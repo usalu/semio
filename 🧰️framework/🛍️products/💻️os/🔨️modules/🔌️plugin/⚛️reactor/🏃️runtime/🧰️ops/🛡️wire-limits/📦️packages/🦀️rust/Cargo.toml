@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-plugin-decl-app = { path = "../../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../../../📨️pending/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../../🔌️app/📦️packages/🦀️rust" }

@@ -30,7 +30,7 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 geometry = { path = "../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
 semio-framework-graph-drawing = { path = "../../../../../../../../🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }

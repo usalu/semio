@@ -33,9 +33,9 @@ pack = { workspace = true }
 replication = { package = "semio-framework-replication", path = "../../../📡️replication/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
-semio-ui-contract = { path = "../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-contract = { path = "../../../🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { workspace = true }
 semio-ui-declaration = { path = "../../../🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 

@@ -27,11 +27,11 @@ testkit = ["semio-plugin-host-engine/testkit", "semio-plugin-host-guest-runtime/
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }
 semio-plugin-interpreter-runtime = { workspace = true }
-semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1-host-native): `GuestRuntime`'s `RuntimeActorId`/
 # `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
 # actor crate, already a `[workspace.dependencies]` entry.
@@ -77,7 +77,7 @@ semio-plugin-host-shard = { path = "../../🧵️shard/📦️packages/🦀️ru
 semio-plugin-interpreter = { workspace = true }
 semio-plugin-interpreter-runtime = { workspace = true, features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
 # plain dependency above for test builds only) brings in `semio-framework-async::testkit::

@@ -1,6 +1,3 @@
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_PAGE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 use semio_plugin_result_page::pending_result_page::*;
 use semio_framework_actor::typed_operation_page::{TypedOperationResultToken,TypedOperationResultLane};

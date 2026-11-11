@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import corpus from "./🧫️fixtures/🔣️.json";
 import { runOwnedCommand } from "../../../🟦️.ts";
@@ -11,7 +12,7 @@ for (const row of corpus.cases) test(row.id, async () => {
   const cancel = row.interruption === "cancelled" ? setTimeout(() => controller.abort(), corpus.interruptionMilliseconds) : undefined;
   const pending: Promise<void>[] = [];
   let publications = 0, published = false, childPid = 0, childCompleted = false;
-  const oracle = Bun.spawn(["node", "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row), childCode], { stdout: "pipe", stderr: "pipe" });
+  const oracle = Bun.spawn([registeredToolExecutableV1("node"), "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row), childCode], { stdout: "pipe", stderr: "pipe" });
   try {
     const phaseCeiling = row.interruption === "deadline" ? corpus.interruptionMilliseconds : corpus.callerCeilingMilliseconds;
     let terminal = "completed", failure = "";

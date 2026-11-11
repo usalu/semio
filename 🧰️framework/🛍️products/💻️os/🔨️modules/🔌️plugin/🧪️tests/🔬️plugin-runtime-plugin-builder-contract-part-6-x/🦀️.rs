@@ -16,7 +16,7 @@ async fn reactor_native_lifecycle_retains_exact_close_until_ack() {
     assert!(!runtime.guest_lifetimes.borrow().get(instance).unwrap().cell.is_live());
     assert_eq!(semio_plugin_runtime_instances::inst_wire_frames::instance_actor(&runtime, instance).await.expect("admitted actor"), "native-fixture");
     let early = Event::InstanceClose(ActorInstanceCloseRequest { lifetime, request_sequence: 9 });
-    assert!(semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(early), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
+    assert!(semio_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(early), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
     assert!(semio_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, instance).is_ok());
     reactor_native_lifecycle_ack(&runtime, captured).await;
     assert!(runtime.guest_lifetimes.borrow().get(instance).unwrap().cell.is_live());
@@ -28,29 +28,29 @@ async fn reactor_native_lifecycle_rejects_foreign_and_colliding_owners() {
     use semio_framework::kernel::{ActorInstanceCloseRequest, ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt as Receipt, Event};
     let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
-    assert!(semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(reactor_native_lifecycle_open(7, 8, "a".repeat(semio_plugin_reactor_lifecycle::life_instance_registry::PLUGIN_RUNTIME_ACTOR_BYTES + 1))), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
+    assert!(semio_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(reactor_native_lifecycle_open(7, 8, "a".repeat(semio_plugin_reactor_lifecycle::life_instance_registry::PLUGIN_RUNTIME_ACTOR_BYTES + 1))), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
     assert!(runtime.guest_lifetimes.borrow().get(7).is_none());
     assert!(semio_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).is_err());
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(7, 8, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
     let Receipt::Captured { lifetime, .. } = captured else { panic!("real captured owner") };
-    assert!(semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(reactor_native_lifecycle_open(1031, 8, "collision".into())), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
+    assert!(semio_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(reactor_native_lifecycle_open(1031, 8, "collision".into())), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
     assert_eq!(runtime.guest_lifetimes.borrow().get(7).unwrap().cell.lifetime(), lifetime);
     reactor_native_lifecycle_ack(&runtime, captured).await;
     for foreign in [
         ActorInstanceLifetime { activation_generation: 42, ..lifetime },
         ActorInstanceLifetime { guest_lifetime: lifetime.guest_lifetime + 1, ..lifetime },
     ] {
-        assert!(semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(Event::InstanceClose(ActorInstanceCloseRequest { lifetime: foreign, request_sequence: 9 })), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
+        assert!(semio_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(Event::InstanceClose(ActorInstanceCloseRequest { lifetime: foreign, request_sequence: 9 })), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
         assert!(semio_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::plugin_capture_instance_close(&runtime, 7).is_ok());
         assert!(runtime.guest_lifetimes.borrow().get(7).unwrap().cell.is_live());
     }
     let wrong = Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: Receipt::Retired { lifetime, request_sequence: 9, close_generation: 1 } });
-    assert!(semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(wrong), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
+    assert!(semio_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(wrong), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
     reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
     let reopened = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(7, 10, "native-fixture".into())]).await.lifecycle_receipt.unwrap();
     let Receipt::Captured { lifetime: replacement, .. } = reopened else { panic!("new captured owner") };
     assert!(replacement.guest_lifetime > lifetime.guest_lifetime);
-    assert!(semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured })), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
+    assert!(semio_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(Event::InstanceLifecycleAck(ActorInstanceLifecycleAck { receipt: captured })), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
     reactor_native_lifecycle_ack(&runtime, reopened).await;
     reactor_native_lifecycle_finish(&runtime, replacement, 11).await;
 }
@@ -147,13 +147,13 @@ async fn reactor_native_open_preserves_the_neutral_actor_authority() {
     let runtime = semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     semio_plugin_runtime_instances::inst_descriptor::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("production declarations"));
     assert!(semio_plugin_runtime_instances::inst_wire_frames::instance_actor(&runtime, 23).await.is_err(), "a missing admitted actor never invents authority");
-    assert!(semio_framework_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(reactor_native_lifecycle_open(23, 1, String::new())), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
+    assert!(semio_plugin_reactor_turn::poll_kernel(&runtime, &mut Some(reactor_native_lifecycle_open(23, 1, String::new())), &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await.is_err());
     assert!(runtime.guest_lifetimes.borrow().get(23).is_none(), "empty actor admission owns no instance");
     let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(23, 2, actor.into())]).await.lifecycle_receipt.expect("native open receipt");
     let ActorInstanceLifecycleReceipt::Captured { lifetime, .. } = captured else { panic!("opened native lifetime") };
     reactor_native_lifecycle_ack(&runtime, captured).await;
     assert_eq!(semio_plugin_runtime_instances::inst_wire_frames::instance_actor(&runtime, 23).await.expect("admitted native actor"), actor);
-    let document = semio_framework_plugin_runtime_ops::ops_document::plugin_document_pack(&runtime, 23).await.expect("native stored document");
+    let document = semio_plugin_runtime_ops::ops_document::plugin_document_pack(&runtime, 23).await.expect("native stored document");
     semio_plugin_testing_laws::artifact_app_laws::plugin_load_document(&runtime, 23, &document, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("native bounded document reload");
     assert_eq!(semio_plugin_runtime_instances::inst_wire_frames::instance_actor(&runtime, 23).await.expect("native actor after reload"), actor);
     reactor_native_lifecycle_finish(&runtime, lifetime, 3).await;
@@ -392,7 +392,7 @@ fn surface_routing_projection(view: &ViewModel) -> ViewModel {
 }
 
 async fn surface_routing_render(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<VcsArtifactApp<TestApp>>, surface: &str, expected: &ViewModel, node_key: &str) {
-    let (_, presence) = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(runtime, 1, surface).await.expect("mounted surface renders");
+    let (_, presence) = semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(runtime, 1, surface).await.expect("mounted surface renders");
     let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take()).expect("the app body was rendered");
     assert_eq!(
         serde_json::to_value(&actual).unwrap(),
@@ -457,7 +457,7 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
     for surface in surfaces {
         let id = surface["id"].as_str().expect("surface id");
         let mounted = surface_routing_view(&fixture["base"], &surface["view"]);
-        semio_framework_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 1, id.into(), surface["bodyKey"].as_str().expect("body key").into(), &semio_plugin_plugin_program::encode_wire_serialized(&mounted)).await.expect("surface mounts");
+        semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 1, id.into(), surface["bodyKey"].as_str().expect("body key").into(), &semio_plugin_plugin_program::encode_wire_serialized(&mounted)).await.expect("surface mounts");
         expected.insert(id.into(), surface_routing_projection(&mounted));
     }
 
@@ -468,16 +468,16 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
     let synthetic = &fixture["syntheticSurface"];
     let synthetic_id = synthetic["id"].as_str().expect("synthetic surface id");
     let synthetic_view = surface_routing_view(&fixture["base"], &synthetic["view"]);
-    let refused = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 1, synthetic_id.into(), synthetic["bodyKey"].as_str().expect("body key").into(), &semio_plugin_plugin_program::encode_wire_serialized(&synthetic_view))
+    let refused = semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 1, synthetic_id.into(), synthetic["bodyKey"].as_str().expect("body key").into(), &semio_plugin_plugin_program::encode_wire_serialized(&synthetic_view))
         .await
         .expect_err("the synthetic `window` surface must never mount for an app with window instances");
     assert!(refused.message.contains(fixture["syntheticRefusal"].as_str().expect("refusal")), "the refusal must name the synthetic surface rule: {}", refused.message);
-    assert!(semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 1, synthetic_id).await.is_err(), "a refused synthetic surface must have no host context to render from");
+    assert!(semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 1, synthetic_id).await.is_err(), "a refused synthetic surface must have no host context to render from");
     surface_routing_render(&runtime, fixture["pickedSurface"].as_str().expect("picked surface"), &expected[fixture["pickedSurface"].as_str().expect("picked surface")], node_key).await;
     surface_routing_render(&runtime, fixture["inspectionSurface"].as_str().expect("inspection surface"), &expected[fixture["inspectionSurface"].as_str().expect("inspection surface")], node_key).await;
 
     let refreshed = surface_routing_view(&fixture["base"], &fixture["refreshedView"]);
-    semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render(&runtime, 1, "graph", &serde_json::to_string(&refreshed).expect("host view serializes")).await.expect("host refresh renders");
+    semio_plugin_runtime_ops::ops_surface_render::plugin_render(&runtime, 1, "graph", &serde_json::to_string(&refreshed).expect("host view serializes")).await.expect("host refresh renders");
     RENDER_CONTEXT_PROBE.with(|probe| probe.take());
     for surface in surfaces {
         let id = surface["id"].as_str().expect("surface id");

@@ -105,6 +105,8 @@ impl<O> ResidentConstruction<O>{
     pub fn drive_tool_credited(&mut self,context:&mut StepContext<'_>,demand:ToolJobAdmissionDemand,construct:impl FnOnce(&mut OriginalToolConstructionScope<'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<Option<std::result::Result<semio_framework_job::OriginalCreditedOutput<O>,O>>,OriginalTurnFailure>{
         match self.drive_tool(context,demand,construct)?{Some(output)=>Ok(Some(context.adopt_original_credit(output)?)),None=>Ok(None)}
     }
+    /// 🪢️ The resident admission, lent to producers that build into their own candidate slot.
+    pub fn admission(&mut self)->&mut semio_framework_job::OriginalConstructionAdmission{&mut self.admission}
     pub fn terminal_is_empty(&self)->bool{self.output.is_none()&&self.admission.terminal_is_empty()}
 }
 

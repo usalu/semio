@@ -30,7 +30,7 @@ semio-framework-test-fixtures = { path = "../../../../../../🧰️framework/�
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 semio-framework-job = { workspace = true }
-semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-plugin-host = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-plugin-interpreter-runtime = { workspace = true }
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }

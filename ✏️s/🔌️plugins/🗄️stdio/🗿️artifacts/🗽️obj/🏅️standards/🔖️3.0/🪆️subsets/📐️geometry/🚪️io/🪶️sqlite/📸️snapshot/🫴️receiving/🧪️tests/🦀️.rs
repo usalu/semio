@@ -10,8 +10,6 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::sync::atomic::{AtomicBool,Ordering};
-#[global_allocator]
-static ORIGINAL_OBJ_ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn contract()->serde_json::Value{serde_json::from_str(fixture_text!("../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{serde_json::from_value(contract()["originalGrant"].clone()).unwrap()}
 fn fixture()->ObjSnapshot{semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}

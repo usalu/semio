@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🔷️ `verify typescript`: the generated project lists exactly the live sources, agrees with TypeScript's own file resolution and counts what the real compiler reports.
  * @see 🎛️commands/✅️verify/🔷️typescript-project/🟦️.ts
  */
@@ -92,7 +93,7 @@ test("the diagnostic summary agrees with the real compiler on a project with two
     mkdirSync(home, { recursive: true });
     const document = typescriptProjectDocument(["wrong.ts", "right.ts"], "../../..", {});
     writeFileSync(join(home, "tsconfig.json"), JSON.stringify({ ...document, compilerOptions: { ...(document.compilerOptions as object), types: [] } }));
-    const run = spawnSync("node", [join(workspaceRoot, "node_modules", "typescript", "bin", "tsc"), "-p", join(home, "tsconfig.json"), "--noEmit", "--pretty", "false"], { cwd: scratch, encoding: "utf8" });
+    const run = spawnSync(registeredToolExecutableV1("node"), [join(workspaceRoot, "node_modules", "typescript", "bin", "tsc"), "-p", join(home, "tsconfig.json"), "--noEmit", "--pretty", "false"], { cwd: scratch, encoding: "utf8" });
     expect(run.status).toBe(2);
     expect(summarizeTypescriptDiagnostics(run.stdout)).toEqual({ total: 2, files: 1, byCode: { TS2322: 1, TS2304: 1 } });
   } finally {
@@ -189,7 +190,7 @@ test("a file that does not parse is reported on its own and every other file is 
     writeFileSync(join(scratch, "importer.ts"), "import { half } from './broken.ts';\nexport const text: string = 1;\nexport { half };\n");
     writeFileSync(join(scratch, "wrong.ts"), "export const count: number = 'text';\n");
     writeFileSync(join(scratch, "right.ts"), "export const fine: number = 1;\n");
-    const reference = spawnSync("node", [join(workspaceRoot, "node_modules", "typescript", "bin", "tsc"), "-p", join(scratch, "tsconfig.json"), "--noEmit", "--pretty", "false"], { cwd: scratch, encoding: "utf8" });
+    const reference = spawnSync(registeredToolExecutableV1("node"), [join(workspaceRoot, "node_modules", "typescript", "bin", "tsc"), "-p", join(scratch, "tsconfig.json"), "--noEmit", "--pretty", "false"], { cwd: scratch, encoding: "utf8" });
     expect(summarizeTypescriptDiagnostics(reference.stdout).byCode).toEqual({ TS1109: 1 });
     const log = join(scratch, "check.tsc.txt"), syntaxLog = join(scratch, "check.syntax.txt");
     expect(await runTypescriptCompiler(scratch, join(scratch, "tsconfig.json"), log, syntaxLog, 2048, 5)).toBe(2);
@@ -211,7 +212,7 @@ test("on a project that parses, the child reports exactly what tsc reports", asy
     writeFileSync(join(scratch, "tsconfig.json"), JSON.stringify({ compilerOptions: { strict: true, noEmit: true, types: [] }, include: ["*.ts"] }));
     writeFileSync(join(scratch, "wrong.ts"), "export const count: number = 'text';\nexport const missing = undeclared;\n");
     writeFileSync(join(scratch, "also.ts"), "export const flag: boolean = 1;\n");
-    const reference = spawnSync("node", [join(workspaceRoot, "node_modules", "typescript", "bin", "tsc"), "-p", join(scratch, "tsconfig.json"), "--noEmit", "--pretty", "false"], { cwd: scratch, encoding: "utf8" });
+    const reference = spawnSync(registeredToolExecutableV1("node"), [join(workspaceRoot, "node_modules", "typescript", "bin", "tsc"), "-p", join(scratch, "tsconfig.json"), "--noEmit", "--pretty", "false"], { cwd: scratch, encoding: "utf8" });
     const log = join(scratch, "check.tsc.txt");
     expect(await runTypescriptCompiler(scratch, join(scratch, "tsconfig.json"), log, join(scratch, "check.syntax.txt"), 2048, 5)).toBe(reference.status ?? -1);
     expect(readFileSync(log, "utf8")).toBe(reference.stdout);

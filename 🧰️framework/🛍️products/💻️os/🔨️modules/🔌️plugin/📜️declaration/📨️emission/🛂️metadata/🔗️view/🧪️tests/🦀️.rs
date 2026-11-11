@@ -33,8 +33,8 @@ fn original_view_routing_alias_denials_preserve_metadata_and_original_close(){
   let view=metadata.as_ref().unwrap().view_state.as_ref().unwrap();let pointer=Arc::as_ptr(view);let text=view.panel_json.as_ref().unwrap().as_ptr();
   let demand=ActionMeta::routing_alias_demands();let mut grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:demand.depth};
   match row["grant"].as_str().unwrap(){"items-zero"=>grant.maximum_items=0,"copy-minus-one"=>grant.maximum_copy_bytes-=1,"depth-zero"=>grant.maximum_depth=0,"cancelled"=>{caller.cancel().cancel_now();},"exact"=>{},_=>unreachable!()}
-  let mut alias=None;
-  let admitted=original_alias_turn(&mut caller,&mut decoder,grant,|cx|metadata.as_ref().unwrap().admit_routing_alias(&mut alias,cx));
+  let mut alias=None;let mut admission=semio_framework_job::OriginalConstructionAdmission::default();
+  let admitted=original_alias_turn(&mut caller,&mut decoder,grant,|cx|metadata.as_ref().unwrap().admit_routing_alias(&mut admission,&mut alias,cx));
   assert_eq!(admitted,row["admitted"].as_bool().unwrap());
   assert_eq!(alias.is_some(),admitted);
   assert_eq!(Arc::as_ptr(metadata.as_ref().unwrap().view_state.as_ref().unwrap()),pointer);

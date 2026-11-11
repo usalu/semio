@@ -2,9 +2,11 @@
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshot,Fem2dSnapshotValue};
 use semio_s_fem_node::planar::FemNodeValue;
 use semio_s_fem_receiving::reply::settled;
-use semio_framework_value::{RetainedCloneGrant,RetainedWorkOutcome,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,close_original_effect_step};
 use semio_os_kernel::{NativeSnapshotDecodeOwner,NativeSnapshotFailure};
+use semio_framework_dsl_record::receiving::OwnedSlot;
+use std::mem::size_of;
 const BODY:usize=4096;
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:2_000_000,maximum_copy_bytes:64*1024*1024,maximum_capacity_bytes:64*1024*1024,maximum_release_bytes:64*1024*1024,maximum_depth:512}}
 fn retire_turn(caller:&mut OriginalJobFixtureCaller,run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>){

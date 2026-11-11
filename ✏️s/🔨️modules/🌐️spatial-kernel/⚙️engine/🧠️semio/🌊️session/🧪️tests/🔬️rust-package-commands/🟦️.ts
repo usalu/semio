@@ -3,7 +3,7 @@ import { verifyProducedWasmPackageV1 } from "@semio-tech/process/wasm-build";
 import { ScriptInvocation } from "@semio-tech/process/routing";
 import { runAdmittedExactCargoLawsV1 as runExactCargoLaws, runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
 import { runOwnedCommand } from "@semio-tech/process/execution";
-import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "@semio-tech/framework/process/compiler-capacity";
+import { scriptCompilerAdmissionControlV1, type CompilerAdmissionControl } from "@semio-tech/process/compiler-capacity";
 import { resolve } from "node:path";
 import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { buildBudgetMs } from "@semio-tech/process/budget";

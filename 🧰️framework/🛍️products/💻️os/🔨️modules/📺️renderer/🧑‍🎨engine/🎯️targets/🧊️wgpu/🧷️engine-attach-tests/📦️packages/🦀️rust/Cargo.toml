@@ -45,12 +45,12 @@ semio-renderer-wgpu-ui-engine-tests = { path = "../../../🧿️ui-engine-tests/
 flow = { path = "../../../../../../../🌊️flow/📦️packages/🦀️rust", package = "semio-os-flow" }
 framework_editor = { path = "../../../../../../../../../../🔨️modules/✍️editor/📦️packages/🦀️rust", package = "semio-framework-editor" }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
-semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-os-infinite-board-normal-focus = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🎯️focus/📦️packages/🦀️rust" }
 semio-os-infinite-board-normal-gestures = { path = "../../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-os-node-graph = { path = "../../../../../🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust" }
 semio-renderer-camera = { path = "../../../../../🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

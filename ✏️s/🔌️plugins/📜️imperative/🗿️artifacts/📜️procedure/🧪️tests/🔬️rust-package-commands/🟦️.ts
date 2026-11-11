@@ -1,12 +1,12 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
 import { join } from "node:path";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
 if (segments[0] === "procedure-document-contract") {
-    const { runCargo } = await import("@semio-tech/framework/process/execution");
+    const { runCargo } = await import("@semio-tech/process/execution");
     const { testProcedureDocumentContractOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
     testProcedureDocumentContractOracle();
     const schemaRoot = join(context.repoRoot, "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");

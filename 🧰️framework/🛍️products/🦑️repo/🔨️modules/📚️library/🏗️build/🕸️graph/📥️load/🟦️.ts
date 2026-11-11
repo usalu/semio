@@ -20,7 +20,7 @@ import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/�
 import {decodeGraphRecordsV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🟨️.mjs";
 import {readGenerationExternalInputsV1,resolveGenerationExternalInputV1,canonicalJsonV1 as canonicalGenerationJsonV1} from "../🕰️generations/🟨️.mjs";
 import {loadGenerationGraphV1,type GenerationLoadStatsV1} from "../🕰️generations/🔌️load/🟨️.mjs";
-import {graphSnapshotPolicyV1,GRAPH_LIMITS_V1,graphDeclarationV1,buildGraphProducerAuthorityV1,loadedGraphModuleAuthorityV1,graphSelfUrlsV1} from "../🔐️authority/🟦️.ts";
+import {graphSnapshotPolicyV1,GRAPH_LIMITS_V1,graphDeclarationV1,graphPinSchemaV1,buildGraphProducerAuthorityV1,loadedGraphModuleAuthorityV1,graphSelfUrlsV1} from "../🔐️authority/🟦️.ts";
 import {portableInputs,buildGraphMembersV1,workspaceBuildFilesV1,buildGraphMembershipV1,buildGraphSourceFactsHoldV1} from "../📁️workspace/🟦️.ts";
 import {readBuildGraphV1,buildGraphPathV1} from "../📜️contract/🟦️.ts";
 import {inventoryDirectoriesV1} from "../🕊️release/🟦️.ts";
@@ -50,7 +50,7 @@ async function withRetainedGraphSnapshotV1<T>(workspace:string,store:RepositoryC
 
 /** 🏪️ Delivers the pinned reusable graph only through its existing private Store consumer and retained exact content descriptor. */
 export function withRepositoryBuildGraphPublicationV1<T>(root:string,control:ResourceLeaseControl,body:(graph:BuildGraphV1,digest:string,actual:ResourceLeaseControl)=>Promise<T>):Promise<T>{
- const pin={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST};if(validateJsonSchemaSubset(graphDeclarationV1("../🧬️schema/📥️pin.json"),pin).length||!isAbsolute(pin.path!))throw Error("Original immutable build graph path and digest required");
+ const pin={path:process.env.SEMIO_BUILD_GRAPH_PATH,digest:process.env.SEMIO_BUILD_GRAPH_DIGEST};if(validateJsonSchemaSubset(graphPinSchemaV1,pin).length||!isAbsolute(pin.path!))throw Error("Original immutable build graph path and digest required");
  return withRepositoryBuildGraphConsumerV1(root,control,async(store,actual)=>{await store.recheck();checkResourceLeaseControl(actual);const expected=requireNativeStoragePathV1(store.root,join(store.root,"snapshots",pin.digest+".json"));if(pin.path!==expected)throw Error("Original retained Graph snapshot identity required");return withRetainedGraphSnapshotV1(root,store,expected,actual,async source=>{if(createHash("sha256").update(source).digest("hex")!==pin.digest)throw Error("Pinned build graph digest differs from original authority");let reads=0;const records=dirname(expected),graph=await decodeGraphRecordsV1(Buffer.from(source),async digest=>{if(++reads%64===0)await store.recheck();checkResourceLeaseControl(actual);const path=requireNativeStoragePathV1(store.root,join(records,digest+".gz")),status=await lstat(path);if(!status.isFile()||status.isSymbolicLink()||status.nlink!==1||status.size>graphSnapshotPolicyV1.maximumSnapshotBytes)throw Error("Original bounded Graph record required");return readFile(path);},{policy:graphSnapshotPolicyV1.records as never}) as BuildGraphV1;checkResourceLeaseControl(actual);const value=await body(graph,pin.digest!,actual);await store.recheck();checkResourceLeaseControl(actual);return value;});});
 }
 

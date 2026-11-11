@@ -1,6 +1,6 @@
 
-import {BundleScript, ScriptRouter} from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runArtifactRustPackageMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runAssemblyChecks } from "../../🧪️tests/📦️assembly/🟦️.ts";
 import { runDeletionProofScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🗑️ Compiles the general assembly in a regular-file workspace with the concrete fleet absent. */

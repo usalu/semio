@@ -4,8 +4,6 @@ use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,Origin
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneStep,retirement::controlled::ControlledRetirement};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use serde_json::Value;
-#[global_allocator]
-static EXPORT_FONT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn now()->Option<u64>{Some(0)}
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn stock(v:&Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:v["items"].as_u64().unwrap()as usize,maximum_copy_bytes:v["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:v["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:v["release"].as_u64().unwrap()as usize,maximum_depth:v["depth"].as_u64().unwrap()as usize}}

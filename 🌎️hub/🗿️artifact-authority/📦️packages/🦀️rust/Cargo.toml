@@ -29,7 +29,7 @@ semio-framework-artifact-reference = { path = "../../../../🧰️framework/🔨
 semio-framework-value = { path = "../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 tokio = { workspace = true, features = ["full"] }
 semio-framework-async = { workspace = true }
-semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-plugin-host = { path = "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 rusqlite = { version = "0.38.0", features = ["bundled"] }

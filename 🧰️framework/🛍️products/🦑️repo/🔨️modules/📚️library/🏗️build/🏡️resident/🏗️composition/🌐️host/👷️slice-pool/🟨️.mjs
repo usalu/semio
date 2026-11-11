@@ -7,7 +7,7 @@ import {sliceLimitPolicyV1} from "./🧱️limit/🟨️.mjs";
 import {createPressureWatchV1} from "./🌡️pressure/🟨️.mjs";
 import {SLICE_JOB_VARIABLE_V1,createReaperV1,deadServiceRowV1,listProcessesV1,sliceJobTokenV1} from "./🧹️reap/🟨️.mjs";
 
-export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=2000,budgetMegabytes=Infinity,marginMegabytes=0,headroom=()=>({limitBytes:Infinity,currentBytes:process.memoryUsage().rss}),sampleMilliseconds=1000,note=()=>undefined,createWorker=(url,data,env)=>createProcessWorkerV1(url,data,env,graceMilliseconds===undefined?{}:{graceMilliseconds}),pressure=()=>createPressureWatchV1(),limiter,graceMilliseconds,reaper=createReaperV1(graceMilliseconds===undefined?{}:{graceMilliseconds})}){
+export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=2000,budgetMegabytes=Infinity,marginMegabytes=0,elasticity={},headroom=()=>({limitBytes:Infinity,currentBytes:process.memoryUsage().rss}),sampleMilliseconds=1000,note=()=>undefined,createWorker=(url,data,env)=>createProcessWorkerV1(url,data,env,graceMilliseconds===undefined?{}:{graceMilliseconds}),pressure=()=>createPressureWatchV1(),limiter,graceMilliseconds,reaper=createReaperV1(graceMilliseconds===undefined?{}:{graceMilliseconds})}){
  if(!Number.isSafeInteger(maximum)||maximum<1)throw new Error("Positive worker maximum required");
  if(!Number.isFinite(marginMegabytes)||marginMegabytes<0||!(budgetMegabytes>=0))throw new Error("Finite memory margin and budget required");
  const tails=createBoundedCacheV1({name:"host:slice-roots",maxEntries:64,maxBytes:64}),waiting=[],counters={started:0,completed:0,failed:0,cancelled:0,overBudget:0,pressured:0};
@@ -46,7 +46,7 @@ export function createSlicePoolV1({workerUrl,maximum=2,heartbeatMilliseconds=200
   async run(request,{signal,onProgress}={}){
    const key=String(request.root),previous=tails.get(key)??Promise.resolve(),turn=previous.catch(()=>undefined).then(async()=>{
     await slot(signal);
-    try{const policy=limiter===undefined?undefined:sliceLimitPolicyV1(headroom(),marginMegabytes),limit=policy===undefined?undefined:await limiter.create(policy,"slice-"+(sequence+1)).catch(()=>undefined);return await runWorker(request,signal,onProgress,limit);}finally{release();}
+    try{const policy=limiter===undefined?undefined:sliceLimitPolicyV1(headroom(),marginMegabytes,elasticity),limit=policy===undefined?undefined:await limiter.create(policy,"slice-"+(sequence+1)).catch(()=>undefined);return await runWorker(request,signal,onProgress,limit);}finally{release();}
    });
    tails.set(key,turn.catch(()=>undefined));
    return turn;

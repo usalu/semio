@@ -173,7 +173,7 @@ impl ArtifactEditor for LayoutPlayApp {
         registry.register(LayoutMediaExportJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !LAYOUT_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return layout_build_export_tool_job(request, output, cx);
@@ -188,8 +188,8 @@ impl ArtifactEditor for LayoutPlayApp {
     /// 🎞️ `import-media` is the only reserved route layout owns: every inbound `fields:in` delivery is
     /// routed through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
     /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
-    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if body.is_some(){return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)}
+    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_some(){return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,construction,cx)}
         let request=source.as_ref().ok_or_else(||Fault::from("layout import requires its original request"))?;
         if request.tool_id.as_str() != LAYOUT_IMPORT_TOOL_ID {
             return Ok(false);
@@ -200,7 +200,7 @@ impl ArtifactEditor for LayoutPlayApp {
         let Some(ArtifactReservedToolInput::Media { .. }) = request.input.as_ref() else {
             return Err(Fault::from("layout import-media requires media input").into());
         };
-        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,construction,cx)
     }
 
     fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{

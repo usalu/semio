@@ -151,6 +151,8 @@ export function registerFieldExtractorV1(format:string,extract:(text:string,poin
 export function jsonPointerValueV1(document:unknown,pointer:string):unknown;
 /** 🧲️ Merges stored row arrays into the running observation scope by reference. */
 export function retainObservedRowsV1(rows:readonly unknown[]):void;
+/** 🪢️ Makes the rows of a stored or detached closure one live instance per distinct row, in place, and answers the same array. */
+export function shareObservationRowsV1<Row>(rows:Row[]):Row[];
 /** 🫧️ Runs a synchronous computation with its observations returned, not recorded into the running scope. */
 export function observeDetachedSyncV1<T>(compute:()=>T):Readonly<{value:T;rows:readonly unknown[];layers:readonly (readonly unknown[])[]}>;
 /** 🔁️ Runs a computation inside a caller-owned validation round. */

@@ -774,14 +774,15 @@ macro_rules! fixture {
 #[cfg(feature = "sut")]
 const FIXTURE_TEXTS: &[(&str, (&str, &str, &str, &str))] = &[
     ("change-annex", (
-    ("change-reliability-class", (
         include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🔣️.before.json"),
-        include_str!("../🧫️fixtures/🧬️mutations/🎯change-reliability-class/✅apply/🔣️.before.json"),
         include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🔣️.mutation.json"),
-        include_str!("../🧫️fixtures/🧬️mutations/🎯change-reliability-class/✅apply/🔣️.mutation.json"),
         include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🔣️.after.json"),
-        include_str!("../🧫️fixtures/🧬️mutations/🎯change-reliability-class/✅apply/🔣️.after.json"),
         include_str!("../🧫️fixtures/🧬️mutations/🌍️change-annex/✅apply/🔣️.outcome.json"),
+    )),
+    ("change-reliability-class", (
+        include_str!("../🧫️fixtures/🧬️mutations/🎯change-reliability-class/✅apply/🔣️.before.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🎯change-reliability-class/✅apply/🔣️.mutation.json"),
+        include_str!("../🧫️fixtures/🧬️mutations/🎯change-reliability-class/✅apply/🔣️.after.json"),
         include_str!("../🧫️fixtures/🧬️mutations/🎯change-reliability-class/✅apply/🔣️.outcome.json"),
     )),
     ("insert-material", (

@@ -3,7 +3,7 @@ use norm::{ClauseId, Quantity, SubjectRef};
 
 fn check(id: &str, case: &str, demand: f64, capacity: f64) -> CheckResult {
     CheckResult::assess(id, "EN TOY-1", ClauseId::new("EN TOY-1", "§6", "6.1.2"), SubjectRef::new(case, format!("cases[id={case}]"), norm::LocalizedCopy::new("Tie", "Zugstab")), norm::LocalizedCopy::new(format!("Check {id}"), format!("Nachweis {id}")))
-        .utilization(Quantity::new(QuantityKind::Force, demand), Quantity::new(QuantityKind::Force, capacity))
+        .utilization(Quantity::new(norm::QuantityKind::Force, demand), Quantity::new(norm::QuantityKind::Force, capacity))
         .build()
 }
 

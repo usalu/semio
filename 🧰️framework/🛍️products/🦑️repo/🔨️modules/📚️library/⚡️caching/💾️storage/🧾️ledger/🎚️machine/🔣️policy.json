@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "defaultTotalBytes": 212400603136,
+  "defaultTotalBytes": 212937474048,
   "environment": "SEMIO_CACHE_BUDGET_BYTES",
   "file": "🎚️machine-budget.json",
   "hostFreeFloorBytes": 16106127360,
@@ -16,7 +16,7 @@
     {
       "id": "rust",
       "partition": "rust",
-      "weightBasisPoints": 4853,
+      "weightBasisPoints": 4841,
       "floorBytes": 2147483648,
       "headroomBasisPoints": 1500,
       "purpose": { "en": "Cargo build units, registry and Nx artifacts in the compiler image.", "de": "Cargo-Build-Einheiten, Registry und Nx-Artefakte im Compiler-Image." }
@@ -24,7 +24,7 @@
     {
       "id": "products",
       "partition": "products",
-      "weightBasisPoints": 1213,
+      "weightBasisPoints": 1210,
       "floorBytes": 1073741824,
       "headroomBasisPoints": 1500,
       "purpose": { "en": "Bazel and Semio action outputs, workspaces and browser/vite products.", "de": "Bazel- und Semio-Aktionsergebnisse, Workspaces sowie Browser- und Vite-Produkte." }
@@ -32,7 +32,7 @@
     {
       "id": "tools",
       "partition": "tools",
-      "weightBasisPoints": 405,
+      "weightBasisPoints": 403,
       "floorBytes": 536870912,
       "headroomBasisPoints": 1500,
       "purpose": { "en": "Pinned tool installs (Nx tooling, SDKs, Bazel, interpreters).", "de": "Gepinnte Werkzeug-Installationen (Nx-Tooling, SDKs, Bazel, Interpreter)." }
@@ -40,7 +40,7 @@
     {
       "id": "dependencies",
       "partition": "dependencies",
-      "weightBasisPoints": 1820,
+      "weightBasisPoints": 1815,
       "floorBytes": 536870912,
       "headroomBasisPoints": 1500,
       "purpose": { "en": "Package-manager caches and per-lockfile dependency trees.", "de": "Paketmanager-Caches und Abhängigkeitsbäume je Lock-Datei." }
@@ -80,7 +80,7 @@
     {
       "id": "loose",
       "loose": true,
-      "weightBasisPoints": 1226,
+      "weightBasisPoints": 1248,
       "floorBytes": 268435456,
       "headroomBasisPoints": 0,
       "purpose": { "en": "Everything cached outside the images: Go, Playwright, toolchains, binaries, indexes.", "de": "Alles Zwischengespeicherte außerhalb der Images: Go, Playwright, Toolchains, Binärdateien, Indizes." }

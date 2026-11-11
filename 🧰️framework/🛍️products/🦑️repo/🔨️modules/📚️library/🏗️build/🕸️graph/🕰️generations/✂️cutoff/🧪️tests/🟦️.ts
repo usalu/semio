@@ -361,13 +361,20 @@ test("a settle keeps the row lists of its answers only when asked, and the settl
 const heapChild=(mode:string,questions:number,perQuestion:number,chunk:number)=>{
  const run=Bun.spawnSync([process.execPath,join(dirname(fileURLToPath(import.meta.url)),"🧮️heap-child/🟨️.mjs"),mode,String(questions),String(perQuestion),String(chunk)],{stdout:"pipe",stderr:"pipe"});
  expect(run.exitCode,run.stderr.toString()).toBe(0);
- return JSON.parse(run.stdout.toString().trim().split("\n").pop()!) as{outcome:{changed:number;answers:number};growth:number;after:number[]};
+ return JSON.parse(run.stdout.toString().trim().split("\n").pop()!) as{outcome:{changed:number;answers:number};growth:number;held:number;retained:number;after:number[]};
 };
 
 test("settling a large generated fixture of questions leaves the heap under its bound once the result is dropped",()=>{
  const questions=Number(process.env.SEMIO_SETTLE_QUESTIONS??3000),bound=Number(process.env.SEMIO_SETTLE_HEAP_MB??24),result=heapChild("growth",questions,150,256);
  expect(result.outcome).toEqual({changed:questions,answers:0});
  expect(result.growth,"heap growth after settling "+questions+" questions: "+result.growth.toFixed(1)+" MB").toBeLessThan(bound);
+},300000);
+
+test("the supports of thousands of unchanged answers that read the same rows through their own copies are held once",()=>{
+ const questions=Number(process.env.SEMIO_HELD_QUESTIONS??2000),bound=Number(process.env.SEMIO_HELD_HEAP_MB??60),result=heapChild("held",questions,150,256);
+ expect(result.outcome).toEqual({changed:0,answers:0});
+ expect(result.held).toBe(questions);
+ expect(result.retained,"heap held for "+questions+" supports of 150 rows: "+result.retained.toFixed(1)+" MB").toBeLessThan(bound);
 },300000);
 
 test("the heap after each settle chunk stays flat while thousands of closures with distinct supports settle through a durable store",()=>{

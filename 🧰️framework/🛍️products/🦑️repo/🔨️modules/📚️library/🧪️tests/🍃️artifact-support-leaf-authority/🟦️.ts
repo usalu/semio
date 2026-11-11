@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -169,7 +170,7 @@ async function verifyRustPointerAssertion(repo: string, aggregate: string, descr
   ].join("\n"));
   let completed = false;
   try {
-    const child = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(root, "Cargo.toml"), "--target-dir", join(root, "🎯️target"), "--", dirname(join(repo, descriptor)), join(repo, descriptor)], { cwd: root, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn([registeredToolExecutableV1("cargo"), "run", "--offline", "--quiet", "--manifest-path", join(root, "Cargo.toml"), "--target-dir", join(root, "🎯️target"), "--", dirname(join(repo, descriptor)), join(repo, descriptor)], { cwd: root, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
     const [code, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()]);
     expect(code, stderr).toBe(0);
     expect(stdout).toBe(`[TRACE] descriptor pointer checked: ${dirname(join(repo, descriptor))}\n`);

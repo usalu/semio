@@ -44,14 +44,21 @@ use semio_plugin_time_travel as time_travel;
 use semio_framework::*;
 use semio_framework_tool_machine::{GesturePhase, GestureState, GestureTool, ToolAbortReason, ToolRefusal, ToolStep};
 
-fn gesture_grants()->(semio_framework_value::retained_clone::RetainedCloneGrant,semio_framework_value::retained_clone::RetainedCloneGrant){
+fn gesture_bank()->(semio_framework_value::retained_clone::RetainedCloneGrant,semio_framework_value_testing_effect_bank::EffectBank){
  use semio_framework_value::{retained_clone::RetainedCloneGrant,shared_issuance::SealedShared};
- (RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:SealedShared::<GestureSlot<TestMutation>>::birth_bytes(),maximum_depth:1,..Default::default()},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:std::mem::size_of::<SealedShared<GestureSlot<TestMutation>>>(),maximum_depth:1,..Default::default()})
+ let grant=RetainedCloneGrant{maximum_items:4,maximum_copy_bytes:4096,maximum_capacity_bytes:4*SealedShared::<GestureSlot<TestMutation>>::birth_bytes(),maximum_depth:4,..Default::default()};
+ (grant,semio_framework_value_testing_effect_bank::EffectBank::new(semio_framework_value_testing_effect_bank::Wallet::new(grant,1024)))
+}
+fn admit_gesture(app:&mut ToyApp,operation:u64,base:&[u8;32],meta:&ActionMeta)->Result<GestureCapture<TestMutation>,Fault>{
+ use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll};
+ let(grant,mut bank)=gesture_bank();
+ let(poll,_)=bank.run(grant,1024,|effect|{let result=app.render_ctx().admit_gesture_slot(operation,base,meta,effect).map(|(capture,_)|capture);RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})});
+ match poll{RetainedWorkPoll::Complete(turn)=>turn.result,RetainedWorkPoll::Pending{..}=>panic!("original gesture admission stayed pending")}
 }
 fn retire_gesture_capture<T:semio_framework_value::retirement::RetireOwned>(original:T){
- use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
+ use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement,RetainedWorkPoll};
  let mut owner=ControlledRetirement::new(original).unwrap_or_else(|(_,original)|{let _original=std::mem::ManuallyDrop::new(original);panic!("original gesture fixture retirement was refused");});
- for _ in 0..100000 {if owner.terminal_is_empty(){return;}let copy=owner.next_copy_byte_demand().unwrap().max(4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};assert!(owner.step(grant).unwrap().progress().fits(grant));}
+ for _ in 0..100000 {if owner.terminal_is_empty(){return;}let d=owner.next_demand(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes.max(4096),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let mut bank=semio_framework_value_testing_effect_bank::EffectBank::new(semio_framework_value_testing_effect_bank::Wallet::new(grant,1024));let(poll,_)=bank.run(grant,1024,|effect|owner.step(4096,effect));let RetainedWorkPoll::Complete(turn)=poll else{panic!("original gesture fixture retirement stayed pending")};assert!(turn.result.unwrap().progress().fits(grant));}
  panic!("original gesture fixture retained physical owners");
 }
 const NUDGE_TOOL: &str = "s.test.time-travel@1/*#editor#nudge";
@@ -140,7 +147,7 @@ fn in_window(actor: &str, window: &str) -> ActionMeta {
 #[doc(hidden)]
 pub fn stream(app: &mut ToyApp, actor: &str, operation: u64, window: &str, value: i32) -> Option<(protocol::TransactionRef, Vec<TestMutation>)> {
     let base = app.stores.store.content_revision_now();
-    let slot = app.render_ctx().admit_gesture_slot(operation, &base, &in_window(actor, window),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+    let slot = admit_gesture(app,operation,&base,&in_window(actor, window)).expect("funded original gesture admission");
     let committed = slot.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value }.into()), "seed").expect("a stream tick is never refused");
     assert!(app.render_ctx().settle_gesture_slot(operation, true), "the dispatch drove its slot");
     retire_gesture_capture(slot);
@@ -218,7 +225,7 @@ async fn a_late_release_of_a_press_the_runtime_ended_leaves_zero_trace() {
     let mut app = seeded_app(&fixture, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let base = app.stores.store.content_revision_now();
     let dispatch = |app: &mut ToyApp, operation: u64, press: &str, phase: GesturePhase, value: i32| {
-        let slot = app.render_ctx().admit_gesture_slot(operation, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+        let slot = admit_gesture(app,operation,&base,&in_window(&actor, "pane-a")).expect("funded original gesture admission");
         let committed = slot.drive::<NudgeTool>(Some(press), "nudge", phase, Some(SetCount { value }.into()), "seed").expect("the dispatch is never refused");
         assert!(app.render_ctx().settle_gesture_slot(operation, true), "even a dropped dispatch drove its slot");
         retire_gesture_capture(slot);
@@ -251,17 +258,17 @@ async fn the_slot_follows_only_a_publishing_dispatch_admitted_on_the_gesture_it_
     let actor = text(&fixture["actor"]).to_string();
     let mut app = seeded_app(&fixture, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
     let base = app.stores.store.content_revision_now();
-    let faulted = app.render_ctx().admit_gesture_slot(900, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+    let faulted = admit_gesture(&mut app,900,&base,&in_window(&actor, "pane-a")).expect("funded original gesture admission");
     faulted.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 7 }.into()), "seed").expect("a tick");
     assert!(app.render_ctx().settle_gesture_slot(900, false));
     assert!(app.tool_machines.gestures().is_empty(), "a dispatch that does not publish decides nothing");
-    let (first, second) = (app.render_ctx().admit_gesture_slot(901, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission"), app.render_ctx().admit_gesture_slot(902, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission"));
+    let (first, second) = (admit_gesture(&mut app,901,&base,&in_window(&actor, "pane-a")).expect("funded original gesture admission"), admit_gesture(&mut app,902,&base,&in_window(&actor, "pane-a")).expect("funded original gesture admission"));
     first.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 8 }.into()), "seed").expect("a tick");
     second.drive::<NudgeTool>(None, "nudge", GesturePhase::Stream, Some(SetCount { value: 9 }.into()), "seed").expect("a tick");
     assert!(app.render_ctx().settle_gesture_slot(901, true) && app.render_ctx().settle_gesture_slot(902, true));
     assert_eq!(app.rendered_snapshot().count, 8, "the dispatch admitted on a slot that moved since is dropped");
     assert!(!app.render_ctx().settle_gesture_slot(902, true), "a slot is settled once");
-    let release = app.render_ctx().admit_gesture_slot(903, &base, &in_window(&actor, "pane-a"),gesture_grants().0,gesture_grants().1).expect("funded original gesture admission");
+    let release = admit_gesture(&mut app,903,&base,&in_window(&actor, "pane-a")).expect("funded original gesture admission");
     let (transaction, mutations) = release.drive::<NudgeTool>(None, "nudge", GesturePhase::Commit, Some(SetCount { value: 10 }.into()), "seed").expect("the release").expect("the release commits");
     assert_eq!((transaction.tool.as_str(), mutations), (NUDGE_TOOL, vec![TestMutation::from(SetCount { value: 10 })]), "ONE transaction of the net leaf");
     assert!(app.render_ctx().settle_gesture_slot(903, true));

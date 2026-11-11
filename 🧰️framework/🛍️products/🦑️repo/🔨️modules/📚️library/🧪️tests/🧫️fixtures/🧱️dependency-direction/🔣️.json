@@ -4333,7 +4333,7 @@
     },
     {
       "id": "actual-sdk-law-policy",
-      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts",
       "names": [
         "configuredExactCargoLawPolicyV1",
         "readExactCargoLawPolicyV1",
@@ -4349,14 +4349,14 @@
     },
     {
       "id": "actual-sdk-command-capture",
-      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts",
       "names": [
         "captureOwnedCommandV1"
       ]
     },
     {
       "id": "actual-sdk-routing-environment",
-      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts",
       "names": [
         "scriptInvocationEnvironment"
       ]
@@ -4373,7 +4373,7 @@
     },
     {
       "id": "actual-sdk-native-observation",
-      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts",
       "names": [
         "cargoProvenancePhysicalControlV1",
         "cargoProvenanceProgressSinkV1",
@@ -4391,7 +4391,7 @@
     },
     {
       "id": "actual-sdk-wasm-package-owner",
-      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts",
       "names": [
         "readWasmPackageOwnerV1",
         "WasmPackageOwnerV1"
@@ -4406,7 +4406,7 @@
     },
     {
       "id": "actual-sdk-build-modes",
-      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎚️mode/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts",
       "names": [
         "buildModesV1"
       ]
@@ -4424,7 +4424,7 @@
     },
     {
       "id": "actual-sdk-compiler-admission",
-      "path": "🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts",
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts",
       "names": [
         "scriptCompilerAdmissionControlV1",
         "phaseCompilerAdmissionControlV1",

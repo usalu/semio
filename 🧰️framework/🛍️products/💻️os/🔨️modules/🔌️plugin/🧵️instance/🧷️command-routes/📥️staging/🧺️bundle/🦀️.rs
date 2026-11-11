@@ -1,7 +1,7 @@
 //! 🐀️ Borrowed bundle of the `instance-commands` use cases: `CommandCtx` (WP7 of the instance family).
 //!
 //! 🧺️ The fields carry the names of the composer fields they borrow, so a method body written for the composer reads the same; `X` is the registered `InstanceExtension` list.
-use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
@@ -9,7 +9,7 @@ use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
 use semio_plugin_instance_dispatch::dispatch_bundle::DispatchCtx;
 use semio_plugin_decl_emission::Emit;
-use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_plugin_instance_extension::{ExtensionCtx, InstanceExtension};
 use semio_framework::FaultFrom;
 use std::future::Future;

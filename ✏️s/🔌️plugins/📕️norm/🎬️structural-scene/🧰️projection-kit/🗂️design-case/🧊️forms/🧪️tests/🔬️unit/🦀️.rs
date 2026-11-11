@@ -1,6 +1,6 @@
 use super::*;
 use norm::design_case::{CaseEntry, CaseNumber, InputSpec};
-use norm::{ClauseId, Quantity, SubjectRef, UnitId};
+use norm::{ClauseId, SubjectRef, UnitId};
 
 struct Toy;
 
@@ -92,7 +92,7 @@ fn report(case: &str, demand: f64) -> CheckReport {
     let mut report = CheckReport::default();
     report.push(
         norm::CheckResult::assess("toy", "EN TOY-1", ClauseId::new("EN TOY-1", "§1", "1"), SubjectRef::new(case, format!("cases[id={case}]"), norm::LocalizedCopy::new("Toy", "Spielzeug")), norm::LocalizedCopy::new("Toy", "Spielzeug"))
-            .utilization(Quantity::new(QuantityKind::Force, demand), Quantity::new(QuantityKind::Force, 100.0))
+            .utilization(norm::Quantity::new(norm::QuantityKind::Force, demand), norm::Quantity::new(norm::QuantityKind::Force, 100.0))
             .build(),
     );
     report

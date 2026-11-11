@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {afterEach,expect,test} from "bun:test";
 import {createServer} from "node:net";
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
@@ -135,7 +136,7 @@ test.skipIf(!sandboxed)("the host sandbox confines an action to its input root: 
 
 test("a worker started as its own process joins, runs actions and leaves on SIGTERM",async()=>{
  const cluster=await start({workers:0}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts");
- const child=Bun.spawn(["bun",entry,"--join",cluster.server.workerUrl,"--name","proc-1","--concurrency","2","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env}});
+ const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","proc-1","--concurrency","2","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env}});
  try{
   await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,20000,"the worker process must register");
   const run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","echo from-process > out.txt"],outputPaths:["out.txt"]}));
@@ -149,7 +150,7 @@ test("a worker started as its own process joins, runs actions and leaves on SIGT
 
 test("work of a worker that dies is re-queued after its lease expires and finished by another worker",async()=>{
  const cluster=await start({workers:0,scheduler:{leaseSeconds:2}}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts"),marker=join(work,"started");
- const child=Bun.spawn(["bun",entry,"--join",cluster.server.workerUrl,"--name","doomed","--concurrency","1","--sandbox","isolated-root","--work-directory",join(work,"w"),"--lang","en"],{stdout:"ignore",stderr:"ignore",cwd:work,env:{...process.env}});
+ const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","doomed","--concurrency","1","--sandbox","isolated-root","--work-directory",join(work,"w"),"--lang","en"],{stdout:"ignore",stderr:"ignore",cwd:work,env:{...process.env}});
  try{
  await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,20000,"the doomed worker must register");
  const run=cluster.execute(await cluster.action({arguments:["/bin/sh","-c",`echo go > ${marker}; sleep 2; echo survived > out.txt`],outputPaths:["out.txt"]}));
@@ -211,7 +212,7 @@ const lan=Object.values(networkInterfaces()).flat().find(row=>row&&row.family===
 test.skipIf(lan===undefined)("a worker on another network interface joins with tokens, fetches inputs from the shared store through the scheduler's address and runs an action",async()=>{
  const tokens={read:"read-secret-1",write:"write-secret-2",worker:"worker-secret-3"},cluster=await start({workers:0,bind:"0.0.0.0",advertise:lan!,tokens}),work=temporary(),entry=join(import.meta.dir,"..","🏃️entry","🟦️.ts");
  expect(cluster.server.workerUrl.startsWith(`http://${lan}:`)).toBe(true);
- const child=Bun.spawn(["bun",entry,"--join",cluster.server.workerUrl,"--name","lan-worker","--concurrency","1","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env,SEMIO_REMOTE_EXECUTION_WORKER_TOKEN:tokens.worker,SEMIO_REMOTE_CACHE_TOKEN:tokens.write}});
+ const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","lan-worker","--concurrency","1","--sandbox","isolated-root","--work-directory",work,"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:work,env:{...process.env,SEMIO_REMOTE_EXECUTION_WORKER_TOKEN:tokens.worker,SEMIO_REMOTE_CACHE_TOKEN:tokens.write}});
  try{
   await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,30000,"the worker must register through the LAN address");
   const run=await cluster.execute(await cluster.action({arguments:["/bin/sh","-c","cat in.txt > out.txt"],files:{"in.txt":"over the network\n"},outputPaths:["out.txt"]}));

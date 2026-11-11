@@ -25,8 +25,8 @@ path = "../../🦀️.rs"
 semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-renderer-wgpu-engine-registry = { path = "../../../🗺️engine-registry/📦️packages/🦀️rust" }
 framework_editor = { path = "../../../../../../../../../../🔨️modules/✍️editor/📦️packages/🦀️rust", package = "semio-framework-editor" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -36,11 +36,11 @@ semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️u
 semio-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📥️input/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3.83"
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"] }
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]

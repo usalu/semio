@@ -1,5 +1,6 @@
 import type {BuildGraphModuleAuthorityV1} from "../📋️model/🟦️.ts";
 import graphSchema from "../🧬️schema/🔣️.json" with{type:"json"};
+import graphPinSchemaSource from "../../🧬️schema/📥️pin.json" with{type:"json"};
 import type graphSnapshotPolicy from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/🔣️policy.json";
 import type exactReadSchema from "../../📥️inputs/🧮️digest/📥️read/🧬️schema/🔣️.json";
 import {REVISION_POLICY_V1,captureBoundedSourceRevisionV1,capturePhysicalSourceTextV1,physicalSourceOriginV1,pinnedAuthorityReadV1,type PhysicalSourceModuleMetaV1} from "../../📥️inputs/🔏️revision/🟨️.mjs";
@@ -20,6 +21,9 @@ declareFormatStampV1("graph.generation",generationSchemaV1);
 
 /** 🔖️ The declared format stamps whose move makes a loaded graph implementation obsolete: it neither reads nor builds nor publishes a generation any more. */
 export const graphFormatStampsV1=Object.freeze(["graph.generation","graph.record","graph.inferrers"]);
+
+/** 📌️ The schema of the pin (path and digest) a caller hands a loader: imported statically, so that it is one of the declared sources of the loader and never an undeclared physical read. */
+export const graphPinSchemaV1=graphPinSchemaSource;
 
 /** 📏️ The declared limits of the graph module; its schema file is their single source. */
 export const GRAPH_LIMITS_V1=Object.freeze({...graphSchema.definitions.Limits.const});

@@ -5,7 +5,8 @@
   "required": [
     "version",
     "cases",
-    "closures"
+    "closures",
+    "refusals"
   ],
   "properties": {
     "version": {
@@ -101,6 +102,44 @@
                   ]
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "key",
+          "values"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
             }
           }
         }

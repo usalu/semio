@@ -1,7 +1,5 @@
 //! ⚖️ Sequence step parameters retire under quoted grants: a dictionary-valued step parameter set passes the typed-command input lane and retires its keys and values exactly.
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 use semio_framework_test_typed_input_law as typed_input_law;
 

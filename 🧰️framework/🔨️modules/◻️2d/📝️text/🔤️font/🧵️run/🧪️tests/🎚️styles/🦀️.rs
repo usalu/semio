@@ -5,7 +5,7 @@ use super::*;
 fn styled_original_runs_match_portable_ranges_and_rustybuzz() {
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../📄️paragraph/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut unicode_admission=semio_framework_2d_text_font_shape_unicode::UnicodeDataAdmissionJob::new(semio_framework_2d_text_font_shape_unicode::UNICODE_BYTES.to_vec(),1000000);
-    while !unicode_admission.advance(4096,&mut semio_framework_2d_text_font::work::RetainedWorkLedger::new(semio_framework_2d_text_font_testing::work_grant(4096))).unwrap().done{}
+    while !semio_framework_2d_text_font_testing::with_work(4096,|w,e|unicode_admission.advance(4096,w,e)).unwrap().done{}
     let unicode=unicode_admission.take_result().unwrap();
     let mut admission=FontFaceAdmissionJob::new(bytes(rows["font"].as_str().unwrap()),FontOutlineLimits::default());
     while !admission.advance(4096,&mut semio_framework_2d_text_font::work::RetainedWorkLedger::new(semio_framework_2d_text_font_testing::work_grant(4096))).unwrap().done{}
@@ -19,7 +19,7 @@ fn styled_original_runs_match_portable_ranges_and_rustybuzz() {
         for grant in [1,7,4096] {
             let mut cursor=crate::FontOutlineRunCursor::new(text,1,crate::FontRunStyle{size,origin:[0.0;2],line_height:1.2,kerning:true,outlines:true},FontOutlineLimits::default(),unicode.layout,&unicode.source,&spans,semio_framework_2d_text_font_shape_unicode::bidi::UnicodeBidiDirection::Auto);
             let mut work=0;
-            loop {let progress=cursor.advance(text,&fonts,&unicode.source,&spans,grant,&mut semio_framework_2d_text_font::work::RetainedWorkLedger::new(semio_framework_2d_text_font_testing::work_grant(grant))).unwrap();assert!(progress.work-work<=grant as u64);work=progress.work;if progress.done{break;}}
+            loop {let progress=semio_framework_2d_text_font_testing::with_work(grant,|w,e|cursor.advance(text,&fonts,&unicode.source,&spans,grant,w,e)).unwrap();assert!(progress.work-work<=grant as u64);work=progress.work;if progress.done{break;}}
             let output=cursor.take_result().unwrap();
             let face=rustybuzz::Face::from_slice(&fonts[0].source,0).unwrap();
             for glyph in output.glyphs.iter() {

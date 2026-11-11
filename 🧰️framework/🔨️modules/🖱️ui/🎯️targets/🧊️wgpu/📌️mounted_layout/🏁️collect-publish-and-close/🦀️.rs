@@ -205,7 +205,7 @@ pub fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32
     while job.stage() != LayoutJobStage::PublishResults {
         let mut actual_retained_progress=semio_framework_job::RetainedCloneProgress::default();
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(1, u64::MAX,ui_contract::UI_WORKER_RETIREMENT_POLICY), cancel.clone(), || Some(0), &mut preview,&mut actual_retained_progress);
-        let outcome = match semio_framework_job::InteractiveJob::step(&mut job, &mut cx) { Ok(outcome) => outcome.map(semio_framework_job::JobOutcomeBorrow::into_descriptor), Err(_) => return false };
+        let outcome = match job.worker_one(&mut cx) { Ok(outcome) => outcome.map(semio_framework_job::JobOutcomeBorrow::into_descriptor), Err(_) => return false };
         if let Some(mut descriptor) = outcome {
             let failed = matches!(descriptor.kind(), semio_framework_job::JobOutcomeKind::Fault | semio_framework_job::JobOutcomeKind::Cancelled);
             descriptor.acknowledge(ui_contract::UI_WORKER_RETIREMENT_POLICY);

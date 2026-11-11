@@ -48,7 +48,7 @@ semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-scene = { workspace = true }
 serde = { workspace = true }
-semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust", package = "semio-plugin-retained-command"}
+semio-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust"}
 semio-plugin-instance-initialization = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/📦️packages/🦀️rust" }
 
 [dev-dependencies]

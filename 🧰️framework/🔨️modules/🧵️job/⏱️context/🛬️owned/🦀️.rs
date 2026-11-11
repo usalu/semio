@@ -8,6 +8,12 @@ use semio_framework_value_native_owned::native_decoding::{NativeDecodeProgress,N
 use semio_framework_job_receiving::OriginalJobWorkRecipient;
 use semio_framework_value_call::NativeCallFailure;
 type ScopeLoan=stock::OriginalReturnScopeLoan<Input>;
+/// 🪙️ Quotes what a first receiving scope claim needs beyond its quoted body once the return table exists: its setup and twice its control, as items, copy bytes and fuel.
+pub fn original_receiving_scope_headroom()->(usize,usize,u64){
+ let outcome=Outcome::<()>::placement();
+ let control=(outcome.copied_items+2,outcome.copied_bytes+stock::original_return_scope_completion_copy_bytes::<Input>(true,true)+std::mem::size_of::<Option<ScopeLoan>>(),4);
+ (2+2*control.0,stock::original_return_scope_admission_copy_bytes::<Input>().max(stock::original_return_stock_top_up_copy_bytes())+2*control.1,2+2*control.2)
+}
 /// 🏦️ A constructed output that carries the scope credit its consumed payload held.
 pub type OriginalCreditedOutput<O>=stock::CreditedOutput<Input,O>;
 use stock::OriginalReturnEscrowAmounts as Amounts;
@@ -50,7 +56,10 @@ impl StepContext<'_>{
  /// 🏁️ Settles the owner's one persistent escrow row when the owner retires; `true` once it is returned.
  fn release_original_scope(&mut self,held:&mut Option<ScopeLoan>)->Result<bool,Failure>{
   let Some(loan)=held.as_ref()else{return Ok(true)};let budget=self.return_budget.as_mut().ok_or_else(||ValueError::invariant("Source scope budget absent"))?.get_mut();
-  if budget.scope_requires_retirement(loan)?{return Err(ValueError::invariant("decoder retains receiving stock").into())}
+  if budget.scope_requires_retirement(loan)?{
+   if budget.scope_observation(loan)?.is_some(){self.observe_scope_loan(held)?;return Ok(held.is_none())}
+   let done=budget.retire_scope(held.as_mut().ok_or_else(||ValueError::invariant("Source scope loan absent"))?)?;if done{held.take();}return Ok(done)
+  }
   if budget.scope_observation(loan)?.is_none(){budget.enter_scope(loan)?;budget.finish_scope(loan,Amounts::default(),true,Default::default(),Default::default(),0,false)?}
   self.observe_scope_loan(held)?;Ok(held.is_none())
  }

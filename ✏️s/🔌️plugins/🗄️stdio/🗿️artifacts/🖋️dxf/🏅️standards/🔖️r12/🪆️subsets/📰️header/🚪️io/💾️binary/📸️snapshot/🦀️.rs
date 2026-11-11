@@ -104,8 +104,5 @@ pub mod artifact_items_13 {
 #[cfg(any(test, feature = "testkit"))]
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 
-#[cfg(any(test, feature = "testkit"))]
-#[global_allocator]
-pub static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
 }
 //#endregion 🧩️ArtifactItems13

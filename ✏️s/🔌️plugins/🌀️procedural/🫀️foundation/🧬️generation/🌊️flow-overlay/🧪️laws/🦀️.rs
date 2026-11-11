@@ -1,7 +1,5 @@
 //! 🧪️ Generation overlays equal the original native/JSON behavior and retain every canceled owner.
 use super::retained_flow_overlay::GenerationFlowOverlayWork;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_flow_flow::OrderedMap;
 use semio_framework_value::DslValue;

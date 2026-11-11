@@ -4,10 +4,10 @@ use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_emission::ArtifactMutationOutcome;
 use semio_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_value::RetainedCloneProgress;
-use semio_framework_os_kernel::ArtifactStore;
-use semio_framework_os_kernel::ConfigStore;
+use semio_os_kernel::ArtifactStore;
+use semio_os_kernel::ConfigStore;
 use serde_json::Value;
-use semio_framework_os_kernel::store_schema::ArtifactCommand;
+use semio_os_kernel::store_schema::ArtifactCommand;
 use semio_plugin_ownership::store_lifecycle::bounded_config_store_owners;
 use semio_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_plugin_decl_emission::{ActionMeta, AsyncTaskRun, AsyncTaskSource, Emit, HostEvent, ToolCommandCatalog};
@@ -27,7 +27,7 @@ use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
 use semio_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
 use semio_plugin_window_kits::{LabelAxes, WindowKit};
 use semio_plugin_mounted_owner::MountedOwnerPolicyV1;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_plugin_program::PluginProgram;
 use semio_framework_job::StepContext;
 use semio_ui_declaration::ui::SurfaceKind;
@@ -40,7 +40,7 @@ use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_builder as builder;
 use semio_plugin_window_transient::built_text_to_component_tree;
-use semio_framework_os_kernel::io;
+use semio_os_kernel::io;
 use semio_plugin_ownership::transient_publication::transient_store_disposer;
 use semio_framework::*;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
@@ -235,13 +235,13 @@ pub fn seed_op(op: &Value) -> TestMutation {
 
 /// 🌱️ A registered toy instance holding the fixture's seed, one edit per op, authored by the fixture actor.
 #[doc(hidden)]
-pub async fn seeded_app(fixture: &Value, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
+pub async fn seeded_app(fixture: &Value, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
     seeded_app_as(fixture, text(&fixture["actor"]), mounted_policy, identity).await
 }
 
 /// 🪪️ Opens the toy under its acting actor while preserving each neutral seed edit's author.
 #[doc(hidden)]
-pub async fn seeded_app_as(fixture: &Value, actor: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
+pub async fn seeded_app_as(fixture: &Value, actor: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ToyApp {
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), mounted_policy, identity).await;
     assert_eq!(app.stores.store.local_actor_id(), &protocol::ActorId(actor.into()));
     for op in fixture["seed"].as_array().expect("seed") {
@@ -263,7 +263,7 @@ pub fn seeded_mutation(app: &ToyApp, index: usize) -> String {
 }
 
 #[doc(hidden)]
-pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> InvocationResult {
+pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> InvocationResult {
     app.handle_action(action, Some(&DslValue::Object(args)), &meta(fixture), identity).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"))
 }
 
@@ -273,7 +273,7 @@ pub fn rejected(result: &InvocationResult) -> Option<&str> {
 }
 
 #[doc(hidden)]
-pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
+pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) {
     assert_eq!(app.mounted_policy,mounted_policy);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while std::time::Instant::now() < deadline {
@@ -310,7 +310,7 @@ pub fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
 
 /// ⏯️ Runs one fixture step through the real verbs (a `replay` pumps the per-turn Report replay to completion).
 #[doc(hidden)]
-pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Option<InvocationResult> {
+pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Option<InvocationResult> {
     let (name, value) = step.as_object().and_then(|step| step.iter().next()).expect("one-key step");
     Some(match name.as_str() {
         "begin" => {
@@ -359,7 +359,7 @@ pub fn close(app: &mut ToyApp,cx:&mut semio_framework_job::StepContext<'_>) {
 
 /// 🏁️ Runs fixture scenario `id`, which ends in a commit, on `app`.
 #[doc(hidden)]
-pub async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     let scenario = fixture["scenarios"].as_array().expect("scenarios").iter().find(|scenario| text(&scenario["id"]) == id).unwrap_or_else(|| panic!("scenario {id}"));
@@ -380,7 +380,7 @@ pub fn head(app: &ToyApp) -> (i32, String) {
 }
 /// 🧱️ One long edit applied in batches that each fit the Store's fixed displaced-owner retirement authority, drained between batches.
 #[doc(hidden)]
-pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     const BATCH: i32 = 128;
     let mut start = 0;
     while start < count {

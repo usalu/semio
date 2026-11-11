@@ -1,6 +1,6 @@
 #!/usr/bin/env repo
 /** 📦️ ifc TypeScript artifact package router. */
-import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
+import { runArtifactTypeScriptPackageMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 await runArtifactTypeScriptPackageMain(import.meta.dir, "@semio-tech/stdio-ifc", {suites:[
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/⚖️boundary/🧪️tests/🟦️.test.ts",
   "📐️geometry/🧵️prepare/🕸️mesh/🧪️tests/🟦️.test.ts",

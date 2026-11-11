@@ -4,8 +4,6 @@
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as vcs;
 
-#[global_allocator]
-static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 pub mod context {
     use semio_plugin::artifact_app_laws::{new_app_with_registry, OriginalFixtureScope};

@@ -12,7 +12,7 @@ use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents};
 use semio_framework_value::RetirementDemand;
 use semio_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolView};
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;

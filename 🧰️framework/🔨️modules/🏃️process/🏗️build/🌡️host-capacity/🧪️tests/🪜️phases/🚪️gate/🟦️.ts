@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../🧰️tools/🏃️run/🟦️.ts";
 import {afterAll,expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,readFileSync,readdirSync,rmSync} from "node:fs";
@@ -24,7 +25,7 @@ test("Phases marked by the process itself and by a child process cut the run int
  await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:5000}),learn:run=>{runs.push(run);},observe:async()=>level,resize:(phase,context)=>{calls.push(`${phase}:${context.reservedMegabytes}`);return phase==="rebuild"?{reservedMegabytes:7000,rampMilliseconds:90000}:phase==="execution"?{reservedMegabytes:1600,rampMilliseconds:60000}:undefined;}}),async handle=>{
   const environment={...process.env,...handle.environment,SEMIO_HOST_CAPACITY_DIRECTORY:directory};
   await sleep(120);expect(markHostCapacityPhaseV1(environment,"plan")).toBe(true);await sleep(60);level=900;await sleep(120);
-  const child=spawnSync("bun",["-e",`import {markHostCapacityPhaseV1} from ${JSON.stringify(entry)};process.exit(markHostCapacityPhaseV1(process.env,"rebuild")?0:3);`],{env:environment,encoding:"utf8"});
+  const child=spawnSync(registeredToolExecutableV1("bun"),["-e",`import {markHostCapacityPhaseV1} from ${JSON.stringify(entry)};process.exit(markHostCapacityPhaseV1(process.env,"rebuild")?0:3);`],{env:environment,encoding:"utf8"});
   expect(child.status,child.stderr).toBe(0);await sleep(60);level=6000;await sleep(200);
   seen.rebuild=grantRow(directory,handle.id);
   expect(markHostCapacityPhaseV1(environment,"plan")).toBe(true);await sleep(60);level=800;await sleep(120);

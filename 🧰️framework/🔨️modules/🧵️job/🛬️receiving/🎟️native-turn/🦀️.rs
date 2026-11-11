@@ -4,7 +4,7 @@ use semio_framework_value_control_contract::{RetainedOwnerGate,OriginalConstruct
 use std::mem::{size_of,ManuallyDrop};
 #[path="🌱️birth/🦀️.rs"]
 mod birth;
-pub use birth::{OriginalJobReturnBirth,OriginalJobReturnBirthTurn,original_return_birth_quote,original_return_refresh_quote};
+pub use birth::{OriginalJobReturnBirth,OriginalJobReturnBirthTurn,original_return_birth_quote,original_return_refresh_quote,original_return_refresh_turn_quote,original_return_table_birth_quote,original_decoder_prerequisite_quote,OriginalReturnTurnQuote};
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 
 /// 🫴️ Lends the same actual Job context to Work and physical authorities for one native turn.

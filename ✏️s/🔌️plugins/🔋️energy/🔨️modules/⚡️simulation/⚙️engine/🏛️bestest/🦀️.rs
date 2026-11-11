@@ -657,6 +657,3 @@ fn extremum(values: &[f64], minimum: bool) -> (f64, u32) {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[global_allocator]
-static BESTEST_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

@@ -7,7 +7,7 @@ use crate::sdk_fault::plugin_sdk_fault;
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure;
 pub use original_failure::{PluginLifecycleFailure,PluginLifecyclePrimary};
-pub use original_failure::{original_lifecycle_net_after,original_lifecycle_grant,original_lifecycle_step,original_lifecycle_effect_step,plugin_settle_poll,plugin_grant_step,plugin_unit_step,plugin_effect_close,plugin_effect_turn,plugin_failure_error,plugin_settle_value,plugin_pay_unit,original_lifecycle_delta,original_lifecycle_unposted};
+pub use original_failure::{original_lifecycle_net_after,original_lifecycle_grant,original_lifecycle_step,original_lifecycle_effect_step,plugin_settle_poll,plugin_grant_step,plugin_unit_step,plugin_effect_close,plugin_controlled_effect_close,plugin_poll_outcome,plugin_effect_turn,plugin_failure_error,plugin_settle_value,plugin_pay_unit,original_lifecycle_delta,original_lifecycle_unposted};
 
 
 

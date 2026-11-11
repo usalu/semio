@@ -1,8 +1,9 @@
 //! 🫴️ Original artifact document source custody through strict bounded base64 receiving.
 use super::ArtifactDocumentPayload;
 use base64_codec::{Base64Control, Base64ControlError, Base64DecodeCursor, Base64Input};
+use semio_framework_job::admit_original_construction_settled;
 use semio_framework::action_bus::{admit_original_tool_construction_settled, OriginalToolSourceBinding, ToolJobAdmissionDemand};
-use semio_framework_job::{close_original_retained_step, InteractiveJobCloseStep, OriginalTurnFailure, StepContext};
+use semio_framework_job::{close_original_effect_step, close_original_retained_step, InteractiveJobCloseStep, OriginalConstructionAdmission, OriginalTurnFailure, StepContext};
 use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, ManuallyDrop};
 
@@ -16,6 +17,7 @@ pub struct OriginalArtifactDocumentReceiving {
     decoded: ManuallyDrop<[Option<Vec<u8>>; 2]>,
     closing_text: ManuallyDrop<[Option<String>; 2]>,
     close_owner: ManuallyDrop<Option<ControlledRetirement<DocumentSourceOwner>>>,
+    construction: OriginalConstructionAdmission,
     phase: usize,
     maximum_decoded_bytes: usize,
     fault: Option<Base64ControlError>,
@@ -23,8 +25,10 @@ pub struct OriginalArtifactDocumentReceiving {
 }
 
 impl OriginalArtifactDocumentReceiving {
-    fn refusal_value(&self) -> ValueError {
-        let kind = match self.fault() { Some(Base64ControlError::Cancelled) => ValueRefusalKind::Canceled, Some(Base64ControlError::OutputLimit) => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvalidValue };
+    fn refusal_value(&self) -> ValueError { Self::refusal_of(self.fault()) }
+
+    fn refusal_of(fault: Option<&Base64ControlError>) -> ValueError {
+        let kind = match fault { Some(Base64ControlError::Cancelled) => ValueRefusalKind::Canceled, Some(Base64ControlError::OutputLimit) => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvalidValue };
         ValueError::literal(kind, "artifact document retains its original base64 refusal")
     }
 
@@ -35,17 +39,19 @@ impl OriginalArtifactDocumentReceiving {
     }
 
     /// 🎟️ Transfers both original text owners only inside the caller's admitted construction scope.
-    pub fn admit_original(source: &mut Option<ArtifactDocumentPayload>, output: &mut Option<Self>, maximum_decoded_bytes: usize, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+    pub fn admit_original(admission: &mut OriginalConstructionAdmission, source: &mut Option<ArtifactDocumentPayload>, output: &mut Option<Self>, maximum_decoded_bytes: usize, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
         if cx.original_clock_binding().is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "artifact document receiving requires its original clock").into()); }
         if source.is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "artifact document original payload is absent").into()); }
         let demand = RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() };
-        admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
+        let settled = admit_original_tool_construction_settled(cx, admission, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
             scope.admit_owner(demand)?;
             let ArtifactDocumentPayload { pack, spr } = source.take().expect("borrowed original document preflight");
-            let candidate = Self { source: scope.identity().source_binding(), cursors: ManuallyDrop::new([Some(Base64DecodeCursor::new(Base64Input::OwnedText(pack))), Some(Base64DecodeCursor::new(Base64Input::OwnedText(spr)))]), decoded: ManuallyDrop::new([None, None]), closing_text: ManuallyDrop::new([None, None]), close_owner: ManuallyDrop::new(None), phase: 0, maximum_decoded_bytes, fault: None, closing: false };
+            let candidate = Self { source: scope.identity().source_binding(), cursors: ManuallyDrop::new([Some(Base64DecodeCursor::new(Base64Input::OwnedText(pack))), Some(Base64DecodeCursor::new(Base64Input::OwnedText(spr)))]), decoded: ManuallyDrop::new([None, None]), closing_text: ManuallyDrop::new([None, None]), close_owner: ManuallyDrop::new(None), construction: Default::default(), phase: 0, maximum_decoded_bytes, fault: None, closing: false };
             Ok((candidate, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
-        })
+        })?;
+        if settled && !admission.terminal_is_empty() { if let Some(owner) = output.as_mut() { std::mem::swap(&mut owner.construction, admission); } }
+        Ok(settled)
     }
 
     /// 📐️ Quotes a single existing codec transition without decoding, cloning or allocating.
@@ -65,28 +71,29 @@ impl OriginalArtifactDocumentReceiving {
         if self.phase >= 2 { return Ok(self.phase == 2); }
         let total = self.cursors.iter().flatten().try_fold(0usize, |sum, cursor| sum.checked_add(cursor.expected_output_bytes())).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "artifact document decoded extent overflow"))?;
         if total > self.maximum_decoded_bytes { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "artifact document decoded pair exceeds its original contract").into()); }
-        let maximum_work=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX);let demand = self.next_demands(maximum_work)?;
+        let settle_fuel=semio_framework_job::original_construction_settled_quote::<()>(semio_framework_job::OriginalConstructionDemand{items:0,copy_bytes:0,capacity_bytes:0,release_bytes:0,depth:0},0)?.1;let maximum_work=usize::try_from(cx.fuel_remaining().saturating_sub(settle_fuel)).unwrap_or(usize::MAX);let demand = self.next_demands(maximum_work)?;
         if demand.depth==0{return Ok(false)}
         let selected_work=self.cursors[self.phase].as_ref().expect("original document cursor remains resident").next_work_demand(maximum_work);
         let cancel = cx.borrowed_original_cancel_token()?;
         let now = cx.clock_source();
         let deadline = cx.deadline_us();
-        if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),RetirementDemand{copy_bytes:demand.copy_bytes+size_of::<Option<Vec<u8>>>(),..demand}){return Ok(false)}
-        semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx, |effect| {
+        let mut output = None;
+        let settled = admit_original_construction_settled(cx, &mut self.construction, &mut output, semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, selected_work as u64, |_, allocated| {
             let cursor = self.cursors[self.phase].as_mut().expect("original document cursor remains resident");
             let mut observe = |_| !cancel.is_cancelled_now() && now().is_some_and(|instant| instant < deadline);
             let mut control = Base64Control { maximum_output_bytes: self.maximum_decoded_bytes, progress: &mut observe };
             let result = cursor.step(selected_work, &mut control);let actual=cursor.last_turn_receipt();
             let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: actual.copied_bytes, retained_capacity_bytes: actual.allocated_capacity_bytes, released_bytes: 0 };
+            if progress.retained_capacity_bytes != 0 && allocated.is_none() { *allocated = Some(progress.retained_capacity_bytes); }
             match result {
                 Ok(_) if cursor.is_complete() => { self.decoded[self.phase] = cursor.take_output(); self.phase += 1;progress.copied_bytes+=size_of::<Option<Vec<u8>>>(); }
                 Ok(_) => {}
                 Err(error) => self.fault = Some(error),
             }
-            let work=actual.work_units as u64;
-            if work!=0&&!effect.performed(work)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original document decode exceeded its work grant"))}
-            if self.fault.is_some(){Err(self.refusal_value().with_retained_progress(progress))}else{Ok(RetainedCloneStep::Progress(progress))}
+            let result=if self.fault.is_some(){Err(Self::refusal_of(self.fault.as_ref()).with_retained_progress(progress))}else{Ok(((),progress))};
+            RetainedWorkOutcome{result,work:u128::from(actual.work_units as u64)}
         })?;
+        if !settled { return Ok(false); }
         Ok(self.phase == 2)
     }
 
@@ -98,7 +105,7 @@ impl OriginalArtifactDocumentReceiving {
         self.validate_source(cx)?;
         if self.closing || self.phase != 2 || self.fault.is_some() { return Ok(false); }
         let demand = RetirementDemand { copy_bytes: size_of::<(Vec<u8>, Vec<u8>)>(), depth: 1, ..Default::default() };
-        admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
+        admit_original_tool_construction_settled(cx, &mut self.construction, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: 0, release_bytes: 0, depth: 1 }, |scope| {
             scope.admit_owner(demand)?;
             let pair = (self.decoded[0].take().expect("complete Pack source"), self.decoded[1].take().expect("complete SPR source"));
             self.phase = 3;
@@ -118,8 +125,9 @@ impl OriginalArtifactDocumentReceiving {
         self.validate_source(cx)?;
         self.closing = true;
         if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
+        if self.custody_is_empty() { return self.construction.retire_step(cx); }
         if let Some(owner) = self.close_owner.as_mut() {
-            let step = semio_framework_job::close_original_effect_step(cx, owner.next_demand(4096)?, |effect| owner.step(4096, effect))?;
+            let step = close_original_effect_step(cx, owner.next_demand(4096)?, |effect| owner.step(4096, effect))?;
             if owner.terminal_is_empty() { *self.close_owner = None; }
             return Ok(step);
         }
@@ -134,12 +142,14 @@ impl OriginalArtifactDocumentReceiving {
             } else if let Some(index) = self.decoded.iter().position(Option::is_some) {
                 *self.close_owner = Some(ControlledRetirement::retain(DocumentSourceOwner::Bytes(self.decoded[index].take().expect("original decoded bytes"))));
             }
-            RetainedWorkOutcome::<_,ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+            RetainedWorkOutcome::<_, ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
         })
     }
 
     /// 🏁️ Both source texts, both decoded owners and every close scaffold must be gone.
-    pub fn terminal_is_empty(&self) -> bool { self.closing && self.cursors.iter().all(Option::is_none) && self.decoded.iter().all(Option::is_none) && self.closing_text.iter().all(Option::is_none) && self.close_owner.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.custody_is_empty() && self.construction.terminal_is_empty() }
+
+    fn custody_is_empty(&self) -> bool { self.closing && self.cursors.iter().all(Option::is_none) && self.decoded.iter().all(Option::is_none) && self.closing_text.iter().all(Option::is_none) && self.close_owner.is_none() }
 }
 
 impl Drop for OriginalArtifactDocumentReceiving {

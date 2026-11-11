@@ -27,13 +27,13 @@ original-wire-testing = ["dep:semio-framework-trace", "semio-framework-job/testk
 semio-framework-trace = { workspace = true, optional = true }
 semio-framework-manifest-actions = { path = "../../../🛂️manifest/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-manifest-app-surface = { path = "../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../../🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
+semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-manifest-arg-schema = { path = "../../../🛂️manifest/🧮️arg-schema/📦️packages/🦀️rust" }

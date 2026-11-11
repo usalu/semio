@@ -49,12 +49,12 @@ semio-renderer-wgpu-ui-engine = { path = "../../../🖱️ui-engine/📦️packa
 semio-renderer-wgpu-ui-engine-dump = { path = "../../../🔎️ui-engine-dump/📦️packages/🦀️rust" }
 base64 = "0.22.1"
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-io-base64 = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-os-config = { workspace = true }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-time-travel = { workspace = true }
 semio-framework-tool-run = { workspace = true }
@@ -73,19 +73,19 @@ semio-ui-declaration = { path = "../../../../../../../../../../🔨️modules/�
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-os-services = { workspace = true }
-semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 tokio = { version = "1", default-features = false, features = ["sync", "rt", "net", "time"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3.83"
 semio-framework-async = { workspace = true }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"] }
 tokio = { version = "1", default-features = false, features = ["sync"] }
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasElement", "OffscreenCanvas", "CanvasRenderingContext2d", "Element", "Event", "MouseEvent", "WheelEvent", "KeyboardEvent", "InputEvent", "ResizeObserver", "ResizeObserverEntry", "DomRect", "Performance", "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response", "Headers", "Blob", "Url", "HtmlAnchorElement", "console", "MediaQueryList"] }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }

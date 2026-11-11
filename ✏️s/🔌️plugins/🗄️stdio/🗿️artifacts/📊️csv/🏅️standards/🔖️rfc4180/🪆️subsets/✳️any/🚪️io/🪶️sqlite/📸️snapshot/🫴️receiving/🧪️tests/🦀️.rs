@@ -23,8 +23,6 @@ use store::os_store::serialization::ArtifactSqliteSnapshotHost as _;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicUsize,Ordering as AtomicOrdering};
 use semio_framework_trace_memory_testing as heap;
-#[global_allocator]
-static CSV_RECEIVING_HEAP:heap::RequestedAllocator=heap::RequestedAllocator;
 fn policy()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}

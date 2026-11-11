@@ -10,7 +10,9 @@ use semio_plugin_decl_views::child_view::ChildContentView;
 use semio_plugin_window_config::WindowConfigSnapshot;
 use semio_plugin_window_transient::window_transient::WindowTransientSnapshot;
 use semio_os_kernel as store;
-use semio_framework_value::{DslValue,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,RetainedCloneStep,RetirementPollExit,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetirementCursor,RetirementStep,RetireOwned,controlled::ControlledRetirement,arc_custody::{ArcLease,original::SharedOriginalStorage}}};
+use semio_framework_value::{DslValue,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetirementCursor,RetirementStep,RetireOwned,controlled::ControlledRetirement},OriginalRetirementPoll,RetainedWorkPoll,RetainedAllocationEffect};
+use semio_plugin_original_job_ownership::OriginalRequestLease;
+use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use std::{mem::ManuallyDrop,sync::Arc};
 
 pub use semio_plugin_decl_emission::ViewLease as ContextViewLease;
@@ -27,7 +29,7 @@ pub struct ContextRetirementParts<A:ArtifactApp>{pub metadata:ContextOwnedFields
 /// 🔗️ The aliases a captured context borrows from roots its issuers still own: each retires as a lease, and only a last owner pays the deep release.
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct ContextResidualLeases{children:ArcLease<ChildContentView>,entities:Option<SharedOriginalStorage<std::collections::BTreeSet<u64>>>,payload:Option<SharedOriginalStorage<Vec<u8>>>}
+struct ContextResidualLeases{children:OriginalRequestLease<ChildContentView>,entities:Option<SharedOriginalStorage<std::collections::BTreeSet<u64>>>,payload:Option<SharedOriginalStorage<Vec<u8>>>}
 
 pub struct Cursor<A:ArtifactApp>{metadata:ControlledRetirement<ContextOwnedFields<A::Draft,A::Transient,A::Mutation>>,residual:ManuallyDrop<Option<ContextOriginalResidual<A>>>,leases:Option<ControlledRetirement<ContextResidualLeases>>,peers:Option<store::os_store::presence::PresencePeersRetirement<A::Presence>>}
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original context lease depth overflow"))?;Ok(demand)}
@@ -42,40 +44,44 @@ impl<A:ArtifactApp> Cursor<A>{
 }
 impl<A:ArtifactApp> RetireOwned for ArtifactOwnedToolJobContext<A>{
  type RetirementCursor=Cursor<A>;
- fn retirement_seed(self)->Self::RetirementCursor{let parts=self.into_retirement_parts();Cursor{metadata:ControlledRetirement::new(parts.metadata).unwrap_or_else(|_|panic!("captured owned context fields refused genuine typed custody")),residual:ManuallyDrop::new(Some(parts.residual)),leases:None,peers:None}}
+ fn retirement_seed(self)->Self::RetirementCursor{let parts=self.into_retirement_parts();Cursor{metadata:ControlledRetirement::retain(parts.metadata),residual:ManuallyDrop::new(Some(parts.residual)),leases:None,peers:None}}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<A>>())}
  fn controlled_retirement_supported()->bool{true}
 }
+fn settle(poll:OriginalRetirementPoll)->RetirementStep{
+ match poll{RetainedWorkPoll::Pending{work}=>RetirementStep::Pending(work),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
+}
 impl<A:ArtifactApp> Cursor<A>{
- fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
-  let grant=effect.grant();let empty=RetainedCloneProgress::default();
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}
-  if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}
-  if !self.metadata.terminal_is_empty(){return RetirementPollExit::resume(self.metadata.step(body,&mut effect.nested(grant))).map(|step|RetainedCloneStep::Progress(step.progress()))}
-  if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original context leases require admitted depth").into())}
-  if let Some(residual)=self.residual.take(){
-   let ContextOriginalResidual{children,peers,peer_factory,tool_run}=residual;
+ fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{
+  let grant=effect.grant();
+  if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+  if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
+  if !self.metadata.terminal_is_empty(){return settle(self.metadata.step(body,effect));}
+  if grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
+  if self.residual.is_some(){
+   if let Err(error)=semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect){return RetirementStep::Failure(error.into(),effect.performed_work())}
+   let Some(ContextOriginalResidual{children,peers,peer_factory,tool_run})=self.residual.take()else{unreachable!()};
    let(entities,payload)=match tool_run{Some(ContextToolRunSources{entities,payload})=>(Some(entities),payload),None=>(None,None)};
    self.peers=peers.map(|root|store::os_store::presence::PresencePeersRetirement::of_alias(root,peer_factory));
-   return match ControlledRetirement::new(ContextResidualLeases{children:ArcLease::new(children),entities,payload}){Ok(owner)=>{self.leases=Some(owner);RetirementPollExit::pay(effect,1)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}Err((error,_))=>Err(error.into())};
+   self.leases=Some(ControlledRetirement::retain(ContextResidualLeases{children:OriginalRequestLease(children),entities,payload}));
+   return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},effect.performed_work());
   }
   if let Some(leases)=self.leases.as_mut(){
-   let step=RetirementPollExit::resume(leases.step(body,&mut effect.nested(grant)));
+   let step=settle(leases.step(body,effect));
    if leases.terminal_is_empty(){self.leases=None;}
-   return step.map(|step|RetainedCloneStep::Progress(step.progress()));
+   return step;
   }
-  let Some(peers)=self.peers.as_mut()else{return Ok(RetainedCloneStep::Complete(empty))};
-  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-  let step=peers.close_step(&mut effect.nested(child));
+  let Some(peers)=self.peers.as_mut()else{return RetirementStep::Complete(0)};
+  let step=settle(semio_framework_value::ErasedSnapshotRetirement::close_step(peers,body,effect));
   if peers.terminal_is_empty(){self.peers=None;}
-  step.map(|step|RetainedCloneStep::Progress(step.progress()))
+  step
  }
- pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{let result=self.step(body,effect);crate::completion_retirement::cursor_turn(effect,result)}
 }
 impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
- semio_framework_value::native_retirement_reply!();
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
- fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if !self.metadata.terminal_is_empty(){return self.metadata.next_computational_work(body)}match self.leases.as_ref(){Some(leases)if self.residual.is_none()&&!leases.terminal_is_empty()=>leases.next_computational_work(body),_=>Ok(1)}}
+
+ semio_framework_value::native_retirement_reply!();
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{if !self.metadata.terminal_is_empty(){return self.metadata.next_computational_work(body)}if let Some(leases)=self.leases.as_ref(){return leases.next_computational_work(body)}Ok(u64::from(!self.terminal_is_empty()))}
  fn terminal_is_empty(&self)->bool{self.metadata.terminal_is_empty()&&self.residual.is_none()&&self.leases.is_none()&&self.peers.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demands(body).ok().map(|demand|demand.capacity_bytes)}
@@ -90,8 +96,9 @@ mod tests{
  use super::*;
  fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16}}
  fn drain<T:RetireOwned>(value:T){
+  let mut bank=semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::Wallet::new(RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10},1<<30));
   let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("controlled custody"));
-  for _ in 0..64{if owner.terminal_is_empty(){return}owner.step(grant()).expect("retirement step");}
+  for _ in 0..64{if owner.terminal_is_empty(){return}let work=owner.next_computational_work(grant().maximum_copy_bytes).expect("retirement work");let(poll,_)=bank.run(grant(),work,|effect|owner.step(grant().maximum_copy_bytes,effect));assert!(matches!(poll,semio_framework_value::RetainedWorkPoll::Complete(_)),"retirement step settles");}
   assert!(owner.terminal_is_empty(),"retirement reaches its terminal within the bound");
  }
  /// 🧩️ LAW: closing a captured context's view lease succeeds while the host window still holds the view, releases exactly its own reference and never waits for sole ownership.
@@ -100,6 +107,6 @@ mod tests{
   let window=Arc::new(ViewModel::new(semio_framework::Locale::En,semio_framework::Terminology::Native));
   drain(ContextViewLease::new(Arc::clone(&window)));
   assert_eq!(Arc::strong_count(&window),1,"the lease released exactly its own reference");
-  drain(window);
+  drain(ContextViewLease::new(window));
  }
 }

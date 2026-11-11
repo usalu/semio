@@ -5,7 +5,7 @@ fn every_catalogue_entry_evaluates_from_the_demo_document() {
     let rows = catalogue_demo_cases();
     assert_eq!(rows.len(), En1990Cases::entries().len());
     for row in &rows {
-        let results = evaluate_design_case(&design_case::DesignCase::from(row), AnnexChoice::De);
+        let results = evaluate_design_case(&DesignCase::from(row), AnnexChoice::De);
         assert!(!results.is_empty(), "entry {} yields no result", row.entry_id);
         let prefix = format!("cases[id={}]", row.id);
         assert!(results.iter().all(|result| result.subject.path.starts_with(&prefix)), "entry {} is not addressed to its case row", row.entry_id);
@@ -25,8 +25,8 @@ fn every_demo_case_evaluates_its_entry_instead_of_reporting_missing_or_invalid_i
     let silent: Vec<String> = catalogue_demo_cases()
         .iter()
         .filter(|row| {
-            let results = evaluate_design_case(&design_case::DesignCase::from(*row), AnnexChoice::De);
-            results.iter().all(|result| result.status == semio_s_plugin_norm_compliance::CheckStatus::NotApplicable) || results.iter().any(|result| result.id.contains(".input."))
+            let results = evaluate_design_case(&DesignCase::from(*row), AnnexChoice::De);
+            results.iter().all(|result| result.status == CheckStatus::NotApplicable) || results.iter().any(|result| result.id.contains(".input."))
         })
         .map(|row| row.entry_id.clone())
         .collect();

@@ -132,7 +132,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         registry.register(AnimatePresentationRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !ANIMATE_PRESENTATION_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
@@ -149,8 +149,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
 
     /// 🎞️ `import-media` is the only reserved route presentation owns: every inbound `frames:in`
     /// delivery is routed through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`).
-    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if body.is_some(){return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,cx)}
+    fn build_reserved_tool_job(source:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if body.is_some(){return semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,construction,cx)}
         let request=source.as_ref().ok_or_else(||Fault::from("presentation import requires its original request"))?;
         if request.tool_id.as_str() != PRESENTATION_IMPORT_TOOL_ID {
             return Ok(false);
@@ -161,7 +161,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         let Some(ArtifactReservedToolInput::Media { .. }) = request.input.as_ref() else {
             return Err(Fault::from("presentation import-media requires media input").into());
         };
-        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,PresentationImportJob>(source,body,construction,cx)
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {

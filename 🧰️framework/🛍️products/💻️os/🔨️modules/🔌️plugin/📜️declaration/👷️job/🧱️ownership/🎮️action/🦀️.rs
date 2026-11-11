@@ -1,12 +1,12 @@
 //! 🎯️ A declared action producer owns original command construction and wire encoding under the initiating continuation.
 use semio_framework::{Fault,action_bus::RetainedToolWireInput};
-use semio_framework_job::{StepContext,OriginalTurnFailure};
+use semio_framework_job::{StepContext,OriginalConstructionAdmission,OriginalTurnFailure};
 use semio_framework_value::{DslValue,RetirementDemand,ValueError,retirement::RetireOwned};
 
 /// 🏭️ A genuine application declaration supplies the concrete producer before any argument moves.
 pub trait ArtifactOriginalCommandProducerFactory<C:RetireOwned+Send+Sync+'static>:Send+Sync{
  fn birth_demands(&self)->Result<RetirementDemand,ValueError>;
- fn admit(&self,cx:&mut StepContext<'_>,output:&mut Option<Box<dyn ArtifactOriginalCommandProducer<C>>>)->Result<bool,OriginalTurnFailure>;
+ fn admit(&self,cx:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission,output:&mut Option<Box<dyn ArtifactOriginalCommandProducer<C>>>)->Result<bool,OriginalTurnFailure>;
 }
 
 /// 🧬️ The producer retains every partial input, typed owner and encoded page until exact handoff or original closure.

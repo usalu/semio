@@ -6,7 +6,7 @@
   ],
   "nativeEntries": [
     "🧰️framework/📦️packages/🟦️typescript/⏳️async/🟦️.ts",
-    "🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🧪️vitest/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧪️vitest/🟦️.ts",
     "🧰️framework/📦️packages/🟦️typescript/🟦️.ts",
     "🧰️framework/📦️packages/🟦️typescript/🧪️test/📖️source-text/🟦️.ts",
     "🧰️framework/📦️packages/🟦️typescript/🪪️identity/📁️installation/🟦️.ts",

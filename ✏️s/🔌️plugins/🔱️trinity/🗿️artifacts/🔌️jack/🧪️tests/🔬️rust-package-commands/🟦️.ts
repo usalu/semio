@@ -1,12 +1,12 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
-import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/framework/process/cargo-test";
-import { runCargo } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/process/cargo-test";
+import { runCargo } from "@semio-tech/process/execution";
 import { join, resolve } from "node:path";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
-import { readCargoTestPolicyV1 } from "@semio-tech/framework/process/cargo-test";
-import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
+import { runOwnedCommand } from "@semio-tech/process/execution";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { readCargoTestPolicyV1 } from "@semio-tech/process/cargo-test";
+import { scriptInvocationBudget } from "@semio-tech/process/routing";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
@@ -111,7 +111,7 @@ if (segments[0] === "jack-document-contract") {
     return;
   }
 if (segments[0] === "jack-query-ownership") {
-    const { runCargo } = await import("@semio-tech/framework/process/execution");
+    const { runCargo } = await import("@semio-tech/process/execution");
     const { testResumableQueryOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts");
     testResumableQueryOracle();
     if (segments[1] === "oracle") return;

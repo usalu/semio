@@ -9,15 +9,15 @@ use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef};
 use store::os_store::composition_coordinator::CompositionCoordinator;
 use crate::dispatch_bundle::DispatchCtx;
 use semio_plugin_instance_extension::InstanceExtension;
-use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
+use semio_plugin_instance_docs::docs_components::MediaTransfers;
 use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use semio_framework::{AppEvent, AppRole, ArtifactHandle, ArtifactDiff, ArtifactVersion, ActorId, DslValue, Effect, HybridLogicalTimestamp, InvocationId, InvocationResult, InverseMutation, KernelMutation, MutationId, SchemaId, UndoGroup, UndoPolicy};
 use semio_framework::kernel::{EditRef, UiDirtyScope};
 use semio_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
 use semio_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
 use semio_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
-use semio_framework_plugin_instance_docs::docs_instance_root::{artifact_handle_of, tool_transaction_shape_fault, viewer_read_only_fault};
+use semio_plugin_instance_docs::docs_instance_root::{artifact_handle_of, tool_transaction_shape_fault, viewer_read_only_fault};
 use semio_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_plugin_job::{EmitWire, TransactionProposalDraft};
 use semio_plugin_child::ChildContentRetirement;
@@ -32,8 +32,8 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),
     /// which no registry-less typed command can reach and no reserved route carries.
     #[cfg(test)]
-    pub async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        self.dispatch_emit(verb, emit, meta, identity, cx).await
+    pub async fn test_dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+        self.dispatch_emit(verb, emit, meta, identity).await
     }
 
     /// 🔀️ Ticket 26/09/16/INPUT-CAUSALITY-LEDGER §2 C — the reactor-side fold of a guest emit's
@@ -50,9 +50,9 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
     /// world overlay still lands), and one diagnostic per verb that could not be applied.
     /// A failed carrier applies no verb: its pick did not happen. The typed-operation ladder,
     /// which never enters here, has its own twin ([`Self::publish_mounted_typed_inline_interaction_unit`]).
-    pub async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
+    pub async fn dispatch_emit(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
         if !emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||!emit.child_preparations.is_empty()||emit.child_preparations.capacity()!=0{
-            return self.mount_original_emit_publication(verb, emit, meta, None, cx).await;
+            return Err(plugin_sdk_fault(format!("dispatch_emit: verb {verb:?} emitted retained children; they land only through the stepped `dispatch_original_emission` mount")));
         }
         let folded = take_inline_interaction_verbs(&mut emit.effects);
         let mut result = self.dispatch_emit_inner(verb, emit, meta, identity).await?;

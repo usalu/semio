@@ -9,6 +9,7 @@ import controls from "./🧫️fixtures/🎛️control.json";
 import words from "./🧫️fixtures/🔢️binary64.json";
 import widths from "./🧫️fixtures/🛂️invalid-u8.json";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { En1990Snapshot } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { EN1990_SQLITE_SCHEMA, en1990SnapshotToSqliteDatabase, en1990SnapshotFromSqliteDatabase, type En1990SqliteSnapshot } from "../🟦️.ts";
 import {binary64,type Binary64} from "@semio-tech/framework/value/ieee754";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework/io/sqlite-snapshot";
@@ -18,8 +19,8 @@ function setEveryWord(s:En1990SqliteSnapshot,value:Binary64):void{Object.assign(
 function nativeWord(value:number):bigint{const buffer=Buffer.alloc(8);buffer.writeDoubleBE(value);return buffer.readBigUInt64BE()}
 
 test("EN1990 neutral full input agrees with the independent schema oracle",()=>{
- const ajv=new Ajv({strict:false});expect(ajv.validate(schema,fixture)).toBe(true);expect(fixture).toEqual(snapshot.parseEn1990Snapshot(fixture));
- for(const field of widths.fields){for(const value of widths.invalidValues){const invalid={...fixture,[field]:value};expect(ajv.validate(schema,invalid)).toBe(false);expect(()=>snapshot.parseEn1990Snapshot(invalid)).toThrow()}for(const value of widths.validValues){const valid={...fixture,[field]:value};expect(ajv.validate(schema,valid)).toBe(true);expect(valid).toEqual(snapshot.parseEn1990Snapshot(valid))}}
+ const ajv=new Ajv({strict:false});expect(ajv.validate(schema,fixture)).toBe(true);expect(snapshot.parseEn1990Snapshot(fixture)).toEqual(fixture as En1990Snapshot);
+ for(const field of widths.fields){for(const value of widths.invalidValues){const invalid={...fixture,[field]:value};expect(ajv.validate(schema,invalid)).toBe(false);expect(()=>snapshot.parseEn1990Snapshot(invalid)).toThrow()}for(const value of widths.validValues){const valid={...fixture,[field]:value};expect(ajv.validate(schema,valid)).toBe(true);expect(snapshot.parseEn1990Snapshot(valid)).toEqual(valid as En1990Snapshot)}}
  expect(ownedFixture().altitudeM.bits).toBe(nativeWord(fixture.altitudeM));
 });
 test("EN1990 snapshot publicly exposes both owned relational directions",()=>{expect(Object.hasOwn(sqliteOwner,"en1990SnapshotToSqliteDatabase")).toBe(true);expect(Object.hasOwn(sqliteOwner,"en1990SnapshotFromSqliteDatabase")).toBe(true)});

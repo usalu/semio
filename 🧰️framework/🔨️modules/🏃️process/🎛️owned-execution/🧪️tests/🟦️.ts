@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -27,7 +28,7 @@ test("terminates a bounded owned descendant process", async () => {
   ].join(";");
   const { runOwnedCommand } = await import(owner);
   try {
-    await expect(runOwnedCommand(process.execPath, ["-e", source], root, "owned-descendant", 2_000, { stdout: "ignore" })).rejects.toThrow(/timeout 2000ms/);
+    await expect(runOwnedCommand(process.execPath, ["-e", source], root, "owned-descendant", 2_000, { stdout: "ignore" })).rejects.toThrow(/timeout process\.execution\.timed-out/);
     const descendant = Number(readFileSync(marker, "utf8"));
     const alive = (): boolean => {
       try {
@@ -69,7 +70,7 @@ test("owned command cancellation and UTF-8 reports match independent Node execut
     const expected = {lines:row.expectedLines,error:row.expectedError,created:false};
     expect(await run(api,process.execPath,row)).toEqual(expected);
     const runner = `const fs=require('node:fs');const root=process.argv[2];const row=JSON.parse(fs.readFileSync(0,'utf8'));const existsSync=fs.existsSync;const resolve=require('node:path').resolve;const fixture=${JSON.stringify({reportExecutionBudgetMs:fixture.reportExecutionBudgetMs})};const run=${run.toString()};import(require('node:url').pathToFileURL(process.argv[1]).href).then(api=>run(api,process.execPath,row)).then(value=>console.log('RESULT '+JSON.stringify(value)));`;
-    const independent = spawnSync("node",["-e",runner,module,root],{input:JSON.stringify(row),encoding:"utf8",timeout:fixture.reportExecutionBudgetMs+5_000});
+    const independent = spawnSync(registeredToolExecutableV1("node"),["-e",runner,module,root],{input:JSON.stringify(row),encoding:"utf8",timeout:fixture.reportExecutionBudgetMs+5_000});
     writeFileSync(resolve(root, row.mode + ".log"), independent.stdout + independent.stderr);
     expect(independent.status).toBe(0);
     const result = independent.stdout.match(/RESULT (\{[^\n]+\})/u);
@@ -128,7 +129,7 @@ test("owned timeout and stop drain descendant-created groups and inherited pipes
     return state.status === 0 && !state.stdout.trim().startsWith("Z");
   };
   const source = "const {spawn}=require('node:child_process');const child=spawn(process.execPath,['-e','setInterval(()=>{},10000)'],{detached:process.platform!=='win32',stdio:'inherit'});console.log('READY '+JSON.stringify({root:process.pid,descendant:child.pid}));setInterval(()=>{},10000)";
-  const unrelated = spawn("node", ["-e", "setInterval(()=>{},10000)"], { stdio: "ignore" });
+  const unrelated = spawn(registeredToolExecutableV1("node"), ["-e", "setInterval(()=>{},10000)"], { stdio: "ignore" });
   const unrelatedExited = new Promise<void>(accept => unrelated.once("exit", () => accept()));
   try {
     for (const row of corpus.cases) {
@@ -150,7 +151,7 @@ test("owned timeout and stop drain descendant-created groups and inherited pipes
           if (implementation === "owned") {
             work = runOwnedCommand("node", ["-e", source], root, "owned-groups", row.timeoutMs, { signal: controller.signal, onLine: ready }).catch(error => { failure = String(error); }).finally(() => { settled = true; });
           } else {
-            oracle = spawn("node", ["-e", source], { detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
+            oracle = spawn(registeredToolExecutableV1("node"), ["-e", source], { detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
             oracle.stdout!.on("data", bytes => String(bytes).trim().split("\n").forEach(ready));
             work = new Promise<void>(accept => oracle!.once("close", () => { settled = true; failure = row.expected.reason; accept(); }));
           }
@@ -182,7 +183,7 @@ test("original owned child close preserves exact status signal and drained outpu
   const oracle="const{spawn}=require('node:child_process');const row=JSON.parse(process.argv[1]);const child=spawn(process.execPath,['-e',process.argv[2],JSON.stringify(row)],{stdio:['ignore','pipe','pipe']});let stdout='',stderr='';child.stdout.on('data',bytes=>stdout+=bytes);child.stderr.on('data',bytes=>stderr+=bytes);child.once('close',(code,signal)=>console.log(JSON.stringify({code,signal,stdout,stderr})))";
   try {
     for(const row of rows){
-      const independent=spawnSync("node",["-e",oracle,JSON.stringify(row),child],{encoding:"utf8",timeout:10000});expect(independent.status).toBe(0);
+      const independent=spawnSync(registeredToolExecutableV1("node"),["-e",oracle,JSON.stringify(row),child],{encoding:"utf8",timeout:10000});expect(independent.status).toBe(0);
       const expected=JSON.parse(independent.stdout),lines:string[]=[];let failure:string|null=null;
       try{await runOwnedCommand("node",["-e",child,JSON.stringify(row)],root,"original-exit",10000,{onLine:line=>lines.push(line)});}catch(error){failure=String(error);}
       expect(lines).toContain(row.stdout);expect(lines).toContain(row.stderr);

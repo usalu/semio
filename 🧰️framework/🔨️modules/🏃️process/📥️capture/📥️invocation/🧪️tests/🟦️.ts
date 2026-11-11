@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
@@ -46,7 +47,7 @@ for (const row of corpus.cases) test(row.id, async () => {
       async yieldContinuation() { ledger.push("yield"); await setImmediate(); }
     }
   };
-  const oracle = Bun.spawn(["node", "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row)], { stdout: "pipe", stderr: "pipe" });
+  const oracle = Bun.spawn([registeredToolExecutableV1("node"), "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row)], { stdout: "pipe", stderr: "pipe" });
   try {
     const policy = { budgetMs: corpus.operationMilliseconds, maxOutputBytes: corpus.maximumOutputBytes };
     expect(new Ajv({ strict: true }).compile(policySchema)(policy)).toBe(true);

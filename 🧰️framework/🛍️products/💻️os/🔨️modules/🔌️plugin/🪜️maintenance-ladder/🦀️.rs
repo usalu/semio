@@ -2,11 +2,11 @@
 //! in which an empty stage never consumes the call. Every unit quotes its next demand on all axes and spends the caller's
 //! unchanged grant on exactly one owner; the same module drives the envelope-ingress, store-replacement and archive-load
 //! frontiers for both the live rotation and the close ladder.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as pack;
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep, plugin_retirement_fault, plugin_turn_admitted};
-use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, LocalInteraction, PeerRoster};
 use semio_plugin_document_media::{ActiveArtifactEnvelopeIngress, ActiveArtifactStoreReplacement, ActiveArtifactStoreReplacementState, ActiveDocumentArchiveLoadState, ArtifactStoreReplacementPublicationGuard, ArtifactStoreReplacementRefusal, CompositionPinsRetirement, publish_boxed_document_store_candidate_if_authoritative};
 use semio_plugin_decl_app::{ArtifactApp, DOCUMENT_LOAD_FAILED_CODE, document_load_fault};
 use semio_plugin_ownership::store_lifecycle::{ArtifactDisposal, ArtifactDocumentStoreDisposer, ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
@@ -16,9 +16,9 @@ use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_child::{ChildContentRetirement, ChildMemberRegistry, ChildMemberRetirement};
 use semio_plugin_decl_views::child_view::{ChildContentView, child_content_arc_bytes};
 use crate::ladders_components::{CloseCursors, MaintenanceCursors};
-use semio_framework_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
+use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
 use semio_plugin_decl_emission::Emit;
-use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;
@@ -30,17 +30,17 @@ use protocol::OpText;
 use semio_plugin_decl_views::PeerPresenceRoot;
 use semio_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication, PeerRosterPublicationStage, PresenceRosterOutcome};
 use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
+use semio_plugin_reactor_app::PluginApp;
+use semio_plugin_instance_render::render_bundle::{RenderCtx, RenderRef};
 use semio_plugin_operation::TOOL_CANCELLATION_SLOTS;
-use semio_framework_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
+use semio_plugin_time_travel_turns::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
 use semio_plugin_time_travel::TimeTravelLedger;
 use semio_plugin_tool_machine::ToolMachineRuntime;
-use semio_framework_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
+use semio_plugin_tool_run_turns::tool_run_bundle::{ToolRunCtx, ToolRunRef};
 use semio_plugin_tool_run::ToolRunLedger;
-use semio_framework_plugin_instance_typed_ops::typed_bundle::TypedCtx;
+use semio_plugin_instance_typed_ops::typed_bundle::TypedCtx;
 use semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
-use semio_framework_plugin_composition_emission::root::{advance_original_child_root_retirement, original_child_root_retirement_demands};
+use semio_plugin_composition_emission::root::{advance_original_child_root_retirement, original_child_root_retirement_demands};
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use crate::ladders_document_replacement::{retire_document_window_registry_demands, retire_document_window_registry_step};
 use semio_ui_contract::*;
@@ -48,7 +48,7 @@ use semio_plugin_time_travel as time_travel;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::{idle, item, item_demand, progressed, removed};
+use semio_plugin_instance_docs::docs_maintenance_ladder::{idle, item, item_demand, progressed, removed};
 use crate::ladders_plugin_app_impl::{MAINTENANCE_CHILD_MEMBER_STAGE, MAINTENANCE_CHILD_ROOT_STAGE, MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE, MAINTENANCE_DOCUMENT_DISPLACED_STAGE, MAINTENANCE_STAGES};
 
 #[doc(hidden)]
@@ -180,6 +180,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 drop(self.media.snapshot_retirements.remove(operation_id).ok_or_else(authority)?);
                 return Ok(removed(final_progress))
         }
+        if stage==8{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.ingest.advance_snapshot_read_returns_one(&mut *self.stores,&mut *self.interaction,effect).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
         if stage==MAINTENANCE_CHILD_ROOT_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.child_root_retirement_step(effect).map(RetainedCloneStep::Progress).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
         if stage==MAINTENANCE_CHILD_MEMBER_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.child_member_retirement_step(effect).map(RetainedCloneStep::Progress).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
         if stage==MAINTENANCE_DOCUMENT_DISPLACED_STAGE{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_poll(self.stores.store.maintenance_retirements_step(effect))).map(progressed)}
@@ -237,19 +238,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 }
             }
             7 => self.maintenance_peer_roster_step(cx, grant),
-            8 => {
-                for _ in 0..3 {
-                    let demand = self.ingest.snapshot_read_returns_demands(&*self.stores, &*self.interaction, grant.maximum_copy_bytes).map_err(value_fault)?;
-                    if !plugin_turn_admitted(demand, grant)? {
-                        break;
-                    }
-                    let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.ingest.advance_snapshot_read_returns_one(&mut *self.stores, &mut *self.interaction, effect).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from))?;
-                    if step.progress() != RetainedCloneProgress::default() {
-                        return Ok(progressed(step));
-                    }
-                }
-                Ok(idle())
-            }
+            8 => unreachable!("original snapshot returns handled before the fault-only ladder"),
             MAINTENANCE_DOCUMENT_DISPLACED_STAGE => unreachable!("original displaced retirement handled before the fault-only ladder"),
             10 => self.drive_envelope_ingress(grant, false),
             11 => unreachable!("original envelope decode handled before the fault-only ladder"),
@@ -599,6 +588,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             && self.tools.tool_operations.is_empty()
             && self.tools.original_emission_admission.is_none()
             && self.tools.original_emission_receipt.is_none()
+            && self.tools.original_emission_construction.as_ref().is_none_or(|admission| admission.terminal_is_empty())
             && self.tools.tool_cancellations.active_operation_count() == 0
             && self.tools.latest_wins_commands.is_empty()
             && self.tools.latest_wins_keys.map.as_ref().is_some_and(|map| map.is_empty())

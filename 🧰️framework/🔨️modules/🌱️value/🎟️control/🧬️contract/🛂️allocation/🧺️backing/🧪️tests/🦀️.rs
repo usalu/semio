@@ -1,9 +1,8 @@
 //! 🧪️ Exact native backing layouts preserve neutral widths, empty ownership and aligned vector capacity.
 use super::*;
 use std::mem::size_of;
-use semio_framework_trace_memory_testing::{observe_backing,refuse_one_allocation_on_this_thread,RequestedAllocator};
-#[global_allocator]
-static ALLOCATOR:RequestedAllocator=RequestedAllocator;
+use semio_framework_trace_memory_testing::{observe_backing,refuse_one_allocation_on_this_thread};
+use semio_framework_value_testing_allocator as _;
 #[repr(align(64))]
 #[derive(Default)]
 struct Wide{_byte:u8}

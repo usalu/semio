@@ -50,7 +50,7 @@ tokio = { workspace = true, features = ["full"] }
 futures = "0.3"
 semio-framework-async = { workspace = true }
 semio-framework-async-slots = { workspace = true }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 protocol = { path = "../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }

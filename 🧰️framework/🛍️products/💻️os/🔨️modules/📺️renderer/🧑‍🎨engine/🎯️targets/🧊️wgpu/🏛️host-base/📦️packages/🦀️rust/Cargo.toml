@@ -26,8 +26,8 @@ testkit = []
 
 [dependencies]
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-os-kernel" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"] }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
@@ -42,7 +42,7 @@ semio-ui-theme = { path = "../../../../../../../../../../🔨️modules/🖱️u
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-os-services-native-io = { workspace = true }
-semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3.83"

@@ -47,7 +47,7 @@ semio-framework-dispatch-macros = { workspace = true }
 semio-os-infinite = { workspace = true }
 semio-ui-contract = { workspace = true }
 semio-ui-scene = { workspace = true }
-semio-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-os" }
+semio-os = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

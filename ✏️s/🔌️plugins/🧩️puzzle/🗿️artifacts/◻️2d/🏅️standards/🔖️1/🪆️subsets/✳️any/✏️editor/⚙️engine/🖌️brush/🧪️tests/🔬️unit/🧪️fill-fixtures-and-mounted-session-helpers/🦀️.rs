@@ -40,8 +40,10 @@
 
     fn begin_fill_capture(original: &mut OriginalFixture, host: &BoardHost) -> crate::editor::puzzle2d::engine::BoardFillSnapshotCapture {
         let mut output = None;
+        let mut construction = semio_framework_job::OriginalConstructionAdmission::default();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if original.turn(FILL_TEST_GRANT, |cx| host.begin_board_fill_snapshot(&mut output, cx)).expect("original capture admission") {
+            if original.turn(FILL_TEST_GRANT, |cx| host.begin_board_fill_snapshot(&mut construction, &mut output, cx)).expect("original capture admission") {
+                retire_fill_construction(original, &mut construction);
                 return output.expect("admitted capture stays in caller custody");
             }
         }
@@ -51,9 +53,11 @@
     fn new_fill_job(original: &mut OriginalFixture, host: &BoardHost, count: u32, operation: Operation) -> BoardFillJob {
         let mut snapshot = Some(capture_fill_snapshot(original, host));
         let mut output = None;
+        let mut construction = semio_framework_job::OriginalConstructionAdmission::default();
         for _ in 0..FILL_TEST_PUMP_LIMIT {
-            if original.turn(FILL_TEST_GRANT, |cx| BoardFillJob::admit_original(&mut snapshot, count, operation, &mut output, cx)).expect("original fill job admission") {
+            if original.turn(FILL_TEST_GRANT, |cx| BoardFillJob::admit_original(&mut construction, &mut snapshot, count, operation, &mut output, cx)).expect("original fill job admission") {
                 assert!(snapshot.is_none());
+                retire_fill_construction(original, &mut construction);
                 return output.expect("admitted fill job stays in caller custody");
             }
         }
@@ -96,6 +100,15 @@
     /// 🚪️ A fill job closes through its own quoted demands; every job must reach terminal-empty before it drops.
     fn close_fill_job(original: &mut OriginalFixture, mut job: BoardFillJob) {
         original.close_job(&mut job);
+    }
+
+    /// 🧹 A settled construction admission retires its control metadata through the caller's funded turns.
+    fn retire_fill_construction(original: &mut OriginalFixture, construction: &mut semio_framework_job::OriginalConstructionAdmission) {
+        for _ in 0..FILL_TEST_PUMP_LIMIT {
+            if construction.terminal_is_empty() { return; }
+            original.turn(FILL_TEST_GRANT, |cx| Ok(construction.close_step(cx)?)).expect("original fill construction retirement");
+        }
+        panic!("fill construction retirement exceeded bounded opportunities");
     }
 
     /// 🧹 A placement retires through its own quoted release demand; it asserts terminal-empty when dropped.

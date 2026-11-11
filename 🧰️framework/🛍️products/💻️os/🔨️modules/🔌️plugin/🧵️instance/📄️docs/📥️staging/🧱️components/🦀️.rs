@@ -24,10 +24,10 @@ use semio_ui_contract::*;
 /// 🩺️ Media transfers: the media exports, downloads, closures and snapshot retirements of the instance.
 pub struct MediaTransfers<A: ArtifactApp> {
     pub pending_reserved_producer_permit:ManuallyDrop<Option<(FrameworkReservedCommitPermit,(semio_framework_job::OperationId,semio_framework_job::Generation,usize))>>,
-    pub reserved_mount:ManuallyDrop<Option<Box<semio_framework_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
-    pub reserved_mount_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_framework_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>,
-    pub reserved_mounted_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>>>,
+    pub reserved_mount:ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
+    pub reserved_mounted_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>>>,
     pub reserved_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
+    pub reserved_mount_construction:semio_framework_job::OriginalConstructionAdmission,
     pub media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
     pub media_export_preparation:ManuallyDrop<Option<MediaExportPreparation<A>>>,
     pub media_download_preparation:ManuallyDrop<Option<semio_plugin_document_media::media_export::MediaDownloadPreparation>>,

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {cargoWorkspaceForManifestControlledV1} from "../🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {stripVTControlCharacters} from "node:util";
@@ -29,7 +30,7 @@ const storage=JSON.parse(process.env.SEMIO_CARGO_PREPARATION_STORAGE);
 const put = (root: string, path: string, source: string): void => { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), source); };
 const workspace = (members: string[], dependencies = ""): string => `[workspace]\nresolver="2"\nmembers=${JSON.stringify(members)}\n[workspace.metadata.semio.repository]\nschema-version=1\nexclude-patterns=[]\nowner-manifests=["*/Cargo.toml"]\nmember-manifests=${JSON.stringify(members.map(m=>m+"/Cargo.toml"))}\n[workspace.package]\nedition="2021"\n${dependencies}`;
 const pkg = (name: string, deps = ""): string => `[package]\nname="${name}"\nversion="0.1.0"\nedition.workspace=true\n[lib]\npath="🦀️.rs"\n${deps}`;
-const cargo = (root: string, path: string): { status: number; text: string } => { const r=Bun.spawnSync(["cargo","metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,path)],{cwd:root,stdout:"pipe",stderr:"pipe"}); return {status:r.exitCode,text:r.stdout.toString()+r.stderr.toString()}; };
+const cargo = (root: string, path: string): { status: number; text: string } => { const r=Bun.spawnSync([registeredToolExecutableV1("cargo"),"metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,path)],{cwd:root,stdout:"pipe",stderr:"pipe"}); return {status:r.exitCode,text:r.stdout.toString()+r.stderr.toString()}; };
 test("portable admitted workspace contributions match independent JSON schema", () => {
  for(const v of fixture.accepted) { expect(validate(v)).toBe(true); expect(parseCargoWorkspaceContribution(v)).toEqual(v); }
  for(const {value} of fixture.rejected) { expect(validate(value)).toBe(false); expect(()=>parseCargoWorkspaceContribution(value)).toThrow(); }
@@ -336,7 +337,7 @@ test("explicit root-owned packages remain discoverable beneath a different nativ
 
 
 test("current physical workspace admissions and selected nextest profiles match independent native documents",async()=>{
- const nativeNextest=Bun.spawnSync(["cargo","nextest","--version"],{stdout:"pipe",stderr:"pipe",timeout:10000}).exitCode===0;
+ const nativeNextest=Bun.spawnSync([registeredToolExecutableV1("cargo"),"nextest","--version"],{stdout:"pipe",stderr:"pipe",timeout:10000}).exitCode===0;
  const root=process.cwd(),{repositoryCargoTestPolicyV1}=await import("../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts"),scopes=discoverCargoWorkspaces(root),packages=scopes.flatMap(scope=>{const members=cargoWorkspaceMembers(root,scope),document=TOML.parse(readFileSync(join(root,scope.manifest),"utf8")) as any;
   expect(members.map(row=>relative(join(root,scope.directory),join(root,row.directory)).replaceAll("\\","/")||".").sort()).toEqual([...document.workspace.members].sort());return members;});
  for(const target of fixture.policyPackages){const selected=packages.find(row=>row.name===target.name);expect(selected?.workspace).toBe(target.workspace);const configPath=join(root,target.workspace,".config/nextest.toml"),source=readFileSync(configPath,"utf8"),config=TOML.parse(source) as any;expect(Bun.TOML.parse(source)).toEqual(config);

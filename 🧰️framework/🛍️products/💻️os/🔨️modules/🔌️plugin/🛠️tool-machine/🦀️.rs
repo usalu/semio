@@ -178,6 +178,9 @@ impl<M, CM> PressLeaf<M, CM> {
     }
 }
 
+/// 🏛️ One resident construction admission per original owner family keeps a partly funded construction alive across turns.
+#[derive(Default)]
+pub struct ToolAdmissions{pub tag:semio_framework_job::OriginalConstructionAdmission,pub tag_retirement:semio_framework_job::OriginalConstructionAdmission,pub tagged:semio_framework_job::OriginalConstructionAdmission,pub follow:semio_framework_job::OriginalConstructionAdmission,pub settlement:semio_framework_job::OriginalConstructionAdmission,pub scrub:semio_framework_job::OriginalConstructionAdmission}
 /// 🗂️ The instance's continuous-tool runtime: the per-window press ledger (every lane of a press as [`PressLeaf`]s),
 /// [`GestureLedger`] (each window's ONE gesture slot, the slots admitted dispatches hold until they publish, and whether a
 /// host fact ended a gesture since the last repaint) and [`TypingLedger`], the committed ⊕ provisional overlays every render seam reads while a press or run is open — the
@@ -205,11 +208,12 @@ pub struct ToolMachineRuntime<P, M:RetireOwned+Send+'static, C = NoConfig, CM = 
     pub ingress: Option<ToolTag>,
     pub operations: Vec<(u64, ToolTag)>,
     pub tick: u64,
+    pub admissions: ToolAdmissions,
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub now_ms: Option<u64>,
 }
 
-impl<P,M:RetireOwned+Send+'static,C,CM> Default for ToolMachineRuntime<P,M,C,CM>{fn default()->Self{Self{presses:ScrubLedger::default(),gestures:GestureLedger::default(),gesture_operations:std::array::from_fn(|_|None),gesture_retirement:None,gesture_ended:false,typing:TypingLedger::default(),overlay:None,overlay_generation:0,provisional_generation:0,config_overlay:None,config_overlay_generation:0,pending_overlay_aliases:None,overlay_alias_retirement:None,pending_config_aliases:None,config_alias_retirement:None,refold_owed:false,refold_request:0,window_overlays:BTreeMap::new(),ingress:None,operations:Vec::new(),tick:0,#[cfg(any(test,feature="artifact-app-testing"))]now_ms:None}}}
+impl<P,M:RetireOwned+Send+'static,C,CM> Default for ToolMachineRuntime<P,M,C,CM>{fn default()->Self{Self{presses:ScrubLedger::default(),gestures:GestureLedger::default(),gesture_operations:std::array::from_fn(|_|None),gesture_retirement:None,gesture_ended:false,typing:TypingLedger::default(),overlay:None,overlay_generation:0,provisional_generation:0,config_overlay:None,config_overlay_generation:0,pending_overlay_aliases:None,overlay_alias_retirement:None,pending_config_aliases:None,config_alias_retirement:None,refold_owed:false,refold_request:0,window_overlays:BTreeMap::new(),ingress:None,operations:Vec::new(),tick:0,admissions:ToolAdmissions::default(),#[cfg(any(test,feature="artifact-app-testing"))]now_ms:None}}}
 
 
 impl<P:'static,M:RetireOwned+Send+'static,C:'static,CM:'static> ToolMachineRuntime<P,M,C,CM>{

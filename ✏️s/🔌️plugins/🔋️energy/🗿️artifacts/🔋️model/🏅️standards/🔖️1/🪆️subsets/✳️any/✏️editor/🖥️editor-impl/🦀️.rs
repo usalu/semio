@@ -64,7 +64,7 @@ impl ArtifactEditor for EnergyModelEditor {
 
     fn original_action_command_producer()->Option<&'static dyn semio_plugin::ArtifactOriginalCommandProducerFactory<Self::Command>>{Some(&editor_commands::ENERGY_ORIGINAL_ACTION_FACTORY)}
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, _construction:&mut semio_framework_job::OriginalConstructionAdmission,cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
         if !ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);

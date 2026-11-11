@@ -3,7 +3,7 @@ use super::*;
 use semio_framework::Fault;
 use semio_framework_value_persistent::list::PagedList;
 use std::mem::{ManuallyDrop,size_of};
-use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetirementDemand,RetainedAllocationEffect,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_plugin_window_kits::RegisteredDefinitionSource;
 use semio_plugin_decl_app::tool_contract::{ArtifactToolPublicationLane,ArtifactToolFactoryRegistry};
 pub use semio_plugin_job::original_declared_tools::{DeclaredToolCatalog,DeclaredToolCatalogSource,DeclaredToolCatalogAlias};
@@ -39,14 +39,14 @@ impl OriginalDeclaredTools{
  pub fn commit_producer(&mut self){self.catalog.commit_producer();}
  pub fn source(&self)->Option<DeclaredToolCatalogSource<'_>>{self.catalog.source()}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.catalog.close_demands(body)}
- pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{self.catalog.close_step(effect)}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.catalog.close_step(effect)}
  pub fn terminal_is_empty(&self)->bool{self.catalog.terminal_is_empty()}
 }
 impl semio_plugin_reactor_app::OriginalPluginAppRegistration for OriginalDeclaredTools{
  fn as_any(&self)->&dyn std::any::Any{self}
  fn commit_producer(&mut self){OriginalDeclaredTools::commit_producer(self);}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{OriginalDeclaredTools::close_demands(self,body)}
- fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let d=OriginalDeclaredTools::close_demands(self,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,d,|effect|OriginalDeclaredTools::close_step(self,effect))?;Ok(OriginalDeclaredTools::terminal_is_empty(self))}
+ fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let d=OriginalDeclaredTools::close_demands(self,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_effect_step(cx,d,|effect|OriginalDeclaredTools::close_step(self,effect))?;Ok(OriginalDeclaredTools::terminal_is_empty(self))}
  fn terminal_is_empty(&self)->bool{OriginalDeclaredTools::terminal_is_empty(self)}
  fn boxed_release_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<dyn semio_plugin_reactor_app::OriginalPluginAppRegistration>>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
 }

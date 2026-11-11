@@ -31,8 +31,8 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 semio-framework-value-source-hold = { path = "../../../../../../../🔨️modules/🌱️value/🔗️source-hold/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 semio-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }

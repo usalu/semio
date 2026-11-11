@@ -8,6 +8,7 @@ use super::*;
 pub(super) struct FillCapture {
     pub(super) capture: ArtifactFillCaptureCursor,
     pub(super) ingress: Option<BoardFillSnapshotIngress>,
+    pub(super) construction: semio_framework_job::OriginalConstructionAdmission,
     pub(super) suggestion_offset: f64,
     pub(super) serial: u64,
     pub(super) open_handles: u64,
@@ -15,7 +16,7 @@ pub(super) struct FillCapture {
 
 impl FillCapture {
     pub(super) fn new(suggestion_offset: f64) -> Self {
-        Self { capture: ArtifactFillCaptureCursor::new(), ingress: None, suggestion_offset, serial: 1, open_handles: 0 }
+        Self { capture: ArtifactFillCaptureCursor::new(), ingress: None, construction: Default::default(), suggestion_offset, serial: 1, open_handles: 0 }
     }
 
     /// 🔬️ Up to `units` capture units; the captured snapshot once the document is fully streamed.
@@ -30,7 +31,7 @@ impl FillCapture {
 
     /// 🚰️ One granted close turn of the ingress.
     pub(super) fn close_one(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
-        let Some(ingress) = self.ingress.as_mut() else { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }) };
+        let Some(ingress) = self.ingress.as_mut() else { return self.construction.retire_step(cx) };
         ingress.begin_close();
         let demand = self.close_demands()?;
         let ingress = self.ingress.as_mut().expect("original fill ingress remains staged");
@@ -39,15 +40,15 @@ impl FillCapture {
             step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
         }) })?;
         if ingress.terminal_is_empty() { self.ingress = None; }
-        Ok(if self.ingress.is_none() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
+        Ok(if self.ingress.is_none() { InteractiveJobCloseStep::Pending { progress: step.progress() } } else { step })
     }
 
     pub(super) fn is_closed(&self) -> bool {
-        self.ingress.is_none()
+        self.ingress.is_none() && self.construction.terminal_is_empty()
     }
 
     pub(super) fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        let Some(ingress) = self.ingress.as_ref() else { return Ok(Default::default()) };
+        let Some(ingress) = self.ingress.as_ref() else { return Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.construction.terminal_is_empty() { 0 } else { size_of::<semio_framework_job::OriginalConstructionAdmission>() }, depth: usize::from(!self.construction.terminal_is_empty()), ..Default::default() }) };
         Ok(semio_framework_value::RetirementDemand { release_bytes: ingress.next_close_release_byte_demand(), depth: 1, ..Default::default() })
     }
 }

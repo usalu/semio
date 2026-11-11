@@ -1,5 +1,18 @@
 /// 🧵️ Retained work and child emission laws of the surface fixture: the retained command fuel and fallback charges, the exact birth admission and the private typed lanes and group row frames of child emission.
 
+fn funded_group_input(grant: RetainedCloneGrant, advance: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, semio_framework_value::ValueError>) -> (RetainedCloneStep, semio_framework_trace::HeapAllocationObservation) {
+    let mut bank = semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::new(grant, 1 << 20));
+    let mut observed = None;
+    let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, grant, 1 << 20, |effect| {
+        let (result, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| advance(effect));
+        observed = Some(events);
+        semio_framework_value_testing_admission::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() })
+    });
+    match poll {
+        semio_framework_value_testing_admission::RetainedWorkPoll::Complete(turn) => (turn.result.unwrap(), observed.expect("funded turn ran")),
+        semio_framework_value_testing_admission::RetainedWorkPoll::Pending { .. } => panic!("funded turn stayed pending"),
+    }
+}
 #[test]
 fn work_fixture_close_reconciles_the_actual_original_job_and_allocator_once(){
  use crate::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
@@ -272,11 +285,11 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
             let capacity = group.next_input_capacity_byte_demand(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor).unwrap();
             assert!(capacity <= grant.maximum_capacity_bytes);
             for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), capacity.checked_sub(1).map(|maximum_capacity_bytes| RetainedCloneGrant { maximum_capacity_bytes, ..grant })].into_iter().flatten() {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, denied).unwrap());
+                let (step, heap) = funded_group_input(denied, |effect| group.advance_inputs(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, effect));
                 assert_eq!(step.progress(), Default::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| group.advance_inputs(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, grant).unwrap());
+            let (step, heap) = funded_group_input(grant, |effect| group.advance_inputs(&app.child_composition.children, "neutral-parent-α", &dialect, &private_genesis_actor, semio_framework_job::OperationId(7391), semio_framework_job::Generation(3), 1_000_000, 1, effect));
             assert!(step.progress().fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         }

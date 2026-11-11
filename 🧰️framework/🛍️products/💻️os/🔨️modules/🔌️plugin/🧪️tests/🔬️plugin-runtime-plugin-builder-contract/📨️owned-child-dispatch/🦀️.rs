@@ -50,6 +50,23 @@ use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutation
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use serde_json::Value;
 use semio_framework_job::InteractiveJob as _;
+use semio_plugin_job::original_emission::OriginalEmissionInput;
+use semio_plugin_instance_app::VcsArtifactApp;
+use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
+use semio_plugin_testing_laws::artifact_app_laws::{self, OriginalFixtureScope};
+
+async fn mount_owned_emit(app: &mut VcsArtifactApp<TestApp, TestMembers>, verb: &str, emit: Emit<TestMutation, TestConfigMutation>, receipt: &mut Option<semio_framework::kernel::InvocationResult>, scope: &mut OriginalFixtureScope) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    artifact_app_laws::ensure_fixture_cancellation_issuer(app, scope.cx())?;
+    let mut input = Some(OriginalEmissionInput::<TestApp> { verb: verb.into(), meta: meta(), emit });
+    for _ in 0..semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+        if app.dispatch_ctx().dispatch_original_emission(&mut input, receipt, scope.cx()).await? { return Ok(()); }
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "owned child emission exceeded its supplied mount turn bound").into())
+}
+
+fn mounted_operation(receipt: &semio_framework::kernel::InvocationResult) -> u64 {
+    receipt.output.get("operationId").and_then(DslValue::as_str).expect("the mount answers with its actual admitted operation identity").parse().unwrap()
+}
 
 #[semio_framework_async_macros::async_test]
 async fn direct_owned_child_dispatch_retains_original_parent_and_children() {
@@ -62,9 +79,16 @@ async fn direct_owned_child_dispatch_retains_original_parent_and_children() {
         emit.child_preparations.push_back(ChildEmitPreparation::of_owned::<TestSnapshot, TestMutation>("slot", "child-1", vec![TestMutation::SetCount(SetCount { value: row["childCount"].as_i64().unwrap() as i32 }), TestMutation::SetLabel(SetLabel { value: row["childLabel"].as_str().unwrap().into() })]));
         for _ in 0..law["maximumTurns"].as_u64().unwrap() { if matches!(prepare_original_fixture_child(&mut emit, law["maximumItems"].as_u64().unwrap() as usize, law["maximumBytes"].as_u64().unwrap() as usize).unwrap(), ChildEmitPreparationStep::Ready(_)) { break; } }
         assert_eq!(emit.owned_child_emits.len(), 1);
-        let result = app.test_dispatch_emit("compositeEdit", emit, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("direct dispatch retains owned publication under a genuine mounted operation");
-        assert!(result.output.get("operationId").and_then(DslValue::as_str).is_some(), "direct dispatch returns its actual admitted operation identity");
-        assert!(result.mutations.is_empty(), "publication remains staged at admission");
+        let mut scope = OriginalFixtureScope::admit();
+        let mut receipt = None;
+        mount_owned_emit(&mut app, "compositeEdit", emit, &mut receipt, &mut scope).await.expect("the stepped mount retains owned publication under a genuine mounted operation");
+        let admitted = receipt.as_ref().expect("the settled mount answers with its receipt");
+        mounted_operation(admitted);
+        assert!(admitted.mutations.is_empty(), "publication remains staged at admission");
+        let mut retirement = None;
+        assert!(artifact_app_laws::retire_fixture_owned(&mut receipt, &mut retirement, artifact_app_laws::fixture_mounted_policy().close, scope.cx()).unwrap());
+        drain_and_close_composed_fixture(&mut app, artifact_app_laws::fixture_mounted_policy(), scope.cx());
+        scope.retire();
         drain_and_close_composed_fixture(&mut app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
     }
 }
@@ -83,13 +107,26 @@ async fn direct_owned_child_dispatch_retains_original_output_when_authority_capt
         let original = emit.owned_child_emits.as_ptr() as usize;
         assert_eq!(emit.owned_child_emits.len(), 1);
         let verb = if refused { "unregisteredOriginalChildVerb" } else { "compositeEdit" };
-        let result = app.test_dispatch_emit(verb, emit, &meta(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("original output remains mounted even after authority capture refusal");
-        let operation = result.output.get("operationId").and_then(DslValue::as_str).unwrap().parse::<u64>().unwrap();
-        let (observation, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.tools.test_original_owned_emit_observation(operation).unwrap());
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        assert_eq!(observation, (1, 1, original, refused, refused));
-        assert!(result.mutations.is_empty());
-        drain_and_close_composed_fixture(&mut app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
+        let mut scope = OriginalFixtureScope::admit();
+        let mut receipt = None;
+        let mounted = mount_owned_emit(&mut app, verb, emit, &mut receipt, &mut scope).await;
+        if refused {
+            let failure = mounted.expect_err("an unregistered verb refuses before its mounted birth");
+            assert!(failure.to_string().contains("registered native publication owner"));
+            assert_eq!(app.tools.test_original_admission_emit_observation(), Some((1, 1, original)), "the refused admission keeps the original owned output");
+            assert!(receipt.is_none());
+        } else {
+            mounted.expect("the registered verb mounts its original owned output");
+            let operation = mounted_operation(receipt.as_ref().unwrap());
+            let (observation, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.tools.test_original_owned_emit_observation(operation).unwrap());
+            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+            assert_eq!(observation, (1, 1, original, false, false));
+            assert!(receipt.as_ref().unwrap().mutations.is_empty());
+            let mut retirement = None;
+            assert!(artifact_app_laws::retire_fixture_owned(&mut receipt, &mut retirement, artifact_app_laws::fixture_mounted_policy().close, scope.cx()).unwrap());
+        }
+        drain_and_close_composed_fixture(&mut app, artifact_app_laws::fixture_mounted_policy(), scope.cx());
+        scope.retire();
     }
 }
 

@@ -1,9 +1,9 @@
-import { receiveScriptProcessInvocation } from "@semio-tech/framework/process/routing";
-import { startNativeProgress } from "@semio-tech/framework/process/execution";
+import { receiveScriptProcessInvocation } from "@semio-tech/process/routing";
+import { startNativeProgress } from "@semio-tech/process/execution";
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "@semio-tech/framework/process/routing";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
-import { runArtifactRustPackageMain } from "@semio-tech/framework/process/cargo-test";
+import { BundleScript, ScriptRouter } from "@semio-tech/process/routing";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
+import { runArtifactRustPackageMain } from "@semio-tech/process/cargo-test";
 
 
 const cargoName = "semio-s-artifact-norm-en1996";

@@ -3,9 +3,6 @@
 extern crate semio_os_kernel as protocol;
 extern crate semio_framework_value_derive as value_derive;
 
-#[cfg(test)]
-#[global_allocator]
-static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 pub mod catalog {
     pub use semio_s_artifact_stdio_ifc4x3_schema::*;

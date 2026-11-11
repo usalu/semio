@@ -4,12 +4,9 @@ use crate::standards::v5::subsets::any::io::sqlite::snapshot::{index};
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v5::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_test_fixtures::fixture_text;
+use semio_framework_value_testing_allocator::{observe_retirement_allocations,refuse_all_allocations_on_this_thread,retirement_allocations_so_far};
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
 std::thread_local!{
- static TRACK:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
- static REFUSE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
- static ATTEMPTS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};
- static LIVE:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};
  static VISITS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};
  static SQL_LATE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
 }
@@ -17,18 +14,7 @@ pub(in crate::standards::v5::subsets::any::io::sqlite::snapshot) fn retirement_v
 pub(in crate::standards::v5::subsets::any::io::sqlite::snapshot) struct SqlLateCopyScope(bool);
 impl SqlLateCopyScope{pub(in crate::standards::v5::subsets::any::io::sqlite::snapshot) fn enter()->Self{Self(SQL_LATE.with(|active|active.replace(true)))}}
 impl Drop for SqlLateCopyScope{fn drop(&mut self){SQL_LATE.with(|active|active.set(self.0));}}
-struct ObservedAllocator;
-fn refuse()->bool{if REFUSE.try_with(std::cell::Cell::get).unwrap_or(false){let _=ATTEMPTS.try_with(|count|count.set(count.get()+1));true}else{false}}
-fn allocated(bytes:usize){if TRACK.try_with(std::cell::Cell::get).unwrap_or(false){let _=LIVE.try_with(|count|count.set(count.get()+bytes));}}
-fn released(bytes:usize){if TRACK.try_with(std::cell::Cell::get).unwrap_or(false){let _=LIVE.try_with(|count|count.set(count.get()-bytes));}}
-unsafe impl std::alloc::GlobalAlloc for ObservedAllocator{
- unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{if refuse(){return std::ptr::null_mut()}let result=unsafe{std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};if !result.is_null(){allocated(layout.size())}result}
- unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{if refuse(){return std::ptr::null_mut()}let result=unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&std::alloc::System,layout)};if !result.is_null(){allocated(layout.size())}result}
- unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{if refuse(){return std::ptr::null_mut()}let result=unsafe{std::alloc::GlobalAlloc::realloc(&std::alloc::System,pointer,layout,size)};if !result.is_null(){released(layout.size());allocated(size)}result}
- unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){released(layout.size());unsafe{std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)}}
-}
-#[global_allocator]
-static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
+fn live()->usize{let(allocated,freed)=retirement_allocations_so_far().expect("retirement observation scope is open");allocated-freed}
 fn corpus()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🧹️lifecycle/🔣️.json")).unwrap()}
 fn leaf(index:usize,cases:&serde_json::Value)->HtmlNode{let value=&cases["leaves"][index%4];let text=value["text"].as_str().unwrap().to_owned();match value["kind"].as_str().unwrap(){"text"=>HtmlNode::Text{text},"comment"=>HtmlNode::Comment{text},"rawText"=>HtmlNode::RawText{parent_kind:match value["parentKind"].as_str().unwrap(){"script"=>RawTextKind::Script,"style"=>RawTextKind::Style,_=>panic!("literal raw kind")},text},_=>panic!("literal leaf kind")}}
 fn attributes(cases:&serde_json::Value)->Vec<HtmlAttr>{cases["attributes"].as_array().unwrap().iter().map(|value|HtmlAttr{name:value["name"].as_str().unwrap().to_owned(),value:value.get("value").map(|value|value.as_str().unwrap().to_owned())}).collect()}
@@ -41,7 +27,7 @@ fn isolated(flag:&str,name:&str)->bool{if std::env::var_os(flag).is_some(){retur
 fn sqlite_snapshot_html_public_retirement_releases_deep_wide_fields_when_all_allocations_refuse(){
  if isolated("SEMIO_HTML_ALLOCATION_FREE_RETIRE_CHILD","sqlite_snapshot_html_public_retirement_releases_deep_wide_fields_when_all_allocations_refuse"){return}
  let cases=corpus();for case in 0..3{let cases=cases.clone();let stack=cases["stackBytes"].as_u64().unwrap()as usize;let(owned,remaining,attempts,visits,nodes)=std::thread::Builder::new().stack_size(stack).spawn(move||{
-  TRACK.with(|active|active.set(true));let(snapshot,nodes)=tree(case,&cases);let owned=LIVE.with(std::cell::Cell::get);ATTEMPTS.with(|count|count.set(0));VISITS.with(|count|count.set(0));REFUSE.with(|active|active.set(true));snapshot.retire_sqlite_snapshot();REFUSE.with(|active|active.set(false));let remaining=LIVE.with(std::cell::Cell::get);TRACK.with(|active|active.set(false));(owned,remaining,ATTEMPTS.with(std::cell::Cell::get),VISITS.with(std::cell::Cell::get),nodes)
+  observe_retirement_allocations(||{let(snapshot,nodes)=tree(case,&cases);let owned=live();VISITS.with(|count|count.set(0));let((),attempts)=refuse_all_allocations_on_this_thread(||snapshot.retire_sqlite_snapshot());(owned,live(),attempts,VISITS.with(std::cell::Cell::get),nodes)}).0
  }).unwrap().join().unwrap();assert!(owned>0);assert_eq!(remaining,0,"all owned fields must release in case {case}");assert_eq!(attempts,0,"cold retirement must request no allocation in case {case}");assert!(visits>=nodes&&visits<=3*nodes,"case {case}: {visits} visits for {nodes} nodes must stay linear");}
 }
 #[test]

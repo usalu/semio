@@ -25,11 +25,11 @@ path = "../../🦀️.rs"
 semio-plugin-decl-views = { path = "../../../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-plugin-child = { path = "../../../../../../🪆️child/📦️packages/🦀️rust" }
 semio-plugin-composition-publication = { path = "../../../../📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework-hash = { path = "../../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-plugin-decl-app = { path = "../../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
@@ -37,8 +37,8 @@ semio-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️
 semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-os-kernel" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

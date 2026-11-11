@@ -1,8 +1,8 @@
 import {ROSTER_RULES_V1} from "../../🧭️roster/🟨️.mjs";
 import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import{applyBuildGeneratedTaskDependenciesV1,buildInputSourceRoleV1,buildNativeSourceObservationV1}from"../../🚪️admission/🟦️.ts";
-import {createRequire} from "node:module";
-const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
+import managersV1 from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
+const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
 /** 📦️ Infers every project node of one workspace snapshot with bounded concurrency and settlement. */
 import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { availableParallelism } from "node:os";

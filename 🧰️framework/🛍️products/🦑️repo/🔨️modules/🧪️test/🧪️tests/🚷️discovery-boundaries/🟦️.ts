@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import {AsyncLocalStorage} from "node:async_hooks";
 import { lstatSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -86,7 +87,7 @@ test("fresh authority links and resident Node and Bun source mutations fail clos
   put(taxonomyPath,JSON.stringify(vocabulary));put(policyPath,readFileSync(join(repo,policyPath),"utf8"));put(featurePath,"Feature: Authority\n");put(`${vocabulary.testDomainPath}/📜️script.ts`,"export {};\n");
   expect(new Set(fixture.authorityCases.map(row=>row.id)).size).toBe(fixture.authorityCases.length);
   const oracle=String.raw`import{mkdirSync,writeFileSync,symlinkSync,lstatSync,rmSync}from"node:fs";import{join,dirname}from"node:path";const base=process.argv[1],rows=JSON.parse(process.argv[2]),result=[];mkdirSync(base,{recursive:true});for(const row of rows){const path=join(base,row.path),target=row.authority==="root"?base:join(base,row.id+".json");mkdirSync(dirname(path),{recursive:true});if(row.authority!=="root")writeFileSync(target,"{}");symlinkSync(process.platform==="win32"&&row.authority!=="root"?dirname(target):target,path,process.platform==="win32"?"junction":row.authority==="root"?"dir":"file");result.push({id:row.id,linked:lstatSync(path).isSymbolicLink()});rmSync(path);}process.stdout.write(JSON.stringify(result));`;
-  const child=spawnSync("node",["--input-type=module","--eval",oracle,join(root,"physical-oracle"),JSON.stringify(fixture.authorityCases)],{encoding:"utf8",timeout:3000});
+  const child=spawnSync(registeredToolExecutableV1("node"),["--input-type=module","--eval",oracle,join(root,"physical-oracle"),JSON.stringify(fixture.authorityCases)],{encoding:"utf8",timeout:3000});
   noteLayoutMemberV1("physical-oracle");const nodeRows=child.status===0?JSON.parse(child.stdout):[];
   for(const row of fixture.authorityCases){
    const path=join(root,row.path),saved=row.authority==="root"?null:readFileSync(path,"utf8"),target=row.authority==="root"?root:join(root,`authority-${row.id}.json`);noteLayoutMemberV1(row.path);if(saved!==null){noteLayoutMemberV1(basename(target));writeFileSync(target,saved);rmSync(path);}symlinkSync(process.platform==="win32"&&row.authority!=="root"?dirname(target):target,path,process.platform==="win32"?"junction":row.authority==="root"?"dir":"file");
@@ -140,6 +141,6 @@ test("test inference awaits the exact library bootstrap before command helpers",
   const copied=await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href),result=await copied.default.createNodesV2[1]([featurePath],{},context);expect(result).toHaveLength(1);
   const revision=new Bun.CryptoHasher("sha256").update(wrapper).digest("hex"),received=await import(pathToFileURL(join(root,"📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href+"?revision="+revision);
   expect(received.events).toEqual(fixture.bootstrapOrder.expected);
-  const oracle=spawnSync("node",["--input-type=module","--eval",'const events=[];let ready=false;const bootstrap={then(accept){ready=true;events.push("ready");accept();}};await bootstrap;if(!ready)throw Error("not ready");events.push("inputs");console.log(JSON.stringify(events));'],{encoding:"utf8",timeout:3000});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.bootstrapOrder.expected);
+  const oracle=spawnSync(registeredToolExecutableV1("node"),["--input-type=module","--eval",'const events=[];let ready=false;const bootstrap={then(accept){ready=true;events.push("ready");accept();}};await bootstrap;if(!ready)throw Error("not ready");events.push("inputs");console.log(JSON.stringify(events));'],{encoding:"utf8",timeout:3000});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout)).toEqual(fixture.bootstrapOrder.expected);
  
 }),30000);

@@ -137,6 +137,10 @@ impl NativeRetirementDecodeControl<'_,'_>{
   let capacity=owner.capacity;let spent=&mut owner.spent;
   owner.original.receive_original_effect(demand,maximum_work,frame,authority,|control,effect,authority,action|{let previous_maximum=control.maximum_bytes;let mut funding=RetirementFundingScope{loan:NativeRetirementDecodeControl{original:control,funding:None,capacity,spent:*spent,previous_maximum},spent};invoke(&mut funding.loan,effect,authority,action)})
  }
+ /// 🪢️ Runs one cleanup action inside an original invocation of this decoder's persistent Work scope, so owners bound to that scope keep their binding across turns; `None` means the work quote was not admitted.
+ pub fn with_original_effect<R>(&mut self,demand:RetirementDemand,maximum_work:u64,run:impl FnOnce(&mut crate::RetainedAllocationEffect<'_>)->R)->Result<Option<R>,ValueError>{
+  self.original.with_allocated_effect(demand,maximum_work,|_,effect|run(effect))
+ }
  /// 🛠️ Lends the same cleanup funding through the shared resident receiving driver.
  pub fn receive_effect<E:super::NativeReceivingEffectError>(&mut self,demand:RetirementDemand,maximum_work:u64,frame:&mut super::NativeReceivingEffect<E>,operation:impl FnOnce(&mut NativeRetirementDecodeControl<'_,'_>,&mut crate::RetainedAllocationEffect<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,E>)->Result<super::NativeReceivingEffectPoll<E>,ValueError>{
   if self.requires_original_birth(){return Err(invalid(ValueRefusalKind::InvariantViolated,"original failure birth must precede the cleanup effect"))}

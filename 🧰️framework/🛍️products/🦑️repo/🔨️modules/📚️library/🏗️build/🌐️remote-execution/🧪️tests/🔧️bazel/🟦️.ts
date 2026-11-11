@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🔧️ Law: real Bazel offloads hermetic actions to the in-house executor. With a worker in its own process, the generated hermetic workspace builds with zero local spawns of the hermetic mnemonic, the worker runs the actions inside its sandbox, the results land in the shared store and a build from a clean output base is answered by the action cache without any worker run, and the outputs equal those of a local build. */
 import {expect,test} from "bun:test";
 import {makeTestTreeWritableV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -49,7 +50,7 @@ test.skipIf(!binary)("law: real Bazel runs hermetic actions on a worker in its o
   };
   const {workspace,planned}=await generate("ws",{host:host.id,remote:{platform:host.id,properties:{...host.properties}},tools:{[host.id]:process.execPath}}),local=await generate("ws-local",{host:host.id,tools:{[host.id]:process.execPath}}),label=(id:string)=>planned.tasks[id]!.label;
   expect(local.planned.tasks["app:build"]!.label).toBe(label("app:build"));
-  workerProcess=Bun.spawn(["bun",entry,"--join",cluster.server.workerUrl,"--name","second-process","--concurrency","2","--work-directory",join(directory,"worker"),"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:directory,env:{...process.env}});
+  workerProcess=Bun.spawn([registeredToolExecutableV1("bun"),entry,"--join",cluster.server.workerUrl,"--name","second-process","--concurrency","2","--work-directory",join(directory,"worker"),"--lang","en"],{stdout:"pipe",stderr:"pipe",cwd:directory,env:{...process.env}});
   await eventuallyV1(()=>cluster.server.scheduler.status().workers.length===1,30000,"the worker process must register");
 
   const environmentVariables={SEMIO_REMOTE_EXECUTION_ENDPOINT:cluster.server.grpcUrl,SEMIO_REMOTE_EXECUTION_PLATFORM:host.id,SEMIO_REMOTE_EXECUTION_INSTANCE:"main"};

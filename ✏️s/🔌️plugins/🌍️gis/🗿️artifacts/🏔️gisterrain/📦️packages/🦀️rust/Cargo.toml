@@ -41,7 +41,7 @@ semio-framework-job = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
-semio-framework-surface = { path = "../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
+semio-framework-surface = { path = "../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }

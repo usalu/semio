@@ -7,8 +7,6 @@ use semio_plugin::native_snapshot_export::{NativeSnapshotPackExportJob,SNAPSHOT_
 use semio_framework_value::{RetainedCloneGrant,retirement::{OwnedValueRetirementFactory,controlled::ControlledRetirement},ToValue};
 use semio_framework_pack::snapshot::ArtifactPack;
 use std::sync::Arc;
-#[global_allocator]
-static ORIGINAL_EXPORT_HEAP:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 fn clock()->Option<u64>{Some(1)}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:4_000_000,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:96}}
 fn turn()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:96}}

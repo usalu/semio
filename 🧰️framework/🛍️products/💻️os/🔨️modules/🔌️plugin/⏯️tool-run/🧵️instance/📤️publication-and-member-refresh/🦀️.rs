@@ -86,7 +86,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             publication.begin_close();
             semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|{let result=publication.close_step(effect);semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::RetirementPollExit::settle(effect,result))})?;return Ok(false);
         }
-        if !finalize.ingress.terminal_is_empty(){let d=finalize.ingress.close_demands(grant.maximum_copy_bytes)?;semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|finalize.ingress.close_step(effect))?;return Ok(false);}
+        if !finalize.ingress.terminal_is_empty(){let d=finalize.ingress.close_demands(grant.maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=finalize.ingress.close_step(effect);semio_framework_value::RetirementPollExit::settle(effect,result)})?;return Ok(false);}
         Ok(true)
     }
 

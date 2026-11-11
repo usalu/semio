@@ -25,14 +25,14 @@ path = "../../🦀️.rs"
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-plugin-tool-machine = { path = "../../../../🛠️tool-machine/📦️packages/🦀️rust" }
 semio-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust", package = "semio-plugin-instance-stores"}
+semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust"}
 semio-plugin-instance-history = { path = "../../../📜️history/📦️packages/🦀️rust" }
 semio-plugin-instance-children = { path = "../../../🪆️children/📦️packages/🦀️rust" }
 semio-plugin-instance-jobs = { path = "../../../👷️jobs/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust", package = "semio-plugin-instance-docs"}
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust"}
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
@@ -43,4 +43,4 @@ semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

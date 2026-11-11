@@ -3,8 +3,6 @@ use semio_plugin::ArtifactEditor;
 use semio_plugin_host_configuration::{with_original_host_configuration,testkit::HeapWitness};
 use semio_framework_value::DslValue;
 
-#[global_allocator]
-static HOST_CONFIGURATION_HEAP: HeapWitness = HeapWitness;
 
 use semio_s_artifact_cad_cad_editor::CadPlayApp;
 use semio_s_artifact_cad_cad_config::{CadConfigMutation,SetContributionsEdit};

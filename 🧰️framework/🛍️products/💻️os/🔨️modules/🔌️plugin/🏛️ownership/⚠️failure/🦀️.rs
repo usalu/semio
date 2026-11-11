@@ -122,6 +122,19 @@ pub fn plugin_effect_close<E:From<ValueError>>(cx:&mut StepContext<'_>,grant:Ret
  }
 }
 
+/// 🧾️ Projects one effect-recorded retirement poll into a work outcome that keeps the work it settled.
+pub fn plugin_poll_outcome(poll:semio_framework_value::OriginalRetirementPoll)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep,ValueError>{
+ match poll{semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work},semio_framework_value::RetainedWorkPoll::Complete(turn)=>semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(plugin_failure_error),work:turn.work}}
+}
+
+/// 🔏️ Runs one native-control retirement owner inside the context's own performed-work effect, settling its poll and posting its performed work; a yielding turn or refused quote advances nothing.
+pub fn plugin_controlled_effect_close<E:From<ValueError>>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>,&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::OriginalRetirementPoll)->Result<semio_framework_value::RetainedCloneStep,E>{
+ match cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|control|Ok(close(effect,control)))).map_err(E::from)?{
+  Some((polled,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));plugin_settle_value(polled.map_err(E::from)?).map_err(E::from)}
+  None=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))
+ }
+}
+
 /// 🪙️ Runs one plain-result owner inside the context's own performed-work effect and posts its receipt and performed work through the original receiving debit once; a yielding turn or refused quote advances nothing.
 pub fn plugin_effect_turn<E:Into<semio_framework_job::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,E>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
  if cx.retirement_should_yield(){return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}

@@ -30,7 +30,7 @@ semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" 
 semio-os-store-canonical-json = { path = "../../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-os-store-command = { path = "../../../../📬️command/📦️packages/🦀️rust" }

@@ -60,7 +60,7 @@ semio-framework = { path = "../../../../../../../🧰️framework/📦️package
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-hub-stdio-catalog = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 axum = { version = "0.8", features = ["ws"] }
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }

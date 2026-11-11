@@ -1,7 +1,7 @@
-import { scriptInvocationEnvironment, type ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { resolveTestLevel, testLevelBudgetMs } from "@semio-tech/framework/process/test-budget";
+import { scriptInvocationEnvironment, type ScriptInvocation } from "@semio-tech/process/routing";
+import { resolveTestLevel, testLevelBudgetMs } from "@semio-tech/process/test-budget";
 import { resolve } from "node:path";
-import { resolveTypescriptCompilerV1, runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { resolveTypescriptCompilerV1, runOwnedCommand } from "@semio-tech/process/execution";
 
 /** 🏃️ Runs the `TestScript` command under the caller's roots and invocation. */
 export async function runTestScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {

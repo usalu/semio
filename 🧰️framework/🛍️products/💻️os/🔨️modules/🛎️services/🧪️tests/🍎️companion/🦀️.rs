@@ -3,8 +3,6 @@
 //! 🧭️ The tests reach the private service modules through the `testkit` hooks of `semio_os_services`, never through the production crate's own module tree.
 #![cfg(test)]
 
-#[global_allocator]
-static ORIGINAL_SERVICES_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[path = "../🔬️component-unit"]
 mod component {

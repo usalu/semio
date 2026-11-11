@@ -5,8 +5,6 @@ extern crate semio_os_kernel as protocol;
 #[path="🧱️material/🦀️.rs"]mod material;
 #[path="👆️interaction/🦀️.rs"]mod interaction;
 use semio_framework_actor::OriginalJobOutputState;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧩️guest-io/🔣️.json")).unwrap()}
 fn actual_model(law:&serde_json::Value)->Vec<u8>{
  let read=|name:&str|std::fs::read(std::env::var_os(name).unwrap_or_else(||panic!("{name} must come from the genuine model-owning test-guest-io ingress"))).unwrap();

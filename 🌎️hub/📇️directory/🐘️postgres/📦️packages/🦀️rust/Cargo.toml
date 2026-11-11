@@ -31,7 +31,7 @@ semio-hub-directory = { workspace = true }
 semio-hub-directory-contract = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
 sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"] }

@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "owner": "repository:scratch",
+ "area": "scratch",
+ "root": ".cache",
+ "directory": "scratch",
+ "units": "^(?<pid>[0-9]+)-[A-Za-z0-9._-]+$",
+ "off": "SEMIO_SCRATCH",
+ "environment": ["TMPDIR", "TMP", "TEMP"],
+ "fallbackDirectory": "semio-scratch",
+ "maximumPrefixLength": 24,
+ "removal": {"maxRetries": 5, "retryDelayMilliseconds": 50}
+}

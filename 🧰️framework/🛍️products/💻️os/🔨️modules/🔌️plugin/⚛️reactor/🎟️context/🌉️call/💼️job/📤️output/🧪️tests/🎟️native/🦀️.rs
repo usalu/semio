@@ -1,7 +1,5 @@
 //! 🎟️ Focused integration tests call the same production actor entry and canonical neutral law bodies.
 use semio_plugin::reactor::original_actor_context::original_laws;
-#[global_allocator]
-static ORIGINAL_OUTPUT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[test]
 fn original_fixed_metadata(){original_laws::original_owned_job_header_matches_portable_oracle_without_allocation()}
 #[test]

@@ -25,7 +25,7 @@ path = "../../🦀️.rs"
 semio-hub-directory-contract = { workspace = true }
 serde = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 
 [dev-dependencies]

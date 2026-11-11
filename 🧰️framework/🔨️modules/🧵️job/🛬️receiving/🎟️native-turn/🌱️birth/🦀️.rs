@@ -1,6 +1,7 @@
 //! 🌱️ Source parents birth their return table and publisher through inline paid construction actions, each performed together with its Work settlement.
 use super::*;
-use semio_framework_job_context::{OriginalReturnBirthState,OriginalTurnFailure,receive_original_retained_work};
+use semio_framework_job_context::{OriginalReturnBirthState,OriginalTurnFailure,receive_original_retained_work,original_return_source::OriginalReturnSourceInput};
+use semio_framework_job_return_budget::OriginalReturnOriginCommitProducer;
 use semio_framework_job_return_budget::{OriginalReturnBirthPhase as Phase,OriginalReturnBirthStage as Stage};
 use semio_framework_value_control_contract::{OriginalConstructionAcceptStatus,OriginalConstructionAuthority,OriginalConstructionCompletion,OriginalConstructionLoan,OriginalWork,OriginalWorkActionIdentity,OriginalWorkActionProof,OriginalWorkAuthority,OriginalWorkBorrow,RetainedCloneStep,RetainedWorkOutcome};
 use semio_framework_value_native_outcome::OriginalConstructionAcceptedProof as Accepted;
@@ -83,24 +84,58 @@ fn filled<'s>(context:&OriginalJobNativeTurnContext<'_,'_,'_>,work:&mut Original
 const ACTION_WORK:u64=1;
 const PAYOUT_WORK:u64=1;
 const RETIRE_WORK:u64=1;
+type Budget=semio_framework_job_return_budget::OriginalReturnBudget<semio_framework_job_context::original_return_source::OriginalReturnSourceInput>;
+/// 🧾️ The quotes of one birth chain, read from a live Source turn or from a cold budget.
+trait Ledger{fn work(&self,stage:Stage)->u64;fn total(&self,stage:Stage)->Result<(usize,RetirementDemand),ValueError>;fn demand(&self,stage:Stage)->Result<RetirementDemand,ValueError>;fn commit_cost(&self,bound:bool)->Result<RetirementDemand,ValueError>;fn commit_demand(&self)->Result<RetirementDemand,ValueError>;}
+impl Ledger for Budget{fn work(&self,stage:Stage)->u64{self.birth_work(stage)}fn total(&self,stage:Stage)->Result<(usize,RetirementDemand),ValueError>{self.birth_total(stage)}fn demand(&self,stage:Stage)->Result<RetirementDemand,ValueError>{self.birth_demand(stage)}fn commit_cost(&self,bound:bool)->Result<RetirementDemand,ValueError>{Ok(Self::origin_commit_demand_for(bound))}fn commit_demand(&self)->Result<RetirementDemand,ValueError>{OriginalReturnOriginCommitProducer::<OriginalReturnSourceInput>::demand(self)}}
+impl Ledger for &StepContext<'_>{fn work(&self,stage:Stage)->u64{self.return_birth_work(stage).unwrap_or(0)}fn total(&self,stage:Stage)->Result<(usize,RetirementDemand),ValueError>{self.return_birth_total(stage)}fn demand(&self,stage:Stage)->Result<RetirementDemand,ValueError>{self.return_birth_demand(stage)}fn commit_cost(&self,_:bool)->Result<RetirementDemand,ValueError>{self.return_origin_commit_cost()}fn commit_demand(&self)->Result<RetirementDemand,ValueError>{self.return_origin_commit_demand()}}
 /// ⛽️ Quotes each stage's exact Work (origin, origin commit, table, table commit, publisher, publisher commit, release), derived from the actions and builders it will spend on, each including its paid completion and retirements.
+fn stage_work(budget:&impl Ledger,origin_current:bool,table:bool,publisher:bool)->[u64;7]{
+ if origin_current{return [0;7]}let held=ACTION_WORK+PAYOUT_WORK;
+ [held+RETIRE_WORK,held,if table{budget.work(Stage::Table)+PAYOUT_WORK+RETIRE_WORK}else{0},if table{held}else{0},if publisher{budget.work(Stage::Publisher)+PAYOUT_WORK+RETIRE_WORK}else{0},if publisher{held}else{0},held+RETIRE_WORK*(2+u64::from(table)+u64::from(publisher))]
+}
 pub fn original_return_birth_quote(cx:&StepContext<'_>)->Result<[u64;7],ValueError>{
- let state=cx.return_birth_state()?;if state.origin_current{return Ok([0;7])}
- let table=state.table!=Phase::Live;let publisher=state.publisher_wanted&&state.publisher!=Phase::Live;let held=ACTION_WORK+PAYOUT_WORK;
- Ok([held+RETIRE_WORK,held,if table{cx.return_birth_work(Stage::Table)?+PAYOUT_WORK+RETIRE_WORK}else{0},if table{held}else{0},if publisher{cx.return_birth_work(Stage::Publisher)?+PAYOUT_WORK+RETIRE_WORK}else{0},if publisher{held}else{0},held+RETIRE_WORK*(2+u64::from(table)+u64::from(publisher))])
+ let state=cx.return_birth_state()?;let table=state.table!=Phase::Live;let publisher=state.publisher_wanted&&state.publisher!=Phase::Live;
+ Ok(stage_work(&cx,state.origin_current,table,publisher))
 }
 /// 📏️ Sums the demand and item count of every action of one birth chain (the whole refresh when neither table nor publisher is born), each charged by the same quotes the chain pays.
-fn chain_demand(cx:&StepContext<'_>,table:bool,publisher:bool)->Result<(usize,RetirementDemand,usize),ValueError>{
+fn chain_demand_of(budget:&impl Ledger,bound:bool,table:bool,publisher:bool)->Result<(usize,RetirementDemand,usize),ValueError>{
  let mut total=RetirementDemand::default();let mut items=0usize;
  let mut add=|count:usize,demand:RetirementDemand|{items+=count;total.copy_bytes=total.copy_bytes.saturating_add(demand.copy_bytes.saturating_mul(count));total.capacity_bytes=total.capacity_bytes.saturating_add(demand.capacity_bytes.saturating_mul(count));total.release_bytes=total.release_bytes.saturating_add(demand.release_bytes.saturating_mul(count));total.depth=total.depth.max(demand.depth)};
- let paid=OriginalConstructionCompletion::demand();let retire=OriginalConstructionCompletion::retire_demand();
- add(1,semio_framework_job_return_budget::OriginalReturnBudget::<semio_framework_job_context::original_return_source::OriginalReturnSourceInput>::refresh_turn_demand());add(1,paid);add(1,cx.return_origin_commit_cost()?);add(1,paid);add(1,retire);
- for(wanted,build,commit)in[(table,Stage::Table,Stage::TableCommit),(publisher,Stage::Publisher,Stage::PublisherCommit)]{if wanted{let(fill,whole)=cx.return_birth_total(build)?;add(1,whole);add(fill.saturating_sub(1),RetirementDemand{depth:whole.depth,..Default::default()});add(1,paid);add(1,cx.return_birth_demand(commit)?);add(1,paid);add(2,retire)}}
- add(1,cx.return_birth_demand(Stage::Release)?);add(1,paid);add(2,retire);
- Ok((items,total,cx.return_origin_commit_demand()?.copy_bytes.saturating_sub(cx.return_origin_commit_cost()?.copy_bytes)))
+ let paid=OriginalConstructionCompletion::demand();let retire=OriginalConstructionCompletion::retire_demand();let cost=budget.commit_cost(bound)?;
+ add(1,Budget::refresh_turn_demand());add(1,paid);add(1,cost);add(1,paid);add(1,retire);
+ for(wanted,build,commit)in[(table,Stage::Table,Stage::TableCommit),(publisher,Stage::Publisher,Stage::PublisherCommit)]{if wanted{let(fill,whole)=budget.total(build)?;add(1,whole);add(fill.saturating_sub(1),RetirementDemand{depth:whole.depth,..Default::default()});add(1,paid);add(1,budget.demand(commit)?);add(1,paid);add(2,retire)}}
+ add(1,budget.demand(Stage::Release)?);add(1,paid);add(2,retire);
+ Ok((items,total,budget.commit_demand()?.copy_bytes.saturating_sub(budget.commit_cost(false)?.copy_bytes)))
 }
+fn chain_demand(cx:&StepContext<'_>,table:bool,publisher:bool)->Result<(usize,RetirementDemand,usize),ValueError>{chain_demand_of(&cx,true,table,publisher)}
 /// 🧮️ Quotes the exact retained progress the next origin-refresh chain charges its Source turn, including the table and publisher births it still owes.
 pub fn original_return_refresh_quote(cx:&StepContext<'_>)->Result<RetainedCloneProgress,ValueError>{let state=cx.return_birth_state()?;let(items,demand,_)=chain_demand(cx,state.table!=Phase::Live,state.publisher_wanted&&state.publisher!=Phase::Live)?;Ok(RetainedCloneProgress{copied_items:items,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes})}
+/// 🧾️ What one birth chain bills its turn, plus the transient copy bytes its gate also requires on top of the charge.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct OriginalReturnTurnQuote{pub charge:RetainedCloneGrant,pub slack_copy_bytes:usize,pub fuel:u64}
+impl OriginalReturnTurnQuote{
+ /// 🎫️ The grant a turn with nothing else to do needs for the chain to run.
+ pub fn standalone(&self)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:self.charge.maximum_copy_bytes.saturating_add(self.slack_copy_bytes),..self.charge}}
+ /// 🎫️ The grant and fuel a turn needs for this chain to run first and `business` to run on what is left.
+ pub fn beneath(&self,business:RetainedCloneGrant,business_fuel:u64)->Result<(RetainedCloneGrant,u64),ValueError>{
+  let overflow=||ValueError::invariant("original turn quote overflow");let charge=self.charge;
+  Ok((RetainedCloneGrant{maximum_items:charge.maximum_items.checked_add(business.maximum_items).ok_or_else(overflow)?,maximum_copy_bytes:charge.maximum_copy_bytes.checked_add(business.maximum_copy_bytes.max(self.slack_copy_bytes)).ok_or_else(overflow)?,maximum_capacity_bytes:charge.maximum_capacity_bytes.checked_add(business.maximum_capacity_bytes).ok_or_else(overflow)?,maximum_release_bytes:charge.maximum_release_bytes.checked_add(business.maximum_release_bytes).ok_or_else(overflow)?,maximum_depth:charge.maximum_depth.max(business.maximum_depth)},self.fuel.checked_add(business_fuel).ok_or_else(overflow)?))
+ }
+}
+fn turn_quote(table:bool)->Result<OriginalReturnTurnQuote,ValueError>{
+ let budget=Budget::empty(0);let(items,demand,slack)=chain_demand_of(&budget,!table,table,false)?;
+ Ok(OriginalReturnTurnQuote{charge:RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},slack_copy_bytes:slack,fuel:stage_work(&budget,false,table,false).iter().sum()})
+}
+/// 🔁️ Every turn of a Source whose return table exists first pays its origin refresh from the turn's grant.
+pub fn original_return_refresh_turn_quote()->Result<OriginalReturnTurnQuote,ValueError>{turn_quote(false)}
+/// 🌱️ The one turn that births the return table: its whole atomic chain is funded from that turn's grant or it does not start.
+pub fn original_return_table_birth_quote()->Result<OriginalReturnTurnQuote,ValueError>{turn_quote(true)}
+/// 🪪️ Quotes the grant and fuel that admit each decoder prerequisite, the Source loan, the work issuer and the return table birth, one turn each and all-or-nothing: a turn below it charges nothing.
+pub fn original_decoder_prerequisite_quote()->Result<(RetainedCloneGrant,u64),ValueError>{
+ let loan=OriginalCallerSourceLoan::admission_demand();let issuer=semio_framework_job_context::OriginalJobDecodeOwner::work_issuer_birth_copy_bytes();let(source,source_fuel)=(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:loan.copy_bytes.max(issuer),maximum_capacity_bytes:loan.capacity_bytes,maximum_release_bytes:loan.release_bytes,maximum_depth:loan.depth.max(1)},2);let table=original_return_table_birth_quote()?;let(table,table_fuel)=(table.standalone(),table.fuel);
+ Ok((RetainedCloneGrant{maximum_items:source.maximum_items.max(table.maximum_items),maximum_copy_bytes:source.maximum_copy_bytes.max(table.maximum_copy_bytes),maximum_capacity_bytes:source.maximum_capacity_bytes.max(table.maximum_capacity_bytes),maximum_release_bytes:source.maximum_release_bytes.max(table.maximum_release_bytes),maximum_depth:source.maximum_depth.max(table.maximum_depth)},source_fuel.max(table_fuel)))
+}
 /// 📏️ Checks that this turn's grant funds the sum of every action of the chain (items, copy, capacity, release, depth), so an atomic chain never starts on a turn it cannot finish.
 fn grant_admits(cx:&StepContext<'_>,table:bool,publisher:bool)->Result<bool,ValueError>{
  let grant=cx.retained_grant();let(items,total,slack)=chain_demand(cx,table,publisher)?;

@@ -184,7 +184,7 @@ where
             if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
             if rejected.terminal_is_empty(){drop(self.rejected.take());self.state=ActiveArtifactEnvelopeDecodeState::Complete;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,child,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_value(rejected.close_step(grant.maximum_copy_bytes,effect)))?;
+            let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,child,|effect|crate::poll_step(rejected.close_step(child.maximum_copy_bytes,effect)))?;
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,rejected.terminal_is_empty(),"envelope original rejected frame")?;
             return Ok(PluginLifecycleStep::retained(step,false));
         }

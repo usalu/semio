@@ -49,6 +49,3 @@ pub use payload_builder::{OriginalJobPayloadAdmission,JobPayloadAuthority, Origi
 mod payload_owner_retirement;
 pub use payload_owner_retirement::{close_ledger, ledger_demands,ledger_work_demand};
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

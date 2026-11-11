@@ -1,5 +1,5 @@
 #!/usr/bin/env repo
-import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "@semio-tech/framework/process/routing";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "@semio-tech/process/routing";
 import { runScriptProgram } from "./🧪️tests/🔬️script-commands/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
 /** 🚪️ `run` — runs the program of this script. */

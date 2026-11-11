@@ -1,8 +1,8 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
 import { resolve } from "node:path";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
@@ -15,8 +15,8 @@ if (segments[0] === "curation-document-contract") {
 const schemaRoot = context.repoRoot + "/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema";
 const { testCurationDocumentContractOracle } = await import(schemaRoot + "/🧪️tests/🪪️document-contract/🟦️.ts");
 testCurationDocumentContractOracle();
-const { runCmd } = await import("@semio-tech/framework/process/execution");
-const { runCargo } = await import("@semio-tech/framework/process/execution");
+const { runCmd } = await import("@semio-tech/process/execution");
+const { runCargo } = await import("@semio-tech/process/execution");
 runCmd("bun", [context.repoRoot + "/node_modules/typescript/bin/tsc", "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--skipLibCheck", schemaRoot + "/🧪️tests/🪪️document-contract/🟦️.ts"], { cwd: context.repoRoot });
 if (segments[1] === "native") await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-sourcing-curation", "--lib", "curation_document_contract", "--", "--nocapture"], context.repoRoot);
     return;

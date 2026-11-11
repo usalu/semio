@@ -353,12 +353,14 @@ async fn registry_matches_the_language_agnostic_json() {
             }
         }
         assert!(entry.status == NdpStatus::Unverified || json["evidence"].as_str().is_some_and(|evidence| !evidence.trim().is_empty()), "verified row {} has no evidence", entry.id);
-        let number = |value: &serde_json::Value, expected: NdpValue| match value {
-            serde_json::Value::Null => assert_eq!(expected, NdpValue::Unset),
-            serde_json::Value::Number(n) => assert_eq!(expected, NdpValue::Number(n.as_f64().expect("f64"))),
-            serde_json::Value::String(s) => assert_eq!(expected, NdpValue::Text(s.as_str())),
-            other => panic!("bad value {other}"),
-        };
+        fn number(value: &serde_json::Value, expected: NdpValue) {
+            match value {
+                serde_json::Value::Null => assert_eq!(expected, NdpValue::Unset),
+                serde_json::Value::Number(n) => assert_eq!(expected, NdpValue::Number(n.as_f64().expect("f64"))),
+                serde_json::Value::String(s) => assert!(matches!(expected, NdpValue::Text(text) if text == s.as_str()), "{expected:?} != {s}"),
+                other => panic!("bad value {other}"),
+            }
+        }
         number(&json["recommended"], entry.recommended);
         number(&json["naDe"], entry.na_de);
     }

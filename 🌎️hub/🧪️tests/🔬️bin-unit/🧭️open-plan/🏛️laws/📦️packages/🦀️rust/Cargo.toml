@@ -47,7 +47,7 @@ serde_json = { workspace = true }
 semio-framework-artifact-reference = { path = "../../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 axum = { version = "0.8", features = ["ws"] }
 futures = "0.3"
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }

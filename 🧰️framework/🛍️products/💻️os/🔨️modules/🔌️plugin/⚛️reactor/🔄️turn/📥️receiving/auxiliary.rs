@@ -4,7 +4,7 @@ use semio_framework::action_staging::StagedFormRequest;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
-use semio_framework_plugin_runtime_ops::ops_surface_render::staged_context::{self,StagedWindowContextCapture,StagedWindowContextLease};
+use semio_plugin_runtime_ops::ops_surface_render::staged_context::{self,StagedWindowContextCapture,StagedWindowContextLease};
 use semio_ui_runtime::ComponentTree;
 use semio_framework_value::{RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneClose;
@@ -49,7 +49,7 @@ impl StagedAuxiliaryInput{
     pub async fn close_step<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.witness.validate(cx)?;self.closing=true;
         if self.controller_started&&!self.controller_closed{if staged_context::close_work(runtime,self.lease.as_mut().ok_or_else(invalid)?,cx).await?==Some(true){if metadata(cx,true)?{self.controller_closed=true;}}return Ok(false);}
-        if !self.retirement.is_empty()||self.request.is_some(){let demand=self.retirement.next_owner_demands::<StagedFormRequest>(self.request.is_some(),&None,4096)?;retired(cx,demand,|effect|begin(&mut self.retirement,&mut self.request,effect))?;return Ok(false);}
+        if !self.retirement.is_empty()||self.request.is_some(){let demand=self.retirement.next_owner_demands::<StagedFormRequest>(self.request.is_some(),&None,4096)?;if self.retirement.is_empty(){retired(cx,demand,|effect|self.retirement.begin_granted(&mut self.request,effect).result?.ok_or_else(invalid))?;}else{let body=cx.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,demand,|effect|self.retirement.step_granted(body,effect))?;}return Ok(false);}
         if let Some(input)=self.input.as_mut(){if !input.terminal_is_empty(){input.close_step(cx)?;return Ok(false);}if metadata(cx,true)?{self.input.take();}return Ok(false);}
         if !metadata(cx,true)?{return Ok(false);}self.lease=None;self.capture=Default::default();self.closed=true;Ok(true)
     }

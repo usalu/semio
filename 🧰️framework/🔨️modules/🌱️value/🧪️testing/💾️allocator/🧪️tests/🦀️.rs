@@ -36,3 +36,17 @@ fn canonical_allocator_refuses_nested_retirement_scope_without_replacing_origina
  let law:serde_json::Value=serde_json::from_str(include_str!("unwind.json")).unwrap();let bytes=law["afterBytes"].as_u64().unwrap()as usize;
  let(((),physical),trace)=semio_framework_trace::observe_heap_allocations_on_this_thread(||observe_retirement_allocations(||{drop(Vec::<u8>::with_capacity(bytes));let nested=std::panic::catch_unwind(||observe_retirement_allocations(||panic!("nested observer must not enter")));assert!(nested.is_err());assert!(RETIREMENT_ALLOCATION_EVENTS.with(|events|events.get().is_some()));drop(Vec::<u8>::with_capacity(bytes));}));assert!(physical.0>=bytes*2&&physical.1>=bytes*2);assert_eq!(physical,(trace.requested_bytes,trace.released_bytes));assert!(!trace.overflowed);
 }
+#[test]
+fn canonical_allocator_refuses_every_request_in_scope_and_restores_after_it(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();let bytes=fixture["initialBytes"].as_u64().unwrap()as usize;
+ let(refusals,attempts)=refuse_all_allocations_on_this_thread(||{let mut refused=0;for _ in 0..3{let mut value=Vec::<u8>::new();refused+=usize::from(value.try_reserve_exact(bytes).is_err());}refused});assert_eq!((refusals,attempts),(3,3));
+ let mut value=Vec::<u8>::new();value.try_reserve_exact(bytes).unwrap();assert!(value.capacity()>=bytes);
+}
+#[test]
+fn canonical_allocator_refuses_only_the_selected_size_and_taps_every_request(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap();let bytes=fixture["initialBytes"].as_u64().unwrap()as usize;
+ thread_local!{static SEEN:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};static FREED:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
+ install_allocation_tap(|layout|{if layout.size()==977{SEEN.with(|seen|seen.set(seen.get()+1));}},|_,layout|{if layout.size()==977{FREED.with(|freed|freed.set(freed.get()+1));}});
+ let(outcome,attempts)=refuse_allocations_of_size_on_this_thread(bytes,||{let mut other=Vec::<u8>::new();other.try_reserve_exact(bytes+1).unwrap();let mut selected=Vec::<u8>::new();(other.capacity()>bytes,selected.try_reserve_exact(bytes).is_err())});assert_eq!((outcome,attempts),((true,true),1));
+ let tapped=Vec::<u8>::with_capacity(977);drop(tapped);assert_eq!((SEEN.with(std::cell::Cell::get),FREED.with(std::cell::Cell::get)),(1,1));
+}

@@ -1,6 +1,6 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { resolve } from "node:path";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 
 const CASES = [
   "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🖼️decoded-image/🟦️.ts",

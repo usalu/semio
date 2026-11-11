@@ -54,7 +54,7 @@ for (const row of corpus.crates) test(row.package + " has independent production
     if (row.package.startsWith("semio-os-history")) for (const forbidden of ["semio-os-directory", "semio-os-vcs", "semio-os-command"]) expect(dependencies).not.toContain(forbidden);
   }
   for (const input of rows.filter(row => row.kind === "source")) {
-    const tokens = rustTokens(selectRustSourceV1(readFileSync(resolve(workspace, input.path), "utf8"), cfg));
+    const tokens = rustTokens(selectRustSourceV1(readFileSync(resolve(workspace, input.path), "utf8"), cfg, input.path));
     for (const forbidden of ["semio_os_kernel", "semio_plugin", "os_store", "os_spr", "os_directory"]) expect(tokens.some(token => token.text === forbidden)).toBe(false);
   }
 }, 120000);

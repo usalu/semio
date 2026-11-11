@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
@@ -29,12 +30,12 @@ test("standalone input inspection refuses root links before ordinary target read
     const paths: Record<string, string> = { regular: join(root, "physical"), relative: relative(process.cwd(), join(root, "physical")), "root-link": join(root, "root-link"), "ancestor-link": join(root, "root-link/child"), file: join(root, "file"), missing: join(root, "missing"), dot: root + "/./physical", parent: root + "/other/../physical", "cancelled-link": root + "/prefix-link/../physical", empty: "", nul: root + "\0", "drive-relative": "C:root" };
     const rows = fixture.cases.map(row => ({ ...row, input: paths[row.mode]! }));
     const script = "const fs=require(\"node:fs\"),path=require(\"node:path\");const rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(row=>{const value=row.input;if(!value||value.includes(\"\\0\")||/^[A-Za-z]:(?:$|[^\\\\/])/.test(value)||value.split(/[\\\\/]/).some(part=>part===\".\"||part===\"..\"))return {state:\"rejected\",reason:\"unsafe-root\"};const root=path.resolve(value),parts=[];for(let current=root;;current=path.dirname(current)){parts.push(current);if(current===path.dirname(current))break;}for(const current of parts.reverse()){let node;try{node=fs.lstatSync(current);}catch(error){if(error.code===\"ENOENT\")return {state:\"rejected\",reason:\"missing-root\"};throw error;}if(node.isSymbolicLink())return {state:\"rejected\",reason:\"linked-root\"};if(!node.isDirectory())return {state:\"rejected\",reason:\"non-directory-root\"};}return {state:\"admitted\",reason:null};})));";
-    const oracle = Bun.spawn(["node", "-e", script, JSON.stringify(rows)], { stdout: "pipe", stderr: "pipe" });
+    const oracle = Bun.spawn([registeredToolExecutableV1("node"), "-e", script, JSON.stringify(rows)], { stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, status] = await Promise.all([new Response(oracle.stdout).text(), new Response(oracle.stderr).text(), oracle.exited]);
     expect(status, stderr).toBe(0);
     const references = JSON.parse(stdout) as readonly { state: string; reason: string | null }[];
     for (const [index, row] of rows.entries()) expect(references[index], row.id).toEqual(row.expected);
-    const markerOracle = Bun.spawn(["node", "-e", 'const fs=require("node:fs");console.log(JSON.stringify(JSON.parse(process.argv[1]).map(path=>fs.readFileSync(path+"/leaf.rs","utf8").match(/OWNER: &str = "([^"\\n]+)"/)[1])));', JSON.stringify(fixture.native.map(row => rows.find(value => value.id === row.id)!.input))], { stdout: "pipe", stderr: "pipe" });
+    const markerOracle = Bun.spawn([registeredToolExecutableV1("node"), "-e", 'const fs=require("node:fs");console.log(JSON.stringify(JSON.parse(process.argv[1]).map(path=>fs.readFileSync(path+"/leaf.rs","utf8").match(/OWNER: &str = "([^"\\n]+)"/)[1])));', JSON.stringify(fixture.native.map(row => rows.find(value => value.id === row.id)!.input))], { stdout: "pipe", stderr: "pipe" });
     const [markers, markerErrors, markerStatus] = await Promise.all([new Response(markerOracle.stdout).text(), new Response(markerOracle.stderr).text(), markerOracle.exited]);
     expect(markerStatus, markerErrors).toBe(0);
     const physicalMarkers = JSON.parse(markers) as readonly string[];

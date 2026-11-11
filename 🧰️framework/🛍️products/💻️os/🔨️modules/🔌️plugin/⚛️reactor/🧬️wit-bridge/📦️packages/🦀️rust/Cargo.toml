@@ -25,13 +25,13 @@ path = "../../🦀️.rs"
 semio-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
 semio-plugin-reactor-core = { path = "../../../📦️packages/🦀️rust" }
-semio-framework-plugin-reactor-turn = { path = "../../../🔄️turn/📦️packages/🦀️rust", package = "semio-plugin-reactor-turn"}
+semio-plugin-reactor-turn = { path = "../../../🔄️turn/📦️packages/🦀️rust"}
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

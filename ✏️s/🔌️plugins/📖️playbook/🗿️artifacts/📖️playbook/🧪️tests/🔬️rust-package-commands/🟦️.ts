@@ -1,4 +1,4 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {

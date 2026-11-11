@@ -117,6 +117,15 @@ export function resolveRegisteredToolV1(entry: ToolEntryV1, root: string, option
   return resolution;
 }
 
+/** 🧭️ The executable a registered tool starts with on this host, for spawns that keep their own stdio and lifecycle (tests, probes); a missing tool throws `tool-missing` like `runToolV1`. */
+export function registeredToolExecutableV1(toolId: string, root: string = toolRootV1()): string {
+  const entry = findToolV1(toolId);
+  if (entry === undefined) throw new ToolErrorV1("unknown-tool", toolId, `unknown tool ${toolId}`);
+  const resolution = resolveRegisteredToolV1(entry, root);
+  if (resolution.command === null) throw new ToolErrorV1("tool-missing", entry.id, `tool ${entry.id} is missing: ${resolution.tried.join(", ")}`);
+  return resolution.command;
+}
+
 const prepare = (toolId: string, options: ToolRunOptionsV1) => {
   const { entry, registry, language } = entryOf(toolId, options), root = options.root ?? toolRootV1(options.cwd, options.env ?? process.env);
   checkCaller(entry, registry, root, options, language);

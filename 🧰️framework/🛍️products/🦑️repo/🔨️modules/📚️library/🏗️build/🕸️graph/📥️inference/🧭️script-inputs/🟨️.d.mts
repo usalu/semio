@@ -25,7 +25,7 @@ export function closureHandleFromRecipeV1(recipe: ScriptInputsValueV1): ScriptIn
 export function closureHandleOfV1(value: unknown): ScriptInputsValueV1;
 export function registerClosureQueryV1(name: string, query: ScriptInputsValueV1): void;
 export function bindClosureScriptsV1(workspaceRoot: string, scripts: ScriptInputsValueV1): void;
-export function resetClosureEntriesV1(): void;
+export function resetClosureEntriesV1(entryBytes?: number): void;
 export function closureEntryCountsV1(): { derived: number; loaded: number; stale: number; checked: number };
 export function closureStoreDirectoryV1(workspaceRoot: string): string | undefined;
 export function bindClosureStoreV1(workspaceRoot: string, directory: string, writable?: boolean): void;

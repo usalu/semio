@@ -317,7 +317,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   await prime?.(signal);
   const current=await read(signal),usable=current?.manifest&&current.manifest.identity===identity?current.manifest:undefined;
   const reuse=hint&&usable&&current.pointer.generation===hint.generation&&now()-hint.atMs<=P.hintMaximumAgeMilliseconds;
-  const previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await membership(previous?.frontier?previous:undefined,signal);
+  let previous=usable&&!reuse?{manifest:usable,frontier:await readFrontier(usable.frontier)}:undefined,live=reuse?hint.live:await membership(previous?.frontier?previous:undefined,signal);
   const found=reuse?hint.plan:await plan({current,identity,changes:previous?.frontier?live.changes:undefined,...previous?.frontier&&live.dirty?{journalDirty:live.dirty}:{},only,skipEnvironment:coverage!==undefined,signal,progress});
   if(found.kind==="clean"){
    if(usable.membership===live.digest&&!found.refresh?.size)return{current,built:false,published:false,plan:found,computed:0};
@@ -329,7 +329,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   aborted(signal);
   const spec={cold,owners:names,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:usable.env,previousParts:cold?undefined:usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
    stubs:Object.fromEntries(Object.entries(owners0).map(([name,row])=>[name,{root:row.root,kind:row.kind,targets:row.targets,...(row.nativeRoot?{nativeRoot:row.nativeRoot}:{}),...(row.config?{config:row.config}:{}),...(row.tag?{tag:row.tag}:{}),...(row.reads?{reads:row.reads}:{})}]))};
-  if(usable)indexCache.delete("view:"+usable.factIndex);
+  previous=undefined;indexCache.clear();
   const result=await compute(spec,signal);
   stats.computed+=result.owners.length;aborted(signal);
   const envDigest=result.env.digest,owners={...owners0},dropped=new Set(found.removed),upserts=new Map(),append=new Map(),returned=new Set(),stored=[];
@@ -386,7 +386,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  async function refreshMetadata({current,live,signal,held}){
   const manifest=current.manifest,frontier=live?await store(P.frontiers,live.frontier,".json.br",P.maximumIndexBytes):undefined;
   let factIndex=manifest.factIndex,patched;
-  if(held?.size){const old=await readIndex(manifest.factIndex);if(old){patched=patchFactIndexV1(old,{upserts:derivedUpsertsV1([],held)});factIndex=(await keep(P.indexes,packFactIndexV1(patched,P.maximumIndexBytes).bytes,".facts.br")).digest;}}
+  if(held?.size){const old=await readIndex(manifest.factIndex);if(old){patched=patchFactIndexV1(old,{upserts:derivedUpsertsV1([],held)});indexCache.delete(manifest.factIndex);factIndex=(await keep(P.indexes,packFactIndexV1(patched,P.maximumIndexBytes).bytes,".facts.br")).digest;}}
   const next={...manifest,generation:manifest.generation+1,parent:current.pointer.manifest,membership:live?live.digest:manifest.membership,frontier:frontier?frontier.digest:manifest.frontier,factIndex,built:{kind:"refresh",base:manifest.generation,dirty:[]}};
   const digest=await writeManifest(next);
   try{const outcome=await publish({manifestDigest:digest,expectedGeneration:current.pointer.generation,verified:current.pointer.verified,signal});if(outcome.published){if(patched){indexCache.set(factIndex,patched);await settler.markIndexed({held}).catch(()=>undefined);}return{current:{pointer:outcome.pointer,manifest:next},published:true};}}

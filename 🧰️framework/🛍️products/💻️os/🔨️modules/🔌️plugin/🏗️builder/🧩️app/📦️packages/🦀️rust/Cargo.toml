@@ -28,9 +28,9 @@ artifact-app-testing = []
 semio-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
-semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }

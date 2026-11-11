@@ -154,15 +154,15 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
 
     /// 🏗️ Author-owned payload builder paired with `register_tool_job_factories`.
-    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>,_output:&mut Option<semio_framework::ErasedToolJob>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>,_output:&mut Option<semio_framework::ErasedToolJob>,_construction:&mut semio_framework_job::OriginalConstructionAdmission,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered surface tool lacks its original source-preserving producer").into())
     }
 
     /// 📥️ Supplies the framework-owned bounded natural-file importer while leaving every other
     /// reserved route to the editor. Editors with a richer media route may override this method.
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if let Some(original)=request.as_ref(){let natural=matches!(&original.input,Some(ArtifactReservedToolInput::Media{port,..})if port==NATURAL_FILE_PORT)&&Self::natural_file_codec().is_some();if !natural||!original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"natural-file import requires its owned declared media and no wire").into())}}
-        semio_plugin_decl_app::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::natural_file_import::NaturalFileImportWork<Self>>(request,body,cx)
+        semio_plugin_decl_app::tool_contract::admit_reserved_work::<EditorApp<Self>,crate::natural_file_import::NaturalFileImportWork<Self>>(request,body,construction,cx)
     }
 
     /// 🎞️ Author-owned resumable media-output producer for `EditorApp<Self>`.

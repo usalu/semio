@@ -55,7 +55,7 @@ impl<W: RetireOwned> OriginalRenderWork<W> {
             cx.consume_fuel(1);
             return Ok(Some(true));
         }
-        semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.step(body,effect))?;
+        semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.step(grant.maximum_copy_bytes, effect))?;
         Ok(Some(false))
     }
 }

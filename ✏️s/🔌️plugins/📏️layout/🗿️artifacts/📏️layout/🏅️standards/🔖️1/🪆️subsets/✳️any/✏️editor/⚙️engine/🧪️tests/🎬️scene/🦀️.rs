@@ -15,8 +15,6 @@ use semio_framework_2d_engine::PathSegment;
 use serde_json::Value;
 use ui_render::{TextSystem,TextStyle,TextRunStyle,TextAlignment,FontFamilyChoice,TextFontSet,TextFontFiles,TextFontRole};
 use semio_s_artifact_layout_layout_engine_export::{export_document_pdf_headless_batch,export_document_png_headless_batch,export_document_svg_headless_batch,export_package_zip_headless_batch};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[path="../../🎬️scene/🧪️tests/🔬️unit/🦀️.rs"] mod laws_0;
 #[path="../../🎬️scene/🧪️tests/👁️layer-order/🦀️.rs"] mod laws_1;
 #[path="../../🎬️scene/📄️paragraph/🧪️tests/🦀️.rs"] mod laws_2;

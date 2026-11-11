@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -98,7 +99,7 @@ describe("root artifact and dependency source ownership", () => {
     const cwd = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript");
     const projection = JSON.stringify({ contractId: "wgpu-frame-worker", schemaVersion: 1, moves: [], edits: [], removals: [] }) + "\n";
     const env = { ...process.env, SEMIO_GENERATOR_PREVIEW: "1", SEMIO_GENERATOR_PREVIEW_PROTOCOL: "package-projected-inputs-v1", SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: "" };
-    const success = spawnSync("bun", ["./📜️script.ts", "preview-generated"], { cwd, env, input: projection, encoding: "utf8", maxBuffer: 8 * 1024 * 1024, timeout: 15_000 });
+    const success = spawnSync(registeredToolExecutableV1("bun"), ["./📜️script.ts", "preview-generated"], { cwd, env, input: projection, encoding: "utf8", maxBuffer: 8 * 1024 * 1024, timeout: 15_000 });
     expect(success.status, success.stderr).toBe(0);
     expect(success.stderr).toBe("");
     const manifest = JSON.parse(success.stdout);
@@ -111,7 +112,7 @@ describe("root artifact and dependency source ownership", () => {
     writeFileSync(cancelFile, "cancel\n");
     const started = Date.now();
     try {
-      const cancelled = spawnSync("bun", ["./📜️script.ts", "preview-generated"], { cwd, env: { ...env, SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancelFile }, input: projection, encoding: "utf8", maxBuffer: 8 * 1024 * 1024, timeout: 15_000 });
+      const cancelled = spawnSync(registeredToolExecutableV1("bun"), ["./📜️script.ts", "preview-generated"], { cwd, env: { ...env, SEMIO_GENERATOR_PREVIEW_CANCEL_FILE: cancelFile }, input: projection, encoding: "utf8", maxBuffer: 8 * 1024 * 1024, timeout: 15_000 });
       expect(cancelled.status).not.toBe(0);
       expect(cancelled.stderr).toMatch(/cancelled/u);
       expect(cancelled.stdout).toBe("");

@@ -3,8 +3,6 @@ use semio_os_flow_host_source::ordering::{OriginalTextOrdering,FlowTextOrderingW
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,StepContext,OperationId,Generation,close_original_retained_step};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueRefusalKind};
 use std::cmp::Ordering;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}
 fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(97146),Generation(17),RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:128*1024*1024,maximum_capacity_bytes:256*1024*1024,maximum_release_bytes:512*1024*1024,maximum_depth:4096},clock,1500,32768)}
 fn native<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,run));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));result.unwrap()}

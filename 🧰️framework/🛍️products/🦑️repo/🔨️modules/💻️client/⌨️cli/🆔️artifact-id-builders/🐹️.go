@@ -452,7 +452,7 @@ func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]
 	if baseCheckpoint == "" {
 		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
 	}
-	args := []string{"diff", "--name-status", "-M"}
+	args := []string{"diff", "--name-status", "-M", "-z"}
 	if baseCheckpoint != GitIndexRef {
 		args = append(args, baseCheckpoint)
 		if headCheckpoint != "" {
@@ -467,21 +467,23 @@ func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff status failed: %s", strings.TrimSpace(stderr))
 	}
+	fields := strings.Split(stdout, "\x00")
 	var results []GitDiffStatus
-	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
-		if line == "" {
+	for index := 0; index < len(fields); index++ {
+		status := fields[index]
+		if status == "" {
 			continue
 		}
-		parts := strings.Split(line, "\t")
-		if len(parts) < 2 {
+		if strings.HasPrefix(status, "R") && index+2 < len(fields) {
+			results = append(results, GitDiffStatus{Status: "renamed", From: fields[index+1], To: fields[index+2]})
+			index += 2
 			continue
 		}
-		status := strings.TrimSpace(parts[0])
-		if strings.HasPrefix(status, "R") && len(parts) >= 3 {
-			results = append(results, GitDiffStatus{Status: "renamed", From: parts[1], To: parts[2]})
-			continue
+		if index+1 >= len(fields) {
+			break
 		}
-		file := parts[1]
+		index++
+		file := fields[index]
 		switch status {
 		case "A":
 			results = append(results, GitDiffStatus{Status: "added", To: file})

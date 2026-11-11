@@ -3,23 +3,241 @@
   "catalog": {
     "version": 1,
     "id": "steps",
-    "languages": ["en", "de"],
+    "languages": [
+      "en",
+      "de"
+    ],
     "messages": {
-      "start": { "en": "[steps] checking {count} file(s)…", "de": "[steps] {count} Datei(en) werden geprüft…" },
-      "done": { "en": "[steps] done.", "de": "[steps] fertig." },
-      "warn": { "en": "[steps] {name} is slow ({seconds} s)", "de": "[steps] {name} ist langsam ({seconds} s)" }
+      "start": {
+        "en": "[steps] checking {count} file(s)…",
+        "de": "[steps] {count} Datei(en) werden geprüft…"
+      },
+      "done": {
+        "en": "[steps] done.",
+        "de": "[steps] fertig."
+      },
+      "warn": {
+        "en": "[steps] {name} is slow ({seconds} s)",
+        "de": "[steps] {name} ist langsam ({seconds} s)"
+      }
     }
   },
   "events": [
-    { "name": "an info line is a diagnostic line too", "key": "start", "values": { "count": 4 }, "level": "info", "en": "[steps] checking 4 file(s)…", "de": "[steps] 4 Datei(en) werden geprüft…" },
-    { "name": "a line without values", "key": "done", "values": {}, "level": "info", "en": "[steps] done.", "de": "[steps] fertig." },
-    { "name": "a warning is a diagnostic line", "key": "warn", "values": { "name": "lane", "seconds": 12 }, "level": "warn", "en": "[steps] lane is slow (12 s)", "de": "[steps] lane ist langsam (12 s)" },
-    { "name": "an error is a diagnostic line", "key": "warn", "values": { "name": "gate", "seconds": 3 }, "level": "error", "en": "[steps] gate is slow (3 s)", "de": "[steps] gate ist langsam (3 s)" }
+    {
+      "name": "an info line is a diagnostic line too",
+      "key": "start",
+      "values": {
+        "count": 4
+      },
+      "level": "info",
+      "en": "[steps] checking 4 file(s)…",
+      "de": "[steps] 4 Datei(en) werden geprüft…"
+    },
+    {
+      "name": "a line without values",
+      "key": "done",
+      "values": {},
+      "level": "info",
+      "en": "[steps] done.",
+      "de": "[steps] fertig."
+    },
+    {
+      "name": "a warning is a diagnostic line",
+      "key": "warn",
+      "values": {
+        "name": "lane",
+        "seconds": 12
+      },
+      "level": "warn",
+      "en": "[steps] lane is slow (12 s)",
+      "de": "[steps] lane ist langsam (12 s)"
+    },
+    {
+      "name": "an error is a diagnostic line",
+      "key": "warn",
+      "values": {
+        "name": "gate",
+        "seconds": 3
+      },
+      "level": "error",
+      "en": "[steps] gate is slow (3 s)",
+      "de": "[steps] gate ist langsam (3 s)"
+    }
   ],
   "wire": [
-    { "name": "a valid event", "valid": true, "data": { "version": 1, "key": "steps.start", "values": { "count": 1 }, "level": "info" } },
-    { "name": "an unknown level", "valid": false, "data": { "version": 1, "key": "steps.start", "values": {}, "level": "debug" } },
-    { "name": "a key without a namespace", "valid": false, "data": { "version": 1, "key": "start", "values": {}, "level": "info" } },
-    { "name": "a stored text", "valid": false, "data": { "version": 1, "key": "steps.start", "values": {}, "level": "info", "text": "x" } }
+    {
+      "name": "a valid event",
+      "valid": true,
+      "data": {
+        "version": 1,
+        "key": "steps.start",
+        "values": {
+          "count": 1
+        },
+        "level": "info"
+      }
+    },
+    {
+      "name": "an unknown level",
+      "valid": false,
+      "data": {
+        "version": 1,
+        "key": "steps.start",
+        "values": {},
+        "level": "debug"
+      }
+    },
+    {
+      "name": "a key without a namespace",
+      "valid": false,
+      "data": {
+        "version": 1,
+        "key": "start",
+        "values": {},
+        "level": "info"
+      }
+    },
+    {
+      "name": "a stored text",
+      "valid": false,
+      "data": {
+        "version": 1,
+        "key": "steps.start",
+        "values": {},
+        "level": "info",
+        "text": "x"
+      }
+    }
+  ],
+  "children": [
+    {
+      "name": "a child that fails with exit code 101",
+      "label": "cargo check",
+      "status": 101,
+      "exitCode": 101,
+      "en": "cargo check failed with exit code 101",
+      "de": "cargo check ist mit Exitcode 101 fehlgeschlagen"
+    },
+    {
+      "name": "a child that fails with exit code 1",
+      "label": "bun test",
+      "status": 1,
+      "exitCode": 1,
+      "en": "bun test failed with exit code 1",
+      "de": "bun test ist mit Exitcode 1 fehlgeschlagen"
+    }
+  ],
+  "signals": [
+    {
+      "name": "a child killed by SIGTERM",
+      "label": "cargo build",
+      "status": null,
+      "signal": "SIGTERM",
+      "exitCode": 143,
+      "en": "cargo build was killed by SIGTERM",
+      "de": "cargo build wurde durch SIGTERM beendet"
+    },
+    {
+      "name": "a status that carries a signal keeps the status",
+      "label": "cargo test",
+      "status": 7,
+      "signal": "SIGTERM",
+      "exitCode": 7,
+      "en": "cargo test failed with exit code 7",
+      "de": "cargo test ist mit Exitcode 7 fehlgeschlagen"
+    }
+  ],
+  "stops": [
+    {
+      "name": "a command cancelled before it starts",
+      "label": "cargo test",
+      "kind": "pre-cancelled",
+      "exitCode": 130,
+      "en": "cargo test was cancelled",
+      "de": "cargo test wurde abgebrochen"
+    },
+    {
+      "name": "a command cancelled while it runs",
+      "label": "bun test",
+      "kind": "cancel-after",
+      "abortAfterMs": 200,
+      "exitCode": 130,
+      "en": "bun test was cancelled",
+      "de": "bun test wurde abgebrochen"
+    },
+    {
+      "name": "a command that exceeds its time limit",
+      "label": "cargo build",
+      "kind": "timeout",
+      "timeoutMs": 300,
+      "exitCode": 124,
+      "en": "cargo build exceeded its 300 ms time limit and was stopped",
+      "de": "cargo build hat sein Zeitlimit von 300 ms überschritten und wurde angehalten"
+    },
+    {
+      "name": "a command that writes beyond its output limit",
+      "label": "cargo check",
+      "kind": "output-limit",
+      "exitCode": 1,
+      "en": "cargo check wrote more output than its limit allows and was stopped",
+      "de": "cargo check hat mehr Ausgabe geschrieben, als sein Limit erlaubt, und wurde angehalten"
+    }
+  ],
+  "boundary": [
+    {
+      "name": "a cargo lock refusal renders its own text and resolver output",
+      "kind": "cargo-lock",
+      "message": "",
+      "en": [
+        "Short resolver refusal",
+        "original resolver output"
+      ],
+      "de": [
+        "Kurze Resolver-Ablehnung",
+        "original resolver output"
+      ],
+      "exitCode": 1
+    },
+    {
+      "name": "a crate source byte budget refusal renders typed and localized",
+      "kind": "refusal",
+      "message": "source.read-bytes-exceeded",
+      "values": {
+        "file": "/crate/owner/source.rs",
+        "observedBytes": "3702",
+        "maximumBytes": 1960
+      },
+      "en": [
+        "Rust source /crate/owner/source.rs has 3702 bytes but only 1960 bytes remain in its crate source boundary"
+      ],
+      "de": [
+        "Rust-Quelle /crate/owner/source.rs hat 3702 Bytes, aber in der Quellgrenze ihres Crates verbleiben nur 1960 Bytes"
+      ],
+      "exitCode": 1
+    },
+    {
+      "name": "a plain error becomes the localized internal error",
+      "kind": "error",
+      "message": "Unbalanced thing",
+      "en": [
+        "Internal error: Unbalanced thing"
+      ],
+      "de": [
+        "Interner Fehler: Unbalanced thing"
+      ],
+      "exitCode": 1
+    },
+    {
+      "name": "a thrown string becomes the localized internal error",
+      "kind": "string",
+      "message": "boom",
+      "en": [
+        "Internal error: boom"
+      ],
+      "de": [
+        "Interner Fehler: boom"
+      ],
+      "exitCode": 1
+    }
   ]
 }

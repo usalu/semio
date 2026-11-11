@@ -109,7 +109,7 @@ use semio_ui_layout::layout::WindowMeasure;
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, transient_store_disposer};
 use semio_plugin_window_transient::{built_text_to_component_tree, window_transient};
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
+use semio_plugin_instance_docs::docs_maintenance_ladder::item;
 use semio_os_kernel as protocol;
 use semio_os_kernel as store;
 use semio_plugin_tool_run as tool_run;

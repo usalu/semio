@@ -6,8 +6,6 @@ use semio_os_kernel::sqlite_snapshot::SnapshotEncoding;
 use crate::{standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot, standards::v_ascii::subsets::any::schema::snapshot::StlTriangle};
 use semio_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRow, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase};
 use semio_os_kernel::sqlite_snapshot::artifact::Cell;
-#[global_allocator]
-static ORIGINAL_RECEIVING_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use crate::standards::v_ascii::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;

@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn the_cantilever_under_an_end_torque_has_the_closed_form_root_bimoment() {
-        let (l, ei_w, g_it, mt) = (3000.0, 210000.0 * 50000.0e6, 81000.0 * 10.0e4, 1.0e6);
+        let (l, ei_w, g_it, mt) = (3000.0, 210000.0_f64 * 50000.0e6, 81000.0_f64 * 10.0e4, 1.0e6);
         let k = (g_it / ei_w).sqrt();
         let profile = warping_torsion(l, ei_w, g_it, mt, l * (1.0 - 1e-3), false, (End::Fixed, End::Free), 400).expect("solution");
         let closed = mt / k * (k * l).tanh();

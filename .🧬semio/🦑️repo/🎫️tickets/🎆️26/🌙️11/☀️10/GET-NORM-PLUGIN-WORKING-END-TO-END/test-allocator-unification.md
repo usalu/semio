@@ -1,0 +1,252 @@
+# Test allocator unification
+
+## Single mechanism
+- `semio-framework-value-testing-allocator` (`🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🦀️.rs`) owns the one `#[global_allocator]` of every test binary that links it (`ObservedAllocator` -> `RequestedAllocator` -> `HeapWitness`). It is a strict superset of the per-binary declarations: `observe_heap_allocations_on_this_thread`, `retained_heap_bytes*`, `observe` / `observe_backing`, `observe_retirement_allocations` and the refusal scopes all read the same physical events.
+- Crate docs now state that test binaries MUST NOT declare their own global allocator and which observers to use.
+- Extended with generic scopes so bespoke allocators are no longer needed: `refuse_all_allocations_on_this_thread`, `refuse_allocations_of_size_on_this_thread` (the three refusal modes share one `Refusal` thread-local) and `install_allocation_tap` (layout and released-pointer hooks). Three new laws in the crate tests (7 tests pass via `repo cargo test -p semio-framework-value-testing-allocator` from `🧰️framework`).
+- Production safety: the crate is only reachable through `role = "test"` crates, the optional `testkit` features of `semio-framework-job` / `semio-os-kernel-neural-engine-model`, and `[dev-dependencies]`; no production crate has it in `[dependencies]` (the wfc oracle crate lists it, but is only a dev-dependency of its users). No manifest change was needed.
+
+## Method
+Static feature-resolved dependency analysis (scripts `alloc-static.py`, `alloc-linked.py`) over all manifests of 🧰️framework, ✏️s and 🌎️hub: every file declaring `#[global_allocator]` was mapped to its owning package(s) via `#[path]` / `include!` chains; a package conflicts when the testing allocator is reachable from its normal+dev dependencies under its default features. No file was shared between a conflicting and a non-conflicting package. `alloc-linked.py` additionally verified that each conflicting package references a dependency that reaches the allocator in its sources (so the crate is really linked); the only miss, `semio-framework-value-control-physical`, now links it with `use semio_framework_value_testing_allocator as _;`.
+
+## Removed declarations (assertion path unchanged)
+Declarations removed (static + `#[cfg(test)]` + attached docstring): 172 `semio_framework_trace::HeapWitness`, 3 bare `HeapWitness`, 28+5+1+1+1 `RequestedAllocator` (trace-memory-testing). All their assertions keep measuring through `observe_heap_allocations_on_this_thread` / `retained_heap_bytes*` / `observe*` of trace-memory-testing, because the testing allocator delegates every event to the same `RequestedAllocator` -> `HeapWitness`; no assertion was weakened or edited.
+
+Bespoke allocators converted (real numbers preserved):
+- `semio-s-artifact-stdio-binary-snapshot` receiving laws: local `Allocator` + `TRACE` replaced by `observe_heap_allocations_on_this_thread` (requested/released bytes, same realloc accounting).
+- `semio-ui-wgpu-engine-laws` / `-scene-laws` `physical-job-close/allocator`: `PhysicalAllocator` replaced by `observe_heap_allocations_on_this_thread` (births/frees).
+- `semio-s-artifact-stdio-md-snapshot` and `-html-snapshot` retirement laws: `RetireObservedAllocator` / `ObservedAllocator` (refuse-all + live bytes) replaced by `refuse_all_allocations_on_this_thread` + `observe_retirement_allocations` / `retirement_allocations_so_far`; still assert owned > 0, remaining == 0, zero attempts, linear visits.
+- `semio-framework-dsl-record` borrowed-object: `ObservedDslAllocator` replaced by `install_allocation_tap` (same request layouts, bytes and rejected-payload pointer reclamation).
+- `semio-framework-text-splice-native`: `Refusing` replaced by `refuse_allocations_of_size_on_this_thread`; the law now also asserts the refusal was actually hit (`attempts > 0`).
+- `semio-framework-value-control-physical`: removed `RequestedAllocator` declaration; added dev-dependency on `semio-framework-trace-memory-testing` (the test already imported it) and the explicit link of the testing allocator.
+- Kept: the testing allocator crate's own declaration.
+
+Dev-dependency additions: `semio-framework-trace` (binary snapshot), `semio-framework-value-testing-allocator` (md/html snapshot, text-splice-native), `semio-framework-trace-memory-testing` (value-control-physical).
+
+Left alone: 6 orphan files (not part of any crate graph, declarations never compiled): block 3d `retirement-law`, remodel mutations `retained-params`, sourcing curation `backing`, workflow `backing`, dev composition generation3d `unit`, store group `isolated`.
+
+Also restored three pre-existing empty `//#region` blocks my first cleanup pass dropped by mistake (plugin `🦀️.rs`, guest-runtime `🦀️.rs`, process3d unit `🦀️.rs`).
+
+## Files edited (allocator declaration removed)
+- `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🏗️construction/🧪️tests/🦀️.rs`
+- `✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🧪️tests/🪧️pane-smoke/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️transforms/📥️source/🧪️laws/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🌊️flow-overlay/🧪️laws/🦀️.rs`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪧️pane-smoke/🦀️.rs`
+- `✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🏛️host-configuration/🦀️.rs`
+- `✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/⚖️preparation-law/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️task-resume/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️action-producer/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️testkit/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/📝️typed-json/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️text/↩️inverse/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🧬️retained-clone/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🎮️commands/📤️jobs/🧪️tests/♻️retirement/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧮️physical/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌉️bridge-fatigue-rows/🧪️tests/🛬️native/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🖥️app-surface/🪺️inspector-forms/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪧️pane-smoke-target/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🏛️host-configuration/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/⚖️retirement-law/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/♻️retirement/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️child-publication/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️unit/🧵️original-close.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️tests/🪧️pane-smoke-target/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/original-receiving-tests.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/🧬️schema/📸️snapshot/original-receiving-tests.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧪️tests/🥣️companion/🦀️.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🎟️font/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🌱️initialization/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️simulation-session/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️mounted-bestest/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/♻️restore/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️.rs`
+- `✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/🦀️.rs`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🏛️host-configuration/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/⚖️retirement-law/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖌️paint-stroke/🧵️work/📍️samples/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/🫧️transient/🧪️tests/⚖️retirement-law/🦀️.rs`
+- `✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⌨️typing/🔗️fold/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧪️tests/⚙️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🧪️tests/⚙️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📸️native-export/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/👁️mvd/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/📚️rules/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/👥️population/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/🧮️evaluator/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🏗️fem/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💾️binary/📸️snapshot/📦️pack/🧩️extras/📥️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/⚙️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/✏️editor/🪆️child/🧪️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/🧾️original/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/💾️binary/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧪️tests/⚙️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🧪️tests/⚙️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🏅️standards/🔖️r12/🪆️subsets/📰️header/🚪️io/💾️binary/📸️snapshot/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🧪️tests/⚙️preparation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/🎩️header/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🫧️transient/🧪️tests/⚖️retirement-law/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️transform-tool-transactions/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧪️tests/🎬️scene/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📤️output/📝️text/🧪️tests/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🧪️tests/⚖️retirement-law/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🔨️modules/🏠️host/🧰️owned/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🍎️companion/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🎞️app-frame/📬️reply-prefix/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🏛️ownership/🧪️tests/🪦️original/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🧩️command-decode/🎟️original/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🏗️admission/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌲️bin-07/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍃️bin-08/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍯️bin-10/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌆️bin-02/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🍎️bin-09/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/📜️pair/🫴️failure/🧪️tests.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🥧️companion/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🍰️bin-1/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🥧️bin-2/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📚️library/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🎟️native-caller/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🦴️asset-decode/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎞️actions-b/📤️drawing-export-and-snapshots/🔍️trace/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/⚖️laws/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/⚠️errors/📤️domain/🧪️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/⚖️laws/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🧵️pipeline/🧪️tests/🎯️target.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔤️ordering/🧪️laws/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/📥️evaluation-source/🔎️read/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌐️geometry/🧪️tests/♻️ownership/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️guest-contract/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/📮️requests/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/📦️payload/🧪️tests/🚪️public/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🎟️context/🌉️call/💼️job/📤️output/🧪️tests/🎟️native/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🛬️lifted/👷️job/🧪️mutation/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📸️preparation/🧪️tests/🚪️public/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️pending/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🔄️full-operation/📃️wire/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/♻️cancellation/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🥝️tests-16/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🫒️tests-05-3/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔁️poll/📥️events/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🔤️encoding/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎭️guest-runtime/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🏗️instance/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🧪️tests/public.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔔️wake/🎟️root/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/🎟️call/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗂️registry/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧿️original/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/⌨️typing/🎟️original/🧪️tests/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🧪️tests/🪟️native-window/🧪️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/👷️jobs/🧪️tests/🧷️declared-capture/🧪️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎞️media/⚠️turn/🧪️tests/🎟️native/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/♻️resources/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🎭️actor/💼️job/📨️publication/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🪞️transparent-receiving/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/📝️paged-text-old-receiving/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/📝️paged-text-receiving/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📐️model/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/👶️scope/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🫴️projection/📸️snapshot/🧪️tests.rs`
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/🫴️projection/🔤️json/🧪️tests.rs`
+- `🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/🛬️receiving/♻️close/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/🛬️receiving/🎟️state/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/👷️worker/📬️payload/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/♻️close/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📄️prefix/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🦀️.rs`
+- `🧰️framework/🔨️modules/🎠️kernel/📤️return/🔤️json/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎠️kernel/♻️retirement/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🧪️tests/🔬️record-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🧪️tests/🧮️record-schema-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/📨️wire/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🎟️source/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-mounted-layout-unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧪️tests/📋️clipboard-ingress/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-laws/🦀️.rs`
+- `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/♻️refusal/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🛂️manifest/🧮️arg-schema/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/🛂️allocation/🧺️backing/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🆔️ids/🎟️seed/🧪️tests/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/⚔️conflict/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/♻️settlement/🦀️.rs`
+- `🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️tests/🥣️companion.rs`
+- `🌎️hub/🧩️compositions/🌀️procedural/🧪️tests/😴️idle-turns/🦀️.rs`
+- `🌎️hub/🧩️compositions/🧩️puzzle/🧪️tests/🧩️guest-io/🦀️.rs`
+- `🌎️hub/🧩️compositions/🧩️puzzle/🦀️.rs`
+- `🌎️hub/🧩️compositions/🀄️wfc/🧪️tests/😴️idle-turns/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧰️context/📏️measure-and-tool-run-probes/🦀️.rs`
+
+## Verification (`repo cargo --store=shared --configuration=prototype --parallelism=4 -- check -p <crate> --tests`, from the owning workspace)
+- `semio-framework-value-testing-allocator`: `test` passes, 7 tests (3 new).
+- `semio-framework-value-control-physical`: `check --tests` clean.
+- `semio-framework-dsl-record`, `semio-framework-text-splice-native`, `semio-ui-wgpu-engine-laws`: my edited files compile; remaining errors are only in other agents' in-flight migration files (`receive_value`, `RetainedWorkOutcome` / `close_original_retained_step`, surface-content-height law).
+- `semio-s-artifact-stdio-html-snapshot`, `-md-snapshot`, `-binary-snapshot`: blocked by dependency crates under migration (`plugin/instance/dispatch` staging errors, missing `OriginalSourceCloseContext`, job context source-boundary refusal), not by the allocator edits.
+- Previously touched crates (peer, scrub-host, document-media, command, host-configuration, retained-command, plugin-extension, runtime-ops): queued in `alloc-check-summary2.log`; they sit on the same in-flight plugin stack, so a green result needs the peers' migration to land first. No `#[global_allocator]` remains in any of them (the static sweep reports none for them).
+- Re-run the static sweep with `alloc-static.py` after the migration lands to prove zero duplicates: only the testing allocator's own declaration plus the 6 orphan files above remain.

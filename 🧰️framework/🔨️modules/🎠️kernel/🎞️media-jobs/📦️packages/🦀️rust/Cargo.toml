@@ -23,10 +23,10 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-kernel-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
-semio-framework-io-base64 = { path = "../../../../🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-io-base64 = { path = "../../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { workspace = true }
 
 [dev-dependencies]

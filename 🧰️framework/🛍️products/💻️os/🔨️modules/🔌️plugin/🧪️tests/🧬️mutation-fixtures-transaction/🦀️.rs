@@ -351,7 +351,7 @@ impl ArtifactApp for TxnApp {
         registry.register(TxnFixtureFactory { keys: TXN_TOOL_IDS.into_iter().map(|tool_id| ToolFactoryKey::new(registry.controller_id(), tool_id)).collect() })
     }
 
-    fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::testing_laws_unit_1::mutation_fixture::job_close::admit_fixture_tool_job(request,output,cx,|request|{let count=request.snapshot.count;TxnFixtureJob{owners:crate::testing_laws_unit_1::mutation_fixture::job_close::FixtureJobOwners::from_request(request),count,page:0}})}
+    fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::testing_laws_unit_1::mutation_fixture::job_close::admit_fixture_tool_job(request,output,construction,cx,|request|{let count=request.snapshot.count;TxnFixtureJob{owners:crate::testing_laws_unit_1::mutation_fixture::job_close::FixtureJobOwners::from_request(request),count,page:0}})}
 
     /// 🪪️ The tool id each variant dispatches under. Without it the `ArtifactApp` default answers
     /// `"typed-command"` for every variant, which matches no registered factory key and makes every

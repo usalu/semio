@@ -176,10 +176,10 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let mut app = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let mut outside = artifact.clone();
     outside.data.push(0x7f);
-    app.consume_media(NATURAL_FILE_PORT, artifact, scope.cx()).await.expect("registered natural import");
+    semio_plugin::artifact_app_laws::consume_media(&mut app, NATURAL_FILE_PORT, artifact, scope.cx()).await.expect("registered natural import");
     semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("natural import publishes");
     let opened = app.snapshot().expect("opened snapshot").clone();
-    let refused = match app.consume_media(NATURAL_FILE_PORT, outside, scope.cx()).await {
+    let refused = match semio_plugin::artifact_app_laws::consume_media(&mut app, NATURAL_FILE_PORT, outside, scope.cx()).await {
         Err(_) => true,
         Ok(_) => semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).is_err(),
     };
@@ -195,7 +195,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
     let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut reopened = semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<Mp4Editor>, _>(async { semio_plugin::App { definition: create_mp4_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     reopened.bind_instance_id(2).await;
-    reopened.consume_media(NATURAL_FILE_PORT, saved, scope.cx()).await.expect("fresh owner imports exported bytes");
+    semio_plugin::artifact_app_laws::consume_media(&mut reopened, NATURAL_FILE_PORT, saved, scope.cx()).await.expect("fresh owner imports exported bytes");
     semio_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, scope.cx()).await).expect("fresh owner import publishes");
     let reopened_snapshot = reopened.snapshot().expect("reopened snapshot").clone();
     assert_eq!(reopened_snapshot, opened);

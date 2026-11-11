@@ -1,10 +1,10 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { devToolingEnv } from "@semio-tech/framework/process/execution";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
-import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "@semio-tech/framework/process/native-build";
+import { devToolingEnv } from "@semio-tech/process/execution";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
+import { cargoRepositoryPackages, cargoWorkspaceForManifest } from "@semio-tech/process/native-build";
 
 /** 🏃️ Runs the `DeletionProofScript` command under the caller's roots and invocation. */
 export async function runDeletionProofScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {

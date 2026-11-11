@@ -28,7 +28,7 @@ testkit = ["dep:semio-ui-declaration", "dep:semio-framework-test-fixtures"]
 [dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
 semio-framework = { workspace = true }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }

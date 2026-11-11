@@ -50,22 +50,37 @@ async fn framework_reserved_emit_admission_preserves_saturated_foreign_slots_and
 async fn framework_reserved_emit_cancelled_original_permit_keeps_its_exact_reservation_until_finish(){
  let mut app=contract_composed_app_raw(semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
  let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();
- let retained=app.dispatch_ctx().test_reserved_emit_cancelled_worker_handoff(&meta()).await;
+ let retained=app.dispatch_ctx().test_reserved_emit_cancelled_worker_handoff(&meta(),semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().preparation).await;
  drain_and_close_composed_fixture(&mut app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut cx);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
  assert!(retained,"cancelled producer retains its original admitted permit and keyed reservation until explicit finish");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn framework_reserved_emit_busy_completion_keeps_original_fixed_owner(){
- let mut app=contract_composed_app_raw(semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+ let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut app=contract_composed_app_raw(policy,&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
  let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();
- let retained=app.test_reserved_emit_busy_completion_owner(&meta(),&mut cx).await;
- drain_and_close_composed_fixture(&mut app, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut cx);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
- assert!(retained,"busy original completion remains in the same pre-admitted operation until bounded close");
+ let operation=app.dispatch_ctx().test_mount_reserved_cut(&meta(),semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(),&mut cx).await.unwrap().expect("the stepped cut mount settles its producer");
+ let id=operation.operation.0;
+ let retained={let mounted=app.tools.tool_operations.get_mut(id).expect("the settled cut producer owns its admitted slot");
+  let retained=mounted.completion.is_some()&&mounted.reserved_producer.is_some()&&mounted.cancellation_lease.as_ref().is_some_and(|lease|!lease.token.is_cancelled_now())&&mounted.terminal_fault.is_none();
+  mounted.user_cancel_requested=true;mounted.terminal_seen=true;mounted.cancellation_lease.as_ref().unwrap().cancel();retained};
+ drain_and_close_composed_fixture(&mut app,policy,&mut cx);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
+ assert!(retained,"the original completion and producer stay in the same pre-admitted operation until bounded close");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn reserved_mounted_source_survives_denied_first_birth_and_reaches_the_actual_worker_candidate(){
- let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut app=contract_composed_app_raw(policy,&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut decoder=semio_framework_job::OriginalJobDecodeOwner::empty();let mut cx=caller.context().with_original_decoder(&mut decoder);
- assert!(app.test_reserved_original_before_birth(&meta(),&mut cx).await.unwrap());drain_and_close_composed_fixture(&mut app,policy,&mut cx);let fuel=cx.fuel_remaining();drop(cx);let fuel=caller.retire_decoder(&mut decoder,fuel).unwrap();caller.retire(fuel).unwrap();
+ let policy=semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();let mut app=contract_composed_app_raw(policy,&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+ let mut caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().unwrap();let mut cx=caller.context();
+ let operation=app.dispatch_ctx().test_mount_reserved_cut(&meta(),semio_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(),&mut cx).await.unwrap().expect("the stepped cut mount settles its producer");
+ let retained={let mounted=app.tools.tool_operations.get_mut(operation.operation.0).expect("the actual stepped reserved producer is mounted");
+  assert!(mounted.reserved_producer.is_some()&&!mounted.terminal_seen);assert!(mounted.session.is_none()&&mounted.session_rejected.is_none());
+  let original=mounted.reserved_producer.as_ref().unwrap().test_source_identity();let before=cx.retained_progress();
+  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(Default::default(),|same|mounted.drive_worker_step(same)));result.unwrap();
+  assert_eq!(cx.retained_progress(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(mounted.session_rejected.is_none());assert_eq!(mounted.reserved_producer.as_ref().unwrap().test_source_identity(),original);
+  mounted.drive_worker_step(&mut cx).unwrap();
+  let retained=mounted.session_rejected.is_some()&&mounted.session.is_none()&&format!("{:?}",mounted.stage)=="Worker"&&mounted.reserved_producer.as_ref().unwrap().test_source_identity()==original&&mounted.reserved_producer.as_ref().unwrap().test_bound_operation()==Some(operation);
+  mounted.user_cancel_requested=true;mounted.terminal_seen=true;mounted.cancellation_lease.as_ref().unwrap().cancel();retained};
+ drain_and_close_composed_fixture(&mut app,policy,&mut cx);let fuel=cx.fuel_remaining();drop(cx);caller.retire(fuel).unwrap();
+ assert!(retained,"the mounted source survives the denied first birth and keeps its exact producer and operation");
 }

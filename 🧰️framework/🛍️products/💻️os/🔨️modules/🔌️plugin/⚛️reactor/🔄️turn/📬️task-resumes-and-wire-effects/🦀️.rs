@@ -46,11 +46,11 @@ pub fn drain_task_resumes<PA: semio_plugin_reactor_app::PluginApp>(runtime: &sem
             }
             TaskResumeOutcome::Command(bytes) => {
                 delivering = true;
-                semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)
+                semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)
             }
-            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
+            TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => semio_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
-        let output = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(runtime, resume.instance, &resume.meta, input, identity, cx));
+        let output = ::semio_framework_async::poll::resolve_ready(semio_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(runtime, resume.instance, &resume.meta, input, identity, cx));
         for frame_bytes in output.frames {
             route_app_frame(resume.instance, &frame_bytes, effects);
         }

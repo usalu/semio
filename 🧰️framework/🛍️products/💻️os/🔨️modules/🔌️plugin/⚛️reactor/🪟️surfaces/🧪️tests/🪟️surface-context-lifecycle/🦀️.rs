@@ -1,6 +1,23 @@
 //! 🧪️ Surface context survives rerender and stays isolated from sibling surfaces and app instances.
 
 use super::*;
+use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement}};
+/// 🗑️ Retires one owner through genuine original producer invocations, each granted exactly the cursor's own quote, because dropping an unretired owner abandons its ordered-map roots.
+fn drain<T:RetireOwned>(value:T){
+    let stock=RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<10};
+    let mut bank=semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::Wallet::new(stock,1<<30));
+    let mut owner=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("controlled custody"));
+    let body=1<<24;
+    for _ in 0..1<<20{
+        if owner.terminal_is_empty(){return}
+        let work=owner.next_computational_work(body).expect("retirement work");let d=owner.next_demand(body).expect("retirement demand");
+        let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};
+        let(poll,_)=semio_framework_value_testing_admission::driven::<semio_framework_value::OriginalRetirementFailure>(&mut bank,grant,work.max(1),|effect,reply,recover|if recover{owner.recover_step_into(body,effect,reply)}else{owner.step_into(body,effect,reply)});
+        bank.take_admitted();
+        match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>{turn.result.expect("retirement step succeeds");}semio_framework_value::RetainedWorkPoll::Pending{..}=>panic!("retirement step stayed pending")}
+    }
+    panic!("retirement reaches its terminal within the bound");
+}
 
 #[test]
 fn auxiliary_context_leases_use_actual_windows_and_never_survive_source_replacement(){
@@ -16,7 +33,7 @@ fn auxiliary_context_leases_use_actual_windows_and_never_survive_source_replacem
             "sibling"=>contexts.insert("7:right".into(),"graph".into(),view.for_window_instance("right").unwrap()).unwrap(),
             "refresh"=>contexts.insert("7:left".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap(),
             "update"=>contexts.update_view(&view),
-            "locale"=>{let mut next=view.clone();next.locale=semio_ui_locale::Locale::En;contexts.update_view(&next);},
+            "locale"=>{let mut next=view.clone();next.locale=semio_ui_locale::Locale::En;contexts.update_view(&next);drain(next);},
             "close"=>contexts.remove("7:left"),
             "close-remount"=>{contexts.remove("7:left");contexts.insert("7:left".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap();},
             "ambiguous"=>contexts.insert("alias".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap(),
@@ -25,7 +42,9 @@ fn auxiliary_context_leases_use_actual_windows_and_never_survive_source_replacem
         }
         let current=contexts.borrow_window_lease(lease);assert_eq!(current.is_some(),row["valid"].as_bool().unwrap());
         if let Some(current)=current{assert_eq!(current.view_state.window_id.as_deref(),Some(window));assert_eq!(current.view_state.locale,locale);}
+        drain(contexts);
     }
+    drain(view);
 }
 
 #[test]
@@ -37,6 +56,7 @@ fn retained_surface_render_borrows_the_exact_mounted_view_without_materializatio
     let binding=contexts.slots.iter().flatten().find(|binding|binding.surface==id).unwrap();
     for _ in 0..3{let actual=contexts.borrow(id).unwrap();assert!(std::ptr::eq(actual.view_state,binding.view_state.as_ref().unwrap()));assert!(std::ptr::eq(actual.body_key.as_ptr(),binding.body_key.as_ptr()));assert_eq!(actual.view_state.window_id.as_deref(),Some(window));}
     assert!(contexts.borrow("unmounted").is_none());
+    drain(contexts);drain(view);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -52,7 +72,7 @@ async fn surface_context_retains_host_preferences_and_window_identity() {
         oracle.insert(id.into(), surface.clone());
     }
     for (id, expected) in &oracle {
-        let actual = contexts.get(id).unwrap();
+        let actual = contexts.borrow(id).unwrap();
         assert_eq!(actual.body_key, expected["bodyKey"].as_str().unwrap());
         assert_eq!(actual.view_state.window_id.as_deref(), expected["windowId"].as_str());
         assert_eq!(actual.view_state.active_utility_id.as_deref(), expected["activeUtilityId"].as_str());
@@ -66,7 +86,7 @@ async fn surface_context_retains_host_preferences_and_window_identity() {
     let updated: semio_framework::ViewModel = serde_json::from_value(updated).unwrap();
     contexts.update_view(&updated);
     for (id, expected) in &oracle {
-        let actual = contexts.get(id).unwrap();
+        let actual = contexts.borrow(id).unwrap();
         assert_eq!(actual.view_state.locale, updated.locale);
         assert_eq!(actual.view_state.terminology, updated.terminology);
         assert_eq!(actual.view_state.window_id.as_deref(), expected["windowId"].as_str());
@@ -76,18 +96,19 @@ async fn surface_context_retains_host_preferences_and_window_identity() {
     let hidden = fixture["hidden"].as_str().unwrap();
     contexts.remove(hidden);
     oracle.remove(hidden);
-    assert!(contexts.get(hidden).is_none());
-    assert!(contexts.get(fixture["survivor"].as_str().unwrap()).is_some());
-    assert!(SurfaceContexts::default().get(fixture["survivor"].as_str().unwrap()).is_none());
+    assert!(contexts.borrow(hidden).is_none());
+    assert!(contexts.borrow(fixture["survivor"].as_str().unwrap()).is_some());
+    assert!(SurfaceContexts::default().borrow(fixture["survivor"].as_str().unwrap()).is_none());
     assert_eq!(contexts.len(), oracle.len());
     let mut closed = updated.clone();
     closed.window_instances.retain(|window| !fixture["closedWindowIds"].as_array().unwrap().iter().any(|id| id.as_str() == Some(window.id.as_str())));
     contexts.update_view(&closed);
     assert_eq!(contexts.len(), 1);
-    assert!(contexts.get(fixture["panelSurvivor"].as_str().unwrap()).is_some());
+    assert!(contexts.borrow(fixture["panelSurvivor"].as_str().unwrap()).is_some());
     contexts.remove(fixture["panelSurvivor"].as_str().unwrap());
     assert_eq!(contexts.len(), 0);
     assert!(contexts.view_state.is_none());
+    drain(contexts);drain(updated);drain(closed);drain(view);
 }
 
 #[test]
@@ -107,7 +128,8 @@ fn surface_context_capacity_reuses_closed_windows_without_partial_updates() {
     view.window_id = None;
     contexts.insert("panel".into(), "properties".into(), view).unwrap();
     assert_eq!(contexts.len(), 1);
-    assert!(contexts.get("panel").unwrap().view_state.window_id.is_none());
+    assert!(contexts.borrow("panel").unwrap().view_state.window_id.is_none());
+    drain(contexts);
 }
 
 /// 🧩️ A reserved section surface keeps the FULL host view it was mounted with — no window/panel
@@ -128,7 +150,7 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
     }
     contexts.insert("7:panel".into(), "properties".into(), view.for_panel()).unwrap();
     for section in UiRefreshSection::ALL {
-        let context = contexts.get(&format!("7:{}", section.body_key())).unwrap();
+        let context = contexts.borrow(&format!("7:{}", section.body_key())).unwrap();
         assert_eq!(context.body_key, section.body_key());
         assert_eq!(context.view_state.window_id.as_deref(), Some("left"));
         assert_eq!(context.view_state.active_tool_id.as_deref(), Some("fill"));
@@ -137,15 +159,16 @@ fn reserved_section_surfaces_keep_the_unnarrowed_view_and_outlive_their_windows(
     let mut closed = view.clone();
     closed.window_instances.clear();
     contexts.update_view(&closed);
-    assert!(contexts.get("7:left").is_none());
+    assert!(contexts.borrow("7:left").is_none());
     for section in UiRefreshSection::ALL {
-        assert!(contexts.get(&format!("7:{}", section.body_key())).is_some());
+        assert!(contexts.borrow(&format!("7:{}", section.body_key())).is_some());
         assert!(contexts.is_section(&format!("7:{}", section.body_key())));
         contexts.remove(&format!("7:{}", section.body_key()));
         assert!(!contexts.is_section(&format!("7:{}", section.body_key())));
     }
     contexts.remove("7:panel");
     assert_eq!(contexts.len(), 0);
+    drain(contexts);drain(closed);drain(view);
 }
 
 /// 🪟️ WAVE B56 LAW: the app's DEFAULT window surface is a real window INSTANCE and has host context;
@@ -167,15 +190,16 @@ async fn default_window_surface_has_host_context_and_the_synthetic_name_is_refus
     let mut contexts = SurfaceContexts::default();
     let projected = view.for_window_instance(default["windowId"].as_str().unwrap()).unwrap();
     contexts.insert(default["id"].as_str().unwrap().into(), default["bodyKey"].as_str().unwrap().into(), projected.clone()).unwrap();
-    let actual = contexts.get(default["id"].as_str().unwrap()).expect("the app's default window surface must retain host context");
+    let actual = contexts.borrow(default["id"].as_str().unwrap()).expect("the app's default window surface must retain host context");
     assert_eq!(actual.body_key, default["bodyKey"].as_str().unwrap());
     assert_eq!(actual.view_state.window_id.as_deref(), default["windowId"].as_str());
     assert!(contexts.is_window(default["id"].as_str().unwrap()));
     let synthetic = default["syntheticId"].as_str().unwrap();
     let refused = contexts.insert(synthetic.into(), default["bodyKey"].as_str().unwrap().into(), projected).expect_err("the synthetic `window` surface must never mount for an app with window instances");
     assert_eq!(refused, default["syntheticRefusal"].as_str().unwrap());
-    assert!(contexts.get(synthetic).is_none());
+    assert!(contexts.borrow(synthetic).is_none());
     assert_eq!(contexts.background_surfaces(), vec![default["id"].as_str().unwrap().to_owned()]);
+    drain(contexts);drain(view);
 }
 
 /// 🪟️ WAVE B56 LAW: background work addresses EVERY mounted window instance, and an instance with no
@@ -201,6 +225,7 @@ async fn background_surfaces_name_every_window_then_fall_back_to_panels() {
     }
     assert_eq!(contexts.background_surfaces(), vec!["7:panel".to_owned()]);
     assert!(!contexts.background_surfaces().iter().any(|surface| surface.ends_with(":window")));
+    drain(contexts);drain(view);
 }
 
 /// ⚖️ A remote edit merged into the document re-projects EVERY bound surface: the windows and the
@@ -222,4 +247,5 @@ async fn document_surfaces_name_every_window_and_every_panel() {
     expected.sort();
     assert_eq!(surfaces, expected);
     assert!(contexts.background_surfaces().len() < surfaces.len(), "background work still addresses windows only");
+    drain(contexts);drain(view);
 }

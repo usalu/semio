@@ -246,6 +246,87 @@
           "minimum": 0
         }
       }
+    },
+    "delimiterFault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "delimiter",
+        "at"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "unexpected",
+            "mismatched",
+            "unclosed"
+          ]
+        },
+        "delimiter": {
+          "enum": [
+            "(",
+            ")",
+            "[",
+            "]",
+            "{",
+            "}"
+          ]
+        },
+        "at": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "line",
+            "column"
+          ],
+          "properties": {
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "column": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "closing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "delimiter",
+            "at"
+          ],
+          "properties": {
+            "delimiter": {
+              "enum": [
+                ")",
+                "]",
+                "}"
+              ]
+            },
+            "at": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "line",
+                "column"
+              ],
+              "properties": {
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "column": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

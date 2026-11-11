@@ -1,0 +1,8 @@
+{
+ "host": {"totalMegabytes": 16384, "availableMegabytes": 9000, "cores": 10},
+ "runs": [
+  {"name": "a-planned-run-waits-small-and-executes-full", "args": ["run", "@x/y:build", "--parallel=8"], "waiting": {"quiet": true, "reservedBelowMegabytes": 2100}, "executing": {"quiet": false, "reservedAtLeastMegabytes": 5000}},
+  {"name": "a-planned-test-run-waits-small-and-executes-full", "args": ["run", "@x/y:test", "--parallel=4"], "waiting": {"quiet": true, "reservedBelowMegabytes": 2100}, "executing": {"quiet": false, "reservedAtLeastMegabytes": 3000}}
+ ],
+ "worker": {"megabytes": 3500, "admittedWithinMilliseconds": 1500}
+}

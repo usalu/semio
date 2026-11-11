@@ -231,8 +231,6 @@ fn weather_checkpoint_rejects_foreign_config_and_preserves_same_model_authority(
  caller.close_job(&mut original);
 caller.finish();}
 
-#[global_allocator]
-static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 /// ♻️ Cancelling a wire build mid-page retires the boxed payload builder only through funded close steps, and the box release is itself paid.
 #[test]

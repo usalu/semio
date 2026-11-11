@@ -73,8 +73,6 @@ fn retired_analytic_mesh_metadata_obeys_exact_byte_grants() {
 #[cfg(test)]
 mod physical_session_custody {
     use super::*;
-    #[global_allocator]
-    static SYSTEM:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
     pub(super) fn observe<T>(work:impl FnOnce()->T)->(T,(usize,usize)) {let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,(heap.requested_bytes,heap.released_bytes))}
     #[test]
     fn original_session_capture_keeps_same_allocation_until_full_typed_grants() {

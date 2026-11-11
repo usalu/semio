@@ -9,8 +9,6 @@ use crate::standards::iana::subsets::any::io::sqlite::snapshot::*;
 use crate::standards::iana::subsets::any::io::binary::snapshot::read_tsv_source_binary;
 use semio_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshotHost};
 
-#[global_allocator]
-static TSV_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 #[test]
 fn sqlite_snapshot_tsv_original_typed_destination_retains_cancelled_children(){

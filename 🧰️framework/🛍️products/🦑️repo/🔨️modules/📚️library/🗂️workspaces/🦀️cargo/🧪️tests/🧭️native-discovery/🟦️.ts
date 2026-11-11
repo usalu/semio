@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {expect,test} from "bun:test";
 import {existsSync,mkdtempSync,mkdirSync,readFileSync,writeFileSync} from "node:fs";
 import {dirname,join} from "node:path";
@@ -20,6 +21,6 @@ test("current root patterns discover every authored native owner before preparat
  const independent=["Cargo.toml",...glob.sync(patterns,{cwd:root,onlyFiles:true,followSymbolicLinks:false,dot:false,ignore:["**/target/**","**/🗑️generated/**"]}).filter(path=>path!=="Cargo.toml"&&(TOML.parse(readFileSync(join(root,path),"utf8")) as any).workspace?.metadata?.semio?.repository)].sort();
  expect(independent).toEqual(expected);expect(discoverCargoWorkspaces(root).map(owner=>owner.manifest).sort()).toEqual(expected);
  for(const owner of expected){const selected=cargoWorkspaceForManifest(root,join(dirname(owner),"pkg/Cargo.toml")),prepared=prepareCargoOwners(root,selected);expect(prepared.owners).toEqual([dirname(owner)]);
-  const native=Bun.spawnSync(["cargo","metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,owner)],{cwd:root,stdout:"pipe",stderr:"pipe"});if(native.exitCode!==0)throw Error(native.stderr.toString());const metadata=JSON.parse(native.stdout.toString());expect(metadata.workspace_members).toHaveLength(1);expect(metadata.packages[0].manifest_path.replaceAll("\\","/")).toBe(join(root,dirname(owner),"pkg/Cargo.toml").replaceAll("\\","/"));
+  const native=Bun.spawnSync([registeredToolExecutableV1("cargo"),"metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,owner)],{cwd:root,stdout:"pipe",stderr:"pipe"});if(native.exitCode!==0)throw Error(native.stderr.toString());const metadata=JSON.parse(native.stdout.toString());expect(metadata.workspace_members).toHaveLength(1);expect(metadata.packages[0].manifest_path.replaceAll("\\","/")).toBe(join(root,dirname(owner),"pkg/Cargo.toml").replaceAll("\\","/"));
  }
 },60000);

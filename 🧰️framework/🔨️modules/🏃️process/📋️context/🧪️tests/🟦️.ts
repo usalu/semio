@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../🧰️tools/🏃️run/🟦️.ts";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -12,5 +13,5 @@ test("Process cache authority is explicit, schema-owned and bound to the current
   for(const row of [{...fixture,extra:1},{...fixture,leaseDirectory:"relative"},{...fixture,cwd:"/foreign"}])expect(()=>api.readProcessOwnerContextV1({SEMIO_PROCESS_OWNER_CONTEXT:JSON.stringify(row)},"/owner")).toThrow();
   expect(()=>api.readProcessOwnerContextV1({},"/owner")).toThrow("Explicit process owner context required");
   expect(()=>api.processCacheDirectoryV1(fixture,"../foreign")).toThrow();
-  const child=spawnSync("node",["-e","const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));",JSON.stringify(fixture)],{encoding:"utf8"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,"python","styling")).toBe(child.stdout);
+  const child=spawnSync(registeredToolExecutableV1("node"),["-e","const p=require('node:path'),row=JSON.parse(process.argv[1]);process.stdout.write(p.join(row.cacheRoot,'python','styling'));",JSON.stringify(fixture)],{encoding:"utf8"});expect(child.status).toBe(0);expect(api.processCacheDirectoryV1(fixture,"python","styling")).toBe(child.stdout);
 });

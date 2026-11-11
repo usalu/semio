@@ -1,6 +1,4 @@
 use semio_plugin::*;
-#[global_allocator]
-static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_job::{StepBudget, StepContext};
 use semio_ui_runtime::ComponentTree;

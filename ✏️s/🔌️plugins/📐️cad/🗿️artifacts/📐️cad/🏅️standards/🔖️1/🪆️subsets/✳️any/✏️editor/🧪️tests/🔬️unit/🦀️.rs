@@ -1,5 +1,4 @@
 
-semio_plugin::install_fixture_heap_witness!();
 /// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
 const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 extern crate semio_os_kernel as protocol;

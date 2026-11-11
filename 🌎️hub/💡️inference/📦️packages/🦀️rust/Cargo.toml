@@ -31,7 +31,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 semio-framework-job = { workspace = true }
-semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-hub-gis = { workspace = true }
 semio-hub-inference-binding = { workspace = true }
 semio-framework-schema-registry = { workspace = true }

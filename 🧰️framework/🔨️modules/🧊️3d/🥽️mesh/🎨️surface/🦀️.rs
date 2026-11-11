@@ -51,7 +51,8 @@ impl MeshSurfaceJob {
         }
     }
 
-    pub(super) fn finish_with_progress(mut self) -> MeshResult<HalfedgeMesh> {
+    /// 🏁️ Drives the job to completion in bounded steps, failing when it is cancelled.
+    pub fn finish_with_progress(mut self) -> MeshResult<HalfedgeMesh> {
         loop {
             match self.step(1024)? {
                 MeshModelingStep::Working(_) => {}

@@ -1,7 +1,7 @@
 #!/usr/bin/env repo
 /** 🌱️ Executes the shared authority's complete app and portable native laws. */
-import { receiveScriptProcessInvocation } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { BundleScript, ScriptRouter, runScriptMain } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🚪️ `run` — runs the program of this script. */
 class RunScript extends BundleScript {

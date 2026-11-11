@@ -29,7 +29,7 @@ semio-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️r
 semio-os-store-replay = { path = "../../../../🔁️replay/📦️packages/🦀️rust" }
 semio-os-store-space-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust" }
 semio-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-os-identity = { path = "../../../../../🪪️identity/📦️packages/🦀️rust" }
 semio-os-store-ephemeral = { path = "../../../../🫧️ephemeral/📦️packages/🦀️rust"}
 semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }

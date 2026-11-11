@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import {withBuildTestInvocationV1} from "../../../🧪️testing/📥️invocation/🟦️.ts";
 import deletionSchema from "../🧫️fixtures/🏗️native/🧬️schema/🔣️.json";
 import capacitySchema from "../../🎟️capacity/🧬️schema/🔣️.json";
@@ -73,7 +74,7 @@ test("Cargo modes publish separate executable owners and reuse warm compiler int
  mkdirSync(artifacts);
  writeFileSync(manifest,`[workspace]\n[package]\nname="${fixture.cargo.name}"\nversion="0.1.0"\nedition="2021"\n[[bin]]\nname="${fixture.cargo.name}"\npath="main.rs"\n[profile.prototype]\ninherits="dev"\nincremental=true\n[profile.release]\nlto="thin"\ncodegen-units=1\n`);
  writeFileSync(join(directory,"main.rs"),fixture.cargo.source);
- expect(spawnSync("cargo",["generate-lockfile","--offline","--manifest-path",manifest],{cwd:directory,encoding:"utf8"}).status).toBe(0);
+ expect(spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline","--manifest-path",manifest],{cwd:directory,encoding:"utf8"}).status).toBe(0);
  for(const row of fixture.modes) {
   writeFileSync(join(directory,"main.rs"),fixture.cargo.source);
   const policy = {version:1 as const,mode:row.mode as "prototype"|"release",compilerConfiguration:lawCompilerConfigurationV1(directory),cwd:directory,buildDirectory:join(directory,"b"),leaseDirectory:process.env.SEMIO_TEST_ARTIFACT_DIR!,captureDirectory:join(directory,"c"),budgetMs:30000};
@@ -86,7 +87,7 @@ test("Cargo modes publish separate executable owners and reuse warm compiler int
    expect(unit.message.profile.opt_level).toBe(row.optLevel);expect(unit.message.fresh).toBe(warm);
    const binary=join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,manifest,row.mode as "prototype"|"release"),`${fixture.cargo.name}${process.platform==="win32"?".exe":""}`),runtime=spawnSync(binary,[],{encoding:"utf8"});expect(runtime.status).toBe(0);expect(runtime.stdout).toBe(fixture.cargo.stdout);
   }
-  const oracle=spawnSync("cargo",["run","--offline","--quiet","--manifest-path",manifest,"--profile",row.nativeProfile,"--target-dir",join(directory,"oracle")],{cwd:directory,encoding:"utf8",env:{...process.env,CARGO_BUILD_BUILD_DIR:join(directory,"ob")},timeout:30000});expect(oracle.status).toBe(0);expect(oracle.stdout).toBe(fixture.cargo.stdout);
+  const oracle=spawnSync(registeredToolExecutableV1("cargo"),["run","--offline","--quiet","--manifest-path",manifest,"--profile",row.nativeProfile,"--target-dir",join(directory,"oracle")],{cwd:directory,encoding:"utf8",env:{...process.env,CARGO_BUILD_BUILD_DIR:join(directory,"ob")},timeout:30000});expect(oracle.status).toBe(0);expect(oracle.stdout).toBe(fixture.cargo.stdout);
   writeFileSync(join(directory,"main.rs"),fixture.cargo.source.replace("runtime-ok","edited-runtime-ok"));
   const editedStarted = performance.now();await buildCargoArtifacts(manifest,["--bin",fixture.cargo.name],policy,lawBuildOptionsV1(held,admission,{provenance:path=>{receipt=path;},environment:{SEMIO_TEST_ARTIFACT_DIR:artifacts}}));
   const editedMs = Math.round(performance.now()-editedStarted), editedReceipt=JSON.parse(readFileSync(receipt,"utf8"));expect(editedReceipt.units.find((unit:any)=>unit.message.target.kind.includes("bin")).message.fresh).toBe(false);
@@ -103,12 +104,12 @@ test("Reserved Cargo children consume their admitted compiler worker count",asyn
  const count=fixture.capacity.reservedCargoWorkers;
  writeFileSync(join(owner,"Cargo.toml"),'[package]\nname="reserved_workers"\nversion="0.1.0"\nedition="2021"\nbuild="build.rs"\n[[bin]]\nname="reserved_workers"\npath="main.rs"\n[workspace]\n[profile.prototype]\ninherits="dev"\n');
  writeFileSync(join(owner,"build.rs"),'fn main(){ println!("cargo::rustc-env=OBSERVED_WORKERS={}",std::env::var("NUM_JOBS").unwrap()); }');writeFileSync(join(owner,"main.rs"),'fn main(){print!("{}",env!("OBSERVED_WORKERS"));}');
- const lock=spawnSync("cargo",["generate-lockfile","--offline"],{cwd:owner,encoding:"utf8"});expect(lock.status,lock.stderr).toBe(0);
+ const lock=spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline"],{cwd:owner,encoding:"utf8"});expect(lock.status,lock.stderr).toBe(0);
  const environment:Record<string,string|undefined>={...process.env,SEMIO_BUILD_MODE:"prototype",SEMIO_COMPILER_PARALLELISM:String(count)};delete environment.MAKEFLAGS;delete environment.CARGO_MAKEFLAGS;delete environment.CARGO_BUILD_JOBS;
  try{
   await buildCargoArtifacts(join(owner,"Cargo.toml"),[],{version:1,mode:"prototype",cwd:owner,buildDirectory:join(owner,"b"),captureDirectory:join(held.root,"capture"),leaseDirectory:output,budgetMs:120_000},lawBuildOptionsV1(held,admission,{environment:{...environment,...held.environment,SEMIO_TEST_ARTIFACT_DIR:undefined}}));
   const executable=join(publishedCargoArtifactDirectoryV1(held.storage.backing.root,join(owner,"Cargo.toml"),"prototype"),"reserved_workers"+(process.platform==="win32"?".exe":"")),admitted=Number(spawnSync(executable,[],{encoding:"utf8"}).stdout);expect(Number.isSafeInteger(admitted)&&admitted>=count&&admitted<=availableParallelism()).toBe(true);
-  const oracle=spawnSync("cargo",["run","--quiet","--profile","prototype","-j",String(admitted),"--target-dir",join(owner,"oracle")],{cwd:owner,env:environment,encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(oracle.stdout).toBe(String(admitted));
+  const oracle=spawnSync(registeredToolExecutableV1("cargo"),["run","--quiet","--profile","prototype","-j",String(admitted),"--target-dir",join(owner,"oracle")],{cwd:owner,env:environment,encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(oracle.stdout).toBe(String(admitted));
  }finally{}
  })); },120_000);
 

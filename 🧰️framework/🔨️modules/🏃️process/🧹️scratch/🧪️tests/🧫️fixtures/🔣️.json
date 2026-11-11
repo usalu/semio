@@ -1,0 +1,14 @@
+{
+ "lifecycle": [
+  {"name": "completes", "prefix": "rs", "ending": "complete", "fills": 3},
+  {"name": "throws", "prefix": "uc", "ending": "throw", "fills": 3},
+  {"name": "is-cancelled", "prefix": "drc", "ending": "cancel", "fills": 3},
+  {"name": "sanitises-the-prefix", "prefix": "a/b c\u0000d", "ending": "complete", "fills": 0},
+  {"name": "bounds-the-prefix", "prefix": "abcdefghijklmnopqrstuvwxyz0123456789", "ending": "complete", "fills": 0}
+ ],
+ "process": [
+  {"name": "private-temporary-directory", "environment": {}, "isolates": true},
+  {"name": "scratch-switched-off", "environment": {"SEMIO_SCRATCH": "off"}, "isolates": false},
+  {"name": "child-below-the-home-keeps-it", "inherit": true, "isolates": false}
+ ]
+}

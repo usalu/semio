@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 /** 🚦️ The test protocol: the fixture is the contract, a Python implementation and real `bun test --shard`, real vitest and Python's XML parser are the oracles. */
 import { test, expect } from "bun:test";
 import Ajv from "ajv";
@@ -176,7 +177,7 @@ test("concurrent processes append to one report without losing a suite", async (
 }, 60000);
 
 const vitestBinary = (() => { try { return join(dirname(Bun.resolveSync("vitest/package.json", import.meta.dir)), "vitest.mjs"); } catch { return undefined; } })();
-const node = spawnSync("node", ["--version"], { encoding: "utf8" }).status === 0;
+const node = spawnSync(registeredToolExecutableV1("node"), ["--version"], { encoding: "utf8" }).status === 0;
 (vitestBinary && node ? test : test.skip)("real vitest: a shard and the JUnit file reach the tool and its cases land in test.xml", () => {
   const directory = scratch();
   try {
@@ -185,7 +186,7 @@ const node = spawnSync("node", ["--version"], { encoding: "utf8" }).status === 0
     for (const index of [1, 2]) {
       const xml = join(directory, `v-${index}.xml`);
       const prepared = prepareTestCommandV1("node", [vitestBinary!, "run", "--root", directory, "--globals"], { SEMIO_TEST_SHARD: `${index}/2`, SEMIO_TEST_XML_OUTPUT_FILE: xml }, directory);
-      const run = spawnSync("node", prepared.args as string[], { cwd: directory, encoding: "utf8" });
+      const run = spawnSync(registeredToolExecutableV1("node"), prepared.args as string[], { cwd: directory, encoding: "utf8" });
       prepared.finish({ code: run.status, signal: run.signal, durationMs: 1 });
       expect(run.status, run.stderr + run.stdout).toBe(0);
       seen.push(caseNames(readFileSync(xml, "utf8")));

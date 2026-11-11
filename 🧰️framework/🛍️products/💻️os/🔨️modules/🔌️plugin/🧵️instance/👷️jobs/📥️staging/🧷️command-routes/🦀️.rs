@@ -116,7 +116,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         if state.starting||state.closing{return Ok(None)}
         if !state.complete{state.caller.as_ref().ok_or_else(||plugin_sdk_fault("original preview caller source is absent"))?.validate_context(cx)?;}
         if state.producer_request.is_some(){
-            let mut candidate=None;let result=A::build_tool_job(&mut state.producer_request,&mut candidate,cx);
+            let mut candidate=None;let result=A::build_tool_job(&mut state.producer_request,&mut candidate,&mut state.producer_construction,cx);
             if let Some(job)=candidate{state.producer=Some(semio_plugin_job::OriginalPreviewDrive::new(job,state.config,cx));}
             match result{Err(failure)=>{state.closing=true;return Err(failure)},Ok(true)if state.producer.is_none()=>{state.closing=true;return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original preview producer completed without its job").into())},_=>{}}
             return Ok(None);
@@ -133,7 +133,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
         }
         if state.publication.is_none(){state.publication=state.completion.as_ref().ok_or_else(||plugin_sdk_fault("original preview completion source is absent"))?.take()?;return Ok(None)}
         if state.completion.is_some()||state.completion_close.is_some(){let body=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&state.completion,&state.completion_close,body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut state.completion,&mut state.completion_close,effect))?;return Ok(None)}
-        if let Some(owner)=state.lease_close.as_mut(){if owner.terminal_is_empty(){let step=semio_plugin_operation::original_lease_cursor_release(&mut state.lease_close,cx.retained_grant()).map(RetainedCloneStep::Progress)?;cx.consume_retained(step.progress())?;return Ok(None)}let canonical=self.tool_cancellations.handle().ok_or_else(||plugin_sdk_fault("active cancellation retirement requires its original canonical registry"))?;let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.retirement_demands(canonical,body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.close_step(canonical,effect))?;return Ok(None)}
+        if let Some(owner)=state.lease_close.as_mut(){if owner.terminal_is_empty(){let step=semio_plugin_operation::original_lease_cursor_release(&mut state.lease_close,cx.retained_grant())?;cx.consume_retained(step)?;return Ok(None)}let canonical=self.tool_cancellations.handle().ok_or_else(||plugin_sdk_fault("active cancellation retirement requires its original canonical registry"))?;let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.retirement_demands(canonical,body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.close_step(canonical,effect))?;return Ok(None)}
         if state.lease.is_some(){let(owner,progress)=semio_plugin_operation::original_lease_cursor_admit(&mut state.lease,cx.retained_grant())?;state.lease_close=owner;cx.consume_retained(progress)?;return Ok(None)}
         if let Some(caller)=state.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){state.caller.take();}return Ok(None)}
         if cx.retained_grant().maximum_items<2||cx.retained_grant().maximum_depth==0{return Ok(None)}

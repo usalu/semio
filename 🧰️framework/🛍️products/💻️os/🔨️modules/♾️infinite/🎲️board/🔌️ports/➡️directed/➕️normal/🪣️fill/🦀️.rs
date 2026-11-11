@@ -83,7 +83,7 @@ impl BoardFillJob {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: bytes + size_of::<Self>(), capacity_bytes: bytes, depth: 1, ..Default::default() })
     }
 
-    pub fn admit_original(snapshot: &mut Option<BoardFillSnapshot>, max_count: u32, semantic_operation: semio_framework_job::Operation, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub fn admit_original(admission: &mut semio_framework_job::OriginalConstructionAdmission, snapshot: &mut Option<BoardFillSnapshot>, max_count: u32, semantic_operation: semio_framework_job::Operation, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
         if snapshot.is_none() || output.is_some() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "board fill admission requires its original snapshot and empty output").into()); }
@@ -91,7 +91,7 @@ impl BoardFillJob {
         let demand = Self::admission_demands()?;
         let mut allocation_failed = false;
         let mut constructed_progress = RetainedCloneProgress::default();
-        let admitted = admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+        let admitted = admit_original_tool_construction_settled(cx, admission, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
             scope.admit_owner(demand)?;
             let binding = scope.identity().source_binding();
             let mut original = snapshot.take().expect("original snapshot retained until admitted construction");

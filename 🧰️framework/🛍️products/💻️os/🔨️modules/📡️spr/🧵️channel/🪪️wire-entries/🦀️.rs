@@ -23,7 +23,7 @@ fn deserialize_identity_document_id<'de, D: serde::Deserializer<'de>>(deserializ
     serde::Deserialize::deserialize(deserializer)
 }
 //#region 🔖️MediaExportWire
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 #[derive(semio_framework_value::RetireOwned)]
 pub struct MediaExportHandleWire {
     pub app_instance_id: u32,

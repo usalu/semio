@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {afterAll,afterEach,describe,expect,test} from "bun:test";
 import {appendFileSync,chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync,lstatSync} from "node:fs";
 import {connect,createServer} from "node:net";
@@ -195,7 +196,7 @@ describe("large output",()=>{
   s.ports.execution.run=async({id,onSpawn,onOutput}:any)=>{onSpawn?.();await onOutput("stdout",big);mkdirSync(join(s.root,".out/d"),{recursive:true});writeFileSync(join(s.root,".out/d/o.txt"),"x");return{exit:0};};
   const first=await s.run("run",["d:build"]);expect(first.out).toBe(big);
   const again=await s.run("run",["d:build"]);expect(again.served).toBe("memo");
-  const done=await new Promise<{status:number|null;stdout:string}>(resolve=>{const c=spawn("bun",[join(import.meta.dir,"..","..","🚪️client","⌨️main","🟨️.mjs"),"--root",s.root,"--languages","en","--","status"],{env:{...process.env,XDG_RUNTIME_DIR:s.base}});let stdout="";c.stdout.on("data",d=>stdout+=d);c.on("exit",status=>resolve({status,stdout}));});
+  const done=await new Promise<{status:number|null;stdout:string}>(resolve=>{const c=spawn(registeredToolExecutableV1("bun"),[join(import.meta.dir,"..","..","🚪️client","⌨️main","🟨️.mjs"),"--root",s.root,"--languages","en","--","status"],{env:{...process.env,XDG_RUNTIME_DIR:s.base}});let stdout="";c.stdout.on("data",d=>stdout+=d);c.on("exit",status=>resolve({status,stdout}));});
   expect(done.status).toBe(0);expect(JSON.parse(done.stdout).state.files).toBeGreaterThan(0);
  },30000);
 });
@@ -482,7 +483,7 @@ describe("process level crash safety",()=>{
   const base=shortTempDirectory("sr-");cleanups.push(()=>cleanup(base));
   const serve=join(import.meta.dir,"..","🖥️fixture-server","🟨️.mjs");
   const env={...process.env,XDG_RUNTIME_DIR:base};
-  const first=spawn("bun",[serve,root,"--profile","lifecycle","--watcher",WATCHER,"--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
+  const first=spawn(registeredToolExecutableV1("bun"),[serve,root,"--profile","lifecycle","--watcher",WATCHER,"--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
   const line=await new Promise<string>(resolve=>first.stdout.once("data",c=>resolve(String(c))));
   expect(JSON.parse(line.split("\n")[0]!).ready).toBe(true);
   const watcherPid=Number(spawnSync("pgrep",["-f","semio-repo-watch watch --root "+root]).stdout.toString().trim().split("\n")[0]);
@@ -491,7 +492,7 @@ describe("process level crash safety",()=>{
   expect(await waitFor(()=>{try{process.kill(watcherPid,0);return false;}catch{return true;}},4000)).toBe(true);
   const probe=await forwardCommandV1({root,command:"ping",args:[],cwd:root,languages:["en"],environment:env,stdout:{write(){}},stderr:{write(){}}});
   expect(probe.handled).toBe(false);
-  const second=spawn("bun",[serve,root,"--profile","lifecycle","--watcher",WATCHER,"--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
+  const second=spawn(registeredToolExecutableV1("bun"),[serve,root,"--profile","lifecycle","--watcher",WATCHER,"--js-scan"],{env,stdio:["ignore","pipe","inherit"]});
   const line2=await new Promise<string>(resolve=>second.stdout.once("data",c=>resolve(String(c))));
   expect(JSON.parse(line2.split("\n")[0]!).ready).toBe(true);
   second.kill("SIGTERM");await new Promise(r=>second.once("exit",r));

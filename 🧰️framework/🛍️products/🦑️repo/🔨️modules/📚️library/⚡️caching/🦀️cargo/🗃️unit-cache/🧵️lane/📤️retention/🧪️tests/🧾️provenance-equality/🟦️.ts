@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🧾️ Contract: compiling in a pooled lane records the same provenance as compiling in the shared directory, and releasing the lane through the retention rule loses none of it. One real Cargo workspace (a library with a build script and a dependent library) is built three ways with the real receipt writer: in a shared build directory with a plain compiler (the old path), in a cold pooled lane through the unit cache wrapper, and in a second lane that restores every unit from the cache. After the directories are normalised the three receipts agree on every unit, source input, dependency-info source, build script and invocation input; every recorded artifact digest is checked by an independent implementation (`hashlib`); and the shared ledger holds the lane receipts byte for byte.
  * @see ../../🟦️.ts */
 import {expect,test} from "bun:test";
@@ -26,14 +27,14 @@ function workspace(root:string):string{
  writeFileSync(join(w,"dep/src/lib.rs"),'#[cfg(fixture)] pub fn one()->u32{1}\n');
  writeFileSync(join(w,"app/Cargo.toml"),'[package]\nname = "app"\nversion = "0.1.0"\nedition = "2021"\n[dependencies]\ndep = { path = "../dep" }\n');
  writeFileSync(join(w,"app/src/lib.rs"),'pub fn two()->u32{dep::one()+1}\n');
- const run=spawnSync("cargo",["generate-lockfile","--manifest-path",join(w,"Cargo.toml")],{cwd:w,env:environment(root),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
+ const run=spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--manifest-path",join(w,"Cargo.toml")],{cwd:w,env:environment(root),encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
  return w;
 }
 
 type Built={receipt:string;ledger:string;build:string;target:string;decoded:ReturnType<typeof decodeCargoProvenanceV1>};
 async function compile(root:string,w:string,name:string,directories:Readonly<{build:string;target:string;env:Record<string,string|undefined>}>):Promise<Built>{
  const manifest=join(w,"Cargo.toml"),args=["build","--locked","--manifest-path",manifest,"-p","app"];
- const run=spawnSync("cargo",[...args,"--message-format=json-render-diagnostics"],{cwd:w,env:directories.env as NodeJS.ProcessEnv,encoding:"utf8",maxBuffer:1<<27});expect(run.status,run.stderr).toBe(0);
+ const run=spawnSync(registeredToolExecutableV1("cargo"),[...args,"--message-format=json-render-diagnostics"],{cwd:w,env:directories.env as NodeJS.ProcessEnv,encoding:"utf8",maxBuffer:1<<27});expect(run.status,run.stderr).toBe(0);
  const units:{message:unknown;evidence:unknown}[]=[],buildScripts:unknown[]=[];
  for(const line of run.stdout.split("\n")){if(!line.startsWith("{"))continue;const message=JSON.parse(line);if(message.reason==="build-script-executed")buildScripts.push(message);if(message.reason==="compiler-artifact")units.push({message,evidence:{version:1,kind:"discovery",paths:[],producer:null}});}
  const receipt=join(root,"receipts","cargo-unit-provenance-"+name+".json");

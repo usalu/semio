@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../🧰️tools/🏃️run/🟦️.ts";
 /** 🧵️ Contract: the scheduler hands rustc the front-end thread count the run was admitted, not the cores of the host. Cargo's authored `-Z threads=0` becomes the admitted parallelism, a larger count is capped to it, a smaller one stays, both spellings are read and nothing changes without a grant. The real scheduler binary runs a stand-in rustc that prints its arguments; the verdict of every language-agnostic corpus case (`./🔣️.json`) must equal the independent Python oracle (`./🐍️.py`). Measured on one 2.7 MB crate (opt-level 0, debuginfo 1, 256 codegen units, fresh incremental cache, load 23 to 35): 1 thread 181 s wall / 129 s CPU / 2.9 GB peak, 4 threads 119 s / 132 s / 5.4 GB, 10 threads (`-Z threads=0`) 90 s / 143 s / 5.2 GB. */
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
@@ -28,7 +29,7 @@ test("the scheduler binary hands the stand-in rustc exactly the corpus arguments
  try{
   let scheduler=process.env.SEMIO_TEST_SCHEDULER;
   if(!scheduler){
-   const built=spawnSync("cargo",["build","--release","--manifest-path",manifest,"--bins"],{cwd:scratch,env:{...process.env,CARGO_TARGET_DIR:join(scratch,"target")},encoding:"utf8"});
+   const built=spawnSync(registeredToolExecutableV1("cargo"),["build","--release","--manifest-path",manifest,"--bins"],{cwd:scratch,env:{...process.env,CARGO_TARGET_DIR:join(scratch,"target")},encoding:"utf8"});
    expect(built.status,built.stderr).toBe(0);
    scheduler=join(scratch,"target","release","semio-build-scheduler");
   }

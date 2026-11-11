@@ -206,11 +206,12 @@
       "maximumRamping": 2,
       "rampIdleAfterMilliseconds": 30000,
       "rampIdleObservedBasisPoints": 2500,
-      "maximumQuiet": 4,
+      "maximumQuiet": 16,
       "quietSoftStopGrants": 1
     },
     "swap": {
       "ceilingBasisPoints": 2500,
+      "activeMegabytesPerSecond": 1,
       "outMegabytesPerSecond": 64
     },
     "pressure": {

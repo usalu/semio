@@ -95,7 +95,7 @@ mod agent_lane_preview_tests {
             if !self.outcomes.terminal_is_empty() {
                 let demand=self.outcomes.close_demands().map_err(semio_framework_job::OriginalTurnFailure::from)?;
                 let step=semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|self.outcomes.close_step(effect))?;
-                return Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}});
+                return Ok(match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress}},semio_framework_job::InteractiveJobCloseStep::Blocked=>semio_framework_job::InteractiveJobCloseStep::Blocked});
             }
             self.released = true;
             Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })

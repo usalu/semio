@@ -776,8 +776,6 @@ fn energy_precompute_close_delegates_original_factory_quotes_and_physical_receip
  }}
 }
 
-#[global_allocator]
-static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[test]
 fn hourly_zone_power_series_integrate_to_meters_and_exclude_warmup() {

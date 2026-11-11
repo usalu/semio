@@ -6,18 +6,18 @@ fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:100000,maximum_c
 fn quantum()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:128}}
 fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(751),Generation(6),stock(),||Some(0),u64::MAX,1000000)}
 fn measured(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,run:impl FnOnce(&mut StepContext<'_>)->Result<(),OriginalTurnFailure>){
- let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(quantum(),decoder,run));result.unwrap();let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(caller.stock(),stock());
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.refreshed_turn_with_decoder(quantum(),decoder,run));result.unwrap();let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(caller.stock(),stock());
 }
 fn account<R>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut StepContext<'_>)->R)->R{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run(cx));cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:heap.requested_bytes,released_bytes:heap.released_bytes,..Default::default()}).unwrap();result}
 fn checkpoint(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){
  measured(caller,decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|native.checkpoint()))?;account(cx,|_|drop(out));cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;Ok(())});
 }
 fn close(mut caller:OriginalJobFixtureCaller,mut decoder:OriginalJobDecodeOwner){
- while !decoder.terminal_is_empty(){caller.turn(quantum(),|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(quantum());
+ while !decoder.terminal_is_empty(){caller.bare_turn(quantum(),|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(quantum());
 }
 #[test]
 fn actual_original_progress_observer_has_no_verdict_and_cancels_at_completed_256(){
- let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let token=Arc::new(caller.admit_alias(quantum()));let observing=Arc::clone(&token);
+ let mut caller=caller();let mut decoder=caller.admitted_decoder();let token=Arc::new(caller.admit_alias(quantum()));let observing=Arc::clone(&token);
  let seen=Rc::new(RefCell::new(Vec::with_capacity(8)));let observing_seen=Rc::clone(&seen);
  let mut completed_work=0;
  testkit::with_native_decode_progress(Box::new(move|progress|{
@@ -36,7 +36,7 @@ fn actual_original_progress_observer_has_no_verdict_and_cancels_at_completed_256
 }
 #[test]
 fn scoped_native_progress_observers_restore_nested_and_unwound_owners(){
- let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let outer=Rc::new(RefCell::new(Vec::with_capacity(8)));let inner=Rc::new(RefCell::new(Vec::with_capacity(8)));let observing=Rc::clone(&outer);
+ let mut caller=caller();let mut decoder=caller.admitted_decoder();let outer=Rc::new(RefCell::new(Vec::with_capacity(8)));let inner=Rc::new(RefCell::new(Vec::with_capacity(8)));let observing=Rc::clone(&outer);
  testkit::with_native_decode_progress(Box::new(move|progress|{observing.borrow_mut().push(progress.completed);}),||{
   checkpoint(&mut caller,&mut decoder);let observing=Rc::clone(&inner);
   testkit::with_native_decode_progress(Box::new(move|progress|{observing.borrow_mut().push(progress.completed);}),||checkpoint(&mut caller,&mut decoder));
@@ -47,7 +47,7 @@ fn scoped_native_progress_observers_restore_nested_and_unwound_owners(){
 }
 #[test]
 fn a_thousand_receiving_turns_on_one_owner_never_exhaust_the_escrow_table(){
- let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut completed=0;
+ let mut caller=caller();let mut decoder=caller.admitted_decoder();let mut completed=0;
  for _ in 0..100000{if completed==1000{break}let mut ran=false;measured(&mut caller,&mut decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|{ran=true;native.checkpoint()}))?;account(cx,|_|drop(out));if ran{cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;}Ok(())});completed+=usize::from(ran);}
  assert_eq!(completed,1000);close(caller,decoder);
 }

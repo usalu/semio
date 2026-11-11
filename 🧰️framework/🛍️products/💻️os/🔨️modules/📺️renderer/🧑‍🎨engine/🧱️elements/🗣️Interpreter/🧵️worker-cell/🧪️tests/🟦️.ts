@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createRequire } from "node:module";
 import { createAdmittedWorkerCell, createWorkerCell } from "../🟦️.ts";
-import { repoCacheDirectory } from "@semio-tech/framework/process/execution";
+import { repoCacheDirectory } from "@semio-tech/process/execution";
 import { readModuleTreeSource, readSourceFamilySource } from "@semio-tech/framework/compiler/syntax/module-tree";
 const require = createRequire(import.meta.url);
 const memoize: (factory: (owner: string) => State) => ((owner: string) => State) = require("lodash/memoize");

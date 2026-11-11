@@ -15,7 +15,7 @@ use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_plugin_ownership::bounded_ownership::{plugin_text_close, plugin_text_retirement_demand};
-use crate::{retired,settle};
+use crate::{retired};
 
 #[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -100,18 +100,15 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOpe
         use semio_framework_job::{InteractiveJobCloseStep};
         if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.close_demand()?;
-        retired(cx,demand,|effect|{
+        retired(cx,demand,|effect|{let grant=effect.grant();
             self.closing=true;self.pending=None;
-            if !self.outcomes.terminal_is_empty(){let r=self.outcomes.close_step(effect);return settle(effect,r)}
-            let grant=effect.grant();
-            semio_framework_value::RetirementPollExit::settle(effect,(||->Result<RetainedCloneStep,ValueError>{
+            if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(effect)}
             let item=RetainedCloneProgress{copied_items:1,..Default::default()};
             if let Some(parent)=self.parent_document_id.as_mut(){return Ok(RetainedCloneStep::Progress(plugin_text_close(parent,grant).unwrap_or_else(||{self.parent_document_id=None;item})))}
             macro_rules! return_alias{($($field:ident),+)=>{$(if let Some(original)=self.$field.as_ref(){if std::sync::Arc::strong_count(original)<=1{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original final owner retirement cursor"))}drop(self.$field.take());return Ok(RetainedCloneStep::Progress(item));})+}}
             return_alias!(command,snapshot,config,history,children,draft,interaction_state,interaction_hover,peer_presence,presence_peers,transient);
             if self.presence_local.is_some()||self.output.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original retained completion or snapshot-read retirement cursor"))}
             self.operation=None;Ok(RetainedCloneStep::Complete(item))
-            })().map_err(Into::into))
         })
     }
 

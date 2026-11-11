@@ -1,11 +1,10 @@
 //! 📦️ Actual empty, short and full native backing remains with its funded Original caller until exact release.
 use semio_framework_job::*;
+use semio_framework_value_testing_allocator as _;
 #[cfg(test)] use semio_framework_job_payload::payload_pages_and_ledger::JobPayloadStream;
 #[path="../../../../🧪️testing/📬️payload/🦀️.rs"]
 mod original_payload;
-#[global_allocator]
-static ORIGINAL_PHYSICAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-fn close(original:&mut original_payload::OriginalTestPayload,grant:RetainedCloneGrant)->(bool,RetainedCloneProgress,(usize,usize)){let(done,heap)=original_payload::observe(||original.original_turn(grant,|builder,cx|{let demand=builder.retirement_demands()?;close_original_retained_step(cx,demand,|actual|builder.close_step_granted(actual))?;Ok(builder.terminal_is_empty())}).unwrap());(done,original.caller.receipt(),heap)}
+fn close(original:&mut original_payload::OriginalTestPayload,grant:RetainedCloneGrant)->(bool,RetainedCloneProgress,(usize,usize)){let(done,heap)=original_payload::observe(||original.original_turn(grant,|builder,cx|{original_payload::close_builder(builder,cx)?;Ok(builder.terminal_is_empty())}).unwrap());(done,original.caller.receipt(),heap)}
 #[test]
 fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing_grant(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📦️physical-close/🔣️.json")).unwrap();assert_eq!(fixture["pageBytes"],JOB_PAYLOAD_PAGE_BYTES);

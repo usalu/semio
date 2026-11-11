@@ -277,4 +277,5 @@ fn a_newer_transfer_of_the_same_lifetime_retires_the_finished_pair_in_bounded_st
     }
     let reload = ingress.begin_load(newer.lifetime, 61, live).expect("the newer pair loads");
     assert!(matches!(ingress.finish_load(reload, Ok(()), live), ColdPairIngressStatus::Applied(receipt) if receipt.transfer_generation == 61));
+    close_all(&mut ingress, newer.lifetime);
 }

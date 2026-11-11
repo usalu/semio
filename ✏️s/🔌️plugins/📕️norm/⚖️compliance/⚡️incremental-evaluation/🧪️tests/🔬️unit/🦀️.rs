@@ -527,7 +527,7 @@ fn the_shared_reads_come_from_the_field_names_without_converting_the_document() 
 
 static METERED_CONVERSIONS: AtomicUsize = AtomicUsize::new(0);
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct Metered(Doc);
 
 impl ToValue for Metered {

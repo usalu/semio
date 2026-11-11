@@ -205,7 +205,7 @@ async fn a_viewer_page_publishes_only_its_transient_item() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::PluginApp;
     let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<ViewerApp<HomeViewer>, _>(async { semio_framework_plugin::App { definition: create_home_viewer().await, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<ViewerApp<HomeViewer>, _>(async { semio_framework_plugin::App { definition: create_home_viewer().await, examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     let fixture = semio_framework_pack_json::parse(fixture_text!("../../🧪️tests/🧫️fixtures/📬️directory-feed/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("language-neutral directory feed fixture");
     let pages = fixture["pages"].as_array().expect("pages");

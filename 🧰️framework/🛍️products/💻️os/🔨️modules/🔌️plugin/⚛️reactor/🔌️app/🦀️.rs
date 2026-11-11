@@ -66,8 +66,8 @@ use semio_plugin_decl_app::whole_document_archive;
 use semio_plugin_document_media::lifted_app::whole_document_media;
 
 /// 🚪️ Which births an instance has paid so far; the runtime opening and the fixtures advance the same value through [`PluginApp::advance_instance_birth`].
-#[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
-pub struct InstanceBirth{pub identity_bound:bool,pub issuer_ready:bool}
+#[derive(Default)]
+pub struct InstanceBirth{pub identity_bound:bool,pub issuer_ready:bool,pub construction:semio_framework_job::OriginalConstructionAdmission}
 
 /// 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
 /// (via {@link VcsArtifactApp}'s store) across calls — no per-call document JSON is threaded in.
@@ -108,9 +108,8 @@ pub trait PluginApp: Send + 'static {
     fn advance_instance_birth(&mut self,birth:&mut InstanceBirth,instance_id:u32,actor:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if !birth.identity_bound{
             if !self.bind_original_opening(instance_id,actor,cx)?{return Ok(false)}
-            let paid=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()};
-            if cx.retirement_should_yield()||cx.fuel_remaining()<1||cx.retained_grant().maximum_depth==0||!paid.fits(cx.retained_grant()){return Ok(false)}
-            cx.consume_retained(paid)?;cx.consume_fuel(1);birth.identity_bound=true;
+            let mut done=None;
+            semio_plugin_job::original_steps::unit(cx,&mut birth.construction,&mut done,semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()},||{birth.identity_bound=true;Ok(())})?;
             return Ok(false)
         }
         if !birth.issuer_ready{if !self.admit_cancellation_issuer(cx)?{return Ok(false)}birth.issuer_ready=true;return Ok(false)}
@@ -553,8 +552,8 @@ pub trait PluginApp: Send + 'static {
     fn original_natural_file_media_type(&self,_port:&str,_format_kind:&str)->Option<semio_framework::MediaType>{None}
     /// 🎞️ Advances one original intrinsic media input until its actual producer is mounted.
     async fn advance_original_media_import(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_completed:&mut bool,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original media import is not implemented").into())}
-    async fn import_media(&mut self, _port: &str, _media: Media, _meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()))
+    async fn import_media(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+        Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()).into())
     }
     /// 🌀️ O1/§1.5 (sdk-dedyn): plain AFIT — see `export_media` above.
     async fn media_fingerprint(&mut self, _port: &str) -> Result<MediaFingerprint, MediaError> {
@@ -575,14 +574,15 @@ pub trait PluginApp: Send + 'static {
     /// verbatim (the source document and its members), which the runtime admits as a stepped archive load. Anything else (a
     /// foreign document schema, or a `Binary{format}` wire) has no SDK-level importer registry yet, so the default rejects it;
     /// apps that need one override this method directly.
-    async fn consume_media(&mut self, _port: &str, artifact: MediaArtifact, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaConsumption, MediaArtifactError> {
-        let schema_now = self.artifact_schema().await.to_string();
-        match artifact.descriptor.wire {
-            MediaWireFormat::Document { schema } if schema == schema_now => whole_document_archive(&artifact.data).await.map(MediaConsumption::DocumentLoad),
-            MediaWireFormat::Document { schema } => Err(MediaArtifactError::SchemaMismatch { expected: schema_now, found: schema }),
-            MediaWireFormat::Binary { format_kind } => Err(MediaArtifactError::NoImporter(format_kind)),
-            MediaWireFormat::Intrinsic { schema } => Err(MediaArtifactError::NoImporter(schema)),
-        }
+    async fn consume_media(&mut self,_port:&str,artifact:&mut Option<MediaArtifact>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<MediaConsumption>,semio_plugin_decl_app::MediaArtifactOperationFailure>{
+        let artifact=artifact.take().ok_or_else(||MediaArtifactError::Payload("media artifact was already consumed".into()))?;
+        let schema_now=self.artifact_schema().await.to_string();
+        Ok(Some(match artifact.descriptor.wire{
+            MediaWireFormat::Document{schema} if schema==schema_now=>MediaConsumption::DocumentLoad(whole_document_archive(&artifact.data).await?),
+            MediaWireFormat::Document{schema}=>return Err(MediaArtifactError::SchemaMismatch{expected:schema_now,found:schema}.into()),
+            MediaWireFormat::Binary{format_kind}=>return Err(MediaArtifactError::NoImporter(format_kind).into()),
+            MediaWireFormat::Intrinsic{schema}=>return Err(MediaArtifactError::NoImporter(schema).into()),
+        }))
     }
 }
 

@@ -37,7 +37,7 @@ semio-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️p
 semio-renderer-wgpu-scene-tables = { path = "../../../🧮️scene-tables/📦️packages/🦀️rust" }
 semio-renderer-wgpu-scene-text-vfs = { path = "../../../📁️scene-text-vfs/📦️packages/🦀️rust" }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-trace = { workspace = true }
 serde_json = "1.0.140"

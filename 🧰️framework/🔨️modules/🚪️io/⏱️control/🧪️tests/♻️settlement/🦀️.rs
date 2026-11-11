@@ -3,8 +3,6 @@ use semio_framework_io_control::{NativeSnapshotEncodeOwner,NativeSnapshotEncodeS
 use semio_framework_value::{ErasedSnapshotRetirement,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement}};
 use semio_framework_value::native_encoding::*;
 use std::{sync::{Arc,Mutex},panic::{catch_unwind,AssertUnwindSafe}};
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 use semio_framework_trace_memory_testing::observe_backing as observe;
 type Cursor=<NativeSnapshotEncodeSettlement as RetireOwned>::Retirement;
 fn close<T:RetireOwned>(value:T,bank:&mut RetainedCloneGrant,fuel:&mut u64){

@@ -150,7 +150,7 @@ func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map
 		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
 	}
 	args := BuildGitDiffArgs("-U0", baseCheckpoint, headCheckpoint, paths)
-	stdout, stderr, exitCode := ExecCommand("git", args, "")
+	stdout, stderr, exitCode := ExecCommand("git", append([]string{"-c", "core.quotepath=off"}, args...), "")
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
 	}
@@ -159,16 +159,12 @@ func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map
 	lineRegex := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
 	for _, line := range strings.Split(stdout, "\n") {
 		if strings.HasPrefix(line, "diff --git ") {
-			parts := strings.Fields(line)
-			if len(parts) >= 4 {
-				newPath := strings.TrimPrefix(parts[3], "b/")
-				currentFile = newPath
-				if result[currentFile] == nil {
-					result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
-				}
+			currentFile = gitDiffNewPath(line)
+			if result[currentFile] == nil {
+				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
 			}
-		} else if strings.HasPrefix(line, "+++ b/") {
-			currentFile = strings.TrimPrefix(line, "+++ b/")
+		} else if strings.HasPrefix(line, "+++ b/") || strings.HasPrefix(line, "+++ \"b/") {
+			currentFile = strings.TrimPrefix(gitPathField(strings.TrimSuffix(line[len("+++ "):], "\t")), "b/")
 			if result[currentFile] == nil {
 				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
 			}

@@ -7,7 +7,6 @@
 //! the yielded leaf's inputs (offset, pivot, targets) through the real `historyEdit*` verbs and replays the downstream.
 
 extern crate semio_os_kernel as protocol;
-#[global_allocator]static ACTOR_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn actor_admission_turn<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->T{
  let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run(cx));let after=cx.retained_progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));result.unwrap()
 }

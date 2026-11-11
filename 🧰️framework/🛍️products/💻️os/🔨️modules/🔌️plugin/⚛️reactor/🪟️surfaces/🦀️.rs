@@ -3,11 +3,6 @@
 use semio_framework::{UiRefreshSection, ViewModel};
 
 #[doc(hidden)]
-pub struct SurfaceContext {
-    pub body_key: String,
-    pub view_state: ViewModel,
-}
-#[doc(hidden)]
 pub struct BorrowedSurfaceContext<'a> {
     pub body_key:&'a str,
     pub view_state:&'a ViewModel,
@@ -28,8 +23,9 @@ pub struct SurfaceContextRef<'a>{pub body_key:&'a str,pub view_state:&'a ViewMod
 /// 🧩️ A reserved section keeps the FULL, unnarrowed view it was mounted with — it is rendered for no
 /// window and for no panel, and no window closing prunes it, so a later host refresh must not
 /// re-narrow it either.
+#[doc(hidden)]
 #[derive(semio_framework_value::RetireOwned)]
-enum SurfaceRole {
+pub enum SurfaceRole {
     Window(String),
     Panel,
     Section,
@@ -54,8 +50,9 @@ impl SurfaceRole {
 
 /// 🪟️ ONE mounted surface: its authored body, its role, and — the point of this type — its OWN
 /// projected host view.
+#[doc(hidden)]
 #[derive(semio_framework_value::RetireOwned)]
-struct SurfaceBinding {
+pub struct SurfaceBinding {
     surface: String,
     pub body_key: String,
     role: SurfaceRole,
@@ -73,18 +70,36 @@ pub struct SurfaceContexts {
     view_state: Option<ViewModel>,
     version:u64,
     leases_exhausted:bool,
+    displaced:Vec<Displaced>,
+    retiring:Option<Displaced>,
     retirement: semio_framework_value::retained_clone::RetainedCloneClose,
     closing_slot: usize,
     closing_body: Option<usize>,
     cached_source:std::mem::ManuallyDrop<Option<semio_framework_value::RetainedCloneSource<ViewModel>>>,
-    cached_admission:std::mem::ManuallyDrop<Option<semio_framework_value::retained_clone::RetainedCloneSourceAdmission<ViewModel,ViewModel,()>>>,
     cached_capture:Option<usize>,
     captured_slot:Option<usize>,
 }
 
+/// 🗑️ A replaced, removed or refused host projection waits here until a funded turn retires it, because dropping it unretired would abandon its ordered-map roots.
+#[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
+pub enum Displaced{Binding(SurfaceBinding),View(ViewModel)}
+/// 🧱️ Every owned host projection of one registry, the only state its retirement cursor carries.
+#[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
+pub struct SurfaceContextsOwned{slots:[Option<SurfaceBinding>;semio_ui_contract::UI_RESIDENT_SLOTS],view_state:Option<ViewModel>,displaced:Vec<Displaced>,retiring:Option<Displaced>}
+impl semio_framework_value::retirement::RetireOwned for SurfaceContexts{
+    type RetirementCursor=<SurfaceContextsOwned as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{
+        assert!(self.cached_capture.is_none()&&self.cached_source.is_none()&&self.retirement.is_empty(),"surface registry retirement requires a released source and capture lease");
+        let Self{slots,view_state,displaced,retiring,..}=self;
+        semio_framework_value::retirement::RetireOwned::retirement_seed(SurfaceContextsOwned{slots,view_state,displaced,retiring})
+    }
+    fn controlled_retirement_supported()->bool{<SurfaceContextsOwned as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
+}
 impl Default for SurfaceContexts {
     fn default() -> Self {
-        Self {slots: std::array::from_fn(|_| None),view_state: None,version:0,leases_exhausted:false,retirement:Default::default(),closing_slot:0,closing_body:None,cached_source:std::mem::ManuallyDrop::new(None),cached_admission:std::mem::ManuallyDrop::new(None),cached_capture:None,captured_slot:None}
+        Self {slots: std::array::from_fn(|_| None),view_state: None,version:0,leases_exhausted:false,displaced:Vec::new(),retiring:None,retirement:Default::default(),closing_slot:0,closing_body:None,cached_source:std::mem::ManuallyDrop::new(None),cached_capture:None,captured_slot:None}
     }
 }
 
@@ -108,6 +123,7 @@ impl SurfaceContexts {
     pub fn insert(&mut self, surface: String, body_key: String, view_state: ViewModel) -> Result<(), &'static str> {
         assert!(self.cached_capture.is_none(),"original surface capture holds the registry mutation lease");
         if synthetic_window_surface(&surface, &view_state) {
+            self.displaced.push(Displaced::View(view_state));
             return Err("a surface named `window` is synthetic: an app with window instances is addressed by instance");
         }
         let role = if UiRefreshSection::from_body_key(&body_key).is_some() {
@@ -118,24 +134,29 @@ impl SurfaceContexts {
                 None => SurfaceRole::Panel,
             }
         };
-        let projected = role.project(&view_state).ok_or("surface context names a window instance the host view does not carry")?;
-        let index = self
+        let Some(projected) = role.project(&view_state) else {
+            self.displaced.push(Displaced::View(view_state));
+            return Err("surface context names a window instance the host view does not carry");
+        };
+        let Some(index) = self
             .slots
             .iter()
             .position(|slot| slot.as_ref().is_some_and(|context| context.surface == surface))
-            .or_else(|| self.slots.iter().position(|slot| slot.as_ref().is_none_or(|context| context.role.window_id().is_some_and(|id| !view_state.window_instances.iter().any(|window| window.id == id)))))
-            .ok_or("surface context capacity exhausted")?;
-        let version=if self.leases_exhausted{None}else{self.version.checked_add(1)}.ok_or("surface context version exhausted")?;
+            .or_else(|| self.slots.iter().position(|slot| slot.as_ref().is_none_or(|context| context.role.window_id().is_some_and(|id| !view_state.window_instances.iter().any(|window| window.id == id))))) else {
+            self.displaced.extend([Displaced::View(projected),Displaced::View(view_state)]);
+            return Err("surface context capacity exhausted");
+        };
+        let Some(version)=(if self.leases_exhausted{None}else{self.version.checked_add(1)}) else {
+            self.displaced.extend([Displaced::View(projected),Displaced::View(view_state)]);
+            return Err("surface context version exhausted");
+        };
         self.prune_windows(&view_state);
         self.version=version;
-        self.slots[index] = Some(SurfaceBinding {surface,body_key,role,view_state: Some(projected),version});
-        self.view_state = Some(view_state);
+        let previous=self.slots[index].replace(SurfaceBinding {surface,body_key,role,view_state: Some(projected),version});
+        self.displaced.extend(previous.map(Displaced::Binding));
+        let previous=self.view_state.replace(view_state);
+        self.displaced.extend(previous.map(Displaced::View));
         Ok(())
-    }
-
-    pub fn get(&self, surface: &str) -> Option<SurfaceContext> {
-        let binding=self.borrow(surface)?;
-        Some(SurfaceContext { body_key:binding.body_key.into(),view_state:binding.view_state.clone() })
     }
 
     pub fn borrow(&self,surface:&str)->Option<SurfaceContextRef<'_>>{let(index,binding)=self.slots.iter().enumerate().find_map(|(index,slot)|slot.as_ref().filter(|binding|binding.surface==surface).map(|binding|(index,binding)))?;let view=if self.captured_slot==Some(index){self.cached_source.as_ref().and_then(|source|source.original_authority()).or(binding.view_state.as_ref())}else{binding.view_state.as_ref()}?;Some(SurfaceContextRef{body_key:&binding.body_key,view_state:view})}
@@ -171,17 +192,17 @@ impl SurfaceContexts {
                 continue;
             }
             if let Some(projected) = binding.role.project(view) {
-                binding.view_state = Some(projected);
+                self.displaced.extend(binding.view_state.replace(projected).map(Displaced::View));
                 binding.version=self.version;
             }
         }
-        self.view_state = Some(view.clone());
+        self.displaced.extend(self.view_state.replace(view.clone()).map(Displaced::View));
     }
 
     fn prune_windows(&mut self, view: &ViewModel) {
         for slot in &mut self.slots {
             if slot.as_ref().and_then(|context| context.role.window_id()).is_some_and(|id| !view.window_instances.iter().any(|window| window.id == id)) {
-                *slot = None;
+                self.displaced.extend(slot.take().map(Displaced::Binding));
             }
         }
     }
@@ -213,10 +234,10 @@ impl SurfaceContexts {
         assert!(self.cached_capture.is_none(),"original surface capture holds the registry mutation lease");
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|context| context.surface == surface)) {
             match self.version.checked_add(1){Some(version)if !self.leases_exhausted=>self.version=version,_=>self.leases_exhausted=true}
-            *slot = None;
+            self.displaced.extend(slot.take().map(Displaced::Binding));
         }
         if self.slots.iter().all(Option::is_none) {
-            self.view_state = None;
+            self.displaced.extend(self.view_state.take().map(Displaced::View));
         }
     }
 

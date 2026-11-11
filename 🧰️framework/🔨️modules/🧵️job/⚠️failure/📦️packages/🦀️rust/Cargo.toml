@@ -53,6 +53,10 @@ name = "original-domain-reservation"
 path = "../../📦️domain/🎟️reservation/🧪️tests/owning.rs"
 
 [[test]]
+name = "original-source-qualification"
+path = "../../🎟️work/🧪️tests/🪪️qualification/owning.rs"
+
+[[test]]
 name = "original-work-failure"
 path = "../../🎟️work/🧪️tests/owning.rs"
 

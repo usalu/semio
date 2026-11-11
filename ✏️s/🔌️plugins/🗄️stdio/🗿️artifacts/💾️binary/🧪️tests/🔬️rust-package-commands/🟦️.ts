@@ -1,10 +1,10 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ValidateFunction } from "ajv";
 import { semioSchemaAjvV1 } from "@semio-tech/framework/schema/oracles/validator";
-import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
+import { runArtifactRustTests } from "@semio-tech/process/cargo-test";
 import { parseBinarySnapshot } from "../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
 import { binarySnapshotToSqliteDatabase, binarySnapshotFromSqliteDatabase } from "../../🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
 import { mutableSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot/testing/mutable-copy";

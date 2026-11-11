@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -93,7 +94,7 @@ else {
   const children: ReturnType<typeof Bun.spawn>[] = [], runs: Promise<number>[] = [], outcomes = new Map<string, number>();
   const events = () => existsSync(join(root, "state/events.jsonl")) ? readFileSync(join(root, "state/events.jsonl"), "utf8").trim().split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];
   const run = (id: string) => {
-    const child = Bun.spawn(["node", join(nxRoot, "dist/bin/nx.js"), "run", "fixture:test", "--output-style=stream"], { cwd: root, env: { ...env, FIXTURE_RUN_ID: id, FIXTURE_SHARED: scenario.sharing ? "1" : "0" }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn([registeredToolExecutableV1("node"), join(nxRoot, "dist/bin/nx.js"), "run", "fixture:test", "--output-style=stream"], { cwd: root, env: { ...env, FIXTURE_RUN_ID: id, FIXTURE_SHARED: scenario.sharing ? "1" : "0" }, stdout: "pipe", stderr: "pipe" });
     children.push(child);
     const drain = async (stream: ReadableStream<Uint8Array>) => { for await (const bytes of stream) appendFileSync(join(root, "state/" + id + ".log"), bytes); };
     const completion = Promise.all([drain(child.stdout), drain(child.stderr), child.exited]).then(results => { outcomes.set(id, results[2]); return results[2]; });

@@ -1,8 +1,6 @@
 use super::*;
 use semio_framework_pack_json::{JsonBorrowedSinkCursor,JsonBorrowNoContext,JsonNativeSource};
 use semio_framework_value::{RetainedCloneGrant,RetirementDemand,NativeEncodeControl};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn write(source:&impl JsonWriteSource)->String{
  let mut cursor=JsonBorrowedSinkCursor::empty(64).unwrap();let mut observer=|_|true;let mut control=NativeEncodeControl::new(100000,&mut observer);let mut output=Vec::new();

@@ -28,11 +28,11 @@ testkit = []
 [dependencies]
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework = { workspace = true }
-semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-sync = { workspace = true }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -45,9 +45,9 @@ semio-framework-job = { workspace = true }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-plugin = { path = "../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
+semio-plugin = { path = "../../../../🔌️plugin/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }
-semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 serde_json = { workspace = true }

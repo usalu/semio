@@ -19,7 +19,7 @@ test("mounted gesture keeps actual issuer and separately funded maintenance",()=
  const machine=pluginSubtreeText("🛠️tool-machine")+pluginSubtreeText("🧵️instance")+pluginSubtreeText("📜️declaration","🛠️tool-machine");
  const plugin=pluginSubtreeText("📜️declaration","👷️job");
  const fields=readFileSync(resolve(import.meta.dir,"../../../../📜️declaration/🧩️app/🛬️lifted/📸️fields/🦀️.rs"),"utf8");
- for(const token of["GestureCapture","GestureOperation","gesture_retirement_demand","gesture_retirement_step(grant)","request_gesture_cancellation","begin_gesture_retirement"])expect(machine.includes(token),token).toBe(true);
+ for(const token of["GestureCapture","GestureOperation","gesture_retirement_demand","gesture_retirement_step(cx,grant)","request_gesture_cancellation","begin_gesture_retirement"])expect(machine.includes(token),token).toBe(true);
  for(const token of["gesture_operations.remove","Arc::new(GestureSlot"])expect(machine.includes(token),token).toBe(false);
  for(const token of["gesture: GestureCapture<A::Mutation>","gesture: GestureCapture::detached()"])expect(plugin.includes(token),token).toBe(true);
  expect(plugin.includes("gesture: std::sync::Arc<GestureSlot")).toBe(false);expect(fields.includes("pub gesture:GestureCapture<M>")).toBe(true);

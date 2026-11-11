@@ -21,12 +21,12 @@ semio-framework-pack-json-native-input = { path = "../../🔨️modules/🎒️p
 semio-ui-declaration = { path = "../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
+semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-io-schema = { path = "../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
-semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-abi = { path = "../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }

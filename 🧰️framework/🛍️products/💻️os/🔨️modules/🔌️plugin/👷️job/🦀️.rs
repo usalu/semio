@@ -1,7 +1,7 @@
 extern crate semio_os_kernel as store;
-pub use semio_plugin_job_receiving::original_steps;
-pub(crate) use semio_plugin_job_receiving::original_steps::{acted,begin,born,forgotten,forward,funds,moved,paid,produced,replied,retired,settle};
+pub(crate) use semio_plugin_job_receiving::original_steps::{acted,adopted,begin,born,built,built_with,forgotten,forward,funds,moved,paid,produced,replied,retired,retired_poll,settle,unbuilt};
 pub use semio_plugin_host_configuration::OriginalHostConfiguration;
+pub use semio_plugin_job_receiving::original_steps;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as vcs;
 extern crate semio_os_kernel as pack;
@@ -638,8 +638,8 @@ impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
             self.retirement_fault=Some(plugin_sdk_fault("child emission exceeds its captured preview output allocation authority"));
             return Ok(None);
         }
-        let Some((result,performed))=cx.with_original_effect(grant,|_,effect|if self.wire_mode{emit.prepare_child_preview_original(effect)}else{emit.prepare_child_original(effect)})? else{return Ok(None)};
-        cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));let step=result.map_err(|failure|semio_framework_job::OriginalTurnFailure::from(failure.debit_original(cx)))?;
+        let outcome=if self.wire_mode{emit.prepare_child_preview_original(cx)}else{emit.prepare_child_original(cx)};
+        let step=outcome.map_err(|failure|semio_framework_job::OriginalTurnFailure::from(failure.debit_original(cx)))?;
         let progress=step.progress();
         cx.consume_retained(progress)?;
         match step{
@@ -700,6 +700,7 @@ pub struct AgentLanePreview<A:ArtifactApp>{
     pub starting:bool,
     pub producer_request:Option<semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>,
     pub producer_request_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest<A>>>,
+    pub producer_construction:semio_framework_job::OriginalConstructionAdmission,
     pub producer:Option<OriginalPreviewDrive<semio_framework::ErasedToolJob>>,
     pub children:Option<OriginalPreviewDrive<ChildEmissionPreviewJob<A>>>,
     pub completion:Option<ArtifactToolCompletion<A>>,
@@ -717,6 +718,7 @@ pub struct AgentLanePreview<A:ArtifactApp>{
 impl<A:ArtifactApp> AgentLanePreview<A>{
     pub fn retirement_demands(&self,body:usize,canonical:Option<&semio_plugin_operation::ToolCancellationHandle>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         if self.producer_request.is_some()||self.producer_request_retirement.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.producer_request,&self.producer_request_retirement,body)}
+        if !self.producer_construction.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<semio_framework_job::OriginalConstructionAdmission>(),depth:1,..Default::default()})}
         if let Some(owner)=self.producer.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
         if let Some(owner)=self.children.as_ref(){return owner.retirement_demands(body).map(|demand|if demand==Default::default(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{demand})}
         if self.completion.is_some()||self.completion_close.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)}
@@ -725,11 +727,12 @@ impl<A:ArtifactApp> AgentLanePreview<A>{
         if self.lease.is_some(){return Ok(semio_framework_value::RetirementDemand{capacity_bytes:std::mem::size_of::<semio_plugin_operation::ToolCancellationLeaseRetirement>(),copy_bytes:std::mem::size_of::<semio_plugin_operation::ToolCancellationLease>(),depth:1,..Default::default()})}
         Ok(self.caller.as_ref().map_or(semio_framework_value::RetirementDemand{depth:1,..Default::default()},|caller|caller.retirement_demands()))
     }
-    pub fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.key.is_none()&&self.caller.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.producer_construction.terminal_is_empty()&&self.producer.is_none()&&self.children.is_none()&&self.completion.is_none()&&self.completion_close.is_none()&&self.publication.is_none()&&self.publication_close.is_none()&&self.lease.is_none()&&self.lease_close.is_none()}
     pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,canonical:Option<&semio_plugin_operation::ToolCancellationHandle>)->Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Close;
         self.closing=true;if cx.should_yield(){return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(Default::default()))}
         if self.producer_request.is_some()||self.producer_request_retirement.is_some(){let body=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.producer_request,&self.producer_request_retirement,body)?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.producer_request,&mut self.producer_request_retirement,effect))?;return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))}
+        if !self.producer_construction.terminal_is_empty(){let step=self.producer_construction.retire_step(cx)?;return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))}
         if let Some(owner)=self.producer.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.producer.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),Close::Blocked=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original preview producer awaits paid closure"}})}
         if let Some(owner)=self.children.as_mut(){let step=owner.cancel_step(cx)?;if owner.cancellation_terminal_is_empty(){self.children.take();}return Ok(match step{Close::Pending{progress}|Close::Complete{progress}=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress),Close::Blocked=>semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{reason:"original preview child producer awaits paid closure"}})}
         if self.completion.is_some()||self.completion_close.is_some(){let body=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.completion,&self.completion_close,body)?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.completion,&mut self.completion_close,effect))?;return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()))}

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 📦️ Contract: every module in the closure of the authorizer compiler initialises when the closure is bundled into one file, which a module that reads a sibling file relative to `import.meta.url` at load cannot (the bundle sits elsewhere): the real compiler closure, compiled by Bun, is imported by Node; a closure with such a read is refused by the same Node import, so the check is sensitive to the fault. */
 import{expect,test}from"bun:test";
 import{spawnSync}from"node:child_process";
@@ -13,7 +14,7 @@ async function initialiseInNodeV1(root:string,entry:string){
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original ticket artifact directory required");
  return withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"fixture:compiler-init",maximumElapsedMilliseconds:0},{fixture:"compiler-init"},Date.now()),async original=>{
   const control=createIssuedResourceControlV1(original,"fixture:compiler-init",0),captured=await captureNxAuthorizerSourcesV1(root,entry,control.signal),sealed=await compileNxAuthorizerSnapshotV1(root,snapshotNxAuthorizerSourcesV1(captured),control,"node","module"),directory=await mkdtemp(join(artifacts,"ci-"));
-  try{const file=join(directory,"bundle.mjs");await writeFile(file,sealed.bytes);return spawnSync("node",["--input-type=module","--eval","await import("+JSON.stringify(pathToFileURL(file).href)+");console.log('initialised');"],{cwd:directory,encoding:"utf8"});}finally{await rm(directory,{recursive:true,force:true});}
+  try{const file=join(directory,"bundle.mjs");await writeFile(file,sealed.bytes);return spawnSync(registeredToolExecutableV1("node"),["--input-type=module","--eval","await import("+JSON.stringify(pathToFileURL(file).href)+");console.log('initialised');"],{cwd:directory,encoding:"utf8"});}finally{await rm(directory,{recursive:true,force:true});}
  });
 }
 

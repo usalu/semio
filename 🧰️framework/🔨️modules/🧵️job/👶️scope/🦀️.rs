@@ -351,8 +351,5 @@ impl<J: InteractiveJob + 'static> Drop for ChildJobGuard<'_, J> {
 #[cfg(test)]
 const TEST_RETAINED_POLICY:RetainedCloneGrant=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:32768,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128};
 #[cfg(test)]
-#[global_allocator]
-static JOB_OWNER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-#[cfg(test)]
 #[path="🧪️tests/👶️ownership/🦀️.rs"]
 mod retained_ownership_tests;

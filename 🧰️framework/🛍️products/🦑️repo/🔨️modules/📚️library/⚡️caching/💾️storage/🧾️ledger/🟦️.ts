@@ -58,7 +58,7 @@ export function readCacheLedgerV1(value:unknown,partitions:CachePartitionBudgets
   if(area.carry?.some(path=>segments(path).some(part=>part==="."||part===".."||part==="")))refuse("canonical carried directories required for "+area.id);
   if(area.directory!==undefined&&segments(area.directory).some(part=>part==="."||part===".."))refuse("canonical directory required for "+area.id);
   if(area.pattern!==undefined)try{new RegExp(area.pattern,"u");}catch{refuse("valid pattern required for "+area.id);}
-  if(area.collect&&((area.collect.custody==="pid")!==(area.collect.units?.includes("(?<pid>")===true)||area.collect.units!==undefined&&(area.kind!=="nested"||area.collect.depth===2)))refuse("pid custody needs a unit pattern with a (?<pid>) group, and unit patterns need a depth-1 nested area: "+area.id);
+  if(area.collect&&((area.collect.custody==="pid")!==(area.collect.units?.includes("(?<pid>")===true)||area.collect.units!==undefined&&(area.kind!=="nested"&&area.kind!=="tree"||area.collect.depth===2)))refuse("pid custody needs a unit pattern with a (?<pid>) group, and unit patterns need a depth-1 nested or tree area: "+area.id);
   const remainder=area.budget!==undefined&&"remainder" in area.budget;
   if(area.kind==="nested"){
    if(area.reclaim&&(area.reclaim.softAvailableBytes>=area.reclaim.targetAvailableBytes||area.partition==="graph"&&area.reclaim.targetAvailableBytes>2684354560))refuse("reclaim needs soft below target and, in the graph partition, a target within the headroom schema: "+area.id);

@@ -6,8 +6,6 @@ use semio_framework::UiRefreshSection;
 use semio_ui_contract::{UI_TEXT_MAX_BYTES,UI_BUILT_CHILDREN_MAX,UI_FIXED_LIST_ITEMS};
 use serde_json::{Value,json};
 use std::collections::BTreeMap;
-#[global_allocator]
-static SURFACE_CARRIER_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
     /// 🧮️ Sized FROM the two ceilings rather than against a frozen literal: the law's whole subject is
     /// a payload one whole node of children cannot hold, so its precondition has to follow whatever

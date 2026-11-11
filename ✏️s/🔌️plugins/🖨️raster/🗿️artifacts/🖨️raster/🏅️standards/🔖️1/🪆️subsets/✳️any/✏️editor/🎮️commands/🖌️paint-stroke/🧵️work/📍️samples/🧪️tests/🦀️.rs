@@ -1,7 +1,5 @@
 //! 🧪️ Original output allocation and scalar work remain bounded while transposing the neutral stroke columns.
 use super::*;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:128}}

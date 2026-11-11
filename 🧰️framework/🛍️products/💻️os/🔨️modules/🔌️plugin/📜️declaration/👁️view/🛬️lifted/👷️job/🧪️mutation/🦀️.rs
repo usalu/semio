@@ -1,8 +1,6 @@
 //! 🧪️ Actual exclusive gates preserve typed refusals and release original backing.
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalTurnFailure,OperationId,Generation};
-#[global_allocator]
-static ORIGINAL_MUTATION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 struct Counter{value:usize,closed:bool}
 impl ArtifactInstanceOperationOwner for Counter{
  fn as_any_mut(&mut self)->&mut dyn std::any::Any{self}

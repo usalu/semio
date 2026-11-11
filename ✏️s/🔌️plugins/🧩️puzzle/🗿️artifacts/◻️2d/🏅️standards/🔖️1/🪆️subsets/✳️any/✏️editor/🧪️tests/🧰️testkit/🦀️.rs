@@ -15,10 +15,6 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use std::collections::BTreeSet;
 
 
-/// 🧮️ Weighs what this test binary allocates, per thread (`semio_framework_trace::HeapWitness`), so a cost law
-/// reads its own work and nothing a concurrent law allocates.
-#[global_allocator]
-static PUZZLE2D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 use semio_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 use semio_s_artifact_puzzle_2d_mut_any_10::editor::puzzle2d::snapshot::board_snapshot_nodes;
 use semio_framework::Effect;

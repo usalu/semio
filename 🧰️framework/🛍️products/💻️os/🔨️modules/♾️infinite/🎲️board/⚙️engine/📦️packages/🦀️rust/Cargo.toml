@@ -32,8 +32,8 @@ semio-framework-async-slots = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 geometry = { path = "../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph-manifest = { path = "../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 graph = { path = "../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
@@ -43,7 +43,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-os-infinite-board-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 serde_json = "1.0.140"
 
 [[test]]

@@ -156,7 +156,7 @@ def summarize(facts,language):
     leases=facts.get("leases");cap=facts.get("capacity");at=facts["atMs"]
     grants=cap["grants"] if cap else [];obs=[g for g in grants if g["observedMegabytes"] is not None]
     host=facts.get("host")
-    memory={"totalMegabytes":host["totalMegabytes"] if host else 0,"availableMegabytes":host["availableMegabytes"] if host else 0,"floorMegabytes":cap["floorMegabytes"] if cap else 0,"spareMegabytes":cap["headroomMegabytes"] if cap else 0,"pressure":host["pressure"] if host else "normal","swapUsedMegabytes":host["swapUsedMegabytes"] if host else None,"load":host["load"] if host else None,"cores":host["cores"] if host else None,"admittedMegabytes":sum(g["reservedMegabytes"] for g in grants),"observedMegabytes":sum(g["observedMegabytes"] for g in obs),"unobservedGrants":len(grants)-len(obs),"overReservedMegabytes":sum(max(0,g["reservedMegabytes"]-g["observedMegabytes"]) for g in obs),"underReservedMegabytes":sum(max(0,g["observedMegabytes"]-g["reservedMegabytes"]) for g in obs),"grants":len(grants),"waiters":len(cap["waiters"]) if cap else 0}
+    memory={"totalMegabytes":host["totalMegabytes"] if host else 0,"availableMegabytes":host["availableMegabytes"] if host else 0,"floorMegabytes":cap["floorMegabytes"] if cap else 0,"spareMegabytes":cap["headroomMegabytes"] if cap else 0,"pressure":host["pressure"] if host else "normal","swapUsedMegabytes":host["swapUsedMegabytes"] if host else None,"load":host["load"] if host else None,"sampleAgeSeconds":host["ageSeconds"] if host else None,"cores":host["cores"] if host else None,"admittedMegabytes":sum(g["reservedMegabytes"] for g in grants),"observedMegabytes":sum(g["observedMegabytes"] for g in obs),"unobservedGrants":len(grants)-len(obs),"overReservedMegabytes":sum(max(0,g["reservedMegabytes"]-g["observedMegabytes"]) for g in obs),"underReservedMegabytes":sum(max(0,g["observedMegabytes"]-g["reservedMegabytes"]) for g in obs),"grants":len(grants),"waiters":len(cap["waiters"]) if cap else 0}
     by={}
     for w in (leases["waiters"] if leases else []): by.setdefault(w["resource"],[]).append(w)
     queues=[]
@@ -223,6 +223,7 @@ def summarize(facts,language):
             if state=="stuck": say("holder-stuck","alert","pid %d"%h["pid"],{"pid":h["pid"],"resource":short(h["resource"]),"minutes":(s.get("silentSeconds",0)+30)//60})
             else: say("holder-stale","warn","pid %d"%h["pid"],{"pid":h["pid"],"resource":short(h["resource"]),"ids":", ".join(s.get("staleIds",[]))})
     if host and host["pressure"]!="normal": say("memory-pressure","alert" if host["pressure"]=="critical" else "warn","host",{"pressure":host["pressure"]})
+    if host and host["ageSeconds"]>POLICY["findings"]["sampleStaleSeconds"]: say("sample-stale","warn","host",{"age":duration(language,host["ageSeconds"])})
     for g_ in sorted(grants,key=lambda g_:(g_["pid"],g_["id"])):
         if g_["observedMegabytes"] is not None and g_["reservedMegabytes"]>0 and g_["observedMegabytes"]*10000>g_["reservedMegabytes"]*POLICY["findings"]["underReservedBasisPoints"]: say("under-reserved","warn","pid %d"%g_["pid"],{"pid":g_["pid"],"observed":g_["observedMegabytes"],"reserved":g_["reservedMegabytes"]})
     for w in sorted(cap["waiters"] if cap else [],key=lambda w:w["position"]):
@@ -308,7 +309,7 @@ def generate(seed,count):
         for position,w in enumerate(cwait,1): w["position"]=position
         total=16384;floor=2048
         facts={"version":1,"atMs":at,"workspace":"/w",
-         "host":{"platform":"darwin","cores":rnd.choice([None,8,10]),"totalMegabytes":total,"availableMegabytes":rnd.randint(500,9000),"pressure":rnd.choice(["normal","normal","warn","critical"]),"swapUsedMegabytes":rnd.choice([None,0,4000]),"load":rnd.choice([None,3.5,22.25])},
+         "host":{"ageSeconds":index%3*20,"platform":"darwin","cores":rnd.choice([None,8,10]),"totalMegabytes":total,"availableMegabytes":rnd.randint(500,9000),"pressure":rnd.choice(["normal","normal","warn","critical"]),"swapUsedMegabytes":rnd.choice([None,0,4000]),"load":rnd.choice([None,3.5,22.25])},
          "leases":{"holders":holders,"waiters":waiters,"cycles":rnd.sample(["1/q > 2/q","3/q > 4/q"],rnd.randint(0,1))},
          "capacity":{"floorMegabytes":floor,"headroomMegabytes":rnd.randint(-3000,6000),"capacityMegabytes":total-floor,"grants":grants,"waiters":cwait},
          "activeMilliseconds":{op:[rnd.randint(2000,900000) for _ in range(rnd.randint(0,40))] for op in ops if rnd.random()<0.8},

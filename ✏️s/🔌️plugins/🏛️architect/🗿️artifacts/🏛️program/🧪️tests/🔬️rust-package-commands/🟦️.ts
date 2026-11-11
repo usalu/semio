@@ -1,9 +1,9 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 import { join, resolve } from "node:path";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
@@ -46,7 +46,7 @@ if (segments[0] === "architect-window-ownership") {
       { cwd: context.repoRoot },
     );
     if (segments[1] === "native") {
-      const { runCargo } = await import("@semio-tech/framework/process/execution");
+      const { runCargo } = await import("@semio-tech/process/execution");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "architect_window_ownership_", "--", "--nocapture"], context.repoRoot);
     }
     return;
@@ -57,7 +57,7 @@ if (segments[0] === "program-document-contract") {
     const schemaRoot = join(context.repoRoot, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: context.repoRoot });
     if (segments[1] === "native") {
-      const { runCargo } = await import("@semio-tech/framework/process/execution");
+      const { runCargo } = await import("@semio-tech/process/execution");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-architect-program", "--lib", "program_document_contract", "--", "--nocapture"], context.repoRoot);
     }
     return;
@@ -68,7 +68,7 @@ if (segments[0] === "program-document-contract") {
 /** 🏃️ Runs the `RegisterCatalogScript` command under the caller's roots and invocation. */
 export async function runRegisterCatalogScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
   if (args.length > 1 || (args.length === 1 && args[0] !== "--check")) throw new Error("generate-register-catalog [--check]");
-  const { generateCollectionCatalogV1 } = await import("@semio-tech/framework/process/execution");
+  const { generateCollectionCatalogV1 } = await import("@semio-tech/process/execution");
   const stale = generateCollectionCatalogV1(join(context.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json"), args[0] === "--check" ? "check" : "write");
   if (args[0] === "--check" && stale.length) throw new Error(`register catalog is stale: ${stale.join(", ")}`);
   console.log(`[register-catalog] ${stale.length ? `wrote ${stale.length}` : "current"}`);
@@ -77,6 +77,6 @@ export async function runRegisterCatalogScript(context: Readonly<{ root: string;
 /** 🏃️ Runs the `SnapshotSourceProfileScript` command under the caller's roots and invocation. */
 export async function runSnapshotSourceProfileScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {
   if(args.length)throw new Error("test-snapshot-sqlite-source-profile accepts no arguments");
-  const {runRepositoryTestCommand}=await import("@semio-tech/framework/process/test-execution");
+  const {runRepositoryTestCommand}=await import("@semio-tech/process/test-execution");
   await runRepositoryTestCommand(process.execPath,["test",join(context.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"),"--test-name-pattern","Architect complete sixty-five typed bodies"],{cwd:context.repoRoot});
 }

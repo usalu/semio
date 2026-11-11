@@ -2,9 +2,6 @@
 
 #![allow(clippy::result_large_err)]
 
-#[cfg(test)]
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;

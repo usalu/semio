@@ -5,8 +5,8 @@
       "artifact": "⚡️din18599",
       "childField": "climateTable",
       "committed": {
-        "snapshots": 52,
-        "diffs": 21
+        "snapshots": 212,
+        "diffs": 42
       },
       "document": {
         "buildingCategory": "Residential",

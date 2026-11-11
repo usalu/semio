@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {buildBackendIdsV1} from "../../../🔌️backends/🟦️.ts";
 /** 🤹️ Concurrent session conformance: the wait derivation, attribution, criteria, edits, digests and workload admission are checked against language-agnostic fixtures, an independent Python oracle and Bazel's own elapsed time; the runner is exercised with real processes that contend for real leases of the lease module; the command through its ports. */
 import {test,expect} from "bun:test";
@@ -376,7 +377,7 @@ const installedNx=(()=>{const path=join(root,"node_modules/nx/dist/src/tasks-run
   const source=`const {StoreRunInformationLifeCycle}=require(process.env.NX_LIFE);const out=[];const lc=new StoreRunInformationLifeCycle("nx run-many",d=>out.push(d));
 const t=(id)=>({id,hash:"h",target:{project:id.split(":")[0],target:id.split(":")[1]},startTime:1,endTime:2});
 lc.startCommand();lc.startTasks([t("p:build"),t("q:build")]);lc.endTasks([{task:t("p:build"),status:"success",code:0},{task:t("q:build"),status:"local-cache",code:0}]);lc.endCommand();process.stdout.write(JSON.stringify(out[0]));`;
-  const before=Date.now(),run=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_LIFE:installedNx!,NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv}),after=Date.now();
+  const before=Date.now(),run=spawnSync(registeredToolExecutableV1("node"),["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_LIFE:installedNx!,NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv}),after=Date.now();
   expect(run.status,run.stderr).toBe(0);
   const record=JSON.parse(run.stdout);
   expect(plain(concurrentNxFitV1(record,["p:build","q:build"],{startMs:before,endMs:after},true))).toEqual({observation:{executed:["p:build"],restored:["q:build"],cached:[]},observed:"window"});

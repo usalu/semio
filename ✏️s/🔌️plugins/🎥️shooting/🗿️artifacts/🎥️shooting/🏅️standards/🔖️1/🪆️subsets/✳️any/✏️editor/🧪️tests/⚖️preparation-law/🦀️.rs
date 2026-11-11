@@ -5,8 +5,6 @@ use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::schema::mut
 use semio_s_artifact_shooting_shooting::{ShootingMutation, ShootingShot, ShootingSnapshot};
 use std::sync::Arc;
 
-#[global_allocator]
-static SHOOTING_PREPARATION_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 /// ⏱️ One-item turns a small shooting edit may spend reaching `Prepared`; measured 1069 (document) and 813 (config), 2.9k before the publication-performance work.
 const PREPARATION_TURN_BOUND: usize = 2_048;

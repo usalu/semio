@@ -36,7 +36,7 @@ import { runLayoutExportAffineTests } from "../../🗿️artifacts/📏️layout
 import { runLayoutPdfStreamTests } from "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📕️pdf-png-and-package-encoding/🧪️tests/run.ts";
 import { runLayoutCanonicalTests } from "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️native-json/🧪️tests/run.ts";
 import { test } from "bun:test";
-import { testLevelBudgetMs } from "@semio-tech/framework/process/test-budget";
+import { testLevelBudgetMs } from "@semio-tech/process/test-budget";
 const root = process.cwd();
 test("runLayoutDrawingSegmentTests", async () => { await runLayoutDrawingSegmentTests(); }, testLevelBudgetMs());
 test("runLayoutDrawingExportTests", async () => { await runLayoutDrawingExportTests(root); }, testLevelBudgetMs());

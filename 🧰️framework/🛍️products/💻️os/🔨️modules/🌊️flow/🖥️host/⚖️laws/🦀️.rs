@@ -50,9 +50,6 @@ mod evaluation_tests;
 #[path = "../📥️preview/🧪️tests/🦀️.rs"]
 mod preview_tests;
 
-#[cfg(test)]
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 /// 🧾️ Reads the actual host fixture through its existing runtime fixture-reader authority.
 #[cfg(test)]
 fn read_node(path:&str)->&'static str{fixture_text!(format!("../../../{path}"))}

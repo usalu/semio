@@ -23,7 +23,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dev-dependencies]
-semio-framework-plugin-retained-command = { path = "../../../../📦️packages/🦀️rust", package = "semio-plugin-retained-command"}
+semio-plugin-retained-command = { path = "../../../../📦️packages/🦀️rust"}
 semio-plugin-decl-views = { path = "../../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }

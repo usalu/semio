@@ -25,6 +25,10 @@ impl GuestRelayOperationCaps {
  pub fn from_policy(policy:GuestRelayDriverPolicy,cleanup:GuestRelayOperationReserve,transit:GuestRelayOperationTransit,infrastructure:GuestRelayOperationInfrastructure)->GuestRelayOperationCaps {
   let root=policy.root;GuestRelayOperationCaps{cleanup,transit,infrastructure,turn_fuel:root.turn_fuel,operation_fuel:root.operation_fuel,turn_execution_fuel:root.turn_execution_fuel,operation_execution_fuel:root.operation_execution_fuel,maximum_turn_microseconds:root.maximum_turn_microseconds,maximum_lifetime_microseconds:root.maximum_lifetime_microseconds,max_effects:root.max_effects,max_patch_bytes:root.max_patch_bytes,max_frames:root.max_frames,admission:policy.admission,drive:policy.drive,wake:policy.wake,operation:policy.operation}
  }
+ /// 📤️ Projects explicit per-operation caps without treating a configured lifetime identity as request funding.
+ pub fn project(policy:GuestRelayDriverPolicy,cleanup:GuestRelayOperationReserve,transit:GuestRelayOperationTransit,infrastructure:GuestRelayOperationInfrastructure)->Self {
+  Self::from_policy(policy,cleanup,transit,infrastructure)
+ }
  /// 📏️ The request bounds guest logical work and elapsed time; the host keeps its independently declared finite physical stock.
  pub fn bind_request(self,request:GuestRelayOperationRequest)->Result<Self,ValueError>{
   if request.work_units==0||request.maximum_elapsed_microseconds==0{return Err(invalid("positive requested operation work and elapsed duration required"))}

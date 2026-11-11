@@ -27,7 +27,7 @@ semio-hub-trusted-catalog-contract = { workspace = true }
 semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-plugin-host = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
 directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }

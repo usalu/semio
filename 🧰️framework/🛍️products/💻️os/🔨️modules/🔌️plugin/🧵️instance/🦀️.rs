@@ -91,8 +91,8 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactor
     pub original_emission:semio_plugin_job::original_emission::OriginalEmissionSource<A>,
     pub original_typed_command:semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
 pub original_host_event_command:semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
-pub original_command_scope:Option<(semio_framework_job::OriginalSourceBinding,(u64,u64))>,
-pub original_host_event_scope:Option<(semio_framework_job::OriginalSourceBinding,(u64,u64))>,
+pub original_command_scope:Option<(semio_framework_job::OriginalSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64))>,
+pub original_host_event_scope:Option<(semio_framework_job::OriginalSourceBinding,(semio_framework_value::retained_clone::NativeAllocationIdentity,u64))>,
     pub original_typed_tag:std::mem::ManuallyDrop<Option<semio_plugin_tool_machine::ToolTag>>,
     pub original_typed_tag_close:semio_framework_value::retained_clone::RetainedCloneClose,
     /// 🗜️ Local interaction: the framework-owned live query, topology authority, hover and snapshot read returns.
@@ -258,17 +258,17 @@ mod app_ctx_builders;
 pub use semio_plugin_instance_extension::{ExtensionCtx, ExtensionRef, InstanceExtension};
 pub use semio_plugin_instance_children::children_instance_root::genesis_member_schema;
 pub use semio_plugin_instance_children::children_plugin_app_impl::MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY;
-pub use semio_framework_plugin_instance_docs::docs_instance_root::{artifact_handle_of, typed_operation_document_is_fresh};
-pub use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
-pub use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
+pub use semio_plugin_instance_docs::docs_instance_root::{artifact_handle_of, typed_operation_document_is_fresh};
+pub use semio_plugin_instance_docs::docs_maintenance_ladder::item;
+pub use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 use semio_plugin_instance_jobs::jobs_instance_root::OriginalRenderTreeIdentity;
 pub use semio_plugin_instance_ladders::ladders_document_replacement::{retire_document_window_registry_demands, retire_document_window_registry_step};
 pub use semio_plugin_instance_ladders::ladders_plugin_app_impl::{MAINTENANCE_CONFIG_LANE_DISPLACED_STAGE, MAINTENANCE_DOCUMENT_DISPLACED_STAGE, MAINTENANCE_STAGES};
-pub use semio_framework_plugin_instance_stores::stores_components::{ConstructorState, InstanceStores, PeerRoster, ActionIngress, LocalInteraction};
+pub use semio_plugin_instance_stores::stores_components::{ConstructorState, InstanceStores, PeerRoster, ActionIngress, LocalInteraction};
 pub use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
 pub use semio_plugin_instance_children::children_components::ChildComposition;
 pub use semio_plugin_instance_jobs::jobs_components::{PendingReserved, ToolOperations};
-pub use semio_framework_plugin_instance_docs::docs_components::{MediaTransfers, EnvelopeJobs};
+pub use semio_plugin_instance_docs::docs_components::{MediaTransfers, EnvelopeJobs};
 pub use semio_plugin_instance_ladders::ladders_components::{MaintenanceCursors, CloseCursors};
 #[path = "📥️staging/🧬️composer-api/🦀️.rs"]
 mod app_composer_api;

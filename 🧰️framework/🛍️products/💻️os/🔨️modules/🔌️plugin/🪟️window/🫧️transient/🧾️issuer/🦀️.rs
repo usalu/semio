@@ -34,11 +34,11 @@ impl WindowTransientSnapshot{
         self.mutation_issuer.factory::<O::Mutation>()?;
         Ok(RetirementDemand{copy_bytes:2*size_of::<WindowTransientMutation>()+size_of::<O::Mutation>()+size_of::<FactoryBoxedValue<O::Mutation>>()+self.window_id.len(),capacity_bytes:size_of::<O::Mutation>()+size_of::<FactoryBoxedValue<O::Mutation>>()+self.window_id.len(),depth:1,..Default::default()})
     }
-    pub fn admit_original_mutation<O:WindowTransientOwner>(&self,input:&mut Option<O::Mutation>,output:&mut Option<WindowTransientMutation>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+    pub fn admit_original_mutation<O:WindowTransientOwner>(&self,input:&mut Option<O::Mutation>,output:&mut Option<WindowTransientMutation>,cx:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission)->Result<bool,OriginalTurnFailure>{
         let demand=self.original_mutation_demands::<O>()?;
         if input.is_none()||output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window mutation requires its retained input and empty destination").into());}
         let factory=self.mutation_issuer.factory::<O::Mutation>()?;
-        semio_framework::action_bus::admit_original_construction_settled(cx,&mut Default::default(),output,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},1,|_,actual|{
+        semio_framework_job::admit_original_construction_settled(cx,admission,output,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},1,|_,actual|{
             let value=WindowTransientMutation::from_issued(self.window_id.clone(),self.window_kind_id,input.take().expect("original Window mutation remains owned"),factory.clone());
             let capacity=value.window_id.capacity()+size_of::<O::Mutation>()+size_of::<FactoryBoxedValue<O::Mutation>>();
             if capacity!=0&&actual.is_none(){*actual=Some(capacity)}

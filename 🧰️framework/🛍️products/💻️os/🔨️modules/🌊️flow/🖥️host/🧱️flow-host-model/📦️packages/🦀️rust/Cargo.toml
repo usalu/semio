@@ -34,8 +34,8 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 semio-framework-value-ordered = { path = "../../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-replication = { workspace = true }
@@ -52,7 +52,7 @@ testkit = []
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }
 

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {buildBackendIdsV1} from "../../🔌️backends/🟦️.ts";
 /** 🔁️ Incremental build conformance: the evaluation model, verdicts, mutations, observers, runner and command are checked against language-agnostic fixtures, an independent Python oracle, Bazel's own binary (execution log, summary line, `rdeps`) and the installed Nx's own run-record class. */
 import {test,expect} from "bun:test";
@@ -142,7 +143,7 @@ const installed=(()=>{const path=join(root,"node_modules/nx/dist/src/tasks-runne
 const t=(id)=>({id,hash:"h",target:{project:id.split(":")[0],target:id.split(":")[1]},startTime:1,endTime:2});
 lc.startCommand();lc.startTasks([t("p:build"),t("q:build"),t("r:build")]);
 lc.endTasks([{task:t("p:build"),status:"success",code:0},{task:t("q:build"),status:"local-cache",code:0},{task:t("r:build"),status:"remote-cache",code:0}]);lc.endCommand();process.stdout.write(JSON.stringify(out[0]));`;
-  const run=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_LIFE:installed!,NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
+  const run=spawnSync(registeredToolExecutableV1("node"),["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_LIFE:installed!,NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
   expect(run.status,run.stderr).toBe(0);
   expect(incrementalNxObservationV1(JSON.parse(run.stdout),["p:build","q:build","r:build"])).toEqual({tool:"nx",executed:["p:build"],restored:["q:build","r:build"],cached:[],unmapped:[]});
  }finally{rmSync(directory,{recursive:true,force:true});}

@@ -81,6 +81,3 @@ pub fn details_edit_special(event:&SnapshotEditEvent,snapshot:&Ifc2x3Snapshot)->
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

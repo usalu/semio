@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-plugin-job-receiving = { path = "../../../../🛬️receiving/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

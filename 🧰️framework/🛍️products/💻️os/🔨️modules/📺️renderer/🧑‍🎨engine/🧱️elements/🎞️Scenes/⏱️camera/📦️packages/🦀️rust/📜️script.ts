@@ -1,14 +1,14 @@
 #!/usr/bin/env repo
-import { createIssuedResourceControlV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoPackageTestsV1 } from "@semio-tech/framework/process/cargo-test";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runAdmittedCargoTestsV1 as runCargoTestsV1, runAdmittedCargoPackageTestsV1 } from "@semio-tech/process/cargo-test";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
-import { runOwnedCommand } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { scriptInvocationBudget } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { readCargoTestPolicyV1 } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { scriptInvocationBudget } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 /** ⏱️ Receives the complete original camera storage package without law filters. */
 class TestScript extends BundleScript {

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../🧰️tools/🏃️run/🟦️.ts";
 import { phaseCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../../../🏗️build/🎟️capacity/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../🎛️owned-execution/🟦️.ts";
 import { expect } from "bun:test";
@@ -76,7 +77,7 @@ export function tinyCargoWorkspaceV1(root: string, crates: readonly string[]): s
     const body = Array.from({ length: ({ base: 150, left: 40, right: 400, top: 80 } as Record<string, number>)[name] ?? 120 }, (_, index) => `pub fn ${name}_${index}<T: Clone + core::fmt::Debug>(value: T) -> (T, String) { let text = format!("{:?}{}", value.clone(), ${index}); (value, text.repeat(${(index % 7) + 1})) }`).join("\n");
     writeFileSync(join(root, name, "src", "lib.rs"), `${(dependencies[name] ?? []).map((dependency) => `pub use ${dependency};`).join("\n")}\n${body}\n`);
   }
-  expect(spawnSync("cargo", ["generate-lockfile", "--offline", "--manifest-path", join(root, "Cargo.toml")], { encoding: "utf8" }).status).toBe(0);
+  expect(spawnSync(registeredToolExecutableV1("cargo"), ["generate-lockfile", "--offline", "--manifest-path", join(root, "Cargo.toml")], { encoding: "utf8" }).status).toBe(0);
   return join(root, "Cargo.toml");
 }
 
@@ -90,7 +91,7 @@ export async function buildThroughBrokerV1(options: Readonly<{ manifest: string;
   const sampler = setInterval(() => { peakRunning = Math.max(peakRunning, broker.stats().running); }, 5);
   try {
     const slot = await pool.acquire();
-    const child = spawn("cargo", ["build", "--offline", "--manifest-path", options.manifest, "--workspace", ...(options.extraArgs ?? [])], { env: { ...process.env, ...pool.environment(), RUSTC_WRAPPER: scheduler, SEMIO_BUILD_BROKER: broker.endpoint, SEMIO_BUILD_PASS: "law", CARGO_TARGET_DIR: join(directory, "t"), CARGO_BUILD_BUILD_DIR: join(directory, "b"), CARGO_TERM_COLOR: "never" }, stdio: ["ignore", "ignore", "pipe"] });
+    const child = spawn(registeredToolExecutableV1("cargo"), ["build", "--offline", "--manifest-path", options.manifest, "--workspace", ...(options.extraArgs ?? [])], { env: { ...process.env, ...pool.environment(), RUSTC_WRAPPER: scheduler, SEMIO_BUILD_BROKER: broker.endpoint, SEMIO_BUILD_PASS: "law", CARGO_TARGET_DIR: join(directory, "t"), CARGO_BUILD_BUILD_DIR: join(directory, "b"), CARGO_TERM_COLOR: "never" }, stdio: ["ignore", "ignore", "pipe"] });
     let stderr = "";
     child.stderr!.on("data", (chunk) => { stderr += chunk; });
     const exit = await new Promise<number>((accept) => child.once("close", (code) => accept(code ?? 1)));

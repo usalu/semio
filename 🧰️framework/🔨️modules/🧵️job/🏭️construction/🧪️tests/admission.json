@@ -1,7 +1,7 @@
 {
   "controller": {
-    "sourceItems": 2,
-    "sourceWork": 2,
+    "sourceItems": 5,
+    "sourceWork": 4,
     "captureItems": 1,
     "captureWork": 1,
     "candidateItems": 1,
@@ -13,16 +13,16 @@
       "bodyItems": 0,
       "bodyWork": 1,
       "candidate": false,
-      "items": 3,
-      "work": 4
+      "items": 6,
+      "work": 6
     },
     {
       "name": "born",
       "bodyItems": 1,
       "bodyWork": 1,
       "candidate": true,
-      "items": 5,
-      "work": 5
+      "items": 8,
+      "work": 7
     }
   ],
   "status": [

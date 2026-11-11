@@ -3,13 +3,11 @@ use super::*;
 use semio_plugin_ownership::original_store_genesis::OriginalStoreGenesisOwner;
 use semio_plugin_decl_app::OriginalArtifactAppBirth;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedAllocationEffect};
 use semio_framework_value::retirement::record_retirement_work;
-use semio_framework_job::{StepContext,OriginalTurnFailure};
+use semio_framework_job::{StepContext,OriginalTurnFailure,InteractiveJobCloseStep};
 use std::mem::size_of;
-fn close_identity(id:&mut String,cx:&mut StepContext<'_>,demand:RetirementDemand)->Result<(),OriginalTurnFailure>{
- semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|{let grant=effect.grant();let progress=semio_plugin_ownership::bounded_ownership::plugin_text_close(id,grant).unwrap_or_default();record_retirement_work(effect,1).map_err(|(error,_)|error)?;Ok::<_,ValueError>(if id.capacity()==0{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})}).map(|_|())
-}
+fn retired(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{semio_framework_job::close_original_retained_effect_step(cx,demand,advance)}
 /// 🌱️ The authored editor explicitly names its native document, config and draft source vocabularies.
 pub trait OriginalArtifactEditorBirth:ArtifactEditor{
  type DocumentGenesis:OriginalStoreGenesisOwner<State=Self::Snapshot,Mutation=Self::Mutation>;
@@ -22,7 +20,7 @@ impl<E:OriginalArtifactEditorBirth> OriginalArtifactAppBirth for EditorApp<E>{
  fn controller_birth_demands(app_id:&str)->Result<RetirementDemand,ValueError>{if app_id.is_empty()||app_id.len()>4096{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"native surface identity is empty or exceeds its declared bound"))}Ok(RetirementDemand{copy_bytes:2*size_of::<Self>()+app_id.len(),capacity_bytes:app_id.len(),depth:1,..Default::default()})}
  fn admit_controller(app_id:&str,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{let d=Self::controller_birth_demands(app_id)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native surface identity birth is not admitted"))}let mut id=String::with_capacity(app_id.len());id.push_str(app_id);Ok((Self::from_admitted_identity(id),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))}
  fn controller_retirement_demands(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(semio_plugin_ownership::bounded_ownership::plugin_text_retirement_demand(&self.id))}
- fn controller_close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let d=self.controller_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|close_identity(&mut self.id,cx,d))?;Ok(self.controller_terminal_is_empty())}
+ fn controller_close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let d=self.controller_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|retired(cx,d,|effect|{let grant=effect.grant();let p=semio_plugin_ownership::bounded_ownership::plugin_text_close(&mut self.id,grant).unwrap_or_default();record_retirement_work(effect,1).map_err(|(error,_)|error)?;Ok(if self.id.capacity()==0{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}))?;Ok(self.controller_terminal_is_empty())}
  fn controller_terminal_is_empty(&self)->bool{self.id.capacity()==0}
 }
 /// 🌱️ The authored viewer explicitly names its native document, config and draft source vocabularies.
@@ -37,6 +35,6 @@ impl<V:OriginalArtifactViewerBirth> OriginalArtifactAppBirth for ViewerApp<V>{
  fn controller_birth_demands(app_id:&str)->Result<RetirementDemand,ValueError>{if app_id.is_empty()||app_id.len()>4096{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"native surface identity is empty or exceeds its declared bound"))}Ok(RetirementDemand{copy_bytes:2*size_of::<Self>()+app_id.len(),capacity_bytes:app_id.len(),depth:1,..Default::default()})}
  fn admit_controller(app_id:&str,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{let d=Self::controller_birth_demands(app_id)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"native surface identity birth is not admitted"))}let mut id=String::with_capacity(app_id.len());id.push_str(app_id);Ok((Self::from_admitted_identity(id),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))}
  fn controller_retirement_demands(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(semio_plugin_ownership::bounded_ownership::plugin_text_retirement_demand(&self.id))}
- fn controller_close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let d=self.controller_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|close_identity(&mut self.id,cx,d))?;Ok(self.controller_terminal_is_empty())}
+ fn controller_close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let d=self.controller_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|retired(cx,d,|effect|{let grant=effect.grant();let p=semio_plugin_ownership::bounded_ownership::plugin_text_close(&mut self.id,grant).unwrap_or_default();record_retirement_work(effect,1).map_err(|(error,_)|error)?;Ok(if self.id.capacity()==0{RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}))?;Ok(self.controller_terminal_is_empty())}
  fn controller_terminal_is_empty(&self)->bool{self.id.capacity()==0}
 }

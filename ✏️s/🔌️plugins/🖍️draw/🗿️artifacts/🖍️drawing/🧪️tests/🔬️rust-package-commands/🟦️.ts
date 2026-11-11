@@ -1,9 +1,9 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
-import { runAdmittedExactCargoLawsV1 } from "@semio-tech/framework/process/cargo-test";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { join } from "node:path";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
@@ -17,7 +17,7 @@ if (segments[0] === "drawing-canvas-window-ownership") {
     testDrawingCanvasWindowOwnershipOracle();
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(configRoot, "🧬️schema/🟦️.ts"), join(transientRoot, "🧬️schema/🟦️.ts"), join(presenceRoot, "🧬️schema/🟦️.ts"), oracle], { cwd: context.repoRoot });
     if (segments[1] === "native") {
-      const { runCargo } = await import("@semio-tech/framework/process/execution");
+      const { runCargo } = await import("@semio-tech/process/execution");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-draw-drawing", "--lib", "drawing_canvas_window_ownership_", "--", "--nocapture"], context.repoRoot);
     }
     return;

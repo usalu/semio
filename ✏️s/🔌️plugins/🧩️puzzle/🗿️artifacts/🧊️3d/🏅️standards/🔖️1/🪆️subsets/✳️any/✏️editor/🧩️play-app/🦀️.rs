@@ -153,7 +153,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Ok(())
     }
 
-    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, _construction:&mut semio_framework_job::OriginalConstructionAdmission,cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original puzzle3d producer request is absent"))?;
         if !PUZZLE3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {return Ok(false);}
         if original.command.action_id()!=original.tool_id {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"puzzle3d-command-tool-mismatch").into());}
@@ -283,9 +283,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         puzzle3d_paste_operations(fragment, placement)
     }
 
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|matches!(request.tool_id.as_str(),"copy"|"cut"|"paste")){return Ok(false)}
-        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,Puzzle3dClipboardJob>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,Puzzle3dClipboardJob>(request,body,construction,cx)
     }
 
     /// 🏷️ Maps each `Puzzle3dCommand` variant back to the action id it was declared under.

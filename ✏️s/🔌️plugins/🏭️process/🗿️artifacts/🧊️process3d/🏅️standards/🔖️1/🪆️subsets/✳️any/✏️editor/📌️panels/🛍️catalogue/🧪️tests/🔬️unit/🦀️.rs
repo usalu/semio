@@ -1,4 +1,3 @@
-semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;

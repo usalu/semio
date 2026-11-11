@@ -1,6 +1,4 @@
 //! 📬️ Reply metadata borrows at most twelve bytes and never allocates or validates the frame body.
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_os_channel::{app_frame_reply_prefix,AppFrame,encode_app_frame};
 #[test]
 fn real_reply_prefix_matches_schema_and_actual_binary_encoder_without_heap(){

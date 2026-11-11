@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync, mkdtempSync, statSync, utimesSync, readdirSync, mkdirSync, symlinkSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -96,7 +97,7 @@ async function testGeneratorInputReceiptReplay(workspace: string, generated: str
     const env = { ...inherited, NX_DAEMON: "false", NX_NO_CLOUD: "true", NX_TUI: "false", NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data") };
     for (const [index, step] of producer.steps.entries()) {
       if (step.edit) writeFileSync(join(root, replay.source), replay.versions[1]);
-      const child = Bun.spawnSync(["node", nx, "run", "receipt-replay:generate", "--outputStyle=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+      const child = Bun.spawnSync([registeredToolExecutableV1("node"), nx, "run", "receipt-replay:generate", "--outputStyle=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
       assert.equal(child.exitCode, 0, `${producer.name} step ${index}: ${child.stdout}${child.stderr}`);
       const runs = existsSync(join(root, "runs.log")) ? readFileSync(join(root, "runs.log"), "utf8").split("\n").filter(Boolean).length : 0;
       assert.equal(runs, step.runs, `${producer.name} step ${index}: consumer executions`);

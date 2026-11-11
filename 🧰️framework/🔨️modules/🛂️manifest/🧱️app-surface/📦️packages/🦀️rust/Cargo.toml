@@ -33,7 +33,7 @@ semio-framework-manifest-arg-schema = { path = "../../../🧮️arg-schema/📦�
 semio-framework-manifest-media = { path = "../../../🎞️media/📦️packages/🦀️rust" }
 semio-framework-onboarding = { path = "../../../../🎓️onboarding/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-ui-contract = { path = "../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-contract = { path = "../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }

@@ -33,8 +33,8 @@ semio-os-flow-host-core = { path = "../../🖥️host/🧱️flow-host-model/�
 semio-os-flow-host-read = { path = "../../🖥️host/📥️evaluation-source/🔎️read/📦️packages/🦀️rust" }
 semio-os-flow-host-session = { path = "../../🖥️host/🎞️session/📦️packages/🦀️rust" }
 semio-os-flow-host = { path = "../../🖥️host/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-os-infinite = { path = "../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust" }
+semio-os-infinite = { path = "../../../♾️infinite/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 

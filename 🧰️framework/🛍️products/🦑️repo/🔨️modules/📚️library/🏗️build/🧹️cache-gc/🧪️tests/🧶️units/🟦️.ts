@@ -42,7 +42,7 @@ test("the declared ledger shares nx/tmp between a pid-collected area and the com
   ["pid custody with a pattern without the group",value=>{value.areas[1].collect.units="^tmp-[0-9]+-x$";},"pid custody needs"],
   ["a pid group without pid custody",value=>{value.areas[1].collect.custody="quiet";},"pid custody needs"],
   ["a pattern on two levels",value=>{value.areas[1].collect.depth=2;},"unit patterns need a depth-1"],
-  ["a pattern on a tree",value=>{value.areas.push({id:"tre",root:"repository",kind:"tree",directory:"tre",budget:{bytes:1},collect:{unusedAgeMs:1,quietMs:0,custody:"quiet",units:"^a$"},writers:["w"],purpose});},"unit patterns need a depth-1"],
+  ["a pattern on two levels of a tree",value=>{value.areas.push({id:"tre",root:"repository",kind:"tree",directory:"tre",budget:{bytes:1},collect:{unusedAgeMs:1,quietMs:0,custody:"quiet",depth:2,units:"^a$"},writers:["w"],purpose});},"unit patterns need a depth-1"],
   ["an invalid pattern",value=>{value.areas[1].collect.units="^tmp-(?<pid>[0-9]+";},"valid unit pattern"],
   ["a sibling the pattern matches",value=>{value.areas[2].directory="nx/tmp/tmp-5-abc";},"overlapping nested areas"],
   ["a parent without a pattern",value=>{delete value.areas[1].collect.units;value.areas[1].collect.custody="quiet";},"overlapping nested areas"],
@@ -50,6 +50,7 @@ test("the declared ledger shares nx/tmp between a pid-collected area and the com
   ["the same directory twice",value=>{value.areas[2].directory="nx/tmp";},"overlapping nested areas"]
  ];
  for(const[name,mutate,message]of refused){const value=document();mutate(value);expect(()=>readCacheLedgerV1(value,partitions),name).toThrow(message);}
+ const treePattern=document();treePattern.areas.push({id:"tre",root:"repository",kind:"tree",directory:"tre",budget:{bytes:1},collect:{unusedAgeMs:1,quietMs:0,custody:"pid",units:"^(?<pid>[0-9]+)-x$"},writers:["w"],purpose});expect(()=>readCacheLedgerV1(treePattern,partitions),"a pid-collected tree").not.toThrow();
  const quietPattern=document();quietPattern.areas[1].collect.custody="quiet";quietPattern.areas[1].collect.units="^tmp-[0-9]+-[a-z]+$";expect(()=>readCacheLedgerV1(quietPattern,partitions)).not.toThrow();
 });
 

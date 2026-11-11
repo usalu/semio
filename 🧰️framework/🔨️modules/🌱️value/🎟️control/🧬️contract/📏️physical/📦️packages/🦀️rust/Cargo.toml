@@ -28,4 +28,5 @@ serde = { version = "1.0", features = ["derive"] }
 semio-framework-test-fixtures = { path = "../../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 encoding_rs = "0.8"
+semio-framework-trace-memory-testing = { path = "../../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -80,8 +80,8 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
  let shared;
  const table=new Map(),metas=new Map(),persisted=new Set(),uses=new Map();
  const partIdentity=id=>"closure-part\0"+id+"\0",partStore=()=>shared?.store??store;
- const parts=Object.freeze({put(rows){const id=partIdOf(rows);uses.set(id,(uses.get(id)??0)+1);if(!table.has(id)){table.set(id,rows);if(partStore()===undefined||!persisted.has(id)){persisted.add(id);partStore()?.put({key:{kind:"closure-part",subject:id,params:""},value:{rows},deps:[],rawReads:[],valueDigest:id,computedAtRev:"0"},"");buildMeta(id);}}return id;},rowsOf:id=>table.get(id)});
- const loadPart=async id=>{let rows=table.get(id);if(rows!==undefined)return rows;const record=await partStore()?.get(partIdentity(id));rows=record?.value?.rows;if(Array.isArray(rows))table.set(id,rows);return Array.isArray(rows)?rows:undefined;};
+ const parts=Object.freeze({put(rows){const id=partIdOf(rows);uses.set(id,(uses.get(id)??0)+1);if(!table.has(id)){rows=rows.map(internRow);table.set(id,rows);if(partStore()===undefined||!persisted.has(id)){persisted.add(id);partStore()?.put({key:{kind:"closure-part",subject:id,params:""},value:{rows},deps:[],rawReads:[],valueDigest:id,computedAtRev:"0"},"");buildMeta(id);}}return id;},rowsOf:id=>table.get(id)});
+ const loadPart=async id=>{let rows=table.get(id);if(rows!==undefined)return rows;const record=await partStore()?.get(partIdentity(id));rows=record?.value?.rows;if(Array.isArray(rows)){rows=rows.map(internRow);table.set(id,rows);}return Array.isArray(rows)?rows:undefined;};
  const manifestIdentity="closure-manifest\0all\0";
  let manifest,manifestDirty=false;
  const manifestOf=async()=>{if(manifest!==undefined)return manifest;const value=(await partStore()?.get(manifestIdentity))?.value;manifest=value===undefined?createManifestV1():readManifestV1(value);return manifest;};
@@ -89,6 +89,9 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
  let activeSummary;const slimOf=meta=>({size:meta.size,outside:meta.outside,touched:activeSummary===undefined||rowTouchedV1(meta,activeSummary)});
  const metaIdentity=id=>"closure-meta\0"+id+"\0",outsideRows=new Map();
  const internOutside=row=>{const key=rowKeyV1(row);let known=outsideRows.get(key);if(known===undefined)outsideRows.set(key,known=row);return known;};
+ const rowPool=new Map();
+ const internRow=row=>{const key=rowKeyV1(row),known=rowPool.get(key)?.deref();if(known!==undefined)return known;rowPool.set(key,new WeakRef(row));return row;};
+ const sweepRows=()=>{for(const[key,ref]of rowPool)if(ref.deref()===undefined)rowPool.delete(key);};
  const buildMeta=id=>{const paths=new Set(),dirs=new Set(),bare=new Set(),rows=table.get(id)??[],meta={paths:[],dirs:[],bare:[],config:false,volatile:false,outside:[],size:rows.length};for(const row of rows){const one=rowPathsV1(row,relative,VOLATILE);if(one.outside)meta.outside.push(internOutside(row));for(const path of one.paths)paths.add(path);for(const dir of one.dirs)dirs.add(dir);for(const dir of one.bare)bare.add(dir);meta.config||=one.config;meta.volatile||=one.volatile;}meta.paths=[...paths];meta.dirs=[...dirs];meta.bare=[...bare];if(manifest!==undefined)indexPartV1(manifest,id,meta);partStore()?.put({key:{kind:"closure-meta",subject:id,params:""},value:meta,deps:[],rawReads:[],valueDigest:id,computedAtRev:"0"},"");const slim=slimOf(meta);metas.set(id,slim);return slim;};
  const metaOf=id=>metas.get(id)??(table.has(id)?buildMeta(id):undefined);
  const metaLoad=async id=>{let meta=metas.get(id);if(meta!==undefined)return meta;const value=(await partStore()?.get(metaIdentity(id)))?.value;if(value!==undefined&&Array.isArray(value.paths)&&Number.isSafeInteger(value.size)){const full={...value,outside:value.outside.map(internOutside)};if(manifest!==undefined)indexPartV1(manifest,id,full);meta=slimOf(full);metas.set(id,meta);return meta;}return await loadPart(id)===undefined?undefined:buildMeta(id);};
@@ -123,7 +126,7 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
   const pool=async(list,work)=>{let next=0;await Promise.all(Array.from({length:Math.min(limits.deriveConcurrency,list.length)},async()=>{while(next<list.length){signal?.throwIfAborted();await work(list[next++]);}}));};
   const stage=async(phase,total,work)=>{if(total===0)return work(()=>undefined);let at=0;await progress?.({phase,done:0,total});const result=await work(()=>progress?.({phase,done:Math.min(++at,total),total}));if(at<total)await progress?.({phase,done:total,total});return result;};
   const ask=async name=>{try{nodes.set(name,await graph.get(keys.get(name),{signal}));}catch{signal?.throwIfAborted();broke.add(name);}};
-  const forgetParts=(final=false)=>{if(!final&&partStore()===undefined)return;const retained=new Set([...held.values()].flatMap(rows=>rows.parts));for(const[id,rows]of[...table])if(!retained.has(rows)&&(final||uses.get(id)===1))table.delete(id);if(final){metas.clear();outsideRows.clear();persisted.clear();uses.clear();}};
+  const forgetParts=(final=false)=>{if(!final&&partStore()===undefined)return;const retained=new Set([...held.values()].flatMap(rows=>rows.parts));for(const[id,rows]of[...table])if(!retained.has(rows)&&(final||uses.get(id)===1))table.delete(id);if(final){metas.clear();outsideRows.clear();rowPool.clear();persisted.clear();uses.clear();}};
   const settleChunk=async chunk=>{
    await pool(chunk,async name=>{await ask(name);await progress?.({phase:"verification",done:Math.min(++asked,names.length),total:names.length});});
    const again=chunk.filter(name=>nodes.has(name)&&!fresh.has(pseudoRows.get(name).path)).map(name=>[name,nodes.get(name)]);
@@ -157,7 +160,7 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
    }
    await stage("flush",1,async tick=>{await graph.flush();await tick();});
    forgetParts();
-   runtimeCollectGarbageV1(true);
+   runtimeCollectGarbageV1(true);sweepRows();
   };
   let asked=0;
   if(names.length)await progress?.({phase:"verification",done:0,total:names.length});
@@ -178,5 +181,5 @@ export function createClosureSettlerV1({store,workspace,limits=CLOSURE_SETTLE_V1
   forgetParts(true);await saveManifest();runtimeCollectGarbageV1(true);
   return{held,kept,changed,answers,failed,reused:Math.max(0,names.length-failed-fresh.size)};
  };
- return Object.freeze({graph,store:shared?.store??store,settle:options=>{const next=chain.then(()=>run(options),()=>run(options));chain=next.catch(()=>undefined);return next;},invalidate:(dirty,options)=>graph.invalidate(dirty,options),release:async()=>{if(await graph.release?.()===undefined)return;await saveManifest();manifest=undefined;table.clear();metas.clear();outsideRows.clear();},markIndexed:async({held=new Map(),dropped=[]})=>{const book=await manifestOf();for(const[name,rows]of held)if(rows.digest!==undefined&&!dropped.includes(name)){book.marks.set(name,{digest:rows.digest,length:rows.length});manifestDirty=true;}for(const name of dropped)if(book.marks.delete(name))manifestDirty=true;await saveManifest();},stats:()=>graph.stats()});
+ return Object.freeze({graph,store:shared?.store??store,settle:options=>{const next=chain.then(()=>run(options),()=>run(options));chain=next.catch(()=>undefined);return next;},invalidate:(dirty,options)=>graph.invalidate(dirty,options),release:async()=>{if(await graph.release?.()===undefined)return;await saveManifest();manifest=undefined;table.clear();metas.clear();outsideRows.clear();rowPool.clear();},markIndexed:async({held=new Map(),dropped=[]})=>{const book=await manifestOf();for(const[name,rows]of held)if(rows.digest!==undefined&&!dropped.includes(name)){book.marks.set(name,{digest:rows.digest,length:rows.length});manifestDirty=true;}for(const name of dropped)if(book.marks.delete(name))manifestDirty=true;await saveManifest();},stats:()=>graph.stats()});
 }

@@ -28,9 +28,9 @@ testkit = []
 [dependencies]
 framework_hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework = { workspace = true }
-semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-os-services = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { currentPlatform } from "@semio-tech/framework/test/adapter";
 import { runToolSyncV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧰️tools/🟦️.ts";
 import { runtimeCommandNameV1 } from "../../../../../../../../../../🧰️framework/🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";

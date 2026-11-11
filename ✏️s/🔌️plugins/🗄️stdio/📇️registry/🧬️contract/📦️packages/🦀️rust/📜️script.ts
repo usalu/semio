@@ -1,10 +1,10 @@
 
 /** 🧬️ Shared stdio artifact contract package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { runContributionChecks } from "../../🧪️tests/📇️contributions/🟦️.ts";
 import { runDefinitionHierarchyChecks } from "../../🧪️tests/🪜️definition-hierarchy/🟦️.ts";
 import {runOriginalCopyCloseChecks} from "../../✏️editing/♻️close/🧪️tests/🟦️.ts";
-import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOriginalOwnershipScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** ♻️ Executes original decoder/copy custody with one actual executable and exact physical laws. */

@@ -23,3 +23,16 @@ test("random indexes with duplicate consumers, unused rows and owners without ro
   expect(refineFactIndexV1(index),"round "+round).toEqual(naive(index));
  }
 });
+
+test("refining a large index holds one list per distinct consumer group, never one per row: the peak stays within 14 bytes per consumer-row incidence",()=>{
+ const rows=150000,owners=600,script=`
+  const{refineFactIndexV1}=await import(${JSON.stringify(new URL("../../🟨️.mjs",import.meta.url).href)});
+  const owners=Array.from({length:${owners}},(_,at)=>"o"+at),rows=Array.from({length:${rows}},(_,at)=>({kind:"file",path:"p"+at,fact:at})),classes=[];
+  for(let group=0;group<300;group++){const o=Array.from({length:40},(_,at)=>(group*2+at*7)%${owners}),r=[];for(let id=group;id<${rows};id+=300)r.push(id);classes.push({r,o});}
+  const index={version:1,owners,rows,classes};let incidences=0;for(const cls of classes)incidences+=cls.r.length*cls.o.length;
+  Bun.gc(true);const before=process.resourceUsage().maxRSS,refined=refineFactIndexV1(index);
+  console.log(JSON.stringify({growth:(process.resourceUsage().maxRSS-before)/1024,incidences,classes:refined.classes.length}));`;
+ const result=Bun.spawnSync([process.execPath,"-e",script]),found=JSON.parse(result.stdout.toString().trim().split("\n").at(-1)!) as {growth:number;incidences:number;classes:number};
+ expect(found.classes).toBe(300);
+ expect(found.growth*1024/found.incidences).toBeLessThan(14);
+});

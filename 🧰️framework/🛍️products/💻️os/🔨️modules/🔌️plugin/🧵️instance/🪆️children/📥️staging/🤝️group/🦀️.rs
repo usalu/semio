@@ -20,7 +20,7 @@ use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::children_components::ChildComposition;
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::Mutation;
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -65,7 +65,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
         if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()});}
         let Some((_,operation))=self.private_child_groups.next_id_from(0)else{
             if cx.retirement_should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
-            let step=match self.private_child_groups.close_empty_backing_granted(grant){Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};cx.consume_fuel(1);let progress=step.progress();cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;
+            let step=match self.private_child_groups.close_empty_backing_step(grant){Ok(step)=>step,Err(error)=>return Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error).debit_original(cx))};let progress=step.progress();cx.consume_fuel(u64::from(progress!=Default::default()));cx.consume_retained(progress).map_err(|error|semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error.with_retained_progress(progress)))?;
             return match step{
                 RetainedCloneStep::Progress(progress)=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}),
                 RetainedCloneStep::Complete(progress)=>Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress}),

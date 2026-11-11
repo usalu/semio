@@ -1,8 +1,5 @@
 //! 👁️ Published ADD2 entity and concept scope, separate from exchange conformance.
 
-#[cfg(test)]
-#[global_allocator]
-static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 mod header;
 #[cfg(test)]
 use semio_s_artifact_stdio_ifc4x3_schema as catalog;

@@ -88,8 +88,8 @@ where
         if self.cancel.is_some() { let original = self.cancel.take().expect("original replacement cancellation remains retained"); *self.cancel_retirement = Some(semio_framework_async::CancelTokenRetirement::from_token(original)); return Ok(paid()); }
         if let Some(cancel) = self.cancel_retirement.as_mut() {
             if cancel.terminal_is_empty() { drop(self.cancel_retirement.take()); return Ok(paid()); }
-            let polled = match cx.with_original_effect(child, |_, effect| cancel.close_step(effect)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)? { Some((turn, performed)) => { cx.consume_work(performed); turn.result }, None => Ok(RetainedCloneStep::Progress(Default::default())) };
-            return match polled {
+            let closed = match cx.with_original_effect(child, |_, effect| cancel.close_step(effect).result)? { Some((result, performed)) => { cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX)); result }, None => Ok(RetainedCloneStep::Progress(Default::default())) };
+            return match closed {
                 Ok(step) => parent(step,cancel.terminal_is_empty()),
                 Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "replacement original cancellation retains its waiter or alias" }),
                 Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error)),

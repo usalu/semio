@@ -5,8 +5,6 @@ use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedClonePro
 use semio_s_artifact_stdio_semio_flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
 use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use store::{snapshot::ArtifactPack,ErasedSnapshotRetirement,MemberOpenDiagnostic,MemberOpenRequest,MemberSnapshotOpenOperation,os_store::owned_schema_decode::OwnedSchemaDecodeCredits,os_store::owned_schema_decode::OwnedSchemaDecodePage,os_store::owned_schema_decode::OwnedSchemaDecodePages};
-#[global_allocator]
-static FLOW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🧾️original/🔣️.json")).unwrap()}
 fn wires()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn bytes(value:&str)->Vec<u8>{value.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}

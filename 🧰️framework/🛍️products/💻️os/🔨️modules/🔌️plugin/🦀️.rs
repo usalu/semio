@@ -1,9 +1,9 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
-pub use semio_framework_os_kernel::io;
+pub use semio_os_kernel::io;
 
 #[cfg(any(test, feature = "artifact-app-testing"))]
-pub use semio_plugin_testing_laws::{with_authoring_identity, install_fixture_heap_witness};
+pub use semio_plugin_testing_laws::with_authoring_identity;
 //#region 📣️FacadeMacroMounts
 #[macro_use]
 #[path = "📣️macros/🌱️wp1-window/🦀️.rs"]
@@ -23,26 +23,14 @@ pub use semio_plugin_window_config::OriginalWindowOwnerRegistration;
 #[cfg(test)] use semio_ui_locale::{Label, LabelText};
 
 /// 🗣️ `#[derive(dsl::DslRecord)]` expands to `::dsl::…` paths, so the crate root must bind that name
-/// — the same `extern crate semio_framework_os_kernel as dsl;` every technology crate declares.
+/// — the same `extern crate semio_os_kernel as dsl;` every technology crate declares.
 /// Without it the plugin-owned `world-3d` records (`WorldSunConfig`, `WorldProjectionConfig`) could
 /// not implement `DslField`, and every artifact embedding one in a `WindowConfigOwner::State` would
 /// have to carry a hand-mirrored copy instead.
-extern crate semio_framework_os_kernel as dsl;
+extern crate semio_os_kernel as dsl;
 
 #[doc(hidden)]
 pub use semio_framework_async as __async;
-
-//#region 🧮️HeapWitness
-/// 🧮️ Weighs what ONE reactor turn RETAINS, in this crate's own test binary only. The wasm harness
-/// (`🖥️host/🧪️tests/🔬️poll-turn-memory`) measured 4 437 B of guest linear memory per `poll` turn
-/// against a live instance — app-independent and render-independent — and the guest has one fixed
-/// linear memory with no process to restart. `semio_framework_trace::HeapWitness` is the shared
-/// instrument (two relaxed atomics per allocation, TEST BINARIES ONLY) the puzzle-3d and
-/// generation3d editors already install; the turn-retention law below reads it.
-#[cfg(test)]
-#[global_allocator]
-static PLUGIN_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-//#endregion 🧮️HeapWitness
 
 #[doc(hidden)]
 #[path = "🧪️tests/🧬️generated-test-contracts/🦀️.rs"]
@@ -153,7 +141,7 @@ pub mod app {
     /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
     /// 2). Defined in `semio_framework` so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
-    pub use {semio_framework_os_kernel::io::io_compose_via,semio_framework_os_kernel::io::dialects_for,semio_framework_os_kernel::io::io_dispatch,semio_framework_os_kernel::io::io_keys_for,semio_framework_os_kernel::io::resolve,semio_framework_os_kernel::io::list_composer_entries,semio_framework_os_kernel::io::register_composer_entries,semio_framework_os_kernel::io::register_subset_validator,semio_framework_os_kernel::io::set_io_fallback_dispatcher,semio_framework_os_kernel::io::subset_validator_entry_of,semio_framework_os_kernel::io::wire_artifact_compose,semio_framework_os_kernel::io::wire_decode_composed_artifact,semio_framework_os_kernel::io::wire_list_composer_entries,semio_framework_os_kernel::io::Analysis,semio_framework_os_kernel::io::AnalyzeSource,semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::AsyncComposeFn,semio_framework_os_kernel::io::ComposeError,semio_framework_os_kernel::io::ComposeFuture,semio_framework_os_kernel::io::ComposeSource,semio_framework_os_kernel::io::ComposedArtifact,semio_framework_os_kernel::io::ComposerEntry,semio_framework_os_kernel::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoFallback,semio_framework_os_kernel::io::IoFallbackDispatcher,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::IoResolveError,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_os_kernel::io::SubsetValidator,semio_framework_os_kernel::io::SubsetValidatorEntry,semio_framework_os_kernel::io::WireComposeSource,semio_framework_os_kernel::io::WireComposedArtifact};
+    pub use {semio_os_kernel::io::io_compose_via,semio_os_kernel::io::dialects_for,semio_os_kernel::io::io_dispatch,semio_os_kernel::io::io_keys_for,semio_os_kernel::io::resolve,semio_os_kernel::io::list_composer_entries,semio_os_kernel::io::register_composer_entries,semio_os_kernel::io::register_subset_validator,semio_os_kernel::io::set_io_fallback_dispatcher,semio_os_kernel::io::subset_validator_entry_of,semio_os_kernel::io::wire_artifact_compose,semio_os_kernel::io::wire_decode_composed_artifact,semio_os_kernel::io::wire_list_composer_entries,semio_os_kernel::io::Analysis,semio_os_kernel::io::AnalyzeSource,semio_framework_artifact_reference::ArtifactDialect,semio_os_kernel::io::AsyncComposeFn,semio_os_kernel::io::ComposeError,semio_os_kernel::io::ComposeFuture,semio_os_kernel::io::ComposeSource,semio_os_kernel::io::ComposedArtifact,semio_os_kernel::io::ComposerEntry,semio_os_kernel::io::Composition,semio_framework_artifact_reference::Dialect,semio_os_kernel::io::ErasedComposeSource,semio_os_kernel::io::IoDirection,semio_os_kernel::io::IoFallback,semio_os_kernel::io::IoFallbackDispatcher,semio_os_kernel::io::IoKey,semio_os_kernel::io::IoPayload,semio_os_kernel::io::IoResolveError,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_os_kernel::io::SubsetValidator,semio_os_kernel::io::SubsetValidatorEntry,semio_os_kernel::io::WireComposeSource,semio_os_kernel::io::WireComposedArtifact};
     pub use super::inference_gateway::wire_artifact_infer;
     /// 🧾️ The body-wide node budget and its fixed-node reserve live ONCE, in the UI contract, because
     /// the React host spends the same number from the other side of the wire
@@ -225,8 +213,8 @@ pub mod plugin_app_close_prelude {
     pub use semio_framework::kernel::*;
     pub use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation};
     pub use semio_framework::*;
-    pub use semio_framework_os_kernel as protocol;
-    pub use semio_framework_os_kernel as store;
+    pub use semio_os_kernel as protocol;
+    pub use semio_os_kernel as store;
     pub use semio_plugin_decl_app;
     pub use semio_plugin_decl_media;
     pub use semio_plugin_decl_views;
@@ -252,7 +240,7 @@ pub use semio_framework::{ErasedToolJob, IconName, Locale, Terminology};
 pub use semio_ui_locale::LocalizedLabel;
 /// 🔀️ `dyn_enum_close!` for `PluginApp` resolves its captured dispatch macro through this root export.
 #[doc(hidden)]
-pub use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+pub use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
 pub use app::{FRAMEWORK_TOOL_RUN_BODY_KEY, OriginalToolRunJobPortRetirement, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunRetargetableJob, ToolRunTraceKeys, ToolRunView, ToolRunPollView, is_time_travel_action_id};
 pub use app::{AsyncTaskSource,AsyncTaskRun};
 pub use app::{reference_birth_fault,ReferenceArtifactAppBirth};

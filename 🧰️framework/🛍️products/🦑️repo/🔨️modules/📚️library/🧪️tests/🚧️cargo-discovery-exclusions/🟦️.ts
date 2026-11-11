@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { readFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import TOML from "@iarna/toml";
@@ -56,7 +57,7 @@ for(const name of vector.virtualRoots)test(`native Cargo source recipes preserve
  const own=discoverCargoWorkspaces(root)[0]!,actual=cargoWorkspaceMembers(root,own);expect(actual.map(row=>row.name).sort()).toEqual(vector.manifests.filter(row=>row.admitted).map(row=>row.package).sort());
  const independent=glob.sync("**/Cargo.toml",{cwd:root,onlyFiles:true,followSymbolicLinks:false,ignore:["Cargo.toml",...vector.opaquePaths.map(path=>path+"/**")]});expect(actual.map(row=>row.manifest).sort()).toEqual(independent.sort());
  for(const row of actual)expect(Bun.TOML.parse(readFileSync(join(root,row.manifest),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,row.manifest),"utf8")));
- const native=Bun.spawnSync(["cargo","metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,"Cargo.toml")],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(native.exitCode,native.stderr.toString()).toBe(0);expect(JSON.parse(native.stdout.toString()).workspace_members.length).toBe(actual.length);
+ const native=Bun.spawnSync([registeredToolExecutableV1("cargo"),"metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,"Cargo.toml")],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(native.exitCode,native.stderr.toString()).toBe(0);expect(JSON.parse(native.stdout.toString()).workspace_members.length).toBe(actual.length);
 });
 
 test("registry catalog filesystem excludes opaque names before metadata enumeration", () => {

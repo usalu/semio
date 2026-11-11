@@ -6,6 +6,7 @@ import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typ
 import {buildInvocationGraphSelectionV1} from "../../🕸️graph/🚪️admission/🟦️.ts";
 import type {BuildGraphV1} from "../../🕸️graph/📋️model/🟦️.ts";
 import scopeSchema from "../../🧭️selection/🎯️scope/🧬️schema/🔣️.json" with {type:"json"};
+import {refuseBuildV1} from "../../📖️texts/🟦️.ts";
 import {parseBuildInvocationV1,resolveBuildInvocationV1,buildInvocationRequestsHelpV1} from "../🟦️.ts";
 
 export {PLANNED_COMMANDS_V1}from"../../🌡️host-capacity/🎯️planned-commands/🟦️.ts";
@@ -58,11 +59,18 @@ export function scopedPlanOfReplyV1(request:InvocationPlanRequestV1,tasks:PlanRe
  return plan;
 }
 
+/** 🚨️ A failed plan request as a localized refusal of the build catalog, so the command line reports it in the language it resolved and ends with a failing exit status: the service refusal carries its text in the language of the request, a service that could not answer names its reason; any other failure is kept as it is. */
+export function refusalOfPlanV1(error:unknown,language:string,resident:Readonly<{PlanRefusedErrorV1:new(...rest:never[])=>Error;HostUnavailableErrorV1:new(...rest:never[])=>Error}>):unknown{
+ if(error instanceof resident.PlanRefusedErrorV1){const refusal=error as Error&{message_:Readonly<Record<string,string>>};return refuseBuildV1("refused","graph.plan-refused",{text:refusal.message_[language]??refusal.message},{cause:error});}
+ if(error instanceof resident.HostUnavailableErrorV1)return refuseBuildV1("failed","graph.host-unavailable",{reason:(error as Error&{reason:string}).reason},{cause:error});
+ return error;
+}
+
 /** 🛰️ Asks the host service for the plan of one invocation: starts the service when none runs, reports its progress and withdraws the request when the signal aborts. */
 export async function requestInvocationPlanV1(options:Readonly<{root:string;request:InvocationPlanRequestV1;environment:NodeJS.ProcessEnv;agent:string;signal?:AbortSignal;write:(line:string)=>void}>&{ports?:Readonly<{requestPlanV1?:(options:any)=>Promise<any>;spawnHostServiceV1?:(options:any)=>any}>}):Promise<InvocationPlanV1>{
  const{root,request,environment,agent,signal,write}=options,resident=await import("../../🏡️resident/🟨️.mjs"),ask=options.ports?.requestPlanV1??resident.requestPlanV1,spawn=options.ports?.spawnHostServiceV1??resident.spawnHostServiceV1;
  const language=resolveLanguageV1(["en","de"] as const,request.arguments,environment).language,implementation=hostImplementationV1(root,environment),script=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚪️door/📜️script.ts");
- const result=await ask({root,implementation,targets:request.targets,agent,language,signal,environment,arguments:request.arguments,tool:request.tool,...request.graphPolicy?{graphPolicy:request.graphPolicy}:{},spawnService:spawn({command:[process.execPath,script,"repo","service","host","run"],environment,cwd:root}),onProgress:(frame:{message?:Record<string,string>})=>{const text=frame.message?.[language]??frame.message?.en;if(text)write(text);}});
+ const result=await ask({root,implementation,targets:request.targets,agent,language,signal,environment,arguments:request.arguments,tool:request.tool,...request.graphPolicy?{graphPolicy:request.graphPolicy}:{},spawnService:spawn({command:[process.execPath,script,"repo","service","host","run"],environment,cwd:root}),onProgress:(frame:{message?:Record<string,string>})=>{const text=frame.message?.[language]??frame.message?.en;if(text)write(text);}}).catch((error:unknown):never=>{throw refusalOfPlanV1(error,language,resident);});
  const reply=result.reply as PlanReplyV1;
  if(!reply.slice)throw Error("The host service answered without a graph slice\nDer Host-Dienst antwortete ohne Graph-Ausschnitt");
  const handoff={path:join(result.runtime.directory,"plans-"+result.runtime.tag,reply.slice.hash+".json"),hash:reply.slice.hash,size:reply.slice.size};

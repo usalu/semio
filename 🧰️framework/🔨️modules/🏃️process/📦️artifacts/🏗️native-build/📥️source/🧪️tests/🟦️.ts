@@ -5,21 +5,22 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve,relative } from "node:path";
 import { Database } from "bun:sqlite";
 import Ajv from "ajv";
+import { isRepoErrorV1, renderRepoErrorV1 } from "../../../../🏗️build/🗣️language/🚨️error/🟦️.ts";
 import { readRustSourceClosureV1, rustCfgMatchesV1, selectRustSourceV1 } from "../🟦️.ts";
 
-const corpus = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { cases: { name: string; cfg: string[]; source: string; expected: string; oracle?: boolean }[]; closures:{name:string;cfg:string[];entry:string;files:Record<string,string>;expected:{path:string;kind:"source"|"embedded"}[]}[] };
+const corpus = JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { refusals: { name: string; source: string; key: string; values: Record<string, string | number> }[]; cases: { name: string; cfg: string[]; source: string; expected: string; oracle?: boolean }[]; closures:{name:string;cfg:string[];entry:string;files:Record<string,string>;expected:{path:string;kind:"source"|"embedded"}[]}[] };
 const normalize = (source: string) => source.replace(/\s+/gu, " ").trim();
 test("portable cfg source corpus is closed and validated by Ajv", () => {
   const validate = new Ajv().compile(JSON.parse(readFileSync(join(import.meta.dir, "🧫️fixtures/schema.json"), "utf8")));
   expect(validate(corpus), JSON.stringify(validate.errors)).toBe(true);
   expect(validate({ ...corpus, hidden: true })).toBe(false);
 });
-for (const row of corpus.cases) test(row.name, () => expect(normalize(selectRustSourceV1(row.source, row.cfg))).toBe(row.expected));
+for (const row of corpus.cases) test(row.name, () => expect(normalize(selectRustSourceV1(row.source, row.cfg, row.name))).toBe(row.expected));
 test("malformed conditional expressions fail closed", () => {
-  for (const condition of ["not(test, unix)", "feature", "all(test", "feature = 42"]) expect(() => selectRustSourceV1(`#[cfg(${condition})] mod unsafe_mount;`, [])).toThrow();
+  for (const condition of ["not(test, unix)", "feature", "all(test", "feature = 42"]) expect(() => selectRustSourceV1(`#[cfg(${condition})] mod unsafe_mount;`, [], "mount.rs")).toThrow();
 });
 test("a cfg-false attribute with nothing to own fails closed", () => {
-  for (const source of ["fn f() { #[cfg(test)] }", "struct S { a: u8, #[cfg(test)] }", "#[cfg(test)]"]) expect(() => selectRustSourceV1(source, [])).toThrow("Unsupported cfg-owned Rust item");
+  for (const source of ["fn f() { #[cfg(test)] }", "struct S { a: u8, #[cfg(test)] }", "#[cfg(test)]"]) expect(() => selectRustSourceV1(source, [], "owned.rs")).toThrow("source.cfg-owned-item");
 });
 const expand = (directory: string, source: string, cfg: string[]) => {
   const file = join(directory, "oracle.rs"), flags = cfg.flatMap(value => ["--cfg", value.includes("=") ? value.replace(/=(.*)$/u, '="$1"') : value]);
@@ -33,7 +34,7 @@ test("independent rustc cfg expansion agrees with the selected source of every o
   try {
     const rows = corpus.cases.filter(row => row.oracle);
     expect(rows.length).toBeGreaterThanOrEqual(20);
-    for (const row of rows) expect(expand(directory, selectRustSourceV1(row.source, row.cfg), []), row.name).toBe(expand(directory, row.source, row.cfg));
+    for (const row of rows) expect(expand(directory, selectRustSourceV1(row.source, row.cfg, row.name), []), row.name).toBe(expand(directory, row.source, row.cfg));
   } finally { rmSync(directory, { recursive: true, force: true }); }
 }, 120_000);
 test("independent SQLite Boolean evaluation agrees with nested cfg predicates", () => {
@@ -77,11 +78,11 @@ test("a unit owns manifest-relative inputs and the token output it emits, while 
   const owned = await readRustSourceClosureV1(["crate/src/lib.rs"], root, [], read, owner("crate"));
   expect(owned.map(row => [row.path, row.kind, row.activeLines])).toEqual([["assets/profile.icc", "embedded", 0], ["crate/src/lib.rs", "source", 1], ["shared/lifetime.rs", "source", 2]]);
   expect(owned.find(row => row.kind === "embedded")!.bytes).toBe(bytes.byteLength);
-  await expect(readRustSourceClosureV1(["crate/src/lib.rs"], root, [], read)).rejects.toThrow("Generated Rust input requires compiler ownership");
+  await expect(readRustSourceClosureV1(["crate/src/lib.rs"], root, [], read)).rejects.toThrow("source.generated-needs-compiler");
   expect((await readRustSourceClosureV1(["derive/lib.rs"], root, [], read, owner("derive"))).map(row => row.path)).toEqual(["derive/lib.rs"]);
   expect(emitted).toEqual(["derive/lib.rs:include_str"]);
   await expect(readRustSourceClosureV1(["derive/lib.rs"], root, [], read)).rejects.toThrow("explicit generated-input observer");
-  await expect(readRustSourceClosureV1(["generated/lib.rs"], root, [], read, owner("generated"))).rejects.toThrow("Generated Rust input requires compiler ownership");
+  await expect(readRustSourceClosureV1(["generated/lib.rs"], root, [], read, owner("generated"))).rejects.toThrow("source.generated-needs-compiler");
 });
 
 for(const row of corpus.closures)test(row.name,async()=>{
@@ -106,4 +107,26 @@ test("shared engine registers its existing canonical slot implementation", () =>
   const packageManifest = Bun.TOML.parse(readFileSync(join(packageRoot, "Cargo.toml"), "utf8")) as { package: { name: string }; lib: { path: string } };
   expect(packageManifest.package.name).toBe(fixture.dependency);
   expect(readFileSync(resolve(packageRoot, packageManifest.lib.path), "utf8")).toContain(`pub struct ${fixture.type}<`);
+});
+
+test("source refusals name file, line and column in both languages and agree with rustc", () => {
+  const directory = mkdtempSync(join(tmpdir(), "rust-delimiter-oracle-"));
+  try {
+    for (const row of corpus.refusals) {
+      let refusal: unknown;
+      try { selectRustSourceV1(row.source, [], "unit.rs"); } catch (error) { refusal = error; }
+      expect(isRepoErrorV1(refusal), row.name).toBe(true);
+      const error = refusal as { key: string; values: Record<string, string | number> };
+      expect(error.key, row.name).toBe(row.key);
+      expect(error.values, row.name).toEqual(row.values);
+      for (const language of ["en", "de"]) expect(renderRepoErrorV1(error, language), row.name).toContain(`unit.rs:${row.values.line}:${row.values.column}`);
+      const file = join(directory, "unit.rs");
+      writeFileSync(file, row.source);
+      const run = spawnSync(process.env.RUSTC ?? "rustc", ["-Zunpretty=normal", "--edition", "2021", file], { encoding: "utf8", env: { ...process.env, RUSTC_BOOTSTRAP: "1" } });
+      expect(run.status, row.name).not.toBe(0);
+      if (error.key.endsWith("unexpected")) { expect(run.stderr, row.name).toContain(`unit.rs:${row.values.line}:${row.values.column}`); continue; }
+      const lines = run.stderr.split("\n"), label = lines.findIndex(text => /^\s*\|.*unclosed delimiter/u.test(text)), marker = /[-^] unclosed/u.test(lines[label]!) ? lines[label]! : lines[label - 2]!;
+      expect(marker.search(/[-^]/u) - marker.indexOf("| ") - 1, row.name).toBe(row.values.column);
+    }
+  } finally { rmSync(directory, { recursive: true, force: true }); }
 });

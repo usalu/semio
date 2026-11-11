@@ -4,7 +4,7 @@
 #[global_allocator]
 static ORIGINAL_OWNER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
-use semio_framework_os_kernel as kernel;
+use semio_os_kernel as kernel;
 use semio_framework_value_derive as value_derive;
 use semio_s_artifact_stdio_contract_window_kit::load_example_effect;
 use pack::snapshot::ArtifactDsl;
@@ -262,7 +262,7 @@ macro_rules! snapshot_details_editor_support {
         fn build_tool_job(
             request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>,
             output: &mut Option<semio_framework_plugin::ErasedToolJob>,
-            cx: &mut semio_framework_plugin::__job::StepContext<'_>,
+            _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>,
         ) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
             let (is_snapshot_edit, is_bounded_native) = {
                 let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;

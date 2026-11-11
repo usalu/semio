@@ -27,10 +27,10 @@ testkit = []
 
 [dependencies]
 semio-framework = { workspace = true }
-semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
-semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }

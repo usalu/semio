@@ -1,10 +1,10 @@
-import { resolveTestLevel } from "@semio-tech/framework/process/test-budget";
+import { resolveTestLevel } from "@semio-tech/process/test-budget";
 import { existsSync, readFileSync } from "node:fs";
 import { delimiter, join, resolve } from "node:path";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runProbe } from "@semio-tech/framework/process/execution";
-import { runRepositoryTestCommand } from "@semio-tech/framework/process/test-execution";
-import { BundleScript } from "@semio-tech/framework/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runProbe } from "@semio-tech/process/execution";
+import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
+import { BundleScript } from "@semio-tech/process/routing";
 import { provisionedToolPathV1, pythonEnvironmentOfProjectV1 } from "@semio-tech/process/toolchains";
 import { ensureOracleTool, oracleEnvironment, oracleManifest, oracleToolDirectory } from "../🛠️toolchain/🟦️.ts";
 

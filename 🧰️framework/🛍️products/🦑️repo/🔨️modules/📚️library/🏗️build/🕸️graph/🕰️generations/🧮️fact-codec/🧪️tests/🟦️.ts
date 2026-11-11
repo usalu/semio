@@ -5,7 +5,7 @@ import Ajv2020 from"ajv";
 import{dirname,join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{testPythonV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import{FACT_CODEC_POLICY_V1,canonicalJsonV1,decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"../🟨️.mjs";
+import{FACT_CODEC_POLICY_V1,canonicalJsonV1,canonicalKeyV1,decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"../🟨️.mjs";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
 
@@ -111,3 +111,13 @@ test("an opened index is a bounded view: walking every row and class keeps every
  expect(()=>{(lazy.rows as unknown[]).push({});}).toThrow();
  lazy.drop();expect(lazy.stats().caches.every(cache=>cache.entries===0)).toBe(true);expect(lazy.rows[5]).toEqual(full.rows[5]);
 },30000);
+
+test("the identity of a value is its canonical text up to the limit and the digest of it beyond, like the Python model",()=>{
+ const large={list:Array.from({length:4000},(_,at)=>({b:"ä"+at,a:[at,null,true,"x".repeat(at%37)],"é":{z:1,y:[]}})),second:"ü".repeat(70000)};
+ const values:unknown[]=[null,"a",["file","/p",{b:1,a:{d:2,c:[1,2,{f:1,e:2}]}}],["file","/p",large],["file","/p",{"é":1,"z":2,"😀":3,"a":0}],{ordered:1,sorted:2}];
+ for(const limit of[8,64,300,1000000])for(const value of values){
+  const text=canonicalJsonV1(value),expected=text.length<=limit?text:"#"+new Bun.CryptoHasher("sha256").update(text).digest("hex");
+  expect(canonicalKeyV1(value,limit)).toBe(expected);
+  expect(model("key",JSON.stringify({value,limit})).stdout.toString()).toBe(expected);
+ }
+});

@@ -1,7 +1,7 @@
 /** 🟤 `change-zone-volume-m3` wire twin: the leaf payload `ChangeZoneVolumeM3`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { type NormWireReader, normWireLiteral, normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeZoneVolumeM3 {
   mutation: "changezonevolumem3";
@@ -9,4 +9,4 @@ export interface ChangeZoneVolumeM3 {
   newVolumeM3: number;
 }
 
-export const parseChangeZoneVolumeM3: NormWireReader<ChangeZoneVolumeM3> = normWireObject<ChangeZoneVolumeM3>({ mutation: normWireRequired(normWireLiteral("changezonevolumem3")), zoneId: normWireRequired(normWireString), newVolumeM3: normWireRequired(normWireRange(normWireNumber, {"maximum":10000000.0,"exclusiveMinimum":0.0})) });
+export const parseChangeZoneVolumeM3: NormWireReader<ChangeZoneVolumeM3> = normWireObject<ChangeZoneVolumeM3>({ mutation: normWireRequired(normWireLiteral("changezonevolumem3")), zoneId: normWireRequired(normWireString), newVolumeM3: normWireRequired(normWireRange(normWireNumber, {"maximum":10000000,"exclusiveMinimum":0})) });

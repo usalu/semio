@@ -136,7 +136,7 @@ impl semio_plugin::ToolJobFactory for EnergyModelViewCommandJobFactory {
         energy_model_view_contract()
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_VIEW_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_VIEW_RAW_BYTES, checkpoint_resume: false);
 
 }
 
@@ -248,7 +248,7 @@ impl ArtifactViewer for EnergyModelViewer {
         registry.register(EnergyModelViewCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, _construction:&mut semio_framework_job::OriginalConstructionAdmission,cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
         if !ENERGY_MODEL_VIEW_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);

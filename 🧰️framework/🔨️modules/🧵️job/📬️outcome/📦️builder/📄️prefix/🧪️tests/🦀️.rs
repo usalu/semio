@@ -4,8 +4,6 @@ use semio_framework_trace::{OperationId,Generation,observe_heap_allocations_on_t
 #[path="../../🧪️testing/🦀️.rs"]
 mod testing;
 use testing::PayloadCase;
-#[global_allocator]
-static PREFIX_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn law()->serde_json::Value{let row:serde_json::Value=serde_json::from_str(include_str!("case.json")).unwrap();let schema:serde_json::Value=serde_json::from_str(include_str!("case.schema.json")).unwrap();for(k,v)in row.as_object().unwrap(){assert_eq!(&schema["properties"][k]["const"],v);}row}
 fn close_case(case:PayloadCase){let(ledger,mut case)=case.into_ledger();let mut ledger=Some(ledger);case.close_ledger(&mut ledger);assert!(ledger.is_none());let(_,heap)=observe(||drop(case));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
 #[test]

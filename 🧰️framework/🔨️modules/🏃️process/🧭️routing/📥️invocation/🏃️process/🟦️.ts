@@ -209,6 +209,8 @@ let received=false;
 const invocations=new WeakMap<ScriptInvocation,Birth>(),controls=new WeakMap<ResourceLeaseControl,ControlScope>(),context=new AsyncLocalStorage<ScriptInvocation>();
 const scope=(parent?:Scope):Scope=>({live:true,accepting:true,pending:new Set(),failures:[],retirements:new Set(),...(parent?{parent}:{})});
 /** 🚪️ A refusal that only reports an owner already closed by an earlier failure; it never names the failure itself. */
+/** ⌛️ The loan of a holder that stopped making observable progress inside its window ran out; its failure belongs to the caller that awaits the holder (an advisory holder such as the telemetry sampler skips it) and never poisons the shared owner, so a successful run stays successful. */
+export class ResourceLoanDeadlineExhaustedV1 extends Error{constructor(){super("Original resource loan deadline exhausted");this.name="ResourceLoanDeadlineExhausted";}}
 export class OriginalAdmissionClosedV1 extends Error{constructor(message:string,options?:ErrorOptions){super(message,options);this.name="OriginalAdmissionClosed";}}
 /** 📕️ A refusal by a closed owner that names the failure which closed it, so the consequence never hides its cause. */
 function closedV1(owner:Scope,text:string):OriginalAdmissionClosedV1{const first=owner.failures[0];return first===undefined?new OriginalAdmissionClosedV1(text):new OriginalAdmissionClosedV1(text+" - first failure: "+String(first instanceof Error?first.message:first).split("\n",1)[0]!.slice(0,progressSchema.const.firstFailure.maximumReasonCharacters),{cause:first});}
@@ -222,7 +224,7 @@ function track<T>(owner:Scope,run:()=>Promise<T>):Promise<T>{
  const work=Promise.resolve().then(run);
  const accepted:Scope[]=[];for(let row:Scope|undefined=owner;row;row=row.parent){accepted.push(row);row.pending.add(work);}
  void work.then(()=>{noteProgressV1();for(const row of accepted)row.pending.delete(work);},error=>{
-  noteProgressV1();let handled=false;
+  noteProgressV1();let handled=error instanceof ResourceLoanDeadlineExhaustedV1;
   for(const row of accepted){row.pending.delete(work);const stop=row.ownedCancellation;if(stop&&stop.signal.aborted&&!stop.parentSignal.aborted&&Object.is(error,stop.signal.reason))handled=true;if(!handled){row.accepting=false;if(!row.failures.length)row.failures.push(error);}}
  });
  return work;
@@ -280,7 +282,7 @@ function remaining(original:ControlScope,maximumOnly=false):number|null{
    stack.push({kind:"root-end",row,value},{kind:"row",row,now,waited});
   }else if(frame.kind==="root-end"){
    const value=minimum(frame.value,rows.get(row)??null);
-   if(value!==null&&value<=0)throw Error("Original resource loan deadline exhausted");
+   if(value!==null&&value<=0)throw new ResourceLoanDeadlineExhaustedV1();
    roots.set(row,value);
   }else if(frame.kind==="row"){
    if(rows.has(row))continue;
@@ -340,7 +342,7 @@ function remaining(original:ControlScope,maximumOnly=false):number|null{
  for(const row of rows.keys()){if(!row.live)throw Error("Live Original resource control issuance required");row.signal.throwIfAborted();}
  for(const invocation of invocations)invocation.control.signal.throwIfAborted();
  const value=minimum(minimum(roots.get(original)??null,epoch===null?null:epoch-wall),monotonic===null?null:monotonic-performance.now());
- if(value!==null&&value<=0)throw Error("Original resource loan deadline exhausted");
+ if(value!==null&&value<=0)throw new ResourceLoanDeadlineExhaustedV1();
  return value;
 }
 /** 🪪️ Authenticates the exact issued control rather than its structural ports. */
@@ -361,7 +363,7 @@ function scheduleControlDeadline(original:ControlScope,controller:AbortControlle
 }
 function followedControlV1(control:ResourceLeaseControl):ControlScope{requireIssuedResourceControlV1(control);return controls.get(control)!;}
 function controlFor(invocation:ScriptInvocation,command:string,requestedMilliseconds:number,parent?:ControlScope,additionalSignal?:AbortSignal,renewal?:Readonly<{policy:ProgressDeadlinePolicyV1;units:number}>,following?:ResourceLeaseControl):ResourceLeaseControl{
- readOriginalResourceControlRequestV1({version:1,command,maximumElapsedMilliseconds:requestedMilliseconds});if(additionalSignal!==undefined&&!(additionalSignal instanceof AbortSignal))throw Error("Actual additional cancellation signal required");if(renewal!==undefined&&(requestedMilliseconds!==renewal.policy.maximumMilliseconds||requestedMilliseconds===0))throw refuseProcessV1("invalid", "routing.renewable-control-needs-nonrenewable-maximum");const birth=admit(invocation,parent),available=parent?remaining(parent):invocation.control.remainingMilliseconds();if(available!==null&&available<=0)throw Error("Original resource loan deadline exhausted");const incoming=parent?.signal??invocation.control.signal,controller=requestedMilliseconds===0?undefined:new AbortController(),signals=[incoming,...(additionalSignal?[additionalSignal]:[]),...(controller?[controller.signal]:[])],child:ControlScope={...scope(parent??birth),birth,invocation:invocation as IssuedScriptInvocationV1,command,requestedMilliseconds,started:performance.now(),waitedAtStart:admissionWaitedMillisecondsV1(),deadlineEpochMilliseconds:requestedMilliseconds===0?null:Date.now()+requestedMilliseconds,signal:signals.length===1?incoming:AbortSignal.any(signals),...(parent?{parentControl:parent}:{}),...(following?{follows:followedControlV1(following)}:{}),...(renewal?{units:renewal.units,progress:createProgressDeadlineV1(renewal.policy,{now:()=>performance.now(),idle:()=>scriptProcessActivityIdleMillisecondsV1(),credit:()=>admissionWaitedMillisecondsV1()-child.waitedAtStart})}:{})};
+ readOriginalResourceControlRequestV1({version:1,command,maximumElapsedMilliseconds:requestedMilliseconds});if(additionalSignal!==undefined&&!(additionalSignal instanceof AbortSignal))throw Error("Actual additional cancellation signal required");if(renewal!==undefined&&(requestedMilliseconds!==renewal.policy.maximumMilliseconds||requestedMilliseconds===0))throw refuseProcessV1("invalid", "routing.renewable-control-needs-nonrenewable-maximum");const birth=admit(invocation,parent),available=parent?remaining(parent):invocation.control.remainingMilliseconds();if(available!==null&&available<=0)throw new ResourceLoanDeadlineExhaustedV1();const incoming=parent?.signal??invocation.control.signal,controller=requestedMilliseconds===0?undefined:new AbortController(),signals=[incoming,...(additionalSignal?[additionalSignal]:[]),...(controller?[controller.signal]:[])],child:ControlScope={...scope(parent??birth),birth,invocation:invocation as IssuedScriptInvocationV1,command,requestedMilliseconds,started:performance.now(),waitedAtStart:admissionWaitedMillisecondsV1(),deadlineEpochMilliseconds:requestedMilliseconds===0?null:Date.now()+requestedMilliseconds,signal:signals.length===1?incoming:AbortSignal.any(signals),...(parent?{parentControl:parent}:{}),...(following?{follows:followedControlV1(following)}:{}),...(renewal?{units:renewal.units,progress:createProgressDeadlineV1(renewal.policy,{now:()=>performance.now(),idle:()=>scriptProcessActivityIdleMillisecondsV1(),credit:()=>admissionWaitedMillisecondsV1()-child.waitedAtStart})}:{})};
  if(renewal){demandScriptProcessActivityV1();if(progressDeadlineTraceEnabledV1(process.env))process.stderr.write(progressDeadlineTraceV1("traceCreated",{label:command,window:Math.round(renewal.policy.idleMilliseconds/60000),minutes:Math.round(renewal.policy.maximumMilliseconds/60000),units:renewal.units},firstFailureLanguagesV1(process.env)));}
  const control:ResourceLeaseControl=Object.freeze({signal:child.signal,remainingMilliseconds:()=>remaining(child),publish:async(progress:Parameters<ResourceLeaseControl["publish"]>[0])=>{remaining(child);if(process.env.SEMIO_BUILD_PROFILE_INPUTS==="1"){}await invocation.control.publish({owner:invocation.policy.owner,command,stage:"running",activity:{resource:progress.resource,mode:progress.mode,elapsedMs:progress.elapsedMs}});remaining(child);},yieldContinuation:async()=>{remaining(child);await invocation.control.yieldContinuation();remaining(child);}});controls.set(control,child);if(controller)scheduleControlDeadline(child,controller);return control;
 }

@@ -3,6 +3,8 @@
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 
+pub(crate) use semio_plugin_job_receiving::original_steps::{adopted,begun,built,built_with,retired,retired_poll,unbuilt};
+
 /// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
 #[cfg(test)]
 #[global_allocator]

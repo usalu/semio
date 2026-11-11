@@ -342,7 +342,7 @@ impl ArtifactApp for DummyApp {
         registry.register(DummyFixtureFactory { keys: vec![ToolFactoryKey::new(registry.controller_id(), DUMMY_TOOL_ID)] })
     }
 
-    fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::testing_laws_unit_1::mutation_fixture::job_close::admit_fixture_tool_job(request,output,cx,|request|{let count=request.snapshot.count;DummyFixtureJob{owners:crate::testing_laws_unit_1::mutation_fixture::job_close::FixtureJobOwners::from_request(request),count,page:0}})}
+    fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::testing_laws_unit_1::mutation_fixture::job_close::admit_fixture_tool_job(request,output,construction,cx,|request|{let count=request.snapshot.count;DummyFixtureJob{owners:crate::testing_laws_unit_1::mutation_fixture::job_close::FixtureJobOwners::from_request(request),count,page:0}})}
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(crate::testing_laws_unit_1::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))

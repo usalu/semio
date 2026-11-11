@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🔷️ Contract: `verify typescript` parses its flags strictly, selects the workspace roots (excludes, shadowed declarations, scopes, changed and listed sets), generates the relative project document, finds excluded applications, counts diagnostics by column-zero lines and type-checks a real project in a Node child; the corpus is language-agnostic, minimatch and the TypeScript compiler API are the third-party oracles and `🐍️.py` re-implements the selection and the log counting. */
 import {expect,setDefaultTimeout,test} from "bun:test";
 import Ajv from "ajv";
@@ -72,7 +73,7 @@ test("git lists sources, changes and writes the generated project",()=>{
  expect(()=>writeTypescriptProject(root,parseTypescriptProjectArguments(["--out","cfg/n.json","--scope","nowhere"]))).toThrow("verify.typescript.the-selection-matches-no-source");
 });
 test("the compiler child type-checks every parsable file and reports syntax errors apart",async()=>{
- if(Bun.spawnSync(["node","--version"]).exitCode!==0)return;
+ if(Bun.spawnSync([registeredToolExecutableV1("node"),"--version"]).exitCode!==0)return;
  const root=scratch();place(root,corpus.e2e.files);const log=join(root,"out.tsc.txt"),syntax=join(root,"out.syntax.txt");
  const status=await runTypescriptCompiler(root,join(root,"tsconfig.json"),log,syntax,1024,5);
  expect(status).toBe(2);const text=readFileSync(log,"utf8"),summary=summarizeTypescriptDiagnostics(text);

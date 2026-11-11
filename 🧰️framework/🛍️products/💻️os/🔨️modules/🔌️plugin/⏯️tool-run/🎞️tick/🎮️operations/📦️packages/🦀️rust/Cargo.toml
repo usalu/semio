@@ -27,6 +27,6 @@ semio-framework-tool-machine = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-os-store-operation-wire = { path = "../../../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-os-store-replay-operation = { path = "../../../../../../🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

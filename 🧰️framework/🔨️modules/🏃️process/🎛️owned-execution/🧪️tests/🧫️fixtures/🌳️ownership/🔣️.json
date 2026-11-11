@@ -8,7 +8,7 @@
         "settled": true,
         "survivors": 0,
         "unrelatedAlive": true,
-        "reason": "timeout 5000ms"
+        "reason": "timeout"
       }
     },
     {
@@ -30,7 +30,7 @@
         "settled": true,
         "survivors": 0,
         "unrelatedAlive": true,
-        "reason": "SIGTERM"
+        "reason": "terminated"
       }
     }
   ]

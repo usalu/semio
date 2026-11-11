@@ -32,9 +32,9 @@ semio-framework-job-worker = { path = "../../../../../../../../🔨️modules/�
 semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1-host-native): `GuestRuntime`'s `RuntimeActorId`/
 # `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
 # actor crate, already a `[workspace.dependencies]` entry.

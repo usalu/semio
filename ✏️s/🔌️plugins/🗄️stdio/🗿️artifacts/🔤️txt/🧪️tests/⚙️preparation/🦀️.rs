@@ -1,7 +1,5 @@
 //! 🧪️ Runtime law: the document-lane `mutation_apply` preparation reaches `Prepared` through the real sealer, publishes the exact post snapshot and an inverse that restores the base.
 
-#[global_allocator]
-static ORIGINAL_OWNER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 use semio_os_kernel as store;
 use semio_plugin::ArtifactEditor;

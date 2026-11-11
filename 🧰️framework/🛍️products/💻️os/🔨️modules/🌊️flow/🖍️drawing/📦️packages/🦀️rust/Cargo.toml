@@ -25,7 +25,7 @@ path = "../../🦀️.rs"
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 semio-framework-2d = { path = "../../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-2d-compute = { path = "../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }

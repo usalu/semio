@@ -81,7 +81,7 @@ pub struct OriginalCallerSource<'source>{pub ledger:&'source Arc<JobPayloadOpera
 pub use owned_source::{OriginalReturnBirthState,OriginalCallerCloseReturn,source_loan_transfer_demand,OriginalCallerSourceAdmission,OriginalSourceCloseContext,OriginalSourceCloseProducer,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalCallerChildSource,OriginalChildTurnReturn,ORIGINAL_NATIVE_SOURCE_CAPACITY,OriginalNativeLease,OriginalNativeRetirement,OriginalNativeBorrow,OriginalNativeBorrowed,OriginalNativeRecipientIdentity,OriginalNativeRecipientClosed,OriginalNativeRetiredWitness};
 #[path="🛬️owned/🦀️.rs"]
 mod original_job_decoder;
-pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput};
+pub use original_job_decoder::{OriginalJobDecodeOwner,OriginalCreditedOutput,original_receiving_scope_headroom};
 //#endregion 📄️RetainedPayload
 
 #[path="📦️return/🪶️weak/🦀️.rs"]
@@ -368,6 +368,10 @@ impl<'a> StepContext<'a> {
 
     pub fn borrowed_original_cancel_token(&self)->Result<&'a CancelToken,ValueError>{match &self.cancel{StepCancelReference::Borrowed(original)|StepCancelReference::Observed(original)=>Ok(*original),StepCancelReference::Owned(_)=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native job controls require an original borrowed cancellation witness"))}}
 
+    /// 🧾️ Borrows the live return budget loan of this context.
+    pub fn original_return_budget(&self)->Option<&original_return_source::OriginalReturnBudgetReference<'a>>{self.return_budget.as_ref()}
+    /// 🧾️ Borrows the live return budget loan of this context exclusively.
+    pub fn original_return_budget_mut(&mut self)->Option<&mut original_return_source::OriginalReturnBudgetReference<'a>>{self.return_budget.as_mut()}
     pub fn original_source_parent(&self)->Result<&'a OriginalCallerSourceParent,ValueError>{self.source_parent.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original caller has no parent source supplier"))}
 
     pub fn borrowed_original_caller_source(&self)->Result<OriginalCallerSource<'a>,ValueError>{let ledger=match &self.payload_ledger{JobPayloadLedgerReference::Borrowed(authority)=>authority.original().ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original caller ledger has already closed"))?,JobPayloadLedgerReference::Owned(_)=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"caller capture requires its admitted borrowed original ledger"))};Ok(OriginalCallerSource{ledger,cancel:self.borrowed_original_cancel_token()?,operation:self.operation,generation:self.generation,clock:self.now_us,deadline:self.deadline_us})}
@@ -413,7 +417,7 @@ impl<'a> StepContext<'a> {
     /// 🧾️ Observes authentic redemptions in the persistent actor without narrowing their aggregate wire receipt.
     pub fn bind_original_reserved_recipient(&mut self,progress:&'a mut RetainedCloneProgress,work:&'a mut u128)->Result<(),ValueError>{self.original_source_parent()?;if self.original_physical_recipient.is_none()||self.original_work_recipient.is_none()||self.reserved_observer.is_some()||self.reserved_return_progress!=Default::default()||self.reserved_return_work!=0{return Err(ValueError::invariant("reserved observer must bind before any redemption"))}self.reserved_observer=Some((progress,work));Ok(())}
     pub fn preflight_original_reserved_return(&self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError>{if let Some((recipient,start))=&self.original_physical_recipient{let delta=semio_framework_job_return_budget::source_fresh_progress(*self.retained_progress,*start).ok_or_else(||ValueError::invariant("original aggregate observer baseline changed"))?;recipient.checked_add(delta)?.checked_add(progress)?;}if let Some(recipient)=&self.original_work_recipient{recipient.checked_add(self.work_units_spent).and_then(|n|n.checked_add(u128::from(work))).ok_or_else(||ValueError::invariant("original aggregate work observer overflow"))?;}if let Some((p,w))=&self.reserved_observer{p.checked_add(progress)?;w.checked_add(u128::from(work)).ok_or_else(||ValueError::invariant("reserved observer work overflow"))?;}self.retained_progress.checked_add(progress)?;self.reserved_return_progress.checked_add(progress)?;self.reserved_return_work.checked_add(work).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original reserved return CPU observer overflow"))?;self.work_units_spent.checked_add(u128::from(work)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return actual CPU counter overflow"))?;Ok(())}
-    fn receive_original_reserved_return(&mut self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError>{
+    pub fn receive_original_reserved_return(&mut self,progress:RetainedCloneProgress,work:u64)->Result<(),ValueError>{
         self.preflight_original_reserved_return(progress,work)?;
         let recipient=self.retained_progress.checked_add(progress)?;let reserved=self.reserved_return_progress.checked_add(progress)?;let reserved_work=self.reserved_return_work.checked_add(work).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original reserved return CPU observer overflow"))?;let total_work=self.work_units_spent.checked_add(u128::from(work)).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original return actual CPU counter overflow"))?;
         if let Some((p,w))=self.reserved_observer.as_mut(){**p=p.checked_add(progress)?;**w=w.checked_add(u128::from(work)).ok_or_else(||ValueError::invariant("reserved observer work overflow"))?;}*self.retained_progress=recipient;self.reserved_return_progress=reserved;self.reserved_return_work=reserved_work;self.work_units_spent=total_work;Ok(())
@@ -543,10 +547,10 @@ pub mod testkit {
 }
 //#endregion 🧪️Tests
 
+
 #[path="📦️return/🎟️place/🦀️.rs"]
 mod original_return_place;
 pub use original_return_place::{OriginalCallerReturnPlace,OriginalSizedClaimReserve};
-pub use original_job_continuation::source::{finish_original_header,begin_original_header,write_original_header,with_original_frozen_header,accept_original_header,close_original_header_failure,abandon_original_unexposed_header,cancel_original_unexposed_header_loan,OriginalHeaderWriteStatus};
 
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure_context;
@@ -557,9 +561,7 @@ pub use step_context_owner::StepContextOwner;
 
 
 
-pub use original_job_continuation::source::{prepare_original_header_guard,qualify_original_header_guard,observe_original_header_guard,release_original_header_guard,OriginalReturnGuardPermit};
 
-pub use original_job_continuation::source::{OriginalHeaderExposurePermit,prepare_original_header_exposure,observe_original_header_exposure,cancel_original_header_exposure};
 
 pub use semio_framework_job_return_escrow_publication::OriginalEscrowHeaderLoanCell;
 

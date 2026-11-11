@@ -28,8 +28,8 @@ testkit = ["semio-os-mcp-port/testkit"]
 [dependencies]
 semio-framework = { workspace = true }
 semio-framework-async = { workspace = true }
-semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 serde_json = { workspace = true }
 semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
 semio-os-mcp-catalog = { path = "../../../📚️catalog-compiler/📦️packages/🦀️rust" }
@@ -40,7 +40,7 @@ semio-os-mcp-hub-remote = { path = "../../../🌍️hub-remote/📦️packages/�
 semio-os-mcp-shell-channel = { path = "../../../🎛️shell-channel/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-os-mcp-port = { path = "../../../🔌️channel-port/📦️packages/🦀️rust", features = ["testkit"] }

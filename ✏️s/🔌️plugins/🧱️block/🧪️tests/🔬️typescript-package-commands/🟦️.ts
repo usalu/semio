@@ -1,6 +1,6 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { resolve } from "node:path";
-import { runCmd } from "@semio-tech/framework/process/execution";
+import { runCmd } from "@semio-tech/process/execution";
 import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");

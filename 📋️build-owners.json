@@ -74,7 +74,7 @@
       "packages": []
     },
     {
-      "name": "@semio-s/plugin-norm-mechanics",
+      "name": "@semio-tech/norm-mechanics-rs",
       "root": "✏️s/🔌️plugins/📕️norm/🧮️mechanics/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/📕️norm/🧮️mechanics/📦️packages/🦀️rust/📋️project.json",
       "packages": []
@@ -10394,7 +10394,7 @@
       "packages": []
     },
     {
-      "name": "semio-framework-plugin-reactor-staged-forms",
+      "name": "semio-plugin-reactor-staged-forms",
       "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/📝️forms/📦️packages/🦀️rust",
       "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/📝️forms/📦️packages/🦀️rust/Cargo.toml",
       "packages": []

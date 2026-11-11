@@ -578,6 +578,14 @@
       "en": "{count} derived facts exceed the cutoff bound of {maximum}",
       "de": "{count} abgeleitete Fakten überschreiten die Grenze von {maximum} für den Abschnitt"
     },
+    "graph.plan-refused": {
+      "en": "{text}",
+      "de": "{text}"
+    },
+    "graph.host-unavailable": {
+      "en": "The graph service could not answer ({reason}); look at `repo service host status` and try again",
+      "de": "Der Graph-Dienst konnte nicht antworten ({reason}); `repo service host status` ansehen und erneut versuchen"
+    },
     "graph.phase-not-begun": {
       "en": "The graph phase {phase} was never begun",
       "de": "Die Graph-Phase {phase} wurde nie begonnen"

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { cruise } from "dependency-cruiser";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -571,7 +572,7 @@ test("actual public package targets obey Node ownership and expose neutral Proce
   const validate=new Ajv({strict:true}).compile({...schema as object,$ref:"#/$defs/AuthoredPublicPackage"});
   expect(new Set(rows.map(row=>row.id)).size).toBe(rows.length);
   const oracle=String.raw`const p=require("node:path"),m=require("node:module");const root=process.argv[1],rows=JSON.parse(process.argv[2]);process.stdout.write(JSON.stringify(rows.map(row=>{try{const target=m.createRequire(p.join(root,row.consumer??p.join(row.owner,"package.json"))).resolve(row.name+(row.subpath==="."?"":row.subpath.slice(1)));return {id:row.id,accept:true,target};}catch(error){return {id:row.id,accept:false,error:error.code};}})));`;
-  const verdicts=JSON.parse(execFileSync("node",["--input-type=commonjs","-e",oracle,repo,JSON.stringify(rows)],{encoding:"utf8",timeout:1000,maxBuffer:16777216})) as readonly Readonly<{id:string;accept:boolean;target?:string;error?:string}>[];
+  const verdicts=JSON.parse(execFileSync(registeredToolExecutableV1("node"),["--input-type=commonjs","-e",oracle,repo,JSON.stringify(rows)],{encoding:"utf8",timeout:1000,maxBuffer:16777216})) as readonly Readonly<{id:string;accept:boolean;target?:string;error?:string}>[];
   expect(verdicts.length).toBe(rows.length);
   const failures:unknown[]=[];
   for(const [index,row] of rows.entries())try{

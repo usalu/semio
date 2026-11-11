@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {test,expect} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {createRequire} from "node:module";
@@ -30,7 +31,7 @@ function neutralFiles(directory:string,args:readonly string[]):string[]{
 function nxFiles(directory:string,nxArguments:readonly string[]):string[]{
  const parsed=parse(nxArguments.slice(1),{boolean:["uncommitted","untracked"],string:["base","head","files"]}),
   source="const u=require(process.env.NX_UTILS);const a=JSON.parse(process.env.NX_FLAGS);const r=u.splitArgsIntoNxArgsAndOverrides({...a,_:[]},'affected',{printWarnings:false},{});const f=u.parseFiles(r.nxArgs).files;process.stdout.write(JSON.stringify((typeof f==='string'?f.split(','):f).sort()));",
-  result=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_UTILS:installed.resolve("nx/src/utils/command-line-utils"),NX_FLAGS:JSON.stringify(parsed),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false",NX_BASE:undefined,NX_HEAD:undefined} as NodeJS.ProcessEnv});
+  result=spawnSync(registeredToolExecutableV1("node"),["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_UTILS:installed.resolve("nx/src/utils/command-line-utils"),NX_FLAGS:JSON.stringify(parsed),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false",NX_BASE:undefined,NX_HEAD:undefined} as NodeJS.ProcessEnv});
  if(result.status!==0)throw Error("nx oracle: "+result.stderr);
  return JSON.parse(result.stdout);
 }
@@ -74,7 +75,7 @@ test("every translated flag is declared by the installed Nx command grammar",()=
  try{
   writeFileSync(join(directory,"nx.json"),"{}\n");
   const source="const record=builder=>{const names=[],proxy=new Proxy(function(){},{get:(_target,property)=>property==='option'?name=>{names.push(name);return proxy;}:()=>proxy,apply:()=>proxy});builder(proxy);return names;};process.stdout.write(JSON.stringify({affected:record(require(process.env.NX_AFFECTED).yargsAffectedCommand.builder),reset:record(require(process.env.NX_RESET).yargsResetCommand.builder)}));",
-   result=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_AFFECTED:installed.resolve("nx/src/command-line/affected/command-object"),NX_RESET:installed.resolve("nx/src/command-line/reset/command-object"),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
+   result=spawnSync(registeredToolExecutableV1("node"),["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_AFFECTED:installed.resolve("nx/src/command-line/affected/command-object"),NX_RESET:installed.resolve("nx/src/command-line/reset/command-object"),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
   if(result.status!==0)throw Error("nx grammar: "+result.stderr);
   const declared=JSON.parse(result.stdout) as Record<string,string[]>;
   for(const [command,names] of Object.entries(fixture.yargsOptions))for(const name of names)expect(declared[command],command+" "+name).toContain(name);

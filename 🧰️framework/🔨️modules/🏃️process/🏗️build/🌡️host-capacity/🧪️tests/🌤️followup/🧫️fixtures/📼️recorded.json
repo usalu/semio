@@ -303,6 +303,7 @@
   },
   "swap": {
    "ceilingBasisPoints": 2500,
+   "activeMegabytesPerSecond": 1,
    "outMegabytesPerSecond": 64
   },
   "pressure": {

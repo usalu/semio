@@ -336,6 +336,3 @@ mod presence_retirement;
 pub use presence_retirement::PresenceStoreRetirement;
 //#endregion 🔖️Authority
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

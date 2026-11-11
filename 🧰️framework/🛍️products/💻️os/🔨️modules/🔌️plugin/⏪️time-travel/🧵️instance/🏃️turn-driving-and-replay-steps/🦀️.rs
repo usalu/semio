@@ -14,7 +14,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if let TimeTravelStoreOutput::OriginalProgress(progress)=self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources{grant},Some(cx)).await?{if progress!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,progress));return Ok(())}}
         if self.time_travel.finalize_outcome.is_some(){self.drive_time_travel_finalize_outcome(cx)?;return Ok(())}
         if self.time_travel.owners().any(TimeTravelOwners::finalizing){match self.time_travel_run(TimeTravelStoreCommand::StepCommit,Some(cx)).await?{TimeTravelStoreOutput::Committed(outcome)=>if outcome!=TimeTravelCommit::Pending{self.time_travel.finalize_outcome=Some(outcome);},TimeTravelStoreOutput::CommitRefused(failure)=>return Err(failure.into()),_=>unreachable!("original finalize command output")};return Ok(())}
-        if self.drive_original_discard_command(grant)?{return Ok(())}
+        if self.drive_original_discard_command_context(grant,cx)?{return Ok(())}
         if self.drive_original_review_children(grant)?{return Ok(())}
         let deadline_us = self.shared().time_travel_turn_deadline();
         if self.time_travel.reprojection_paused && self.stores.store.reprojection_progress().is_none() {
@@ -61,7 +61,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         self.time_travel.command_receipt=Some((grant,receipt));Ok(true)
     }
 
-    pub fn drive_original_discard_command(&mut self,grant:RetainedCloneGrant)->Result<bool,Fault>{
+    /// 🗑️ Drives the original discard command inside one performed-work effect of the turn; an unfunded turn ends with an empty receipt while a command is still owed.
+    pub fn drive_original_discard_command_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,Fault>{
+        let owed=self.time_travel.pending_command.is_some()||self.time_travel.discard_cursor.is_some()||!self.time_travel.command_retirements.terminal_is_empty();
+        match cx.with_original_effect(grant,|_,effect|self.drive_original_discard_command(grant,effect)).map_err(ValueError::into_fault)?{
+            Some((driven,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));driven}
+            None if owed&&self.time_travel.command_receipt.is_none()=>{self.time_travel.command_receipt=Some((grant,Default::default()));Ok(true)}
+            None=>Ok(self.time_travel.command_receipt.is_some()),
+        }
+    }
+
+    /// 🚮️ One effect-shaped step of the original discard command; `Ok(false)` means no command is owed.
+    pub fn drive_original_discard_command(&mut self,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,Fault>{
         if self.time_travel.command_receipt.is_some(){return Ok(true)}
         if grant.maximum_items==0&&self.time_travel.pending_command.is_some(){self.time_travel.command_receipt=Some((grant,Default::default()));return Ok(true)}
         let TimeTravelCtx{stores,time_travel,child_composition,..}=self;
@@ -75,18 +86,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     if time_travel.session.stage!=TimeTravelStage::Editing{time_travel.ui_dirty=true;time_travel.document_dirty=true;time_travel.patch_due=true}return Ok(Some(receipt))
                 }
                 if grant.maximum_depth<time_travel.command_retirements.len()+1{return Ok(Some(Default::default()))}
-                return time_travel.command_retirements.admit_typed_retirement(&mut time_travel.discard_cursor,grant).result.map(|receipt|Some(receipt.unwrap_or_default()))
+                return time_travel.command_retirements.admit_typed_retirement(&mut time_travel.discard_cursor,effect).result.map(|receipt|Some(receipt.unwrap_or_default()))
             }
             if let Some(custody)=time_travel.pending_command.as_mut(){
                 if custody.original().is_some()&&!time_travel.closing{
-                    if !time_travel.command_retirements.has_reserved_slot(){if grant.maximum_depth<time_travel.command_retirements.len()+1||grant.maximum_capacity_bytes<time_travel.command_retirements.next_reserve_capacity_byte_demand()?{return Ok(Some(Default::default()))}return time_travel.command_retirements.reserve_step(grant).result.map(Some)}
+                    if !time_travel.command_retirements.has_reserved_slot(){if grant.maximum_depth<time_travel.command_retirements.len()+1||grant.maximum_capacity_bytes<time_travel.command_retirements.next_reserve_capacity_byte_demand()?{return Ok(Some(Default::default()))}return time_travel.command_retirements.reserve_step(effect).result.map(Some)}
                     let parent_copy=0usize;if grant.maximum_copy_bytes<parent_copy||grant.maximum_depth<2{return Ok(Some(Default::default()))}let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent_copy,maximum_depth:grant.maximum_depth-1,..grant};
                     if let Some((cursor,mut receipt))=custody.admit_discard(&time_travel.command_retirements,child)?{if !receipt.fits(child){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Discard semantic frame exceeded its original caller"))}receipt.copied_bytes+=parent_copy;time_travel.discard_cursor=Some(cursor);return Ok(Some(receipt))}return Ok(Some(Default::default()))
                 }
                 if custody.terminal_is_empty(){let copied_bytes=0usize;if grant.maximum_depth==0||grant.maximum_copy_bytes<copied_bytes{return Ok(Some(Default::default()))}drop(time_travel.pending_command.take());return Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}))}
-                return custody.close_step(grant).map(|step|Some(step.progress()))
+                return semio_plugin_ownership::bounded_ownership::plugin_settle_value(custody.close_step(effect)).map(|step|Some(step.progress()))
             }
-            if !time_travel.command_retirements.terminal_is_empty(){let owner=&time_travel.command_retirements;if grant.maximum_items==0||grant.maximum_copy_bytes<owner.next_copy_byte_demand()?||grant.maximum_capacity_bytes<owner.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<owner.next_release_byte_demand()?||grant.maximum_depth<owner.next_depth_demand()?{return Ok(Some(Default::default()))}return time_travel.command_retirements.step(grant).result.map(|step|Some(step.progress()))}
+            if !time_travel.command_retirements.terminal_is_empty(){let owner=&time_travel.command_retirements;if grant.maximum_items==0||grant.maximum_copy_bytes<owner.next_copy_byte_demand()?||grant.maximum_capacity_bytes<owner.next_capacity_byte_demand(grant.maximum_copy_bytes)?||grant.maximum_release_bytes<owner.next_release_byte_demand()?||grant.maximum_depth<owner.next_depth_demand()?{return Ok(Some(Default::default()))}return semio_plugin_ownership::bounded_ownership::plugin_settle_value(time_travel.command_retirements.step(grant.maximum_copy_bytes,effect)).map(|step|Some(step.progress()))}
             Ok(None)
         })().map_err(ValueError::into_fault)?;
         if let Some(receipt)=receipt{if !receipt.fits(grant){return Err(Fault::from("original TimeTravel command exceeded its caller grant"))}time_travel.command_receipt=Some((grant,receipt));return Ok(true)}Ok(false)
@@ -116,6 +127,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             _ => TimeTravelReplayStep::Faulted,
         };
         let event = match stepped {
+            TimeTravelReplayStep::Unfunded => return Ok(()),
             TimeTravelReplayStep::Pending { done, total,ownership } => {
                 if ownership!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,ownership));}
                 let _ = self.time_travel.session.apply(TimeTravelEvent::ReplayProgressed { generation, done, total });
@@ -143,9 +155,9 @@ impl<'ctx,A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static,X:InstanceE
  fn drive_time_travel_finalize_outcome(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   use semio_framework_value::retirement::controlled::ControlledRetirement;
   use semio_framework_time_travel::TimeTravelSession;
-  let Some(outcome)=self.time_travel.finalize_outcome else{return Ok(())};if self.time_travel.authoring_finalization{let d=RetirementDemand{copy_bytes:size_of::<TimeTravelCommit>()+size_of::<bool>(),depth:1,..Default::default()};let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{self.time_travel.finalize_outcome=None;self.time_travel.authoring_finalization=false;semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}})?;if done.is_some(){self.history.cache=None;self.note_time_travel_changed(matches!(outcome,TimeTravelCommit::Finalized{..}),true);}return Ok(())}let success=matches!(outcome,TimeTravelCommit::Finalized{..});let code=match outcome{TimeTravelCommit::Stale=>TimeTravelRefusal::Stale.code(),TimeTravelCommit::Blocked=>TimeTravelRefusal::Blocked.code(),_=>TIME_TRAVEL_COMMIT_FAILED_CODE};
+  let Some(outcome)=self.time_travel.finalize_outcome else{return Ok(())};if self.time_travel.authoring_finalization{let d=RetirementDemand{copy_bytes:size_of::<TimeTravelCommit>()+size_of::<bool>(),depth:1,..Default::default()};let mut done=false;semio_framework_job::close_original_retained_step(cx,d,|_|{self.time_travel.finalize_outcome=None;self.time_travel.authoring_finalization=false;done=true;semio_framework_value::RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}})?;if done{self.history.cache=None;self.note_time_travel_changed(matches!(outcome,TimeTravelCommit::Finalized{..}),true);}return Ok(())}let success=matches!(outcome,TimeTravelCommit::Finalized{..});let code=match outcome{TimeTravelCommit::Stale=>TimeTravelRefusal::Stale.code(),TimeTravelCommit::Blocked=>TimeTravelRefusal::Blocked.code(),_=>TIME_TRAVEL_COMMIT_FAILED_CODE};
   let d=RetirementDemand{copy_bytes:2*size_of::<TimeTravelSession>()+size_of::<ControlledRetirement<TimeTravelSession>>()+size_of::<TimeTravelCommit>()+if success{0}else{code.len()},capacity_bytes:if success{0}else{code.len()},depth:1,..Default::default()};
-  let mut performed=None;semio_framework_job::admit_original_construction(cx,&mut performed,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},|_|{let result=(||->Result<((),RetainedCloneProgress),ValueError>{if success{if self.time_travel.session_retirement.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"completed time-travel Session retirement slot is occupied"))}let generation=self.time_travel.session.generation.wrapping_add(1);let base=self.time_travel.session.base;let original=std::mem::take(&mut self.time_travel.session);match ControlledRetirement::new(original){Ok(owner)=>self.time_travel.session_retirement=Some(owner),Err((error,original))=>{self.time_travel.session=original;return Err(error)}}self.time_travel.session.generation=generation;self.time_travel.session.base=base;}else{let generation=self.time_travel.session.generation;self.time_travel.session.apply(TimeTravelEvent::FinalizeFaulted{generation,code:code.to_owned()}).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original finalization result lost its matching Session stage"))?;}self.time_travel.finalize_outcome=None;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
-  if performed.is_some(){self.history.cache=None;self.note_time_travel_changed(success,true);}Ok(())
+  let mut performed=false;semio_framework_job::close_original_retained_step(cx,d,|_|{performed=true;let result=(||->Result<RetainedCloneStep,ValueError>{if success{if self.time_travel.session_retirement.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"completed time-travel Session retirement slot is occupied"))}let generation=self.time_travel.session.generation.wrapping_add(1);let base=self.time_travel.session.base;let original=std::mem::take(&mut self.time_travel.session);match ControlledRetirement::new(original){Ok(owner)=>self.time_travel.session_retirement=Some(owner),Err((error,original))=>{self.time_travel.session=original;return Err(error)}}self.time_travel.session.generation=generation;self.time_travel.session.base=base;}else{let generation=self.time_travel.session.generation;self.time_travel.session.apply(TimeTravelEvent::FinalizeFaulted{generation,code:code.to_owned()}).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original finalization result lost its matching Session stage"))?;}self.time_travel.finalize_outcome=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+  if performed{self.history.cache=None;self.note_time_travel_changed(success,true);}Ok(())
  }
 }

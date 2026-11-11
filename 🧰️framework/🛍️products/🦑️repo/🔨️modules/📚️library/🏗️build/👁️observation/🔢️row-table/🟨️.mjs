@@ -146,3 +146,32 @@ export function createRowTableV1({maximumRows=Infinity,maximumCharacters=Infinit
   clear,
  });
 }
+
+
+/**
+ * 🪢️ Creates a weak pool that makes equal observation rows one live instance, however many stored records and detached computations hand them over: unlike the bounded {@link createRowTableV1} it never empties itself, because it holds nothing a live row does not hold, so a working set larger than any table bound still costs one object per distinct row. The rows an analysis row nests are shared first, so equal nested rows are equal by their instance and an analysis row is keyed by its fields and those instances, never by the text of the whole record.
+ */
+export function createRowPoolV1(){
+ const pool=new Map(),numbers=new WeakMap(),dead=new FinalizationRegistry(key=>{if(pool.get(key)?.deref()===undefined)pool.delete(key);});
+ let next=0;
+ const number=row=>{let known=numbers.get(row);if(known===undefined)numbers.set(row,known=++next);return known;};
+ const stampOf=value=>value!==null&&typeof value==="object"&&Object.keys(value).length===5&&typeof value.sha256==="string"?value.size+":"+value.mtimeMs+":"+value.ctimeMs+":"+value.ino+":"+value.sha256:undefined;
+ const identity=row=>{
+  const fact=row.fact,head=row.kind+"\0"+row.path+"\0";
+  if(fact===null||typeof fact!=="object")return head+typeof fact+String(fact);
+  if(Array.isArray(fact.nestedObservations)&&Object.keys(fact).length===5&&typeof fact.provider==="string"&&typeof fact.revision==="string"&&typeof fact.resultSha256==="string"){const source=stampOf(fact.source);if(source!==undefined)return head+"a\0"+fact.provider+"\0"+fact.revision+"\0"+fact.resultSha256+"\0"+source+"\0"+fact.nestedObservations.map(number).join(",");}
+  const flat=stampOf(fact);
+  return flat!==undefined?head+"f\0"+flat:head+"j\0"+JSON.stringify(fact);
+ };
+ const share=row=>{
+  if(row.kind==="analysis"&&Array.isArray(row.fact?.nestedObservations)){const nested=row.fact.nestedObservations;for(let at=0;at<nested.length;at++)nested[at]=share(nested[at]);}
+  const key=identity(row),known=pool.get(key)?.deref();
+  if(known!==undefined)return known;
+  pool.set(key,new WeakRef(row));dead.register(row,key);return row;
+ };
+ return Object.freeze({
+  share,
+  rows(rows){for(let at=0;at<rows.length;at++)rows[at]=share(rows[at]);return rows;},
+  size:()=>pool.size,
+ });
+}

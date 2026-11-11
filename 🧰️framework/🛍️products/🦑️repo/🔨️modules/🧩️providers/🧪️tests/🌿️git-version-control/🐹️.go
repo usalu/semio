@@ -172,6 +172,32 @@ func aCheckpointCommitsAndAdvancesHead(ctx *host.Context) (host.Outcome, error) 
 	}}, nil
 }
 
+func stagingAnEmojiPathListsItVerbatim(ctx *host.Context) (host.Outcome, error) {
+	root, err := scratchRepo(ctx, true)
+	if err != nil {
+		return host.Outcome{}, err
+	}
+	folder := filepath.Join(root, "🧰️emoji folder")
+	if err := os.MkdirAll(folder, 0o755); err != nil {
+		return host.Outcome{}, err
+	}
+	if err := os.WriteFile(filepath.Join(folder, "🌿️notes.txt"), []byte("notes\n"), 0o644); err != nil {
+		return host.Outcome{}, err
+	}
+	provider := &repo.GitVersionControlProvider{}
+	if err := provider.StageAll(root); err != nil {
+		return host.Outcome{}, err
+	}
+	staged, err := provider.StagedFiles(root)
+	if err != nil {
+		return host.Outcome{}, err
+	}
+	if staged == nil {
+		staged = []string{}
+	}
+	return host.Outcome{Projection: map[string]any{"staged": staged}}, nil
+}
+
 func readingOutsideARepositoryIsAnError(ctx *host.Context) (host.Outcome, error) {
 	root, err := scratchRepo(ctx, false)
 	if err != nil {
@@ -193,6 +219,7 @@ func Adapter() *host.Adapter {
 		Subject("a-fresh-repository-reports-its-branch-and-head", aFreshRepositoryReportsItsBranchAndHead).
 		Subject("staging-lists-the-added-paths", stagingListsTheAddedPaths).
 		Subject("a-checkpoint-commits-and-advances-head", aCheckpointCommitsAndAdvancesHead).
+		Subject("staging-lists-an-emoji-path-verbatim", stagingAnEmojiPathListsItVerbatim).
 		Subject("reading-outside-a-repository-is-an-error", readingOutsideARepositoryIsAnError)
 }
 

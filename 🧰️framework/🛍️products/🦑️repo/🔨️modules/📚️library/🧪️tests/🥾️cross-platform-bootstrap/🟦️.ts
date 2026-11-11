@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🥾️ Cross-platform zero-touch laws for a fresh clone on devcontainer, native Windows, macOS and Linux: the stock
  * strict 256-unit path and Windows directory budgets, script encodings Windows PowerShell 5.1 and bash read correctly, the distribution-neutral Linux
  * linker, repo-local git configuration, the native bootstraps' provisioning contract and clone-resolvable workspaces.
@@ -109,7 +110,7 @@ describe("cross-platform bootstrap", () => {
     const contract = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🥾️nx-entrypoints/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(libraryRoot, "🧬️schema/🥾️nx-entrypoints/🔣️.json"), "utf8"));
     expect(new Ajv({ allErrors: true, strict: true }).compile(schema)(contract)).toBe(true);
-    const nodeOracle = spawnSync("node", ["--input-type=module", "-e", 'import {createRequire} from "node:module";import {readFileSync,realpathSync} from "node:fs";import {resolve} from "node:path";const rows=JSON.parse(readFileSync(0,"utf8")),load=createRequire(resolve(".nx/installation/package.json"));process.stdout.write(JSON.stringify(rows.map(row=>realpathSync(load.resolve(row.specifier)))));'], { cwd: repoRoot, input: JSON.stringify(contract.cases), encoding: "utf8", windowsHide: true, timeout: 10_000 });
+    const nodeOracle = spawnSync(registeredToolExecutableV1("node"), ["--input-type=module", "-e", 'import {createRequire} from "node:module";import {readFileSync,realpathSync} from "node:fs";import {resolve} from "node:path";const rows=JSON.parse(readFileSync(0,"utf8")),load=createRequire(resolve(".nx/installation/package.json"));process.stdout.write(JSON.stringify(rows.map(row=>realpathSync(load.resolve(row.specifier)))));'], { cwd: repoRoot, input: JSON.stringify(contract.cases), encoding: "utf8", windowsHide: true, timeout: 10_000 });
     expect(nodeOracle.status).toBe(0);
     const nodeTargets = JSON.parse(nodeOracle.stdout) as string[];
     const load = createRequire(join(repoRoot, ".nx/installation/package.json"));

@@ -38,5 +38,9 @@
   {"args": ["leases", "status"], "expected": null},
   {"args": ["tools", "list"], "expected": null},
   {"args": ["scheduler", "status"], "expected": null}
+ ],
+ "refusals": [
+  {"name": "the memory limit refuses the plan", "error": "PlanRefusedErrorV1", "frame": {"code": "memory", "retry": "later", "message": {"en": "The plan cannot continue: the service holds 2583 MB of its 2583 MB memory limit (safety margin 256 MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.", "de": "Der Plan kann nicht fortgesetzt werden: der Dienst belegt 2583 MB seines Speicherlimits von 2583 MB (Sicherheitsabstand 256 MB); er wurde abgebrochen, damit der Dienst am Leben bleibt; später erneut versuchen oder eine kleinere Auswahl anfragen."}}, "expected": {"code": "refused", "exit": 1, "en": "The plan cannot continue: the service holds 2583 MB of its 2583 MB memory limit (safety margin 256 MB), so it was cancelled to keep the service up; try again later or ask for a smaller selection.", "de": "Der Plan kann nicht fortgesetzt werden: der Dienst belegt 2583 MB seines Speicherlimits von 2583 MB (Sicherheitsabstand 256 MB); er wurde abgebrochen, damit der Dienst am Leben bleibt; später erneut versuchen oder eine kleinere Auswahl anfragen."}},
+  {"name": "a service that cannot answer fails the command", "error": "HostUnavailableErrorV1", "reason": "timeout", "expected": {"code": "failed", "exit": 1, "en": "The graph service could not answer (timeout); look at `repo service host status` and try again", "de": "Der Graph-Dienst konnte nicht antworten (timeout); `repo service host status` ansehen und erneut versuchen"}}
  ]
 }

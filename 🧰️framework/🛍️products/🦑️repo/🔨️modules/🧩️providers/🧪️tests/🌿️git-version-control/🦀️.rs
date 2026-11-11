@@ -82,6 +82,20 @@ mod subject {
         ])))
     }
 
+    /// 📂️ Staging a file under an emoji folder lists its path verbatim.
+    pub fn staging_an_emoji_path_lists_it_verbatim(ctx: &Context) -> Result<Outcome, String> {
+        let root = scratch(ctx, true)?;
+        let provider = provider();
+        let folder = PathBuf::from(&root).join("🧰️emoji folder");
+        std::fs::create_dir_all(&folder).map_err(|error| error.to_string())?;
+        std::fs::write(folder.join("🌿️notes.txt"), "notes\n").map_err(|error| error.to_string())?;
+        provider.stage_all(&root).map_err(|error| error.message)?;
+        let staged = provider.staged_files(&root).map_err(|error| error.message)?;
+        Ok(Outcome::projection(Json::Object(vec![
+            ("staged".to_string(), Json::Array(staged.into_iter().map(Json::String).collect())),
+        ])))
+    }
+
     /// 💾️ A checkpoint commits the working tree and moves HEAD forward.
     pub fn a_checkpoint_commits_and_advances_head(ctx: &Context) -> Result<Outcome, String> {
         let root = scratch(ctx, true)?;
@@ -120,6 +134,7 @@ pub fn adapter() -> Adapter {
         .subject("a-fresh-repository-reports-its-branch-and-head", subject::a_fresh_repository_reports_its_branch_and_head)
         .subject("staging-lists-the-added-paths", subject::staging_lists_the_added_paths)
         .subject("a-checkpoint-commits-and-advances-head", subject::a_checkpoint_commits_and_advances_head)
+        .subject("staging-lists-an-emoji-path-verbatim", subject::staging_an_emoji_path_lists_it_verbatim)
         .subject("reading-outside-a-repository-is-an-error", subject::reading_outside_a_repository_is_an_error);
     registered
 }

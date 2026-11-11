@@ -73,7 +73,5 @@ pub mod view {
     pub mod tests;
 }
 
-#[global_allocator]
-static ORIGINAL_FONT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[path="../../🔤️text/🧪️tests/🎟️original/🦀️.rs"]
 mod original_font_context;

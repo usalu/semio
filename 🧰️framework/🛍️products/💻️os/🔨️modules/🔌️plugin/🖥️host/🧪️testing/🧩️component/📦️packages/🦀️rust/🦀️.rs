@@ -24,8 +24,3 @@ semio_plugin::plugin_exports!(
 #[cfg(test)]
 #[path ="../../🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🦀️.rs"]
 mod sqlite_snapshot_tests;
-#[cfg(test)]
-use semio_framework_trace_memory_testing as test_allocation;
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;

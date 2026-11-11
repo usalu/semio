@@ -3,8 +3,6 @@ use super::*;
 use super::scratch_testing::ScratchCaller;
 use semio_framework_job::close_original_retained_step;
 use semio_framework_value::RetainedWorkOutcome;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn gesture(ids:Vec<String>)->GumballGesture{
  let leaf=GumballMotion::Translate([1.0,0.0,0.0]).leaf(ids.clone());
  GumballGesture{states:Vec::new(),verb:"translateSelection".into(),authoring_seed:"native-source".into(),base_revision:"native-base".into(),transaction:crate::protocol::TransactionRef{id:"native-tx".into(),tool:"native-tool".into()},entries:vec![(GENERATION3D_GUMBALL_LEAF_KEY.into(),leaf)],ids}

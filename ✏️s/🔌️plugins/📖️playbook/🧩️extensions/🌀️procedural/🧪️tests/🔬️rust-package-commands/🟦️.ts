@@ -1,9 +1,9 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
-import { buildBudgetMs } from "@semio-tech/framework/process/budget";
-import { runAdmittedExactCargoLawsV1 } from "@semio-tech/framework/process/cargo-test";
-import { runBun } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { buildBudgetMs } from "@semio-tech/process/budget";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { runBun } from "@semio-tech/process/execution";
 
 /** 🏃️ Runs the `GeometryContractScript` command under the caller's roots and invocation. */
 export async function runGeometryContractScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {

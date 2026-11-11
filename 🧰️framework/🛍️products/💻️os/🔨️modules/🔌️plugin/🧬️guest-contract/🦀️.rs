@@ -12,10 +12,6 @@ pub use semio_plugin_abi::{actor_input_wire, job_kinds, operation_authority, ret
 pub mod original_actor_context;
 pub use semio_plugin_actor_input as original_input;
 
-/// 🧮️ The heap witness the crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
-#[cfg(test)]
-#[global_allocator]
-static GUEST_CONTRACT_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 //#region 🧯️GuestFaults
 /// 🗝️ Conflicting ownership of one composer route.

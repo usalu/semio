@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -30,7 +31,7 @@ for(const row of corpus.cases) test(row.id,()=>{
    else if(kind==="symlink"){const target=join(root,"owned-link-target");mkdirSync(target,{recursive:true});symlinkSync(target,join(root,path),process.platform==="win32"?"junction":"dir");}
   }
   const oracle=String.raw`const fs=require("node:fs"),p=require("node:path"),toml=require("@iarna/toml");const root=process.argv[1],w=JSON.parse(process.argv[2]);const d=toml.parse(fs.readFileSync(p.join(root,w.manifest),"utf8"));const raw=w.field==="library-path"?d.lib.path:w.field==="workspace-path"?d.package.workspace+"/Cargo.toml":d.dependencies.wire.path+"/Cargo.toml";const components=(p.posix.dirname(w.manifest)+"/"+raw).split("/");let verdict=null;for(let i=0;i<components.length;i++){const prefix=root+"/"+components.slice(0,i+1).join("/");try{const info=fs.lstatSync(prefix);if(info.isSymbolicLink()){verdict="linked-input";break;}if(i<components.length-1&&!info.isDirectory()){verdict="non-directory-ancestor";break;}}catch(error){if(error.code!=="ENOENT"&&error.code!=="ENOTDIR")throw error;verdict=error.code==="ENOENT"?"missing-input":"non-directory-ancestor";break;}}console.log(JSON.stringify({verdict}));`;
-  const receipt=JSON.parse(execFileSync("node",["-e",oracle,root,JSON.stringify(row.authorityWitness)],{cwd:resolve(owner,"../../../../../../../../.."),encoding:"utf8",timeout:3_000})) as {verdict:string|null};
+  const receipt=JSON.parse(execFileSync(registeredToolExecutableV1("node"),["-e",oracle,root,JSON.stringify(row.authorityWitness)],{cwd:resolve(owner,"../../../../../../../../.."),encoding:"utf8",timeout:3_000})) as {verdict:string|null};
   writeFileSync(join(root,"node-physical-path-admission.json"),JSON.stringify(receipt));
   expect(receipt.verdict).toBe(row.expectedProblems[0]);
  }

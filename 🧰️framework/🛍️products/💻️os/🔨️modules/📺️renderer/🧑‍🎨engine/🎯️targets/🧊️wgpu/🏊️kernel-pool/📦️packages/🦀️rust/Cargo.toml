@@ -33,15 +33,15 @@ semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packa
 semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-renderer-wgpu-kernel-protocol = { path = "../../../📡️kernel-protocol/📦️packages/🦀️rust" }
 semio-renderer-wgpu-kernel-retained = { path = "../../../🗃️kernel-retained/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-hash = { path = "../../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-os-services = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin-host = { path = "../../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 

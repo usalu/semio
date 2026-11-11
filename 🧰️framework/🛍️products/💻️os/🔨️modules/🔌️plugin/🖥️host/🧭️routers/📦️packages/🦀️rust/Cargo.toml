@@ -30,10 +30,10 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 # ⚡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `⚡️effects/🦀️.rs`'s
 # `AsyncEffectExecutor` derives `OperationContext`/`ScopeHandle`/`ChannelPolicy` (this crate's own
 # vocabulary is domain-neutral, zero tokio) and dispatches onto `HttpPool`/`StorageScheduler`/
@@ -57,7 +57,7 @@ semio-plugin-host-post-turn-relay = { path = "../../../🔀️post-turn-relay/�
 semio-plugin-host-guest-runtime = { path = "../../../🎭️guest-runtime/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-host-post-turn-relay = { path = "../../../🔀️post-turn-relay/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }

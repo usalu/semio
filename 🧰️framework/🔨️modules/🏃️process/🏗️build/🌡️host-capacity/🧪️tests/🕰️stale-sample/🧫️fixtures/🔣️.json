@@ -1,0 +1,17 @@
+{
+ "host":{"version":1,"atMs":1000000,"platform":"linux","cores":10,"totalMegabytes":32768,"availableMegabytes":20000,"pressure":"normal","swapUsedMegabytes":0,"swapOutMegabytesPerSecond":0,"load":2,"openFiles":8000,"openFilesMaximum":245760,"attachedImages":null},
+ "ages":[
+  {"name":"a fresh sample is trusted","ageMs":0,"pressure":"normal","partial":false},
+  {"name":"a sample at the threshold is trusted","ageMs":30000,"pressure":"normal","partial":false},
+  {"name":"a sample past the threshold reads as raised pressure with partial counters","ageMs":30001,"pressure":"warn","partial":true},
+  {"name":"a critical sample stays critical","ageMs":600000,"hostPressure":"critical","pressure":"critical","partial":true}
+ ],
+ "fallback":[
+  {"name":"a failing read keeps the last good sample while it is recent","ageMs":5000,"fails":true,"expect":"last-good"},
+  {"name":"a failing read past the threshold yields the aged last sample","ageMs":90000,"fails":true,"expect":"aged"},
+  {"name":"a working read replaces the last sample","ageMs":90000,"fails":false,"expect":"fresh"}
+ ],
+ "request":{"id":"aaaaaaaa1","operation":"run","priority":"batch","minimumJobs":1,"preferredJobs":4,"fixedMegabytes":1024,"perJobMegabytes":1024,"cpuPerJob":1},
+ "second":{"id":"bbbbbbbb2","operation":"run","priority":"batch","minimumJobs":1,"preferredJobs":4,"fixedMegabytes":1024,"perJobMegabytes":1024,"cpuPerJob":1},
+ "admission":{"freshAdmitted":2,"staleAdmitted":1,"staleReason":"override","staleJobs":1}
+}

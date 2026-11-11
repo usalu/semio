@@ -48,6 +48,8 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
+/// 🪙️ Runs one original close ladder inside the turn's effect; a progressing step that recorded no work pays exactly one unit.
+pub(crate) fn retired<E:Into<semio_framework_value::RetirementPollExit>>(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,E>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_effect_step(cx,demand,|effect|{let result=advance(effect).map_err(Into::into);semio_framework_value::RetirementPollExit::settle(effect,result)})}
 //#region 🔖️Limits
 
 #[path = "⏱️limits-and-job-slot/🦀️.rs"]
@@ -94,6 +96,24 @@ macro_rules! selected_entry_required {
     ($ledger:expr,$step:expr) => {
         $crate::selected_entry_mut!($ledger).ok_or_else(||$crate::tool_run_slot_lost($step))
     };
+}
+
+/// 🧪️ Funded effect turns over one genuine fixture bank for the tests that close original owners.
+#[cfg(test)]
+pub(crate) mod test_effect {
+    use semio_framework_value::{RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneStep, RetainedWorkOutcome, RetainedWorkPoll, RetirementPollExit};
+    use semio_framework_value::retirement::RetirementStep;
+    use semio_framework_value_testing_admission::{EffectBank, Wallet};
+    pub fn bank() -> EffectBank { EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 20 }, 1 << 30)) }
+    pub fn settled<T, E>(bank: &mut EffectBank, grant: RetainedCloneGrant, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<T, E>) -> RetainedWorkOutcome<T, E> {
+        match bank.run(grant, 16, operation).0 { RetainedWorkPoll::Complete(turn) => turn, RetainedWorkPoll::Pending { .. } => panic!("a synchronous funded turn stayed pending") }
+    }
+    pub fn exit_step(bank: &mut EffectBank, grant: RetainedCloneGrant, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, RetirementPollExit>) -> RetainedWorkOutcome<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+        settled(bank, grant, |effect| { let result = operation(effect); RetirementPollExit::settle(effect, result) })
+    }
+    pub fn cursor_step(bank: &mut EffectBank, grant: RetainedCloneGrant, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> RetirementStep) -> Result<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+        settled(bank, grant, |effect| { let step = operation(effect); let work = effect.performed_work(); RetainedWorkPoll::Complete(RetainedWorkOutcome { result: match step { RetirementStep::Progress(progress, _) => Ok(RetainedCloneStep::Progress(progress)), RetirementStep::Failure(error, _) => Err(error), _ => Ok(RetainedCloneStep::Progress(Default::default())) }, work }) }).result
+    }
 }
 
 #[cfg(test)]

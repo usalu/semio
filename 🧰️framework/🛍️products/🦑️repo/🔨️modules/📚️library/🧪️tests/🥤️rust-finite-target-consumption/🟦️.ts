@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { normalizationSourceDeclarations, normalizationSourceFiles } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
@@ -365,7 +366,7 @@ test("actual rustc proves inherited env macro provenance is part of physical sou
 
 test("actual Cargo metadata independently agrees with explicit lib-root and module ownership inputs", () => {
   const f = fixture({ ...vector.cases[0], id: "cargo-metadata-oracle" });
-  const result = Bun.spawnSync(["cargo", "metadata", "--offline", "--no-deps", "--format-version", "1", "--manifest-path", join(f.directory, f.manifest)], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });
+  const result = Bun.spawnSync([registeredToolExecutableV1("cargo"), "metadata", "--offline", "--no-deps", "--format-version", "1", "--manifest-path", join(f.directory, f.manifest)], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });
   expect(result.exitCode, result.stderr.toString()).toBe(0);
   const metadata = JSON.parse(result.stdout.toString()), library = metadata.packages[0].targets.find((target: any) => target.kind.includes("lib"));
   expect(metadata.packages).toHaveLength(1);

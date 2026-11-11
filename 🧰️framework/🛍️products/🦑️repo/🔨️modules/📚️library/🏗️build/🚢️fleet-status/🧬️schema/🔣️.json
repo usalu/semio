@@ -38,6 +38,7 @@
      "maximum": 30,
      "underReservedBasisPoints": 15000,
      "capacityWaitSeconds": 600,
+     "sampleStaleSeconds": 30,
      "leaseWaitSeconds": 900,
      "imageFullBasisPoints": 9000,
      "imageShownBasisPoints": 8000
@@ -173,6 +174,7 @@
       "imageShownBasisPoints",
       "leaseWaitSeconds",
       "maximum",
+      "sampleStaleSeconds",
       "underReservedBasisPoints"
      ],
      "properties": {
@@ -185,6 +187,10 @@
        "minimum": 0
       },
       "capacityWaitSeconds": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "sampleStaleSeconds": {
        "type": "integer",
        "minimum": 0
       },
@@ -215,8 +221,12 @@
      "de": "Flotte {time}: {running} laufen, {blocked} blockiert, {waiting} warten; {alerts} Alarm(e), {warnings} Warnung(en)"
     },
     "memory": {
-     "en": "Memory: {admitted} MB admitted, {observed} MB real over {grants} run(s); host {available} of {total} MB free, {spare} MB above the {floor} MB floor; pressure {pressure}, swap {swap} MB, load {load}",
-     "de": "Speicher: {admitted} MB zugesagt, {observed} MB real in {grants} Lauf/Läufen; Rechner {available} von {total} MB frei, {spare} MB über der Untergrenze von {floor} MB; Druck {pressure}, Auslagerung {swap} MB, Last {load}"
+     "en": "Memory: {admitted} MB admitted, {observed} MB real over {grants} run(s); host {available} of {total} MB free, {spare} MB above the {floor} MB floor; pressure {pressure}, swap {swap} MB, load {load}; sample {age} old",
+     "de": "Speicher: {admitted} MB zugesagt, {observed} MB real in {grants} Lauf/Läufen; Rechner {available} von {total} MB frei, {spare} MB über der Untergrenze von {floor} MB; Druck {pressure}, Auslagerung {swap} MB, Last {load}; Messung {age} alt"
+    },
+    "memoryNone": {
+     "en": "Memory: {admitted} MB admitted, {observed} MB real over {grants} run(s); no host sample available",
+     "de": "Speicher: {admitted} MB zugesagt, {observed} MB real in {grants} Lauf/Läufen; keine Messung des Rechners verfügbar"
     },
     "runsHeader": {
      "en": "Runs ({count}, {shown} shown)",
@@ -461,6 +471,10 @@
     "finding.memory-pressure": {
      "en": "Host memory pressure is {pressure}",
      "de": "Der Speicherdruck des Rechners ist {pressure}"
+    },
+    "finding.sample-stale": {
+     "en": "The host sample is {age} old, so admission lets one run in at a time",
+     "de": "Die Messung des Rechners ist {age} alt, daher wird nur ein Lauf nach dem anderen zugelassen"
     },
     "finding.under-reserved": {
      "en": "pid {pid} uses {observed} MB but only {reserved} MB are admitted",
@@ -889,6 +903,7 @@
      "type": "object",
      "additionalProperties": false,
      "required": [
+      "ageSeconds",
       "availableMegabytes",
       "cores",
       "load",
@@ -898,6 +913,10 @@
       "totalMegabytes"
      ],
      "properties": {
+      "ageSeconds": {
+       "type": "integer",
+       "minimum": 0
+      },
       "platform": {
        "type": "string"
       },
@@ -1927,6 +1946,7 @@
       "observedMegabytes",
       "overReservedMegabytes",
       "pressure",
+      "sampleAgeSeconds",
       "spareMegabytes",
       "swapUsedMegabytes",
       "totalMegabytes",
@@ -1942,6 +1962,17 @@
       "availableMegabytes": {
        "type": "integer",
        "minimum": 0
+      },
+      "sampleAgeSeconds": {
+       "anyOf": [
+        {
+         "type": "integer",
+         "minimum": 0
+        },
+        {
+         "type": "null"
+        }
+       ]
       },
       "floorMegabytes": {
        "type": "integer",

@@ -2,7 +2,7 @@
 
 //#region 🧭️AcceptanceLaws
 /// 🔁️ A history verb as `actor`, admitted and settled, answering the fault code of a refusal (`None`: applied).
-async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
+async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
     let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let settled = match app.handle_action(action, None, &meta, identity).await {
         Ok(admitted) => semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await,
@@ -57,7 +57,7 @@ async fn an_interior_undo_over_a_long_history_replays_over_turns_and_cancel_leav
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let actor = "author".to_string();
     let mut undeferred = seeded_app_as(&fixture, &actor, mounted_policy, &mut identity).await;
@@ -126,7 +126,7 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let mut source = seeded_app_as(&fixture, &actor, mounted_policy, &mut identity).await;
@@ -193,7 +193,7 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let actor = "author".to_string();
     let mut app = seeded_app_as(&fixture, &actor, mounted_policy, &mut identity).await;

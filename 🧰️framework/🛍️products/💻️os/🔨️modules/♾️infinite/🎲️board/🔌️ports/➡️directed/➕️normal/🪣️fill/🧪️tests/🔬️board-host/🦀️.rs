@@ -224,24 +224,24 @@ fn empty_fill_capture_and_ingress_keep_every_original_descriptor_until_admitted(
 }
 
 #[cfg(test)]
-struct BoardFillOriginalFixture { caller: semio_framework_job::OriginalJobFixtureCaller, decoder: semio_framework_job::OriginalJobDecodeOwner }
+struct BoardFillOriginalFixture { caller: semio_framework_job::OriginalJobFixtureCaller, decoder: semio_framework_job::OriginalJobDecodeOwner, construction: semio_framework_job::OriginalConstructionAdmission }
 #[cfg(test)]
 impl BoardFillOriginalFixture {
     fn stock() -> semio_framework_value::RetainedCloneGrant { semio_framework_value::RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 64 << 20, maximum_capacity_bytes: 64 << 20, maximum_release_bytes: 64 << 20, maximum_depth: 128 } }
-    fn new() -> Self { Self { caller: semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(11), semio_framework_job::Generation(3), Self::stock(), || Some(0), u64::MAX, 100_000), decoder: semio_framework_job::OriginalJobDecodeOwner::empty() } }
+    fn new() -> Self { Self { caller: semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(11), semio_framework_job::Generation(3), Self::stock(), || Some(0), u64::MAX, 100_000), decoder: semio_framework_job::OriginalJobDecodeOwner::empty(), construction: Default::default() } }
     fn ingress(&mut self) -> BoardFillSnapshotIngress {
         let mut output = None;
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.caller.turn_with_decoder(Self::stock(), &mut self.decoder, |cx| BoardFillSnapshotIngress::admit_original(0.0, &NEUTRAL_BOARD_NAMING, &mut output, cx)));
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.caller.turn_with_decoder(Self::stock(), &mut self.decoder, |cx| BoardFillSnapshotIngress::admit_original(&mut self.construction, 0.0, &NEUTRAL_BOARD_NAMING, &mut output, cx)));
         assert!(result.unwrap()); let receipt = self.caller.receipt(); assert_eq!((receipt.retained_capacity_bytes, receipt.released_bytes),(heap.requested_bytes,heap.released_bytes)); output.unwrap()
     }
     fn capture(&mut self) -> BoardFillSnapshotCapture {
         let mut output = None;
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.caller.turn_with_decoder(Self::stock(), &mut self.decoder, |cx| BoardFillSnapshotCapture::admit_original(0.0, &NEUTRAL_BOARD_NAMING, &mut output, cx)));
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.caller.turn_with_decoder(Self::stock(), &mut self.decoder, |cx| BoardFillSnapshotCapture::admit_original(&mut self.construction, 0.0, &NEUTRAL_BOARD_NAMING, &mut output, cx)));
         assert!(result.unwrap()); let receipt = self.caller.receipt(); assert_eq!((receipt.retained_capacity_bytes, receipt.released_bytes),(heap.requested_bytes,heap.released_bytes)); output.unwrap()
     }
     fn job(&mut self, snapshot: BoardFillSnapshot, count: u32, semantic: semio_framework_job::Operation) -> BoardFillJob {
         let mut source = Some(snapshot); let mut output = None;
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.caller.turn_with_decoder(Self::stock(), &mut self.decoder, |cx| BoardFillJob::admit_original(&mut source, count, semantic, &mut output, cx)));
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.caller.turn_with_decoder(Self::stock(), &mut self.decoder, |cx| BoardFillJob::admit_original(&mut self.construction, &mut source, count, semantic, &mut output, cx)));
         assert!(result.unwrap()); assert!(source.is_none()); let receipt = self.caller.receipt(); assert_eq!((receipt.retained_capacity_bytes, receipt.released_bytes),(heap.requested_bytes,heap.released_bytes)); output.unwrap()
     }
     fn close_job(&mut self, job: &mut BoardFillJob, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_job::InteractiveJobCloseStep { use semio_framework_job::InteractiveJob; self.caller.turn(grant, |cx| cx.with_original_retirement(|cx| job.close_step(cx))).unwrap() }
@@ -254,6 +254,7 @@ impl BoardFillOriginalFixture {
         self.caller.turn(grant, |cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(semio_framework_value::RetainedCloneStep::Progress(owner.close_step(grant).progress())))).unwrap()
     }
     fn finish(mut self) {
+        while !self.construction.terminal_is_empty() { self.caller.turn(Self::stock(), |cx| { self.construction.close_step(cx)?; Ok(()) }).unwrap(); }
         while !self.decoder.terminal_is_empty() { self.caller.turn(Self::stock(), |cx| { let step = self.decoder.close_step(cx.retained_grant())?; cx.consume_retained(step.progress())?; cx.consume_fuel(step.progress().copied_items as u64); Ok(()) }).unwrap(); }
         self.caller.retire(Self::stock());
     }
@@ -272,7 +273,7 @@ fn board_fill_original_descriptors_keep_source_and_semantic_serial_separate() {
     for axis in law["deniedAxes"].as_array().unwrap() {
         let mut grant = exact;
         match axis.as_str().unwrap() { "items" => grant.maximum_items = 0, "copy" => grant.maximum_copy_bytes -= 1, "capacity" => grant.maximum_capacity_bytes -= 1, "depth" => grant.maximum_depth = 0, _ => panic!("unknown original denial axis") }
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(grant, &mut decoder, |cx| BoardFillSnapshotIngress::admit_original(0.0, &NEUTRAL_BOARD_NAMING, &mut denied, cx)));
+        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(grant, &mut decoder, |cx| BoardFillSnapshotIngress::admit_original(&mut original.construction, 0.0, &NEUTRAL_BOARD_NAMING, &mut denied, cx)));
         assert!(!result.unwrap()); assert!(denied.is_none()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
     let mut ingress = original.ingress();
@@ -304,14 +305,14 @@ fn board_fill_capture_original_page_births_keep_pending_on_each_denied_axis() {
         for axis in 0..4 {
             let mut denied = BoardFillOriginalFixture::stock();
             match axis { 0 => denied.maximum_items = 0, 1 => denied.maximum_copy_bytes = demand.copy_bytes - 1, 2 if demand.capacity_bytes != 0 => denied.maximum_capacity_bytes = demand.capacity_bytes - 1, 2 => continue, _ => denied.maximum_depth = demand.depth - 1 }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(denied, &mut original.decoder, |cx| capture.step(&scene, &style, &brush, cx)));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(denied, &mut original.decoder, |cx| capture.step(&mut original.construction, &scene, &style, &brush, cx)));
             assert!(matches!(step.unwrap(), BoardFillCaptureStep::Pending));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(original.caller.receipt(), Default::default());
             assert!(capture.node.is_some());
             assert_eq!(capture.snapshot.as_ref().unwrap().nodes.len, index);
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(BoardFillOriginalFixture::stock(), &mut original.decoder, |cx| capture.step(&scene, &style, &brush, cx)));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original.caller.turn_with_decoder(BoardFillOriginalFixture::stock(), &mut original.decoder, |cx| capture.step(&mut original.construction, &scene, &style, &brush, cx)));
         assert!(matches!(step.unwrap(), BoardFillCaptureStep::Pending));
         let receipt = original.caller.receipt();
         assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));

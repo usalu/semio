@@ -114,18 +114,22 @@ func (e BreachPriority) String() string {
 
 // ⬛️AllowedLLMs holds the allowed LLM values across providers.
 var AllowedLLMs = []string{
+	"fable-5-2",
+	"opus-5-5",
 	"opus-4-7",
 	"opus-4-6",
 	"opus-4-5",
 	"opus-4-1",
 	"opus-4",
 	"opus-3",
+	"sonnet-5-5",
 	"sonnet-5",
 	"sonnet-4-6",
 	"sonnet-4-5",
 	"sonnet-4",
 	"sonnet-3-7",
 	"sonnet-3-5",
+	"haiku-5-5",
 	"haiku-4-5",
 	"haiku-4",
 	"haiku-3-5",

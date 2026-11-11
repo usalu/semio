@@ -46,7 +46,7 @@ semio-os-store-retirement = { path = "../../../♻️retirement/📦️packages/
 semio-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-os-directory = { path = "../../../../📇️directory/📦️packages/🦀️rust" }
 semio-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }

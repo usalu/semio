@@ -9,7 +9,6 @@
     "heldWitnesses",
     "witnessWork",
     "witnessItems",
-    "witnessCopyBytes",
     "witnessCapacityBytes",
     "witnessReleaseBytes",
     "maximumAdmissionTurns",
@@ -37,9 +36,6 @@
     },
     "witnessItems": {
       "const": 1
-    },
-    "witnessCopyBytes": {
-      "const": 0
     },
     "witnessCapacityBytes": {
       "const": 0

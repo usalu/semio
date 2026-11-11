@@ -9,7 +9,9 @@ export function emitTypeScriptDeclarations(entry: string, workspace: string): Re
   const output=join(workspace,".declaration-data"),files=new Map<string,string>();let bytes=0,capturedBytes=0;const append=(name:string,text:string)=>{const size=Buffer.byteLength(text);if(files.has(name)||files.size>=16384||size>16777216-bytes)throw Error("Declaration data capacity exceeded");bytes+=size;files.set(name,text);};const read=(path:string)=>{const before=lstatSync(path);if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1||before.size>16777216-bytes)throw Error("Finite declaration input required");const text=readFileSync(path,"utf8"),after=lstatSync(path);if(["dev","ino","size","mtimeMs","ctimeMs"].some(key=>before[key as keyof typeof before]!==after[key as keyof typeof after])||Buffer.byteLength(text)!==before.size)throw Error("Declaration input changed during bounded read");return text;};
   const compiler = createRequire(join(workspace, "package.json"))("typescript");
   const options = { allowImportingTsExtensions: true, module: compiler.ModuleKind.ESNext, moduleResolution: compiler.ModuleResolutionKind.Bundler, resolveJsonModule: true, allowSyntheticDefaultImports: true, strict: true, skipLibCheck: true, target: compiler.ScriptTarget.ES2022, lib:[...typeScriptLibraryFilesV1()], declaration: true, emitDeclarationOnly: true, rootDir: workspace, outDir: output };
-  const program = compiler.createProgram([entry], options), emitted = new Map<string, string>(), sources = new Map<string, string>();
+  const roots=[entry],owned=(file:string)=>!file.split(/[\\/]/u).includes("node_modules")&&relative(workspace,file).split(/[\\/]/u)[0]!=="..";
+  let program=compiler.createProgram(roots,options);for(let grown=true;grown;){grown=false;for(const file of program.getSourceFiles()){const path=resolve(file.fileName);if(!file.isDeclarationFile&&program.isSourceFileFromExternalLibrary(file)&&owned(path)&&!roots.includes(path)){roots.push(path);grown=true;}}if(grown)program=compiler.createProgram(roots,options);}
+  const emitted = new Map<string, string>(), sources = new Map<string, string>();
   const result = program.emit(undefined, (file: string, text: string, _bom: boolean, _error: unknown, originals: readonly { fileName: string }[] | undefined) => {
     if (!/\.d\.[cm]?ts$/u.test(file)) return;
     const source = resolve(originals?.[0]?.fileName ?? join(workspace, relative(output, file).replace(/\.d\.([cm]?)ts$/u, ".$1ts")));
@@ -23,11 +25,11 @@ export function emitTypeScriptDeclarations(entry: string, workspace: string): Re
     const origin = pending[index]!, text = emitted.get(origin)!, syntax = compiler.createSourceFile(origin, text, compiler.ScriptTarget.Latest, true), edits: { start: number; end: number; value: string }[] = [];
     const visit = (node: any): void => {
       const literal = (compiler.isImportDeclaration(node) || compiler.isExportDeclaration(node)) ? node.moduleSpecifier : compiler.isImportTypeNode(node) && compiler.isLiteralTypeNode(node.argument) ? node.argument.literal : compiler.isExternalModuleReference(node) ? node.expression : undefined;
-      if (literal && compiler.isStringLiteral(literal) && literal.text.startsWith(".")) {
+      if (literal && compiler.isStringLiteral(literal)) {
         const resolved = compiler.resolveModuleName(literal.text, origin, options, compiler.sys).resolvedModule;
         if (resolved) {
           const source = resolve(resolved.resolvedFileName);
-          if (!sources.has(source) && !resolved.isExternalLibraryImport && existsSync(source)) {
+          if (literal.text.startsWith(".") && !sources.has(source) && !resolved.isExternalLibraryImport && existsSync(source)) {
             sources.set(source, source);
             if (source.endsWith(".json")) append("🧬️types/"+name(source), JSON.stringify(JSON.parse(read(source))) + "\n");
             else if (/\.d\.[cm]?ts$/u.test(source)) { if(pending.length>=16384)throw Error("Declaration source count exceeded");emitted.set(source, read(source)); pending.push(source); }

@@ -35,9 +35,9 @@ impl<'a> FontReader<'a>{
  pub fn u32(&self,at:usize)->Result<u32,&'static str>{self.range(at,4)?;Ok(u32::from_be_bytes([self.bytes[at],self.bytes[at+1],self.bytes[at+2],self.bytes[at+3]]))}
 }
 #[derive(semio_framework_value::RetireOwned)]
-struct AdmissionOwners<S:RetireOwned>{source:Option<S>,failure:Option<&'static str>}
+pub struct AdmissionOwners<S:RetireOwned>{source:Option<S>,failure:Option<&'static str>}
 pub struct FontFaceAdmissionJob<S:FontSource>{owners:AdmissionOwners<S>,source_pointer:usize,source_length:usize,limits:FontOutlineLimits,phase:u8,at:usize,count:usize,tables:[(u32,FontTable);128],table_count:usize,selected:Option<FontFace>,cmap_at:usize,cmap_records:usize,cmap_rank:u8,cmap_segment:usize,previous_end:Option<u32>,work:u64,cancelled:bool}
-impl<S:FontSource+'static> RetireOwned for FontFaceAdmissionJob<S>{fn retirement(self)->Box<dyn RetirementCursor>{self.owners.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
+impl<S:FontSource+'static> RetireOwned for FontFaceAdmissionJob<S>{type RetirementCursor=<AdmissionOwners<S> as RetireOwned>::RetirementCursor;fn retirement_seed(self)->Self::RetirementCursor{self.owners.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
 impl<S:FontSource> FontFaceAdmissionJob<S>{
  pub fn new(source:S,limits:FontOutlineLimits)->Self{let failure=(!(64..=67108864).contains(&limits.max_font_bytes)||source.as_ref().len()>limits.max_font_bytes||!(1..=128).contains(&limits.max_tables)||!(1..=1000000000).contains(&limits.max_work)).then(||"Invalid font admission limits".into());let source_pointer=source.as_ref().as_ptr()as usize;let source_length=source.as_ref().len();Self{owners:AdmissionOwners{source:Some(source),failure},source_pointer,source_length,limits,phase:0,at:0,count:0,tables:[(0,FontTable::default());128],table_count:0,selected:None,cmap_at:0,cmap_records:0,cmap_rank:0,cmap_segment:0,previous_end:None,work:0,cancelled:false}}
  fn table(&self,tag:u32)->Option<FontTable>{self.tables[..self.table_count].iter().find(|entry|entry.0==tag).map(|entry|entry.1)}

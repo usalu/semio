@@ -1,7 +1,7 @@
-import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
+import { runArtifactRustTests } from "@semio-tech/process/cargo-test";
 import { resolve } from "node:path";
-import { BundleScript, scriptInvocationBudget } from "@semio-tech/framework/process/routing";
-import { runBudgetedTestCommand } from "@semio-tech/framework/process/test-execution";
+import { BundleScript, scriptInvocationBudget } from "@semio-tech/process/routing";
+import { runBudgetedTestCommand } from "@semio-tech/process/test-execution";
 
 
 /** 📸️ Qualifies complete JPEG semantic receiving inputs under the original invocation. */

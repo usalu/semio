@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { test, expect } from "bun:test";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
@@ -7,7 +8,7 @@ import { discoverCargoWorkspaces, cargoRepositoryPackages, cargoWorkspaceForMani
 const owner=resolve(import.meta.dir,"../.."),fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🪆️nested-owners/🔣️.json"),"utf8")),artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
 const put=(root:string,path:string,text:string):void=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);};
-const native=(root:string,manifest:string)=>Bun.spawnSync(["cargo","metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,manifest)],{cwd:root,stdout:"pipe",stderr:"pipe"});
+const native=(root:string,manifest:string)=>Bun.spawnSync([registeredToolExecutableV1("cargo"),"metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,manifest)],{cwd:root,stdout:"pipe",stderr:"pipe"});
 const pkg=(name:string,dependencies="")=>'[package]\nname="'+name+'"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="🦀️.rs"\n'+dependencies;
 test("nested owner corpus is closed and admits self-package manifest authority",()=>{
  const admission=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/📇️discovery/🔣️.json"),"utf8")));

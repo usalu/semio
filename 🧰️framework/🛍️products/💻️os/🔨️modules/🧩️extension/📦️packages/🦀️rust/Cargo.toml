@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-os-semio = { path = "../../../🧬️semio/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]

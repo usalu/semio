@@ -15,6 +15,3 @@ pub use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 mod mirror;
 pub use mirror::*;
 
-#[cfg(test)]
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

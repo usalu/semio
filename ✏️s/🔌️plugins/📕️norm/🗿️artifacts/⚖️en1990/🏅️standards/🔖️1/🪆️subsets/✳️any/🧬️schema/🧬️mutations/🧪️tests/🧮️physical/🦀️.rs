@@ -8,8 +8,6 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use semio_s_artifact_norm_en1990_mutations::En1990Mutation;
 use std::sync::Arc;
 
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 trait Receipt{fn receipt(&self)->RetainedCloneProgress;}
 impl Receipt for RetainedCloneStep{fn receipt(&self)->RetainedCloneProgress{self.progress()}}

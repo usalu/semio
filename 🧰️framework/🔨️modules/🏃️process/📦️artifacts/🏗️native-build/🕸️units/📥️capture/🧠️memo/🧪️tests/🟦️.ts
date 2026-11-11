@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🧰️tools/🏃️run/🟦️.ts";
 /** 🧠 Contract: Cargo planning serves `cargo metadata` and `--unit-graph` from its memo exactly while nothing Cargo derived them from moved (source text and unrelated files or environment keep it; manifests, lock, auto-discovered targets, build scripts, Cargo-read environment, configuration and features move it; a workspace whose members Cargo expands from a glob is never remembered, because a new member moves no recorded text and the lock receipt only re-reads the manifests it recorded), and whatever it serves equals what Cargo itself plans right now.
  * @see ../🟦️.ts
  * @see ../../🟦️.ts */
@@ -29,13 +30,13 @@ function workspace(root:string){
 test("the record schema accepts what the memo writes",async()=>{expect(new Ajv({strict:false}).compile(schema)({version:1,key:"0".repeat(64),inputs:[{kind:"text",path:"/x/Cargo.toml",answer:"absent"}],metadata:{},units:{}})).toBe(true);});
 
 test("planning is served from the memo exactly while Cargo's inputs hold, and every served plan equals Cargo's own plan now",async()=>{
- registerCargoLockEnsurerV1(async request=>{if(!request.force)return "current";expect(spawnSync("cargo",["generate-lockfile","--offline","--manifest-path",join(request.workspaceRoot,"Cargo.toml")],{env:request.environment,encoding:"utf8"}).status).toBe(0);return "refreshed";});
+ registerCargoLockEnsurerV1(async request=>{if(!request.force)return "current";expect(spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline","--manifest-path",join(request.workspaceRoot,"Cargo.toml")],{env:request.environment,encoding:"utf8"}).status).toBe(0);return "refreshed";});
  const base=realpathSync(mkdtempSync(join(tmpdir(),"cpm-")));
  try{for(const row of fixture.cases)await routing.withScriptProcessEnvelope(routing.createScriptProcessEnvelope({version:1,owner:"cargo:plan-memo-law",maximumElapsedMilliseconds:120000},{native:{fixture:"cargo-plan-memo"}},Date.now()),async original=>{
   const control:ResourceLeaseControl=routing.createIssuedResourceControlV1(original,"cargo:plan-memo-law",0);
   const root=join(base,row.id.replaceAll(" ","-")),put=workspace(root),memo=cargoPlanMemoV1(join(base,"memo-"+root.length+row.id.length,row.id.replaceAll(" ","-")));let environment:Record<string,string|undefined>={...process.env,RUSTUP_TOOLCHAIN:channel,CARGO_TARGET_DIR:join(root,"..",row.id.replaceAll(" ","-")+"-target"),CARGO_NET_OFFLINE:"true"};let args=["test","--no-run","--manifest-path",join(root,"Cargo.toml"),"-p","memo-app"];
   if(row.edit==="glob-member"){put("Cargo.toml",'[workspace]\nresolver="2"\nmembers=["app","core","extra/*"]\n');put("extra/one/Cargo.toml",'[package]\nname="memo-one"\nversion="0.1.0"\nedition="2021"\n');put("extra/one/src/lib.rs","pub fn one() -> u8 { 1 }\n");args=["test","--no-run","--manifest-path",join(root,"Cargo.toml"),"--workspace"];}
-  expect(spawnSync("cargo",["generate-lockfile","--offline","--manifest-path",join(root,"Cargo.toml")],{env:environment,encoding:"utf8"}).status).toBe(0);
+  expect(spawnSync(registeredToolExecutableV1("cargo"),["generate-lockfile","--offline","--manifest-path",join(root,"Cargo.toml")],{env:environment,encoding:"utf8"}).status).toBe(0);
   const plan=(port:CargoCompilerPlanningPortV1)=>captureCargoCompilationGraphV1({workspaceRoot:root,cwd:root,program:"cargo",prefix:[],args,environment,maximumOutputBytes:cargoPlanningOutputBytesV1},control,port);
   await pause();const first=counted(actualCargoCompilerPlanningPortV1({plans:memo}));await plan(first.port);expect([row.id,"cold",first.seen.plans]).toEqual([row.id,"cold",2]);
   if(row.edit==="source")put("core/src/lib.rs","pub fn core() -> u8 { 2 }\n");

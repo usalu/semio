@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {spawnSync} from "node:child_process";
@@ -24,7 +25,7 @@ for(const row of corpus.cases)test("Repository original receiving "+row.name,asy
  const source=row.mode==="lines"?'process.stdout.write("a\\nb\\nc\\n")':'require("node:fs").writeFileSync(process.argv[1],"ready");process.stdout.write("ready\\n")';
  const policy:Policy={...corpus.policy,maximumElapsedMilliseconds:row.mode==="zero"?0:5000};
  let outcome="ready",refusal:unknown;try{const pending=execute(invocation,"node",["-e",source,marker],process.cwd(),row.name,policy);expect(existsSync(marker)).toBe(false);await pending;}catch(error){outcome="refused";refusal=error;}
- const oracle=spawnSync("node",["-e",String.raw`const {spawnSync}=require("node:child_process");const mode=process.argv[1];if(["cancel","reject","zero"].includes(mode)){process.stdout.write("refused");}else{const child=spawnSync(process.execPath,["-e",mode==="lines"?'console.log("a");console.log("b");console.log("c")':'console.log("ready")'],{encoding:"utf8"});const lines=child.stdout.split(String.fromCharCode(10)).filter(Boolean).length;process.stdout.write(child.status===0&&lines<=2?"ready":"refused");}`,row.mode],{encoding:"utf8",timeout:5000});
+ const oracle=spawnSync(registeredToolExecutableV1("node"),["-e",String.raw`const {spawnSync}=require("node:child_process");const mode=process.argv[1];if(["cancel","reject","zero"].includes(mode)){process.stdout.write("refused");}else{const child=spawnSync(process.execPath,["-e",mode==="lines"?'console.log("a");console.log("b");console.log("c")':'console.log("ready")'],{encoding:"utf8"});const lines=child.stdout.split(String.fromCharCode(10)).filter(Boolean).length;process.stdout.write(child.status===0&&lines<=2?"ready":"refused");}`,row.mode],{encoding:"utf8",timeout:5000});
  expect(oracle.status).toBe(0);expect(oracle.stdout).toBe(row.expected);expect(outcome).toBe(row.expected);
  if(row.mode==="cancel")expect(refusal).toBe(original.signal.reason);
  if(row.mode==="reject")expect(String(refusal)).toContain("publication refused");

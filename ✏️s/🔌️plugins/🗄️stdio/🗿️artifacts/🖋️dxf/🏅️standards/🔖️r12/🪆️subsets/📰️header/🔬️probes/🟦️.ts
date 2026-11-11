@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { cargoTargetDirectory } from "@semio-tech/framework/process/execution";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { cargoTargetDirectory } from "@semio-tech/process/execution";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 //#endregion 🔌️Adapters
 

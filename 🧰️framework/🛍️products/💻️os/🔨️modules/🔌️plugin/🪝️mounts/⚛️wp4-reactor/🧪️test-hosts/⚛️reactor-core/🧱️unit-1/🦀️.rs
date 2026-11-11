@@ -22,7 +22,7 @@ use semio_plugin_reactor_tasks::TASK_EXECUTOR;
 use semio_plugin_reactor_tasks::TASK_RECORDS;
 use semio_plugin_reactor_tasks::TASK_RESUMES;
 use semio_plugin_reactor_tasks::tasks_task_lane::TaskResumeOutcome;
-use semio_framework_plugin_reactor_turn::TurnMoreWorkSources;
+use semio_plugin_reactor_turn::TurnMoreWorkSources;
 use semio_framework::kernel::UiPatch;
 use semio_plugin_reactor_lifecycle::life_reactor_close::activate_reactor_close;
 use semio_plugin_reactor_tasks::tasks_extension_continuation::append_extension_response_page;
@@ -33,7 +33,7 @@ use semio_plugin_reactor_lifecycle::instance_lifetime;
 use semio_ui_runtime::is_stale_intent;
 use semio_plugin_reactor_patches as patches;
 use semio_plugin_reactor_lifecycle as pending;
-use semio_framework_plugin_reactor_turn as turn;
+use semio_plugin_reactor_turn as turn;
 use semio_ui_contract as ui_contract;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
@@ -43,7 +43,7 @@ use semio_plugin_reactor_lifecycle::life_reactor_close::reactor_close_fault;
 use semio_plugin_reactor_lifecycle::life_reactor_close::release_reactor_close;
 use semio_plugin_actor_host::requests;
 use semio_plugin_reactor_lifecycle::life_reactor_close::reserve_reactor_close;
-use semio_framework_plugin_reactor_turn::turn_close_step::step_reactor_close;
+use semio_plugin_reactor_turn::turn_close_step::step_reactor_close;
 use semio_plugin_reactor_tasks::tasks_extension_continuation::take_extension_response;
 
 #[cfg(test)]

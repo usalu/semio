@@ -27,11 +27,11 @@ path = "../../🧬️preparation/✏️apply/🧪️tests/🦀️.rs"
 
 [dependencies]
 semio-os-store-text-io={path="../../../../../🏪️store/🚪️io/📦️packages/🦀️rust"}
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-plugin-window-config-mutation = { path = "../../📬️mutation/📦️packages/🦀️rust" }
 semio-plugin-window-config-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
 semio-plugin-window-config-replace = { path = "../../🧬️preparation/🔁️replace/📦️packages/🦀️rust" }
@@ -52,7 +52,7 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value-clone-source-testing = { path = "../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

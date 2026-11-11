@@ -20,10 +20,10 @@ semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/
 semio-s-artifact-note-note = { workspace = true }
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true
-semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-os = { workspace = true }
 semio-plugin = { workspace = true }
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
@@ -31,7 +31,7 @@ semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 
 semio-s-artifact-stdio-svg = { workspace = true }
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 
@@ -43,4 +43,4 @@ semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️
 semio-plugin-host = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-semio-os-run = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust", package = "semio-os-run" }
+semio-os-run = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust" }

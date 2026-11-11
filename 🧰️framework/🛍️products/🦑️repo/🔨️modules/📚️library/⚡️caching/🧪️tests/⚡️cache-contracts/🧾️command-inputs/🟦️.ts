@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { delimiter, dirname, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
@@ -325,7 +326,7 @@ if (args[0] === "nextest" && args[1] === "list") console.log("{}");
     for (const [path, content] of Object.entries(cases.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
     const { cacheInternals } = await import(pathToFileURL(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href);
     assert.equal(typeof cacheInternals.nativePreparation, "function", "native codegen needs an explicit transitive prerequisite resolver");
-    const cargo = Bun.spawnSync(["cargo", "metadata", "--offline", "--format-version=1"], { cwd: root, stdout: "pipe", stderr: "pipe" });
+    const cargo = Bun.spawnSync([registeredToolExecutableV1("cargo"), "metadata", "--offline", "--format-version=1"], { cwd: root, stdout: "pipe", stderr: "pipe" });
     assert.equal(cargo.exitCode, 0, cargo.stderr.toString());
     const metadata = JSON.parse(cargo.stdout.toString()), packages = new Map(metadata.packages.map((p: any) => [p.id, p]));
     for (const row of cases.cases) {
@@ -375,7 +376,7 @@ export function testNxDaemonDiagnostics(workspace: string, output: string): void
     assert.match(client.daemonProcessException("missing log").message, /missing log/);
   `;
   try {
-    const child = Bun.spawnSync(["node", "--eval", source], { cwd: workspace, env: { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(root, "workspace-data") }, stdout: "pipe", stderr: "pipe", timeout: 10000 });
+    const child = Bun.spawnSync([registeredToolExecutableV1("node"), "--eval", source], { cwd: workspace, env: { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(root, "workspace-data") }, stdout: "pipe", stderr: "pipe", timeout: 10000 });
     assert.equal(child.exitCode, 0, child.stdout.toString() + child.stderr.toString());
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
@@ -399,7 +400,7 @@ export function testNxDaemonTaskEnvironment(workspace: string): void {
     assert.notEqual(nx.hashDaemonClientEnv(), hash);
   `;
   const env = { ...process.env, NX_LOAD_DOT_ENV_FILES: "true" };
-  const child = Bun.spawnSync(["node", "--eval", source], { cwd: workspace, env, stdout: "pipe", stderr: "pipe", timeout: 10000 });
+  const child = Bun.spawnSync([registeredToolExecutableV1("node"), "--eval", source], { cwd: workspace, env, stdout: "pipe", stderr: "pipe", timeout: 10000 });
   assert.equal(child.exitCode, 0, child.stdout.toString() + child.stderr.toString());
 }
 
@@ -443,7 +444,7 @@ export function testNxDaemonRetention(workspace: string, output: string): void {
   fs.rmSync(actualDirectory); fs.renameSync(savedDirectory,actualDirectory);
 `;
   try {
-    const child = Bun.spawnSync(["node", "--eval", code], { cwd: workspace, env: { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(directory, "workspace-data") }, stdout: "pipe", stderr: "pipe", timeout: 10000 });
+    const child = Bun.spawnSync([registeredToolExecutableV1("node"), "--eval", code], { cwd: workspace, env: { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(directory, "workspace-data") }, stdout: "pipe", stderr: "pipe", timeout: 10000 });
     assert.equal(child.exitCode, 0, child.stdout.toString() + child.stderr.toString());
     process.stdout.write(child.stdout);
   } finally { rmSync(directory, { recursive: true, force: true }); }

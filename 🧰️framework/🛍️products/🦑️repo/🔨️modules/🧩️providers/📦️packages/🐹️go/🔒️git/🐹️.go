@@ -151,14 +151,14 @@ func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, erro
 
 // 📄️StagedFiles holds the data fields for a StagedFiles record.
 func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, error) {
-	stdout, stderr, exitCode := workspace.ExecCommand("git", []string{"diff", "--cached", "--name-only"}, repoRoot)
+	stdout, stderr, exitCode := workspace.ExecCommand("git", []string{"diff", "--cached", "--name-only", "-z"}, repoRoot)
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff --cached --name-only failed: %s", strings.TrimSpace(stderr))
 	}
 	var files []string
-	for _, line := range strings.Split(strings.ReplaceAll(stdout, "\r\n", "\n"), "\n") {
-		if line != "" {
-			files = append(files, line)
+	for _, path := range strings.Split(stdout, "\x00") {
+		if path != "" {
+			files = append(files, path)
 		}
 	}
 	return files, nil
@@ -185,7 +185,7 @@ func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map
 		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
 	}
 	args := BuildGitDiffArgs("-U0", baseCheckpoint, headCheckpoint, paths)
-	stdout, stderr, exitCode := workspace.ExecCommand("git", args, "")
+	stdout, stderr, exitCode := workspace.ExecCommand("git", append([]string{"-c", "core.quotepath=off"}, args...), "")
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff failed: %s", strings.TrimSpace(stderr))
 	}
@@ -194,16 +194,12 @@ func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map
 	lineRegex := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
 	for _, line := range strings.Split(stdout, "\n") {
 		if strings.HasPrefix(line, "diff --git ") {
-			parts := strings.Fields(line)
-			if len(parts) >= 4 {
-				newPath := strings.TrimPrefix(parts[3], "b/")
-				currentFile = newPath
-				if result[currentFile] == nil {
-					result[currentFile] = &model.DiffLines{Added: []int{}, Removed: []int{}}
-				}
+			currentFile = gitDiffNewPath(line)
+			if result[currentFile] == nil {
+				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
 			}
-		} else if strings.HasPrefix(line, "+++ b/") {
-			currentFile = strings.TrimPrefix(line, "+++ b/")
+		} else if strings.HasPrefix(line, "+++ b/") || strings.HasPrefix(line, "+++ \"b/") {
+			currentFile = strings.TrimPrefix(gitPathField(strings.TrimSuffix(line[len("+++ "):], "\t")), "b/")
 			if result[currentFile] == nil {
 				result[currentFile] = &model.DiffLines{Added: []int{}, Removed: []int{}}
 			}
@@ -268,7 +264,7 @@ func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]
 	if baseCheckpoint == "" {
 		return nil, fmt.Errorf("base checkpoint or GitIndexRef is required")
 	}
-	args := []string{"diff", "--name-status", "-M"}
+	args := []string{"diff", "--name-status", "-M", "-z"}
 	if baseCheckpoint != GitIndexRef {
 		args = append(args, baseCheckpoint)
 		if headCheckpoint != "" {
@@ -283,21 +279,23 @@ func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff status failed: %s", strings.TrimSpace(stderr))
 	}
+	fields := strings.Split(stdout, "\x00")
 	var results []GitDiffStatus
-	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
-		if line == "" {
+	for index := 0; index < len(fields); index++ {
+		status := fields[index]
+		if status == "" {
 			continue
 		}
-		parts := strings.Split(line, "\t")
-		if len(parts) < 2 {
+		if strings.HasPrefix(status, "R") && index+2 < len(fields) {
+			results = append(results, GitDiffStatus{Status: "renamed", From: fields[index+1], To: fields[index+2]})
+			index += 2
 			continue
 		}
-		status := strings.TrimSpace(parts[0])
-		if strings.HasPrefix(status, "R") && len(parts) >= 3 {
-			results = append(results, GitDiffStatus{Status: "renamed", From: parts[1], To: parts[2]})
-			continue
+		if index+1 >= len(fields) {
+			break
 		}
-		file := parts[1]
+		index++
+		file := fields[index]
 		switch status {
 		case "A":
 			results = append(results, GitDiffStatus{Status: "added", To: file})
@@ -310,6 +308,63 @@ func GetGitDiffStatus(baseCheckpoint, headCheckpoint string, paths []string) ([]
 		}
 	}
 	return results, nil
+}
+
+// 🫙️gitUnquotePath decodes one C-quoted path as git prints names with special bytes and returns it with the text after the closing quote.
+func gitUnquotePath(text string) (string, string, bool) {
+	if !strings.HasPrefix(text, "\"") {
+		return "", text, false
+	}
+	simple := map[byte]byte{'a': '\a', 'b': '\b', 't': '\t', 'n': '\n', 'v': '\v', 'f': '\f', 'r': '\r', '"': '"', '\\': '\\'}
+	var decoded []byte
+	for index := 1; index < len(text); index++ {
+		character := text[index]
+		if character == '"' {
+			return string(decoded), text[index+1:], true
+		}
+		if character != '\\' || index+1 >= len(text) {
+			decoded = append(decoded, character)
+			continue
+		}
+		if index+3 < len(text) {
+			if value, err := strconv.ParseUint(text[index+1:index+4], 8, 16); err == nil {
+				decoded = append(decoded, byte(value))
+				index += 3
+				continue
+			}
+		}
+		if replacement, known := simple[text[index+1]]; known {
+			decoded = append(decoded, replacement)
+		} else {
+			decoded = append(decoded, text[index+1])
+		}
+		index++
+	}
+	return string(decoded), "", true
+}
+
+// 🫙️gitPathField returns a path field of git output, unquoting it when git quoted it.
+func gitPathField(text string) string {
+	if path, _, quoted := gitUnquotePath(text); quoted {
+		return path
+	}
+	return text
+}
+
+// 🧭️gitDiffNewPath returns the new-side repository path named by a `diff --git` header line.
+func gitDiffNewPath(header string) string {
+	rest := strings.TrimPrefix(header, "diff --git ")
+	if strings.HasPrefix(rest, "\"") {
+		_, after, _ := gitUnquotePath(rest)
+		rest = strings.TrimPrefix(after, " ")
+	} else if half := (len(rest) + 1) / 2; half+2 <= len(rest) && strings.HasPrefix(rest[half:], "b/") && rest[:half-1] == "a/"+rest[half+2:] {
+		rest = rest[half:]
+	} else if index := strings.LastIndex(rest, " b/"); index >= 0 {
+		rest = rest[index+1:]
+	} else if index := strings.Index(rest, " \""); index >= 0 {
+		rest = rest[index+1:]
+	}
+	return strings.TrimPrefix(gitPathField(rest), "b/")
 }
 
 // #endregion 🔒️Git

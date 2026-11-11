@@ -3,7 +3,6 @@
 #![recursion_limit = "512"]
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
-semio_plugin::install_fixture_heap_witness!();
 #[path = "../🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_process_process3d_commands::step::add_step;

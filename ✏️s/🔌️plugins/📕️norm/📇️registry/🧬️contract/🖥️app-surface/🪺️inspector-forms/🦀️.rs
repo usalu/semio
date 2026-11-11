@@ -148,6 +148,3 @@ pub use body::*;
 mod paid;
 pub use paid::*;
 
-#[cfg(test)]
-#[global_allocator]
-static INSPECTOR_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

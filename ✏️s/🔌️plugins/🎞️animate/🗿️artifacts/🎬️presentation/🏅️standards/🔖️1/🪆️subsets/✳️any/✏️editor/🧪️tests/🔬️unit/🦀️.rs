@@ -418,7 +418,7 @@ async fn import_media_frames_in_inserts_a_new_tile() {
     let before = crate::presentation_working_scene(&app.snapshot().expect("projection")).1.len();
     let frame_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("name".to_string(), semio_framework_pack_json::Value::from("hero-frame")), ("src".to_string(), semio_framework_pack_json::Value::from("/frames/hero.png"))]));
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
-    app.0.import_media("frames:in", media, &meta("local"), app.1.cx()).await.expect("import frames:in");
+    semio_plugin::artifact_app_laws::import_media(&mut app.0, "frames:in", media, &meta("local"), app.1.cx()).await.expect("import frames:in");
     let (_, after_tiles) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
     assert_eq!(after_tiles.len(), before + 1);
     assert_eq!(after_tiles.last().expect("imported tile").name, "hero-frame");
@@ -431,7 +431,7 @@ async fn import_media_frames_in_places_repeated_imports_in_distinct_cells() {
     for _ in 0..2 {
         let frame_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("name".to_string(), semio_framework_pack_json::Value::from("frame"))]));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
-        app.0.import_media("frames:in", media, &meta("local"), app.1.cx()).await.expect("import frames:in");
+        semio_plugin::artifact_app_laws::import_media(&mut app.0, "frames:in", media, &meta("local"), app.1.cx()).await.expect("import frames:in");
     }
     let (_, tiles) = crate::presentation_working_scene(&app.snapshot().expect("projection"));
     assert_eq!(tiles.len(), 2);
@@ -443,7 +443,7 @@ async fn import_media_rejects_unknown_port() {
     use semio_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
     let mut app = context::presentation_app_with_registry().await;
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
-    assert!(app.0.import_media("not-a-port", media, &meta("local"), app.1.cx()).await.is_err());
+    assert!(semio_plugin::artifact_app_laws::import_media(&mut app.0, "not-a-port", media, &meta("local"), app.1.cx()).await.is_err());
 }
 
 #[semio_framework_async_macros::async_test]

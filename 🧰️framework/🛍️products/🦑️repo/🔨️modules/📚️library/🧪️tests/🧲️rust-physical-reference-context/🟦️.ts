@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 //#region Imports
 import { expect, test } from "bun:test";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, readlinkSync, symlinkSync, writeFileSync } from "node:fs";
@@ -233,7 +234,7 @@ test("scoped joins bind the real target instead of a sibling and survive rollbac
   expect(plan.edits.map((edit) => [edit.path, edit.oldValue, edit.newValue])).toEqual([[vector.consumer, vector.source, vector.destination]]);
   expect(plan.edits[0]!.structuredLocation.startsWith("rust-path-join:")).toBe(true);
   const runtime = () => {
-    const result = Bun.spawnSync(["cargo", "run", "--quiet", "--offline", "--manifest-path", join(row.directory, vector.manifest), "--target-dir", join(row.directory, "🧪️build"), "--bin", "reader"], { cwd: row.directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
+    const result = Bun.spawnSync([registeredToolExecutableV1("cargo"), "run", "--quiet", "--offline", "--manifest-path", join(row.directory, vector.manifest), "--target-dir", join(row.directory, "🧪️build"), "--bin", "reader"], { cwd: row.directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
     expect(result.stdout.toString().trim()).toBe(vector.runtimeOutput);
   };
@@ -363,7 +364,7 @@ test("independent syn parsing reproduces assertion-message, manifest-path and jo
   writeFileSync(join(directory, "🦀️.rs"), readFileSync(join(root, golden.oracle.sourceInput)));
   let passed = false;
   try {
-    const result = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(directory, "Cargo.toml"), "--target-dir", target, "--", vectorPath], { cwd: directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
+    const result = Bun.spawn([registeredToolExecutableV1("cargo"), "run", "--offline", "--quiet", "--manifest-path", join(directory, "Cargo.toml"), "--target-dir", target, "--", vectorPath], { cwd: directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, exitCode] = await Promise.all([new Response(result.stdout).text(), new Response(result.stderr).text(), result.exited]);
     expect({ exitCode, stderr }).toEqual({ exitCode: 0, stderr: "" });
     expect(JSON.parse(stdout)).toEqual({

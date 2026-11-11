@@ -24,7 +24,7 @@ doctest = false
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-ui-contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }
 semio-os-kernel = { workspace = true }

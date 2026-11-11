@@ -40,7 +40,7 @@ semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-diagnostic = { path = "../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-os-pack = { path = "../../../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-os-store-envelope = { path = "../../../../../✉️envelope/📦️packages/🦀️rust" }
@@ -50,7 +50,7 @@ semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒�
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication-edit = { path = "../../../../../../../../../🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 
 
 [dev-dependencies]

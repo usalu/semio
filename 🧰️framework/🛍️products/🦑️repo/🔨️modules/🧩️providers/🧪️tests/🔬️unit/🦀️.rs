@@ -54,7 +54,7 @@ fn extract_issue_url_reads_both_bare_and_embedded_forms() {
 fn git_provider_reads_the_branch_and_the_staged_files() {
     let provider = GitVersionControlProvider::new(recorded(vec![
         ProcessExchange { argv: vec!["git".into(), "rev-parse".into(), "--abbrev-ref".into(), "HEAD".into()], stdin: None, stdout: "main\n".into(), stderr: String::new(), status: 0 },
-        ProcessExchange { argv: vec!["git".into(), "diff".into(), "--cached".into(), "--name-only".into()], stdin: None, stdout: "a.txt\r\nb.txt\n".into(), stderr: String::new(), status: 0 },
+        ProcessExchange { argv: vec!["git".into(), "diff".into(), "--cached".into(), "--name-only".into(), "-z".into()], stdin: None, stdout: "a.txt\0b.txt\0".into(), stderr: String::new(), status: 0 },
     ]));
     assert_eq!(provider.current_branch("/repo").unwrap(), "main");
     assert_eq!(provider.staged_files("/repo").unwrap(), vec!["a.txt".to_string(), "b.txt".to_string()]);

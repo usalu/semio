@@ -76,7 +76,7 @@ async fn drive_inbound_request(runtime: &semio_plugin_reactor_lifecycle::life_in
         capability: capability.to_string(),
         payload: request.as_bytes().to_vec(),
     };
-    semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut Some(event), &mut None, None, inbound_request_budget(), identity,cx).await.expect("one inbound-request turn").effects
+    semio_plugin_reactor_turn::poll_kernel(runtime, &mut Some(event), &mut None, None, inbound_request_budget(), identity,cx).await.expect("one inbound-request turn").effects
 }
 
 /// ⚖️ LAW: every fixture row is answered by exactly one `Effect::Respond` carrying the SAME `req`, on

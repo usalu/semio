@@ -1,18 +1,18 @@
 #!/usr/bin/env repo
-import { createIssuedResourceControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { verifyProducedWasmPackageV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts";
-import { runAdmittedCargoTestsV1 as runCargoTestsV1 } from "@semio-tech/framework/process/cargo-test";
-import { buildBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
-import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { buildAdmittedWasmWebV1 } from "@semio-tech/framework/process/wasm-build";
-import { runOwnedCommand } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { cmdBudgetMs } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/⏱️budget/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { verifyProducedWasmPackageV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🕸️wasm-build/🟦️.ts";
+import { runAdmittedCargoTestsV1 as runCargoTestsV1 } from "@semio-tech/process/cargo-test";
+import { buildBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { scriptCompilerAdmissionControlV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { buildAdmittedWasmWebV1 } from "@semio-tech/process/wasm-build";
+import { runOwnedCommand } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cmdBudgetMs } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
-import { readCargoTestPolicyV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
+import { readCargoTestPolicyV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runtimeExecutableV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
 import { runtimeTestArgumentsV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🚀️process/🟦️.ts";
 

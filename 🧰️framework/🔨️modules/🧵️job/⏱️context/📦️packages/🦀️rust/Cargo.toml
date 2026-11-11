@@ -74,10 +74,6 @@ path = "../../../📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.
 
 
 
-[[test]]
-name = "original-source-return-place"
-required-features = ["testkit"]
-path = "../../📦️return/🎟️place/🧪️tests/🦀️.rs"
 
 
 [[test]]
@@ -127,3 +123,8 @@ path = "../../🎟️source/🏭️admission/🧪️tests/🦀️.rs"
 name = "original-native-progress"
 required-features = ["testkit"]
 path = "../../🧪️tests/📊️native-progress/🦀️.rs"
+
+[[test]]
+name = "original-source-return-place"
+required-features = ["testkit"]
+path = "../../📦️return/🎟️place/🧪️tests/🦀️.rs"

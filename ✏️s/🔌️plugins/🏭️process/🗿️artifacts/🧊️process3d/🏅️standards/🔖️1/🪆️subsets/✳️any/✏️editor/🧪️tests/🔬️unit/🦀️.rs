@@ -1,5 +1,3 @@
-#[global_allocator]
-static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 #[path = "../🧰️support/🦀️.rs"]

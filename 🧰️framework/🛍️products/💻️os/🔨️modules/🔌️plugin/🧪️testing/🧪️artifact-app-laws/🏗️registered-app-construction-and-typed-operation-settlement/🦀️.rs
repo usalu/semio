@@ -8,6 +8,52 @@ pub fn register_framework_reserved_action_factories<A: ArtifactApp>(bus: &semio_
     register_framework_reserved_factories(&mut registry)
 }
 
+/// 🧲️ Re-polls one pending-aware media import until it settles; refuses once its fixture scope is no longer funded.
+pub async fn import_media<P: PluginApp>(app: &mut P, port: &str, media: semio_framework::Media, meta: &ActionMeta, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::kernel::InvocationResult, semio_framework_job::OriginalTurnFailure> {
+    let mut media = Some(media);
+    while !cx.is_cancelled() && !cx.should_yield() {
+        if let Some(result) = app.import_media(port, &mut media, meta, cx).await? { return Ok(result) }
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fixture media import was not funded to settle").into())
+}
+
+/// 🧲️ Re-polls one pending-aware media consumption until it settles; refuses once its fixture scope is no longer funded.
+pub async fn consume_media<P: PluginApp>(app: &mut P, port: &str, artifact: semio_plugin_document_media::MediaArtifact, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_decl_app::MediaConsumption, semio_plugin_decl_app::MediaArtifactOperationFailure> {
+    let mut artifact = Some(artifact);
+    while !cx.is_cancelled() && !cx.should_yield() {
+        if let Some(consumed) = app.consume_media(port, &mut artifact, cx).await? { return Ok(consumed) }
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fixture media consumption was not funded to settle").into())
+}
+
+/// 🚫️ Polls one media consumption under steps that fund no retained work: each must stay pending without decoding or taking its source; the funded polls then settle it.
+pub async fn consume_media_refused_then_funded<P: PluginApp>(app: &mut P, port: &str, artifact: semio_plugin_document_media::MediaArtifact, cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_plugin_decl_app::MediaConsumption, semio_plugin_decl_app::MediaArtifactOperationFailure> {
+    let original = artifact.data.len();
+    let mut artifact = Some(artifact);
+    let (mut refused, mut donated) = (0usize, false);
+    while !cx.is_cancelled() && !cx.should_yield() {
+        let mut polled = None;
+        cx.with_retained_loan(semio_framework_value::RetainedCloneGrant::default(), |unfunded| {
+            let mut poll = std::pin::pin!(app.consume_media(port, &mut artifact, unfunded));
+            polled = Some(poll.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())));
+            Ok(())
+        })?;
+        match polled.expect("the unfunded poll ran") {
+            std::task::Poll::Ready(Ok(None)) => refused += 1,
+            std::task::Poll::Ready(Ok(Some(_))) => panic!("an unfunded step settled its media consumption"),
+            std::task::Poll::Ready(Err(failure)) => panic!("an unfunded step refused instead of staying pending: {failure:?}"),
+            std::task::Poll::Pending => panic!("the fixture media consumption never suspends"),
+        }
+        if !donated { assert_eq!(artifact.as_ref().map(|source| source.data.len()), Some(original), "an unfunded step took its media source"); }
+        if let Some(consumed) = app.consume_media(port, &mut artifact, cx).await? {
+            assert!(refused > 0, "the funded step settled before any unfunded step was refused");
+            return Ok(consumed)
+        }
+        donated = artifact.as_ref().map_or(true, |source| source.data.len() != original);
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "fixture media consumption was not funded to settle").into())
+}
+
 /// 🪪️ A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
 // 🚫️async: E1 pure constructor, called pervasively as `&meta("...")` — see R9.
 pub fn meta(actor: &str) -> ActionMeta {

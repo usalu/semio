@@ -1,9 +1,9 @@
 #!/usr/bin/env repo
-import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { join } from "node:path";
-import { orchestratorBudgetOpts, runCmd } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runTestScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 //#endregion 🔖️Types
 
@@ -16,10 +16,10 @@ class TestScript extends BundleScript {
 }
 //#endregion 🔖️Test
 
-/** 🧾️ Runs the wire-twin witness: every committed norm mutation and snapshot against its generated TypeScript twin and the strict Ajv oracle. */
+/** 🧾️ Runs the wire-twin witness: every committed norm mutation and snapshot against its generated TypeScript twin and the strict Ajv oracle, and the drift gate that every twin equals the generator output. */
 class WireTwinsScript extends BundleScript {
   run(): void {
-    runCmd(process.execPath, ["test", join(this.root, "../../🧪️tests/🧪️wire-twins/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd(process.execPath, ["test", join(this.root, "../../🧪️tests/🧪️wire-twins/🟦️.ts"), join(this.root, "../../🧪️tests/🧪️wire-twins/🧬️drift/🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
   }
 }
 

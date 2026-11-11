@@ -27,8 +27,8 @@ semio-framework = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-sync = { workspace = true }
-semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-framework-dispatch-macros = { path = "../../../../../../../🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
@@ -47,7 +47,7 @@ semio-os-mcp-routing = { path = "../../../🧲️channel-routing/📦️packages
 semio-os-mcp-dispatch = { path = "../../../🪝️action-dispatch/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

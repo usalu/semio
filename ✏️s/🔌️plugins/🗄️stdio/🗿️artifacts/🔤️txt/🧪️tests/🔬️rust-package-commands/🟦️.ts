@@ -1,6 +1,6 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
-import { runRepositoryTestCommand } from "@semio-tech/framework/process/test-execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runArtifactRustTests } from "@semio-tech/process/cargo-test";
+import { runRepositoryTestCommand } from "@semio-tech/process/test-execution";
 import { resolve } from "node:path";
 
 /** 🏃️ Runs the `OriginalTxtEncodingScript` command under the caller's roots and invocation. */

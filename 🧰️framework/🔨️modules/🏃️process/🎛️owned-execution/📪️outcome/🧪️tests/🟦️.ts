@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
@@ -14,7 +15,7 @@ test("actual owned command failures retain canonical terminal outcomes against i
   const observations: { id: string; outcome: unknown; failed: boolean; failure: string; expected: unknown; lines: string[] }[] = [];
   try {
     for (const row of corpus.receivers) {
-      const oracle = Bun.spawn(["node", "--eval", oracleCode, JSON.stringify(row), child], { stdout: "pipe", stderr: "pipe" });
+      const oracle = Bun.spawn([registeredToolExecutableV1("node"), "--eval", oracleCode, JSON.stringify(row), child], { stdout: "pipe", stderr: "pipe" });
       const lines: string[] = []; let failed = false, failure = "", outcome: unknown;
       try { await owned.runOwnedCommand("node", ["--eval", child, JSON.stringify(row)], process.cwd(), "original-outcome", Math.max(0, Math.floor(15000 - (performance.now() - started))), { signal: controller.signal, onLine: line => { lines.push(line); } }); }
       catch (error) { failed = true; failure = String(error); outcome = typeof error === "object" && error !== null && "outcome" in error ? error.outcome : undefined; }

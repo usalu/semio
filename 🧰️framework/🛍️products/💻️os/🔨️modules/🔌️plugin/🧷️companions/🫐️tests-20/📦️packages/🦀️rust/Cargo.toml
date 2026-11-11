@@ -26,8 +26,8 @@ path = "../../🦀️.rs"
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing", "reserved-producer-testing"] }
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-os-kernel" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -1,7 +1,7 @@
 import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 /** 🧩️ Projects Cargo, component, release-pipeline, print and root-command targets. */
-import {createRequire} from "node:module";
-const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
+import managersV1 from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
+const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
 import { parserTypescriptV1 } from "../../../🚀️bootstrap/📦️parsers/🟨️.mjs";
 import { dirname, join, relative } from "node:path";
 import { observedFs } from "../../../../🏗️build/👁️observation/🟨️.mjs";

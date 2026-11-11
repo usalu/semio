@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../🧰️tools/🏃️run/🟦️.ts";
 import{expect,spyOn}from"bun:test";
 import{readFileSync,readdirSync,mkdtempSync,rmSync}from"node:fs";
 import{join}from"node:path";
@@ -18,7 +19,7 @@ for(const row of fixture.cases)for(const retain of fixture.retention){
   expect(validate(fixture)).toBe(true);
   const directory=mkdtempSync(join(law.root,"f-")),environment={...process.env,...law.environment,CARGO_FAILED_STDOUT:row.stdout,CARGO_FAILED_SPLIT:String(row.splitBytes),CARGO_FAILED_EXIT:String(row.exitCode),CARGO_FAILED_CALLS:undefined};
   try{
-   const oracle=spawnSync("node",["-e",program],{env:environment,encoding:"utf8"});expect(oracle.status).toBe(row.exitCode);expect(oracle.stdout).toBe(row.stdout);
+   const oracle=spawnSync(registeredToolExecutableV1("node"),["-e",program],{env:environment,encoding:"utf8"});expect(oracle.status).toBe(row.exitCode);expect(oracle.stdout).toBe(row.stdout);
    const calls=join(directory,"calls.jsonl"),manifest=writeOwnerPackageV1(directory),policy={...defaults.policies[0],manifestPath:manifest,targetDirectory:join(directory,"t"),artifactDirectory:directory,buildDirectory:join(directory,"b"),leaseDirectory:join(directory,"l"),retainArtifacts:retain,buildBudgetMs:1000,coverageEnabled:false,coveragePath:null};
    const reported:string[]=[],sink=spyOn(process.stderr,"write").mockImplementation((chunk:any)=>{reported.push(String(chunk));return true;});
    try{await expect(runCargoTestsV1({manifestPath:manifest,packages:["owner-package"],cwd:directory,environment:{...environment,CARGO_FAILED_CALLS:calls}},policy as never,admission,{command:"node",args:["-e",program,"--"]})).rejects.toThrow("node exited with status "+row.exitCode);}finally{sink.mockRestore();}

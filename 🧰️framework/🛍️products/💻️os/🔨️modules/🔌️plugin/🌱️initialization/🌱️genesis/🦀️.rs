@@ -15,6 +15,8 @@ impl OriginalStoreBirth{
    semio_framework_job::OriginalConstructionStatus::Failed=>{self.admission.take_failure_into_step(&mut self.failure,cx)?;Err(invalid("original Store construction failed; its complete causes are retained").into())}
   }
  }
+ /// 🏛️ The resident admission a settled construction of the same owner continues over across turns.
+ pub fn resident(&mut self)->&mut semio_framework_job::OriginalConstructionAdmission{&mut self.admission}
  /// 🏗️ Admits one construction; `true` only once its candidate is ready and the frame is reset.
  pub fn built<O>(&mut self,cx:&mut StepContext<'_>,output:&mut Option<O>,demand:OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,OriginalTurnFailure>{
   let status=admit_original_construction(cx,output,&mut self.admission,demand,1,|_,_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})?;self.status(cx,status)

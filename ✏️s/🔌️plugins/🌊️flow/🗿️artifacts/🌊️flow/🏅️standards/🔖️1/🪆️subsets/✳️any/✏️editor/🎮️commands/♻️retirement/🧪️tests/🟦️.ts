@@ -1,7 +1,7 @@
 import{expect,test}from"bun:test";
 import{applyPatch}from"fast-json-patch";
 import{resolve}from"node:path";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import fixture from"./🧫️fixtures/🔣️.json";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";

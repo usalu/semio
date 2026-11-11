@@ -26,7 +26,6 @@ pub fn advance_original_tick_payload(writer:&ToolRunTickWriter,source:Option<&dy
 /// ♻️ Cancellation keeps the original chunk and physical payload owners until each full receipt is recorded.
 pub fn close_original_tick_payload(cursor:&mut ToolRunTickWireCursor,payload:&mut RetainedPayloadBuilder,position:&mut usize,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
  if !cursor.terminal_is_empty(){let receipt=cursor.close_step(cx.retained_grant());cx.consume_retained(receipt)?;return Ok(false);}
- if !payload.terminal_is_empty(){let grant=cx.retained_grant();let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|payload.close_step(effect))?else{return Ok(false)};cx.consume_work(performed);let step=turn.result?;cx.consume_retained(step.progress())?;return Ok(false);}
- if *position>0{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false);}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*position=0;return Ok(false);}
+ if !payload.terminal_is_empty(){let grant=cx.retained_grant();let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|payload.close_step(effect))?else{return Ok(false)};cx.consume_work(performed);let step=turn.result?;cx.consume_retained(step.progress())?;return Ok(false);} if *position>0{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false);}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*position=0;return Ok(false);}
  Ok(true)
 }

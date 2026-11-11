@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
-import { runArtifactRustPackageMain } from "@semio-tech/framework/process/cargo-test";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { runArtifactRustPackageMain } from "@semio-tech/process/cargo-test";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
 const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🦀️rust");

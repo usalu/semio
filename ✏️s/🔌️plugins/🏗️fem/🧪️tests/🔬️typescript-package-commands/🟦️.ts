@@ -1,4 +1,4 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 

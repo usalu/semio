@@ -1,6 +1,6 @@
 #!/usr/bin/env repo
 /** 📦️ zip Rust artifact package router. */
-import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🚪️ `retained-opc-check` — runs the program of this script. */
 class RetainedOpcCheckScript extends BundleScript {

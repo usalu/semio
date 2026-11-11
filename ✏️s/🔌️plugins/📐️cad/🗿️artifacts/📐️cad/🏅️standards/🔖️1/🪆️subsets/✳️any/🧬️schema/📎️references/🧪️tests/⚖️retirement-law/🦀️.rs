@@ -1,7 +1,5 @@
 //! ⚖️ CAD reference owners retire under quoted grants: the keyed reference index passes the typed-command input lane and retires its keys and rows exactly.
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 use semio_framework_test_typed_input_law as typed_input_law;
 

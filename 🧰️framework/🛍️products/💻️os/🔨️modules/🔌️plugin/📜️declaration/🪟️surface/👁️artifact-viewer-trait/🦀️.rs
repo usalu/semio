@@ -191,12 +191,12 @@ pub trait ArtifactViewer: Default + Send + 'static {
     }
 
     /// 🏗️ Author-owned payload builder paired with `register_tool_job_factories`.
-    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>,_output:&mut Option<semio_framework::ErasedToolJob>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<ViewerApp<Self>>>,_output:&mut Option<semio_framework::ErasedToolJob>,_construction:&mut semio_framework_job::OriginalConstructionAdmission,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered surface tool lacks its original source-preserving producer").into())
     }
 
     /// 🧭️ Builds a persistent producer/import job for one explicitly registered viewer route.
-    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<ViewerApp<Self>>>,_body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,_construction:&mut semio_framework_job::OriginalConstructionAdmission,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered reserved viewer route lacks its original producer").into())
     }
 

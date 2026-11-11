@@ -91,7 +91,7 @@ test("the admission queue serves the session holding the least memory per unit o
 });
 
 test("a session that already holds memory does not delay another session's equally sized request in the full decision",()=>{
- const policy={memory:{floorBasisPoints:0,floorMinimumMegabytes:0,floorMaximumMegabytes:0,budgetBasisPoints:10000,rampMilliseconds:0},load:{perCoreCeiling:99,overrideAfterMilliseconds:99999},swap:{ceilingBasisPoints:10000,outMegabytesPerSecond:99999},files:{ceilingBasisPoints:10000},attaches:{maximum:99},wait:{bypassMilliseconds:60000,maximumBypasses:99,agingMilliseconds:9999999,lendAfterMilliseconds:30000}} as never;
+ const policy={memory:{floorBasisPoints:0,floorMinimumMegabytes:0,floorMaximumMegabytes:0,budgetBasisPoints:10000,rampMilliseconds:0},load:{perCoreCeiling:99,overrideAfterMilliseconds:99999},swap:{ceilingBasisPoints:10000,activeMegabytesPerSecond:1,outMegabytesPerSecond:99999},files:{ceilingBasisPoints:10000},attaches:{maximum:99},wait:{bypassMilliseconds:60000,maximumBypasses:99,agingMilliseconds:9999999,lendAfterMilliseconds:30000}} as never;
  const host={atMs:0,totalMegabytes:1000,availableMegabytes:1000,swapUsedMegabytes:0,swapOutMegabytesPerSecond:0,load:0,cores:8,pressure:"normal",openFiles:null,openFilesMaximum:null,attachedImages:null} as never;
  const heavy="0123456789ab.sheavy",light="0123456789ab.slight",busy=[{...grant(heavy,700),observedMegabytes:700}];
  const queue=[waiter("first",heavy,1,1),waiter("second",light,1,2)].map(row=>({...row,request:request(row.request.id,250)}));

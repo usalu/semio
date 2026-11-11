@@ -94,7 +94,7 @@ class TestScript extends Script {
 
 /** 🧭️ Routes the repository's portable build commands to the selected implementation. */
 export class RepoScript extends Script {
-  async run(args:string[]):Promise<void> { const{runRepoInvocationV1}=await import("./🧭️invocation/🏃️run/🟦️.ts");await runRepoInvocationV1({root:this.repoRoot,args,signal:this.invocation.control.signal,execute:()=>runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,"repository:command",0))}); }
+  async run(args:string[]):Promise<void> { const{runRepoInvocationV1}=await import("./🧭️invocation/🏃️run/🟦️.ts");await runRepoInvocationV1({root:this.repoRoot,args,signal:this.invocation.control.signal,execute:async()=>{await(await import("./🌡️host-capacity/🟦️.ts")).admitPlannedBuildCapacityV1(this.invocation.control.signal);await runOwnedBuildInvocationV1(this.repoRoot,args,this.invocation,createIssuedResourceControlV1(this.invocation,"repository:command",0));}}); }
 }
 
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
@@ -147,4 +147,4 @@ export async function runBuildMainV1(root:string,argv:readonly string[],environm
   await runBuildCliWithRestartV1(root,argv,environment);
 }
 
-if(isMainModuleV1(import.meta.url)){profileMarkV1("boot.main");await profilePhaseV1("cli.run",()=>runBuildMainV1(findWorkspaceRoot(import.meta.dirname),process.argv.slice(2)).catch(async error=>{const{reportRepoErrorV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts");if(!reportRepoErrorV1(error))throw error;}));}
+if(isMainModuleV1(import.meta.url)){profileMarkV1("boot.main");await profilePhaseV1("cli.run",()=>runBuildMainV1(findWorkspaceRoot(import.meta.dirname),process.argv.slice(2)).catch(async error=>{const{reportBoundaryErrorV1}=await import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📣️progress/🟦️.ts");reportBoundaryErrorV1(error);}));}

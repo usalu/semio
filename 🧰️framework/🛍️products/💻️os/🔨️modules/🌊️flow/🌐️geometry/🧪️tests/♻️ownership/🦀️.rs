@@ -1,8 +1,6 @@
 use super::*;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_trace_memory_testing as allocation;
-#[global_allocator]
-static ORIGINAL_PORT_ALLOCATOR: allocation::RequestedAllocator=allocation::RequestedAllocator;
 
 struct OriginalPort { owner:semio_framework_value::retirement::controlled::RetainedOwnerGate<ControlledRetirement<String>>, retaining:Option<ControlledRetirement<Vec<String>>>,cancelling:bool,receipt:RetainedCloneProgress }
 /// 🔒️ Test fixture only: the port is driven from one thread and `retaining` is read exclusively through `&self` demand queries between steps.

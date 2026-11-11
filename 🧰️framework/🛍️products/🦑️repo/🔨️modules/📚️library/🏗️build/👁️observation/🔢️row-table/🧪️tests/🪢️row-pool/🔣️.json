@@ -1,0 +1,7 @@
+{
+ "version": 1,
+ "workspaces": [
+  {"name": "two hundred crates read one thousand shared files through three providers", "crates": 200, "rowsPerCrate": 500, "files": 1000, "providers": 3, "nested": 2, "seed": 7, "maximumObjectsPerDistinctRow": 48},
+  {"name": "crates that read the very same files hold one row set", "crates": 120, "rowsPerCrate": 300, "files": 300, "providers": 1, "nested": 0, "seed": 11, "maximumObjectsPerDistinctRow": 48}
+ ]
+}

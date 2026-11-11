@@ -89,4 +89,4 @@ semio-framework-value-derive = { workspace = true }
 semio-framework-value = { workspace = true, features = ["testkit"] }
 
 [dev-dependencies]
-semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }

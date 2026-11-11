@@ -155,7 +155,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_ne!(PluginApp::document_identity(&consumer).as_deref(), Some(source_id.as_str()), "separate births must differ before archive identity adoption");
         assert!(std::str::from_utf8(&artifact.data).is_ok_and(|text| text.starts_with("pk:")), "the whole-document carrier is pk: base64 text");
 
-        let semio_plugin_decl_app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact.clone()).await.expect("a whole document of the own schema is consumed") else {
+        let semio_plugin_decl_app::MediaConsumption::DocumentLoad(archive) = semio_plugin_testing_laws::artifact_app_laws::consume_media(&mut consumer, "artifact:in", artifact.clone(), cx).await.expect("a whole document of the own schema is consumed") else {
             panic!("a whole document is answered as a document archive load");
         };
         assert_eq!(consumer.test_snapshot().await, before, "consuming folded nothing: the document is unchanged until the load runs");
@@ -174,7 +174,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut foreign = artifact;
         foreign.descriptor.wire = semio_framework::MediaWireFormat::Document { schema: "foreign.document".into() };
-        let refusal = PluginApp::consume_media(&mut consumer, "artifact:in", foreign).await.expect_err("a foreign document schema is refused");
+        let semio_plugin_decl_app::MediaArtifactOperationFailure::Domain(refusal) = semio_plugin_testing_laws::artifact_app_laws::consume_media(&mut consumer, "artifact:in", foreign, cx).await.expect_err("a foreign document schema is refused") else { panic!("a foreign schema is a domain refusal") };
         let fault = semio_plugin_decl_app::media_artifact_fault(refusal);
         assert_eq!(fault.code.0, semio_plugin_decl_app::MEDIA_SCHEMA_MISMATCH_CODE);
         let notice = semio_framework::kernel::fault_notice(&fault, &[], semio_ui_locale::Terminology::Native, semio_ui_locale::Locale::De).expect("the refusal earns its localized notice");

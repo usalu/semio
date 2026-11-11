@@ -1,27 +1,27 @@
 /** 🔺️ `Vdi3805Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type BoundingBox, type BuildingSystemNumber, type CharacteristicCurve, type Configuration, type CurvePoint, type EditionId, type ExtensionFields, type LocalizedText, type NativeRecord, type ParametricGeometry, parseBoundingBox, parseBuildingSystemNumber, parseCharacteristicCurve, parseConfiguration, parseCurvePoint, parseEditionId, parseExtensionFields, parseLocalizedText, parseNativeRecord, parseParametricGeometry, parseVdi3805CatalogueProduct, parseVdi3805ConnectionPoint, parseVdi3805ExtensionBag, type Vdi3805CatalogueProduct, type Vdi3805ConnectionPoint, type Vdi3805ExtensionBag } from "../📸️snapshot/🟦️.ts";
 
 export interface Vdi3805Diff {
-  /** 📄️ @state artifact */
+  /** @state artifact */
   manufacturerFile: Vdi3805ManufacturerFilePatch | null;
-  /** 📱️ @state artifact */
+  /** @state artifact */
   products: Vdi3805ProductsRows | null;
-  /** 📇️ @state artifact */
+  /** @state artifact */
   catalogExtensions: ExtensionFields | null;
-  /** ⌨️ @state artifact */
+  /** @state artifact */
   editionProfile: Vdi3805EditionProfileRows | null;
-  /** 🛠️ @state artifact */
+  /** @state artifact */
   correctionAsOf: EditionId | null;
-  /** 🔄️ @state artifact */
+  /** @state artifact */
   strictMode: boolean | null;
-  /** 🧊️ @state artifact */
+  /** @state artifact */
   geometry: Vdi3805GeometryRows | null;
-  /** 〰️ @state artifact */
+  /** @state artifact */
   curves: Vdi3805CurvesRows | null;
-  /** ↔️ @state artifact */
+  /** @state artifact */
   limits: Vdi3805LimitsPatch | null;
 }
 

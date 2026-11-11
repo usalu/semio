@@ -10,5 +10,6 @@
     {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": "12.5"}, "ceiling": 8192},
     {"environment": {"SEMIO_TEST_OPEN_FILES_CEILING": ""}, "ceiling": 8192}
   ],
+  "parentExit": {"dieMilliseconds": 700, "endsWithinMilliseconds": 8000, "survivesMilliseconds": 2500},
   "orphans": {"opened": 400, "processes": 2}
 }

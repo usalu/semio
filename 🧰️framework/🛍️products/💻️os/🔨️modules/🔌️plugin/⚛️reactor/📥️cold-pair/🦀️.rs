@@ -461,7 +461,7 @@ semio_plugin_abi::component_persistent_local! {
     pub static COLD_PAIR_INGRESS: RefCell<ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(ColdDocumentPairIngressRegistry::new());
     /// 🛬️ The cold pair whose document still loads through the stepped archive load, stepped once per turn.
     pub static COLD_PAIR_DOCUMENT_LOAD: RefCell<Option<ColdPairDocumentLoad>> = RefCell::new(None);
-    /// 📸️ Instances whose checkpoint-restored document still loads under `checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION`,
+    /// 📸️ Restored documents whose load is still beginning or running under `checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION`,
     /// each stepped once per turn.
     pub static RESTORED_DOCUMENT_LOADS: RefCell<Vec<checkpoint::RestoredDocumentLoad>> = RefCell::new(Vec::new());
     /// 📸️ Original work the checkpoint restore performed before any turn existed; the next restored-load step charges it to its own turn.

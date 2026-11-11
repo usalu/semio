@@ -8,7 +8,7 @@ use semio_plugin_decl_views::child_view::PreparedChildContentIdentity;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_value::ValueError;
+use semio_framework_value::{RetainedAllocationEffect, ValueError};
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_views::child_view::ChildContentRetainers;
 use semio_plugin_decl_emission::Emit;
@@ -119,25 +119,36 @@ pub fn fault(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::In
         pub fn ready(&self) -> bool { !self.closing && self.field == N && (0..N).all(|index| if self.is_shared(index) { self.shared[index].is_some() } else { self.fields[index].is_some() }) }
         pub fn birth_bytes(&self, length: usize, leased: bool) -> usize { if self.is_shared(self.field) && leased { 0 } else { length + if self.is_shared(self.field) { shared_retirement_allocation_bytes::<String>() } else { 0 } } }
         pub fn next_capacity_byte_demand(&self, source: [&str; N], leased: bool) -> usize { if self.closing || self.field == N || self.active.is_some() { 0 } else { self.birth_bytes(source[self.field].len(), leased) } }
-        /// 🧶️ Copies one borrowed metadata field with complete capacity admission and a bounded byte prefix.
-        pub fn advance(&mut self, fields: [&str; N], lease: Option<&SharedUtf8>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
-            let grant = effect.grant();
-            if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        fn preflight(&self, fields: [&str; N], grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, ValueError> {
+            if grant.maximum_items == 0 { return Ok(Some(RetainedCloneStep::Progress(Default::default()))); }
             if self.closing { return Err(fault("private metadata issuer is closing")); }
-            if self.ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+            if self.ready() { return Ok(Some(RetainedCloneStep::Complete(Default::default()))); }
             if fields.iter().any(|field| field.len() > store::MEMBER_OPEN_IDENTITY_BYTES) { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "private metadata exceeds member-open identity admission")); }
             let seal = fields.map(|field| (field.as_ptr() as usize, field.len()));
             if self.source.is_some_and(|original| original != seal) { return Err(fault("private metadata requires its exact borrowed originals")); }
-            let source = fields[self.field].as_bytes();
+            Ok(None)
+        }
+        /// 🧶️ Copies one borrowed metadata field with complete capacity admission and a bounded byte prefix.
+        pub fn advance(&mut self, fields: [&str; N], grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+            if let Some(step) = self.preflight(fields, grant)? { return Ok(step); }
+            self.copy(fields, grant)
+        }
+        /// 🔗️ Leases one shared field from its original owner under the turn's effect, copying every other field.
+        pub fn advance_leased(&mut self, fields: [&str; N], lease: &SharedUtf8, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+            let grant = effect.grant();
+            if let Some(step) = self.preflight(fields, grant)? { return Ok(step); }
             if self.active.is_none() && self.is_shared(self.field) {
-                if let Some(lease) = lease {
-                    let (clone, progress) = lease.admit_clone(effect).result?;
-                    self.shared[self.field] = Some(clone);
-                    self.source = Some(seal);
-                    self.field += 1;
-                    return Ok(RetainedCloneStep::Progress(progress));
-                }
+                let (clone, progress) = lease.admit_clone(effect).result?;
+                self.shared[self.field] = Some(clone);
+                self.source = Some(fields.map(|field| (field.as_ptr() as usize, field.len())));
+                self.field += 1;
+                return Ok(RetainedCloneStep::Progress(progress));
             }
+            self.copy(fields, grant)
+        }
+        fn copy(&mut self, fields: [&str; N], grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+            let seal = fields.map(|field| (field.as_ptr() as usize, field.len()));
+            let source = fields[self.field].as_bytes();
             if self.active.is_none() {
                 let birth = self.birth_bytes(source.len(), false);
                 if grant.maximum_capacity_bytes < birth { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -192,11 +203,11 @@ pub fn fault(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::In
     impl<const N: usize> Drop for PrivateMetadataStringIssuer<N> { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "private metadata strings require guarded transfer or funded physical close"); } }
 
     #[doc(hidden)]
-pub fn advance_metadata<const N: usize>(strings: &mut PrivateMetadataStringIssuer<N>, transaction: &mut Option<bool>, group: &mut Option<bool>, fields: [&str; N], lease: Option<&SharedUtf8>, present: bool, group_present: bool, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
-        if effect.grant().maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+pub fn advance_metadata<const N: usize>(strings: &mut PrivateMetadataStringIssuer<N>, transaction: &mut Option<bool>, group: &mut Option<bool>, present: bool, group_present: bool, grant: RetainedCloneGrant, advance: impl FnOnce(&mut PrivateMetadataStringIssuer<N>) -> Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if transaction.is_some_and(|original| original != present) { return Err(fault("private metadata retains exact transaction presence")); }
         if group.is_some_and(|original| original != group_present) { return Err(fault("private metadata retains exact group identity presence")); }
-        let step = strings.advance(fields, lease, effect)?;
+        let step = advance(strings)?;
         if step.progress().copied_items != 0 { *transaction = Some(present); *group = Some(group_present); }
         Ok(step)
     }
@@ -210,7 +221,7 @@ pub struct PrivateChildMemberMetadataIssuer { pub strings: PrivateMetadataString
         pub fn ready(&self) -> bool { self.strings.ready() }
         pub fn next_capacity_byte_demand(&self, source: PrivateChildMemberMetadataSource<'_>) -> Option<usize> { Some(self.strings.next_capacity_byte_demand(source.fields(), false)) }
         /// 🫴️ Shares the exact bounded string issuer with the parent publication metadata path.
-        pub fn advance(&mut self, source: PrivateChildMemberMetadataSource<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { advance_metadata(&mut self.strings, &mut self.transaction_present, &mut self.group_present, source.fields(), None, source.transaction.is_some(), source.group_id.is_some(), effect) }
+        pub fn advance(&mut self, source: PrivateChildMemberMetadataSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { advance_metadata(&mut self.strings, &mut self.transaction_present, &mut self.group_present, source.transaction.is_some(), source.group_id.is_some(), grant, |strings| strings.advance(source.fields(), grant)) }
         /// 🧳️ Transfers every prebuilt child allocation into one guarded typed metadata bundle.
         pub fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivateChildMemberMetadata>, ValueError> {
             let Some(([id, kind, standard, subset, parent, parent_kind, parent_standard, parent_subset, slot, child, _, key_owner, key_slot, key_child, prepared_id, prepared_kind, prepared_standard, prepared_subset, prepared_owner, prepared_slot, prepared_child, _, transaction_id, tool, group_id, registry_parent, registry_kind, registry_standard, registry_subset, registry_slot, registry_child], mut shared)) = self.strings.take_ready(grant) else { return Ok(None); };
@@ -282,7 +293,7 @@ pub struct PrivatePublicationMetadataIssuer { pub strings: PrivateMetadataString
         pub fn new() -> Self { Self { strings: PrivateMetadataStringIssuer::new(Self::SHARED), transaction_present: None, group_present: None } }
         pub fn ready(&self) -> bool { self.strings.ready() }
         pub fn next_capacity_byte_demand(&self, source: PrivatePublicationMetadataSource<'_>) -> Option<usize> { Some(self.strings.next_capacity_byte_demand(source.fields(), true)) }
-        pub fn advance(&mut self, source: PrivatePublicationMetadataSource<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { advance_metadata(&mut self.strings, &mut self.transaction_present, &mut self.group_present, source.fields(), Some(source.actor), source.transaction.is_some(), source.group_id.is_some(), effect) }
+        pub fn advance(&mut self, source: PrivatePublicationMetadataSource<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> { let grant = effect.grant(); advance_metadata(&mut self.strings, &mut self.transaction_present, &mut self.group_present, source.transaction.is_some(), source.group_id.is_some(), grant, |strings| strings.advance_leased(source.fields(), source.actor, effect)) }
         /// 👜️ Moves the four admitted original parent fields without metadata clones or heap birth.
         pub fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivatePublicationMetadata>, ValueError> {
             let Some(([_, id, tool, group_id], mut shared)) = self.strings.take_ready(grant) else { return Ok(None); };

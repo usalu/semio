@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
@@ -13,12 +14,12 @@ test("phase commands drain every compiler stream before returning their exit sta
   const path = resolve(domainRoot,"⚖️parity/📋️orchestration/🟦️.ts"), source = ts.createSourceFile(path,readFileSync(path,"utf8"),ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);
   const classes = source.statements.filter(ts.isClassDeclaration).filter(node => row.commands.includes(node.name?.text ?? ""));
   expect(classes.map(node => node.name!.text)).toEqual(row.commands);
-  for (const runtime of [process.execPath,"node"]) {
+  for (const runtime of [process.execPath,registeredToolExecutableV1("node")]) {
     for (const node of classes) {
       const command = ts.transpileModule(node.getText(source).replace(/^export\s+/u,""),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}}).outputText;
       const program = `const row=${JSON.stringify(row)};class Script{};function runPhases(){process.stdout.write(row.stdoutChunk.repeat(row.repetitions));process.stderr.write(row.stderrChunk.repeat(row.repetitions)+row.stderrTerminal);return row.exitCode;}\n${command}\nnew ${node.name!.text}().run([]);`;
       const witness = `const {spawn}=require('node:child_process'),{createHash}=require('node:crypto');const child=spawn(${JSON.stringify(runtime)},['--eval',${JSON.stringify(program)}],{stdio:['ignore','pipe','pipe']});const out=createHash('sha256'),err=createHash('sha256');let outBytes=0,errBytes=0,started=false;function drain(){if(started)return;started=true;child.stdout.on('data',chunk=>{outBytes+=chunk.length;out.update(chunk)});child.stderr.on('data',chunk=>{errBytes+=chunk.length;err.update(chunk)});}child.stdout.once('readable',()=>setTimeout(drain,${row.backpressureMs}));child.once('exit',()=>setTimeout(drain,${row.backpressureMs}));child.once('close',status=>console.log(JSON.stringify({status,outBytes,errBytes,outHash:out.digest('hex'),errHash:err.digest('hex')})));`;
-      const child = Bun.spawn(["node","--eval",witness],{cwd:repoRoot,stdout:"pipe",stderr:"pipe"});
+      const child = Bun.spawn([registeredToolExecutableV1("node"),"--eval",witness],{cwd:repoRoot,stdout:"pipe",stderr:"pipe"});
       const [stdout,stderr,status] = await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
       expect(status,stderr).toBe(0);
       const actual = JSON.parse(stdout);

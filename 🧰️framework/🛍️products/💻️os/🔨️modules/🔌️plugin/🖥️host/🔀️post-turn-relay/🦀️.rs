@@ -31,6 +31,3 @@ pub use operation::{GuestRelayOperation,GuestRelayOperationStatus};
 #[path="🔌️plugin-instance-handle/🎫️operation-admission.rs"]
 mod operation_admission;
 pub use operation_admission::GuestRelayOperationAdmission;
-#[cfg(test)]
-#[global_allocator]
-static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

@@ -172,12 +172,12 @@ pub struct OriginalCommandExchangeState{
  pub dispatch:Option<protocol::AppCommand>,
  pub manifest:Option<(u64,InvocationResult)>,pub preview:Option<(InvocationResult,semio_plugin_job::EmitWire)>,pub configuration:Option<InvocationResult>,
  pub archive_admission:semio_plugin_document_media::OriginalDocumentArchiveAdmission,
- pub media_artifact:Option<semio_plugin_document_media::lifted_app::MediaArtifact>,pub media_input:Option<(protocol::AppCommand,semio_plugin_decl_app::MediaArtifactDescriptor)>,
+ pub media_artifact:Option<semio_plugin_document_media::lifted_app::MediaArtifact>,pub media_input:Option<(protocol::AppCommand,semio_plugin_decl_app::MediaArtifactDescriptor)>,pub media_archive:Option<protocol::DocumentArchivePack>,
  pub typed_output:Option<PluginExchangeOutput>,pub typed_leftover:Option<semio_plugin_job::TypedOperationLeftover>,
  pub applied:bool,pub mutated:bool,pub started_operation:Option<u64>,pub effects_done:bool,pub typed_done:bool,pub snapshots_done:bool,
 }
 impl OriginalCommandExchangeState{
- pub const fn empty()->Self{Self{frames:Vec::new(),effects:Vec::new(),events:Vec::new(),frame_bytes:Vec::new(),pending_effects:None,dispatch:None,manifest:None,preview:None,configuration:None,archive_admission:semio_plugin_document_media::OriginalDocumentArchiveAdmission::empty(),media_artifact:None,media_input:None,typed_output:None,typed_leftover:None,applied:false,mutated:false,started_operation:None,effects_done:false,typed_done:false,snapshots_done:false}}
+ pub const fn empty()->Self{Self{frames:Vec::new(),effects:Vec::new(),events:Vec::new(),frame_bytes:Vec::new(),pending_effects:None,dispatch:None,manifest:None,preview:None,configuration:None,archive_admission:semio_plugin_document_media::OriginalDocumentArchiveAdmission::empty(),media_artifact:None,media_input:None,media_archive:None,typed_output:None,typed_leftover:None,applied:false,mutated:false,started_operation:None,effects_done:false,typed_done:false,snapshots_done:false}}
 }
 #[doc(hidden)]
 pub enum OriginalCommandIngressRetirement{Refused{owner:PluginCommandIngress,failure:semio_framework_job::OriginalTurnFailure},Pending(PluginCommandIngress),Failed(semio_framework_job::OriginalTurnFailure),Closed}

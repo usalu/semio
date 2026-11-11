@@ -2,7 +2,6 @@
 #[path="../🦀️.rs"]mod registry;
 use registry::WindowRegistry;
 use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
-#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 fn keys(registry:&WindowRegistry<String,u64>)->serde_json::Value{serde_json::to_value(registry.iter().map(|(key,_)|key.as_str()).collect::<Vec<_>>()).unwrap()}
 fn measured<T>(g:RetainedCloneGrant,run:impl FnOnce()->(T,RetainedCloneProgress))->T{let((output,receipt),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);assert!(receipt.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));output}

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -33,7 +34,7 @@ export function testWorkspaceWatchIgnores(workspace: string, output: string): vo
       } finally { await watcher.stop(); fs.rmSync(root, { recursive: true, force: true }); }
     })().catch(error => { console.error(error); process.exitCode = 1; });
   `;
-  const result = spawnSync("node", ["--eval", source], { cwd: workspace, encoding: "utf8", timeout: 15000 });
+  const result = spawnSync(registeredToolExecutableV1("node"), ["--eval", source], { cwd: workspace, encoding: "utf8", timeout: 15000 });
   assert.equal(result.status, 0, result.stdout + result.stderr);
 }
 
@@ -61,7 +62,7 @@ export async function testWatcherReadiness(workspace: string): Promise<void> {
   for (const row of fixture.processes) {
     const before = { ...row.env }, selected = environment(row.env, row.args, row.watching);
     assert.deepEqual(row.env, before, "Launcher must retain caller environment");
-    const native = spawnSync("node", ["--eval", `process.stdout.write(String(require(${JSON.stringify(require.resolve("nx/src/daemon/client/client"))}).daemonClient.enabled()))`], { cwd: workspace, env: { ...process.env, ...selected }, encoding: "utf8", timeout: 10000 });
+    const native = spawnSync(registeredToolExecutableV1("node"), ["--eval", `process.stdout.write(String(require(${JSON.stringify(require.resolve("nx/src/daemon/client/client"))}).daemonClient.enabled()))`], { cwd: workspace, env: { ...process.env, ...selected }, encoding: "utf8", timeout: 10000 });
     assert.equal(native.status, 0, native.stderr);
     assert.equal(native.stdout, String(row.daemon), row.name);
   }

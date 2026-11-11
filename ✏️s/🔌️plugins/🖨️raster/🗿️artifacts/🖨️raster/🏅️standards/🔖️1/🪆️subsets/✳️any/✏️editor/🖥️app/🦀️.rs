@@ -206,7 +206,7 @@ impl ArtifactEditor for RasterPlayApp {
         registry.register(media_export::RasterDownloadJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if original.tool_id=="exportPng" {return media_export::build_download_job(request, output, cx);}
         if original.tool_id=="selectPixels"{
@@ -372,13 +372,13 @@ impl ArtifactEditor for RasterPlayApp {
     /// 🎞️ The ONE reserved route raster owns: `import-media`. Every inbound media delivery goes
     /// through `dispatch_import_media` → `build_artifact_reserved_media_job`, which fails closed
     /// unless this builder hands back a concrete resumable importer — see [`RasterImportJob`].
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,output:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if output.is_some(){return semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,cx)}
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,output:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if output.is_some(){return semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,construction,cx)}
         let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("Raster original reserved request is absent"))?;
         if original.tool_id.as_str()!=RASTER_IMPORT_TOOL_ID{return Ok(false)}
         if !original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::invariant("Raster reserved import requires decoded media").into())}
         if !matches!(original.input.as_ref(),Some(ArtifactReservedToolInput::Media{..})){return Err(semio_framework_value::ValueError::invariant("Raster reserved import media is absent").into())}
-        semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,cx)
+        semio_plugin::tool_contract::admit_reserved_work::<EditorApp<Self>,RasterImportJob>(request,output,construction,cx)
     }
 
     fn command_id(command: &RasterCommand) -> &'static str {

@@ -56,7 +56,7 @@ use semio_plugin_window_config::WindowConfigOwner;
 #[cfg(test)]
 use semio_plugin_testing_laws::artifact_app_laws;
 #[cfg(test)]
-use semio_framework_plugin_retained_command::typed_operation::test_blank_mounted_operation;
+use semio_plugin_retained_command::typed_operation::test_blank_mounted_operation;
 use semio_plugin_tool_run as tool_run;
 use semio_ui_contract::*;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;

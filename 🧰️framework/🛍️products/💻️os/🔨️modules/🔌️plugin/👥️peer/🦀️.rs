@@ -27,10 +27,20 @@ use semio_plugin_decl_views::NoPresence;
 use semio_plugin_job::reserved_jobs::ConfigurationDecodeRetirement;
 
 #[doc(hidden)]
+/// 🧷️ One shared peer entry whose controlled retirement releases exactly its own lease.
+#[doc(hidden)]
+pub struct PeerPresenceEntryLease(pub std::sync::Arc<PeerPresenceEntry>);
+impl semio_framework_value::retirement::RetireOwned for PeerPresenceEntryLease {
+    type RetirementCursor = semio_framework_value::retirement::arc_custody::ArcLeaseRetirement<PeerPresenceEntry>;
+    fn retirement_seed(self) -> Self::RetirementCursor { semio_framework_value::retirement::arc_custody::ArcLeaseRetirement::lease(self.0) }
+    fn controlled_retirement_supported() -> bool { <PeerPresenceEntry as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() }
+}
+
+#[doc(hidden)]
 pub struct PeerPresenceRootRetirement {
     pub root: ManuallyDrop<Option<std::sync::Arc<PeerPresenceRoot>>>,
     pub owned: ManuallyDrop<Option<PeerPresenceRoot>>,
-    pub entry: ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<PeerPresenceEntry>>>>,
+    pub entry: ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<PeerPresenceEntryLease>>>,
     pub cursor: usize,
 }
 
@@ -45,7 +55,7 @@ impl PeerPresenceRootRetirement {
 
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(entry) = self.entry.as_ref() {
-            if entry.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<PeerPresenceEntry>>>>(),depth:1,..Default::default()})}
+            if entry.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<PeerPresenceEntryLease>>>(),depth:1,..Default::default()})}
             return Ok({let mut demand=entry.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer entry retirement depth overflow"))?;demand});
         }
         if self.root.is_some() {
@@ -53,7 +63,7 @@ impl PeerPresenceRootRetirement {
         }
         if let Some(root) = self.owned.as_ref() {
             let copy=if self.cursor<root.len{
-                size_of::<usize>()+2*size_of::<Option<std::sync::Arc<PeerPresenceEntry>>>()+if root.entries[self.cursor].is_some(){2*size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<PeerPresenceEntry>>>>()}else{0}
+                size_of::<usize>()+2*size_of::<Option<std::sync::Arc<PeerPresenceEntry>>>()+if root.entries[self.cursor].is_some(){2*size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<PeerPresenceEntryLease>>>()}else{0}
             }else{2*size_of::<Option<PeerPresenceRoot>>()};
             return Ok(RetirementDemand{copy_bytes:copy,depth:1,..Default::default()});
         }
@@ -93,7 +103,10 @@ impl PeerPresenceRootRetirement {
             let index = self.cursor;
             self.cursor += 1;
             if let Some(entry) = root.entries[index].take() {
-                *self.entry = Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(semio_framework_value::retirement::arc_custody::ArcLease::new(entry)));
+                match semio_framework_value::retirement::controlled::ControlledRetirement::new(PeerPresenceEntryLease(entry)) {
+                    Ok(owner) => *self.entry = Some(owner),
+                    Err((error, lease)) => { root.entries[index] = Some(lease.0); return Err(error); }
+                }
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
             }
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, ..empty }));
@@ -115,6 +128,7 @@ impl Drop for PeerPresenceRootRetirement {
 mod peer_root_retirement_laws {
     use super::*;
     use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+    use super::retirement_fixture::run;
 
     #[test]
     fn configuration_completion_preserves_original_physical_owner_and_grants() {
@@ -127,7 +141,7 @@ mod peer_root_retirement_laws {
         let (mut owner, handoff) = observe(|| ConfigurationDecodeRetirement { original: std::mem::ManuallyDrop::new(Some(original)), payload: None });
         assert_eq!((handoff.requested_bytes, handoff.released_bytes), (0, 0));
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }, RetainedCloneGrant { maximum_release_bytes: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
-            let (step, heap) = observe(|| owner.step(denied).unwrap());
+            let (step, heap) = run(denied,|effect|owner.step(effect).unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(std::sync::Arc::as_ptr(owner.original.as_ref().unwrap()), identity);
@@ -136,7 +150,7 @@ mod peer_root_retirement_laws {
         let mut released = birth.released_bytes;
         for _ in 0..10000 {
             if owner.terminal_is_empty() { break; }
-            let (step, heap) = observe(|| owner.step(grant).unwrap());
+            let (step, heap) = run(grant,|effect|owner.step(effect).unwrap());
             let progress = step.progress();
             assert!(progress.fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -320,17 +334,17 @@ mod peer_root_retirement_laws {
         let (mut owner, handoff) = observe(|| PeerPresenceRootRetirement::new(root));
         assert_eq!((handoff.requested_bytes, handoff.released_bytes), (0, 0));
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_release_bytes: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
-            let (_, heap) = observe(|| owner.close_step(denied));
+            let (_, heap) = run(denied,|effect|owner.close_step(effect));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
         assert_eq!(borrowed.iter().map(|(actor, presence)| (actor.as_ptr(), presence.surface.as_ref().unwrap().as_ptr())).collect::<Vec<_>>(), pointers);
-        let (_, heap) = observe(|| owner.close_step(grant).unwrap());
+        let (_, heap) = run(grant,|effect|owner.close_step(effect).unwrap());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         drop(borrowed);
         let (mut born, mut released) = (birth.requested_bytes, birth.released_bytes);
         for turn in 0..4096 {
             if owner.terminal_is_empty() { break; }
-            let (step, heap) = observe(|| owner.close_step(grant).unwrap());
+            let (step, heap) = run(grant,|effect|owner.close_step(effect).unwrap());
             let receipt = step.progress().unwrap_or_default();
             assert!(receipt.fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes));
@@ -627,6 +641,15 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
                 Ok(PeerRosterTurn::Spent)
             }
             PeerRosterPublicationStage::DecodeTyped => {
+                if self.pending_pack.is_some() || self.rejected.is_some() {
+                    let grant = original.remaining_grant();
+                    let maximum = 1;
+                    let (rejected, pending_pack) = (&mut self.rejected, &mut self.pending_pack);
+                    let Some(step) = original.native().with_effect(grant, maximum, |_, effect| if rejected.is_some() { semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(rejected, grant.maximum_copy_bytes, effect)) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(pending_pack, rejected, effect).result }).map_err(refused)? else { return Ok(PeerRosterTurn::Spent) };
+                    let step = step.map_err(refused)?;
+                    original.record_progress(step.progress()).map_err(refused)?;
+                    return Ok(PeerRosterTurn::Spent);
+                }
                 if self.packs_len == 0 {
                     self.release_packs_shell();
                     self.stage = PeerRosterPublicationStage::ReleaseCreated;
@@ -784,7 +807,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(typed) = self.typed.as_mut() {
-            let step = match typed.close_step(effect) { Ok(step) => step, Err(semio_framework_value::RetirementPollExit::Pending(_)) => return Ok(PluginLifecycleStep::Progress(empty)), Err(semio_framework_value::RetirementPollExit::Failed(failure)) => return Err(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure)) };
+            let step = match typed.close_step(effect) { Ok(step) => step, Err(semio_framework_value::RetirementPollExit::Pending(_)) => semio_framework_value::retained_clone::RetainedCloneStep::Progress(empty), Err(semio_framework_value::RetirementPollExit::Failed(failure)) => return Err(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure)) };
             if typed.terminal_is_empty() { drop(self.typed.take()); }
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
@@ -805,18 +828,15 @@ impl<A: ArtifactApp> Drop for PeerRosterPublication<A> {
 }
 
 #[cfg(test)]
-#[global_allocator]
-static PEER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-
-#[cfg(test)]
 mod peer_presence_metadata_currency {
  use super::*;
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+ use super::retirement_fixture::{run,settled};
 
  fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
  fn paid(owner:&mut PeerPresenceRootRetirement)->RetainedCloneProgress{
   let g=grant();let demand=owner.retirement_demands(g.maximum_copy_bytes).unwrap();
-  let(step,heap)=observe(||owner.close_step(g).unwrap());let progress=step.progress().unwrap_or_default();
+  let(step,heap)=run(g,|effect|owner.close_step(effect).unwrap());let progress=step.progress().unwrap_or_default();
   assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
   assert!(progress.fits(g));assert_eq!(progress.copied_bytes,demand.copy_bytes);progress
  }
@@ -824,7 +844,7 @@ mod peer_presence_metadata_currency {
  #[test]
  fn peer_presence_metadata_empty_owned_clear_requires_copy_funding(){
   let mut owner=PeerPresenceRootRetirement::owned(PeerPresenceRoot::empty());
-  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap());
+  let(step,heap)=run(RetainedCloneGrant{maximum_copy_bytes:0,..grant()},|effect|owner.close_step(effect).unwrap());
   assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress().unwrap_or_default(),Default::default());
   assert!(owner.owned.is_some());assert!(owner.retirement_demands(grant().maximum_copy_bytes).unwrap().copy_bytes>0);
   paid(&mut owner);assert!(owner.terminal_is_empty());
@@ -833,7 +853,7 @@ mod peer_presence_metadata_currency {
  #[test]
  fn peer_presence_metadata_sparse_entry_reports_its_cursor_and_option_writes(){
   let mut root=PeerPresenceRoot::empty();root.len=1;let mut owner=PeerPresenceRootRetirement::owned(root);
-  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap());
+  let(step,heap)=run(RetainedCloneGrant{maximum_copy_bytes:0,..grant()},|effect|owner.close_step(effect).unwrap());
   assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress().unwrap_or_default(),Default::default());assert_eq!(owner.cursor,0);
   let progress=paid(&mut owner);assert!(progress.copied_bytes>=size_of::<usize>()+size_of::<Option<std::sync::Arc<PeerPresenceEntry>>>());assert_eq!(owner.cursor,1);
   paid(&mut owner);assert!(owner.terminal_is_empty());
@@ -842,10 +862,29 @@ mod peer_presence_metadata_currency {
  #[test]
  fn peer_presence_metadata_terminal_child_cursor_clear_is_separately_funded(){
   let mut source=PeerPresenceRoot::empty();source.insert("metadata-peer".into(),PeerPresence::default()).unwrap();let entry=source.entries[0].take().unwrap();source.len=0;
-  let mut child=semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(entry);
-  for _ in 0..4096{if child.terminal_is_empty(){break}let(step,heap)=observe(||child.step(grant()).unwrap());let p=step.progress();assert!(p.fits(grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}
+  let mut child=semio_framework_value::retirement::controlled::ControlledRetirement::new(PeerPresenceEntryLease(entry)).map_err(|(error,_)|error).unwrap();
+  for _ in 0..4096{if child.terminal_is_empty(){break}let(turn,heap)=run(grant(),|effect|settled(child.step(grant().maximum_copy_bytes,effect)));let p=turn.result.unwrap().progress();assert!(p.fits(grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));}
   assert!(child.terminal_is_empty());let mut owner=PeerPresenceRootRetirement::owned(PeerPresenceRoot::empty());*owner.entry=Some(child);
-  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_copy_bytes:0,..grant()}).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress().unwrap_or_default(),Default::default());assert!(owner.entry.is_some());
+  let(step,heap)=run(RetainedCloneGrant{maximum_copy_bytes:0,..grant()},|effect|owner.close_step(effect).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.progress().unwrap_or_default(),Default::default());assert!(owner.entry.is_some());
   paid(&mut owner);assert!(owner.entry.is_none());assert!(!owner.terminal_is_empty());paid(&mut owner);assert!(owner.terminal_is_empty());
  }
+}
+
+#[cfg(test)]
+mod retirement_fixture{
+ use semio_framework_value::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,ValueError};
+ use semio_framework_value_testing_admission::{driven,BankWallet,EffectBank};
+
+ /// 🪢️ Runs one retirement turn as a genuine original producer invocation and observes its exact heap traffic.
+ pub fn run<R>(grant:RetainedCloneGrant,close:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->(R,semio_framework_trace::HeapAllocationObservation){
+  let mut bank=EffectBank::new(BankWallet::new(RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:1<<20},1<<30));
+  let(mut close,mut output)=(Some(close),None);
+  let(poll,_)=driven::<ValueError>(&mut bank,grant,1<<20,|effect,reply,_|{let close=close.take().ok_or_else(||ValueError::invariant("fixture operation runs once"))?;output=Some(semio_framework_trace::observe_heap_allocations_on_this_thread(||close(effect)));Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))});
+  assert!(matches!(poll,RetainedWorkPoll::Complete(ref turn) if turn.result.is_ok()),"fixture effect turn did not complete");
+  assert!(bank.into_wallet().is_ok(),"fixture bank closed with a live original action");
+  output.expect("fixture operation ran")
+ }
+
+ /// 🏁️ A suspended retirement poll is a fixture fault.
+ pub fn settled<T,E>(poll:RetainedWorkPoll<T,E>)->RetainedWorkOutcome<T,E>{match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{..}=>panic!("original fixture turn stayed pending")}}
 }

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -21,7 +22,7 @@ describe("Nx Unicode project transport", () => {
 
   test.if(testLevelAtLeast("long"))("builds the describe graph without a lossy duplicate repo-test root", () => {
     const root = getWorkspaceRoot();
-    const result = spawnSync("bun", ["nx", "show", "projects", "--with-target", "describe"], { cwd: root, encoding: "utf8", env: { ...process.env, NX_ISOLATE_PLUGINS: "true" } });
+    const result = spawnSync(registeredToolExecutableV1("bun"), ["nx", "show", "projects", "--with-target", "describe"], { cwd: root, encoding: "utf8", env: { ...process.env, NX_ISOLATE_PLUGINS: "true" } });
     expect(result.status, result.stderr).toBe(0);
   }, 180_000);
 });

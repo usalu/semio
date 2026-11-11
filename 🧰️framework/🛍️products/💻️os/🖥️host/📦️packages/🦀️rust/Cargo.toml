@@ -29,10 +29,10 @@ semio-ui-locale = { path = "../../../../../🔨️modules/🖱️ui/🌐️local
 semio-framework-value = { path = "../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-artifact-space-collection = { workspace = true }
-semio-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-framework-value-derive = { path = "../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-os-kernel = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 
-semio-framework = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../📦️packages/🦀️rust" }
 semio-os-host-codec-abi = { path = "../../📡️codec-abi/📦️packages/🦀️rust" }
 semio-os-host-instance = { path = "../../🧱️instance/📦️packages/🦀️rust" }
 semio-os-host-media-raster = { path = "../../🖼️media-export-raster/📦️packages/🦀️rust" }
@@ -61,7 +61,7 @@ base64_codec = { path = "../../../../../🔨️modules/🚪️io/🔤️base64/�
 semio-framework-deflate = { path = "../../../../../🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 # 🔄️ The space backbone's folder storage (`store_sync`) needs the kernel's sync transport off the WASI guest. A target table
 # instead of a feature keeps `sync` out of every `wasm32-wasip2` component, so all hub components share one kernel unit.
-semio-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync"] }
+semio-os-kernel = { path = "../../../📦️packages/🦀️rust", features = ["sync"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1", features = ["sync"], default-features = false }
@@ -71,8 +71,8 @@ tokio = { version = "1", features = ["sync"], default-features = false }
 # own module doc explains the fix. Native-only: `NativeKernelRuntime` spawns real OS threads and is
 # never compiled for wasm32, where the JS host already owns plugin execution off this crate.
 semio-framework-actor = { workspace = true }
-semio-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin-host = { path = "../../../🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing", "protocol-laws"] }
+semio-os-kernel = { path = "../../../📦️packages/🦀️rust", features = ["mutation-testing", "protocol-laws"] }
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

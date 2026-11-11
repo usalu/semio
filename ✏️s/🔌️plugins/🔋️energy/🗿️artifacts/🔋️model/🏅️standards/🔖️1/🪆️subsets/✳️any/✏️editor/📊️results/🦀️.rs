@@ -210,6 +210,3 @@ pub fn legend_bounds_labels(min: f64, max: f64) -> (String, String) {
 mod tests;
 //#endregion 🧪️Tests
 
-#[cfg(test)]
-#[global_allocator]
-static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

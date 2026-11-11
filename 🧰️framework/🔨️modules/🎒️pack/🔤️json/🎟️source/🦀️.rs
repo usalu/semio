@@ -108,6 +108,3 @@ mod tests{
  }
 }
 
-#[cfg(test)]
-#[global_allocator]
-static SOURCE_JSON_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

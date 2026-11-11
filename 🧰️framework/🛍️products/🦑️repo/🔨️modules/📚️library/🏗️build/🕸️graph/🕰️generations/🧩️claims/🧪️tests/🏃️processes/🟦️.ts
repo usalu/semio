@@ -4,6 +4,8 @@ import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{acquireFreshResourceLeaseV1,acquireQueuedResourceLease,acquireResourceLease}from"@semio-tech/process/leases";
 import{fileURLToPath}from"node:url";
+import{spawnSync}from"node:child_process";
+import fixture from"./🔣️.json";
 
 const spawned:ReturnType<typeof Bun.spawn>[]=[];
 const spawnV1=(...args:Parameters<typeof Bun.spawn>)=>{const child=Bun.spawn(...args);spawned.push(child);return child;};
@@ -93,5 +95,21 @@ test("a fresh exclusive lease held by another process refuses both the nonwaitin
   expect(await child.exited,await new Response(child.stderr).text()).toBe(0);
   (await acquireFreshResourceLeaseV1(request())).release();
   (await acquireResourceLease({...request(),timeoutMs:0})).release();
+ }finally{rmSync(dir,{recursive:true,force:true});}
+},60000);
+
+const cpuSeconds=(pid:number)=>spawnSync("ps",["-o","cputime=","-p",String(pid)],{encoding:"utf8"}).stdout.trim().split(":").reduce((sum,part)=>sum*60+Number(part),0);
+for(const lease of fixture.wait.leases)test.skipIf(process.platform==="win32")("a worker holding a lease forever and a worker waiting for it sleep instead of spinning ("+lease+" leases)",async()=>{
+ const dir=mkdtempSync(join(tmpdir(),"claims-cpu-")),log=join(dir,"log.jsonl"),budget=fixture.wait.waitMilliseconds*fixture.wait.maxCpuShare;
+ writeFileSync(log,"");
+ try{
+  const holderChild=launch(dir,log,"H",fixture.wait.wanted,{CLAIMS_LEASE:lease,CLAIMS_MODE:"hang"});
+  expect(await until(()=>rows(log).some(row=>row.event==="hang"),30000)).toBe(true);
+  const waiter=launch(dir,log,"W",fixture.wait.wanted,{CLAIMS_LEASE:lease});
+  await new Promise(resolve=>setTimeout(resolve,fixture.wait.waitMilliseconds));
+  const oracle=[holderChild.pid,waiter.pid].map(cpuSeconds);
+  holderChild.kill("SIGKILL");waiter.kill("SIGKILL");await Promise.all([holderChild.exited,waiter.exited]);
+  for(const child of[holderChild,waiter])expect(Number(child.resourceUsage()!.cpuTime.total)/1000,"cpu milliseconds of "+child.pid).toBeLessThan(budget);
+  for(const seconds of oracle)expect(seconds*1000,"ps cputime of a still running worker").toBeLessThan(budget);
  }finally{rmSync(dir,{recursive:true,force:true});}
 },60000);

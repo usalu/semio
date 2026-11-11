@@ -70,6 +70,14 @@
       "en": "A renewable repository command requires a positive ceiling",
       "de": "Ein erneuerbarer Repository-Befehl verlangt eine positive Obergrenze"
     },
+    "execution.child-failed": {
+      "en": "{label} failed with exit code {status}",
+      "de": "{label} ist mit Exitcode {status} fehlgeschlagen"
+    },
+    "execution.child-killed": {
+      "en": "{label} was killed by {signal}",
+      "de": "{label} wurde durch {signal} beendet"
+    },
     "testing.route-table-invalid": {
       "en": "The process test route table is invalid: it must satisfy its closed schema",
       "de": "Die Routentabelle der Prozess-Tests ist ungültig: sie muss ihrem geschlossenen Schema genügen"
@@ -169,6 +177,138 @@
     "nativeHelpers.wrapper-absent": {
       "en": "The unit cache compiler wrapper is missing after its build: {path}",
       "de": "Der Compiler-Wrapper des Unit-Caches fehlt nach seinem Build: {path}"
+    },
+    "execution.cancelled": {
+      "en": "{label} was cancelled",
+      "de": "{label} wurde abgebrochen"
+    },
+    "execution.terminated": {
+      "en": "{label} was terminated by {signal}",
+      "de": "{label} wurde durch {signal} beendet"
+    },
+    "execution.timed-out": {
+      "en": "{label} exceeded its {milliseconds} ms time limit and was stopped",
+      "de": "{label} hat sein Zeitlimit von {milliseconds} ms überschritten und wurde angehalten"
+    },
+    "execution.output-limit": {
+      "en": "{label} wrote more output than its limit allows and was stopped",
+      "de": "{label} hat mehr Ausgabe geschrieben, als sein Limit erlaubt, und wurde angehalten"
+    },
+    "source.escaped-workspace": {
+      "en": "Rust source {path} lies outside the declared workspace",
+      "de": "Rust-Quelle {path} liegt außerhalb des deklarierten Arbeitsbereichs"
+    },
+    "source.missing-input": {
+      "en": "Rust source input {file} is missing",
+      "de": "Rust-Quelleingabe {file} fehlt"
+    },
+    "source.changed-during-closure": {
+      "en": "Rust source {file} changed while its closure was read",
+      "de": "Rust-Quelle {file} hat sich beim Lesen ihrer Hülle geändert"
+    },
+    "source.generated-needs-compiler": {
+      "en": "Rust source {file} reads generated input, which only the compiler can attest",
+      "de": "Rust-Quelle {file} liest erzeugte Eingaben, die nur der Compiler bestätigen kann"
+    },
+    "source.inner-attribute-invalid": {
+      "en": "Rust source {file} has an inner attribute that is never closed",
+      "de": "Rust-Quelle {file} hat ein inneres Attribut, das nie geschlossen wird"
+    },
+    "source.ambiguous-mount": {
+      "en": "Rust source {file} mounts module {module} through an ambiguous path attribute",
+      "de": "Rust-Quelle {file} bindet Modul {module} über ein mehrdeutiges Pfadattribut ein"
+    },
+    "source.unresolved-module": {
+      "en": "Rust source {file}: module {module} has no single matching file",
+      "de": "Rust-Quelle {file}: Modul {module} hat keine eindeutig passende Datei"
+    },
+    "source.cfg-unbalanced": {
+      "en": "A Rust cfg expression has unbalanced delimiters",
+      "de": "Ein Rust-cfg-Ausdruck hat unausgeglichene Klammern"
+    },
+    "source.cfg-identifier-required": {
+      "en": "A Rust cfg predicate must start with an identifier",
+      "de": "Ein Rust-cfg-Prädikat muss mit einem Bezeichner beginnen"
+    },
+    "source.cfg-predicate-invalid": {
+      "en": "A Rust cfg predicate is invalid: only all, any and not take arguments",
+      "de": "Ein Rust-cfg-Prädikat ist ungültig: nur all, any und not nehmen Argumente"
+    },
+    "source.cfg-not-arity": {
+      "en": "The Rust cfg predicate not takes exactly one predicate",
+      "de": "Das Rust-cfg-Prädikat not nimmt genau ein Prädikat"
+    },
+    "source.cfg-feature-value-required": {
+      "en": "The Rust cfg predicate feature requires a value",
+      "de": "Das Rust-cfg-Prädikat feature verlangt einen Wert"
+    },
+    "source.cfg-equality-invalid": {
+      "en": "A Rust cfg equality must compare a name with a string",
+      "de": "Eine Rust-cfg-Gleichheit muss einen Namen mit einer Zeichenkette vergleichen"
+    },
+    "source.conditional-attribute-invalid": {
+      "en": "Rust source {file} has an invalid cfg or cfg_attr attribute",
+      "de": "Rust-Quelle {file} hat ein ungültiges cfg- oder cfg_attr-Attribut"
+    },
+    "source.cfg-attr-incomplete": {
+      "en": "Rust source {file}: cfg_attr requires a predicate and at least one attribute",
+      "de": "Rust-Quelle {file}: cfg_attr verlangt ein Prädikat und mindestens ein Attribut"
+    },
+    "source.inner-cfg-scope": {
+      "en": "Rust source {file} has an inner cfg attribute outside a named module",
+      "de": "Rust-Quelle {file} hat ein inneres cfg-Attribut außerhalb eines benannten Moduls"
+    },
+    "source.cfg-owned-item": {
+      "en": "Rust source {file} has a cfg attribute that owns no supported item",
+      "de": "Rust-Quelle {file} hat ein cfg-Attribut, das kein unterstütztes Element besitzt"
+    },
+    "source.delimiter-unclosed": {
+      "en": "Rust source {file}:{line}:{column}: the delimiter {delimiter} is never closed",
+      "de": "Rust-Quelle {file}:{line}:{column}: das Trennzeichen {delimiter} wird nie geschlossen"
+    },
+    "source.delimiter-unexpected": {
+      "en": "Rust source {file}:{line}:{column}: the closing delimiter {delimiter} has no opening delimiter",
+      "de": "Rust-Quelle {file}:{line}:{column}: das schließende Trennzeichen {delimiter} hat kein öffnendes"
+    },
+    "source.delimiter-mismatched": {
+      "en": "Rust source {file}:{line}:{column}: the delimiter {delimiter} is closed by {closing} at {closingLine}:{closingColumn} instead",
+      "de": "Rust-Quelle {file}:{line}:{column}: das Trennzeichen {delimiter} wird stattdessen durch {closing} bei {closingLine}:{closingColumn} geschlossen"
+    },
+    "source.read-bytes-exceeded": {
+      "en": "Rust source {file} has {observedBytes} bytes but only {maximumBytes} bytes remain in its crate source boundary",
+      "de": "Rust-Quelle {file} hat {observedBytes} Bytes, aber in der Quellgrenze ihres Crates verbleiben nur {maximumBytes} Bytes"
+    },
+    "source.read-files-exhausted": {
+      "en": "Rust source {file} exceeds the file count of its crate source boundary ({remainingFiles} files remain)",
+      "de": "Rust-Quelle {file} überschreitet die Dateianzahl der Quellgrenze ihres Crates ({remainingFiles} Dateien verbleiben)"
+    },
+    "source.read-extent-mismatched": {
+      "en": "Rust source {file} has {observedBytes} bytes where {expectedBytes} bytes were admitted",
+      "de": "Rust-Quelle {file} hat {observedBytes} Bytes, zugelassen waren {expectedBytes} Bytes"
+    },
+    "source.crate-refused": {
+      "en": "Rust crate {crate} was refused before the compiler: {reason}",
+      "de": "Rust-Crate {crate} wurde vor dem Compiler abgelehnt: {reason}"
+    },
+    "source.boundary-policy-invalid": {
+      "en": "The Cargo source boundary policy is not the closed ordinary policy",
+      "de": "Die Cargo-Quellgrenzenrichtlinie ist nicht die geschlossene gewöhnliche Richtlinie"
+    },
+    "source.environment-source-missing": {
+      "en": "The original Rust compiler environment source {file} is missing",
+      "de": "Die ursprüngliche Rust-Compilerumgebungsquelle {file} fehlt"
+    },
+    "execution.loan-expired": {
+      "en": "The resource loan of {label} ran out without observable progress: {message}",
+      "de": "Die Ressourcenleihe von {label} lief ohne beobachtbaren Fortschritt ab: {message}"
+    },
+    "error.internal": {
+      "en": "Internal error: {message}",
+      "de": "Interner Fehler: {message}"
+    },
+    "source.boundary-exceeded": {
+      "en": "Rust crate {crate} exceeds its source boundary before the compiler: {files} of {maxFiles} files, {bytes} of {maxBytes} bytes",
+      "de": "Rust-Crate {crate} überschreitet vor dem Compiler seine Quellgrenze: {files} von {maxFiles} Dateien, {bytes} von {maxBytes} Bytes"
     }
   }
 }

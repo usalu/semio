@@ -185,16 +185,16 @@ impl ArtifactEditor for SequencePlayApp {
     /// reserved factory but never a concrete importer, so every inbound `steps:in` delivery is routed
     /// exclusively through this builder (`dispatch_import_media` → `build_artifact_reserved_media_job`);
     /// `copy`/`cut`/`paste` stay on the framework's own reserved factories.
-    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>>,output:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if output.is_some(){return semio_plugin::tool_contract::admit_reserved_work::<semio_plugin::EditorApp<Self>,SequenceImportJob>(request,output,cx)}
+    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>>,output:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if output.is_some(){return semio_plugin::tool_contract::admit_reserved_work::<semio_plugin::EditorApp<Self>,SequenceImportJob>(request,output,construction,cx)}
         let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("Sequence original reserved request is absent"))?;
         if original.tool_id.as_str()!=SEQUENCE_IMPORT_TOOL_ID{return Ok(false)}
         if !original.raw_wire.is_empty(){return Err(semio_framework_value::ValueError::invariant("Sequence reserved import requires decoded media").into())}
         if !matches!(original.input.as_ref(),Some(semio_plugin::ArtifactReservedToolInput::Media{..})){return Err(semio_framework_value::ValueError::invariant("Sequence reserved import media is absent").into())}
-        semio_plugin::tool_contract::admit_reserved_work::<semio_plugin::EditorApp<Self>,SequenceImportJob>(request,output,cx)
+        semio_plugin::tool_contract::admit_reserved_work::<semio_plugin::EditorApp<Self>,SequenceImportJob>(request,output,construction,cx)
     }
 
-    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let artifact_route = SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.contains(&original.tool_id.as_str());
         let config_route = SEQUENCE_RETAINED_CONFIG_TOOL_IDS.contains(&original.tool_id.as_str());

@@ -1,8 +1,6 @@
 #![cfg(not(target_arch="wasm32"))]
 use semio_framework_job::*;use semio_framework_job_worker::{WorkerJobOutcome,WorkerJobPoll,WorkerJobSession,WorkerJobSessionPreparation,OriginalWorkerFixtureCaller};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobInitializer};
 use semio_ui_wgpu_hosting::host::{ClipboardIoJob, ClipboardIoJobInitializer};
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:100_000,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128}}
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}

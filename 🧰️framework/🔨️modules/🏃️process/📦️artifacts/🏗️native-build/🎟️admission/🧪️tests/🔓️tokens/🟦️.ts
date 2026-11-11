@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../🧰️tools/🏃️run/🟦️.ts";
 import{test,expect}from"bun:test";
 import{spawn,spawnSync}from"node:child_process";
 import{chmodSync,existsSync,mkdirSync,mkdtempSync,writeFileSync}from"node:fs";
@@ -13,7 +14,7 @@ const reserveBytes=6*2**30,pause=(milliseconds:number)=>new Promise<void>(done=>
 async function schedulerBinary(scratch:string):Promise<string|undefined>{
  if(process.env.SEMIO_TEST_SCHEDULER)return process.env.SEMIO_TEST_SCHEDULER;
  if(process.platform==="win32"||!existsSync(manifest))return undefined;
- const built=spawnSync("cargo",["build","--release","--manifest-path",manifest,"--bins"],{cwd:scratch,env:{...process.env,CARGO_TARGET_DIR:join(scratch,"target")},encoding:"utf8"});
+ const built=spawnSync(registeredToolExecutableV1("cargo"),["build","--release","--manifest-path",manifest,"--bins"],{cwd:scratch,env:{...process.env,CARGO_TARGET_DIR:join(scratch,"target")},encoding:"utf8"});
  if(built.status!==0)throw Error("Scheduler build failed: "+built.stderr);
  return join(scratch,"target","release","semio-build-scheduler");
 }

@@ -2,17 +2,18 @@
 use semio_plugin_decl_app::{ArtifactApp,OriginalCompletionBirth};
 use semio_plugin_decl_app::tool_contract::{ArtifactReservedToolInput,ArtifactReservedToolJobRequest,ArtifactReservedToolJob,ArtifactReservedJob,ArtifactToolCompletion};
 use semio_framework_job::{StepContext,OriginalTurnFailure,InteractiveJob,InteractiveJobCloseStep};
-use semio_framework_value::{DslValue,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
-use semio_framework_value::retained_clone::RetainedCloneClose;
+use semio_framework_value::{DslValue,OriginalRetirementFailure,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,ValueError,ValueRefusalKind,retirement::arc_custody::ArcLease};
+use semio_framework_value::retained_clone::{NativeAllocationIdentity,RetainedCloneClose};
+use semio_plugin_job::original_steps::{funded,retired,retired_poll};
 use semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor;
-use semio_framework_plugin_instance_stores::stores_command_routes::AuthoringSeedWork;
-use semio_framework_value::retirement::arc_custody::ArcLease;
+use semio_plugin_instance_stores::stores_command_routes::AuthoringSeedWork;
 use std::mem::{ManuallyDrop,size_of};
 
 type ActionWire=ArtifactCanonicalJsonTreeWireCursor<(String,Option<DslValue>)>;
+type CacheRoots<A>=(ArcLease<<A as ArtifactApp>::Snapshot>,ArcLease<<A as ArtifactApp>::Config>,ArcLease<semio_plugin_decl_views::history_view::HistoryView>);
 pub struct ReservedPreparation<A:ArtifactApp>{
  pub source:semio_framework::action_bus::OriginalToolSourceBinding,
- pub decoder:(semio_framework_value::retained_clone::NativeAllocationIdentity,u64),
+ pub decoder:(NativeAllocationIdentity,u64),
  pub revision:[u8;32],
  meta:Option<(usize,usize,u32,Option<(semio_ui_locale::Locale,semio_ui_locale::Terminology)>)>,
  pub admission:ManuallyDrop<Option<semio_framework::ToolWireAdmission>>,
@@ -23,7 +24,7 @@ pub struct ReservedPreparation<A:ArtifactApp>{
  pub admission_cursor:(usize,usize),
  pub admission_registration:Option<usize>,
  pub admission_decoded:usize,
- pub cache_roots:ManuallyDrop<Option<(ArcLease<A::Snapshot>,ArcLease<A::Config>,ArcLease<semio_plugin_decl_views::history_view::HistoryView>)>>,
+ pub cache_roots:ManuallyDrop<Option<CacheRoots<A>>>,
  pub metadata:ManuallyDrop<Option<[Vec<u8>;9]>>,
  pub headers:ManuallyDrop<Option<[String;9]>>,
  metadata_sources:[[(usize,usize);2];9],
@@ -46,18 +47,22 @@ pub struct ReservedPreparation<A:ArtifactApp>{
  closing:bool,
 }
 impl<A:ArtifactApp> ReservedPreparation<A>{
- pub fn slot_close_demands(slot:&Option<Self>,body:usize)->Result<RetirementDemand,ValueError>{match slot.as_ref(){None=>Ok(Default::default()),Some(owner)if owner.terminal_is_empty()=>Ok(RetirementDemand{copy_bytes:size_of::<Option<Self>>(),depth:1,..Default::default()}),Some(owner)=>owner.close_demands(body)}}
- pub fn close_slot(slot:&mut Option<Self>,bus:&semio_framework::ActionBus,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
-  let Some(owner)=slot.as_mut()else{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})};owner.validate(owner.revision,cx)?;if !owner.terminal_is_empty(){return owner.close_step(bus,cx)}let bytes=size_of::<Option<Self>>();semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{drop(slot.take());RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})
+ pub fn slot_close_demands(slot:&Option<Self>,birth:&Option<semio_framework_job::OriginalConstructionAdmission>,body:usize)->Result<RetirementDemand,ValueError>{match slot.as_ref(){None=>Ok(if birth.is_some(){RetirementDemand{copy_bytes:size_of::<semio_framework_job::OriginalConstructionAdmission>(),depth:1,..Default::default()}}else{Default::default()}),Some(owner)if owner.terminal_is_empty()=>Ok(RetirementDemand{copy_bytes:size_of::<Option<Self>>(),depth:1,..Default::default()}),Some(owner)=>owner.close_demands(body)}}
+ pub fn close_slot(slot:&mut Option<Self>,birth:&mut Option<semio_framework_job::OriginalConstructionAdmission>,bus:&semio_framework::ActionBus,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+  let Some(owner)=slot.as_mut()else{let Some(admission)=birth.as_mut()else{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})};let step=admission.retire_step(cx)?;if admission.terminal_is_empty(){*birth=None}return Ok(step)};owner.validate(owner.revision,cx)?;if !owner.terminal_is_empty(){return owner.close_step(bus,cx)}let bytes=size_of::<Option<Self>>();semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{drop(slot.take());RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})
  }
- pub fn admit(slot:&mut Option<Self>,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ pub fn owns_birth(slot:&Option<Self>,birth:&Option<semio_framework_job::OriginalConstructionAdmission>,cx:&StepContext<'_>)->bool{slot.as_ref().is_some_and(|owner|owner.matches(cx))||birth.as_ref().is_some_and(|admission|admission.matches(cx))}
+ pub fn admit(slot:&mut Option<Self>,birth:&mut Option<semio_framework_job::OriginalConstructionAdmission>,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   cx.original_source_parent()?;
   if let Some(owner)=slot.as_ref(){owner.validate(revision,cx)?;return Ok(true)}
   let bytes=size_of::<Self>();let source=semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx);
-  semio_framework::action_bus::admit_original_construction_settled(cx,&mut Default::default(),slot,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},1,|control,_|{
+  let admission=birth.get_or_insert_with(Default::default);
+  let settled=semio_framework_job::admit_original_construction_settled(cx,admission,slot,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},1,|control,_|{
    let result=control.retirement_recipient_identity().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"reserved preparation requires its original decoder recipient")).map(|recipient|(Self{source,decoder:(control.ledger_identity(),recipient),revision,meta:None,admission:ManuallyDrop::new(None),wire_key:ManuallyDrop::new(None),wire_schema:ManuallyDrop::new(None),wire_cursor:ManuallyDrop::new(None),wire_construction:Default::default(),admission_cursor:(0,0),admission_registration:None,admission_decoded:0,cache_roots:ManuallyDrop::new(None),metadata:ManuallyDrop::new(Some(Default::default())),headers:ManuallyDrop::new(Some(Default::default())),metadata_sources:[[(0,0);2];9],metadata_bound:[false;9],metadata_transferred:[false;9],seed:None,seed_output:ManuallyDrop::new(None),completion_birth:Default::default(),completion:ManuallyDrop::new(None),action_wire:ManuallyDrop::new(None),action_returned:ManuallyDrop::new(None),raw_wire:ManuallyDrop::new(None),input:ManuallyDrop::new(None),snapshot_read:ManuallyDrop::new(None),interaction_read:ManuallyDrop::new(None),request:ManuallyDrop::new(None),body:ManuallyDrop::new(None),job:ManuallyDrop::new(None),retirement:Default::default(),closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));
    RetainedWorkOutcome{result,work:1}
-  })
+  })?;
+  if settled{if let(Some(owner),Some(residue))=(slot.as_mut(),birth.take()){owner.wire_construction=residue}}
+  Ok(settled)
  }
  pub fn validate(&self,revision:[u8;32],cx:&StepContext<'_>)->Result<(),ValueError>{if !self.matches(cx)||self.revision!=revision{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"reserved preparation requires its original caller, decoder and unchanged document revision"))}Ok(())}
  pub fn matches(&self,cx:&StepContext<'_>)->bool{self.source.matches(cx)&&cx.native_receiving_identity()==Some(self.decoder)}
@@ -67,10 +72,14 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
   let bytes=std::mem::size_of_val(&self.meta);let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}self.meta=Some(identity);cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(true)
  }
  pub fn bind_cache(&mut self,roots:(&std::sync::Arc<A::Snapshot>,&std::sync::Arc<A::Config>,&std::sync::Arc<semio_plugin_decl_views::history_view::HistoryView>),cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(self.revision,cx)?;if let Some(bound)=self.cache_roots.as_ref(){return if bound.0.0.as_ref().is_some_and(|held|std::sync::Arc::ptr_eq(held,roots.0))&&bound.1.0.as_ref().is_some_and(|held|std::sync::Arc::ptr_eq(held,roots.1))&&bound.2.0.as_ref().is_some_and(|held|std::sync::Arc::ptr_eq(held,roots.2)){Ok(true)}else{Err(ValueError::invariant("reserved preparation requires its original cache roots").into())}}
-  let bytes=size_of::<(ArcLease<A::Snapshot>,ArcLease<A::Config>,ArcLease<semio_plugin_decl_views::history_view::HistoryView>)>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
+  self.validate(self.revision,cx)?;if let Some(bound)=self.cache_roots.as_ref(){return if bound.0.0.as_ref().is_some_and(|root|std::sync::Arc::ptr_eq(root,roots.0))&&bound.1.0.as_ref().is_some_and(|root|std::sync::Arc::ptr_eq(root,roots.1))&&bound.2.0.as_ref().is_some_and(|root|std::sync::Arc::ptr_eq(root,roots.2)){Ok(true)}else{Err(ValueError::invariant("reserved preparation requires its original cache roots").into())}}
+  let bytes=size_of::<CacheRoots<A>>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
   *self.cache_roots=Some((ArcLease::new(roots.0.clone()),ArcLease::new(roots.1.clone()),ArcLease::new(roots.2.clone())));cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(true)
  }
+ /// 🗃️ The admitted snapshot root the cached read must agree with.
+ pub fn snapshot_root(&self)->Option<&std::sync::Arc<A::Snapshot>>{self.cache_roots.as_ref().and_then(|roots|roots.0.0.as_ref())}
+ /// 📤️ Hands the admitted cache roots to the request that retires them from now on.
+ pub fn take_cache_roots(&mut self)->Option<(std::sync::Arc<A::Snapshot>,std::sync::Arc<A::Config>,std::sync::Arc<semio_plugin_decl_views::history_view::HistoryView>)>{let(snapshot,config,history)=self.cache_roots.take()?;Some((snapshot.0?,config.0?,history.0?))}
  pub fn copy_metadata(&mut self,field:usize,parts:[&str;2],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(self.revision,cx)?;if field>=9{return Err(ValueError::invariant("reserved metadata field exceeds its inventory").into())}
   let identities=parts.map(|part|(part.as_ptr()as usize,part.len()));if self.metadata_bound[field]&&self.metadata_sources[field]!=identities{return Err(ValueError::invariant("reserved metadata source changed during its granted copy").into())}
@@ -100,18 +109,13 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
   let action=std::mem::take(&mut self.metadata.as_mut().unwrap()[1]);let action=unsafe{String::from_utf8_unchecked(action)};self.metadata_transferred[1]=true;*self.action_wire=Some(ActionWire::new((action,args.take())));cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(true)
  }
  pub fn advance_action_wire(&mut self,maximum:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(self.revision,cx)?;if self.raw_wire.is_some(){return Ok(true)}let owner=self.action_wire.as_mut().ok_or_else(||ValueError::invariant("reserved action wire has no original source"))?;
+  self.validate(self.revision,cx)?;if self.raw_wire.is_some()&&self.action_returned.is_some(){return Ok(true)}let owner=self.action_wire.as_mut().ok_or_else(||ValueError::invariant("reserved action wire has no original source"))?;
   if owner.phase()=="allocate"&&owner.measured_byte_length()>maximum{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"reserved action wire exceeds its declared input bound").into())}
-  if owner.phase()=="sourceClose"{semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|owner.return_original(&mut self.action_returned,effect).result)?;return Ok(false)}
-  semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|owner.advance(effect).map(|step|{*self.raw_wire=step.output;RetainedCloneStep::Progress(step.progress)}))?;Ok(self.raw_wire.is_some())
+  if owner.phase()=="sourceClose"{funded(cx,Default::default(),|effect|RetainedWorkPoll::Complete(owner.return_original(&mut self.action_returned,effect)))?;return Ok(false)}
+  funded(cx,Default::default(),|effect|{let result=owner.advance(effect).map(|step|{*self.raw_wire=step.output;RetainedCloneStep::Progress(step.progress)});RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:effect.performed_work()})})?;Ok(self.raw_wire.is_some()&&self.action_returned.is_some())
  }
  pub fn advance_builder(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(self.revision,cx)?;if self.job.is_some(){return Ok(true)}if self.body.is_none(){A::build_reserved_tool_job(&mut self.request,&mut self.body,cx)?;return Ok(false)}ArtifactReservedToolJob::admit_boxed_original(&mut self.body,&mut self.job,cx)
- }
- pub fn handoff(&mut self,output:&mut Option<(ArtifactReservedToolJob,ArtifactToolCompletion<A>,semio_framework::ToolWireAdmission)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(self.revision,cx)?;if self.request.is_some()||self.body.is_some()||self.job.is_none()||self.completion.is_none()||self.admission.is_none(){return Err(ValueError::invariant("reserved handoff requires the complete admitted producer and completion").into())}
-  let bytes=size_of::<(ArtifactReservedToolJob,ArtifactToolCompletion<A>,semio_framework::ToolWireAdmission)>();
-  semio_framework::action_bus::admit_original_construction_settled(cx,&mut Default::default(),output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},1,|_,_|RetainedWorkOutcome{result:Ok(((self.job.take().unwrap(),self.completion.take().unwrap(),self.admission.take().unwrap()),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1})
+  self.validate(self.revision,cx)?;if self.job.is_some(){return Ok(true)}if self.body.is_none(){A::build_reserved_tool_job(&mut self.request,&mut self.body,&mut self.wire_construction,cx)?;return Ok(false)}ArtifactReservedToolJob::admit_boxed_original(&mut self.body,&mut self.job,cx)
  }
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   let header=RetirementDemand{depth:1,..Default::default()};
@@ -123,24 +127,23 @@ impl<A:ArtifactApp> ReservedPreparation<A>{
   if !self.completion_birth.terminal_is_empty(){return Ok(self.completion_birth.close_demands())}
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<()>(false,&None,body)}
   macro_rules! lane{($field:ident,$type:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_demands::<$type>(true,&None,body)}};}
-  lane!(request,ArtifactReservedToolJobRequest<A>);lane!(input,ArtifactReservedToolInput);lane!(snapshot_read,store::os_store::snapshot_read::SnapshotRead<A::Snapshot>);lane!(interaction_read,store::os_store::snapshot_read::SnapshotRead<store::InteractionState>);lane!(cache_roots,(ArcLease<A::Snapshot>,ArcLease<A::Config>,ArcLease<semio_plugin_decl_views::history_view::HistoryView>));lane!(admission,semio_framework::ToolWireAdmission);lane!(wire_key,semio_framework::ToolFactoryKey);lane!(wire_schema,String);lane!(action_returned,(String,Option<DslValue>));lane!(raw_wire,Vec<u8>);lane!(metadata,[Vec<u8>;9]);lane!(headers,[String;9]);lane!(seed_output,String);lane!(completion,ArtifactToolCompletion<A>);
+  lane!(request,ArtifactReservedToolJobRequest<A>);lane!(input,ArtifactReservedToolInput);lane!(snapshot_read,store::os_store::snapshot_read::SnapshotRead<A::Snapshot>);lane!(interaction_read,store::os_store::snapshot_read::SnapshotRead<store::InteractionState>);lane!(cache_roots,CacheRoots<A>);lane!(admission,semio_framework::ToolWireAdmission);lane!(wire_key,semio_framework::ToolFactoryKey);lane!(wire_schema,String);lane!(action_returned,(String,Option<DslValue>));lane!(raw_wire,Vec<u8>);lane!(metadata,[Vec<u8>;9]);lane!(headers,[String;9]);lane!(seed_output,String);lane!(completion,ArtifactToolCompletion<A>);
   Ok(header)
  }
  pub fn close_step(&mut self,bus:&semio_framework::ActionBus,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
   self.validate(self.revision,cx)?;self.closing=true;
-  if let Some(cursor)=self.wire_cursor.as_mut(){if !cursor.terminal_is_empty(){let step=cursor.close_step(bus,cx)?;return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}let bytes=size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();return semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{self.wire_cursor.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})}
+  if let Some(cursor)=self.wire_cursor.as_mut(){if !cursor.terminal_is_empty(){let step=cursor.close_step(bus,cx)?;return Ok(InteractiveJobCloseStep::Pending{progress:step.progress()})}let bytes=size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();return semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{self.wire_cursor.take();RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})}
   if !self.wire_construction.terminal_is_empty(){self.wire_construction.close_step(cx)?;return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
-  if let Some(job)=self.job.as_mut(){if !job.terminal_is_empty(){job.begin_close();return job.close_step(cx)}return semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.job.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
-  if let Some(job)=self.body.as_mut(){if !job.terminal_is_empty(){job.begin_close();return job.close_step(cx)}let released_bytes=std::mem::size_of_val(&**job);return semio_framework_job::close_original_retained_step(cx,RetirementDemand{release_bytes:released_bytes,depth:1,..Default::default()},|_|{self.body.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})),work:1}})}
-  if let Some(wire)=self.action_wire.as_mut(){if !wire.terminal_is_empty(){let demand=wire.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;return semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|wire.close_step(effect).map(RetainedCloneStep::Progress))}return semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.action_wire.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
+  if let Some(job)=self.job.as_mut(){if !job.terminal_is_empty(){job.begin_close();return job.close_step(cx)}return semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.job.take();RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
+  if let Some(job)=self.body.as_mut(){if !job.terminal_is_empty(){job.begin_close();return job.close_step(cx)}let released_bytes=std::mem::size_of_val(&**job);return semio_framework_job::close_original_retained_step(cx,RetirementDemand{release_bytes:released_bytes,depth:1,..Default::default()},|_|{self.body.take();RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})),work:1}})}
+  if let Some(wire)=self.action_wire.as_mut(){if !wire.terminal_is_empty(){let demand=wire.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;return retired(cx,demand,|effect|wire.close_step(effect).map(RetainedCloneStep::Progress))}return semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.action_wire.take();RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
   if !self.completion_birth.terminal_is_empty(){return self.completion_birth.close_step(cx)}
   let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-  semio_framework_job::close_original_effect_step(cx,demand,|effect|{
-   use semio_framework_value::{RetainedWorkPoll,OriginalRetirementFailure};
-   if !self.retirement.is_empty(){return self.retirement.step_granted(effect.grant().maximum_copy_bytes,effect)}
+  retired_poll(cx,demand,|effect|{
+   if !self.retirement.is_empty(){let body=effect.grant().maximum_copy_bytes;return self.retirement.step_granted(body,effect)}
    macro_rules! lane{($field:ident)=>{if self.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.$field,effect);return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))).map_err(OriginalRetirementFailure::from),work:turn.work})}};}
    lane!(request);lane!(input);lane!(snapshot_read);lane!(interaction_read);lane!(cache_roots);lane!(admission);lane!(wire_key);lane!(wire_schema);lane!(action_returned);lane!(raw_wire);lane!(metadata);lane!(headers);lane!(seed_output);lane!(completion);
-   self.seed=None;RetainedWorkPoll::Complete(RetainedWorkOutcome::<_,OriginalRetirementFailure>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})
+   self.seed=None;RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})
   })
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.wire_cursor.is_none()&&self.wire_construction.terminal_is_empty()&&self.wire_key.is_none()&&self.wire_schema.is_none()&&self.admission.is_none()&&self.cache_roots.is_none()&&self.metadata.is_none()&&self.headers.is_none()&&self.seed.is_none()&&self.seed_output.is_none()&&self.completion_birth.terminal_is_empty()&&self.completion.is_none()&&self.action_wire.is_none()&&self.action_returned.is_none()&&self.raw_wire.is_none()&&self.input.is_none()&&self.snapshot_read.is_none()&&self.interaction_read.is_none()&&self.request.is_none()&&self.body.is_none()&&self.job.is_none()&&self.retirement.is_empty()}

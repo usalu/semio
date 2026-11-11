@@ -12,10 +12,10 @@ fn close_input(input:Input<App>,caller:&mut OriginalJobFixtureCaller,decoder:&mu
  for index in 0..262144{if capture.as_ref().unwrap().terminal_is_empty(){break}actual_turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|capture.as_mut().unwrap().close_step(cx)));assert!(index<262143,"original emission capture closure stalled at {cut:?}");}if let Some(input)=input{close_input(input,&mut caller,&mut decoder,g);}while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(g);}
 }
 
-#[test]fn original_emission_mounted_header_fits_the_actual_policy(){let d=semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation::<App>::original_emission_birth_demands();assert!(d.copy_bytes<=32768,"real mounted emission header {d:?}");}
+#[test]fn original_emission_mounted_header_fits_the_actual_policy(){let d=semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation::<App>::original_emission_birth_demands();assert!(d.copy_bytes<=32768,"real mounted emission header {d:?}");}
 
 #[test]fn original_emission_mounted_box_keeps_original_payload_and_returns_its_caller_after_paid_close(){
- use semio_framework_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation as Mounted,original_emission::OriginalEmissionPublicationFrontier as Frontier};
+ use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation as Mounted,original_emission::OriginalEmissionPublicationFrontier as Frontier};
  use semio_plugin_operation::{ToolCancellationIssuer,ToolOperationKey,ArtifactDocumentAuthority};
  let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};
  for cancel in [false,true]{let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut issuer=ToolCancellationIssuer::empty();for index in 0..1000{if issuer.ready(){break}actual_turn(&mut caller,&mut decoder,g,|cx|issuer.admit_step(cx.original_source_parent()?,cx));assert!(index<999)}

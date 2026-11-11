@@ -34,8 +34,8 @@ semio-framework-canvas = { path = "../../../../../../../🔨️modules/🖼️ca
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../../../../🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-os-infinite = { path = "../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
+semio-os-infinite = { path = "../../../../♾️infinite/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
 semio-framework-graph-manifest = { path = "../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
@@ -43,7 +43,7 @@ semio-framework-graph-dsl = { path = "../../../../../../../🔨️modules/🕸�
 
 [dev-dependencies]
 semio-os-flow-host-core = { path = "../../🧱️flow-host-model/📦️packages/🦀️rust", features = ["testkit"] }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

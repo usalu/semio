@@ -1,8 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { CATALOG_LANGUAGES_V1, handleTextV1, qualifiedKeyV1, type CatalogHandleV1, type TextValuesV1 } from "../📖️catalog/🟦️.ts";
-import { isRepoErrorV1, renderRepoErrorV1, repoErrorExitCodeV1 } from "../🚨️error/🟦️.ts";
+import { isRepoErrorV1, renderRepoErrorV1, repoErrorExitCodeV1, type RepoErrorV1 } from "../🚨️error/🟦️.ts";
 import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { writeDiagnosticLineV1 } from "../../📤️output/🟦️.ts";
+import { isOwnedCommandFailureV1, ownedCommandExitCodeV1, type OwnedCommandFailure } from "../../../🎛️owned-execution/📪️outcome/🟦️.ts";
+import { refuseProcessV1 } from "../../../📖️texts/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🏷️ The severity of one progress event; every level goes to the diagnostic stream, because the result stream carries only the command result. */
@@ -64,11 +66,43 @@ export function sayV1(handle: CatalogHandleV1, key: string, values: TextValuesV1
   emitProgressV1(progressV1(handle, key, values, level));
 }
 
-/** 🚪️ Reports a refusal at the CLI boundary: a `RepoErrorV1` is rendered in the resolved language to the standard error and sets the exit status of its class; anything else is not handled and answers `false`. */
-export function reportRepoErrorV1(error: unknown, options: Readonly<{ environment?: LanguageEnvironmentV1; args?: readonly string[]; osLanguages?: OsLanguageListV1; write?: ProgressWriteV1; setExitCode?: (code: number) => void }> = {}): boolean {
-  if (!isRepoErrorV1(error)) return false;
+/** 🛑️ Turns a failed child command into a refusal of the process catalog that keeps the child's evidence as its cause; the CLI boundary takes the exit status from the same evidence. */
+export const refuseChildFailureV1 = (failure: OwnedCommandFailure): RepoErrorV1 => failure.outcome.status !== null
+  ? refuseProcessV1("failed", "execution.child-failed", { label: failure.label, status: failure.outcome.status }, { cause: failure })
+  : refuseProcessV1("failed", "execution.child-killed", { label: failure.label, signal: failure.outcome.signal ?? "" }, { cause: failure });
+
+type RefusalOptionsV1 = Readonly<{ environment?: LanguageEnvironmentV1; args?: readonly string[]; osLanguages?: OsLanguageListV1; write?: ProgressWriteV1; setExitCode?: (code: number) => void }>;
+type BilingualRefusalV1 = Readonly<{ name: "CargoLockRefused"; texts: Readonly<Record<string, string>>; diagnostic?: Readonly<{ stderr?: string }> }>;
+
+const isBilingualRefusalV1 = (value: unknown): value is BilingualRefusalV1 => {
+  const row = value as Partial<BilingualRefusalV1> | null;
+  return typeof value === "object" && row !== null && row.name === "CargoLockRefused" && typeof row.texts === "object" && row.texts !== null;
+};
+
+/** 🧯️ Turns anything that is not a typed refusal into the internal-error refusal, which keeps the original message and never the stack; an expired resource loan is classified as such, not as an internal fault. */
+export const refuseInternalV1 = (error: unknown): RepoErrorV1 => error instanceof Error && error.name === "ResourceLoanDeadlineExhausted"
+  ? refuseProcessV1("failed", "execution.loan-expired", { label: "repo", message: error.message }, { cause: error })
+  : refuseProcessV1("failed", "error.internal", { message: error instanceof Error ? error.message : String(error) }, { cause: error });
+
+/** 🚪️ Reports a refusal at the CLI boundary: a `RepoErrorV1` is rendered in the resolved language to the standard error and sets the exit status of its class; a failed child command is rendered as a refusal and passes on its own exit status; anything else is not handled and answers `false`. */
+export function reportRepoErrorV1(error: unknown, options: RefusalOptionsV1 = {}): boolean {
+  const bilingual = isBilingualRefusalV1(error) ? error : undefined;
+  if (bilingual) {
+    const language = resolveLanguageV1(CATALOG_LANGUAGES_V1, options.args ?? [], options.environment ?? process.env, options.osLanguages).language, write = options.write ?? processWriteV1;
+    write(bilingual.texts[language] ?? "");
+    if (bilingual.diagnostic?.stderr) write(bilingual.diagnostic.stderr.trimEnd());
+    (options.setExitCode ?? ((code) => { process.exitCode = code; }))(1);
+    return true;
+  }
+  const child = isOwnedCommandFailureV1(error) ? error : undefined, refusal = child ? refuseChildFailureV1(child) : isRepoErrorV1(error) ? error : undefined;
+  if (!refusal) return false;
   const language = resolveLanguageV1(CATALOG_LANGUAGES_V1, options.args ?? [], options.environment ?? process.env, options.osLanguages).language;
-  (options.write ?? processWriteV1)(renderRepoErrorV1(error, language));
-  (options.setExitCode ?? ((code) => { process.exitCode = code; }))(repoErrorExitCodeV1(error.code));
+  (options.write ?? processWriteV1)(renderRepoErrorV1(refusal, language));
+  (options.setExitCode ?? ((code) => { process.exitCode = code; }))(child ? ownedCommandExitCodeV1(child.outcome) : repoErrorExitCodeV1(refusal.code));
   return true;
+}
+
+/** 🛡️ Reports any error at a CLI boundary: typed refusals render as themselves, every other error renders as the localized internal error with exit status 1, so no runtime source excerpt or stack ever reaches the terminal. */
+export function reportBoundaryErrorV1(error: unknown, options: RefusalOptionsV1 = {}): void {
+  if (!reportRepoErrorV1(error, options)) reportRepoErrorV1(refuseInternalV1(error), options);
 }

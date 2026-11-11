@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -96,7 +97,7 @@ test("Cargo metadata and independent TOML parsing confirm isolated target and bu
       const build = row.environment.CARGO_BUILD_BUILD_DIR ? resolve(root, row.environment.CARGO_BUILD_BUILD_DIR) : resolve(root, oracle.build["build-dir"]);
       expect(cargoDirectories(root, isolated)).toEqual({ target, build });
       const { CARGO_TARGET_DIR: _target, CARGO_BUILD_TARGET_DIR: _secondary, CARGO_BUILD_BUILD_DIR: _build, ...ambient } = process.env;
-      const cargo = spawnSync("cargo", ["metadata", "--no-deps", "--offline", "--format-version", "1"], {
+      const cargo = spawnSync(registeredToolExecutableV1("cargo"), ["metadata", "--no-deps", "--offline", "--format-version", "1"], {
         cwd: root, encoding: "utf8", timeout: 30_000,
         env: { ...ambient, CARGO_TARGET_DIR: isolated.CARGO_TARGET_DIR, CARGO_BUILD_BUILD_DIR: isolated.CARGO_BUILD_BUILD_DIR, RUSTUP_TOOLCHAIN: toolchain.toolchain.channel },
       });

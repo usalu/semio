@@ -3,8 +3,6 @@ use semio_framework_actor::cold_pair::ColdDocumentPairFrontier;
 use semio_framework_value::{RetainedCloneGrant,RetainedWorkOutcome,ValueError,retained_clone::RetainedCloneStep,retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_framework_job::{StepContext,StepBudget,OperationId,Generation,close_original_retained_step,CancelToken};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observed;
-#[global_allocator]
-static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 /// 📫️ Reports the actual independent work of one original retirement step.
 fn worked(result:Result<RetainedCloneStep,ValueError>)->RetainedWorkOutcome{let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));RetainedWorkOutcome{result,work}}
 fn drain<T:RetireOwned>(source:T,original_bytes:usize,grant:RetainedCloneGrant,root:&CancelToken,sequence:&mut u64){

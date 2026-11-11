@@ -115,7 +115,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let input = semio_plugin_abi::sqlite_wire::SnapshotInput { dialect: dialect.to_coordinate(), encoding: encoding.as_str().into(), payload: Std1AnySnapshot { value: 7 }.encode_pack(), limits: limits.into(),native:grant.into() };
             let mut input = input;
             if encoding == SnapshotEncoding::Text { input.payload = b"{\"value\":7}".to_vec(); }
-            let exported = semio_framework_plugin_runtime_ops::ops_document::plugin_snapshot_sqlite_export(&mut semio_plugin_abi::sqlite_wire::SnapshotInputOwner{wire:Some(input),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
+            let exported = semio_plugin_runtime_ops::ops_document::plugin_snapshot_sqlite_export(&mut semio_plugin_abi::sqlite_wire::SnapshotInputOwner{wire:Some(input),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
             let semio_plugin_abi::sqlite_wire::SnapshotFileResult::Rejected(rejection) = exported else { panic!("refused provider exported a file") };
             sqlite_guest_assert_refusal(&rejection, &expected);
             let mut database = SqliteDatabase::from_schema(<Std1AnySnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA).unwrap();
@@ -123,7 +123,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let mut control = SqliteSnapshotControl::new(&mut progress, limits);
             attach_sqlite_snapshot_metadata(&mut database, &dialect, encoding, &mut control).unwrap();
             let bytes = export_sqlite_database(&database, limits, &mut |_| true).unwrap();
-            let imported = semio_framework_plugin_runtime_ops::ops_document::plugin_snapshot_sqlite_import(&mut semio_plugin_abi::sqlite_wire::SnapshotInputOwner{wire:Some(semio_plugin_abi::sqlite_wire::SnapshotInput { dialect: dialect.to_coordinate(), encoding: encoding.as_str().into(), payload: bytes, limits: limits.into(),native:grant.into() }),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
+            let imported = semio_plugin_runtime_ops::ops_document::plugin_snapshot_sqlite_import(&mut semio_plugin_abi::sqlite_wire::SnapshotInputOwner{wire:Some(semio_plugin_abi::sqlite_wire::SnapshotInput { dialect: dialect.to_coordinate(), encoding: encoding.as_str().into(), payload: bytes, limits: limits.into(),native:grant.into() }),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
             let semio_plugin_abi::sqlite_wire::SnapshotPayloadResult::Rejected(rejection) = imported else { panic!("refused provider imported a snapshot") };
             sqlite_guest_assert_refusal(&rejection, &expected);
         }

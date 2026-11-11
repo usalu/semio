@@ -1,0 +1,6 @@
+# runtime-ops ingress and media migration
+
+- `RetireOwned` leaves: `OperationId` in `🌱️value/♻️retirement/🦀️.rs` (new `semio-framework-trace` dep there; trace stays zero-dependency, so the impl lives in the retirement crate), `ArtifactStoreConstructorKind/Phase` in `🌱️initialization/🏪️catalog/🦀️.rs`, via `artifact_retire_leaf!`.
+- `ingress`: `MediaArtifact` now `semio_plugin_document_media::lifted_app::MediaArtifact`; `funded` work is `u128` (API type); state gains resident `media_archive: Option<DocumentArchivePack>`.
+- `media`: `plugin_consume_media` takes the resident `archive` slot and `OriginalDocumentArchiveAdmission` (the exchange state's `archive_admission`, retired by its derive) and answers `MediaImport{Applied,Loading,Admitting,Refused}`. `arm_media_in` in plugin-exchange resumes admission across turns.
+- Status: `check -p semio-plugin-runtime-ops --lib` is clean for these files. Tests blocked: `semio-plugin-testing-caller` (dev-dep) has 21 unmigrated errors in `🎟️caller/🦀️.rs` and `👷️work/🦀️.rs` (old `close_step(grant)`, `admit`, `advance`, `with_native_receiving` signatures). Run tests from the repo root, not the en1990 workspace (the crate is only a member of the root workspace).

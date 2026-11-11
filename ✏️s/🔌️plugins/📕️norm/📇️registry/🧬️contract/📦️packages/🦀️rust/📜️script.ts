@@ -1,7 +1,7 @@
 #!/usr/bin/env repo
 /** 📦️ norm contract Rust package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runTestBytePropertyScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🧫️ Executes the bounded intrinsic byte property projection against its independent oracle. */
 class TestBytePropertyScript extends BundleScript {

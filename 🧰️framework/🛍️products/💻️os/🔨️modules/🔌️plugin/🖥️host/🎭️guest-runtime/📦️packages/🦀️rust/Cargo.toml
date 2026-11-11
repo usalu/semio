@@ -28,8 +28,8 @@ testkit = ["semio-plugin-host-engine/testkit", "semio-plugin-host-operation/test
 [dependencies]
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }
 semio-plugin-interpreter-runtime = { workspace = true }
@@ -60,7 +60,7 @@ serde_json = "1.0.140"
 semio-plugin-host-engine = { path = "../../../🔧️engine/📦️packages/🦀️rust", features = ["testkit"] }
 semio-plugin-host-operation = { path = "../../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
 # plain dependency above for test builds only) brings in `semio-framework-async::testkit::

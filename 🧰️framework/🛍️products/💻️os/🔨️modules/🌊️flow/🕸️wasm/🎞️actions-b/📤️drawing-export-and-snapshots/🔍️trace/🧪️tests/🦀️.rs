@@ -1,7 +1,5 @@
 //! 🧪️ Actual Flow arguments, original caller and canonical bytes preserve the independent JSON oracle.
 use super::*;
-#[global_allocator]
-static FLOW_TRACE_TEST_ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
 use semio_framework_value::{RetainedCloneGrant,retirement::controlled::ControlledRetirement};
 fn grant(v:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:v["items"].as_u64().unwrap()as usize,maximum_copy_bytes:v["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:v["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:v["release"].as_u64().unwrap()as usize,maximum_depth:v["depth"].as_u64().unwrap()as usize}}

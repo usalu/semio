@@ -28,13 +28,13 @@ semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
-semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-tool-run = { workspace = true }
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 # 🏢️ Architecturally pinned, not "not yet converted": `🗿️artifacts/🔋️model/🦀️.rs`'s
 #    `energy_structure_from_model`/`energy_model_from_structure` (the sole lossless `Model` <->
@@ -49,7 +49,7 @@ pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦
 #    file's own docstring for the full rationale.
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-plugin-instance-construction = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust", package = "semio-plugin-instance-construction"}
+semio-plugin-instance-construction = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust"}
 
 [dev-dependencies]
 semio-plugin = { workspace = true, features = ["artifact-app-testing"] }

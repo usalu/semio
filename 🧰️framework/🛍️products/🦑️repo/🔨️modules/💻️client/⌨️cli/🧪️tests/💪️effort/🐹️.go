@@ -20,9 +20,9 @@ import (
 // 🧠️TestAllowedLLMsCoverage tests resolution of all latest LLMs across providers.
 func TestAllowedLLMsCoverage(t *testing.T) {
 	testModels := []string{
-		"opus-4-7", "opus-4-6", "opus-4-5", "opus-4-1", "opus-4", "opus-3",
-		"sonnet-5", "sonnet-4-6", "sonnet-4-5", "sonnet-4", "sonnet-3-7", "sonnet-3-5",
-		"haiku-4-5", "haiku-4", "haiku-3-5",
+		"fable-5-2", "opus-5-5", "opus-4-7", "opus-4-6", "opus-4-5", "opus-4-1", "opus-4", "opus-3",
+		"sonnet-5-5", "sonnet-5", "sonnet-4-6", "sonnet-4-5", "sonnet-4", "sonnet-3-7", "sonnet-3-5",
+		"haiku-5-5", "haiku-4-5", "haiku-4", "haiku-3-5",
 		"gemini-3-7-pro", "gemini-3-7-flash", "gemini-3-1-pro", "gemini-3-pro", "gemini-3-flash",
 		"gemini-2-5-pro", "gemini-2-5-flash", "gemini-2-5-flash-lite", "gemini-2-pro", "gemini-2-flash", "gemini-2-flash-lite",
 		"gpt-5-5", "gpt-5-4", "gpt-5-3-codex", "gpt-5-2-codex", "gpt-5-2", "gpt-5-1-codex", "gpt-5-1", "gpt-5-codex", "gpt-5", "gpt-5-mini",

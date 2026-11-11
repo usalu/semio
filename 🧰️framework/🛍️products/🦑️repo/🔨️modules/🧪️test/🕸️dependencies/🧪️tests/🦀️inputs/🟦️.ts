@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
@@ -44,7 +45,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   assert.ok(!project.targets["test-oracle"].dependsOn?.includes(fixture.generator.target));
   assert.ok(project.targets["test-subject"].inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
   for (const path of ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml"]) assert.ok(project.targets["test-subject"].inputs.includes(`{workspaceRoot}/${path}`), path);
-  const cargo = Bun.spawnSync(["cargo", "metadata", "--offline", "--format-version", "1"], { cwd: root, env: { ...process.env, CARGO_TARGET_DIR: join(root, ".compiler") }, stdout: "pipe", stderr: "pipe" });
+  const cargo = Bun.spawnSync([registeredToolExecutableV1("cargo"), "metadata", "--offline", "--format-version", "1"], { cwd: root, env: { ...process.env, CARGO_TARGET_DIR: join(root, ".compiler") }, stdout: "pipe", stderr: "pipe" });
   assert.equal(cargo.exitCode, 0, cargo.stderr.toString());
   const metadata = JSON.parse(cargo.stdout.toString());
   const cargoRoots = metadata.packages.map((pkg: any) => relative(root, dirname(pkg.manifest_path)).replaceAll("\\", "/")).sort();
@@ -72,7 +73,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   for (const entry of Object.values(projects)) put(`${entry.root}/project.json`, JSON.stringify(entry));
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const execute = async () => {
-    const child = Bun.spawn(["node", cli, "run", `${project.name}:test-subject`, "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn([registeredToolExecutableV1("node"), cli, "run", `${project.name}:test-subject`, "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
     assert.equal(code, 0, stdout + stderr);
     return readFileSync(join(root, ".results/test.txt"), "utf8");
@@ -114,7 +115,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
     'writeFileSync(path, helper);',
     'await resident.createNodesV2[1]([feature], {}, { workspaceRoot: root });',
   ].join("\n"));
-  const reload = Bun.spawn(["node", join(root, "reload/📜️script.ts"), feature], { cwd: root, stdout: "pipe", stderr: "pipe" });
+  const reload = Bun.spawn([registeredToolExecutableV1("node"), join(root, "reload/📜️script.ts"), feature], { cwd: root, stdout: "pipe", stderr: "pipe" });
   const [reloadOut, reloadError, reloadCode] = await Promise.all([new Response(reload.stdout).text(), new Response(reload.stderr).text(), reload.exited]);
   assert.equal(reloadCode, 0, reloadOut + reloadError);
 }

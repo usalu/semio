@@ -9,9 +9,6 @@ pub mod receive;
 #[path = "../admission.rs"]
 pub mod admission;
 
-#[cfg(test)]
-#[global_allocator]
-static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[cfg(test)]
 #[path = "../overlay-tests.rs"]

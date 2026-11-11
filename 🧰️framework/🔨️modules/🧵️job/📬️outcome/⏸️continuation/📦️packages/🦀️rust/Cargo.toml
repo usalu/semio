@@ -25,6 +25,9 @@ semio-framework-job-context = { workspace = true }
 semio-framework-job-failure = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-job-clock = { workspace = true }
+semio-framework-job-return-escrow-publication = { path = "../../../../📬️outcome/📤️publication/🪙️escrow/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-job-return-budget = { path = "../../../../📬️outcome/🪙️budget/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 
 [features]

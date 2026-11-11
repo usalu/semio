@@ -293,11 +293,11 @@ semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true
-semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
+semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
 semio-framework-action-bus = { path = "../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
@@ -537,8 +537,8 @@ semio-s-artifact-bim-model-v1 = { path = "../../🏅️standards/🔖️1/📦�
 semio-s-artifact-bim-model-gestures-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️gestures/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-families-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🪑️families/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-bim-model-coordinate-tests = { path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤝️coordinate/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
-semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-plugin" }
-semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["protocol-laws", "mutation-testing"] }
+semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
 serde.workspace = true
 serde_json.workspace = true
 gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"] }

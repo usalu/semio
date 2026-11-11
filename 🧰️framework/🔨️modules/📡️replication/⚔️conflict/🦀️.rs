@@ -512,6 +512,3 @@ mod owned_retirement {
     impl RetireOwned for ConflictId { type RetirementCursor = <String as RetireOwned>::RetirementCursor; fn retirement_seed(self) -> Self::RetirementCursor { self.0.retirement_seed() } fn retirement_birth_bytes(&self) -> Option<usize> { self.0.retirement_birth_bytes() } fn controlled_retirement_supported() -> bool { String::controlled_retirement_supported() } }
 }
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;

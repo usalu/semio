@@ -21,10 +21,10 @@ use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
 pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture, receive_persistent_fixture, receive_view_fixture, typing_run, TypingRun};
     use semio_framework_value::ErasedSnapshotRetirement;
 
-    /// 🧮️ Refuses a test binary whose allocator is not the heap witness: every heap-equality assertion of these laws would otherwise read `(0, 0)` and fail any non-zero retained page. Install it with [`install_fixture_heap_witness!`](crate::install_fixture_heap_witness).
+    /// 🧮️ Refuses a test binary whose allocator is not the heap witness: every heap-equality assertion of these laws would otherwise read `(0, 0)` and fail any non-zero retained page.  Linking the testing caller installs it.
     pub fn assert_heap_witness_installed(){
         let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||std::hint::black_box(Box::new([0u8;64])));
-        assert!(heap.requested_bytes>=64,"fixture heap witness missing: call semio_plugin::install_fixture_heap_witness!() once in this test binary");
+        assert!(heap.requested_bytes>=64,"fixture heap witness missing: link semio-plugin-testing-caller into this test binary");
     }
 
     /// 🪙️ A fixture without a job turn funds one page presentation from an explicit finite wallet of exactly its grant.
@@ -67,7 +67,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
     }
 
     /// 📨️ Presents a real mounted page under its caller, returning when the current turn cannot advance.
-    pub fn present_fixture_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_job::OriginalTurnFailure>{
+    pub fn present_fixture_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_job::OriginalTurnFailure>{
         use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             let mut output=None;
@@ -87,7 +87,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
     }
 
     /// 📫️ Retires the acknowledged producer through its financed public port without renewing the caller's turn.
-    pub fn retire_fixture_acknowledged_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn retire_fixture_acknowledged_mounted_page<A: semio_plugin_decl_app::ArtifactApp>(mounted:&mut semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation<A>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             if !mounted.result_page_retirement_pending(){return Ok(true)}
@@ -131,7 +131,7 @@ use fixture_tree_projection_and_scenes::project_fixture_node;
 #[path = "🏗️registered-app-construction-and-typed-operation-settlement/🦀️.rs"]
 mod registered_app_construction_and_typed_operation_settlement;
 pub use registered_app_construction_and_typed_operation_settlement::{
-    capture_fixture_window_config, close_registered_fixture_app, drain_store_displaced_retirements,
+    capture_fixture_window_config, close_registered_fixture_app, consume_media, consume_media_refused_then_funded, drain_store_displaced_retirements, import_media,
     fixture_close_grant, meta, new_app, new_app_with_registry, new_app_with_registry_and_members,
     new_registered_app, new_registered_app_with_members,
     publish_framework_schemas,

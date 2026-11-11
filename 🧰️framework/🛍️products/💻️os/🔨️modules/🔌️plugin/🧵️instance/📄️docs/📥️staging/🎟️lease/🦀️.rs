@@ -45,8 +45,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         if !pending.returning{if let Some(source)=pending.source.as_ref(){source.validate_context(cx)?;}}
         if let Some(owner)=pending.retirement.as_mut(){
             if owner.terminal_is_empty(){pending.retirement.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-            let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.close_step(tools.tool_cancellations.handle().unwrap(),effect))? else{return Ok(RetainedCloneStep::Progress(Default::default()))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
-            return match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_job::OriginalTurnFailure::from),semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default()))}
+            return semio_plugin_ownership::bounded_ownership::plugin_controlled_effect_close::<ValueError>(cx,grant,|effect,_|owner.close_step(tools.tool_cancellations.handle().unwrap(),effect)).map_err(Into::into)
         }
         if let Some(lease)=pending.lease.take(){lease.cancel();*pending.retirement=Some(semio_plugin_operation::ToolCancellationLeaseRetirement::new(lease));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
         if pending.verb.is_some(){drop(pending.verb.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}

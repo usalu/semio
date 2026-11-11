@@ -12,7 +12,7 @@ use semio_framework::kernel::{ClipboardFragment, Effect, FRAMEWORK_RESERVED_JOB_
 use crate::command_bundle::CommandCtx;
 use semio_framework_value::DslValue;
 use semio_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-use semio_framework_plugin_retained_command::reserved_route_capacity_lift::FRAMEWORK_RESERVED_ROUTE_CAPACITY;
+use semio_plugin_retained_command::reserved_route_capacity_lift::FRAMEWORK_RESERVED_ROUTE_CAPACITY;
 use std::future::Future;
 use std::collections::HashSet;
 use semio_plugin_decl_views::history_view::{HistoryCommandFilter, InverseAction, ShellHistoryReplay};
@@ -27,14 +27,14 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_framework::onboarding::RECORD_TUTORIAL_ACTION_ID;
 use semio_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_plugin_job::TypedOperationCompletionWitness;
-use semio_framework_plugin_retained_command::typed_operation::bounded_json_items;
+use semio_plugin_retained_command::typed_operation::bounded_json_items;
 use semio_plugin_instance_dispatch::dispatch_emit;
 use semio_plugin_instance_render::render_history_view::history_command;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_ui_contract::*;
 use crate::commands_instance_root::catalogue_snapshot_from_document;
 use crate::commands_instance_root::note_shell_command_label;
-use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
+use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> CommandCtx<'ctx, A, M, X> {
     /// 🧮️ One reserved gesture's work, in the STAGED EDIT ROWS every other capacity in the
@@ -90,12 +90,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let contract = self.tools.qualified_tool_proof(&*self.stores, action)?.contract();
         let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
-        if CLIPBOARD_ACTION_IDS.contains(&action) {
-            return self.as_dispatch().advance_original_reserved_action(action,args,decoded_items,contract.max_raw_wire_bytes,meta,cx).await;
-        }
         let wire_args = args.cloned();
         let raw = semio_framework_pack_json::to_json_string(&(action, wire_args)).into_bytes();
         let work_items = self.framework_reserved_work_items(action, args).await?;
+        if CLIPBOARD_ACTION_IDS.contains(&action) {
+            let mut finished=None;
+            if !self.as_dispatch().advance_original_reserved_action(action,args,decoded_items,meta,contract.max_raw_wire_bytes,&mut finished,cx).await?{return Ok(None)}
+            let operation=finished.ok_or_else(||plugin_sdk_fault("clipboard producer settled without its operation"))?;
+            return Ok(Some(self.as_dispatch().reserved_started_result(action,meta,operation).await));
+        }
         let Some(permit)=self.as_dispatch().admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx).await?else{return Ok(None)};
         let mut job = permit.operation.operation.0;
         self.pending.retire_pending_reserved_latest_wins(action, job);
@@ -410,6 +413,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let snapshot = catalogue_snapshot_from_document::<A::Snapshot>(body)?;
         let pack = snapshot.encode_pack();
         let spr = store::os_store::text_format::empty_document_spr("", A::DOCUMENT_SCHEMA).await;
-        self.as_dispatch().dispatch_emit(action, Emit { effects: vec![Effect::LoadDocument { pack, spr }], ui_scope: UiDirtyScope::Full, ..Emit::default() }, meta, identity, cx).await
+        self.as_dispatch().dispatch_emit(action, Emit { effects: vec![Effect::LoadDocument { pack, spr }], ui_scope: UiDirtyScope::Full, ..Emit::default() }, meta, identity).await
     }
 }

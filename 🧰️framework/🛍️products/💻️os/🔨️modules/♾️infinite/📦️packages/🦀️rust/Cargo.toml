@@ -37,7 +37,7 @@ semio-framework-canvas = { path = "../../../../../../🔨️modules/🖼️canva
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 # ⏯️ Decodes the `World3dScene.tool_run_trace` delta for the world's trace layer (`🌍️world/⏯️tool-run-trace`).
@@ -47,7 +47,7 @@ semio-framework-tool-run = { workspace = true }
 # this crate builds through) plus the browser session bridges' async vocabulary. Unconditional: the
 # helper is target-neutral and `semio-framework-job` already pulls this crate in on every target.
 semio-framework-async = { workspace = true }
-semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../📦️packages/🦀️rust" }
 geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph-manifest = { path = "../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 graph = { path = "../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
@@ -72,7 +72,7 @@ semio-framework-hash = { workspace = true }
 semio-framework-surface-terrain = { path = "../../../../../../🔨️modules/🗺️surface/🏔️terrain/📦️packages/🦀️rust" }
 # 🖼️ Decodes the world's texture PNGs (`🌍️world/🧱️scene`) through the first-party codec, no third-party image crate on any
 # target. RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
-semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+semio-framework-pixels = { path = "../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 ui_gpu = { path = "../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-ui-wgpu-render" }
@@ -105,7 +105,7 @@ semio-framework-job-worker-authority = { path = "../../../../../../🔨️module
 
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [[test]]

@@ -10,7 +10,7 @@ use std::future::Future;
 use semio_plugin_job::{INTERACTIVE_TURN_WORKER_PUMPS, INTERACTIVE_TURN_WORKER_WALL_US};
 use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -19,12 +19,12 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use crate::typed_bundle::TypedCtx;
 use semio_framework_value::ValueError;
 use semio_ui_contract::*;
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
+use semio_plugin_instance_docs::docs_maintenance_ladder::item;
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     #[inline(never)]
     pub fn retire_typed_operation_unit(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.lease_retirement_ready()){let body=cx.retained_grant().maximum_copy_bytes;let canonical=&self.tools.tool_cancellations;let owner=self.tools.tool_operations.get_mut(operation_id).unwrap();let demand=owner.lease_retirement_demands(canonical,body)?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.lease_retirement_step(canonical,effect))?;return Ok(PluginLifecycleStep::Progress(step.progress()))}
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.lease_retirement_ready()){let body=cx.retained_grant().maximum_copy_bytes;let canonical=&self.tools.tool_cancellations;let owner=self.tools.tool_operations.get_mut(operation_id).unwrap();let demand=owner.lease_retirement_demands(canonical,body)?;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(owner.lease_retirement_step(canonical,effect)))?;return Ok(PluginLifecycleStep::Progress(step.progress()))}
         let grant=cx.retained_grant();let demand=self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.retire_typed_operation_granted(operation_id,same,actual).map(|step|(step,false)))
     }
@@ -32,7 +32,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.stream_abort_open()){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.tools.tool_operations.get_mut(operation_id).unwrap().close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
         if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.terminal_is_empty()){
-            let d=self.tools.tool_operations.get(operation_id).unwrap().original_frame_release_demands();if !semio_plugin_ownership::bounded_ownership::fund_or_refuse(d,grant,grant)?{return Ok(PluginLifecycleStep::Progress(Default::default()))}
+            let d=self.tools.tool_operations.get(operation_id).unwrap().original_frame_release_demands();if !plugin_grant_funds(d,grant){return Ok(PluginLifecycleStep::Progress(Default::default()))}
             let original=self.tools.tool_operations.remove(operation_id).unwrap();self.tools.operation_progress_retired|=original.progress.is_some();drop(original);
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))
         }
@@ -88,7 +88,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
             let grant = semio_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
             let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
-            if !semio_plugin_ownership::bounded_ownership::fund_or_refuse(demand, self.mounted_policy.close, grant)? {
+            if !plugin_grant_funds(demand,grant) {
                 return Ok(());
             }
             match cx.with_retained_loan(grant,|same|self.retire_typed_operation_unit(operation_id,same).map_err(Into::into))? {

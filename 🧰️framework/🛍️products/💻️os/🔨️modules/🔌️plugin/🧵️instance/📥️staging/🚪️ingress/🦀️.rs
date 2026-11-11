@@ -1,7 +1,7 @@
 //! 📒️ Staged slice of the `ingress` band of the mounted artifact instance: its `instance-app` members (WP6 step S0 of the instance family).
 //!
 //! 🚪️ Ingress of the mounted artifact instance: framework-reserved job driving, constructors, store-constructor units, envelope ingress and decode, document archive genesis and merge, child members and packs.
-use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, ConstructorState, InstanceStores, LocalInteraction, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{ActionIngress, ConstructorState, InstanceStores, LocalInteraction, PeerRoster};
 use semio_framework::kernel::ActorId;
 use semio_plugin_window_kits::AppActionRegistry;
 use semio_plugin_decl_app::ArtifactApp;
@@ -17,7 +17,7 @@ use semio_plugin_instance_ladders::ladders_components::{CloseCursors, Maintenanc
 use semio_plugin_instance_history::history_components::{CommandHistory, HostEvents, Transactions};
 use store::os_store::composition_coordinator::CompositionCoordinator;
 use semio_plugin_decl_emission::Emit;
-use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
+use semio_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault,FaultCode,FaultFrom,FaultOrigin};
 use std::future::Future;
 use semio_plugin_instance_extension::InstanceExtension;

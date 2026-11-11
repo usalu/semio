@@ -82,6 +82,3 @@ impl Drop for RetainedFaultPublication{fn drop(&mut self){assert!(std::thread::p
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

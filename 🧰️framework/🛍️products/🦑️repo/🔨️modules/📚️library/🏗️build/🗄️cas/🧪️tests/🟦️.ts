@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🧪️ Tests for the host-wide content-addressed store, its access ledger, pins and least-recently-accessed collector. */
 import {spawn,spawnSync} from "node:child_process";
 import {appendFileSync,chmodSync,existsSync,realpathSync,symlinkSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
@@ -264,7 +265,7 @@ test("Nx task cache entries written through the remote cache land once in the ho
 test("a real Nx task of one workspace is restored from the host-store-backed remote cache by a second workspace with its own empty cache, and the archive is stored once",async()=>{
  const cache=join(process.env.HOME??"",".bun/install/cache"),versions=(()=>{try{return readdirSync(cache).filter(name=>/^nx@\d+\.\d+\.\d+@@@1$/u.test(name)).sort().reverse();}catch{return [];}})(),version=versions.find(name=>existsSync(join(cache,"@nx",`nx-linux-x64-gnu@${name.slice(3,name.indexOf("@@@"))}@@@1`)));
  const installation=join(import.meta.dir,"../../../../../../../../.nx/installation/node_modules");
- if(!version||process.platform!=="linux"||!existsSync(installation)||spawnSync("node",["--version"]).status!==0)return;
+ if(!version||process.platform!=="linux"||!existsSync(installation)||spawnSync(registeredToolExecutableV1("node"),["--version"]).status!==0)return;
  const number=version.slice(3,version.indexOf("@@@")),nx=join(cache,version,"dist/bin/nx.js"),modules=scratch("nx-mods");
  mkdirSync(join(modules,"@nx"),{recursive:true});symlinkSync(join(cache,"@nx",`nx-linux-x64-gnu@${number}@@@1`),join(modules,"@nx","nx-linux-x64-gnu"),"dir");
  const {startRemoteCacheServerV1}=await import("../../🌐️remote-cache/🖥️server/🟦️.ts"),{nxRemoteCacheEnvironmentV1}=await import("../../🌐️remote-cache/🧶️nx/🟦️.ts"),root=scratch("nx-real"),host=createCasStoreV1({root});
@@ -275,7 +276,7 @@ test("a real Nx task of one workspace is restored from the host-store-backed rem
   expect(await nxRemoteCacheEnvironmentV1({},{endpoint:"http://127.0.0.1:1"})).toEqual({});expect(await nxRemoteCacheEnvironmentV1({SEMIO_REMOTE_CACHE_NX:"off"},{endpoint:server.url})).toEqual({});
   const make=(name:string)=>{const directory=scratch(name);mkdirSync(join(directory,"a"),{recursive:true});writeFileSync(join(directory,"package.json"),'{"name":"w","private":true}');writeFileSync(join(directory,"nx.json"),'{"analytics":false}');
    writeFileSync(join(directory,"a","project.json"),JSON.stringify({name:"a",targets:{build:{executor:"nx:run-commands",cache:true,options:{command:"mkdir -p out && echo built > out/x.txt",cwd:"{projectRoot}"},inputs:[{runtime:"echo fixed"}],outputs:["{projectRoot}/out"]}}}));return directory;};
-  const run=(directory:string)=>new Promise<{status:number|null;stdout:string;stderr:string}>(done=>{const child=spawn("node",[nx,"run-many","-t","build","-p","a","--outputStyle=static"],{cwd:directory,env:{PATH:process.env.PATH,HOME:process.env.HOME,NODE_PATH:`${modules}:${installation}`,...environment,NX_DAEMON:"false",NX_NO_CLOUD:"true",NX_TUI:"false",NX_CACHE_DIRECTORY:join(directory,".cache"),NX_WORKSPACE_DATA_DIRECTORY:join(directory,".data")}});let stdout="",stderr="";child.stdout.on("data",chunk=>{stdout+=chunk;});child.stderr.on("data",chunk=>{stderr+=chunk;});const timer=setTimeout(()=>child.kill("SIGKILL"),120000);child.on("close",status=>{clearTimeout(timer);done({status,stdout,stderr});});});
+  const run=(directory:string)=>new Promise<{status:number|null;stdout:string;stderr:string}>(done=>{const child=spawn(registeredToolExecutableV1("node"),[nx,"run-many","-t","build","-p","a","--outputStyle=static"],{cwd:directory,env:{PATH:process.env.PATH,HOME:process.env.HOME,NODE_PATH:`${modules}:${installation}`,...environment,NX_DAEMON:"false",NX_NO_CLOUD:"true",NX_TUI:"false",NX_CACHE_DIRECTORY:join(directory,".cache"),NX_WORKSPACE_DATA_DIRECTORY:join(directory,".data")}});let stdout="",stderr="";child.stdout.on("data",chunk=>{stdout+=chunk;});child.stderr.on("data",chunk=>{stderr+=chunk;});const timer=setTimeout(()=>child.kill("SIGKILL"),120000);child.on("close",status=>{clearTimeout(timer);done({status,stdout,stderr});});});
   const first=make("nx-w1"),second=make("nx-w2"),one=await run(first);expect(one.status,one.stdout+one.stderr).toBe(0);
   const two=await run(second);expect(two.status,two.stdout+two.stderr).toBe(0);
   expect(readFileSync(join(second,"a","out","x.txt"),"utf8").trim()).toBe("built");expect(two.stdout+two.stderr).toMatch(/remote cache/iu);

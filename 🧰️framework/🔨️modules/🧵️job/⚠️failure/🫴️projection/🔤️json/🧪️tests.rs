@@ -3,7 +3,6 @@ use semio_framework_job_failure::*;
 use semio_framework_pack_json::JsonError;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,retirement::controlled::ControlledRetirement};
 use OriginalDomainView as V;
-#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧪️fixtures/🔣️.json")).unwrap()}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:65536,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:4096}}
 fn sample(kind:&str,name:&str,offset:usize)->JsonError{match kind{"Native"=>JsonError::Native(ValueError::new(ValueRefusalKind::InvalidValue,name.to_owned()).with_retained_progress(RetainedCloneProgress{copied_items:3,copied_bytes:7,..Default::default()})),"UnexpectedEof"=>JsonError::UnexpectedEof,"UnexpectedByte"=>JsonError::UnexpectedByte{found:255,offset},"InvalidNumber"=>JsonError::InvalidNumber(offset),"InvalidEscape"=>JsonError::InvalidEscape(offset),"InvalidUnicodeEscape"=>JsonError::InvalidUnicodeEscape(offset),"UnpairedSurrogate"=>JsonError::UnpairedSurrogate(offset),"ControlCharacterInString"=>JsonError::ControlCharacterInString{byte:17,offset},"InvalidUtf8"=>JsonError::InvalidUtf8,"TrailingData"=>JsonError::TrailingData(offset),"MaxDepthExceeded"=>JsonError::MaxDepthExceeded(129),"DuplicateMember"=>JsonError::DuplicateMember{name:name.to_owned(),offset},_=>panic!("unknown original JSON fixture")}}

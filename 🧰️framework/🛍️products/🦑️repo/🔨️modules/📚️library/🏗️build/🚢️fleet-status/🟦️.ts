@@ -21,7 +21,7 @@ export type FleetBazelSlotFactV1=Readonly<{slot:string;pid:number|null;key?:stri
 /** 🧺️ Everything the aggregation may look at; a section a reader could not fill is absent and reported through `sources`. */
 export type FleetFactsV1=Readonly<{
  version:1;atMs:number;workspace:string;
- host?:Readonly<{platform:string;cores:number|null;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;load:number|null}>;
+ host?:Readonly<{ageSeconds:number;platform:string;cores:number|null;totalMegabytes:number;availableMegabytes:number;pressure:"normal"|"warn"|"critical";swapUsedMegabytes:number|null;load:number|null}>;
  leases?:Readonly<{holders:readonly FleetHolderFactV1[];waiters:readonly FleetWaiterFactV1[];cycles:readonly string[]}>;
  capacity?:Readonly<{floorMegabytes:number;headroomMegabytes:number;capacityMegabytes:number;grants:readonly FleetGrantFactV1[];waiters:readonly FleetCapacityWaiterFactV1[]}>;
  activeMilliseconds?:Readonly<Record<string,readonly number[]>>;
@@ -162,7 +162,7 @@ const schedulerSection=(fact:FleetSchedulerFactV1):Row=>({budgetMegabytes:fact.b
 export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):FleetReportV1{
  const leaseWait=leaseEstimates(facts),capacityWait=capacityEstimates(facts),runs=buildRuns(facts,leaseWait,capacityWait,language),leases=facts.leases,capacity=facts.capacity,atMs=facts.atMs;
  const grants=capacity?.grants??[],observedGrants=grants.filter(row=>row.observedMegabytes!==null);
- const memory:Row={totalMegabytes:facts.host?.totalMegabytes??0,availableMegabytes:facts.host?.availableMegabytes??0,floorMegabytes:capacity?.floorMegabytes??0,spareMegabytes:capacity?.headroomMegabytes??0,pressure:facts.host?.pressure??"normal",swapUsedMegabytes:facts.host?.swapUsedMegabytes??null,load:facts.host?.load??null,cores:facts.host?.cores??null,admittedMegabytes:grants.reduce((sum,row)=>sum+row.reservedMegabytes,0),observedMegabytes:observedGrants.reduce((sum,row)=>sum+row.observedMegabytes!,0),unobservedGrants:grants.length-observedGrants.length,overReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.reservedMegabytes-row.observedMegabytes!),0),underReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.observedMegabytes!-row.reservedMegabytes),0),grants:grants.length,waiters:capacity?.waiters.length??0};
+ const memory:Row={totalMegabytes:facts.host?.totalMegabytes??0,availableMegabytes:facts.host?.availableMegabytes??0,floorMegabytes:capacity?.floorMegabytes??0,spareMegabytes:capacity?.headroomMegabytes??0,pressure:facts.host?.pressure??"normal",swapUsedMegabytes:facts.host?.swapUsedMegabytes??null,load:facts.host?.load??null,sampleAgeSeconds:facts.host?.ageSeconds??null,cores:facts.host?.cores??null,admittedMegabytes:grants.reduce((sum,row)=>sum+row.reservedMegabytes,0),observedMegabytes:observedGrants.reduce((sum,row)=>sum+row.observedMegabytes!,0),unobservedGrants:grants.length-observedGrants.length,overReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.reservedMegabytes-row.observedMegabytes!),0),underReservedMegabytes:observedGrants.reduce((sum,row)=>sum+Math.max(0,row.observedMegabytes!-row.reservedMegabytes),0),grants:grants.length,waiters:capacity?.waiters.length??0};
  const byResource=new Map<string,{waiters:FleetWaiterFactV1[]}>();
  for(const waiter of leases?.waiters??[]){const row=byResource.get(waiter.resource)??{waiters:[]};row.waiters.push(waiter);byResource.set(waiter.resource,row);}
  const queues=[...byResource].map(([resource,row])=>({resource,longest:Math.max(...row.waiters.map(waiter=>waiter.waitedSeconds)),waiters:[...row.waiters].sort((left,right)=>(left.position??Infinity)-(right.position??Infinity)||right.waitedSeconds-left.waitedSeconds||left.pid-right.pid)})).sort((left,right)=>right.longest-left.longest||compare(left.resource,right.resource));
@@ -184,6 +184,7 @@ export function summarizeFleetV1(facts:FleetFactsV1,language:FleetLanguageV1):Fl
    else say("holder-stale","warn",`pid ${row.pid}`,{pid:row.pid,resource:shortResource(row.resource),ids:(row.standing?.staleIds??[]).join(", ")});}
  }
  if(facts.host?.pressure!==undefined&&facts.host.pressure!=="normal")say("memory-pressure",facts.host.pressure==="critical"?"alert":"warn","host",{pressure:facts.host.pressure});
+ if(facts.host!==undefined&&facts.host.ageSeconds>policy.findings.sampleStaleSeconds)say("sample-stale","warn","host",{age:fleetDurationV1(language,facts.host.ageSeconds)});
  for(const row of [...grants].sort((left,right)=>left.pid-right.pid||compare(left.id,right.id)))if(row.observedMegabytes!==null&&row.reservedMegabytes>0&&row.observedMegabytes*10000>row.reservedMegabytes*policy.findings.underReservedBasisPoints)say("under-reserved","warn",`pid ${row.pid}`,{pid:row.pid,observed:row.observedMegabytes,reserved:row.reservedMegabytes});
  for(const row of [...capacity?.waiters??[]].sort((left,right)=>left.position-right.position))if(row.waitedSeconds>=policy.findings.capacityWaitSeconds)say("capacity-wait","warn",`pid ${row.pid}`,{pid:row.pid,waited:fleetDurationV1(language,row.waitedSeconds),operation:row.operation,need:row.needMegabytes});
  const waited=new Map<string,FleetWaiterFactV1>();
@@ -233,7 +234,7 @@ export function formatFleetReportV1(language:FleetLanguageV1,report:FleetReportV
  const say=(key:string,values:Readonly<Record<string,string|number>>={})=>fleetTextV1(language,key,values),duration=(seconds:number)=>fleetDurationV1(language,seconds),lines:string[]=[],memory=report.memory,summary=report.summary;
  const estimate=(seconds:number|null|undefined):string=>seconds===null||seconds===undefined?"":say("estimate",{estimate:duration(seconds)});
  lines.push(say("header",{time:clock(report.atMs),running:summary.running,blocked:summary.blocked,waiting:summary.waiting,alerts:summary.alerts,warnings:summary.warnings}));
- lines.push(say("memory",{admitted:memory.admittedMegabytes,observed:memory.observedMegabytes,grants:memory.grants,available:memory.availableMegabytes,total:memory.totalMegabytes,spare:memory.spareMegabytes,floor:memory.floorMegabytes,pressure:memory.pressure,swap:memory.swapUsedMegabytes??"n/a",load:memory.load??"n/a"}));
+ lines.push(memory.sampleAgeSeconds===null?say("memoryNone",{admitted:memory.admittedMegabytes,observed:memory.observedMegabytes,grants:memory.grants}):say("memory",{age:duration(memory.sampleAgeSeconds),admitted:memory.admittedMegabytes,observed:memory.observedMegabytes,grants:memory.grants,available:memory.availableMegabytes,total:memory.totalMegabytes,spare:memory.spareMegabytes,floor:memory.floorMegabytes,pressure:memory.pressure,swap:memory.swapUsedMegabytes??"n/a",load:memory.load??"n/a"}));
  if(report.runs.length===0)lines.push(say("runsNone"));
  else{
   lines.push(say("runsHeader",{count:report.runs.length,shown:Math.min(limit,report.runs.length)}));

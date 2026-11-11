@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
@@ -131,7 +132,7 @@ describe("📐️ canonical test layout", () => {
         mkdirSync(dirname(path), { recursive: true });
         writeFileSync(path, source.source);
       }
-      const observed = spawnSync("cargo", ["metadata", "--offline", "--no-deps", "--format-version", "1", "--manifest-path", join(root, "Cargo.toml")], { cwd: root, encoding: "utf8", timeout: 15000 });
+      const observed = spawnSync(registeredToolExecutableV1("cargo"), ["metadata", "--offline", "--no-deps", "--format-version", "1", "--manifest-path", join(root, "Cargo.toml")], { cwd: root, encoding: "utf8", timeout: 15000 });
       expect(observed.status, observed.stderr).toBe(0);
       const packages = JSON.parse(observed.stdout).packages as { manifest_path: string }[];
       expect(packages).toHaveLength(1);
@@ -153,7 +154,7 @@ describe("📐️ canonical test layout", () => {
         const entry = join(root, vector.sources[0]!.path);
         const output = join(dirname(entry), "📜️script.mjs");
         await build({ entryPoints: [entry], outfile: output, bundle: true, platform: "node", format: "esm", logLevel: "silent" });
-        const observed = spawnSync(process.execPath.includes("bun") ? "node" : process.execPath, ["--input-type=module", "--eval", `import { value } from ${JSON.stringify(pathToFileURL(output).href)}; process.stdout.write(value);`], { encoding: "utf8" });
+        const observed = spawnSync(registeredToolExecutableV1("node"), ["--input-type=module", "--eval", `import { value } from ${JSON.stringify(pathToFileURL(output).href)}; process.stdout.write(value);`], { encoding: "utf8" });
         expect(observed.status, observed.stderr).toBe(0);
         expect(observed.stdout).toBe("{}");
         expect(inspectTestLayoutSources(taxonomy, vector.sources).some(finding => finding.code === "production-fixture-dependency")).toBe(vector.sources[1]!.path.split("/").includes(taxonomy.testFixturesDirName));

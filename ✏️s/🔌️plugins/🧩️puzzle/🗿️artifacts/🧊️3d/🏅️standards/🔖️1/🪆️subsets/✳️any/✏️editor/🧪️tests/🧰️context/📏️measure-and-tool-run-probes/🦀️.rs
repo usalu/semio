@@ -210,27 +210,6 @@ pub async fn context_menu_for_hit(app: &mut Puzzle3dApp, domain: &str, id: &str)
     app.context_menu(&request, &view).await
 }
 
-//#region 🧮️HeapWitness
-/// 🧮️ The test binary's own allocator, counting retained bytes across the WHOLE PROCESS. The guest
-/// heap this artifact ships into is a fixed `GUEST_LINEAR_MEMORY_MAXIMUM_BYTES` wasm linear memory
-/// with ONE allocator and no threads at all, so an owner the tick loop never frees is a hard trap in
-/// production and nothing at all in a native suite — the only way a law can state the growth bound
-/// is to weigh the heap itself.
-///
-/// 🧵️ Process-wide, deliberately NOT per-thread: natively a mounted worker session allocates its
-/// owners on a pool thread and the tick loop frees them on the caller's, so a per-thread counter
-/// reads a growing leak as a NEGATIVE number on the law's own thread and reports the exact opposite
-/// of the truth. A growth law therefore runs its ticks with the fill registry guard held
-/// ([`crate::editor::puzzle3d::precompute::fill_envelope_test_guard`]) and differences this counter.
-///
-/// 🧬️ The instrument itself is `semio_framework_trace::HeapWitness`, shared with the procedural
-/// artifact's guest-memory laws instead of written twice
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-#[global_allocator]
-static PUZZLE3D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-
-//#endregion 🧮️HeapWitness
-
 pub fn edit_rows(settled: &Puzzle3dSettled) -> Vec<semio_framework::kernel::HistoryEntry> {
     settled.completions.iter().filter_map(|completion| completion.history_patch.as_ref()).flat_map(|patch| patch.upserts.iter()).filter(|entry| entry.applied && !entry.op_lines.is_empty()).cloned().collect()
 }

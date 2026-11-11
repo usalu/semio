@@ -105,7 +105,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         registry.register(Puzzle5dRetainedCommandJobFactory::new(&controller_id))
     }
 
-    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, _construction:&mut semio_framework_job::OriginalConstructionAdmission,cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool,semio_framework_job::OriginalTurnFailure> {
         let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original puzzle5d producer request is absent"))?;
         if !PUZZLE5D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {return Ok(false);}
         if original.command.action_id()!=original.tool_id {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"puzzle5d-command-tool-mismatch").into());}
@@ -162,9 +162,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         }
     }
 
-    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|["copy","cut","paste","import-media"].contains(&request.tool_id.as_str())){return Ok(false)}
-        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,crate::editor::puzzle5d::session::Puzzle5dReservedWork>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,crate::editor::puzzle5d::session::Puzzle5dReservedWork>(request,body,construction,cx)
     }
 
     /// 📎 Ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1d: replaces the old

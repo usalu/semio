@@ -2,6 +2,7 @@
 use super::*;
 use semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource as Source;
 use semio_plugin_decl_emission::ActionMeta;
+use semio_plugin_job::original_steps::{begun,retired_poll};
 use std::mem::size_of;
 type App=fixture::NativeWindowApp;
 #[track_caller]
@@ -15,7 +16,7 @@ fn original_typed_command_source_retains_metadata_caller_and_selected_close(){
   for index in 0..16{if cut==Some(index){caller.cancel().cancel_now();break}let ready=action(&mut caller,&mut decoder,g,|cx|{if !source.admit(cx)?{return Ok(false)}source.capture_metadata(&mut metadata,cx)});if ready{break}assert!(index<15)}
   if cut.is_none(){assert!(metadata.is_none());let view=source.metadata().unwrap().view_state.as_deref().unwrap();assert_eq!(view.active_mode_id.as_ref().unwrap().as_ptr(),text);assert_eq!(view.active_utility_by_window_id.get("window").unwrap().as_ptr(),utility);let mut foreign=OriginalJobDecodeOwner::empty();action(&mut caller,&mut foreign,g,|cx|{assert!(source.close_step(cx).is_err());Ok(())});assert!(foreign.terminal_is_empty());}
   for index in 0..262144{if !source.pending(){break}let d=source.close_demands().unwrap();for axis in 0..5{let mut denied=g;match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes=d.copy_bytes-1,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes=d.capacity_bytes-1,3 if d.release_bytes>0=>denied.maximum_release_bytes=d.release_bytes-1,4 if d.depth>0=>denied.maximum_depth=d.depth-1,_=>continue}action(&mut caller,&mut decoder,denied,|cx|cx.with_original_retirement(|cx|source.close_step(cx)));assert_eq!(caller.receipt(),RetainedCloneProgress::default(),"selected pending close accepted denied axis {axis}: {d:?}");assert_eq!(source.close_demands().unwrap(),d);}action(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|source.close_step(cx)));assert!(index<262143);}
-  if let Some(metadata)=metadata{let mut metadata=Some(metadata);let mut close=semio_framework_value::retained_clone::RetainedCloneClose::default();for index in 0..262144{if metadata.is_none()&&close.is_empty(){break}action(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=close.next_owner_demands::<ActionMeta>(metadata.is_some(),&None,32768)?;close_original_retained_step(cx,d,|grant|{if let Some(step)=close.begin_granted(&mut metadata,grant)?{Ok(step)}else{close.select(32768)?.step(grant)}})?;Ok(())}));assert!(index<262143)}}
+  if let Some(metadata)=metadata{let mut metadata=Some(metadata);let mut close=semio_framework_value::retained_clone::RetainedCloneClose::default();for index in 0..262144{if metadata.is_none()&&close.is_empty(){break}action(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|{let d=close.next_owner_demands::<ActionMeta>(metadata.is_some(),&None,32768)?;if close.is_empty()&&metadata.is_some(){begun(cx,d,|effect|close.begin_granted(&mut metadata,effect))?;}else{retired_poll(cx,d,|effect|close.step_granted(32768,effect))?;}Ok(())}));assert!(index<262143)}}
   while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(g);
  }
 }

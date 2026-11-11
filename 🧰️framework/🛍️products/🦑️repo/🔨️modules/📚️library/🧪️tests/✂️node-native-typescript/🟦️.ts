@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
@@ -102,7 +103,7 @@ function stripOnlyFindings(files: readonly string[], host?: ts.CompilerHost): st
 /** 🟢️ Node's own answer for one source: its type stripper accepts it or refuses it. */
 function nodeStripVerdicts(sources: readonly string[]): boolean[] {
   const script = 'import { stripTypeScriptTypes } from "node:module"; import { readFileSync } from "node:fs"; const sources = JSON.parse(readFileSync(0, "utf8")); process.stdout.write(JSON.stringify(sources.map((source) => { try { stripTypeScriptTypes(source); return true; } catch { return false; } })));';
-  const run = spawnSync("node", ["--no-warnings", "--input-type=module", "-e", script], { input: JSON.stringify(sources), encoding: "utf8" });
+  const run = spawnSync(registeredToolExecutableV1("node"), ["--no-warnings", "--input-type=module", "-e", script], { input: JSON.stringify(sources), encoding: "utf8" });
   expect(run.status, run.stderr).toBe(0);
   return JSON.parse(run.stdout) as boolean[];
 }
@@ -135,7 +136,7 @@ test("every native entry's runtime closure is erasable, imports types as types, 
   for (const entry of fixture.nativeEntries) {
     expect(stripOnlyFindings(nativeClosure(entry)), entry).toEqual([]);
     if (entry.includes("/🧪️testing/🎚️config/")) continue;
-    const load = spawnSync("node", ["--no-warnings", "--experimental-strip-types", "--input-type=module", "-e", `await import(${JSON.stringify(pathToFileURL(join(root, entry)).href)});`], { cwd: root, encoding: "utf8", env: { ...process.env, SEMIO_VITEST_POLICY: JSON.stringify(repositoryVitestPolicyV1(root)) } });
+    const load = spawnSync(registeredToolExecutableV1("node"), ["--no-warnings", "--experimental-strip-types", "--input-type=module", "-e", `await import(${JSON.stringify(pathToFileURL(join(root, entry)).href)});`], { cwd: root, encoding: "utf8", env: { ...process.env, SEMIO_VITEST_POLICY: JSON.stringify(repositoryVitestPolicyV1(root)) } });
     expect(load.status, `${entry}\n${load.stderr.slice(0, 2048)}`).toBe(0);
   }
 }, 120_000);

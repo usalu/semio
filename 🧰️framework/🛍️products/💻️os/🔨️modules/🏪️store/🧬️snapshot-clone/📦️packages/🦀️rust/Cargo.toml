@@ -28,7 +28,7 @@ law = ["semio-framework-job/testkit", "semio-os-store-one-item-publication/testk
 semio-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-os-store-canonical-json = { path = "../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-os-store-one-item-publication = { path = "../../../🎮️one-item/📬️publication/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-os-store-command = { path = "../../../📬️command/📦️packages/🦀️rust" }
 semio-os-store-one-item = { path = "../../../🎮️one-item/📦️packages/🦀️rust" }

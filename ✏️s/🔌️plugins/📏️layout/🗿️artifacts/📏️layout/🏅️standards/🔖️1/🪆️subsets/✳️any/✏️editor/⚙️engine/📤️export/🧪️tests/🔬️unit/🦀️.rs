@@ -16,8 +16,6 @@ use semio_s_artifact_layout_layout_engine_json::{JsonValidationCursor, MAX_LAYOU
 use semio_s_artifact_layout_layout_model::PageOverride;
 use std::sync::Arc;
 
-#[global_allocator]
-static LAYOUT_EXPORT_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 include!("📕️pdf-structure/🦀️.rs");
 include!("🎟️harness-pdf-and-dispatch-laws/🦀️.rs");

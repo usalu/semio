@@ -32,14 +32,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     return Err(typing.fault.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frozen fault was not constructed"))?.into())
                 }
                 let mut demand=Host::<A>::shell_close_demands();demand.copy_bytes+=std::mem::size_of::<u64>()+std::mem::size_of::<bool>();let mut received=false;
-                semio_framework_job::close_original_retained_step(cx,demand,|_|{let result=(||{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);received=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+                semio_framework_job::close_original_retained_step(cx,demand,|_|{let result:Result<_,semio_framework_value::ValueError>=(||{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);received=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
                 return Ok(if received{*decision}else{None})
             }
         }else if decision.is_some(){return Ok(*decision)}
         if !self.capture_original_tool_tag(action,args,meta,cx,tag,ready,typing).await?{return Ok(None)}
         if self.tools.original_scrub_dispatch.is_none(){
             let frozen=X::freezes_document(&*self.time_travel,&*self.tool_runs)&&matches!(tag,Some(ToolTag::Scrub(ScrubTag{phase:ScrubPhase::Tick{..}|ScrubPhase::Commit{..},..})));
-            Host::<A>::admit(&self.tool_machines.presses,meta.view_state.as_deref(),frozen,&mut self.tools.original_scrub_dispatch,cx)?;return Ok(None)
+            Host::<A>::admit(&self.tool_machines.presses,meta.view_state.as_deref(),frozen,&mut self.tool_machines.admissions.scrub,&mut self.tools.original_scrub_dispatch,cx)?;return Ok(None)
         }
         self.tools.original_scrub_dispatch.as_mut().unwrap().advance(&mut self.tool_machines.presses,meta.view_state.as_deref(),tag,decision,cx)?;
         Ok(None)
@@ -86,14 +86,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             },
             3=>{
                 if typing.transaction.is_some(){typing.transition(4,cx)?;return Ok(false)}
-                if let Some(row)=typing.row.as_mut(){if row.ready(){if row.take_into(&self.tool_machines.typing,&mut typing.transaction,&mut typing.values,cx)?{typing.transition(4,cx)?;}}else{row.advance(&mut self.tool_machines.typing,cx)?;}}
+                let source=typing.after.as_ref().ok_or_else(invalid)?;
+                if let Some(row)=typing.row.as_mut(){if row.ready(){if row.take_into(&self.tool_machines.typing,&mut typing.transaction,&mut typing.values,cx)?{typing.transition(4,cx)?;}}else{row.advance(&mut self.tool_machines.typing,source,cx)?;}}
                 else{OriginalTypingCommit::admit(&self.tool_machines.typing,typing.after.as_ref().ok_or_else(invalid)?,typing.key.ok_or_else(invalid)?,cx,&mut typing.birth,&mut typing.row)?;}
                 if typing.transaction.is_some(){typing.transition(4,cx)?;}
             },
             4=>{
                 if !typing.close_row(cx)?{return Ok(false)}
                 if typing.metadata.is_some(){typing.transition(5,cx)?;return Ok(false)}
-                typing.original_metadata.as_ref().ok_or_else(invalid)?.admit_routing_alias(&mut typing.metadata,cx)?;
+                typing.original_metadata.as_ref().ok_or_else(invalid)?.admit_routing_alias(typing.birth.resident(),&mut typing.metadata,cx)?;
             },
             5=>{if typing.input.is_some()||typing.prepare_verb(cx)?{typing.make_input(cx)?;}},
             6=>{

@@ -215,7 +215,7 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::PluginApp;
     let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HomeApp>, _>(async { semio_framework_plugin::App { definition: create_home_app().await, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HomeApp>, _>(async { semio_framework_plugin::App { definition: create_home_app().await, examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     let view = home_view("u1", semio_ui_locale::Locale::En);
     let meta = semio_framework_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };
@@ -561,7 +561,7 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
     assert_eq!((field("documentId"), field("schema"), field("name"), field("storage"), field("target")), (imported.id.clone(), S_SPACE_SCHEMA.to_owned(), name.to_owned(), "folder".to_owned(), String::new()));
     let pack = protocol::base64_standard_decode(field("pack")).expect("the pack is base64");
     let spr = protocol::base64_standard_decode(field("spr")).expect("the spr is base64");
-    let parsed: store::os_store::text_format::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("the kept pair parses");
+    let parsed: store::os_store::text_format::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::parse_document_pack(&pack, &spr, &::semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("the kept pair parses");
     let envelope = parsed.into_envelope();
     let same = envelope.id == imported.id && envelope.schema == S_SPACE_SCHEMA;
     envelope.retire_unadopted();

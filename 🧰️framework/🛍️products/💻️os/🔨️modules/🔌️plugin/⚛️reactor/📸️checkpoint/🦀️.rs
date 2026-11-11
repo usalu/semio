@@ -76,7 +76,7 @@ impl CheckpointPack {
 pub async fn checkpoint<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
-        let files = semio_framework_plugin_runtime_ops::ops_document::plugin_document_pack(runtime, *id).await?;
+        let files = semio_plugin_runtime_ops::ops_document::plugin_document_pack(runtime, *id).await?;
         let document_pack = store::os_store::serialization::encode_document_pack_bytes(&files.pack, &files.spr).await;
         let actor = semio_plugin_runtime_instances::inst_wire_frames::instance_actor(runtime, *id).await?;
         instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), actor, document_pack });
@@ -128,6 +128,17 @@ pub struct RestoredCheckpoint {
     pub document_loads: Vec<RestoredDocumentLoad>,
     pub work: u128,
 }
+
+impl RestoredDocumentLoad {
+    /// 🚦️ Advances the archive admission by one step under [`RESTORE_DOCUMENT_LOAD_OPERATION`] and answers whether the load began.
+    pub async fn begin_step<PA: semio_plugin_reactor_app::PluginApp>(&mut self, runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if !self.admitted {
+            self.admitted = semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, self.instance, RESTORE_DOCUMENT_LOAD_OPERATION, &mut *self.archive, &mut self.admission, cx).await?;
+        }
+        Ok(self.admitted)
+    }
+}
+
 
 /// 📸️ Restores every instance recorded in `state` under its checkpointed id and admits its document pack as a stepped
 /// whole-document archive load (`📓️api-stepped-document-load.md` §4), which `⚛️reactor`'s turn drives to `Ready` while

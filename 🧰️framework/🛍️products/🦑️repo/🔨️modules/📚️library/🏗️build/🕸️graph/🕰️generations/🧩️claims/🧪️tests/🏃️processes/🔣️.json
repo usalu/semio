@@ -1,0 +1,4 @@
+{
+  "version": 1,
+  "wait": {"leases": ["file", "queued"], "wanted": ["w1", "w2"], "waitMilliseconds": 2500, "maxCpuShare": 0.5}
+}

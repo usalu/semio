@@ -17,7 +17,7 @@ class TestScript extends BundleScript {
 class RuntimeTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runRepositoryCargoTests(["semio-s-artifact-lowpoly-lowpoly-model", "semio-s-artifact-lowpoly-lowpoly-model-diff", "semio-s-artifact-lowpoly-lowpoly-mut-paint", "semio-s-artifact-lowpoly-lowpoly-commands", "semio-s-artifact-lowpoly-lowpoly-view", "semio-framework-plugin-command", "semio-framework-plugin-tests-11-2", "semio-framework-pixels", "semio-hub-lowpoly", "semio-s-artifact-lowpoly-lowpoly-editor", "semio-s-artifact-lowpoly-lowpoly-engine", "semio-s-artifact-lowpoly-lowpoly-io", "semio-s-artifact-lowpoly-lowpoly-mut-objects", "semio-s-artifact-lowpoly-lowpoly-modes", "semio-s-artifact-lowpoly-lowpoly-viewer"], this.repoRoot, this.invocation, rest);
+    await runRepositoryCargoTests(["semio-s-artifact-lowpoly-lowpoly-model", "semio-s-artifact-lowpoly-lowpoly-model-diff", "semio-s-artifact-lowpoly-lowpoly-mut-paint", "semio-s-artifact-lowpoly-lowpoly-commands", "semio-s-artifact-lowpoly-lowpoly-view", "semio-plugin-command", "semio-plugin-tests-11-2", "semio-framework-pixels", "semio-hub-lowpoly", "semio-s-artifact-lowpoly-lowpoly-editor", "semio-s-artifact-lowpoly-lowpoly-engine", "semio-s-artifact-lowpoly-lowpoly-io", "semio-s-artifact-lowpoly-lowpoly-mut-objects", "semio-s-artifact-lowpoly-lowpoly-modes", "semio-s-artifact-lowpoly-lowpoly-viewer"], this.repoRoot, this.invocation, rest);
   }
 }
 

@@ -2,8 +2,6 @@ use semio_os_infinite::world::{World3dBuildContext,WorldCursorWakeAuthority};
 use semio_framework_job::{StepContext,StepBudget,OperationId,Generation,CancelToken};
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observed;
-#[global_allocator]
-static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 const NATIVE_TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:256};
 fn native_clock()->Option<u64>{Some(1000)}
 fn native_paid<R>(caller:&mut semio_framework_job::OriginalJobFixtureCaller,run:impl FnOnce(RetainedCloneGrant)->(R,semio_framework_value::RetainedCloneProgress))->R{caller.turn(NATIVE_TURN,|cx|{let((value,receipt),heap)=observed(||run(cx.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));cx.consume_retained(receipt)?;if receipt.copied_items!=0{cx.consume_fuel(1);}Ok(value)}).unwrap()}

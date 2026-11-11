@@ -9,7 +9,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::{LocalInteraction, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{LocalInteraction, PeerRoster};
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
@@ -49,15 +49,15 @@ impl<A: ArtifactApp> PendingReserved<A> {
         semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             if let Some(owner)=self.pending_render_retirement.as_mut(){
                 if owner.terminal_is_empty(){drop(self.pending_render_retirement.take());self.pending_render_identity=None;self.pending_render_tree_identity=None;return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))}
-                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(effect.grant().maximum_copy_bytes,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
             }
             if let Some(place)=self.pending_render_failure_place.as_mut(){
                 if place.terminal_is_empty(){*self.pending_render_failure_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}
-                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|place.close_step(body,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|place.close_step(effect.grant().maximum_copy_bytes,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
             }
             if let Some(place)=self.pending_render_compound_place.as_mut(){
                 if place.terminal_is_empty(){*self.pending_render_compound_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}
-                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|place.close_step(body,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|place.close_step(effect.grant().maximum_copy_bytes,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
             }
             if let Some(source)=self.pending_render_failure.take(){
                 match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>{*self.pending_render_retirement=Some(owner);Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))},Err((failure,source))=>{*self.pending_render_failure=Some(source);Err(failure.into())}}

@@ -21,6 +21,6 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-plugin-job-receiving = { path = "../../../../../../👷️job/🛬️receiving/📦️packages/🦀️rust" }

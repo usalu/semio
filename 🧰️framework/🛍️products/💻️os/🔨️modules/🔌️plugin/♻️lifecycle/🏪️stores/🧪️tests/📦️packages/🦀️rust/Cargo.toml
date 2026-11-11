@@ -22,11 +22,11 @@ semio-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️
 semio-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-instance-extension = { path = "../../../../../🧵️instance/🧩️extensions/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio_ui_contract = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
-semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-plugin-instance-ladders = { path = "../../../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }

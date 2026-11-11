@@ -52,35 +52,35 @@
       "fuel": 0,
       "deadline": 1500,
       "spent": 0,
-      "remaining": 10,
+      "remaining": 13,
       "unwind": false
     },
     {
       "fuel": 3,
       "deadline": 1500,
       "spent": 1,
-      "remaining": 9,
+      "remaining": 12,
       "unwind": false
     },
     {
       "fuel": 99,
       "deadline": 3000,
       "spent": 2,
-      "remaining": 7,
+      "remaining": 10,
       "unwind": false
     },
     {
       "fuel": 3,
       "deadline": 1000,
       "spent": 0,
-      "remaining": 7,
+      "remaining": 10,
       "unwind": false
     },
     {
       "fuel": 2,
       "deadline": 1500,
       "spent": 1,
-      "remaining": 6,
+      "remaining": 9,
       "unwind": true
     }
   ]

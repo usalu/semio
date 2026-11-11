@@ -28,6 +28,7 @@ testkit = []
 [dependencies]
 semio-framework-value-native-receiver-protocol = { path = "../../🧬️protocol/📦️packages/🦀️rust" }
 semio-framework-value-native-tree-engine = { path = "../../🌳️value/🧱️bulk/📦️packages/🦀️rust" }
+semio-framework-value-native-schema = { path = "../../🧩️record/🔎️schema/📦️packages/🦀️rust" }
 semio-framework-value-native-schema-engine = { path = "../../🧩️record/📦️packages/🦀️rust" }
 semio-framework-value-native-reservation = { path = "../../🌳️value/🎟️reservation/📦️packages/🦀️rust" }
 semio-framework-value-native-shared-engine = { path = "../../🔐️shared-slots/📦️packages/🦀️rust" }

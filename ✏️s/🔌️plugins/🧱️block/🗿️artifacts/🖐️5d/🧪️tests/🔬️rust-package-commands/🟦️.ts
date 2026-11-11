@@ -1,5 +1,5 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 

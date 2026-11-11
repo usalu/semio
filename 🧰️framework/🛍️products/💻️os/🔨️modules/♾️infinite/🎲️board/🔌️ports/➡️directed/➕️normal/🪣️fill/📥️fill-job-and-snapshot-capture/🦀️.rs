@@ -25,21 +25,21 @@ pub operation: semio_framework_job::Operation,
 pub(super) enum BoardFillOffer { Yield, Preview, Checkpoint(u64), Complete, Fault, Cancelled }
 
 // #region board_host
-pub fn begin_board_fill_snapshot(style: &BoardStyleState, brush: &BoardBrushState, output: &mut Option<BoardFillSnapshotCapture>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-    BoardFillSnapshotCapture::admit_original(brush.suggestion_offset, style.naming, output, cx)
+pub fn begin_board_fill_snapshot(admission: &mut semio_framework_job::OriginalConstructionAdmission, style: &BoardStyleState, brush: &BoardBrushState, output: &mut Option<BoardFillSnapshotCapture>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    BoardFillSnapshotCapture::admit_original(admission, brush.suggestion_offset, style.naming, output, cx)
 }
 
 impl BoardFillSnapshotCapture {
     pub fn admission_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let mut demand = BoardFillSnapshot::descriptor_demands(); demand.copy_bytes += size_of::<Self>(); Ok(demand)
     }
-    pub fn admit_original(suggestion_offset: f64, naming: &'static BoardNaming, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub fn admit_original(admission: &mut semio_framework_job::OriginalConstructionAdmission, suggestion_offset: f64, naming: &'static BoardNaming, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
         let demand = Self::admission_demands()?;
         let mut allocation_failed = false;
         let mut constructed_progress = RetainedCloneProgress::default();
-        let admitted = admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+        let admitted = admit_original_tool_construction_settled(cx, admission, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
             scope.admit_owner(demand)?;
             let mut candidate = Self::unallocated(suggestion_offset, naming);
             let snapshot = candidate.snapshot.as_mut().expect("original snapshot construction carrier");
@@ -376,7 +376,7 @@ impl BoardFillSnapshotCapture {
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>() + capacity_bytes, capacity_bytes, release_bytes: 0, depth: 2 })
     }
 
-    pub fn step(&mut self, scene: &BoardSceneState, style: &BoardStyleState, brush: &BoardBrushState, cx: &mut semio_framework_job::StepContext<'_>) -> Result<BoardFillCaptureStep, semio_framework_job::OriginalTurnFailure> {
+    pub fn step(&mut self, admission: &mut semio_framework_job::OriginalConstructionAdmission, scene: &BoardSceneState, style: &BoardStyleState, brush: &BoardBrushState, cx: &mut semio_framework_job::StepContext<'_>) -> Result<BoardFillCaptureStep, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
         cx.original_source_parent()?.validate_borrowed_context(cx)?;
@@ -386,7 +386,7 @@ impl BoardFillSnapshotCapture {
         if matches!(self.phase, BoardFillCapturePhase::Complete) { return Ok(BoardFillCaptureStep::Complete); }
         let demand = self.next_step_demands(style)?;
         let mut output = None;
-        admit_original_tool_construction_settled(cx, &mut Default::default(), &mut output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+        admit_original_tool_construction_settled(cx, admission, &mut output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
             scope.admit_owner(demand)?;
             let result = match self.phase {
                 BoardFillCapturePhase::Nodes => self.capture_node(scene, style),

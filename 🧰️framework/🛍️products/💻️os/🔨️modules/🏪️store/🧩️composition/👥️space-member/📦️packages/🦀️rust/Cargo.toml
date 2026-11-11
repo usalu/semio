@@ -41,7 +41,7 @@ semio-os-store-space-schema = { path = "../../../../🧬️schema/📦️package
 semio-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-composition-admission = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-os-store-blob-identity = { path = "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
 semio-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }

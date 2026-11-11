@@ -23,3 +23,14 @@ export type RowTableV1<Row extends{kind:string;path:string;fact:unknown}>=Readon
 }>;
 /** 🏗️ Creates the compact row store; over `maximumRows` or `maximumCharacters` it empties itself before the next row. */
 export function createRowTableV1<Row extends{kind:string;path:string;fact:unknown}=any>(options?:{maximumRows?:number;maximumCharacters?:number;hash?:(kind:number,path:number,shape:number,reference:number)=>number}):RowTableV1<Row>;
+/** 🪢️ A weak pool of observation rows: equal rows are one live instance and nothing is held that a live row does not hold. */
+export type RowPoolV1<Row extends{kind:string;path:string;fact:unknown}>=Readonly<{
+ /** 🗺️ The live instance equal to `row`, which becomes the instance when none is alive; the rows an analysis row nests are shared in place first. */
+ share(row:Row):Row;
+ /** 🧺️ Replaces every row of `rows` by its shared instance in place and answers the same array. */
+ rows(rows:Row[]):Row[];
+ /** 📦️ The keys of the rows that may still be alive. */
+ size():number;
+}>;
+/** 🏗️ Creates the weak row pool. */
+export function createRowPoolV1<Row extends{kind:string;path:string;fact:unknown}=any>():RowPoolV1<Row>;

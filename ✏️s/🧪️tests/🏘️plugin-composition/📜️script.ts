@@ -2,7 +2,7 @@
 /** 🏘️ Runs every cross-plugin composition law; plugins may not meet anywhere else. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runVitest } from "@semio-tech/framework/process/vitest";
+import { runVitest } from "@semio-tech/process/vitest";
 import { runRepositoryCommand } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 
 /** 🧪️ Executes the composition laws with the repository's owned command runner. */

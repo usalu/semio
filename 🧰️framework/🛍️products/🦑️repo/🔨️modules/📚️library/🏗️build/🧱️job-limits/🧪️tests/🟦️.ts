@@ -127,6 +127,8 @@ test("the headroom is the smallest memory.max up the tree and the current bytes 
  expect(cgroupMemoryHeadroomV1(ports)).toEqual({limitBytes:Infinity,currentBytes:700*mb});
  files.set(join(root,...own,"memory.max"),String(4096*mb));files.set(join(root,...own.slice(0,-1),"memory.max"),String(3000*mb));files.set(join(root,"memory.max"),"max");
  expect(cgroupMemoryHeadroomV1(ports)).toEqual({limitBytes:own.length>1?3000*mb:4096*mb,currentBytes:700*mb});
+ files.set(join(root,...own,"memory.stat"),"anon 1\nfile 400\ninactive_file "+300*mb+"\nactive_file 5\n");
+ expect(cgroupMemoryHeadroomV1(ports)?.currentBytes,"the inactive file cache is reclaimable, not growth").toBe(400*mb);
  rmSync(root,{recursive:true,force:true});
 });
 

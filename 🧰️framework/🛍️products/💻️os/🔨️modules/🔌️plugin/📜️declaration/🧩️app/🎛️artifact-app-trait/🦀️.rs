@@ -163,12 +163,12 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
     /// 🏗️ Builds one payload-owning operation for an explicitly registered app factory. Returning
     /// `None` is fail-closed; the framework never substitutes its bounded-first-step factory.
-    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,_output:&mut Option<semio_framework::ErasedToolJob>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_tool_job(_request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,_output:&mut Option<semio_framework::ErasedToolJob>,_construction:&mut semio_framework_job::OriginalConstructionAdmission,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered app tool lacks its original source-preserving producer").into())
     }
     /// 🧭️ Builds a persistent producer/import job for one explicitly registered reserved route.
     /// The empty default grants no route authority and never calls legacy monolithic hooks.
-    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(_request:&mut Option<ArtifactReservedToolJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_construction:&mut semio_framework_job::OriginalConstructionAdmission,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered reserved app route lacks its original producer").into())
     }
     /// 🎞️ Builds an owned resumable producer for an explicitly registered media-output port.

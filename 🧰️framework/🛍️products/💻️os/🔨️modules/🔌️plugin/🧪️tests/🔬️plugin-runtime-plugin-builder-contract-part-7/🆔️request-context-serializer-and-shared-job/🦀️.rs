@@ -157,7 +157,7 @@
 
     #[test]
     fn retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement() {
-        semio_framework_plugin_retained_command::test_raw_allocation_close::<TestApp>();
+        semio_plugin_retained_command::test_raw_allocation_close::<TestApp>();
     }
 
     #[semio_framework_async_macros::async_test]

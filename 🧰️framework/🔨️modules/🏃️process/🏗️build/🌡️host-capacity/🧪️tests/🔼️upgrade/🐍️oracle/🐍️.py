@@ -49,7 +49,7 @@ def evaluate(policy,host,ledger,waiters,now):
     ledger_cpu=sum(g["cpu"] for g in active);ceiling=policy["load"]["perCoreCeiling"]*host["cores"]
     load_room=math.inf if host["load"] is None and ledger_cpu==0 else ceiling-max(host["load"] or 0,ledger_cpu)
     reported=None if load_room==math.inf else load_room
-    swap_ceiling=host["totalMegabytes"]*policy["swap"]["ceilingBasisPoints"]//10000;rate=host["swapOutMegabytesPerSecond"];swapping=rate is None or rate>0
+    swap_ceiling=host["totalMegabytes"]*policy["swap"]["ceilingBasisPoints"]//10000;rate=host["swapOutMegabytesPerSecond"];swapping=rate is not None and rate>=policy["swap"]["activeMegabytesPerSecond"]
     soft=soft_reason(policy,host)
     if host["pressure"]=="critical":hard="pressure-critical"
     elif host["swapUsedMegabytes"] is not None and host["swapUsedMegabytes"]>swap_ceiling and swapping:hard="swap"

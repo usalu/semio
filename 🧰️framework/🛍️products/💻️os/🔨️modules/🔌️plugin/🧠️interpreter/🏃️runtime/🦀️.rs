@@ -39,10 +39,6 @@ pub(crate) use semio_plugin_host_operation::test_native_authority;
 #[cfg(any(test,feature="testkit"))]
 pub use semio_plugin_interpreter_fixtures as channel_fixture;
 
-/// 🧮️ Runtime allocation witness.
-#[cfg(test)]
-#[global_allocator]
-static OWNED_RUNTIME_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[path = "🎛️operation/🦀️.rs"]
 pub mod operation;

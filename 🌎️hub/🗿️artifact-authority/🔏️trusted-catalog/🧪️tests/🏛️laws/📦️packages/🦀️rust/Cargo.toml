@@ -48,7 +48,7 @@ semio-plugin-guest-contract = { workspace = true }
 semio-plugin = { workspace = true }
 semio-hub-stdio-catalog = { workspace = true }
 semio-hub-gis = { workspace = true }
-semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-hub-vcs = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 futures = "0.3"

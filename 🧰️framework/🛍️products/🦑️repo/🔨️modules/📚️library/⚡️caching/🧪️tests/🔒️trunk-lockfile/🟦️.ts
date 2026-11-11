@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {WASM_BINDGEN_LOCKS_V1} from "../../🦀️cargo/🕸️wasm-bindgen/🟦️.ts";
 import{testRecordV1}from"../📋️values/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
@@ -96,7 +97,7 @@ export async function testNativeTrunkLockfile(workspace: string, generated: stri
   assert.ok((result.stdout + result.stderr).includes(fixture.probe.diagnostic));
   assert.equal(readFileSync(join(root, "Cargo.lock"), "utf8"), fixture.probe.files["Cargo.lock"]);
   writeFileSync(join(root, "Cargo.lock"), fixture.probe.validLock);
-  const oracle = spawnSync("cargo", ["metadata", "--locked", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], { cwd: root, env, encoding: "utf8", timeout: 15000 });
+  const oracle = spawnSync(registeredToolExecutableV1("cargo"), ["metadata", "--locked", "--format-version=1", "--manifest-path", join(root, "Cargo.toml")], { cwd: root, env, encoding: "utf8", timeout: 15000 });
   assert.equal(oracle.status, 0, oracle.stderr);
   assert.equal(JSON.parse(oracle.stdout).packages[0].name, "trunk-lock-fixture");
   const watch = spawn("trunk", ["watch", ...trunkArgs], { cwd: root, env, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });

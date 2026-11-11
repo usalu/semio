@@ -8,7 +8,7 @@ import { buildCasePlan } from "../../📦️packages/🟦️typescript/🎬️ex
 import { loadOracleRegistry, oracleHostPackagesFor } from "../../📦️packages/🟦️typescript/🤝️contributions/🟦️.ts";
 import { testProjectName } from "../../📦️packages/🟦️typescript/🧭️case-discovery/🟦️.ts";
 import { parseFeature } from "@semio-tech/framework/test/gherkin";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { oracleHostPython, pythonHostArguments } from "../../📦️packages/🟦️typescript/🖥️host/🏗️materialization/🟦️.ts";
 import control from "../🧫️fixtures/🔮️oracle-source-ownership/🔣️.json";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";

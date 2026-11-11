@@ -28,6 +28,7 @@ semio-framework-trace = { workspace = true, optional = true }
 semio-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-plugin-job-receiving = { path = "../../../../🛬️receiving/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]

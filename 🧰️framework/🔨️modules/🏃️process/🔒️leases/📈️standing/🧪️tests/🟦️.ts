@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 /** 📈️ Tests for leases standing. */
 import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
@@ -183,7 +184,7 @@ test("activity probes renew liveness exactly like the model: due only after the 
  expect(read,"the sample is not even read before the probe is due").toBe(0);
 });
 
-const spawnChild=(source:string)=>Bun.spawn(["bun","-e",source],{stdout:"ignore",stderr:"ignore"});
+const spawnChild=(source:string)=>Bun.spawn([registeredToolExecutableV1("bun"),"-e",source],{stdout:"ignore",stderr:"ignore"});
 test("Law: a holder whose child burns CPU for longer than the stuck bound is never asked and never accepts a stuck request; a holder whose whole tree idles ages into stuck as before",async()=>{
  const resource="repository-graph-facts:/w:shard:7",bound=policy.freshness.stuckAfterMilliseconds.find(row=>row.prefix==="repository-graph-facts:")!.milliseconds,t0=Date.now(),twoHoursAgo=t0-2*bound;
  const request={version:1 as const,holderPid:process.pid,holderStartedAtMs:1,requesterPid:process.pid+1,requesterStartedAtMs:t0,resource,reason:"stuck" as const,atMs:t0,requesterComponents:{}};

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import{testMethodV1,testStringsV1,testRecordV1}from"../📋️values/🟦️.ts";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
@@ -18,7 +19,7 @@ export async function testCommandImportClosure(workspace: string, output: string
     const build = () => require("esbuild").build({ entryPoints: [entry], absWorkingDir: root, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
     const oracle = (result: any) => Object.keys(result.metafile.inputs).map(path => relative(root, resolve(root, path))).sort();
     const execute = (url: string, expression: string) => {
-      const result = spawnSync("node", ["--input-type=module", "-e", `const api = await import(${JSON.stringify(url)}); console.log(JSON.stringify(${expression}));`], { cwd: root, encoding: "utf8", timeout: 10000 });
+      const result = spawnSync(registeredToolExecutableV1("node"), ["--input-type=module", "-e", `const api = await import(${JSON.stringify(url)}); console.log(JSON.stringify(${expression}));`], { cwd: root, encoding: "utf8", timeout: 10000 });
       assert.equal(result.status, 0, result.stderr); return JSON.parse(result.stdout);
     };
     const executeBundle = (result: any) => execute(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].contents).toString("base64")}`, "{result:api.result,lazy:(await api.lazy()).value,sideEffect:globalThis.fixtureLoaded,typeExportSideEffect:Boolean(globalThis.fixtureTypeExportLoaded)}");

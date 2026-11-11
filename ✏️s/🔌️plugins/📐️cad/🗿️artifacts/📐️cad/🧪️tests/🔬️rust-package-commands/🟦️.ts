@@ -1,9 +1,9 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
 const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🦀️rust");
@@ -42,7 +42,7 @@ if (segments[0] === "cad-document-contract") {
     const schemaRoot = join(context.repoRoot, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema");
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧪️tests/🪪️document/🟦️.ts"].map((file) => `${schemaRoot}/${file}`)], { cwd: context.repoRoot });
     if (segments[1] === "native") {
-      const { runCargo } = await import("@semio-tech/framework/process/execution");
+      const { runCargo } = await import("@semio-tech/process/execution");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-cad-cad-model", "--test", "cad_model_document_contract", "--", "--nocapture"], context.repoRoot);
     }
     return;

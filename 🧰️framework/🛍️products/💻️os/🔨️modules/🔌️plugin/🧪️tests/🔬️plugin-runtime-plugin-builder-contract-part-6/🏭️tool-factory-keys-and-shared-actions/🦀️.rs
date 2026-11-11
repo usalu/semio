@@ -3,8 +3,8 @@
     struct OtherTestRetainedCommandFactory(TestRetainedCommandFactory);
 
     impl ToolJobFactory for OtherTestRetainedCommandFactory {
-        type Payload = semio_framework_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
-        type Job = semio_framework_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
+        type Payload = semio_plugin_retained_command::ArtifactRetainedCommandPayload<TestApp>;
+        type Job = semio_plugin_retained_command::ArtifactRetainedCommandJob<TestApp>;
         fn keys(&self) -> &[ToolFactoryKey] {
             &self.0.keys
         }

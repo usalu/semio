@@ -1,9 +1,9 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
 import { join, resolve } from "node:path";
 import { readFileSync } from "node:fs";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
 const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🦀️rust");

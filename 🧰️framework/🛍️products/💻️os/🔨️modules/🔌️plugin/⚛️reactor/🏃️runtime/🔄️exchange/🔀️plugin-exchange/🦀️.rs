@@ -3,8 +3,8 @@
 use semio_plugin_decl_emission::ActionMeta;
 use semio_plugin_decl_app::{ArtifactApp, EphemeralSnapshot};
 use semio_plugin_decl_media::ArtifactMediaExportPoll;
-use semio_framework_plugin_runtime_ops::ops_ingress::{COMMAND_INGRESS_MOVES_PER_TURN, PluginCommandIngress, PluginCommandIngressStep, PluginExchangeOutput, encode_exchange_frames, push_invocation_side_frames, relay_clear_default_app, relay_open_artifact, relay_set_default_app, transaction_proposal_frame};
-use semio_framework_plugin_runtime_ops::ops_surface_render::ContextMenuWireRequest;
+use semio_plugin_runtime_ops::ops_ingress::{COMMAND_INGRESS_MOVES_PER_TURN, PluginCommandIngress, PluginCommandIngressStep, PluginExchangeOutput, encode_exchange_frames, push_invocation_side_frames, relay_clear_default_app, relay_open_artifact, relay_set_default_app, transaction_proposal_frame};
+use semio_plugin_runtime_ops::ops_surface_render::ContextMenuWireRequest;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_plugin_job::EmitWire;
 use semio_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
@@ -12,13 +12,13 @@ use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin};
 use semio_plugin_plugin_program::{Plugin, PluginProgram, decode_wire_serialized, encode_wire_serialized};
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
-use semio_framework_plugin_runtime_ops::ops_typed_operations::{TYPED_OPERATION_REPLY_LEFTOVER_PUMPS, advance_typed_operation_output, advance_typed_operation_output_with_leftover, drive_self_waking_ready, media_export_handle_from_wire, media_export_handle_into_wire, merge_typed_operation_leftover_into_reply};
+use semio_plugin_runtime_ops::ops_typed_operations::{TYPED_OPERATION_REPLY_LEFTOVER_PUMPS, advance_typed_operation_output, advance_typed_operation_output_with_leftover, drive_self_waking_ready, media_export_handle_from_wire, media_export_handle_into_wire, merge_typed_operation_leftover_into_reply};
 use semio_plugin_window_config::WindowConfigPack;
 use semio_plugin_reactor_app::app_runtime_helpers::{debug_runtime_line, plugin_internal_fault};
 use semio_plugin_runtime_instances::inst_wire_frames::{decode_wire_serialized_or, instance_actor, push_app_fault, push_dispatch_fault, push_os_fault, read_conflicts_frames, resolve_conflict_frames, set_merge_policy_frames, with_instances_mut, with_instances_original_mut};
-use semio_framework_plugin_runtime_ops::ops_wire_limits::find_instance;
-use semio_framework_plugin_runtime_ops::ops_media::{plugin_cancel_media_export, plugin_consume_media, plugin_poll_media_export, plugin_produce_media, plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk};
-use semio_framework_plugin_runtime_ops::ops_document::{plugin_document_pack, plugin_ingest_operations};
+use semio_plugin_runtime_ops::ops_wire_limits::find_instance;
+use semio_plugin_runtime_ops::ops_media::{MediaImport, plugin_cancel_media_export, plugin_consume_media, plugin_poll_media_export, plugin_produce_media, plugin_retain_media_export_result, plugin_submit_media_export, plugin_take_media_export_chunk};
+use semio_plugin_runtime_ops::ops_document::{plugin_document_pack, plugin_ingest_operations};
 
 #[path = "🎯️document-and-child-commands/🦀️.rs"]
 mod document_and_child_commands;
@@ -110,7 +110,7 @@ struct ExchangeFlags {
 ///
 /// 🌉️ Rewritten from a `.map(protocol::encode_app_frame).collect()` into an explicit loop
 /// (sync — `Iterator::map` cannot take an async closure, and `encode_app_frame` is genuinely async).
-pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: &mut Option<(u64, PluginCommandIngress)>, state:&mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: &mut Option<(u64, PluginCommandIngress)>, state:&mut semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginExchangeOutput, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
     debug_runtime_line(format_args!("[TRACE] plugin_exchange entry instance={instance_id} command={}", command.is_some()));
     let constructing = with_instances_mut(runtime, |list| { let instance = find_instance(list, instance_id)?; Ok(instance.app.store_constructor_is_pending()) }).await?;
@@ -292,12 +292,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             protocol::AppCommand::LoadWindowConfig { .. } => arm_load_window_config(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::ReadWindowConfigs { .. } => arm_read_window_configs(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::MediaIn { seq,ref descriptor,ref data,.. } if original_media_applied=>{assert!(descriptor.is_empty()&&data.is_empty(),"original media source must be donated before completion");flags.mutated=true;frames.push(protocol::AppFrame::Done{in_reply_to:*seq});},
-            protocol::AppCommand::MediaIn { .. } => {if !arm_media_in(runtime, instance_id, cx, &mut frames, &mut flags, command,&mut state.archive_admission,original_media_descriptor.take().expect("original media descriptor was donated with its command")).await?{return Ok(PluginExchangeOutput::default())}},
+            protocol::AppCommand::MediaIn { .. } => {if !arm_media_in(runtime, instance_id, cx, &mut frames, &mut flags, command,original_media_descriptor.take().expect("original media descriptor was donated with its command"),&mut state.media_archive,&mut state.archive_admission).await?{return Ok(PluginExchangeOutput::default())}},
             protocol::AppCommand::MediaOut{seq,port,..}=>{let artifact=state.media_artifact.take().expect("original media encoding completes before command donation");frames.push(protocol::AppFrame::Media{in_reply_to:*seq,port:std::mem::take(port),descriptor:encode_wire_serialized(&artifact.descriptor),data:artifact.data});},
             protocol::AppCommand::SubmitMediaExport { .. } => arm_submit_media_export(&mut frames, owner, command).await?,
             protocol::AppCommand::PollMediaExport { .. } => arm_poll_media_export(&mut frames, owner, command).await?,
             protocol::AppCommand::CancelMediaExport { .. } => arm_cancel_media_export(runtime, instance_id, &mut frames, command).await?,
-            protocol::AppCommand::TakeMediaExportChunk{seq,handle}=>{let(data,terminal)=owner.take_media_chunk();frames.push(protocol::AppFrame::MediaExportChunk{in_reply_to:*seq,handle:handle.clone(),data:data.unwrap_or_default(),terminal});},
+            protocol::AppCommand::TakeMediaExportChunk{seq,handle}=>{let(data,terminal)=owner.take_media_chunk();frames.push(protocol::AppFrame::MediaExportChunk{in_reply_to:*seq,handle:std::mem::take(handle),data:data.unwrap_or_default(),terminal});},
             protocol::AppCommand::MediaFingerprint { .. } => arm_media_fingerprint(runtime, instance_id, &mut frames, command).await?,
             protocol::AppCommand::PureCommand{seq,..}=>{let(result,EmitWire{document:document_ops,config:config_ops,draft:draft_ops,children:child_ops})=state.preview.as_mut().expect("original preview completes before decoded command donation");flags.mutated=true;frames.push(protocol::AppFrame::Emit{in_reply_to:*seq,document_ops:std::mem::take(document_ops),config_ops:std::mem::take(config_ops),draft_ops:std::mem::take(draft_ops),output:encode_wire_serialized(&result.output),diagnostics:encode_wire_serialized(&result.diagnostics),child_ops:std::mem::take(child_ops)});push_invocation_side_frames(&mut effect_bytes,&mut event_bytes,&result).await;},
             protocol::AppCommand::TransactionPrepare { .. } => arm_transaction_prepare(runtime, instance_id, &mut frames, command).await?,

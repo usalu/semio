@@ -70,8 +70,6 @@ fn empty_gis_map_initializer(operation: semio_framework_job::OperationId, genera
     gis_map_initializer(envelope, operation, generation)
 }
 
-#[global_allocator]
-static GIS_TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 const ORIGINAL_STOCK: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4_096 };
 

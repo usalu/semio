@@ -15,11 +15,13 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-action-bus = { path = "../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-ui-scene = { path = "../../../../📦️packages/🦀️rust" }

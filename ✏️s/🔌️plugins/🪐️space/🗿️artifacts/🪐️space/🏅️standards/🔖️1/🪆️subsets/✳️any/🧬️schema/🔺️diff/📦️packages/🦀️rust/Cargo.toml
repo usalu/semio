@@ -29,7 +29,7 @@ semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️fr
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-os = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-os" }
+semio-os = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
 semio-os-infinite = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

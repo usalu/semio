@@ -1,7 +1,5 @@
 //! ⚖️ Wires owners retire under quoted grants: the document and its materialized board retire exactly as a lease, every canvas transient mutation passes the typed-command input lane, and a canvas drag prepares, inverts and re-prepares through the owner's own bundle.
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 use semio_framework_test_typed_input_law as typed_input_law;
 use semio_framework_test_transient_preparation_law as transient_preparation_law;

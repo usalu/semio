@@ -36,8 +36,26 @@ fn ndp_registry_resolves_every_symbol_used_by_the_factor_functions() {
 
 #[test]
 fn psi_table_is_ordered_and_covers_every_annex_a_category() {
+    const PRINTED_NON_MONOTONE: &[(&str, &str, (f64, f64, f64))] = &[
+        ("construction_load", "Table A2.1", (1.0, 0.0, 1.0)),
+        ("footbridge_crowd", "Table A2.2", (0.0, 0.4, 0.0)),
+        ("footbridge_service", "Table A2.2", (0.0, 0.4, 0.0)),
+        ("rail_sw2", "Table A2.3", (0.0, 1.0, 0.0)),
+        ("road_gr3_pedestrian", "Table A2.1", (0.0, 0.4, 0.0)),
+        ("road_gr4_crowd", "Table A2.1", (0.0, 0.75, 0.0)),
+        ("road_single_axle", "Table A2.1", (0.0, 0.75, 0.0)),
+    ];
     for entry in PSI_TABLE {
-        assert!(psi_is_ordered(entry.row(AnnexChoice::En)) && psi_is_ordered(entry.row(AnnexChoice::De)), "{}", entry.key);
+        for annex in [AnnexChoice::En, AnnexChoice::De] {
+            let row = entry.row(annex);
+            match PRINTED_NON_MONOTONE.iter().find(|(key, _, _)| *key == entry.key) {
+                Some((key, locator, triple)) => {
+                    assert!(!psi_is_ordered(row), "{key} {locator} is listed as non-monotone but is ordered");
+                    assert_eq!((row.psi_0, row.psi_1, row.psi_2), *triple, "{key} {locator} {annex:?}");
+                }
+                None => assert!(psi_is_ordered(row), "{} {annex:?}", entry.key),
+            }
+        }
     }
     assert!(PSI_TABLE.iter().any(|entry| entry.table == "A2.3") && PSI_TABLE.iter().any(|entry| entry.table == "A1.1"));
     assert_eq!(psi_lookup(AnnexChoice::De, "B"), psi_lookup(AnnexChoice::De, "office"));
@@ -73,7 +91,7 @@ fn spec_example_e90_04_05_en_offers_610a_and_610b_and_de_does_not() {
     let en = worked(AnnexChoice::En);
     close(value(&en, "E90.16", "e610a"), 1.35 * 50.0 + 1.5 * 0.7 * 20.0 + 1.5 * 0.6 * 10.0 + 1.5 * 0.5 * 8.0);
     close(value(&en, "E90.16", "e610b"), 0.85 * 1.35 * 50.0 + 1.5 * 20.0 + 1.5 * 0.6 * 10.0 + 1.5 * 0.5 * 8.0);
-    close(value(&en, "E90.16", "e610ab"), 0.85 * 1.35 * 50.0 + 1.5 * 20.0 + 1.5 * 0.6 * 10.0 + 1.5 * 0.5 * 8.0);
+    close(value(&en, "E90.16", "e610ab"), 1.35 * 50.0 + 1.5 * 0.7 * 20.0 + 1.5 * 0.6 * 10.0 + 1.5 * 0.5 * 8.0);
     let de = evaluate_outcomes("E90.16", &worked(AnnexChoice::De)).expect("de");
     assert!(de.iter().all(|o| o.key != "e610a" && o.key != "e610b"), "NA-DE offers 6.10 only");
     assert!(de.iter().any(|o| o.key == "simplified"));
@@ -359,7 +377,7 @@ fn annex_d_standard_evaluation_reproduces_the_numpy_fit() {
 
 #[test]
 fn table_d1_nodes_follow_the_prediction_fractile_closed_form_within_the_print_rounding() {
-    for n in [3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 20.0, 30.0] {
+    for n in [3.0_f64, 4.0, 5.0, 6.0, 8.0, 10.0, 20.0, 30.0] {
         let known = phi_inv(0.95) * (1.0 + 1.0 / n).sqrt();
         assert!((k_n(n, true).expect("kn") - known).abs() < 0.02, "n = {n}");
     }

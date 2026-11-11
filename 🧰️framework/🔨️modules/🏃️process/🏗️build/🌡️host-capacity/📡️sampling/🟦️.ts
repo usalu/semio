@@ -11,7 +11,7 @@ const totalEnvironment=schema.definitions.Protocol.const.totalEnvironment;
 
 const OBSERVERS=schema.definitions.Observers.const,LIMITS=Object.freeze({...schema.definitions.Limits.const}),OPTIONAL_PROBE_MILLISECONDS=LIMITS.optionalProbeMilliseconds,MEGABYTE=1048576,SCALE:Readonly<Record<string,number>>={K:1/1024,M:1,G:1024,T:1048576};
 
-/** 🧮️ Raw platform counters in bytes before the policy turns them into one sample; `null` marks a counter the platform does not offer. */
+/** 🧮️ Raw platform counters in bytes before the policy turns them into one sample; `null` marks a counter the platform does not offer. `swappedOutBytes` is the cumulative swap traffic (pages swapped out plus pages swapped in: `pswpout` + `pswpin`, `Swapouts` + `Swapins`), so its rate says whether swap is worked, not whether it is occupied. */
 export type HostCountersV1=Readonly<{availableBytes:number|null;compressedBytes:number|null;constrainedBytes:number|null;swapUsedBytes:number|null;swappedOutBytes:number|null;pressureLevel:"normal"|"warn"|"critical"|null;stallPercent:number|null;openFiles:number|null;openFilesMaximum:number|null;attachedImages:number|null;partial?:true}>;
 /** 🔌️ Runs one program and answers its standard output; the only way the sampler reaches a command. */
 export type HostCommandRunnerV1=(command:string,args:readonly string[],signal?:AbortSignal)=>Promise<string>;
@@ -19,14 +19,14 @@ export type HostCommandRunnerV1=(command:string,args:readonly string[],signal?:A
 export type HostTextReaderV1=(path:string)=>Promise<string|null>;
 /** 🔬️ Everything one platform read needs, injectable so every platform parses from fixtures. */
 export type HostProbeV1=Readonly<{platform:HostSampleV1["platform"];run:HostCommandRunnerV1;read:HostTextReaderV1;signal?:AbortSignal;notify?:(line:string)=>void}>;
-/** 🗃️ A shared sample record: the sample plus the cumulative swap counter its successor needs for a rate. */
+/** 🗃️ A shared sample record: the sample plus the cumulative swap traffic counter its successor needs for a rate. */
 export type HostSampleRecordV1=Readonly<{host:HostSampleV1;swappedOutMegabytes:number|null;declared?:string}>;
 
 /** 🍎️ Parses macOS `vm_stat`, `sysctl vm.swapusage`, `sysctl kern.memorystatus_vm_pressure_level`, `sysctl kern.num_files kern.maxfiles` and `hdiutil info` text; available is what the kernel can hand out without compressing or swapping anything: free, file-backed and purgeable pages (Activity Monitor's "memory used" is everything else, the compressor included), never more than free, inactive and speculative pages; the compressor's physical pages are reported on their own, and the attached images are the `images` count of `hdiutil info`, or its `image-path` records. */
 export function parseDarwinCountersV1(vmStat:string,swapUsage:string,pressureLevel:string,filesTable:string="",imageInfo:string|null=null):HostCountersV1{
  const page=Number(/page size of (\d+) bytes/u.exec(vmStat)?.[1]??LIMITS.defaultPageBytes),pages=(name:string)=>Number(new RegExp(`^${name}:\\s+(\\d+)\\.`,"mu").exec(vmStat)?.[1]??0),used=/used = ([\d.]+)([KMGT])/u.exec(swapUsage),level=Number(pressureLevel.trim());
  const settled=pages("Pages free")+pages("Pages inactive")+pages("Pages speculative"),reclaimable=/^File-backed pages:/mu.test(vmStat)?pages("Pages free")+pages("File-backed pages")+pages("Pages purgeable"):settled,compressed=/^Pages occupied by compressor:/mu.test(vmStat)?pages("Pages occupied by compressor")*page:null;
- return Object.freeze({availableBytes:Math.min(settled,reclaimable)*page,compressedBytes:compressed,constrainedBytes:null,swapUsedBytes:used?Math.round(Number(used[1])*SCALE[used[2]!]!*MEGABYTE):null,swappedOutBytes:pages("Swapouts")*page,pressureLevel:level===4?"critical":level===2?"warn":level===1?"normal":null,stallPercent:null,...darwinFilesV1(filesTable),attachedImages:darwinImagesV1(imageInfo)});
+ return Object.freeze({availableBytes:Math.min(settled,reclaimable)*page,compressedBytes:compressed,constrainedBytes:null,swapUsedBytes:used?Math.round(Number(used[1])*SCALE[used[2]!]!*MEGABYTE):null,swappedOutBytes:(pages("Swapouts")+pages("Swapins"))*page,pressureLevel:level===4?"critical":level===2?"warn":level===1?"normal":null,stallPercent:null,...darwinFilesV1(filesTable),attachedImages:darwinImagesV1(imageInfo)});
 }
 
 const wholeV1=(match:RegExpExecArray|null):number|null=>match?Number(match[1]):null;
@@ -40,9 +40,9 @@ function darwinImagesV1(info:string|null):number|null{
 
 /** 🐧️ Parses Linux `/proc/meminfo`, `/proc/vmstat`, `/proc/pressure/memory`, the optional cgroup v2 limit files and `/proc/sys/fs/file-nr` (allocated, unused, maximum); a Linux host has no attachable images, because its partitions are directories, so the count stays unknown. */
 export function parseLinuxCountersV1(meminfo:string,vmstat:string,pressure:string|null,cgroupMaximum:string|null,cgroupCurrent:string|null,fileNr:string|null=null):HostCountersV1{
- const kib=(name:string):number|null=>{const match=new RegExp(`^${name}:\\s+(\\d+) kB`,"mu").exec(meminfo);return match?Number(match[1])*1024:null;},total=kib("SwapTotal"),free=kib("SwapFree"),out=/^pswpout (\d+)$/mu.exec(vmstat),some=/^some avg10=([\d.]+)/mu.exec(pressure??""),maximum=cgroupMaximum?.trim(),limit=maximum!==undefined&&/^\d+$/u.test(maximum)?Number(maximum):null,current=cgroupCurrent!==null&&/^\d+\s*$/u.test(cgroupCurrent)?Number(cgroupCurrent.trim()):null;
+ const kib=(name:string):number|null=>{const match=new RegExp(`^${name}:\\s+(\\d+) kB`,"mu").exec(meminfo);return match?Number(match[1])*1024:null;},total=kib("SwapTotal"),free=kib("SwapFree"),out=/^pswpout (\d+)$/mu.exec(vmstat),back=/^pswpin (\d+)$/mu.exec(vmstat),some=/^some avg10=([\d.]+)/mu.exec(pressure??""),maximum=cgroupMaximum?.trim(),limit=maximum!==undefined&&/^\d+$/u.test(maximum)?Number(maximum):null,current=cgroupCurrent!==null&&/^\d+\s*$/u.test(cgroupCurrent)?Number(cgroupCurrent.trim()):null;
  const available=kib("MemAvailable");
- return Object.freeze({availableBytes:available===null?null:limit!==null&&current!==null?Math.min(available,Math.max(0,limit-current)):available,compressedBytes:null,constrainedBytes:limit,swapUsedBytes:total===null||free===null?null:total-free,swappedOutBytes:out?Number(out[1])*LIMITS.defaultPageBytes:null,pressureLevel:null,stallPercent:some?Number(some[1]):null,...linuxFilesV1(fileNr),attachedImages:null});
+ return Object.freeze({availableBytes:available===null?null:limit!==null&&current!==null?Math.min(available,Math.max(0,limit-current)):available,compressedBytes:null,constrainedBytes:limit,swapUsedBytes:total===null||free===null?null:total-free,swappedOutBytes:out?(Number(out[1])+Number(back?.[1]??0))*LIMITS.defaultPageBytes:null,pressureLevel:null,stallPercent:some?Number(some[1]):null,...linuxFilesV1(fileNr),attachedImages:null});
 }
 
 function linuxFilesV1(fileNr:string|null):Pick<HostCountersV1,"openFiles"|"openFilesMaximum">{

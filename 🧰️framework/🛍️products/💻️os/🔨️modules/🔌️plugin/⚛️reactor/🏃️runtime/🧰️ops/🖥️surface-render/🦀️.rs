@@ -45,6 +45,19 @@ pub async fn plugin_mount_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, in
     })
     .await
 }
+/// 🗑️ Every funded kernel turn retires one projection displaced by a surface mutation per live instance; `true` while any instance still holds one.
+#[doc(hidden)]
+pub fn plugin_drive_displaced_surfaces<PA: PluginApp>(runtime: &PluginRuntime<PA>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    let instances = runtime.instances.try_borrow().map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "runtime instance authority is busy"))?;
+    let (mut cursor, mut pending) = (0, false);
+    while let Some((index, _, cell)) = instances.next_entry_from(cursor) {
+        cursor = index + 1;
+        let Some(mut instance) = cell.host_instance() else { pending = true; continue };
+        if cx.should_yield() { return Ok(true) }
+        pending |= !instance.surface_contexts.retire_displaced_step(cx)?;
+    }
+    Ok(pending)
+}
 #[doc(hidden)]
 pub async fn plugin_hide_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<(), Fault> {
     with_instances_mut(runtime, |list| {
@@ -117,7 +130,7 @@ pub async fn plugin_render_with_document<PA:PluginApp>(runtime:&PluginRuntime<PA
     };
     with_instances_turn_mut(runtime,|list|{
         let mut instance=find_instance(list,instance_id)?;
-        instance.surface_contexts.update_view(&view_state);
+        instance.surface_contexts.update_view(&view_state);instance.surface_contexts.retire_displaced_step(cx)?;
         ::semio_framework_async::poll::resolve_ready(instance.app.render(&resolved_body_key,override_snapshot.as_deref(),&view_state,cx))
     }).await
 }
@@ -272,7 +285,7 @@ pub async fn plugin_refresh_ui<PA: PluginApp>(runtime: &PluginRuntime<PA>, insta
     let request: RefreshRequest = serde_json::from_str(request_json).map_err(|error|plugin_internal_fault(error.to_string()))?;
     with_instances_turn_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        instance.surface_contexts.update_view(&request.view_state);
+        instance.surface_contexts.update_view(&request.view_state);instance.surface_contexts.retire_displaced_step(cx)?;
         let polled = {
             let registered_view = instance.surface_contexts.view().cloned();
             ::semio_framework_async::poll::resolve_ready(instance.app.pending_effects(registered_view.as_ref(), cx))?

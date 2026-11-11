@@ -196,8 +196,8 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         let mut payloads = BTreeMap::new();
         for section in UiRefreshSection::ALL {
             let surface = format!("7:{}", section.body_key());
-            semio_framework_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 7, surface.clone(), section.body_key().into(), &semio_plugin_plugin_program::encode_wire_serialized(&host_view)).await.unwrap();
-            let (tree, presence) = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, &surface).await.unwrap();
+            semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 7, surface.clone(), section.body_key().into(), &semio_plugin_plugin_program::encode_wire_serialized(&host_view)).await.unwrap();
+            let (tree, presence) = semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, &surface).await.unwrap();
             assert!(presence.is_empty());
             assert!(RENDER_CONTEXT_PROBE.with(|probe| probe.take()).is_none(), "a reserved section body key must never reach ArtifactApp::render");
             let projected: Value = serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(tree).unwrap()).unwrap();

@@ -43,3 +43,19 @@ test("the inference caches are released after the discovery and before the gener
     expect(order.at(-1)).toBe("release");
   } finally { rmSync(dir, {recursive: true, force: true}); }
 });
+
+test("the memory the cutoff verification filled is released once, after the plan and before the first owner is inferred", async () => {
+  const dir = mkdtempSync(join(realpathSync(tmpdir()), "graph-release-cutoff-")), order: string[] = [];
+  try {
+    await seed(dir, ringFiles(6));
+    const mock = createMockHost(dir);
+    const host = {
+      ...mock.host,
+      discoverPart: async (...args: Parameters<typeof mock.host.discoverPart>) => { order.push("discover"); return mock.host.discoverPart(...args); },
+      releaseCutoff: async () => { order.push("cutoff"); },
+    };
+    (await loadGenerationGraphV1(host as never)).graph;
+    expect(order.filter(name => name === "cutoff").length).toBe(1);
+    expect(order.indexOf("cutoff")).toBeLessThan(order.indexOf("discover"));
+  } finally { rmSync(dir, {recursive: true, force: true}); }
+});

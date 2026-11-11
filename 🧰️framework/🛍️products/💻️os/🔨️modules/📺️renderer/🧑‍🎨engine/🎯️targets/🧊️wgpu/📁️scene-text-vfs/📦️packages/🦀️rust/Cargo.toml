@@ -32,7 +32,7 @@ semio-renderer-wgpu-scene-canvas2d = { path = "../../../🎨️scene-canvas2d/�
 semio-renderer-wgpu-scene-feeds = { path = "../../../📰️scene-feeds/📦️packages/🦀️rust" }
 semio-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust" }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }

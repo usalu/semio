@@ -25,7 +25,7 @@ replication = { package = "semio-framework-replication", path = "../../../../�
 semio-framework-actor = { workspace = true }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { workspace = true }
 
 [dev-dependencies]

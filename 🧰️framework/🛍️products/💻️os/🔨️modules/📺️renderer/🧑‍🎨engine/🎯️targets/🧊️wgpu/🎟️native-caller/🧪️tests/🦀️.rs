@@ -5,8 +5,6 @@ use native_caller::{NativeFrameCaller,NativeFrameEventIssuer,NativeFrameRootPoli
 use semio_framework_job::{Generation,OperationId,OriginalCallerSourceLoan,OriginalTurnFailure,OriginalTurnPrimary};
 use semio_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
 use semio_framework_value::{RetainedCloneStep,ValueError,ValueRefusalKind};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}
 fn observe<T>(run:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,heap.requested_bytes,heap.released_bytes)}
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🎟️native-caller/🔣️.json")).unwrap()}

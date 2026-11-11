@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 const expandBackends=(value:string)=>value.replaceAll("{backends}",buildBackendIdsV1().join("|"));
 import {buildBackendIdsV1,buildBackendRowV1} from "../../🔌️backends/🟦️.ts";
 import {test,expect} from "bun:test";
@@ -30,7 +31,7 @@ function nxTaskGraph():unknown{
   writeFileSync(join(directory,"nx.json"),"{}\n");
   const source="const {createTaskGraph}=require(process.env.NX_PLAN);const g=JSON.parse(process.env.NX_GRAPH);process.stdout.write(JSON.stringify(createTaskGraph(g.graph,{},[g.project],[g.target],undefined,{})));",
    graph={nodes:fixture.toyGraph.nodes,dependencies:fixture.toyGraph.dependencies},
-   result=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_PLAN:installed.resolve("nx/src/tasks-runner/create-task-graph"),NX_GRAPH:JSON.stringify({graph,project:fixture.toyGraph.project,target:fixture.toyGraph.target}),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
+   result=spawnSync(registeredToolExecutableV1("node"),["-e",source],{cwd:directory,encoding:"utf8",env:{...process.env,NX_PLAN:installed.resolve("nx/src/tasks-runner/create-task-graph"),NX_GRAPH:JSON.stringify({graph,project:fixture.toyGraph.project,target:fixture.toyGraph.target}),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
   if(result.status!==0)throw Error("nx plan: "+result.stderr);
   return JSON.parse(result.stdout);
  }finally{rmSync(directory,{recursive:true,force:true});}

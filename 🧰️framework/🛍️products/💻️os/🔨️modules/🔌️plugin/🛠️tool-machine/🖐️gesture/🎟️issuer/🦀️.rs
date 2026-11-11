@@ -1,7 +1,7 @@
 //! 🎟️ Original gesture issuance keeps the runtime and captured alias behind a strong-only authority.
 use semio_plugin_decl_views::gesture_contract::GestureCapture;
 use semio_plugin_decl_views::gesture_contract::{GestureSlot, GestureSlotDecision};
-use semio_framework_value::{RetainedAllocationEffect, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, RetainedCloneStep, RetainedWorkOutcome, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::shared_issuance::{SealedShared, SealedSharedBirth, SharedIssuer};
@@ -17,22 +17,24 @@ pub fn gesture_issuance_grant(birth:RetainedCloneGrant,handoff:RetainedCloneGran
  RetainedCloneGrant{maximum_items:birth.maximum_items+handoff.maximum_items,maximum_copy_bytes:birth.maximum_copy_bytes+handoff.maximum_copy_bytes,maximum_capacity_bytes:birth.maximum_capacity_bytes+handoff.maximum_capacity_bytes,maximum_release_bytes:birth.maximum_release_bytes+handoff.maximum_release_bytes,maximum_depth:birth.maximum_depth.max(handoff.maximum_depth)}
 }
 
-/// 🎟️ Reserves the actual empty sealed backing of one gesture slot inside the caller's original effect.
+/// 🧱️ Publishes one actual empty sealed backing for the next live gesture inside the caller's original effect.
 #[doc(hidden)]
-pub fn reserve_live<M:Send+'static>(available:bool,effect:&mut RetainedAllocationEffect<'_>)->Result<(SealedSharedBirth<GestureSlot<M>>,RetainedCloneProgress),ValueError>{
- if !available{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"all original gesture operation slots remain occupied"));}
- let mut output=None;let progress=SealedShared::<GestureSlot<M>>::prepare_birth(&mut output,effect).result?.progress();
- output.map(|birth|(birth,progress)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original gesture birth is not funded"))
+pub fn reserve_live<M:Send+'static>(available:bool,output:&mut Option<SealedSharedBirth<GestureSlot<M>>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,ValueError>{
+ if !available{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"all original gesture operation slots remain occupied")),work:0};}
+ SealedShared::<GestureSlot<M>>::prepare_birth(output,effect)
 }
-/// 🎟️ Publishes the slot into its reserved backing and duplicates the strong-only capture inside the same original effect.
+/// 📤️ Moves the live gesture slot into its reserved sealed backing.
 #[doc(hidden)]
-pub fn issue_live<M:RetireOwned+Send+'static>(mut birth:SealedSharedBirth<GestureSlot<M>>,slot:GestureSlot<M>,operation:u64,effect:&mut RetainedAllocationEffect<'_>)->Result<(GestureOperation<M>,GestureCapture<M>,RetainedCloneProgress),ValueError>{
- let mut input=Some(slot);let mut sealed=None;
- let published=birth.publish(&mut input,SharedIssuer::owned(),&mut sealed,effect).result?.progress();
- let slot=sealed.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original gesture publication is not funded"))?;
- let(alias,handoff)=slot.try_duplicate(effect).result?;
- let progress=published.checked_add(handoff)?;
- Ok((GestureOperation{operation,slot,decision:None,settled:false},GestureCapture::Issued(alias),progress))
+pub fn publish_live<M:RetireOwned+Send+'static>(birth:&mut SealedSharedBirth<GestureSlot<M>>,slot:&mut Option<GestureSlot<M>>,output:&mut Option<SealedShared<GestureSlot<M>>>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,ValueError>{
+ birth.publish(slot,SharedIssuer::owned(),output,effect)
+}
+/// 🎟️ Issues the strong operation and its captured alias once the alias is funded by the effect.
+#[doc(hidden)]
+pub fn issue_live<M:RetireOwned+Send+'static>(slot:&mut Option<SealedShared<GestureSlot<M>>>,operation:u64,output:&mut Option<(GestureOperation<M>,GestureCapture<M>)>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,ValueError>{
+ let Some(published)=slot.as_ref()else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original gesture slot is not published")),work:0}};
+ let mut alias=None;let turn=published.duplicate_into(&mut alias,effect);
+ if let Some(alias)=alias{*output=Some((GestureOperation{operation,slot:slot.take().expect("published slot checked"),decision:None,settled:false},GestureCapture::Issued(alias)))}
+ turn
 }
 
 #[doc(hidden)]

@@ -18,7 +18,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../../⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
@@ -37,7 +37,7 @@
         let mut turns: Vec<(bool, bool, bool)> = Vec::new();
         for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
             semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime,cx).unwrap();
-            let (output, scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+            let (output, scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             let more = scan.runnable || scan.contended;
             spent += u64::from(scan.runnable || !scan.contended);
             turns.push((scan.runnable, scan.contended, output.is_some()));
@@ -49,7 +49,7 @@
                     assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                     terminal |= page.lane == TypedOperationResultLane::Terminal;
                     receipts += 1;
-                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(issued.unwrap_or(mounted_policy.close))).await.unwrap();
+                    semio_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(issued.unwrap_or(mounted_policy.close))).await.unwrap();
                 }
             }
             if !more {
@@ -114,7 +114,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app_under_test(mounted_policy, &mut identity).await;
         app.close.close_started = true;
@@ -256,7 +256,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let alice = sample_presence_peer("user:alice#s1", Some(3), true);

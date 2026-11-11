@@ -36,7 +36,7 @@ impl<O:WindowConfigOwner> OriginalWindowAdmission for OriginalWindowOwnerRegistr
 impl<O:WindowTransientOwner> OriginalWindowAdmission for OriginalWindowTransientOwnerRegistration<O>{
  type Registry=WindowTransientOwnerRegistry;
  fn registry_identity(registry:&Self::Registry)->u64{registry.original_lifetime()}
- fn admit(registry:&mut Self::Registry,cx:&mut StepContext<'_>,_:&mut OriginalStoreBirth,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{registry.admit_original_owner::<O>(cx,output)}
+ fn admit(registry:&mut Self::Registry,cx:&mut StepContext<'_>,birth:&mut OriginalStoreBirth,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{registry.admit_original_owner::<O>(cx,birth.resident(),output)}
  fn advance(&mut self,registry:&mut Self::Registry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.step(registry,cx)}
  fn close_step(&mut self,registry:&mut Self::Registry,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{OriginalWindowTransientOwnerRegistration::<O>::close_step(self,registry,cx)}
  fn terminal_is_empty(&self)->bool{OriginalWindowTransientOwnerRegistration::<O>::terminal_is_empty(self)}

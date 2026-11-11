@@ -141,14 +141,19 @@ export function sweepEmptyServiceGroupsV1(prefix:string,keep:string|undefined,po
  return Object.freeze(removed);
 }
 
-/** 📏️ The memory this process may still grow into: the smallest `memory.max` of its own cgroup and every ancestor (`max` means unlimited) and the bytes the cgroup holds now (`memory.current`, which counts what the kernel would kill for). Answers undefined where cgroup v2 is not readable. */
+/** ♻️ The inactive file cache one cgroup holds (`inactive_file` of `memory.stat`): memory the kernel reclaims under pressure, so it is not growth; 0 where the file is unreadable. */
+function reclaimableBytesV1(ports:CgroupPortsV1,directory:string):number{
+ try{const row=ports.read(join(directory,"memory.stat")).split("\n").find(line=>line.startsWith("inactive_file "));const bytes=Number(row?.slice(14));return Number.isFinite(bytes)&&bytes>0?bytes:0;}catch{return 0;}
+}
+
+/** 📏️ The memory this process may still grow into: the smallest `memory.max` of its own cgroup and every ancestor (`max` means unlimited) and the bytes the cgroup holds now (`memory.current` less the inactive file cache of `memory.stat`, which the kernel drops before it kills anything). Answers undefined where cgroup v2 is not readable. */
 export function cgroupMemoryHeadroomV1(ports:CgroupPortsV1=cgroupPortsV1()):Readonly<{limitBytes:number;currentBytes:number}>|undefined{
  try{
   const segments=ports.own().split("/").filter(Boolean);let limit=Infinity,current:number|undefined;
   for(let depth=segments.length;depth>=0;depth--){
    const directory=join(ports.root,...segments.slice(0,depth));
    try{const text=ports.read(join(directory,"memory.max")).trim();if(text!=="max")limit=Math.min(limit,Number(text));}catch{}
-   if(current===undefined)try{current=Number(ports.read(join(directory,"memory.current")).trim());}catch{}
+   if(current===undefined)try{current=Number(ports.read(join(directory,"memory.current")).trim())-reclaimableBytesV1(ports,directory);}catch{}
   }
   return current===undefined||!Number.isFinite(current)?undefined:Object.freeze({limitBytes:limit,currentBytes:current});
  }catch{return undefined;}

@@ -4,8 +4,6 @@ use semio_framework_dsl_record::receiving::owned::{DslOwnedReceivingField,OwnedF
 use semio_framework_dsl_record::{DslField,FieldValue};
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetainedWorkOutcome,retirement::{RetireOwned,controlled::ControlledRetirement}};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1048576,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096}}
 fn loan()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}

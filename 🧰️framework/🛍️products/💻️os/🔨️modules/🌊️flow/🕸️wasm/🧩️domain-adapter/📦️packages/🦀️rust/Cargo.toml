@@ -28,8 +28,8 @@ semio-os-flow-geometry = { path = "../../../../🌐️geometry/📦️packages/�
 semio-framework-canvas = { path = "../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-abi = { path = "../../../../../../../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-async = { workspace = true }

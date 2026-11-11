@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🧪️ Bazel affected: the neutral rule, Bazel's own rdeps and the installed Nx's affected locators agree on every fixture case; a Python graph walk checks the generated package. */
 import {test,expect} from "bun:test";
 import {makeTestTreeWritableV1,testPythonV1} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -88,7 +89,7 @@ const {filterAffected}=require(process.env.NX_AFFECTED),{WholeFileChange}=requir
  }
  process.stdout.write(JSON.stringify(result));
 })().catch(error=>{process.stderr.write(String(error&&error.stack||error));process.exit(1);});`;
-  const run=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",maxBuffer:64*1024*1024,env:{...process.env,NX_AFFECTED:installed.resolve("nx/src/project-graph/affected/affected-project-graph"),NX_FILES:installed.resolve("nx/src/project-graph/file-utils"),NX_CASES:JSON.stringify(selected),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
+  const run=spawnSync(registeredToolExecutableV1("node"),["-e",source],{cwd:directory,encoding:"utf8",maxBuffer:64*1024*1024,env:{...process.env,NX_AFFECTED:installed.resolve("nx/src/project-graph/affected/affected-project-graph"),NX_FILES:installed.resolve("nx/src/project-graph/file-utils"),NX_CASES:JSON.stringify(selected),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
   if(run.status!==0)throw Error("nx oracle: "+run.stderr);
   return JSON.parse(run.stdout);
  }finally{rmSync(directory,{recursive:true,force:true});}

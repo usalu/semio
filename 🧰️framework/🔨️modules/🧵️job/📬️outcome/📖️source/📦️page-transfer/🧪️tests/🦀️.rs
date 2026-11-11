@@ -1,7 +1,5 @@
 //! 📦️ Real sealed pages retain exact backing and ledger custody through funded detachment and close.
 use semio_framework_job_payload::*;
-#[global_allocator]
-static TRANSFER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_trace::{OperationId,Generation,observe_heap_allocations_on_this_thread as observe};
 #[path="../../../📦️builder/🧪️testing/🦀️.rs"]
 mod payload_case;

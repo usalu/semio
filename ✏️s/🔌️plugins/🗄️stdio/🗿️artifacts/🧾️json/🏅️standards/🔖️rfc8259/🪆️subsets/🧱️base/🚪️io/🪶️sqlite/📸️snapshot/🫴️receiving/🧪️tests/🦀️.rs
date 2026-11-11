@@ -6,8 +6,6 @@ use semio_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteRo
 use semio_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusalKind};
 use crate::standards::v_rfc8259::subsets::base::io::sqlite::snapshot::{kind};
 use semio_framework_test_fixtures::fixture_text;
-#[global_allocator]
-static ORIGINAL_RECEIVING_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use crate::standards::v_rfc8259::subsets::base::io::sqlite::snapshot::*;
 use semio_os_kernel::{NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner};
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress};

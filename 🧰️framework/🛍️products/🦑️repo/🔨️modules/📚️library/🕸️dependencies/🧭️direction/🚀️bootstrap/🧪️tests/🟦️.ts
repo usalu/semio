@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -28,7 +29,7 @@ function link(root: string, path: string, directory: boolean): void {
   renameSync(join(root, path), target);
   symlinkSync(target, join(root, path), directory ? process.platform === "win32" ? "junction" : "dir" : "file");
 }
-const node = (source: string, args: string[]): unknown => JSON.parse(execFileSync("node", ["--input-type=commonjs", "-e", source, ...args], { encoding: "utf8" }));
+const node = (source: string, args: string[]): unknown => JSON.parse(execFileSync(registeredToolExecutableV1("node"), ["--input-type=commonjs", "-e", source, ...args], { encoding: "utf8" }));
 const oracle = String.raw`const fs=require("node:fs"),p=require("node:path");const input=process.argv[1];let ok=true;try{if(input.split(/[\\/]/).some(x=>x==="."||x===".."))throw Error();const root=p.resolve(input);for(let x=root;;x=p.dirname(x)){if(fs.lstatSync(x).isSymbolicLink())throw Error();if(x===p.dirname(x))break;}const project=JSON.parse(fs.readFileSync(p.join(root,"📋️project.json"),"utf8"));const paths=["nx.json","📋️project.json",project.metadata.semio.taxonomy,"package.json",...JSON.parse(fs.readFileSync(p.join(root,"package.json"),"utf8")).workspaces.map(x=>x+"/package.json"),"✏️s/🔌️plugins"];for(const rel of paths){let x=root;for(const part of rel.split("/")){x=p.join(x,part);try{if(fs.lstatSync(x).isSymbolicLink())throw Error("link");}catch(e){if(e.code==="ENOENT"&&(rel.endsWith("/package.json")||rel==="✏️s/🔌️plugins"))break;throw e;}}if(rel.endsWith("package.json")&&fs.existsSync(x))JSON.parse(fs.readFileSync(x,"utf8"));}}catch(e){ok=false;}process.stdout.write(JSON.stringify(ok));`;
 
 test("portable bootstrap examples have distinct identities", () => {

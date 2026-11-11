@@ -1,2 +1,0 @@
-export { configuredExactCargoLawPolicyV1, readExactCargoLawPolicyV1, generatedOutputHasLiveLease, exactExecutableFingerprint, runExactCargoLaws, ExactCargoLawError } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-export type { ExactCargoLawPolicyV1, ExactCargoLawGroup, ExactCargoLawStage, ExactCargoLawPort, ExactCargoLawOptions, ExactCargoLawReceipt } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";

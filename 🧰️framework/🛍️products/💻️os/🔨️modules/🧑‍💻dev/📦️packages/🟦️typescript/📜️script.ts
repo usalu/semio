@@ -1,5 +1,5 @@
 #!/usr/bin/env repo
-import { typecheckAdmittedProjectV1 } from "../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
+import { typecheckAdmittedProjectV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

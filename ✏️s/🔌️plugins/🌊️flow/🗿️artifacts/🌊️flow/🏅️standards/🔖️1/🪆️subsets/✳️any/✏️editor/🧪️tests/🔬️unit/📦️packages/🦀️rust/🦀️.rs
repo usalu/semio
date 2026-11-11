@@ -19,6 +19,3 @@ pub use semio_s_artifact_flow_flow_schema::{FLOW_DOCUMENT_SCHEMA, FlowWorkingSce
 mod mirror;
 pub use mirror::*;
 
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

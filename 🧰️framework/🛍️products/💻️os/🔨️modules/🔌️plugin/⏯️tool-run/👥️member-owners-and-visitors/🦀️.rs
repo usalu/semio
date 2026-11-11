@@ -157,13 +157,13 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_,'_> {
         let mut deadline=||semio_framework_job::default_now_us().is_none_or(|now|now>=self.deadline_us);
         if state.rebase_pending{if let Some(owner)=state.preparation.as_mut(){owner.cancel();}}
         if let Some(owner)=state.preparation.as_mut(){
-            if owner.is_closing(){let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.close_step(4096,self.effect)).map_err(ToolRunMemberFoldRefusal::Native)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+            if owner.is_closing(){let step=settled(owner.close_step(self.grant.maximum_copy_bytes,self.effect)).map_err(ToolRunMemberFoldRefusal::Native)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         }
         if state.operation_consumed||state.rebase_pending{
-            if let Some(input)=state.operation_input.as_mut(){let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(input.close_step(4096,self.effect)).map_err(ToolRunMemberFoldRefusal::Native)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+            if let Some(input)=state.operation_input.as_mut(){let step=settled(input.close_step(self.grant.maximum_copy_bytes,self.effect)).map_err(ToolRunMemberFoldRefusal::Native)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
             if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.effect).map_err(ToolRunMemberFoldRefusal::Native)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         }
-        if state.operation_retirement.is_some(){let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::close_factory_ticket(&mut state.operation_retirement,4096,self.effect)).map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+        if state.operation_retirement.is_some(){let step=settled(semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant.maximum_copy_bytes,self.effect)).map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         if state.operation.is_some()&&(state.operation_consumed||state.rebase_pending){let p=store.retire_owned_mutation(&mut state.operation,self.effect).map_err(ToolRunMemberFoldRefusal::Native)?.map_or(idle,|(owner,p)|{state.operation_retirement=Some(owner);p});return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:p,conflicts:0,read:None});}
         let mut shown=self.shown;
         if state.rebase_pending{
@@ -180,7 +180,7 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_,'_> {
             if state.preparation.is_none(){let source=state.overlay.as_ref().or(state.base.as_ref()).ok_or_else(||plugin_sdk_fault("member fold retains its original base"))?;let p=store.begin_derived_operation(&mut state.preparation,source,&mut state.operation_input,u32::try_from(shown).unwrap_or(u32::MAX),store::os_store::ArtifactDerivedOperationMode::Provisional,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?.unwrap_or(idle);return Ok(ToolRunMemberFolded{shown,pending:true,progress:p,conflicts:0,read:None});}
             let owner=state.preparation.as_mut().unwrap();
             if owner.is_finished(){let Some(((next,_),p))=store.take_derived_operation(owner,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?else{return Ok(ToolRunMemberFolded{shown,pending:true,progress:idle,conflicts:0,read:None});};state.operation_consumed=true;let conflicts=u32::from(next.is_none());if let Some(next)=next{if let Some(previous)=state.overlay.replace(next){state.pending_alias=Some(previous.into_snapshot_owner());}}return Ok(ToolRunMemberFolded{shown:shown+1,pending:true,progress:p,conflicts,read:None});}
-            let step=store.step_derived_operation(owner,self.grant.maximum_copy_bytes,self.grant,self.receiving,&mut deadline).map_err(|failure|ToolRunMemberFoldRefusal::Native(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure)))?;return Ok(ToolRunMemberFolded{shown,pending:true,progress:step.progress(),conflicts:0,read:None});
+            let step=store.step_derived_operation(owner,self.grant.maximum_copy_bytes,self.grant,self.receiving,&mut deadline).map_err(semio_framework_value::OriginalRetirementFailure::into_value_error).map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown,pending:true,progress:step.progress(),conflicts:0,read:None});
         }
         let read=state.overlay.as_ref().filter(|_|!self.ops.is_empty()).map(|overlay|store.snapshot_read_derived(overlay).map(|read|(read,store.content_revision()))).transpose().map_err(FaultFrom::into_fault)?;
         Ok(ToolRunMemberFolded{shown,pending:false,progress:idle,conflicts:0,read})
@@ -205,6 +205,12 @@ pub fn tool_grant_funds(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{
  grant.maximum_items!=0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth
 }
 
+/// 🪙️ Settles one nested original close poll; an unsettled poll retries as zero progress and a failure collapses to its primary refusal.
+pub(super) fn settled(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError>{
+ match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)}
+}
+
+
 pub(super) fn close_tool_erased_retirement(owner:&mut Option<Box<dyn store::ErasedSnapshotRetirement>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
  let grant=effect.grant();
  if owner.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}
@@ -213,7 +219,7 @@ pub(super) fn close_tool_erased_retirement(owner:&mut Option<Box<dyn store::Eras
  if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
  let current=owner.as_mut().expect("tool retained owner admitted in place");
  if current.terminal_is_empty(){drop(owner.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
- let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(current.close_step(4096,effect))?;
+ let step=settled(current.close_step(grant.maximum_copy_bytes,effect))?;
  Ok(RetainedCloneStep::Progress(step.progress()))
 }
 
@@ -260,7 +266,7 @@ impl<M:Send+'static> ToolRunMemberEmissionOwner for ToolRunMemberEmissionState<M
         let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()};
         if let Some(owner)=self.retirement_refusal_close.as_mut(){
             if owner.terminal_is_empty(){drop(self.retirement_refusal_close.take());return Ok(RetainedCloneStep::Progress(progress));}
-            let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.step(4096,effect)).map_err(FaultFrom::into_fault)?;return Ok(RetainedCloneStep::Progress(step.progress()));
+            let step=settled(owner.step(grant.maximum_copy_bytes,effect)).map_err(FaultFrom::into_fault)?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(original)=self.retirement_refusal.take(){
             match ControlledRetirement::new(original){Ok(owner)=>*self.retirement_refusal_close=Some(owner),Err((error,original))=>{*self.retirement_refusal=Some(original);return Err(error.into_fault());}}
@@ -366,12 +372,12 @@ impl store::MemberStoreVisitor for ToolRunMemberRetire<'_,'_>{
     {
         if self.grant.maximum_items==0{return Ok((None,Default::default()));}
         let state=self.owners.as_any_mut().downcast_mut::<ToolRunMemberState<P,Mu>>().ok_or_else(||plugin_sdk_fault("member alias retirement owns another exact Store type"))?;
-        if let Some(owner)=state.preparation.as_mut(){if self.everything{owner.cancel();}if owner.is_closing(){let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.close_step(4096,self.effect)).map_err(ValueError::into_fault)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok((None,step.progress()));}}
+        if let Some(owner)=state.preparation.as_mut(){if self.everything{owner.cancel();}if owner.is_closing(){let step=settled(owner.close_step(self.grant.maximum_copy_bytes,self.effect)).map_err(ValueError::into_fault)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok((None,step.progress()));}}
         if self.everything||state.operation_consumed{
-            if let Some(input)=state.operation_input.as_mut(){let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(input.close_step(4096,self.effect)).map_err(ValueError::into_fault)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok((None,step.progress()));}
+            if let Some(input)=state.operation_input.as_mut(){let step=settled(input.close_step(self.grant.maximum_copy_bytes,self.effect)).map_err(ValueError::into_fault)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok((None,step.progress()));}
             if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.effect).map_err(ValueError::into_fault)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok((None,step.progress()));}
         }
-        if state.operation_retirement.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::close_factory_ticket(&mut state.operation_retirement,4096,self.effect)).map(|step|(None,step.progress())).map_err(ValueError::into_fault);}
+        if state.operation_retirement.is_some(){return settled(semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant.maximum_copy_bytes,self.effect)).map(|step|(None,step.progress())).map_err(ValueError::into_fault);}
         if state.operation.is_some()&&(self.everything||state.operation_consumed){return Ok(store.retire_owned_mutation(&mut state.operation,self.effect).map_err(ValueError::into_fault)?.map_or((None,Default::default()),|(frame,p)|(Some(frame),p)));}
         if state.pending_alias.is_some(){return Ok(store.retire_snapshot_alias(&mut state.pending_alias,self.effect).map_err(FaultFrom::into_fault)?.map_or((None,Default::default()),|(owner,progress)|(Some(owner),progress)));}
         let copy=2*size_of::<Option<Arc<P>>>();

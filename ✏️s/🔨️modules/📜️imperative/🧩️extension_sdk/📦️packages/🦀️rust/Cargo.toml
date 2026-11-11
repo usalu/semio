@@ -33,9 +33,9 @@ semio-os-kernel = { path = "../../../../../../🧰️framework/🛍️products/�
 # passthrough envelope, unrelated to `Dictionary`/`OperatorInfo`. Plain `serde` dropped: nothing in
 # this file references it directly any more (tenth-seam pass, see the docstring above).
 serde_json.workspace = true
-semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-semio-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
-semio-framework-job = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-os-kernel = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }

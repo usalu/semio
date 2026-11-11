@@ -32,7 +32,7 @@ semio-os-store-projection = { path = "../../../🎞️projection/🧬️schema/�
 semio-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-os-space-sqlite-cells = { path = "../../../../🪐️space/🪶️sqlite/📦️packages/🦀️rust" }

@@ -14,9 +14,10 @@ test("direct original owned child dispatch uses the mounted publication authorit
     expect(row.members).toBe(1 + Number(row.parentTouched));
   }
   const source = pluginSubtreeText("🧵️instance");
-  expect(source.includes("self.mount_original_emit_publication(verb, emit, meta, None, cx).await")).toBe(true);
+  expect(source.includes("dispatch.dispatch_original_emission(&mut self.original_emission.input,&mut output,cx).await?")).toBe(true);
   const owner = pluginSubtreeText("🧵️instance", "📨️dispatch");
-  expect(owner.includes("fn mount_original_emit_publication")).toBe(true);
+  expect(owner.includes("pub async fn dispatch_original_emission")).toBe(true);
+  expect(owner.includes("they land only through the stepped `dispatch_original_emission` mount")).toBe(true);
 });
 
 test("original completed output is retained before fallible mounted capture", async () => {
@@ -28,10 +29,11 @@ test("original completed output is retained before fallible mounted capture", as
     expect(JSON.parse(JSON.stringify(actual)).retained).toEqual(original);
   }
   const owner = pluginSubtreeText("🧵️instance", "📨️dispatch");
-  const bodyStart = owner.indexOf("async fn mount_original_reserved_owners"), body = owner.slice(bodyStart, bodyStart + 6000);
-  const installed = body.indexOf("tool_operations.insert_admitted");
-  expect(installed).toBeGreaterThan(0);
-  expect(body.indexOf("self.tools.qualified_tool_proof(&*self.stores, verb)")).toBeGreaterThan(installed);
-  expect(body.indexOf("window_config_store.capture")).toBeGreaterThan(installed);
-  expect(body.includes("mounted.terminal_fault")).toBe(true);
+  const bodyStart = owner.indexOf("pub async fn dispatch_original_emission"), body = owner.slice(bodyStart, bodyStart + 9000);
+  const retained = body.indexOf("capture.as_mut().unwrap().receive(input,cx)");
+  expect(retained).toBeGreaterThan(0);
+  expect(body.indexOf("self.tools.app_registration(&input.verb)")).toBeGreaterThan(retained);
+  expect(body.indexOf("capture_window_config")).toBeGreaterThan(retained);
+  expect(body.indexOf("tool_operations.insert_admitted")).toBeGreaterThan(body.indexOf("capture_window_config"));
+  expect(body.includes("original emission requires its exact registered native publication owner")).toBe(true);
 });

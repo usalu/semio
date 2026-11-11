@@ -127,7 +127,7 @@ async fn viewer_rejects_every_contract_mutating_verb() {
         assert_eq!(error.code.0, "viewer.read-only", "'{verb}' rejection must carry the frozen viewer.read-only code");
     }
     let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "semio.testkit-surface/v1".into(), json: "{}".into() } };
-    let error = app.import_media("any-port", media, &meta("local"), cx).await.err().expect("'import' must be rejected on a viewer instance");
+    let error = semio_plugin::artifact_app_laws::import_media(&mut app, "any-port", media, &meta("local"), cx).await.err().expect("'import' must be rejected on a viewer instance");
     assert_eq!(error.origin, FaultOrigin::Framework, "'import' rejection must carry FaultOrigin::Framework");
     assert_eq!(error.code.0, "viewer.read-only", "'import' rejection must carry the frozen viewer.read-only code");
     close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");

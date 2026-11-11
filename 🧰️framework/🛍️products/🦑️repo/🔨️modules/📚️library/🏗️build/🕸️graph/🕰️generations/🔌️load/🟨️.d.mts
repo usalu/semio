@@ -23,6 +23,8 @@ export function createGenerationProgressV1(clock:{begin(phase:string,total:numbe
 export interface GenerationHostV1{
  workspaceRoot:string;separator?:string;language:"en"|"de";namedInputs:unknown;registryDigest:string;signal?:AbortSignal;verbose?:boolean;waitNoticeMilliseconds?:number;
  release?():Promise<void>;
+ /** ✂️ Drops what the cutoff verification of the plan filled (verified blocks, interned rows, settled reads, string interner) once the owners to infer are known and before the first one starts; optional. */
+ releaseCutoff?():Promise<void>;
  identity():Promise<string>;
  implementationRows():Promise<readonly GenerationRowV1[]>;
  externalDependencies?():Promise<readonly string[]>;

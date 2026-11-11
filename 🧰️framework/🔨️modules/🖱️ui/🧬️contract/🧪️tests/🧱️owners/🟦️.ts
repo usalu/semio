@@ -66,7 +66,7 @@ test("UI contract referenced external and derive runtime crates require actual d
   const normalize=(name:string)=>name.replaceAll("-","_"),normal=Object.keys(manifest.dependencies??{}).map(normalize),dev=Object.keys(manifest["dev-dependencies"]??{}).map(normalize),aliases=new Set([...normal,...dev]);
   for(const platform of cfgs)for(const testMode of[false,true]){
    const cfg=[...platform,...testMode?[...Object.keys(manifest.features??{}).map(name=>"feature="+name),"test"]:[]],entries=[resolve(directory,"🦀️.rs"),...testMode?(manifest.test??[]).map((target:any)=>resolve(dirname(manifestPath),target.path)):[]],library=await readRustSourceClosureV1([entries[0]!],framework,cfg,async path=>await readFile(path).catch((error:NodeJS.ErrnoException)=>error.code==="ENOENT"?null:Promise.reject(error))),libraryPaths=new Set(library.map(input=>input.path)),closure=await readRustSourceClosureV1(entries,framework,cfg,async path=>await readFile(path).catch((error:NodeJS.ErrnoException)=>error.code==="ENOENT"?null:Promise.reject(error))),direct=new Set([...normal,...testMode?dev:[]]);
-   for(const input of closure.filter(input=>input.kind==="source"))for(const name of requiredCrates(selectRustSourceV1(readFileSync(resolve(framework,input.path),"utf8"),cfg),aliases)){
+   for(const input of closure.filter(input=>input.kind==="source"))for(const name of requiredCrates(selectRustSourceV1(readFileSync(resolve(framework,input.path),"utf8"),cfg,input.path),aliases)){
     const set=observed.get(owner.name)??new Set<string>();set.add(name);observed.set(owner.name,set);
     if(!direct.has(name)&&!(testMode&&!libraryPaths.has(input.path)&&name===normalize(manifest.package.name)))violations.set(owner.name+":"+name,{owner:owner.name,crate:name,path:input.path});
    }

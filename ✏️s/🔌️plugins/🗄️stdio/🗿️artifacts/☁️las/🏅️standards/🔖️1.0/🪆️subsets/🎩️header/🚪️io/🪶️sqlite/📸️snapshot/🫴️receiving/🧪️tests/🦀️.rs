@@ -5,8 +5,6 @@ use semio_os_kernel::{io::control::{NativeSnapshotDecodeOwner,NativeSnapshotEnco
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::sync::atomic::{AtomicBool,Ordering};
-#[global_allocator]
-static ORIGINAL_LAS_ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn contract()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{serde_json::from_value(contract()["grant"].clone()).unwrap()}
 fn source(id:&str)->LasSnapshot{let mut input=super::snapshot();if id=="empty"{input.vlrs.clear();input.points.clear();}if id=="long"{let literal=contract()["literal"].as_str().unwrap().repeat(257);input.schema=literal.clone();input.header.system_identifier=literal.clone();input.header.generating_software=literal.clone();for vlr in &mut input.vlrs{vlr.user_id=literal.clone();vlr.description=literal.clone();}}input}

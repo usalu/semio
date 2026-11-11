@@ -1,4 +1,3 @@
-semio_plugin::install_fixture_heap_witness!();
 use semio_framework_test_fixtures::fixture_path;
 
 extern crate semio_os_kernel as protocol;

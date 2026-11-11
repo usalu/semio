@@ -23,7 +23,7 @@
         fn bytes(&self)->&[u8]{&self.wire[semio_framework_actor::typed_operation_page::TYPED_OPERATION_RESULT_HEADER_BYTES..]}
         fn decode(target:String,wire:Vec<u8>)->Self{use semio_framework_actor::typed_operation_page::TypedOperationResultPage as Page;let body=wire.strip_prefix(Page::RENDERER_PAGE_MAGIC).expect("actual original renderer page magic");assert!(body.len()>=30);let token=semio_framework_actor::typed_operation_page::TypedOperationResultToken{receiver:u32::from_le_bytes(body[..4].try_into().unwrap()),operation:u64::from_le_bytes(body[4..12].try_into().unwrap()),generation:u64::from_le_bytes(body[12..20].try_into().unwrap()),sequence:u32::from_le_bytes(body[20..24].try_into().unwrap()),attempt:body[24]};let lane=match body[25]{0=>TypedOperationResultLane::Artifact,1=>TypedOperationResultLane::Config,2=>TypedOperationResultLane::Draft,3=>TypedOperationResultLane::Presence,4=>TypedOperationResultLane::Transient,5=>TypedOperationResultLane::Child,6=>TypedOperationResultLane::Effect,7=>TypedOperationResultLane::Event,8=>TypedOperationResultLane::Ui,9=>TypedOperationResultLane::Download,10=>TypedOperationResultLane::Terminal,11=>TypedOperationResultLane::Fault,12=>TypedOperationResultLane::Interaction,13=>TypedOperationResultLane::WindowTransient,14=>TypedOperationResultLane::WindowConfig,15=>TypedOperationResultLane::Diagnostic,_=>panic!("original renderer lane is outside its closed ABI")};assert_eq!(body.len(),30+u32::from_le_bytes(body[26..30].try_into().unwrap())as usize);Self{token,lane,target,wire}}
     }
-    fn receive_native_result_pages<PA:semio_framework_plugin_reactor_app::PluginApp>(runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,cx:&mut semio_framework_job::StepContext<'_>)->(Vec<NativeResultWire>,bool){let mut effects=Vec::new();let pending=semio_plugin_reactor_lifecycle::result_publication::plugin_drive_result_pages(runtime,&mut effects,semio_framework_plugin_runtime_ops::ops_typed_operations::TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM,cx).expect("actual original native renderer receiving");let pages=effects.into_iter().map(|effect|match effect{Effect::SendMessage{target:semio_framework::kernel::MessageEndpoint::Shell{instance},payload}=>NativeResultWire::decode(instance.0,payload),_=>panic!("original native result publisher emitted an unrelated effect")}).collect();(pages,pending)}
+    fn receive_native_result_pages<PA:semio_plugin_reactor_app::PluginApp>(runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,cx:&mut semio_framework_job::StepContext<'_>)->(Vec<NativeResultWire>,bool){let mut effects=Vec::new();let pending=semio_plugin_reactor_lifecycle::result_publication::plugin_drive_result_pages(runtime,&mut effects,semio_plugin_runtime_ops::ops_typed_operations::TYPED_OPERATION_PAGES_PER_TURN_MAXIMUM,cx).expect("actual original native renderer receiving");let pages=effects.into_iter().map(|effect|match effect{Effect::SendMessage{target:semio_framework::kernel::MessageEndpoint::Shell{instance},payload}=>NativeResultWire::decode(instance.0,payload),_=>panic!("original native result publisher emitted an unrelated effect")}).collect();(pages,pending)}
     #[semio_framework_async_macros::async_test]
     async fn concurrent_typed_operations_hand_every_presentable_page_to_one_turn() {
         let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("closed finite original reactor builder caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
@@ -33,7 +33,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         const OPERATIONS: usize = 4;
         let fixture: Value = serde_json::from_str(include_str!("../../../⚛️reactor/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -52,7 +52,7 @@
         let (mut pages, mut crossings, mut widest) = (0usize, 0usize, 0usize);
         for _ in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() * OPERATIONS as u64 {
             semio_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(&runtime,cx).unwrap();
-            let (output, scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+            let (output, scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             let more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -64,7 +64,7 @@
                 }
                 for page in native_pages {
                     pages += 1;
-                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.unwrap();
+                    semio_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.unwrap();
                 }
             }
             if !more && (issued.is_none()||holding>=256) {
@@ -110,7 +110,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         const ROWS: i32 = 4_400;
         let id = 4_103;
@@ -125,7 +125,7 @@
         let mut faults: Vec<String> = Vec::new();
         let mut units = 0u64;
         for _ in 0..(ROWS as u64 * 8) {
-            let (output, scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
+            let (output, scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.unwrap();
             units += 1;
             if let Some((receiver, _output)) = output {
                 assert_eq!(receiver, id);
@@ -136,7 +136,7 @@
                         faults.push(String::from_utf8_lossy(page.bytes()).into_owned());
                     }
                     terminal |= page.lane == TypedOperationResultLane::Terminal;
-                    semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.unwrap();
+                    semio_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.unwrap();
                 }
             }
             if !(scan.runnable || scan.contended || pages_pending) {
@@ -169,7 +169,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let id = 4_101;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
@@ -138,7 +139,7 @@ test("actual native receiving command refuses a different original caller comman
   const output = mkdtempSync(join(artifacts, "native-capability-")), row = corpus.cases.find(row => row.classification === "workspace")!;
   const manifest = row.manifest!, cwd = row.cwd!, requestedManifest = relative(root, join(output, "unacquired", "Cargo.toml")), code = 'console.log("foreign acquisition occurred")';
   const wire = ownerInvocation(manifest, cwd, process.execPath, ["--eval", 'console.log("original command")'], output, 15000, started,"prototype");
-  const oracle = Bun.spawnSync(["node", "--eval", 'console.log(JSON.stringify(JSON.stringify(JSON.parse(process.argv[1]).capabilities.command.arguments) === JSON.stringify(["--eval",process.argv[2]])))', wire, code]);
+  const oracle = Bun.spawnSync([registeredToolExecutableV1("node"), "--eval", 'console.log(JSON.stringify(JSON.stringify(JSON.parse(process.argv[1]).capabilities.command.arguments) === JSON.stringify(["--eval",process.argv[2]])))', wire, code]);
   expect(oracle.exitCode).toBe(0); expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toBe(false);
   const observations = ["different-command", "missing-child", "zero-child"].map(id => {
     const original = JSON.parse(id === "different-command" ? wire : ownerInvocation(manifest, cwd, process.execPath, ["--eval", code], output, 15000, started,"prototype"));

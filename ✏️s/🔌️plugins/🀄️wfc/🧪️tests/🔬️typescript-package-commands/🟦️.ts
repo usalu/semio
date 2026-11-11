@@ -1,6 +1,6 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { resolve } from "node:path";
-import { runCmd } from "@semio-tech/framework/process/execution";
+import { runCmd } from "@semio-tech/process/execution";
 
 const suites = ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "🗿️artifacts/**/🧬️schema/🧪️tests/🧩️suite/🟦️.ts"];
 

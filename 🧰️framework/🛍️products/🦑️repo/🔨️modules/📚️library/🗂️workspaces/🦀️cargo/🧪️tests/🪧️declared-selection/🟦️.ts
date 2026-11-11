@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🪧 Contract: repository Cargo tests and lint bind their named packages through the literal members the caller's workspace declares to Cargo, admitted exactly as the whole-owner walk admits them and without listing one directory; every other request defers to the whole-repository inventory, so the selected rows, or the refusal, never differ from it. Cargo's own `metadata` is the third-party oracle for which manifest `-p <name>` means.
  * @see ../../🟦️.ts
  * @see ../../../../🏃️process/🦀️cargo/🎟️admission/🟦️.ts
@@ -22,7 +23,7 @@ function corpus():string{
  return root;
 }
 function cargoManifest(root:string,workspace:string,name:string):string{
- const result=spawnSync("cargo",["metadata","--no-deps","--format-version","1","--offline","--manifest-path",join(root,workspace,"Cargo.toml")],{encoding:"utf8",maxBuffer:1<<26});
+ const result=spawnSync(registeredToolExecutableV1("cargo"),["metadata","--no-deps","--format-version","1","--offline","--manifest-path",join(root,workspace,"Cargo.toml")],{encoding:"utf8",maxBuffer:1<<26});
  if(result.status!==0)throw Error("cargo metadata failed: "+result.stderr);
  const row=(JSON.parse(result.stdout).packages as {name:string;manifest_path:string}[]).filter(row=>row.name===name);expect(row.length).toBe(1);return realpathSync(row[0]!.manifest_path);
 }

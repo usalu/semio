@@ -6,8 +6,6 @@ use protocol::causal::transition::HistoryFoldIndex;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::retirement::RetireOwned;
 use std::sync::Arc;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,OperationId,Generation,StepContext,close_original_retained_step};
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_value::RetainedWorkOutcome;

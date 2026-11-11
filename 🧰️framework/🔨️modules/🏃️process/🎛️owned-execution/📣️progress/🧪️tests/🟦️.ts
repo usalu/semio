@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import corpus from "./🧫️fixtures/🔣️.json";
 import { runOwnedCommand } from "../../🟦️.ts";
@@ -8,7 +9,7 @@ for (const row of corpus.cases) test(row.id, async () => {
   const pending: Promise<void>[] = [];
   let publications = 0, published = false;
   const oracleCode = 'const c=JSON.parse(process.argv[1]),r=JSON.parse(process.argv[2]);let done=false;const publication=new Promise((resolve,reject)=>setTimeout(()=>setTimeout(()=>{done=true;r.rejectPublication?reject(Error("publisher refused")):resolve()},c.publicationMilliseconds),c.progressIntervalMilliseconds));publication.catch(()=>{});const child=new Promise((resolve,reject)=>{const p=require("node:child_process").spawn(process.execPath,["--eval",`setTimeout(()=>{},${c.childMilliseconds})`]);p.once("error",reject);p.once("close",code=>code===0?resolve():reject(Error("child refused")))});Promise.all([child,publication]).then(()=>console.log(JSON.stringify({terminal:"completed",publishedBeforeTerminal:done})),()=>console.log(JSON.stringify({terminal:"rejected",publishedBeforeTerminal:done})));';
-  const oracle = Bun.spawn(["node", "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row)], { stdout: "pipe", stderr: "pipe" });
+  const oracle = Bun.spawn([registeredToolExecutableV1("node"), "--eval", oracleCode, JSON.stringify(corpus), JSON.stringify(row)], { stdout: "pipe", stderr: "pipe" });
   const publish = (): Promise<void> => {
     publications++;
     const publication = new Promise<void>((accept, refuse) => setTimeout(() => { published = true; row.rejectPublication ? refuse(Error("publisher refused")) : accept(); }, corpus.publicationMilliseconds));

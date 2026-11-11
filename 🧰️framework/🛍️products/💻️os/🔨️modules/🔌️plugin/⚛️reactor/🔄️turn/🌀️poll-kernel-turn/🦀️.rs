@@ -44,7 +44,7 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     step_pending_patch_close(cx)?;
 
     trace_turn_phase_retention("ingress");
-    let (continuation, typed_operation_scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(budget,cx), identity,cx).await?;
+    let (continuation, typed_operation_scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(budget,cx), identity,cx).await?;
     let typed_operation_contended = typed_operation_scan.contended;
     if let Some((instance, output)) = continuation {
         route_exchange_output(instance, output, &mut effects,cx)?;
@@ -52,7 +52,8 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
 
     trace_turn_phase_retention("continuation");
     let result_page_work=semio_plugin_reactor_lifecycle::result_publication::plugin_drive_result_pages(runtime,&mut effects,budget.max_effects as usize,cx)?;
-    let pending_effects_runnable = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_drive_pending_effects(runtime, &mut effects, cx)?;
+    let pending_effects_runnable = semio_plugin_runtime_ops::ops_typed_operations::plugin_drive_pending_effects(runtime, &mut effects, cx)?;
+    let displaced_surface_work=semio_plugin_runtime_ops::ops_surface_render::plugin_drive_displaced_surfaces(runtime,cx)?;
     let now_ms = u64::try_from(semio_plugin_actor_host::now_ms().await).unwrap_or(0);
 
     trace_turn_phase_retention("presence-clock");
@@ -60,8 +61,8 @@ pub(super) async fn poll_kernel_turn<PA: semio_plugin_reactor_app::PluginApp, T,
     let reconcile_work = drive_turn_reconcile(&mut effects, cx)?;
     let executors = drive_turn_executors(&mut effects);
     let resumes_remain = drain_task_resumes(runtime, &mut effects, 64, identity, cx);
-    effects.extend(semio_framework_plugin_runtime_ops::ops_document::plugin_drain_document_backbones(runtime)?);
-    let more_work = settle_turn_work(runtime, TurnWorkInputs { events_pending: events.is_some(), executors, close_cleanup_work, typed_operation_runnable: typed_operation_scan.runnable || result_page_work, typed_operation_contended, pending_effects_runnable, reconcile_work, resumes_remain, document_load_work }, &effects)?;
+    effects.extend(semio_plugin_runtime_ops::ops_document::plugin_drain_document_backbones(runtime)?);
+    let more_work = settle_turn_work(runtime, TurnWorkInputs { events_pending: events.is_some(), executors, close_cleanup_work, typed_operation_runnable: typed_operation_scan.runnable || result_page_work || displaced_surface_work, typed_operation_contended, pending_effects_runnable, reconcile_work, resumes_remain, document_load_work }, &effects)?;
 
     let lifecycle_receipt = focus.map(|instance| runtime.guest_lifetimes.borrow_mut().prepare_turn(instance, &ReactorClosePeers)).transpose()?.flatten();
     let (ui_patches, ui_patch_receipt) = if cold_pair_loading { (semio_framework::kernel::UiTurnPatches::default(), None) } else { fill_turn_patch_page(runtime, turn_patch_budget_bytes(budget))? };

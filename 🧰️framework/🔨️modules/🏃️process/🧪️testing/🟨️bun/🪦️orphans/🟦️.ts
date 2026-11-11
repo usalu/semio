@@ -7,7 +7,7 @@ import{runtimeNativeSystemV1}from"../../../../../📦️packages/🟦️typescri
 import{runtimeNativeLibcV1}from"../../../../../📦️packages/🟦️typescript/⚙️runtime/🧲️native/📚️libc/🟦️.ts";
 import{fillTestOrphansMessageV1 as fill,openFilesCeilingV1,testOrphansMessagesV1 as messages,testOrphansProtocolV1 as protocol}from"./👶️child/🟦️.ts";
 
-export{limitOpenFilesV1,openFilesCeilingV1,startTestOrphanGuardV1,testOrphansProtocolV1}from"./👶️child/🟦️.ts";
+export{exitWithParentV1,limitOpenFilesV1,openFilesCeilingV1,startTestOrphanGuardV1,testOrphansProtocolV1}from"./👶️child/🟦️.ts";
 export{parentGoneV1}from"./👷️parent/🟦️.ts";
 
 const words=(environment:Readonly<Record<string,string|undefined>>)=>messages[resolveHostCapacityLanguageV1(environment)];

@@ -2,7 +2,7 @@
 
     use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct TwoTurnPublicationPresencePreparationFactory;
 

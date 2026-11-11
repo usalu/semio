@@ -46,7 +46,7 @@ pub(super) async fn render_dirty_surfaces<PA: PluginApp>(runtime: &PluginRuntime
             Err(_) => Err(surface),
         };
         match mounted {
-            Ok(mut grant) => match semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(runtime, instance, &surface_key,&mut |source,cx|grant.commit_source(source,cx),cx).await {
+            Ok(mut grant) => match semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(runtime, instance, &surface_key,&mut |source,cx|grant.commit_source(source,cx),cx).await {
                 Ok(Some(presence)) => {
                     let unbuilt = semio_plugin_window_kits_rich::tree_kit::take_arena_unbuilt_rows();
                     ARENA_STARVED.with(|starved| starved.borrow_mut().note(instance, surface_key.as_str(), unbuilt));

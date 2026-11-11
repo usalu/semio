@@ -27,7 +27,7 @@ testkit = ["semio-plugin-host-guest-runtime/testkit", "semio-plugin-host-process
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-ui-runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
 semio-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }

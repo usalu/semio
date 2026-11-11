@@ -29,8 +29,8 @@ semio-os-infinite-directed-presentation = { path = "../../../../../../../🎲️
 semio-framework-canvas = { path = "../../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 geometry = { path = "../../../../../../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
 semio-framework-graph-drawing = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }
@@ -46,4 +46,4 @@ semio-os-infinite-board-dag-model = { path = "../../../🗃️model/📦️packa
 [target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
 
 [dev-dependencies]
-semio-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }

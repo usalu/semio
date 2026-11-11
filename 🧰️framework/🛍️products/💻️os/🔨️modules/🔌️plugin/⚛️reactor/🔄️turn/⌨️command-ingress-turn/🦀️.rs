@@ -101,7 +101,7 @@ impl CommandIngressTurn {
         let previous=self.loan.take_state();self.loan.put_state(match previous {
             Some(CommandIngressOwner::ReservedPresence { cursor, admission, page }) => {
                 let now_ms = semio_plugin_actor_host::now_ms().await;
-                match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
+                match semio_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
                     Ok(publication_generation) => {
                         self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
                         Some(CommandIngressOwner::Presence { cursor, publication_generation,exchange:None,exchange_close:None,construction:Default::default(),terminal:false,terminal_fault:None })
@@ -115,7 +115,7 @@ impl CommandIngressTurn {
             owner => owner,
         });
         let previous=self.loan.take_state();self.loan.put_state(match previous {
-            Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
+            Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => match semio_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
                 Ok(()) => {
                     self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
                     Some(CommandIngressOwner::Presence { cursor, publication_generation,exchange:None,exchange_close:None,construction:Default::default(),terminal:false,terminal_fault:None })
@@ -134,7 +134,7 @@ impl CommandIngressTurn {
         if !matches!(self.status,CommandIngressStatus::Idle){return Ok(())}let Some(CommandIngressOwner::Presence{cursor,exchange,exchange_close,construction,terminal,terminal_fault,..})=self.loan.state_mut()else{return Ok(())};let cursor=cursor.clone();
         if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}
         if *terminal{let fault=terminal_fault.take();self.status=terminal_command_ingress(cursor,fault);self.loan.put_state(None);return Ok(())}
-        if !semio_framework_job::admit_original_construction_settled(cx,construction,exchange,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:std::mem::size_of_val(exchange),capacity_bytes:0,release_bytes:0,depth:1},1,|_,_|semio_framework_value::RetainedWorkOutcome{result:Ok((semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>(),..Default::default()})),work:1})?{return Ok(())}
+        if !semio_framework_job::admit_original_construction_settled(cx,construction,exchange,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:std::mem::size_of_val(exchange),capacity_bytes:0,release_bytes:0,depth:1},1,|_,_|semio_framework_value::RetainedWorkOutcome{result:Ok((semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>(),..Default::default()})),work:1})?{return Ok(())}
         let mut output=plugin_exchange_turn(runtime,cursor.instance,&mut None,exchange.as_mut().expect("presence retains its Source output state"),identity,cx).await?;
         if output.presence_terminal==Some(cursor.seq){*terminal=true;*terminal_fault=output.presence_terminal_fault.take();}
         route_exchange_output(cursor.instance,output,effects,cx)
@@ -144,13 +144,13 @@ impl CommandIngressTurn {
     async fn exchange_generic<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,effects:&mut Vec<Effect>,identity:&mut EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         let Some(CommandIngressOwner::Generic{cursor,command,exchange,exchange_close,output,..})=self.loan.state_mut()else{return Ok(())};let cursor=cursor.clone();
         self.status=match advance_command_cursor(cursor.clone()){Ok(terminal)=>CommandIngressStatus::CommandPending(terminal),Err(cursor)=>CommandIngressStatus::Fault{cursor,fault:b"plugin.command-page-index-exhausted".to_vec()}};
-        if matches!(command.as_ref(),Some((_,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}))){if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}let Some((seq,failed))=command.take()else{unreachable!()};match failed.retire_failed_step_on_original(cx){semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Refused{owner,failure}=>{*command=Some((seq,owner));return Err(failure)},semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(failed)=>*command=Some((seq,failed)),semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Closed=>{}}return Ok(())}
+        if matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{..}))){if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}let Some((seq,failed))=command.take()else{unreachable!()};match failed.retire_failed_step_on_original(cx){semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Refused{owner,failure}=>{*command=Some((seq,owner));return Err(failure)},semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Pending(failed)=>*command=Some((seq,failed)),semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Failed(failure)=>return Err(failure),semio_plugin_runtime_ops::ops_ingress::OriginalCommandIngressRetirement::Closed=>{}}return Ok(())}
         if output.is_none(){let state=exchange.as_mut().expect("retained Source exchange state precedes command execution");match plugin_exchange_turn(runtime,cursor.instance,command,state,identity,cx).await{
             Ok(produced)=>{if state.applied{*output=Some(produced)}else{return route_exchange_output(cursor.instance,produced,effects,cx)}},
-            Err(failure)=>{if matches!(command.as_ref(),Some((_,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){semio_plugin_runtime_exchange::exch_plugin_exchange::retain_decoded_exchange_failure(command,Some(failure),(cx.operation(),cx.generation()),None);return Ok(())}return Err(failure)}
+            Err(failure)=>{if matches!(command.as_ref(),Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(_)))){semio_plugin_runtime_exchange::exch_plugin_exchange::retain_decoded_exchange_failure(command,Some(failure),(cx.operation(),cx.generation()),None);return Ok(())}return Err(failure)}
         }}
         if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}
-        if let Some((_,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(owner)))=command.as_mut(){if !cx.with_original_retirement(|cx|owner.close_original_step(cx))?{return Ok(())}}
+        if let Some((_,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Decoded(owner)))=command.as_mut(){if !cx.with_original_retirement(|cx|owner.close_original_step(cx))?{return Ok(())}}
         if command.is_some(){let bytes=std::mem::size_of_val(command);let grant=cx.retained_grant();if cx.retirement_should_yield()||cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}command.take();cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);}
         let mut produced=output.take().expect("actual semantic output survives controlled input retirement");self.status=terminal_command_ingress(cursor.clone(),produced.command_terminal_fault.take());self.loan.put_state(None);route_exchange_output(cursor.instance,produced,effects,cx)
     }
@@ -198,10 +198,10 @@ impl CommandIngressTurn {
         };
         if !matches!(self.status, semio_framework::kernel::CommandIngressStatus::Fault { .. }) {
             if cursor.page_index == 0 && self.loan.state().is_none() {
-                match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq).await {
+                match semio_plugin_runtime_ops::ops_typed_operations::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq).await {
                     Ok(admission) => {
                         let now_ms = semio_plugin_actor_host::now_ms().await;
-                        match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, own_color, cursor.item_count, page, now_ms).await {
+                        match semio_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, own_color, cursor.item_count, page, now_ms).await {
                             Ok(publication_generation) => {
                                 self.loan.put_state(Some(CommandIngressOwner::Presence { cursor:cursor.clone(),publication_generation,exchange:None,exchange_close:None,construction:Default::default(),terminal:false,terminal_fault:None }));
                                 self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
@@ -218,7 +218,7 @@ impl CommandIngressTurn {
                 CommandIngressOwner::Presence { publication_generation, .. } => Some(*publication_generation),
                 _ => None,
             }) {
-                match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
+                match semio_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
                     Ok(()) => {
                         if let Some(CommandIngressOwner::Presence { cursor: active, .. }) = self.loan.state_mut() {
                             active.page_index = cursor.page_index;
@@ -257,7 +257,7 @@ impl CommandIngressTurn {
         self.status=CommandIngressStatus::PageAccepted(cursor.clone());
         if cursor.page_index.checked_add(1)!=Some(cursor.page_count){return Ok(())}
         let Some(CommandIngressOwner::GenericAssembly{pages,..})=self.loan.take_state()else{unreachable!()};
-        match semio_framework::kernel::PagedCommand::try_from_pages(pages){Ok(command)=>self.loan.put_state(Some(CommandIngressOwner::Generic{cursor:cursor.clone(),command:Some((cursor.seq,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(command))),exchange:Some(semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty()),exchange_close:None,output:None,output_close:None})),Err((fault,pages))=>{self.loan.put_state(Some(CommandIngressOwner::GenericAssembly{cursor:cursor.clone(),pages}));self.status=CommandIngressStatus::Fault{cursor,fault:semio_framework_diagnostic::encode_fault_bytes(&fault)};return Ok(())}}
+        match semio_framework::kernel::PagedCommand::try_from_pages(pages){Ok(command)=>self.loan.put_state(Some(CommandIngressOwner::Generic{cursor:cursor.clone(),command:Some((cursor.seq,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(command))),exchange:Some(semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty()),exchange_close:None,output:None,output_close:None})),Err((fault,pages))=>{self.loan.put_state(Some(CommandIngressOwner::GenericAssembly{cursor:cursor.clone(),pages}));self.status=CommandIngressStatus::Fault{cursor,fault:semio_framework_diagnostic::encode_fault_bytes(&fault)};return Ok(())}}
         self.exchange_generic(runtime,effects,identity,cx).await
     }
 

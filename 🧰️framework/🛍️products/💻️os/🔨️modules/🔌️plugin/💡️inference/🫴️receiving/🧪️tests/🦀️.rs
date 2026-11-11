@@ -8,7 +8,7 @@ fn caller() -> OriginalJobFixtureCaller { OriginalJobFixtureCaller::admit(Operat
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap() }
 fn receive(source: &mut Option<ArtifactDocumentPayload>, caller: &mut OriginalJobFixtureCaller, decoder: &mut OriginalJobDecodeOwner) -> OriginalArtifactDocumentReceiving {
     let mut output = None;
-    let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn_with_decoder(stock(), decoder, |cx| OriginalArtifactDocumentReceiving::admit_original(source, &mut output, 4096, cx)));
+    let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| caller.turn_with_decoder(stock(), decoder, |cx| OriginalArtifactDocumentReceiving::admit_original(&mut Default::default(), source, &mut output, 4096, cx)));
     assert!(admitted.unwrap()); assert!(source.is_none()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); output.unwrap()
 }
 fn close(owner: &mut OriginalArtifactDocumentReceiving, caller: &mut OriginalJobFixtureCaller, decoder: &mut OriginalJobDecodeOwner) {
@@ -20,7 +20,7 @@ fn close(owner: &mut OriginalArtifactDocumentReceiving, caller: &mut OriginalJob
 }
 fn close_value<T: RetireOwned>(value: T, caller: &mut OriginalJobFixtureCaller, decoder: &mut OriginalJobDecodeOwner) {
     let mut owner = ControlledRetirement::retain(value);
-    while !owner.terminal_is_empty() { caller.turn_with_decoder(stock(), decoder, |cx| cx.with_original_retirement(|cx| close_original_retained_step(cx, owner.next_demand(stock().maximum_copy_bytes)?, |grant| owner.step(grant)))).unwrap(); }
+    while !owner.terminal_is_empty() { caller.turn_with_decoder(stock(), decoder, |cx| cx.with_original_retirement(|cx| close_original_effect_step(cx, owner.next_demand(stock().maximum_copy_bytes)?, |effect| { let body = effect.grant().maximum_copy_bytes; owner.step(body, effect) }))).unwrap(); }
 }
 fn finish(caller: OriginalJobFixtureCaller, mut decoder: OriginalJobDecodeOwner) {
     let mut caller = caller;
@@ -30,8 +30,8 @@ fn finish(caller: OriginalJobFixtureCaller, mut decoder: OriginalJobDecodeOwner)
 
 #[test]
 fn original_document_base64_advances_under_4096_actual_work_units(){
-    let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut source=Some(ArtifactDocumentPayload{pack:"AAAA".repeat(2048),spr:String::new()});let mut output=None;assert!(caller.turn_with_decoder(stock(),&mut decoder,|cx|OriginalArtifactDocumentReceiving::admit_original(&mut source,&mut output,8192,cx)).unwrap());let mut owner=output.unwrap();let mut done=false;
-    for _ in 0..100_000{let(result,work)=caller.turn_with_decoder(stock(),&mut decoder,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(4096,deadline,|same|{let before=same.original_work_units_spent();let index=owner.phase;let result=owner.step(same)?;let work=same.original_work_units_spent()-before;let codec=owner.cursors[index].as_ref().unwrap().last_turn_receipt().work_units;assert_eq!(work,codec as u64);assert!(work<=4096);Ok((result,work))})}).unwrap();if result{done=true;break}assert!(work>0)}
+    let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut source=Some(ArtifactDocumentPayload{pack:"AAAA".repeat(2048),spr:String::new()});let mut output=None;assert!(caller.turn_with_decoder(stock(),&mut decoder,|cx|OriginalArtifactDocumentReceiving::admit_original(&mut Default::default(),&mut source,&mut output,8192,cx)).unwrap());let mut owner=output.unwrap();let mut done=false;
+    for _ in 0..100_000{let(result,work)=caller.turn_with_decoder(stock(),&mut decoder,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(4096,deadline,|same|{let before=same.original_work_units_spent();let index=owner.phase;let result=owner.step(same)?;let work=same.original_work_units_spent()-before;let codec=owner.cursors[index].as_ref().unwrap().last_turn_receipt().work_units;assert!(work>=codec as u128);assert!(work<=4096);Ok((result,work))})}).unwrap();if result{done=true;break}assert!(work>0)}
     assert!(done);let mut pair=None;assert!(caller.turn_with_decoder(stock(),&mut decoder,|cx|owner.take_pair(&mut pair,cx)).unwrap());let pair=pair.unwrap();assert_eq!(pair.0.len(),6144);assert!(pair.0.iter().all(|byte|*byte==0));assert!(pair.1.is_empty());close(&mut owner,&mut caller,&mut decoder);drop(owner);close_value(pair,&mut caller,&mut decoder);finish(caller,decoder);
 }
 

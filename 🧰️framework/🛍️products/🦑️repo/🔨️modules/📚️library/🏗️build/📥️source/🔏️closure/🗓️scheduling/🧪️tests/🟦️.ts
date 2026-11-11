@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🗓️ Contract: the scheduling policy is closed by its schema and refuses forged tables; every prefix is a real directory and every port a real file inside its own domain; a split keeps the entry and every output-producing file in the keyed part, moves exactly the files under the named prefixes into the overlay and leaves the keyed identity unchanged when only the overlay changes; the immutable loader merges the overlay beside a keyed snapshot, refuses every overlay it cannot prove (outside the declared domains, shadowing a keyed image, another root, hard-linked) and runs the edited scheduling code without the digest of the keyed snapshot ever moving. The cases live in `./🔣️.json`. */
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
@@ -109,7 +110,7 @@ const run=(name:string)=>{
  const runner=join(area,"📜️script.ts");writeFileSync(runner,buildSourceClosureLoaderV1);
  const text=JSON.stringify(base),snapshot=join(area,"implementation.x.json");writeFileSync(snapshot,text);chmodSync(snapshot,0o400);
  const overlay=overlays[name];if(overlay){const target=join(area,buildSchedulingOverlayNameV1("implementation.x.json"));writeFileSync(target,JSON.stringify(overlay));chmodSync(target,0o400);if(name==="writable-hardlink")linkSync(target,join(area,"alias.json"));}
- const result=spawnSync("bun",[runner,snapshot,sha(text),"arg1"],{encoding:"utf8",cwd:area});rmSync(area,{recursive:true,force:true});
+ const result=spawnSync(registeredToolExecutableV1("bun"),[runner,snapshot,sha(text),"arg1"],{encoding:"utf8",cwd:area});rmSync(area,{recursive:true,force:true});
  return {status:result.status,stdout:result.stdout.trim(),stderr:result.stderr,digest:sha(text)};
 };
 

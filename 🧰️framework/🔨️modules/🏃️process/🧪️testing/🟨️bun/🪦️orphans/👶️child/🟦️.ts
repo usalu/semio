@@ -33,12 +33,17 @@ export function limitOpenFilesV1(ceiling:number,platform:string=osPlatform()):nu
  }catch{return undefined;}
 }
 
-/** 🪦️ The child side of the guard, started by the test preload: caps the open files of this `bun test` process and ends its whole tree when its parent is gone (a worker thread checks, so a main thread blocked in a synchronous child call is still caught); answers nothing when `SEMIO_TEST_ORPHAN_GUARD=off`. */
+/** 🪦️ Makes THIS process end itself and its whole tree when its parent is gone, on every host: a worker thread polls the parent (pid change or liveness) so a main thread blocked in a synchronous call or a busy loop is still caught; any helper a test or tool spawns calls it first. Answers that it does not watch when the parent is already init. See https://man7.org/linux/man-pages/man2/getppid.2.html */
+export function exitWithParentV1(interval:number=testOrphansProtocolV1.parentPollMilliseconds,parent:number=process.ppid):Readonly<{watching:boolean;stop:()=>void}>{
+ if(parent<=1)return Object.freeze({watching:false,stop:()=>{}});
+ const worker=new Worker(new URL("../👷️parent/📜️script.ts",import.meta.url),{workerData:{parent,pid:process.pid,interval}});
+ worker.unref();
+ return Object.freeze({watching:true,stop:()=>{void worker.terminate();}});
+}
+
+/** 🪦️ The child side of the guard, started by the test preload: caps the open files of this `bun test` process and ends its whole tree when its parent is gone (see `exitWithParentV1`); answers nothing when `SEMIO_TEST_ORPHAN_GUARD=off`. */
 export function startTestOrphanGuardV1(environment:Readonly<Record<string,string|undefined>>=process.env):Readonly<{ceiling:number;limit:number|undefined;watching:boolean;stop:()=>void}>|undefined{
  if(environment[testOrphansProtocolV1.guardSwitch]==="off")return undefined;
- const ceiling=openFilesCeilingV1(environment),limit=limitOpenFilesV1(ceiling),parent=process.ppid;
- if(parent<=1)return Object.freeze({ceiling,limit,watching:false,stop:()=>{}});
- const worker=new Worker(new URL("../👷️parent/📜️script.ts",import.meta.url),{workerData:{parent,pid:process.pid,interval:testOrphansProtocolV1.parentPollMilliseconds}});
- worker.unref();
- return Object.freeze({ceiling,limit,watching:true,stop:()=>{void worker.terminate();}});
+ const ceiling=openFilesCeilingV1(environment),limit=limitOpenFilesV1(ceiling);
+ return Object.freeze({ceiling,limit,...exitWithParentV1()});
 }

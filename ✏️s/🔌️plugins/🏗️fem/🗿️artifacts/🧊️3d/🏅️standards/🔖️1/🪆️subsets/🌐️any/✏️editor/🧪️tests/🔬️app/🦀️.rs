@@ -1,6 +1,5 @@
 //! 🧪️ Integration tests of the `s.fem.fem3d` play app editor that drive the whole mounted app through the shared `context` harness.
 
-semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as vcs;
 

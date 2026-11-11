@@ -4,8 +4,6 @@ use semio_os_spr::history::RetainedHistoryOpMetaFault;
 use semio_framework_pack_json::JsonError;
 use semio_framework_job_failure::{OriginalDomainProjection,OriginalDomainView as V,OriginalDomainFailure};
 use semio_framework_value::{ValueError,ValueRefusalKind,Number,RetainedCloneGrant,retirement::controlled::ControlledRetirement};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn error()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"original native 源".to_owned())}
 fn close(error:OriginalArtifactPairFailure){let mut owner=ControlledRetirement::retain(error);let grant=RetainedCloneGrant{maximum_items:1024,maximum_copy_bytes:1048576,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:4096};for _ in 0..100000{if owner.terminal_is_empty(){break}owner.step(grant).unwrap();}assert!(owner.terminal_is_empty());}
 #[test]

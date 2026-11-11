@@ -1,5 +1,6 @@
 use super::*;
 use crate::mock_projection::*;
+use crate::Validate;
 use norm::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, SubjectRef};
 
 fn check(entity: &str, utilisation: f64) -> CheckResult {

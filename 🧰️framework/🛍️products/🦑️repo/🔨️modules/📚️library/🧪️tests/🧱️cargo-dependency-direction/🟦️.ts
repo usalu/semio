@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import "../../🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/⏱️budget/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -53,7 +54,7 @@ test("independent Cargo metadata and TOML parsing validate every neutral verdict
       write(cwd, "Cargo.toml", TOML.stringify(workspace));
       const inventory = cargoDirectionInventory(cwd);
       expect([...inventory].sort((a, b) => a.owner.localeCompare(b.owner)), row.id).toEqual([...row.packages].sort((a: CargoDirectionPackage, b: CargoDirectionPackage) => a.owner.localeCompare(b.owner)));
-      const process = Bun.spawn(["cargo", "metadata", "--format-version", "1", "--no-deps", "--offline"], { cwd, stdout: "pipe", stderr: "pipe" });
+      const process = Bun.spawn([registeredToolExecutableV1("cargo"), "metadata", "--format-version", "1", "--no-deps", "--offline"], { cwd, stdout: "pipe", stderr: "pipe" });
       const [stdout, stderr, status] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited]);
       expect(status, `${row.id}: ${stderr}`).toBe(0);
       const graph = cargoDirectionMetadata(JSON.parse(stdout), cwd);

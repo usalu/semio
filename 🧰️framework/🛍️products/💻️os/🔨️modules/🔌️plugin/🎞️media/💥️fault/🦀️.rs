@@ -40,19 +40,22 @@ impl MediaOutputProjection{
 pub fn receive_media_output(owner:&mut MediaOwner<'_, '_>,exporter:impl FnOnce(&mut MediaOwner<'_, '_>)->Result<MediaArtifact,MediaArtifactError>)->Result<MediaOutputProjection,MediaValueError>{
     let grant=owner.remaining_grant();
     if grant.maximum_items==0||grant.maximum_copy_bytes==0||grant.maximum_capacity_bytes==0||grant.maximum_release_bytes==0||grant.maximum_depth<4{return Err(media_frontier_error())}
-    let mut output=None;let mut exporter=Some(exporter);
-    owner.receive_nested::<MediaArtifactError,MediaOutputValue,MediaFailure>(&mut output,&mut |slot,result,_marker,_unwind,original|media_turn(|work|{work.performed();
-        match exporter.take().ok_or_else(media_projection_error)?(original){
-            Ok(value)=>*result=Some(MediaOutputValue::Artifact(value)),
+    let mut exporter=Some(exporter);
+    let mut output=None;
+    let turn=owner.receive_nested::<MediaArtifactError,MediaOutputValue,semio_os_kernel::io::control::NativeSnapshotFailure>(&mut output,&mut |slot,result,_marker,_unwind,original|semio_os_kernel::io::control::native_snapshot_turn(|work|{work.performed();(||->Result<(),MediaValueError>{
+        let exporter=exporter.take().ok_or_else(media_projection_error)?;
+        *result=Some(match exporter(original){
+            Ok(value)=>MediaOutputValue::Artifact(value),
             Err(source)=>{
                 *slot=Some(source);
                 original.record_progress(MediaProgress{copied_items:1,..Default::default()})?;
                 let mut projection=receive_media_artifact_fault(slot,original)?;
-                *result=projection.fault.take_original().map(MediaOutputValue::Fault);
+                projection.fault.take_original().map(MediaOutputValue::Fault).ok_or_else(media_projection_error)?
             }
-        }
+        });
         Ok(())
-    })).result.map_err(media_snapshot_error)?;
+    })().map_err(Into::into)}));
+    turn.result.map_err(media_snapshot_error)?;
     let value=output.ok_or_else(media_projection_error)?;
     Ok(MediaOutputProjection{value:MediaControlled::new(value).ok().unwrap()})
 }
@@ -137,7 +140,7 @@ pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, own
     owner.record_progress(counting.progress())?;
     let extent = extent?;
     let mut output = None;
-    owner.receive::<MediaFaultReceiving, Fault, MediaFailure>(&mut output, &mut |slot, result, _marker, _unwind, native, wallet| media_turn(|work| { work.performed(); (|| -> Result<(), MediaValueError> {
+    let turn = owner.receive::<MediaFaultReceiving, Fault, semio_os_kernel::io::control::NativeSnapshotFailure>(&mut output, &mut |slot, result, _marker, _unwind, native, wallet| semio_os_kernel::io::control::native_snapshot_turn(|work| { work.performed(); (|| -> Result<(), MediaValueError> {
         let transfer = size_of::<Option<MediaArtifactError>>();
         wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: transfer, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 2 })?;
         native.checkpoint()?;
@@ -201,9 +204,10 @@ pub fn receive_media_artifact_fault(source: &mut Option<MediaArtifactError>, own
         wallet.admit_frontier(MediaGrant { maximum_items: 1, maximum_copy_bytes: transfer, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 2 })?;
         native.checkpoint()?;
         wallet.record_progress(MediaProgress { copied_items: 1, copied_bytes: transfer, ..Default::default() })?;
-        *result = state.fault.take();
+        *result = Some(state.fault.take().ok_or_else(media_projection_error)?);
         Ok(())
-    })().map_err(Into::into) })).result.map_err(media_snapshot_error)?;
+    })().map_err(Into::into) }));
+    turn.result.map_err(media_snapshot_error)?;
     let fault = output.ok_or_else(media_projection_error)?;
     Ok(MediaFaultProjection { fault: MediaControlled::new(fault).ok().unwrap() })
 }

@@ -1,9 +1,9 @@
 #!/usr/bin/env repo
-import { receiveScriptProcessInvocation } from "../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 /** 🗄️ Dispatches commands contributed by present Stdio composition owners. */
-import { dispatchOwnedScriptRoute } from "../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🎛️execution/🟦️.ts";
-import { BundleScript, ScriptRouter } from "../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { dispatchOwnedScriptRoute } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 class ContractScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (!await dispatchOwnedScriptRoute(this.invocation,this.repoRoot, ["stdio", "package-contract", ...segments])) throw new Error("No admitted Stdio package-contract owner");

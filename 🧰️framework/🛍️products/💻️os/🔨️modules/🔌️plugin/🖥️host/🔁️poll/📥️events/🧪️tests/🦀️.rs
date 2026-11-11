@@ -1,6 +1,4 @@
 use super::*;
-#[global_allocator]
-static EVENT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn oracle(source:&impl JsonWriteSource,path:&mut Vec<usize>)->serde_json::Value{
  let(node,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.node_at_path(path));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  match node.unwrap(){JsonWriteNode::Null=>serde_json::Value::Null,JsonWriteNode::Bool(v)=>v.into(),JsonWriteNode::Number(Number::UInt(v))=>v.into(),JsonWriteNode::QuotedUnsigned(v)=>v.to_string().into(),JsonWriteNode::String(v)=>v.into(),JsonWriteNode::Array(len)=>serde_json::Value::Array((0..len).map(|index|{path.push(index);let value=oracle(source,path);path.pop();value}).collect()),JsonWriteNode::Object(len)=>{let mut object=serde_json::Map::new();for index in 0..len{let(key,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.object_key_at_path(path,index));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let key=key.unwrap().to_owned();path.push(index);let value=oracle(source,path);path.pop();assert!(object.insert(key,value).is_none());}serde_json::Value::Object(object)},_=>panic!("unexpected Event scalar")}

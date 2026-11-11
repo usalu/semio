@@ -1,43 +1,43 @@
 /** 🔺️ `Iso16757Diff` wire twin: the sparse field delta a mutation raises, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireArray, normWireDefault, normWireInteger, normWireMap, normWireNullable, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 import { type CatalogueUnit, type CatalogueValue, type GeometryObject, type Iso16757Cardinality, type Iso16757ExchangeProcess, type Iso16757PropertyKind, type Iso16757SubjectKind, type LocalizedText, type Names, parseCatalogueUnit, parseCatalogueValue, parseGeometryObject, parseIso16757Cardinality, parseIso16757ExchangeProcess, parseIso16757PropertyKind, parseIso16757SubjectKind, parseLocalizedText, parseNames, parsePartNumberRule, parseProduct, parseProductClass, parseProductGroup, parseProductIndex, parseProductSeries, parsePropertyDefinition, parseSelectionConstraint, parseSubject, type PartNumberRule, type Product, type ProductClass, type ProductGroup, type ProductIndex, type ProductSeries, type PropertyDefinition, type SelectionConstraint, type Subject } from "../📸️snapshot/🟦️.ts";
 
 export interface Iso16757Diff {
-  /** 🗃️ @state artifact */
+  /** @state artifact */
   catalogueName: string | null;
-  /** 🔄️ @state artifact */
+  /** @state artifact */
   manufacturerName: string | null;
-  /** 📱️ @state artifact */
+  /** @state artifact */
   productGroups: Iso16757ProductGroupsRows | null;
-  /** 🖥️ @state artifact */
+  /** @state artifact */
   productClasses: Iso16757ProductClassesRows | null;
-  /** 🚀️ @state artifact */
+  /** @state artifact */
   productSeries: Iso16757ProductSeriesRows | null;
-  /** 🛍️ @state artifact */
+  /** @state artifact */
   products: Iso16757ProductsRows | null;
-  /** 🧰️ @state artifact */
+  /** @state artifact */
   productIndexes: Iso16757ProductIndexesRows | null;
-  /** 📇️ @state artifact */
+  /** @state artifact */
   propertyDefinitions: Iso16757PropertyDefinitionsRows | null;
-  /** ✏️ @state artifact */
+  /** @state artifact */
   subjects: Iso16757SubjectsRows | null;
-  /** 🧊️ @state artifact */
+  /** @state artifact */
   geometryObjects: Iso16757GeometryObjectsRows | null;
-  /** 👉️ @state artifact */
+  /** @state artifact */
   selectionClassId: string | null;
-  /** ☑️ @state artifact */
+  /** @state artifact */
   selectionSeriesId: Iso16757SelectionSeriesIdValue | null;
-  /** 🎯️ @state artifact */
+  /** @state artifact */
   selectionConstraints: Iso16757SelectionConstraintsRows | null;
-  /** 🧩️ @state artifact */
+  /** @state artifact */
   partNumberRule: PartNumberRule | null;
-  /** 🔩️ @state artifact */
+  /** @state artifact */
   partNumberInputs: Iso16757PartNumberInputsRows | null;
-  /** ↔️ @state artifact */
+  /** @state artifact */
   scriptLimits: Iso16757ScriptLimitsPatch | null;
-  /** 🔁️ @state artifact */
+  /** @state artifact */
   exchangeProcess: Iso16757ExchangeProcess | null;
 }
 

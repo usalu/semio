@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {testMethodV1,testRecordV1,testStringsV1} from "../📋️values/🟦️.ts";
 import {preparePlaygroundFixtureTargetsV1} from "../🎮️playground-preparation/🟦️.ts";
 import {preparePlaygroundSourceFixtureV1,type PlaygroundPreparationTargetV1} from "../🧊️preparation/🟦️.ts";
@@ -111,7 +112,7 @@ if (operation === "materialize") {
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const env = { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") };
   const run = async (args: string[]) => {
-    const child = Bun.spawn(["node", cli, ...args, "--outputStyle=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn([registeredToolExecutableV1("node"), cli, ...args, "--outputStyle=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
     const cancel = () => child.kill("SIGTERM"), deadline = setTimeout(cancel, 60000);
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {

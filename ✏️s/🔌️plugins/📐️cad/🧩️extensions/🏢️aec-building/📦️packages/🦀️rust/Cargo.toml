@@ -20,17 +20,17 @@ semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
-semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust" }
 # 🏢️ Names cad's `CadSnapshot`/`CadMutation`/leaf-mutation dispatch types so this extension can
 # plan a composite mutation through cad's own `Planner`, mirroring `💠️lowpoly`'s `cad_plugin` dependency.
 # 🏢️ Supplies the `protocol`/`store` crate-alias targets (`CompositeMutationKind`/`Planner`/
 # `ArtifactPack`) every plugin/extension crate aliases locally in its own glue — see cad's own
 # `🦀️.rs` `extern crate semio_os_kernel as protocol/store` lines.
-semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 # 🌱️ `#[derive(ToValue, FromValue)]` — `CreateBuildingStorey`/`BuildingStructureSummary` satisfy
 # `CompositeMutationKind`'s supertrait bound this way, not `serde::Serialize`/`DeserializeOwned`.
-semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 # 🌱️ `pack::json::Value` — first-party `serde_json::Value` replacement for the `computersJson`
 # payload; `contributes_topic` now also speaks `DslValue` end to end, so `serde`/`serde_json` are
 # fully gone from this crate.
@@ -40,8 +40,8 @@ semio-s-artifact-cad-cad-mut-nodes = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }
 
 [dev-dependencies]
-semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin", features = ["artifact-app-testing"] }
-semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

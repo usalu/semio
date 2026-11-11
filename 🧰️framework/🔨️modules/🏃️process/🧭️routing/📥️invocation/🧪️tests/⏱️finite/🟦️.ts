@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../🧰️tools/🏃️run/🟦️.ts";
 import { existsSync as originalCorpusAuthorityExists } from "node:fs";
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
@@ -14,7 +15,7 @@ test("actual finite parent admission refuses null before effect and preserves ex
   expect(originalCorpusAuthorityExists(new URL("../../\ud83e\uddec\ufe0fschema/\u23f1\ufe0ffinite.json", import.meta.url))).toBe(false);
 
   const admits = new Ajv({ strict: true }).addSchema(policySchema).compile(envelopeSchema);
-  const oracle = Bun.spawnSync(["node", "--eval", 'const rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(row=>row.maximumElapsedMilliseconds===0?row.deadlineOffsetMilliseconds===null:Number.isSafeInteger(row.maximumElapsedMilliseconds)&&row.maximumElapsedMilliseconds>0&&Number.isSafeInteger(row.deadlineOffsetMilliseconds)&&row.deadlineOffsetMilliseconds>0&&row.deadlineOffsetMilliseconds<=row.maximumElapsedMilliseconds)))', JSON.stringify(corpus.cases)]);
+  const oracle = Bun.spawnSync([registeredToolExecutableV1("node"), "--eval", 'const rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(row=>row.maximumElapsedMilliseconds===0?row.deadlineOffsetMilliseconds===null:Number.isSafeInteger(row.maximumElapsedMilliseconds)&&row.maximumElapsedMilliseconds>0&&Number.isSafeInteger(row.deadlineOffsetMilliseconds)&&row.deadlineOffsetMilliseconds>0&&row.deadlineOffsetMilliseconds<=row.maximumElapsedMilliseconds)))', JSON.stringify(corpus.cases)]);
   expect(oracle.exitCode).toBe(0); expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(corpus.cases.map(row => row.accepted));
   for (const row of corpus.cases) {
     const started = Date.now(), policy = { version: 1 as const, owner: row.id, maximumElapsedMilliseconds: row.maximumElapsedMilliseconds }, capabilities = { owner: row.id, command: "original-parent" };
@@ -64,7 +65,7 @@ test("prepared original policy validates every mutable value with independent Aj
 
 test("prepared original policy preserves every awaited control boundary", async () => {
   const fixture = corpus.preparedPolicy;
-  const oracle = Bun.spawnSync(["node", "--eval", 'const r=JSON.parse(process.argv[1]);console.log(JSON.stringify(r.map(v=>!v.abort&&(v.maximum===0?v.remaining===null:typeof v.remaining==="number"&&Number.isFinite(v.remaining)&&v.remaining>0&&v.remaining<=v.maximum))))', JSON.stringify(fixture.controls)]);
+  const oracle = Bun.spawnSync([registeredToolExecutableV1("node"), "--eval", 'const r=JSON.parse(process.argv[1]);console.log(JSON.stringify(r.map(v=>!v.abort&&(v.maximum===0?v.remaining===null:typeof v.remaining==="number"&&Number.isFinite(v.remaining)&&v.remaining>0&&v.remaining<=v.maximum))))', JSON.stringify(fixture.controls)]);
   expect(oracle.exitCode).toBe(0); expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(fixture.controls.map(row => row.accepted));
   for (const row of fixture.controls) {
     const controller = new AbortController(); if ("abort" in row) controller.abort(Error(row.id));

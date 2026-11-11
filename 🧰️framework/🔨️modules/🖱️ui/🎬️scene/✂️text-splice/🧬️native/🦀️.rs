@@ -10,7 +10,9 @@ pub enum OriginalTextSpliceAdvance{Unfunded,Progress,Ready}
 #[derive(Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
 pub enum OriginalTextSpliceComposition{Composed(OriginalTextSplice),Cancelled,Disjoint}
 
-use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
+use semio_framework_job::{StepContext,OriginalConstructionAdmission,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,close_original_retained_step,close_original_effect_step};
+use semio_framework_job::admit_original_construction_settled;
+use semio_framework_value::retained_clone::NativeAllocationIdentity;
 use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::size_of;
@@ -43,13 +45,14 @@ fn parts<'a>(a:TextSpliceView<'a>,b:TextSpliceView<'a>)->[&'a str;8]{[a.before,a
 struct Cursor{phase:u8,field:usize,byte:usize,index:usize,lengths:[usize;8],output_bytes:[usize;4],hash:u64,fingerprint:u64,at:usize,seen_before:usize,seen_after:usize,run:usize,next:usize,limits:[usize;4],lo:usize,hi:usize,original_hi:usize,typed_hi:usize,scan:usize}
 impl Cursor{fn new()->Self{Self{phase:0,field:0,byte:0,index:0,lengths:[0;8],output_bytes:[0;4],hash:HASH,fingerprint:0,at:0,seen_before:0,seen_after:0,run:0,next:0,limits:[0;4],lo:0,hi:0,original_hi:0,typed_hi:0,scan:0}}}
 /// 🧶️ One original composition keeps only scalar buffers and virtual text frontiers until its result and physical owners leave.
-pub struct OriginalTextSpliceComposer{binding:Option<OriginalSourceBinding>,decoder:(u64,u64),fence:Fence,cursor:Cursor,owners:ControlledRetirement<Owners>,closing:bool}
+pub struct OriginalTextSpliceComposer{binding:Option<OriginalSourceBinding>,decoder:(NativeAllocationIdentity,u64),fence:Fence,cursor:Cursor,owners:ControlledRetirement<Owners>,construction:OriginalConstructionAdmission,unit:Option<()>,closing:bool}
 impl OriginalTextSpliceComposer{
  pub fn birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<Self>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  /// 🛡️ SAFETY: the allocation uses the exact `Layout` of `Self`, is checked non-null, and is fully initialised by `write` before `Box::from_raw` takes sole ownership, so the box deallocates with the matching layout.
- pub fn admit(previous:TextSpliceView<'_>,next:TextSpliceView<'_>,context:usize,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
+ pub fn admit(previous:TextSpliceView<'_>,next:TextSpliceView<'_>,context:usize,cx:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
   let _=cx.original_source_parent()?;if output.is_some(){return Err(invalid().into())}let d=Self::birth_demands();let binding=OriginalSourceBinding::borrow(cx);let fence=Fence::new(previous,next,context);
-  admit_original_construction(cx,output,construction(d),|native|construct(||{let decoder=(native.ledger_identity(),native.retirement_recipient_identity().ok_or_else(invalid)?);let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"original text splice allocation refused"))?;Ok((unsafe{pointer.as_ptr().write(Self{binding:Some(binding),decoder,fence,cursor:Cursor::new(),owners:ControlledRetirement::retain(Owners{scalars:Scalars::new(),result:None}),closing:false});Box::from_raw(pointer.as_ptr())},receipt(d)))}))
+  let settled=admit_original_construction_settled(cx,admission,output,construction(d),1,|native,_|construct(||{let decoder=(native.ledger_identity(),native.retirement_recipient_identity().ok_or_else(invalid)?);let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"original text splice allocation refused"))?;Ok((unsafe{pointer.as_ptr().write(Self{binding:Some(binding),decoder,fence,cursor:Cursor::new(),owners:ControlledRetirement::retain(Owners{scalars:Scalars::new(),result:None}),construction:Default::default(),unit:None,closing:false});Box::from_raw(pointer.as_ptr())},receipt(d)))}))?;
+  if settled&&!admission.terminal_is_empty(){if let Some(owner)=output.as_mut(){std::mem::swap(&mut owner.construction,admission)}}Ok(settled)
  }
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.is_some_and(|b|b.matches(cx))||cx.native_receiving_identity()!=Some(self.decoder){return Err(invalid().into())}Ok(())}
  pub fn demands(&self,previous:TextSpliceView<'_>,next:TextSpliceView<'_>,_body:usize)->Result<RetirementDemand,ValueError>{
@@ -58,17 +61,18 @@ impl OriginalTextSpliceComposer{
  }
  pub fn advance(&mut self,previous:TextSpliceView<'_>,next:TextSpliceView<'_>,cx:&mut StepContext<'_>)->Result<OriginalTextSpliceAdvance,OriginalTurnFailure>{
   self.validate(cx)?;if !self.fence.matches(previous,next)||self.closing{return Err(invalid().into())}if self.ready(){return Ok(OriginalTextSpliceAdvance::Ready)}if self.cursor.phase==15{return Err(invalid().into())}if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original text splice was cancelled").into())}
-  let d=self.demands(previous,next,cx.retained_grant().maximum_copy_bytes)?;let mut done=None;let ran=admit_original_construction(cx,&mut done,construction(d),|_|construct(||{self.step(previous,next)?;Ok(((),receipt(d)))}))?;Ok(if !ran{OriginalTextSpliceAdvance::Unfunded}else if self.ready(){OriginalTextSpliceAdvance::Ready}else{OriginalTextSpliceAdvance::Progress})
+  let d=self.demands(previous,next,cx.retained_grant().maximum_copy_bytes)?;let mut admission=std::mem::take(&mut self.construction);let mut marker=self.unit.take();let ran=admit_original_construction_settled(cx,&mut admission,&mut marker,construction(d),1,|_,_|construct(||{self.step(previous,next)?;Ok(((),receipt(d)))}));self.construction=admission;self.unit=marker;let ran=ran?;if ran{self.unit=None}Ok(if !ran{OriginalTextSpliceAdvance::Unfunded}else if self.ready(){OriginalTextSpliceAdvance::Ready}else{OriginalTextSpliceAdvance::Progress})
  }
  pub fn ready(&self)->bool{self.cursor.phase==14&&!self.closing}
  pub fn take_demands(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid())}let mut d=fixed();d.copy_bytes+=2*size_of::<OriginalTextSpliceComposition>();Ok(d)}
- pub fn take_into(&mut self,output:&mut Option<OriginalTextSpliceComposition>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if output.is_some(){return Err(invalid().into())}let d=self.take_demands()?;admit_original_construction(cx,output,construction(d),|_|construct(||{let result=self.owners.original_mut().and_then(|o|o.result.take()).ok_or_else(invalid)?;self.cursor.phase=15;Ok((result,receipt(d)))}))}
+ pub fn take_into(&mut self,output:&mut Option<OriginalTextSpliceComposition>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if output.is_some(){return Err(invalid().into())}let d=self.take_demands()?;let mut admission=std::mem::take(&mut self.construction);let settled=admit_original_construction_settled(cx,&mut admission,output,construction(d),1,|_,_|construct(||{let result=self.owners.original_mut().and_then(|o|o.result.take()).ok_or_else(invalid)?;self.cursor.phase=15;Ok((result,receipt(d)))}));self.construction=admission;settled}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.owners.terminal_is_empty(){self.owners.next_demand(body)}else{Ok(fixed())}}
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if self.terminal_is_empty(){return Ok(true)}self.validate(cx)?;if !self.owners.terminal_is_empty(){let d=self.owners.next_demand(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|{let result=self.owners.step(g);RetainedWorkOutcome{result,work:self.owners.last_turn_work()}})?;if step.progress()!=RetainedCloneProgress::default(){self.closing=true;}return Ok(false)}
-  let d=fixed();close_original_retained_step(cx,d,|_|{self.binding=None;self.closing=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}})?;Ok(self.terminal_is_empty())
+  if self.terminal_is_empty(){return Ok(true)}self.validate(cx)?;if !self.owners.terminal_is_empty(){let d=self.owners.next_demand(cx.retained_grant().maximum_copy_bytes)?;let body=cx.retained_grant().maximum_copy_bytes;let step=close_original_effect_step(cx,d,|effect|self.owners.step(body,effect))?;if step.progress()!=RetainedCloneProgress::default(){self.closing=true;}return Ok(false)}
+  if !self.construction.terminal_is_empty(){self.construction.close_step(cx)?;return Ok(false)}
+  let d=fixed();close_original_retained_step(cx,d,|_|{self.binding=None;self.closing=true;RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}})?;Ok(self.terminal_is_empty())
  }
- pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.owners.terminal_is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.owners.terminal_is_empty()&&self.construction.terminal_is_empty()}
  pub fn release_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<Self>>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
 }
 impl Drop for OriginalTextSpliceComposer{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original text splice requires source-funded physical closure")}}

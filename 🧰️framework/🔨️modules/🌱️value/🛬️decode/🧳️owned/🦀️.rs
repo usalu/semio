@@ -4,7 +4,8 @@ use crate::{RetainedWorkOutcome,OriginalReceivingPrimary,NativeDecodeControl,Ret
 pub use semio_framework_value_control_contract::{OriginalSourceTurn,OriginalSourceTurnIssuer,OriginalSourceTurnWitness};
 pub use semio_framework_value_native_shared_field::NativeIntrinsicSharedField;
 pub use semio_framework_value_native_schema_engine::record;
-pub use record::{NativeRecordKey,NativeRecordField,NativeSourceKeyReply,NativeSourceKeyReplyComplete,NativeSourceKeyValue,NativeSchemaLeaf,NativeSchemaFields,NativeSchemaKeyPoll,NativeSchemaKeyMetadata,NativeSchemaMatchSelection,NativeSchemaKeySource,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher,NativeRecordStorage};
+pub use record::{NativeRecordKey,NativeRecordField,NativeSourceKeyReply,NativeSourceKeyReplyComplete,NativeSourceKeyValue,NativeSchemaKeySource,NativeRecordStorage};
+pub use semio_framework_value_native_schema::{NativeSchemaLeaf,NativeSchemaFields,NativeSchemaKeyPoll,NativeSchemaKeyMetadata,NativeSchemaMatchSelection,NativeRecordSchema,NativeFieldMatch,NativeRecordMatcher};
 #[path="📋️list-impl/🦀️.rs"]mod list_impl;
 pub use semio_framework_value_native_list_receiver::{NativeListSource,NativePersistentListReceiver};
 

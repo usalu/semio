@@ -3,8 +3,6 @@ use semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner;
 use semio_framework_dsl_record::{DslReceivingField,FieldValue};
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
 use semio_framework_value::{RetainedCloneGrant,RetainedWorkOutcome,ValueError,ValueRefusalKind,paged::PagedUtf8,retirement::{RetireOwned,controlled::ControlledRetirement}};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1048576,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096}}
 fn retire<T:RetireOwned>(caller:&mut OriginalJobFixtureCaller,value:T){let g=grant();let mut value=ControlledRetirement::retain(value);for _ in 0..100_000{if value.terminal_is_empty(){return}caller.turn(g,|cx|cx.with_original_retirement(|cx|{let demand=value.selected_demand(g.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=value.step(grant);RetainedWorkOutcome{result,work:value.last_turn_work()}})?;Ok(())})).unwrap();}panic!("retirement did not settle")}

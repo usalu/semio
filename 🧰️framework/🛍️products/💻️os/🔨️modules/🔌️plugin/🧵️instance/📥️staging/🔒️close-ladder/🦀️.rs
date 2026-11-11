@@ -4,7 +4,7 @@
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
 use store::os_store::ArtifactStoreNativeVcsTurn as _;
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, PluginLifecycleStep};
-use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{ActionIngress, InstanceStores, PeerRoster};
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
@@ -23,7 +23,7 @@ use semio_ui_contract::*;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::{idle, removed};
+use semio_plugin_instance_docs::docs_maintenance_ladder::{idle, removed};
 use semio_plugin_instance_jobs::jobs_close_ladder::{handoff, handoff_demand};
 use semio_plugin_instance_ladders::ladders_close_ladder::{CloseRung, child_grant, registry_demands, registry_step};
 
@@ -123,7 +123,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::TimeTravel=>self.time_travel_ctx().time_travel_close_step_context(grant,cx).map_err(PluginLifecycleFailure::from),
             CloseRung::ToolOverlay=>self.render_ctx().tool_overlay_retirement_step(cx,grant,true).map_err(PluginLifecycleFailure::from),
             CloseRung::LocalQuery=>{let Some(query)=self.interaction.local_interaction_query.as_mut()else{return Ok(RetainedCloneStep::Progress(idle))};if !query.is_closing(){query.begin_close();return Ok(RetainedCloneStep::Progress(handoff()))}let step=query.close_step(child)?;if query.terminal_is_empty(){drop(self.take_local_interaction_query_reply());self.interaction.local_interaction_query=None}Ok(RetainedCloneStep::Progress(step.progress()))}
-            CloseRung::SnapshotReturns=>{if let Some(stage)=self.ingest.next_snapshot_read_return_stage(&self.stores, &self.interaction){self.interaction.snapshot_read_return_stage=stage}semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.ingest.advance_snapshot_read_returns_one(&mut self.stores, &mut self.interaction, effect).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(PluginLifecycleFailure::from))}
+            CloseRung::SnapshotReturns=>{if let Some(stage)=self.ingest.next_snapshot_read_return_stage(&self.stores, &self.interaction){self.interaction.snapshot_read_return_stage=stage}semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.ingest.advance_snapshot_read_returns_one(&mut self.stores,&mut self.interaction,effect).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(PluginLifecycleFailure::from))}
             CloseRung::PresenceLocalReads=>self.stores.presence_store.maintenance_local_reads_step(grant).map_err(PluginLifecycleFailure::from),
             CloseRung::MountedJobs=>{let Some(instance_id)=self.tools.live_runtime_instance_id else{return Ok(RetainedCloneStep::Progress(idle))};A::mounted_job_close_step(instance_id, cx, grant).map(ToolOperations::<A>::lifecycle_retained)}
             CloseRung::CancellationSlots=>{

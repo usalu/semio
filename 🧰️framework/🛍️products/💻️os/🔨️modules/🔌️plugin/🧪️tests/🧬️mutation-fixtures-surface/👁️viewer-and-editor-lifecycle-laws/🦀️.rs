@@ -80,17 +80,41 @@ async fn registered_editor_consumes_intrinsic_natural_bytes_through_the_real_med
         data,
     };
     let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    let semio_framework::MediaWireFormat::Binary { format_kind } = artifact.descriptor.wire else { unreachable!("natural-file fixture is binary") };
-    let media_type = PluginApp::original_natural_file_media_type(&app, crate::app_contract::NATURAL_FILE_PORT, &format_kind).expect("registered editor declares its natural-file media type");
-    let mut media = Some(semio_framework::Media { media_type, payload: semio_framework::MediaPayload::Intrinsic { schema: format_kind, value: semio_framework_value::DslValue::Bytes(artifact.data) } });
-    let mut completed = false;
-    let import_meta = meta("local");
-    for turn in 0..4096 {
-        assert!(turn < 4095, "[stall] original natural-file import never completed");
-        if !PluginApp::prepare_media_import(&mut app, cx).await.expect("original natural-file import admits its permit") { continue; }
-        PluginApp::advance_original_media_import(&mut app, crate::app_contract::NATURAL_FILE_PORT, &mut media, &import_meta, &mut completed, cx).await.expect("original natural-file import advances");
-        if completed { break; }
-    }
+    semio_plugin::artifact_app_laws::consume_media(&mut app, crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
+    let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("natural-file import settles");
+    let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
+    assert_eq!(loads.len(), 1, "natural-file Open publishes exactly one document load, no mutation");
+    crate::app_testing::artifact_app_laws::load_document(&mut app, &loads[0], &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.expect("the document load lands");
+    assert_eq!(app.snapshot().expect("imported surface snapshot").count, expected);
+    let history_rows = app.history_snapshot().await.expect("natural-file import history").upserts.into_iter().filter(|entry| entry.edit_id.is_some()).count();
+    let expected_history_rows = usize::try_from(fixture["lifecycle"]["expected"]["openedHistoryEntries"].as_u64().expect("opened history entries")).expect("usize history count");
+    assert_eq!(history_rows, expected_history_rows, "natural-file Open is a document load: it writes no history row into the fresh owner history");
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
+
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
+}
+
+#[semio_framework_async_macros::async_test]
+async fn registered_editor_natural_bytes_stay_untaken_while_unfunded_and_settle_once_funded() {
+    let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️natural-file-lifecycle/🔣️.json")).expect("natural-file lifecycle fixture");
+    let row = &fixture["registeredEditor"];
+    let format_kind = row["formatKind"].as_str().expect("registered editor format kind");
+    let data = row["octets"].as_array().expect("registered editor octets").iter().map(|octet| octet.as_u64().expect("octet") as u8).collect::<Vec<_>>();
+    let expected = i32::try_from(row["expectedCount"].as_i64().expect("expected surface count")).expect("i32 surface count");
+    let artifact = crate::app_contract::MediaArtifact {
+        descriptor: crate::app_contract::MediaArtifactDescriptor {
+            edge_id: None,
+            port_id: Some(crate::app_contract::NATURAL_FILE_PORT.into()),
+            kind_id: Some(format_kind.into()),
+            media_type: None,
+            wire: semio_framework::MediaWireFormat::Binary { format_kind: format_kind.into() },
+            blob_hash: None,
+        },
+        data,
+    };
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    semio_plugin::artifact_app_laws::consume_media_refused_then_funded(&mut app, crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
     let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("natural-file import settles");
     let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
     assert_eq!(loads.len(), 1, "natural-file Open publishes exactly one document load, no mutation");

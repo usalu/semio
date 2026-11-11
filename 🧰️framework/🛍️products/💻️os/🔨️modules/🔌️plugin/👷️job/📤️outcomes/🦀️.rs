@@ -3,11 +3,9 @@ use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind
 use semio_plugin_decl_app::tool_contract::ReservedOutcomeKind;
 use semio_plugin_decl_app::tool_contract::BoundedFaultText;
 use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext, OriginalTurnFailure};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
 use crate::{retired};
-use semio_plugin_job_receiving::original_steps::settle;
-use semio_framework_value::OriginalRetirementPoll;
 
 /// 🚦️ What one cleanup turn decided, before its outcome is lent from the pages the job owns.
 #[doc(hidden)]
@@ -43,7 +41,7 @@ impl CleanupOutcomes {
     pub fn retire(&mut self, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
         if !self.publication.terminal_is_empty() {
             let demand=self.publication.retirement_demands()?;
-            retired(cx,demand,|effect|{let turn=self.publication.close_step(effect);settle(effect,turn.result)})?;
+            semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|self.publication.close_step(effect).result)?;
         }
         if self.publication.terminal_is_empty() {
             self.delivered = false;
@@ -79,12 +77,12 @@ impl CleanupOutcomes {
         Ok(RetirementDemand::default())
     }
 
-    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if !self.publication.terminal_is_empty() {
-            return {let turn=self.publication.close_step(effect);settle(effect,turn.result)};
+            return self.publication.close_step(effect).result;
         }
         self.delivered = false;
-        settle(effect,Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())))
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
     }
 }
 
@@ -136,7 +134,7 @@ impl CleanupPublication {
 
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
         let demand=if self.pending.is_some(){RetirementDemand{depth:1,..Default::default()}}else{self.outcomes.close_demands()?};
-        let step=retired(cx,demand,|effect|if self.pending.take().is_some() {settle(effect,Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))}else{self.outcomes.close_step(effect)})?;
+        let step=retired(cx,demand,|effect|if self.pending.take().is_some() {Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{self.outcomes.close_step(effect)})?;
         Ok(match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}},InteractiveJobCloseStep::Blocked=>InteractiveJobCloseStep::Blocked})
     }
 }

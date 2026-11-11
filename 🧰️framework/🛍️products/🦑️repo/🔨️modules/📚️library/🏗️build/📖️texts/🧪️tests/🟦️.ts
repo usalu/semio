@@ -7,7 +7,7 @@ import schema from "../../../../../../../🔨️modules/🏃️process/📦️pa
 import catalog from "../🔣️.json" with { type: "json" };
 import { BUILD_TEXTS_V1 } from "../🟦️.ts";
 
-const LANGUAGE_NEUTRAL: readonly string[] = [];
+const LANGUAGE_NEUTRAL: readonly string[] = ["graph.plan-refused"];
 const owner = join(import.meta.dir, "..", ".."), foreignOwners = [join(owner, "..", "⚡️caching", "🚀️bootstrap", "🔌️nx-plugin", "🧮️engine-digest"), join(owner, "..", "🗂️workspaces", "🦀️cargo", "🛠️preparation", "👁️witness"), join(owner, "..", "🧪️testing", "🌱️genuine-birth"), join(owner, "..", "🧹️normalization", "🔣️taxonomy", "🏭️generators-packages-and-exclusions"), join(owner, "..", "⚡️caching", "🗂️suites", "🧮️aggregate")];
 const sources = (directory: string): string[] => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? (["🧪️tests", "📖️texts", "node_modules", ".cache"].includes(entry.name) ? [] : sources(join(directory, entry.name))) : /\.(?:ts|mjs)$/u.test(entry.name) ? [join(directory, entry.name)] : []);
 

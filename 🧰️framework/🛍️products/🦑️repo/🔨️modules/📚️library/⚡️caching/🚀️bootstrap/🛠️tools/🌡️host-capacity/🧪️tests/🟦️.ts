@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdirSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
@@ -26,7 +27,7 @@ test.skipIf(!live)("The repository's Nx environment takes its parallelism from t
    const project=join(workspace,`p${index}`);mkdirSync(project);
    writeFileSync(join(project,"project.json"),JSON.stringify({name:`p${index}`,targets:{t:{executor:"nx:run-commands",options:{command:`perl -MTime::HiRes=time -e 'printf q(%.3f ), time' > ${join(workspace,`s${index}.txt`)}; sleep 1.5; perl -MTime::HiRes=time -e 'printf q(%.3f), time' >> ${join(workspace,`s${index}.txt`)}`},cache:false}}}));
   }
-  const run=spawnSync("node",[nx,"run-many","-t","t","--skip-nx-cache"],{cwd:workspace,encoding:"utf8",env:{...process.env,NX_DAEMON:"false",NX_TUI:"false",NX_WORKSPACE_ROOT_PATH:workspace,...nxHostResourceSettingsV1(plan).environment}});
+  const run=spawnSync(registeredToolExecutableV1("node"),[nx,"run-many","-t","t","--skip-nx-cache"],{cwd:workspace,encoding:"utf8",env:{...process.env,NX_DAEMON:"false",NX_TUI:"false",NX_WORKSPACE_ROOT_PATH:workspace,...nxHostResourceSettingsV1(plan).environment}});
   expect(run.status,run.stderr.slice(-2000)+run.stdout.slice(-2000)).toBe(0);
   const spans=Array.from({length:8},(_,index)=>readFileSync(join(workspace,`s${index}.txt`),"utf8").trim().split(/\s+/u).map(Number) as [number,number]);
   expect(Math.max(...spans.map(([start])=>spans.filter(([from,to])=>from<=start&&start<to).length))).toBe(plan.jobs);

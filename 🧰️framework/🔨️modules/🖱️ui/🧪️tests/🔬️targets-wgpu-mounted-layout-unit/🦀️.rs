@@ -4,8 +4,6 @@ use semio_ui_declaration::ui::{UiButtonNode, UiFieldNode, UiPresence, UiSectionN
 use semio_framework_job_worker::OriginalWorkerFixtureCaller;
 use semio_ui_locale::Label;
 
-#[global_allocator]
-static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 fn original_stock() -> semio_framework_job::RetainedCloneGrant {
     semio_framework_job::RetainedCloneGrant { maximum_items: 100_000, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 128 }

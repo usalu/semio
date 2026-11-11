@@ -35,18 +35,18 @@ semio-plugin-document-media = { path = "../../../../🗃️document/📦️packa
 semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
 semio-plugin-publication-mounted = { path = "../../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️packages/🦀️rust" }
-semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", package = "semio-plugin-retained-command"}
+semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust"}
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust" }
 semio-plugin-decl-registry = { path = "../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
-semio-framework-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust", package = "semio-plugin-instance-stores"}
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
+semio-plugin-instance-stores = { path = "../../../🏪️stores/📦️packages/🦀️rust"}
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../../🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

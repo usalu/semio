@@ -1,5 +1,5 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 import { resolve } from "node:path";
 
 /** 🏃️ Runs the `VerifyScript` command under the caller's roots and invocation. */

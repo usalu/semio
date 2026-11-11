@@ -9,8 +9,6 @@ use semio_framework_test_fixtures::{fixture_path, fixture_text};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::sync::atomic::{AtomicBool,Ordering};
-#[global_allocator]
-static ORIGINAL_EPW_ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 const FAILED_BODY:&str="EPW complete body failed before publication";
 fn contract()->serde_json::Value{serde_json::from_str(&std::fs::read_to_string(fixture_path!("../../../../🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).expect("the committed fixture is readable")).unwrap()}
 fn grant()->RetainedCloneGrant{serde_json::from_value(contract()["grant"].clone()).unwrap()}

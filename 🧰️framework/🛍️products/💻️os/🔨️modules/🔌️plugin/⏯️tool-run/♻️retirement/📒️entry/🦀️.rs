@@ -1,10 +1,11 @@
 //! 📒️ A removed run retains its original typed sources and native presentation until funded physical closure.
 use super::*;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
+use semio_framework_value::RetirementPollExit;
+use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use std::mem::size_of;
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|{if !effect.performed(1)?{return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}advance(effect)})}
 
-struct Metadata{tool_id:String,actor:semio_framework_value::SharedUtf8,definition:ToolRunDefinition,settings_values:ToolRunSettingsValues,window:Option<(String,String)>,window_bodies:Vec<String>,payload:Option<semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage<Vec<u8>>>,trace_keys:ToolRunTraceKeys,entity_marks:Vec<(u32,u64)>,entities:semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage<BTreeSet<u64>>,trace:ToolRunTraceStore,recent_trace:std::collections::VecDeque<u64>,counters:Vec<ToolRunCounter>,steps:ToolRunStepRing,checkpoint:Option<Vec<u8>>,announced:Option<(ToolRunState,u64,String)>,port:ToolRunJobPort}
+struct Metadata{tool_id:String,actor:semio_framework_value::SharedUtf8,definition:ToolRunDefinition,settings_values:ToolRunSettingsValues,window:Option<(String,String)>,window_bodies:Vec<String>,payload:Option<SharedOriginalStorage<Vec<u8>>>,trace_keys:ToolRunTraceKeys,entity_marks:Vec<(u32,u64)>,entities:SharedOriginalStorage<BTreeSet<u64>>,trace:ToolRunTraceStore,recent_trace:std::collections::VecDeque<u64>,counters:Vec<ToolRunCounter>,steps:ToolRunStepRing,checkpoint:Option<Vec<u8>>,announced:Option<(ToolRunState,u64,String)>,port:ToolRunJobPort}
 semio_framework_value::artifact_retire_struct!(Metadata{tool_id,actor,definition,settings_values,window,window_bodies,payload,trace_keys,entity_marks,entities,trace,recent_trace,counters,steps,checkpoint,announced,port});
 pub(super) struct ToolRunEntryRetirement<A:ArtifactApp>{operations:semio_plugin_tool_run_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>,native:crate::original_native_tick::OriginalToolRunNativeState,job:Option<ToolRunJobSlot<A::Config>>,finalize:Option<ToolRunFinalize<A>>,aliases:[Option<Arc<A::Snapshot>>;2],displaced:Vec<Arc<A::Snapshot>>,running:Option<A::Snapshot>,provisional:Vec<A::Mutation>,operation:Option<A::Mutation>,member:Option<ToolRunMemberRun>,retirement:Option<Box<dyn store::ErasedSnapshotRetirement>>,metadata:Option<ControlledRetirement<Metadata>>}
 fn scalar<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
@@ -42,25 +43,25 @@ impl<A:ArtifactApp> ToolRunEntryRetirement<A>{
   if !self.native.terminal_is_empty(){return self.native.close_with(cx,d).map(|step|RetainedCloneStep::Progress(step.progress()))}
   if !self.operations.terminal_is_empty(){let before=cx.retained_progress();self.operations.close_step(store,cx)?;let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
   if let Some(job)=self.job.as_mut().filter(|job|!job.terminal_is_empty()){job.begin_close();return job.close_step(cx)}
-  if let Some(finalize)=self.finalize.as_mut().filter(|f|f.publication.is_none()&&!f.ingress.terminal_is_empty()){return retired(cx,d,|effect|finalize.ingress.close_step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()))}
+  if let Some(finalize)=self.finalize.as_mut().filter(|f|f.publication.is_none()&&!f.ingress.terminal_is_empty()){return retired(cx,d,|effect|->Result<RetainedCloneStep,RetirementPollExit>{finalize.ingress.close_step(effect)}).map(|step|RetainedCloneStep::Progress(step.progress()))}
   if self.job.is_none()&&self.finalize.is_none()&&self.retirement.is_none(){if let Some(alias)=self.aliases.iter_mut().find(|alias|alias.is_some()){
    let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|store.retire_snapshot_alias(alias,effect).map(|result|match result{Some((owner,p))=>{self.retirement=Some(owner);RetainedCloneStep::Progress(p)},None=>RetainedCloneStep::Progress(Default::default())}))?;
    return Ok(RetainedCloneStep::Progress(step.progress()))
   }}
-  let step=retired(cx,d,|effect|{let grant=effect.grant();
+  let step=retired(cx,d,|effect|->Result<RetainedCloneStep,RetirementPollExit>{let grant=effect.grant();
    if self.job.is_some(){self.job=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
    if let Some(finalize)=self.finalize.as_mut(){
-    if let Some(publication)=finalize.publication.as_mut(){if publication.terminal_is_empty(){finalize.publication=None;}else{publication.begin_close();let exit=publication.close_step(effect);return semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::RetirementPollExit::settle(effect,exit))}}
+    if let Some(publication)=finalize.publication.as_mut(){if publication.terminal_is_empty(){finalize.publication=None;}else{publication.begin_close();return publication.close_step(effect)}}
     else{self.finalize=None;}
     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
    }
-   if self.retirement.is_some(){return close_tool_erased_retirement(&mut self.retirement,effect)}
+   if self.retirement.is_some(){return Ok(close_tool_erased_retirement(&mut self.retirement,effect)?)}
    if let Some(alias)=self.displaced.pop(){self.aliases[0]=Some(alias);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
-   if self.running.is_some(){let mut factory=Some(std::sync::Arc::clone(store.owned_snapshot_retirement_factory()?));let mut output=None;let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::FactoryOwnedRetirement::<A::Snapshot>::admit_original(&mut self.running,&mut factory,&mut output,effect).map_err(semio_framework_value::OriginalRetirementFailure::from))?;if let Some(owner)=output{self.retirement=Some(owner)}return Ok(step)}
-   if self.operation.is_some(){return store.retire_owned_mutation(&mut self.operation,effect).map(|result|match result{Some((owner,p))=>{self.retirement=Some(owner);RetainedCloneStep::Progress(p)},None=>RetainedCloneStep::Progress(Default::default())})}
+   if self.running.is_some(){let mut factory=Some(Arc::clone(store.owned_snapshot_retirement_factory()?));return match semio_framework_value::FactoryOwnedRetirement::<A::Snapshot>::admit_original(&mut self.running,&mut factory,&mut self.retirement,effect){semio_framework_value::RetainedWorkPoll::Pending{work}=>Err(RetirementPollExit::Pending(work)),semio_framework_value::RetainedWorkPoll::Complete(turn)=>Ok(turn.result?)}}
+   if self.operation.is_some(){return Ok(store.retire_owned_mutation(&mut self.operation,effect).map(|result|match result{Some((owner,p))=>{self.retirement=Some(owner);RetainedCloneStep::Progress(p)},None=>RetainedCloneStep::Progress(Default::default())})?)}
    if let Some(operation)=self.provisional.pop(){self.operation=Some(operation);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
    if let Some(step)=close_ledger_backing(&mut self.displaced,grant)?{return Ok(step)}if let Some(step)=close_ledger_backing(&mut self.provisional,grant)?{return Ok(step)}
-   if let Some(metadata)=self.metadata.as_mut(){if !metadata.terminal_is_empty(){return semio_plugin_ownership::bounded_ownership::plugin_settle_value(metadata.step(4096,effect))}self.metadata=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+   if let Some(metadata)=self.metadata.as_mut(){if !metadata.terminal_is_empty(){return RetirementPollExit::resume(metadata.step(grant.maximum_copy_bytes,effect))}self.metadata=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
    Ok(RetainedCloneStep::Complete(Default::default()))
   })?;Ok(RetainedCloneStep::Progress(step.progress()))
  }

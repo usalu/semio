@@ -4,8 +4,6 @@
 #![cfg(test)]
 #![allow(unused_imports, dead_code, ambiguous_glob_reexports, async_fn_in_trait, clippy::all)]
 
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
 
 use semio_os_store_testing_prelude::*;
 use semio_os_store_testing_fixtures::*;

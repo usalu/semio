@@ -1,5 +1,5 @@
 [package]
-name = "semio-framework-plugin-reactor-staged-forms"
+name = "semio-plugin-reactor-staged-forms"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -21,16 +21,16 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-async = { path = "../../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
-semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-native-decode = { path = "../../../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../../🔌️app/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../../../📨️pending/📦️packages/🦀️rust" }
-semio-framework-plugin-runtime-ops = { path = "../../../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust", package = "semio-plugin-runtime-ops" }
+semio-plugin-runtime-ops = { path = "../../../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust" }
 semio-plugin-reactor-patches = { path = "../../../../../🩹️patches/📦️packages/🦀️rust" }
 semio-plugin-actor-host = { path = "../../../../../../🌐host/📦️packages/🦀️rust" }
 semio_ui_runtime = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-ui-runtime" }

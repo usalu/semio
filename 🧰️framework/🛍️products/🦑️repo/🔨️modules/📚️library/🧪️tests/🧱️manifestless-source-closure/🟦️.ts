@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import {testPythonV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -102,7 +103,7 @@ describe("manifestless source closure", () => {
       const exports = Object.entries(descriptor.ACTOR_COMPONENT_EXPORTS as Record<string, readonly string[]>).map(([name, names]) => `export const ${name}=${name === "describe" ? `{async describe(){return Uint8Array.from(${JSON.stringify(fixture.descriptorProbe.bytes)})}}` : methods(names)};`);
       writeFileSync(complete, exports.join("\n"));
       writeFileSync(incomplete, exports.filter((line) => !line.startsWith("export const reactor=")).join("\n"));
-      const run = (path: string) => spawnSync("node", ["--input-type=module", "--eval", descriptor.PLUGIN_DESCRIPTOR_PROBE_SOURCE, path], { encoding: "utf8" });
+      const run = (path: string) => spawnSync(registeredToolExecutableV1("node"), ["--input-type=module", "--eval", descriptor.PLUGIN_DESCRIPTOR_PROBE_SOURCE, path], { encoding: "utf8" });
       const accepted = run(complete);
       expect(accepted.status, accepted.stderr).toBe(0);
       expect(accepted.stdout).toBe(fixture.descriptorProbe.base64);

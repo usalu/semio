@@ -7,7 +7,6 @@ extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 
-semio_plugin::install_fixture_heap_witness!();
 
 #[path = "../🔬️unit/🦀️.rs"]
 mod unit_tests;

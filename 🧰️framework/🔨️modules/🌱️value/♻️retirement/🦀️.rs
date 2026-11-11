@@ -374,6 +374,7 @@ macro_rules! retirement_fields_seed{
 }
 
 artifact_retire_leaf!(&'static str, (), bool, char, u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
+artifact_retire_leaf!(semio_framework_trace::OperationId);
 artifact_retire_leaf!(semio_framework_value_paged_list::PagedListReservationSelection,semio_framework_value_paged_list::PagedListReservationKind,semio_framework_value_paged_list::PagedListSelectionHeader);
 
 #[doc(hidden)]

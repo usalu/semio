@@ -290,8 +290,6 @@ fn txt_original_encoding_receiving_seam_retains_exact_cause_pointer_and_accepted
  }}
 }
 
-#[global_allocator]
-static TXT_ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 #[test]
 fn sqlite_snapshot_txt_original_paid_receiving_keeps_every_cancelled_backing_and_actual_line_receipt(){

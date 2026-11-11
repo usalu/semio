@@ -4,8 +4,6 @@ use semio_s_spatial_kernel_semio_session::{Session,SessionCapture};
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation,StepContext,OriginalTurnFailure,close_original_retained_step};
 use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress,RetainedCloneStep as Step,RetirementDemand,RetainedWorkOutcome};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(body:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,heap.requested_bytes,heap.released_bytes)}
 fn stock()->Grant{Grant{maximum_items:65536,maximum_copy_bytes:128<<20,maximum_capacity_bytes:256<<20,maximum_release_bytes:512<<20,maximum_depth:4096}}
 fn run(caller:&mut OriginalJobFixtureCaller,g:Grant,born:&mut usize,free:&mut usize,body:impl FnOnce(&mut StepContext<'_>)->Result<(),OriginalTurnFailure>){let(_,a,r)=observe(||caller.turn(g,|cx|cx.with_original_retirement(|cx|cx.with_original_work_loan(1,1500,body))).unwrap());let p=caller.receipt();assert!(p.fits(g));assert_eq!((a,r),(p.retained_capacity_bytes,p.released_bytes));*born+=a;*free+=r;}

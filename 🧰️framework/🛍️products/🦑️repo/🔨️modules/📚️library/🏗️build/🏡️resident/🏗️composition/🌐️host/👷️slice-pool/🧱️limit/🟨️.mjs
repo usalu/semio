@@ -1,5 +1,7 @@
-/** 🧱 A hard memory limit for every slice load: where cgroup v2 is delegated to the user, each load process gets its own leaf cgroup (a sibling of the service's, because a cgroup that holds processes cannot enable controllers for children) with `memory.max` = the service's limit minus its measured usage minus the safety margin, `memory.high` at 90% of that, no swap, and the kernel kills the whole group on an overrun (`memory.oom.group`, `cgroup.kill` on release), so an overrun costs only that load and the service never stalls at its own `memory.high`. Elsewhere (macOS, Windows, no delegation) `sliceLimiterV1` answers undefined and the pool's guard plus the process kill apply: one code path, one capability check.
+/** 🧱 A hard memory limit for every slice load: where cgroup v2 is delegated to the user, each load process gets its own leaf cgroup (a sibling of the service's, because a cgroup that holds processes cannot enable controllers for children) with `memory.max` = the service's limit minus its measured usage minus the safety margin, no swap and no `memory.high` (a throttle at 90% made an overrun crawl for the better part of an hour instead of ending as the typed `memory` refusal), and the kernel kills the whole group on an overrun (`memory.oom.group`, `cgroup.kill` on release), so an overrun costs only that load and the service never stalls at its own `memory.high`. Elsewhere (macOS, Windows, no delegation) `sliceLimiterV1` answers undefined and the pool's guard plus the process kill apply: one code path, one capability check.
  * @see ../🟨️.mjs */
+import {readFileSync} from "node:fs";
+import {freemem} from "node:os";
 import {cgroupPortsV1,createCgroupLimiterV1,detectCgroupV2V1} from "../../../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
 
 const MiB=1048576;
@@ -12,9 +14,16 @@ export function sliceLimiterV1(ports=cgroupPortsV1()){
  return base===undefined?undefined:createCgroupLimiterV1(base,ports);
 }
 
-/** 📏 The policy of one load given the service's own limit and usage, or undefined where the service has no limit. */
-export function sliceLimitPolicyV1({limitBytes,currentBytes},marginMegabytes=0){
+/** 🖥 The memory the host can still give out in bytes (`MemAvailable` where the host reports it, else the free memory), or undefined where unknown. */
+export function hostAvailableBytesV1(read=path=>readFileSync(path,"utf8")){
+ try{const found=/^MemAvailable:\s+(\d+)\s+kB/mu.exec(read("/proc/meminfo"));if(found)return Number(found[1])*1024;}catch{}
+ const free=freemem();return Number.isFinite(free)&&free>0?free:undefined;
+}
+
+/** 📏 The policy of one load given the service's own limit and usage, or undefined where the service has no limit. A host with more memory available than the service limit leaves is let lend the load `hostShareBasisPoints` of it (above `hostFloorMegabytes`), never beyond `maximumMegabytes` and never below what the service limit leaves. */
+export function sliceLimitPolicyV1({limitBytes,currentBytes,availableBytes},marginMegabytes=0,{maximumMegabytes=0,hostShareBasisPoints=0,hostFloorMegabytes=0}={}){
  if(!Number.isFinite(limitBytes))return undefined;
- const megabytes=Math.max(SLICE_LIMIT_FLOOR_MEGABYTES_V1,Math.floor((limitBytes-currentBytes)/MiB)-marginMegabytes);
- return{kind:"service",memoryMegabytes:megabytes,swapMegabytes:0,cpuShares:100,pids:0,softRatioBasisPoints:SLICE_LIMIT_SOFT_BASIS_POINTS_V1,enforcement:"hard"};
+ const declared=Math.floor((limitBytes-currentBytes)/MiB)-marginMegabytes,lent=Number.isFinite(availableBytes)?Math.min(maximumMegabytes,Math.floor(availableBytes*hostShareBasisPoints/10000/MiB)-hostFloorMegabytes):0;
+ const megabytes=Math.max(SLICE_LIMIT_FLOOR_MEGABYTES_V1,declared,lent);
+ return{kind:"job",memoryMegabytes:megabytes,swapMegabytes:0,cpuShares:100,pids:0,softRatioBasisPoints:SLICE_LIMIT_SOFT_BASIS_POINTS_V1,enforcement:"hard"};
 }

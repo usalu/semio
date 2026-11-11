@@ -1,7 +1,5 @@
 //! 🧪️ Runtime law: every semio subset editor publishes through the generic `mutation_apply` document lane over a `RetainedClone` snapshot tree. Apply prepares the exact post snapshot, Undo replays the ordered inverse rows back to the base and Redo prepares the identical post and inverse again.
 
-#[global_allocator]
-static ORIGINAL_OWNER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 use semio_os_kernel as store;
 use semio_plugin::ArtifactEditor;

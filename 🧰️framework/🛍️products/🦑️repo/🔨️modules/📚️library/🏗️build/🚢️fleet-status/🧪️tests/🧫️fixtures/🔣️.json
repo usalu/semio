@@ -66,6 +66,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": null,
      "load": null,
+     "sampleAgeSeconds": null,
      "cores": null,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -272,7 +273,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "leases": {
      "holders": [
@@ -369,6 +371,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 3000,
      "observedMegabytes": 2000,
@@ -552,7 +555,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "leases": {
      "holders": [
@@ -655,6 +659,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -956,7 +961,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "capacity": {
      "floorMegabytes": 2048,
@@ -1045,6 +1051,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 6000,
      "observedMegabytes": 3000,
@@ -1314,7 +1321,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "leases": {
      "holders": [
@@ -1410,6 +1418,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -1703,7 +1712,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "leases": {
      "holders": [
@@ -1766,6 +1776,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -1959,7 +1970,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "storage": {
      "hostFreeBytes": 10737418240,
@@ -2028,6 +2040,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -2231,7 +2244,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "sealed": {
      "mode": "sealed",
@@ -2287,6 +2301,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -2469,7 +2484,8 @@
      "availableMegabytes": 6000,
      "pressure": "critical",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "leases": {
      "holders": [
@@ -2568,6 +2584,7 @@
      "pressure": "critical",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 1000,
      "observedMegabytes": 2500,
@@ -2928,7 +2945,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "generation": {
      "number": 566,
@@ -2965,6 +2983,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -3121,7 +3140,8 @@
      "availableMegabytes": 6000,
      "pressure": "normal",
      "swapUsedMegabytes": 0,
-     "load": 2.5
+     "load": 2.5,
+     "ageSeconds": 0
     },
     "leases": {
      "holders": [],
@@ -3253,6 +3273,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 2.5,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 2000,
      "observedMegabytes": 3001,
@@ -3582,6 +3603,298 @@
    }
   },
   {
+   "id": "sample-starved",
+   "language": "en",
+   "facts": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "sources": [
+     {
+      "id": "leases",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "capacity",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "bazel",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "storage",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "sealed",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "generation",
+      "ok": true,
+      "milliseconds": 10
+     }
+    ],
+    "host": {
+     "platform": "darwin",
+     "cores": 10,
+     "totalMegabytes": 16384,
+     "availableMegabytes": 6000,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "load": 2.5,
+     "ageSeconds": 95
+    },
+    "leases": {
+     "holders": [
+      {
+       "pid": 101,
+       "resource": "build-graph-state:/w:selected:7",
+       "mode": "exclusive",
+       "class": "graph",
+       "heldSeconds": 500,
+       "command": "bun repo run x",
+       "agent": "a1",
+       "standing": {
+        "state": "progressing",
+        "priority": "agent",
+        "implementationDigest": "d1d1d1d1d1d1d1d1",
+        "implementationAgeSeconds": 30,
+        "phase": "inference",
+        "done": 5,
+        "total": 10,
+        "etaMinutes": 3,
+        "parentPid": 100
+       }
+      },
+      {
+       "pid": 102,
+       "resource": "graph-claim:/w:t",
+       "mode": "shared",
+       "class": "graph",
+       "heldSeconds": 100,
+       "standing": {
+        "state": "progressing",
+        "priority": "agent",
+        "implementationDigest": "e2e2e2e2e2e2e2e2",
+        "implementationAgeSeconds": 900,
+        "parentPid": 101
+       }
+      },
+      {
+       "pid": 103,
+       "resource": "nx:daemon-slot:1",
+       "mode": "exclusive",
+       "class": "graph",
+       "heldSeconds": 50,
+       "standing": {
+        "state": "progressing",
+        "priority": "agent",
+        "implementationDigest": "d1d1d1d1d1d1d1d1",
+        "implementationAgeSeconds": 30,
+        "chain": [
+         7,
+         102
+        ]
+       }
+      }
+     ],
+     "waiters": [],
+     "cycles": []
+    },
+    "capacity": {
+     "floorMegabytes": 2048,
+     "headroomMegabytes": 3000,
+     "capacityMegabytes": 14336,
+     "grants": [
+      {
+       "id": "g1",
+       "operation": "run",
+       "pid": 100,
+       "jobs": 2,
+       "reservedMegabytes": 3000,
+       "observedMegabytes": 2000,
+       "heldSeconds": 600,
+       "agent": "a1"
+      }
+     ],
+     "waiters": []
+    }
+   },
+   "report": {
+    "version": 1,
+    "atMs": 1793000000000,
+    "workspace": "/w",
+    "summary": {
+     "running": 1,
+     "blocked": 0,
+     "waiting": 0,
+     "alerts": 0,
+     "warnings": 1
+    },
+    "memory": {
+     "totalMegabytes": 16384,
+     "availableMegabytes": 6000,
+     "floorMegabytes": 2048,
+     "spareMegabytes": 3000,
+     "pressure": "normal",
+     "swapUsedMegabytes": 0,
+     "load": 2.5,
+     "sampleAgeSeconds": 95,
+     "cores": 10,
+     "admittedMegabytes": 3000,
+     "observedMegabytes": 2000,
+     "unobservedGrants": 0,
+     "overReservedMegabytes": 1000,
+     "underReservedMegabytes": 0,
+     "grants": 1,
+     "waiters": 0
+    },
+    "runs": [
+     {
+      "pid": 100,
+      "pids": [
+       100,
+       101,
+       102,
+       103
+      ],
+      "state": "running",
+      "ageSeconds": 600,
+      "agent": "a1",
+      "command": "bun repo run x",
+      "operation": "run",
+      "phase": "inference",
+      "done": 5,
+      "total": 10,
+      "etaSeconds": 180,
+      "priority": "agent",
+      "implementation": {
+       "state": "progressing",
+       "freshness": "current",
+       "digest": "d1d1d1d1d1d1",
+       "ageSeconds": 30
+      },
+      "memory": {
+       "admittedMegabytes": 3000,
+       "observedMegabytes": 2000,
+       "deltaMegabytes": -1000,
+       "jobs": 2
+      },
+      "exclusive": [
+       "build-graph-state:/w:selected:7",
+       "nx:daemon-slot:1"
+      ]
+     }
+    ],
+    "queues": {
+     "graph": {
+      "builder": {
+       "pid": 101,
+       "heldSeconds": 500,
+       "state": "progressing",
+       "etaSeconds": 180,
+       "phase": "inference",
+       "done": 5,
+       "total": 10
+      },
+      "computers": 1,
+      "slots": 0,
+      "waiting": 0,
+      "longestWaitSeconds": 0,
+      "estimatedWaitSeconds": null
+     },
+     "capacity": {
+      "floorMegabytes": 2048,
+      "spareMegabytes": 3000,
+      "grants": 1,
+      "waiters": []
+     },
+     "leases": [],
+     "leasesOmitted": 0
+    },
+    "bazel": {
+     "slots": 0,
+     "live": 0,
+     "held": 0,
+     "rssMegabytes": 0,
+     "servers": []
+    },
+    "storage": {
+     "hostFreeBytes": null,
+     "hostFreeFloorBytes": 0,
+     "machine": {
+      "totalBytes": 0,
+      "effectiveTotalBytes": 0,
+      "usedBytes": 0,
+      "footprintBytes": 0,
+      "overBytes": 0,
+      "evictBytes": 0,
+      "blockedBytes": 0,
+      "source": "default"
+     },
+     "overAreas": [],
+     "images": []
+    },
+    "sealed": {
+     "mode": "live",
+     "drifted": 0,
+     "blocked": 0,
+     "entries": []
+    },
+    "generation": null,
+    "findings": [
+     {
+      "id": "sample-stale",
+      "severity": "warn",
+      "subject": "host",
+      "values": {
+       "age": "95 s"
+      },
+      "text": "The host sample is 95 s old, so admission lets one run in at a time"
+     }
+    ],
+    "sources": [
+     {
+      "id": "leases",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "capacity",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "bazel",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "storage",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "sealed",
+      "ok": true,
+      "milliseconds": 10
+     },
+     {
+      "id": "generation",
+      "ok": true,
+      "milliseconds": 10
+     }
+    ]
+   }
+  },
+  {
    "id": "seed3-0",
    "language": "en",
    "facts": {
@@ -3589,6 +3902,7 @@
     "atMs": 1793650257551,
     "workspace": "/w",
     "host": {
+     "ageSeconds": 0,
      "platform": "darwin",
      "cores": 10,
      "totalMegabytes": 16384,
@@ -3931,6 +4245,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 0,
      "load": 22.25,
+     "sampleAgeSeconds": 0,
      "cores": 10,
      "admittedMegabytes": 15990,
      "observedMegabytes": 0,
@@ -4269,6 +4584,7 @@
     "atMs": 1793833758015,
     "workspace": "/w",
     "host": {
+     "ageSeconds": 20,
      "platform": "darwin",
      "cores": 10,
      "totalMegabytes": 16384,
@@ -4583,6 +4899,7 @@
      "pressure": "warn",
      "swapUsedMegabytes": 4000,
      "load": 3.5,
+     "sampleAgeSeconds": 20,
      "cores": 10,
      "admittedMegabytes": 8935,
      "observedMegabytes": 9338,
@@ -4835,6 +5152,7 @@
     "atMs": 1793104051652,
     "workspace": "/w",
     "host": {
+     "ageSeconds": 40,
      "platform": "darwin",
      "cores": null,
      "totalMegabytes": 16384,
@@ -5196,7 +5514,7 @@
      "blocked": 0,
      "waiting": 0,
      "alerts": 2,
-     "warnings": 1
+     "warnings": 2
     },
     "memory": {
      "totalMegabytes": 16384,
@@ -5206,6 +5524,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 4000,
      "load": null,
+     "sampleAgeSeconds": 40,
      "cores": null,
      "admittedMegabytes": 0,
      "observedMegabytes": 0,
@@ -5434,6 +5753,15 @@
       "text": "Das Implementierungs-Image e1 ist blockiert: 2"
      },
      {
+      "id": "sample-stale",
+      "severity": "warn",
+      "subject": "host",
+      "values": {
+       "age": "40 s"
+      },
+      "text": "Die Messung des Rechners ist 40 s alt, daher wird nur ein Lauf nach dem anderen zugelassen"
+     },
+     {
       "id": "source-failed",
       "severity": "warn",
       "subject": "capacity",
@@ -5486,6 +5814,7 @@
     "atMs": 1793021278532,
     "workspace": "/w",
     "host": {
+     "ageSeconds": 0,
      "platform": "darwin",
      "cores": null,
      "totalMegabytes": 16384,
@@ -5985,6 +6314,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": 4000,
      "load": 3.5,
+     "sampleAgeSeconds": 0,
      "cores": null,
      "admittedMegabytes": 11777,
      "observedMegabytes": 15247,
@@ -6512,6 +6842,7 @@
     "atMs": 1793777073949,
     "workspace": "/w",
     "host": {
+     "ageSeconds": 20,
      "platform": "darwin",
      "cores": null,
      "totalMegabytes": 16384,
@@ -6891,6 +7222,7 @@
      "pressure": "normal",
      "swapUsedMegabytes": null,
      "load": null,
+     "sampleAgeSeconds": 20,
      "cores": null,
      "admittedMegabytes": 11069,
      "observedMegabytes": 4254,
@@ -7197,6 +7529,7 @@
     "atMs": 1793505923949,
     "workspace": "/w",
     "host": {
+     "ageSeconds": 40,
      "platform": "darwin",
      "cores": 8,
      "totalMegabytes": 16384,
@@ -7569,7 +7902,7 @@
      "blocked": 2,
      "waiting": 0,
      "alerts": 2,
-     "warnings": 6
+     "warnings": 7
     },
     "memory": {
      "totalMegabytes": 16384,
@@ -7579,6 +7912,7 @@
      "pressure": "critical",
      "swapUsedMegabytes": null,
      "load": 22.25,
+     "sampleAgeSeconds": 40,
      "cores": 8,
      "admittedMegabytes": 592,
      "observedMegabytes": 0,
@@ -7918,6 +8252,15 @@
        "resource": "nx:daemon-slot:1"
       },
       "text": "pid 392 waits 21 min for nx:daemon-slot:1"
+     },
+     {
+      "id": "sample-stale",
+      "severity": "warn",
+      "subject": "host",
+      "values": {
+       "age": "40 s"
+      },
+      "text": "The host sample is 40 s old, so admission lets one run in at a time"
      },
      {
       "id": "source-failed",

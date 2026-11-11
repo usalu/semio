@@ -1,7 +1,5 @@
 //! ⚖️ Forms Try window owners retire under quoted grants: the shared answer tree retires as a lease whose last alias pays the release, every Try mutation passes the typed-command input lane, and a Try edit prepares, inverts and re-prepares through the owner's own bundle.
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 use semio_framework_test_typed_input_law as typed_input_law;
 use semio_framework_test_transient_preparation_law as transient_preparation_law;

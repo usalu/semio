@@ -75,7 +75,7 @@ impl semio_plugin::ToolJobFactory for EnergyModelCommandJobFactory {
         energy_model_contract()
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_RETAINED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: ENERGY_MODEL_RETAINED_RAW_BYTES, checkpoint_resume: false);
 
 }
 

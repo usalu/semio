@@ -246,7 +246,7 @@ impl semio_framework_value::ToValue for WholeOnly {
 }
 
 fn mixed_placement_rows() -> DslValue {
-    let row = |entries: Vec<(&str, DslValue)>| DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let row = |entries: Vec<(&str, DslValue)>| DslValue::object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect::<Vec<_>>());
     DslValue::Array(vec![
         row(vec![("id", DslValue::String("a".into())), ("x", DslValue::float(1.0)), ("y", DslValue::float(2.0)), ("z", DslValue::float(3.0)), ("yaw", DslValue::float(0.5))]),
         row(vec![("id", DslValue::String("b".into()))]),

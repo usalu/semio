@@ -121,7 +121,7 @@ def closure_model(case):
             if inside(row["root"], provider["sourcePath"]) and (best is None or len(row["root"]) > len(owners[best]["root"])):
                 best = name
         if best is not None:
-            admit(best)
+            admitted.add(best)
     return sorted(admitted)
 
 

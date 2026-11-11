@@ -1,6 +1,4 @@
 //! 🎟️ Calls the original media source laws against the complete current production library.
-#[global_allocator]
-static ORIGINAL_MEDIA_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[test]
 fn original_media_pending_domain(){semio_plugin_tests_03::document_media_test_hosts::document_media_unit_1::tests::media_original_domain_pending_publication_and_cancelled_close()}
 #[test]

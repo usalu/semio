@@ -1,7 +1,7 @@
 #!/usr/bin/env repo
 /** 📦️ txt Rust artifact package router. */
-import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOriginalTxtEncodingScript, runOriginalTxtReceivingScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 
 /** 🛫️ Runs original TXT output custody laws under the unchanged supplied invocation. */

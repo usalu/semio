@@ -73,8 +73,9 @@ impl ReservedJobOutcomes {
     pub fn retire(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
         if !self.publication.terminal_is_empty() {
             let grant = cx.retained_grant();
-            let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, grant, |effect| self.publication.close_step(effect).result);
-            receive_step(cx, step)?;
+            if let Some((turn, _)) = cx.with_original_effect(grant, |_, effect| self.publication.close_step(effect))? {
+                receive_step(cx, turn.result)?;
+            }
         }
         if self.publication.terminal_is_empty() {
             self.delivered = false;

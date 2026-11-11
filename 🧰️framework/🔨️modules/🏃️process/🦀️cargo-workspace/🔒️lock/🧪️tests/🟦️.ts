@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import{test,expect}from"bun:test";
 import{mkdtempSync,mkdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
@@ -13,7 +14,7 @@ type LockCase={name:string;files:Readonly<Record<string,string>>;manifest?:strin
 const cases=corpus.cases as unknown as readonly LockCase[];
 
 const cargo=(args:readonly string[],cwd:string,env:Record<string,string>):Promise<CargoLockRunV1>=>new Promise(done=>{
- const child=spawn("cargo",[...args],{cwd,env:{...process.env,...env},stdio:["ignore","pipe","pipe"]});let stdout="",stderr="";
+ const child=spawn(registeredToolExecutableV1("cargo"),[...args],{cwd,env:{...process.env,...env},stdio:["ignore","pipe","pipe"]});let stdout="",stderr="";
  child.stdout.on("data",chunk=>{stdout+=chunk;});child.stderr.on("data",chunk=>{stderr+=chunk;});child.on("close",status=>done({status,stdout,stderr}));
 });
 const lease=new Set<string>();

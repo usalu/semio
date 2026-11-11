@@ -241,7 +241,7 @@ impl ArtifactEditor for JpgAnyEditor {
         registry.register(JpgAnyPaintRegionFactory::new(registry.controller_id()))?;
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) {
             return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);
@@ -267,7 +267,7 @@ impl ArtifactEditor for JpgAnyEditor {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
         jpg_any_editor_command_id(command)

@@ -10,6 +10,7 @@
     "./budget": "./⏱️budget/🟦️.ts",
     "./test-budget": "./🧪️testing/🎚️budget/🟦️.ts",
     "./test-execution": "./🧪️testing/🎛️execution/🟦️.ts",
+    "./test-orphans": "./🧪️testing/🪦️orphans/🟦️.ts",
     "./vitest": "./🧪️testing/🧪️vitest/🟦️.ts",
     "./cargo-test": "./🧪️testing/🦀️cargo/🟦️.ts",
     "./cargo-laws": "./🧪️testing/🦀️laws/🟦️.ts",

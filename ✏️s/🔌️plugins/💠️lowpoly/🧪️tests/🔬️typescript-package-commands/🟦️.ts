@@ -1,5 +1,5 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
 import { readModuleTreeSource } from "@semio-tech/framework/compiler/syntax/module-tree";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";

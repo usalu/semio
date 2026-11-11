@@ -17,6 +17,3 @@ pub use native_entrypoint::run_native_entrypoint;
 #[path = "../../../../../🧪️tests/🎨️wgpu-paint-policy/🦀️.rs"]
 mod paint_policy_tests;
 
-#[cfg(all(test, not(target_os = "wasi")))]
-#[global_allocator]
-static RENDERER_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

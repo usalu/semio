@@ -1,8 +1,5 @@
 //! 📚 IFC4X3_ADD2 EXPRESS declarations and structural validation.
 use std::collections::{BTreeMap, BTreeSet};
-#[cfg(test)]
-#[global_allocator]
-static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 pub mod query;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
 

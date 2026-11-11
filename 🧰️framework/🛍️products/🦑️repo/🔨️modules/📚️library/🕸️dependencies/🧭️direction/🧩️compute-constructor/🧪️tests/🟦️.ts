@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🧭️ Repository constructor policy retains its original owned path witnesses. */
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
@@ -27,7 +28,7 @@ test("actual constructor-owner predicate matches independent Node path containme
  expect(predicate).toBeDefined();
  const compiled=ts.transpileModule(declaration!.getText(source)+"\n"+predicate!.getText(source).replace(/^export\s+/,""),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
  const actual=new Function(compiled+";return policyEngineCacheConstructorOwner;")() as (path:string)=>boolean;
- const child=spawnSync("node",["--eval",`const fs=require("node:fs"),path=require("node:path").posix;
+ const child=spawnSync(registeredToolExecutableV1("node"),["--eval",`const fs=require("node:fs"),path=require("node:path").posix;
  const data=JSON.parse(fs.readFileSync(0,"utf8")),actual=new Function(data.compiled+";return policyEngineCacheConstructorOwner;")();
  const rows=data.policy.cases.map(row=>{const normalized=row.path.split(String.fromCharCode(92)).join("/"),segments=normalized.split("/");const reference=!path.isAbsolute(normalized)&&!/^\\w:/.test(normalized)&&segments.every(part=>part!==""&&part!=="."&&part!=="..")&&data.policy.owners.some(owner=>{const relative=path.relative(owner,normalized);return relative===""||(!relative.startsWith("../")&&relative!==".."&&!path.isAbsolute(relative));});return {id:row.id,actual:actual(row.path),reference};});process.stdout.write(JSON.stringify(rows));`],{encoding:"utf8",input:JSON.stringify({compiled,policy:corpus.constructorPolicy})});
  expect(child.status,child.stderr).toBe(0);

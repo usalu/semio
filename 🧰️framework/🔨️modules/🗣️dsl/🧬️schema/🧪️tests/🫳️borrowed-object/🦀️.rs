@@ -1,8 +1,6 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
-use std::alloc::{GlobalAlloc, Layout};
 
-struct ObservedDslAllocator;
 std::thread_local! {
     static ALLOCATION_ENABLED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     static ALLOCATED_BYTES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -17,20 +15,13 @@ impl RequestObservation {
 fn record_allocation(bytes: usize,alignment:usize) {
     if ALLOCATION_ENABLED.try_with(|enabled| enabled.get()).unwrap_or(false) { let _ = ALLOCATED_BYTES.try_with(|count| count.set(count.get().saturating_add(bytes)));let _=REQUESTS.try_with(|requests|{let mut value=requests.get();value.push(bytes,alignment);requests.set(value);}); }
 }
-unsafe impl GlobalAlloc for ObservedDslAllocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 { record_allocation(layout.size(),layout.align()); unsafe { semio_framework_trace::HeapWitness.alloc(layout) } }
-    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 { record_allocation(layout.size(),layout.align()); unsafe { semio_framework_trace::HeapWitness.alloc_zeroed(layout) } }
-    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, size: usize) -> *mut u8 { record_allocation(size,layout.align()); unsafe { semio_framework_trace::HeapWitness.realloc(pointer, layout, size) } }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) { record_rejected_payload_deallocation(pointer); unsafe { semio_framework_trace::HeapWitness.dealloc(pointer, layout) } }
-}
-#[global_allocator]
-static DSL_TEST_ALLOCATOR: ObservedDslAllocator = ObservedDslAllocator;
+fn install_taps(){semio_framework_value_testing_allocator::install_allocation_tap(|layout|record_allocation(layout.size(),layout.align()),|pointer,_|record_rejected_payload_deallocation(pointer));}
 
 struct RestoreObservation { enabled:bool, bytes:usize, requests:RequestObservation }
 impl Drop for RestoreObservation {
  fn drop(&mut self){let measured=REQUESTS.with(std::cell::Cell::get);let mut parent=self.requests;if self.enabled{for(bytes,alignment)in measured.layouts[..measured.length].iter().copied(){parent.push(bytes,alignment);}parent.overflow|=measured.overflow;}REQUESTS.with(|requests|requests.set(parent));ALLOCATED_BYTES.with(|bytes|bytes.set(if self.enabled{self.bytes.saturating_add(measured.bytes)}else{self.bytes}));ALLOCATION_ENABLED.with(|enabled|enabled.set(self.enabled));}
 }
-fn observe_requests<T>(operation:impl FnOnce()->T)->(T,RequestObservation){let restore=RestoreObservation{enabled:ALLOCATION_ENABLED.with(std::cell::Cell::get),bytes:ALLOCATED_BYTES.with(std::cell::Cell::get),requests:REQUESTS.with(std::cell::Cell::get)};REQUESTS.with(|requests|requests.set(RequestObservation::EMPTY));ALLOCATED_BYTES.with(|bytes|bytes.set(0));ALLOCATION_ENABLED.with(|enabled|enabled.set(true));let output=operation();let requests=REQUESTS.with(std::cell::Cell::get);drop(restore);assert!(!requests.overflow,"allocator request observation overflow");(output,requests)}
+fn observe_requests<T>(operation:impl FnOnce()->T)->(T,RequestObservation){install_taps();let restore=RestoreObservation{enabled:ALLOCATION_ENABLED.with(std::cell::Cell::get),bytes:ALLOCATED_BYTES.with(std::cell::Cell::get),requests:REQUESTS.with(std::cell::Cell::get)};REQUESTS.with(|requests|requests.set(RequestObservation::EMPTY));ALLOCATED_BYTES.with(|bytes|bytes.set(0));ALLOCATION_ENABLED.with(|enabled|enabled.set(true));let output=operation();let requests=REQUESTS.with(std::cell::Cell::get);drop(restore);assert!(!requests.overflow,"allocator request observation overflow");(output,requests)}
 
 #[test]
 fn sqlite_snapshot_native_encoding_record_backing_matches_actual_allocator_requests(){
@@ -59,7 +50,7 @@ fn sqlite_snapshot_native_encoding_borrowed_object_occurrences_keep_payload_allo
     for _ in 0..depth { value = DslValue::Object(vec![("z".into(), DslValue::Bool(true)), ("a".into(), value)]); }
     let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "value", Shape::Value)]);
     let mut record = RecordValue::default(); record.fields.insert(1, FieldValue::Value(value));
-    ALLOCATED_BYTES.with(|count| count.set(0)); ALLOCATION_ENABLED.with(|enabled| enabled.set(true));
+    install_taps(); ALLOCATED_BYTES.with(|count| count.set(0)); ALLOCATION_ENABLED.with(|enabled| enabled.set(true));
     let text = print(&record, &spec, JoinMode::Document);
     ALLOCATION_ENABLED.with(|enabled| enabled.set(false));
     let allocated = ALLOCATED_BYTES.with(|count| count.get());
@@ -90,7 +81,7 @@ std::thread_local!{static REJECTED_PAYLOAD_DEALLOCATION:std::cell::Cell<Option<R
 struct RestoreRejectedPayloadObservation(Option<RejectedPayloadObservation>);
 impl Drop for RestoreRejectedPayloadObservation{fn drop(&mut self){REJECTED_PAYLOAD_DEALLOCATION.with(|cell|cell.set(self.0));}}
 fn observe_rejected_payload_deallocation<T>(leaf:usize,blocks:&mut[(usize,bool)],operation:impl FnOnce()->T)->(T,RejectedPayloadReclamation){
- let observation=RejectedPayloadObservation{leaf,leaf_seen:false,blocks:blocks.as_mut_ptr(),length:blocks.len(),reclaimed:RejectedPayloadReclamation::default()};let restore=RestoreRejectedPayloadObservation(REJECTED_PAYLOAD_DEALLOCATION.with(|cell|cell.replace(Some(observation))));let result=operation();let reclaimed=REJECTED_PAYLOAD_DEALLOCATION.with(std::cell::Cell::get).unwrap().reclaimed;drop(restore);(result,reclaimed)
+ install_taps();let observation=RejectedPayloadObservation{leaf,leaf_seen:false,blocks:blocks.as_mut_ptr(),length:blocks.len(),reclaimed:RejectedPayloadReclamation::default()};let restore=RestoreRejectedPayloadObservation(REJECTED_PAYLOAD_DEALLOCATION.with(|cell|cell.replace(Some(observation))));let result=operation();let reclaimed=REJECTED_PAYLOAD_DEALLOCATION.with(std::cell::Cell::get).unwrap().reclaimed;drop(restore);(result,reclaimed)
 }
 fn record_rejected_payload_deallocation(pointer:*mut u8){
  let _=REJECTED_PAYLOAD_DEALLOCATION.try_with(|cell|{if let Some(mut observation)=cell.get(){let address=pointer as usize;if address==observation.leaf{if !observation.leaf_seen{observation.leaf_seen=true;observation.reclaimed.leaves+=1;}}let blocks=unsafe{std::slice::from_raw_parts_mut(observation.blocks,observation.length)};if let Some((_,seen))=blocks.iter_mut().find(|(block,_)|*block==address){if !*seen{*seen=true;observation.reclaimed.blocks+=1;}}cell.set(Some(observation));}});

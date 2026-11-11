@@ -7,6 +7,7 @@ use semio_plugin_decl_views::{ArtifactView, ConfigView, InteractionView};
 use semio_plugin_window_transient::window_transient::TransientView;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework::kernel::Effect;
+use semio_plugin_instance_extension::InstanceExtension;
 use semio_framework::{Fault, FaultFrom, ViewModel};
 use semio_ui_contract::*;
 use semio_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};

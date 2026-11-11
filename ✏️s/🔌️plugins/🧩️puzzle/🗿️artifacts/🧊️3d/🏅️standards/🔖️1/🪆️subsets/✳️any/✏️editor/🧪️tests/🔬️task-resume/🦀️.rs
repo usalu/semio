@@ -13,9 +13,6 @@ type Puzzle3dMounted = VcsArtifactApp<Puzzle3d>;
 
 const POLICY: MountedOwnerPolicyV1 = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
 
-/// 🔬️ Heap-observing fixture laws (`take_fixture_result_page`) need the counting allocator installed in the test binary.
-#[global_allocator]
-static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 /// 🪟️ The puzzle3d window commands require the host's per-window view state, exactly as the browser host supplies it.
 fn window_view() -> semio_plugin::ViewModel {

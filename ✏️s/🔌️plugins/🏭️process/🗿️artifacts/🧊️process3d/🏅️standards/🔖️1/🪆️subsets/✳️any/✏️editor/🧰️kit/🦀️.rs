@@ -1,7 +1,7 @@
 //! 🧰️ Process3d editor kit: identifiers, the dispatch context, ui-value plumbing, the io ports and the installed machine
 //! catalogs every command, mode and panel builds on.
 
-extern crate semio_framework_os_kernel as store;
+extern crate semio_os_kernel as store;
 
 //#region 🧩️Modules
 #[path = "."]
@@ -263,7 +263,7 @@ pub fn process_json_envelope_is_bounded(input: &str) -> bool {
 // 🚫️async: E1 pure — bounded JSON decode into operation-owned values, zero suspension points.
 // `TopicContribution::decode` itself is still `fn` in
 // `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` (out of this packet's path_scope); bridged via
-// `semio_framework_os_kernel::io::resolve_ready` (see `imperative_extension_sdk`'s identical bridge and this
+// `semio_os_kernel::io::resolve_ready` (see `imperative_extension_sdk`'s identical bridge and this
 // packet's lease-request for the SDK owner to revert `decode` to sync directly).
 /// 🧩️ Distils a host pack down to what THIS app can install: the `process.machines` entries
 /// addressed to it, in host order, while the re-encoded roster still fits `maximum_bytes`.

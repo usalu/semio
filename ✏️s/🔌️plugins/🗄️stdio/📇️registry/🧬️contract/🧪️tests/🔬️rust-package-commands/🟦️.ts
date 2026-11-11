@@ -1,7 +1,7 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
-import { runAdmittedExactCargoLawsV1 } from "@semio-tech/framework/process/cargo-test";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 
 /** 🏃️ Runs the `OriginalOwnershipScript` command under the caller's roots and invocation. */
 export async function runOriginalOwnershipScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments:string[]): Promise<void> {

@@ -1,12 +1,12 @@
-import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
-import { BundleScript } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
+import { runArtifactRustTests } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
-import { runBudgetedTestCommand } from "@semio-tech/framework/process/test-execution";
-import { resolveTypescriptCompilerV1 } from "@semio-tech/framework/process/execution";
+import { scriptInvocationBudget } from "@semio-tech/process/routing";
+import { runBudgetedTestCommand } from "@semio-tech/process/test-execution";
+import { resolveTypescriptCompilerV1 } from "@semio-tech/process/execution";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
 const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🦀️rust");
@@ -49,7 +49,7 @@ testSemioGeometryContract();
 const stdioSchemaRoot = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets");
 runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${stdioSchemaRoot}/✉️base/🧬️schema/🧮️geometry/🟦️.ts`, ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts"].map((file) => `${stdioSchemaRoot}/📦️object/🧬️schema/${file}`), ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${stdioSchemaRoot}/🧰️kit/🧬️schema/${file}`)], { cwd: this.repoRoot });
 if (segments[1] === "native") {
-const { runCargo } = await import("@semio-tech/framework/process/execution");
+const { runCargo } = await import("@semio-tech/process/execution");
 for (const [crate, filter] of [["semio-s-artifact-stdio-semio-base", "stdio_document_contract"], ["semio-s-artifact-stdio-semio-object", ""], ["semio-s-artifact-stdio-semio-kit", ""]] as const) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", crate, "--lib", ...(filter ? [filter] : []), "--", "--nocapture"], this.repoRoot);
 }
 return;

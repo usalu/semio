@@ -66,7 +66,7 @@ impl PluginArtifactChannel {
         let roster_bytes = semio_framework_pack_json::to_json_string(&roster).into_bytes();
         let policy=self.operation_policy;
         let reserve=policy.cleanup;
-        let caps=self.host_driver_policy.operation_caps(semio_plugin_host::GuestRelayOperationReserve{retained:reserve.retained,work_fuel:reserve.work_fuel,execution_fuel:reserve.execution_fuel,maximum_microseconds:reserve.maximum_microseconds},semio_plugin_host::GuestRelayOperationTransit{retained:policy.transit.retained,work_fuel:policy.transit.work_fuel},semio_plugin_host::GuestRelayOperationInfrastructure{retained:policy.infrastructure.retained,work_fuel:policy.infrastructure.work_fuel,maximum_cleanup_microseconds:policy.infrastructure.maximum_cleanup_microseconds});
+        let caps=semio_plugin_host::GuestRelayOperationCaps::project(self.host_driver_policy,semio_plugin_host::GuestRelayOperationReserve{retained:reserve.retained,work_fuel:reserve.work_fuel,execution_fuel:reserve.execution_fuel,maximum_microseconds:reserve.maximum_microseconds},semio_plugin_host::GuestRelayOperationTransit{retained:policy.transit.retained,work_fuel:policy.transit.work_fuel},semio_plugin_host::GuestRelayOperationInfrastructure{retained:policy.infrastructure.retained,work_fuel:policy.infrastructure.work_fuel,maximum_cleanup_microseconds:policy.infrastructure.maximum_cleanup_microseconds});
         let requested=semio_plugin_host::GuestRelayOperationRequest{work_units:command.work_units,maximum_elapsed_microseconds:command.maximum_elapsed_milliseconds.saturating_mul(1000),retained:command.retained_policy};
         let request_bytes=semio_framework_pack_json::to_json_string(&request).into_bytes();
         let cancel=command.cancel.0.clone();

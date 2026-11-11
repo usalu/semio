@@ -50,6 +50,3 @@ pub use command_decode_error_and_retirement::{
 };
 use command_decode_error_and_retirement::operation_envelope_serde;
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

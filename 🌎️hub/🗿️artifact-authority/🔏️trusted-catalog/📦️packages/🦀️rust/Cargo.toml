@@ -34,7 +34,7 @@ semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 futures = "0.3"
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-hub-stdio-catalog = { workspace = true }
 semio-plugin-host = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-plugin-guest-contract = { workspace = true }

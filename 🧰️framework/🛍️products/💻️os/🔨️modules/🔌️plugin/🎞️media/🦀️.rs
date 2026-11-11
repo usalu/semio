@@ -124,7 +124,7 @@ impl ActiveMediaExport {
         if let Some(owner)=self.parts_retirement.as_mut(){
             if owner.terminal_is_empty(){drop(self.parts_retirement.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
             let demand=owner.selected_demand(grant.maximum_copy_bytes)?;
-            return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|_,effect|Ok((PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.step(grant.maximum_copy_bytes,effect))?.progress()),false)));
+            return semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|crate::poll_step(owner.step(grant.maximum_copy_bytes,effect)))?;Ok((PluginLifecycleStep::Progress(step.progress()),false))});
         }
         if self.parts.is_some(){
             let demand=RetirementDemand{copy_bytes:size_of::<MediaExportOwnedParts>(),depth:1,..Default::default()};

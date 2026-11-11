@@ -25,7 +25,7 @@ path = "../../🦀️.rs"
 canvas = { path = "../../../../🖼️canvas/📦️packages/🦀️rust", package = "semio-framework-canvas" }
 ui_styling = { path = "../../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 serde_json = "1.0.140"
-semio-framework-pixels = { path = "../../../../🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+semio-framework-pixels = { path = "../../../../🔲️pixels/📦️packages/🦀️rust" }
 tiled_map_model = { path = "../../🧮️model/📦️packages/🦀️rust", package = "semio-framework-surface-tiled-map-model" }
 tiled_map_mvt = { path = "../../🧱️vector-tiles/📦️mvt-decoder/📦️packages/🦀️rust", package = "semio-framework-surface-tiled-map-mvt" }
 

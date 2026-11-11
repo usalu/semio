@@ -25,6 +25,6 @@ path = "../../🦀️.rs"
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-semio-framework-pixels = { path = "../../../../🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+semio-framework-pixels = { path = "../../../../🔲️pixels/📦️packages/🦀️rust" }
 
 [dev-dependencies]

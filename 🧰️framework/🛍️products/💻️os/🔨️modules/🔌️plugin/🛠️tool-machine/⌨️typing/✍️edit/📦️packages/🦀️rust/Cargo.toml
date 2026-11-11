@@ -27,3 +27,4 @@ semio-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/�
 semio-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-tool-run = { path = "../../../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-plugin-tool-machine = { path = "../../../../../🛠️tool-machine/📦️packages/🦀️rust" }
+semio-plugin-job-receiving = { path = "../../../../../👷️job/🛬️receiving/📦️packages/🦀️rust" }

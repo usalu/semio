@@ -1,6 +1,6 @@
 /** ♻️ Identifies the complete authored graph implementation, its policy authority and its dependency resolution authority. */
-import {createRequire} from "node:module";
-const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
+import managersV1 from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
+const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
 import { buildModesV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { createHash } from "node:crypto";
 import { lstatSync } from "node:fs";

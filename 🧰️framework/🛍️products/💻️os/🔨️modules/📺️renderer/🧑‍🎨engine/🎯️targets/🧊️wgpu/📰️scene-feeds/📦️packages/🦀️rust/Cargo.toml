@@ -27,7 +27,7 @@ semio-renderer-wgpu-engine-board = { path = "../../../🎲️engine-board/📦�
 semio-renderer-wgpu-host-base = { path = "../../../🏛️host-base/📦️packages/🦀️rust" }
 semio-renderer-wgpu-scene-canvas2d = { path = "../../../🎨️scene-canvas2d/📦️packages/🦀️rust" }
 semio-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-surface = { path = "../../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

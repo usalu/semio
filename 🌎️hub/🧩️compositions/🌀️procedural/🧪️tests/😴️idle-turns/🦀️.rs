@@ -14,9 +14,6 @@ use semio_os_kernel as store;
 use semio_plugin::kernel::{ActorInstanceLifecycleAck, ActorInstanceLifecycleReceipt, ActorInstanceOpenRequest, AppInstanceId, Budget, Event, TurnStatus};
 use semio_plugin::plugin_runtime::{install_plugin_bundle_result, plugin_document_text, plugin_render, PluginRuntime};
 
-/// 🧮️ Weighs every allocation the idle turns make, so the growth law reads bytes rather than pages.
-#[global_allocator]
-static IDLE_TURN_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 type ProceduralRuntime = PluginRuntime<semio_hub_procedural::ProceduralApps>;
 

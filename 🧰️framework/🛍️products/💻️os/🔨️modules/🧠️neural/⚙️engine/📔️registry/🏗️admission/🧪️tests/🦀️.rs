@@ -3,8 +3,6 @@ use neural_engine::{Registry,Schema,SharedRegistryIssuer,RegistryRetirement,Regi
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation,OriginalTurnFailure};
 use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as Progress,RetirementDemand};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}
 fn clock()->Option<u64>{Some(1000)}
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap()}

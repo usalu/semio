@@ -1,6 +1,7 @@
 use super::*;
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,OriginalTurnFailure,StepContext,default_now_us,OriginalConstructionDemand,close_original_retained_step};
-use crate::admission::{admit_original_construction_settled,tests::admitted_decoder};
+use semio_framework_job::admit_original_construction_settled;
+use crate::admission::tests::admitted_decoder;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 const TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:128};
 fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(20751),Generation(52),RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<29,maximum_release_bytes:1<<29,maximum_depth:128},default_now_us,u64::MAX,1<<30)}

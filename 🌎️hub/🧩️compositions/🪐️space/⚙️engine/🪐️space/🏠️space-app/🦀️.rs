@@ -142,7 +142,7 @@ impl semio_framework::ToolJobFactory for SpaceCommandJobFactory {
         space_bounded_contract()
     }
 
-    semio_framework_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: SPACE_BOUNDED_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin_retained_command::retained_command_factory_admission!(maximum_raw_bytes: SPACE_BOUNDED_RAW_BYTES, checkpoint_resume: false);
 
 }
 

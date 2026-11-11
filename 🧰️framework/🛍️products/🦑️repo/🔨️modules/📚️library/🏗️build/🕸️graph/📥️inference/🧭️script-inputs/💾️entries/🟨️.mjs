@@ -5,6 +5,7 @@ import{readFileSync}from"node:fs";
 import{join}from"node:path";
 import{createBoundedCacheV1}from"../../../../🧊️bounded/🟨️.mjs";
 import{INFERENCE_LIMITS_V1}from"../../🧬️schema/🟨️.mjs";
+import{shareObservationRowsV1}from"../../../../👁️observation/🟨️.mjs";
 
 const sha=text=>createHash("sha256").update(text).digest("hex"),EXTENSION=".json.br",MAXIMUM_RECORD_BYTES=268435456;
 
@@ -14,10 +15,10 @@ const sha=text=>createHash("sha256").update(text).digest("hex"),EXTENSION=".json
  */
 export function createClosureStoreV1({directory,limits=INFERENCE_LIMITS_V1,readOnly=false}){
  const entries=join(directory,"e"),layers=join(directory,"l"),entryPath=id=>join(entries,sha(id)+EXTENSION),layerPath=digest=>join(layers,digest+EXTENSION);
- const loaded=createBoundedCacheV1({name:"inference:closure-layers:"+directory,maxEntries:65536,maxBytes:limits.closureLayerCacheBytes,sizeOf:layer=>64+4*layer.bytes}),written=createBoundedCacheV1({maxEntries:65536,maxBytes:65536});
+ const loaded=createBoundedCacheV1({name:"inference:closure-layers:"+directory,maxEntries:65536,maxBytes:limits.closureLayerCacheBytes,sizeOf:layer=>64+limits.closureLayerRowBytes*layer.rows.length}),written=createBoundedCacheV1({maxEntries:65536,maxBytes:65536});
  const pack=text=>brotliCompressSync(Buffer.from(text,"utf8"),{params:{[constants.BROTLI_PARAM_QUALITY]:limits.closureStoreCompressionQuality}}),unpack=bytes=>brotliDecompressSync(bytes,{maxOutputLength:MAXIMUM_RECORD_BYTES}).toString("utf8");
  const place=async(path,text)=>{const temporary=path+"."+process.pid+"."+Math.random().toString(36).slice(2)+".tmp";await writeFile(temporary,pack(text));await rename(temporary,path);};
- let pruned;const images=new WeakMap();
+ let pruned;const images=new WeakMap(),questions=new Map(),intern=text=>{const known=questions.get(text);if(known!==undefined)return known;questions.set(text,text);return text;};
  const sweep=async(directoryPath,maximum)=>{
   const names=(await readdir(directoryPath).catch(()=>[])).filter(name=>name.endsWith(EXTENSION));
   if(names.length<=maximum)return;
@@ -26,7 +27,7 @@ export function createClosureStoreV1({directory,limits=INFERENCE_LIMITS_V1,readO
  };
  const layerSync=digest=>{
   const known=loaded.get(digest);if(known)return known.rows;
-  try{const text=unpack(readFileSync(layerPath(digest))),rows=JSON.parse(text);if(!Array.isArray(rows)||sha(text)!==digest)return undefined;loaded.set(digest,{rows,bytes:text.length});return rows;}catch{return undefined;}
+  try{const text=unpack(readFileSync(layerPath(digest))),rows=JSON.parse(text);if(!Array.isArray(rows)||sha(text)!==digest)return undefined;shareObservationRowsV1(rows);loaded.set(digest,{rows,bytes:text.length});return rows;}catch{return undefined;}
  };
  const layerPresent=async digest=>written.has(digest)||loaded.has(digest)||await stat(layerPath(digest)).then(()=>true,()=>false);
  const keep=async(digest,text)=>{
@@ -58,7 +59,7 @@ export function createClosureStoreV1({directory,limits=INFERENCE_LIMITS_V1,readO
     if(record?.version!==1||record.id!==id||!Array.isArray(record.rows)||!Array.isArray(record.layers))return undefined;
     const found=await Promise.all(record.layers.map(layerPresent));
     if(found.includes(false)||sha(JSON.stringify(record.rows)+record.layers.join(","))!==record.digest)return undefined;
-    return{recipe:record.recipe,value:record.value,rows:record.rows,digests:record.layers,sidecar:record.sidecar??null,bytes:text.length+8*record.layers.length};
+    return{recipe:record.recipe,value:record.value,rows:shareObservationRowsV1(record.rows),digests:record.layers,sidecar:record.sidecar?{...record.sidecar,members:record.sidecar.members?.map(walks=>walks&&walks.map(intern))}:null,bytes:text.length+8*record.layers.length};
    }catch{return undefined;}
   },
   /** 🧱️ The shared row layers named by `digests`, read through the bounded layer cache and held by nobody else; undefined while one is missing or damaged. */

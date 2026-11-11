@@ -10,8 +10,6 @@ fn fixture() -> serde_json::Value {
     fixture
 }
 
-#[global_allocator]
-static ORIGINAL_CONTEXT_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 /// 🎟️ The grant every window-tick transition of a direct session law runs under: no axis the preview owner needs is short.
 fn tick_grant() -> semio_framework_value::RetainedCloneGrant {

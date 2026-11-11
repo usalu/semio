@@ -269,7 +269,7 @@ impl ArtifactEditor for Mp3Editor {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)?;
         registry.register(crate::standards::mpeg1_layer3::subsets::any::io::playback::Mp3MediaExportJobFactory::<EditorApp<Self>>::new(registry.controller_id()))
     }
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) {
             return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);

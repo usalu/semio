@@ -1,6 +1,5 @@
 use semio_framework_value::{ValueError as MediaValueError, ValueRefusalKind as MediaRefusal, NativeEncodeControl as MediaNative, RetainedAllocationEffect as MediaEffect, RetainedWorkOutcome as MediaOutcome};
 use semio_framework_value::retained_clone::{RetainedCloneGrant as MediaGrant, RetainedCloneProgress as MediaProgress};
-use semio_framework_value::retirement::{RetireOwned as MediaRetireOwned, controlled::ControlledRetirement as MediaControlled};
 use semio_os_kernel::io::control::{NativeSnapshotBodyWallet as MediaWallet, NativeSnapshotEffectProgress as MediaMarker, NativeSnapshotFailure as MediaFailure, NativeSnapshotWork as MediaWork, NativeSnapshotEncodeOwner as MediaOwner, native_snapshot_turn as media_turn};
 use store::os_pack::record::BorrowedProjectedPackCursor as MediaPackCursor;
 

@@ -2,7 +2,7 @@ use semio_plugin_job::original_emission::OriginalEmissionInput;
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{contract_app_raw,meta,TestApp};
 use semio_plugin_decl_emission::Emit;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_decl_app::tool_contract::TypedOperationResultLane;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::{TestMutation,set_count::SetCount};
 use semio_plugin_operation::ArtifactDocumentAuthority;

@@ -26,7 +26,7 @@ doctest = false
 axum = { version = "0.8", features = ["ws"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-slots = { workspace = true }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-os-mcp-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }

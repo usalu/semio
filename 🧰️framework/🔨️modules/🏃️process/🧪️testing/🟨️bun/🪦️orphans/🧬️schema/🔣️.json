@@ -36,10 +36,11 @@
     "Corpus": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "ceilings", "orphans"],
+      "required": ["version", "ceilings", "orphans", "parentExit"],
       "properties": {
         "version": { "const": 1 },
         "ceilings": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["environment", "ceiling"], "properties": { "environment": { "type": "object", "additionalProperties": { "type": "string" } }, "ceiling": { "type": "integer", "minimum": 256 } } } },
+        "parentExit": { "type": "object", "additionalProperties": false, "required": ["dieMilliseconds", "endsWithinMilliseconds", "survivesMilliseconds"], "properties": { "dieMilliseconds": { "type": "integer", "minimum": 100 }, "endsWithinMilliseconds": { "type": "integer", "minimum": 1000 }, "survivesMilliseconds": { "type": "integer", "minimum": 500 } } },
         "orphans": { "type": "object", "additionalProperties": false, "required": ["opened", "processes"], "properties": { "opened": { "type": "integer", "minimum": 50, "maximum": 2000 }, "processes": { "type": "integer", "minimum": 1, "maximum": 8 } } }
       }
     }

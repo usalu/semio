@@ -1,7 +1,4 @@
 //! 🧮️ Controlled native EXPRESS evaluator and the structural population validation over the canonical program.
-#[cfg(test)]
-#[global_allocator]
-static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 pub use semio_s_artifact_stdio_ifc4x3_express::{ast, ifc4x3_express_program, metadata, IFC4X3_NATIVE_EXPRESS_EXECUTION, IFC4X3_NATIVE_EXPRESS_IMPLEMENTATION, IFC4X3_RETAINED_EXPRESS_IMPLEMENTATION, IFC4X3_RETAINED_EXPRESS_RECEIVING_IMPLEMENTATION};
 #[path = "../evaluator.rs"]

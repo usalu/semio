@@ -1,0 +1,9 @@
+{
+ "host": {"totalMegabytes": 16384, "availableMegabytes": 7000, "cores": 10},
+ "learnedPlanRatioBasisPoints": 50000,
+ "learnedPlanRuns": 4,
+ "runs": [
+  {"name": "cargo-ignores-the-planning-floor-of-graph-runs-and-runs-with-the-jobs-that-fit", "args": ["cargo", "--parallelism=8", "--", "check", "-p", "x"], "jobsAtLeast": 1, "jobsBelow": 8},
+  {"name": "cargo-with-one-job-asked-runs-with-one-job", "args": ["cargo", "--parallelism=1", "--", "check", "-p", "x"], "jobsAtLeast": 1, "jobsBelow": 2}
+ ]
+}

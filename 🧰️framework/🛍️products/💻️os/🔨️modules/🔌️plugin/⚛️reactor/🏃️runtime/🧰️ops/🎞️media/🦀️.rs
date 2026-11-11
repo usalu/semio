@@ -11,17 +11,37 @@ use semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
 use serde_json::Value;
 use crate::ops_wire_limits::{find_instance, runtime_instance_cell};
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
-use semio_plugin_runtime_instances::inst_wire_frames::with_instances_mut;
+use semio_plugin_runtime_instances::inst_wire_frames::{with_instances_mut, with_instances_original_mut};
+/// 🎞️ Answers how one media import settled: applied at once, a stepped archive load pending for the host to poll, still pending until the next funded turn (app consumption or archive admission), or refused.
+pub enum MediaImport{Applied,Loading(protocol::DocumentArchiveLoadStatus),Pending,Refused(Fault)}
 /// 🎞️ WIT `consume-media` glue — decodes the incoming `media-artifact` (`descriptor-json` + `data`)
-/// and dispatches to `PluginApp::consume_media`. A whole document answers its archive so the caller admits it as a stepped
-/// archive load (`📓️api-stepped-document-load.md` §4) through its resident admission; an applied import answers `Applied`.
-pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, descriptor: MediaArtifactDescriptor, data: Vec<u8>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaConsumption, Fault> {
-    let artifact = MediaArtifact { descriptor, data };
-    with_instances_mut(runtime, |list| {
+/// and dispatches to `PluginApp::consume_media`. A whole document parks in the owner's resident `archive` and is admitted as a stepped archive load
+/// under `operation` through the owner's resident `admission` (the host sequence of the import, `📓️api-stepped-document-load.md` §4); re-entry with a parked archive resumes its admission.
+pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, port_id: &str, descriptor: &MediaArtifactDescriptor, data: &mut Vec<u8>, archive: &mut Option<protocol::DocumentArchivePack>, admission: &mut semio_plugin_document_media::OriginalDocumentArchiveAdmission, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaImport, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    if archive.is_none() {
+        let mut artifact = Some(MediaArtifact { descriptor: descriptor.clone(), data: std::mem::take(data) });
+        let consumed = with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            Ok(::semio_framework_async::poll::resolve_ready(instance.app.consume_media(port_id, &mut artifact, cx)))
+        })
+        .await;
+        if let Some(unconsumed) = artifact { *data = unconsumed.data; }
+        match consumed {
+            Err(fault) => return Ok(MediaImport::Refused(fault)),
+            Ok(Ok(Some(MediaConsumption::Applied))) => return Ok(MediaImport::Applied),
+            Ok(Ok(Some(MediaConsumption::DocumentLoad(pack)))) => *archive = Some(pack),
+            Ok(Ok(None)) => return Ok(MediaImport::Pending),
+            Ok(Err(semio_plugin_decl_app::MediaArtifactOperationFailure::Domain(error))) => return Ok(MediaImport::Refused(semio_plugin_decl_app::media_artifact_fault(error))),
+            Ok(Err(semio_plugin_decl_app::MediaArtifactOperationFailure::Original(failure))) => return Err(failure.into()),
+        }
+    }
+    let pack = archive.as_mut().expect("parked media archive is resident");
+    let admitted = with_instances_original_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        ::semio_framework_async::poll::resolve_ready(instance.app.consume_media(port_id, artifact, cx)).map_err(semio_plugin_decl_app::media_artifact_fault)
+        Ok(instance.app.begin_document_archive_load(operation, pack, admission, cx)?)
     })
-    .await
+    .await?;
+    Ok(if admitted { MediaImport::Loading(protocol::DocumentArchiveLoadStatus { operation, state: protocol::DocumentArchiveLoadState::Pending, completed: 0, total: 0, ahead: 0, fault: Vec::new() }) } else { MediaImport::Pending })
 }
 /// 🎬️ Interactive workflow entry: submits without waiting for the exporter to finish.
 pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, expected_parent_document_id: &str, expected_base_revision: u64,checkpoint_id:Option<&str>,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {

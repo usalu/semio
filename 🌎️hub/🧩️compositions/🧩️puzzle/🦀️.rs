@@ -72,6 +72,3 @@ mod surface_tests;
 //#endregion 🔖️SurfaceTests
 
 
-#[cfg(test)]
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

@@ -5,8 +5,6 @@ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant as Gr
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceTake};
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalTurnFailure,OperationId,Generation};
-#[global_allocator]
-static ORIGINAL_WIRE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap()}
 fn stock()->Grant{Grant{maximum_items:100000,maximum_copy_bytes:1000000,maximum_capacity_bytes:4000000,maximum_release_bytes:4000000,maximum_depth:128}}

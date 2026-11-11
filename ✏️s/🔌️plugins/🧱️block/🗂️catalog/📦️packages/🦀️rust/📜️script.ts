@@ -1,6 +1,6 @@
 #!/usr/bin/env repo
 /** 🗂️ Runs Block catalog native and portable ownership laws. */
-import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter, receiveScriptProcessInvocation, runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
 /** 🚪️ `conformance` — runs the program of this script. */
 class ConformanceScript extends BundleScript {

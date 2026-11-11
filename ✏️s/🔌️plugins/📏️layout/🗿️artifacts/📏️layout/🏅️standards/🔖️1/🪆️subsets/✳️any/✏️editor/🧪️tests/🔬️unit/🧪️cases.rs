@@ -573,7 +573,7 @@ async fn export_media_document_out_round_trips_through_pack() {
 async fn import_media_fields_in_sets_typed_dictionary() {
     let mut app = layout_app().await;
     let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Intrinsic { schema: "form.dictionary".into(), value: semio_framework_value::DslValue::Object(vec![("name".into(),semio_framework_value::DslValue::String("Ada".into()))]) } };
-    app.0.import_media("fields:in", media, &artifact_app_laws::meta("local"), app.1.cx()).await.expect("import fields:in");
+    semio_plugin::artifact_app_laws::import_media(&mut app.0, "fields:in", media, &artifact_app_laws::meta("local"), app.1.cx()).await.expect("import fields:in");
     let document = app.snapshot().expect("projection");
     assert_eq!(document.data_fields,Some(semio_framework_value_dictionary::QuestionDictionary{entries:vec![semio_framework_value_dictionary::QuestionDictionaryEntry{question_id:"name".into(),value:semio_framework_value::DslValue::String("Ada".into())}]}));
 }

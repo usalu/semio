@@ -1,7 +1,5 @@
 //! 🧪️ Actor seeds admit the exact original UTF8 and shared header under real caller credits, matching Serde string wire.
 use super::*;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
 use semio_framework_value::{RetainedCloneStep,retirement::controlled::ControlledRetirement};
 #[test]

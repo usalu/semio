@@ -1,7 +1,7 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { runCmd } from "@semio-tech/framework/process/execution";
+import { runCmd } from "@semio-tech/process/execution";
 import plan from "../🧫️fixtures/🏃️package-runner/🔣️.json" with { type: "json" };
 import { testNormDocumentContractOracle } from "../🪪️document-contract/🟦️.ts";
 import { deleteEntitiesFailuresV1 } from "../🗑️delete-entities/🟦️.ts";

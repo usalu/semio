@@ -1,4 +1,4 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { resolve } from "node:path";
 
 const variant = (value: string): string => ({ config: "WindowConfig", transient: "WindowTransient" })[value] ?? value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");

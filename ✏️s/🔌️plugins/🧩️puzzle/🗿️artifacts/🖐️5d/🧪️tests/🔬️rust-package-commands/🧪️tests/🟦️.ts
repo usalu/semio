@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import fixture from "../🧫️fixtures/🔣️.json";
 
 const calls: unknown[][] = [];
-mock.module("@semio-tech/framework/process/cargo-test", () => ({
+mock.module("@semio-tech/process/cargo-test", () => ({
   runArtifactRustPackagesTests: async (...args: unknown[]) => { calls.push(args); },
 }));
 const { runOwnedVerifyScript } = await import("../🟦️.ts");

@@ -1,24 +1,24 @@
 /** 🧬️ `Iso16757Artifact` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { type NormJson, normWireJson, normWireMap, normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
 
 export interface Iso16757Artifact {
-  /** 🗃️ @state artifact */
+  /** @state artifact */
   catalogue: { [key: string]: NormJson };
-  /** 🗺️ @state artifact */
+  /** @state artifact */
   dictionary: { [key: string]: NormJson };
-  /** 🧊️ @state artifact */
+  /** @state artifact */
   geometry: { [key: string]: NormJson };
-  /** 👉️ @state artifact */
+  /** @state artifact */
   selection: { [key: string]: NormJson };
-  /** 🧩️ @state artifact */
+  /** @state artifact */
   partNumberRule: { [key: string]: NormJson };
-  /** 🔩️ @state artifact */
+  /** @state artifact */
   partNumberInputs: { [key: string]: string };
-  /** ↔️ @state artifact */
+  /** @state artifact */
   scriptLimits: { [key: string]: NormJson };
-  /** 🔁️ @state artifact */
+  /** @state artifact */
   exchangeProcess: { [key: string]: NormJson };
 }
 

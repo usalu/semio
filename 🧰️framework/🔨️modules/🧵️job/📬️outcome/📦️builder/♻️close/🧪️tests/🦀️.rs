@@ -1,8 +1,6 @@
 //! ♻️ Genuine normal-library context owns staged backing and separate paid header closure.
 use semio_framework_job_payload::*;
 use semio_framework_trace::{OperationId,Generation};
-#[global_allocator]
-static CLOSE_HEAP:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
 fn stock(row:&serde_json::Value)->RetainedCloneGrant{let p=&row["stock"];RetainedCloneGrant{maximum_items:p["items"].as_u64().unwrap()as usize,maximum_copy_bytes:p["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["depth"].as_u64().unwrap()as usize}}
 #[test]
 fn genuine_original_builder_close_retains_staged_page_until_paid_then_separate_header_clear(){

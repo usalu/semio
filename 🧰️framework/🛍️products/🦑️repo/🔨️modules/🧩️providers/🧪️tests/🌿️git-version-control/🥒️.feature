@@ -28,6 +28,14 @@ Feature: The version control provider says exactly what git says
     When two new files are written and everything is staged
     Then every implementation projects an empty staged list before staging and both paths after it
 
+  @id-staging-lists-an-emoji-path-verbatim
+  @level-long
+  @mode-differential
+  Scenario: Staging a file under an emoji folder lists its path verbatim
+    Given a throwaway repository initialised on main with one commit
+    When a file under a folder named with an emoji is written and staged
+    Then every implementation projects exactly that path as the only staged entry, unquoted
+
   @id-a-checkpoint-commits-and-advances-head
   @level-long
   @mode-differential

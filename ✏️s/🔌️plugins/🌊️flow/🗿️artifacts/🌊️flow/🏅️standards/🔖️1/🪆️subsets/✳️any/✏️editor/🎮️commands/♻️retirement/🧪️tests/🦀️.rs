@@ -131,8 +131,6 @@ use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::*;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
 
-#[global_allocator]
-static ORIGINAL_COMMAND_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 fn observe<T>(work:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(work);(value,heap.requested_bytes,heap.released_bytes)}
 

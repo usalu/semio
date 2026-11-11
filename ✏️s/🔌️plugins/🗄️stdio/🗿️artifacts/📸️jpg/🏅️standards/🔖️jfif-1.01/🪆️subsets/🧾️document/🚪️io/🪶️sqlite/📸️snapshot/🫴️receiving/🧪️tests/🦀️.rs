@@ -8,8 +8,6 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::sync::atomic::{AtomicBool,Ordering};
-#[global_allocator]
-static ORIGINAL_JPEG_ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn contract()->serde_json::Value{serde_json::from_str(fixture_text!("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{serde_json::from_value(contract()["originalGrant"].clone()).unwrap()}
 fn bytes(value:&serde_json::Value)->Vec<u8>{value.as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect()}

@@ -29,9 +29,10 @@ use protocol::HybridLogicalTimestamp;
 pub struct ToolRunPublicationIngress{pub actor_pending:ActorCapture,pub actor:Option<ControlledRetirement<SharedUtf8>>,pub transaction:ManuallyDrop<Option<protocol::TransactionRef>>,transaction_close:Option<ControlledRetirement<protocol::TransactionRef>>}
 impl Default for ToolRunPublicationIngress{fn default()->Self{Self{actor_pending:ActorCapture::new(),actor:None,transaction:ManuallyDrop::new(None),transaction_close:None}}}
 fn original_control_demand<T:RetireOwned>(owner:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>(),depth:1,..Default::default()});}Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun ingress child depth overflow"))?;demand})}
-fn close_original_control<T:RetireOwned>(slot:&mut Option<ControlledRetirement<T>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
- let owner=slot.as_mut().unwrap();if owner.terminal_is_empty(){drop(slot.take());semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
- semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.step(4096,effect)).map(|step|RetainedCloneStep::Progress(step.progress()))
+fn close_original_control<T:RetireOwned>(slot:&mut Option<ControlledRetirement<T>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+ let owner=slot.as_mut().unwrap();if owner.terminal_is_empty(){drop(slot.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+ let body=effect.grant().maximum_copy_bytes;
+ Ok(RetainedCloneStep::Progress(semio_framework_value::RetirementPollExit::resume(owner.step(body,effect))?.progress()))
 }
 
 impl ToolRunPublicationIngress{
@@ -52,15 +53,15 @@ impl ToolRunPublicationIngress{
   if self.transaction.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<protocol::TransactionRef>>()+size_of::<Option<ControlledRetirement<protocol::TransactionRef>>>(),depth:1,..Default::default()});}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{
   let grant=effect.grant();
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  let demand=self.close_demands(grant.maximum_copy_bytes)?;if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.actor_pending.terminal_is_empty(){let pending=&mut self.actor_pending;return semio_plugin_ownership::bounded_ownership::plugin_grant_step(effect,|grant|pending.close_step(grant))}
+  if !tool_grant_funds(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if !self.actor_pending.terminal_is_empty(){let turn=self.actor_pending.close_step(grant);semio_framework_value::RetirementPollExit::pay(effect,turn.work)?;return Ok(turn.result?)}
   if self.actor.is_some(){return close_original_control(&mut self.actor,effect)}
   if self.transaction_close.is_some(){return close_original_control(&mut self.transaction_close,effect)}
   self.transaction_close=Some(ControlledRetirement::retain(self.transaction.take().unwrap()));
-  semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+  Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
 
 }

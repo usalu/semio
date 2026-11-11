@@ -26,7 +26,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-io-schema = { path = "../../../../../../../../🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }

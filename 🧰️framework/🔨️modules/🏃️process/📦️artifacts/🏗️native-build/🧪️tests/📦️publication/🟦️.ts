@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -17,7 +18,7 @@ export async function testCargoArtifactPublication(output: string): Promise<void
     writeFileSync(join(root, ".cargo/config.toml"), '[build]\ntarget-dir="shared-output"\nbuild-dir="build-cache"\n');
     writeFileSync(join(root, "Cargo.toml"), `[workspace]\n[profile.prototype]\ninherits="dev"\n[package]\nname=${JSON.stringify(fixture.name)}\nversion="0.0.0"\nedition="2021"\n[[bin]]\nname=${JSON.stringify(fixture.name)}\npath="main.rs"\n`);
     writeFileSync(join(root, "main.rs"), `fn main() { print!(${JSON.stringify(fixture.stdout)}); }\n`);
-    const oracle = Bun.spawn(["cargo", "build", "--offline", "--target-dir", join(root, "oracle")], { cwd: root, stdout: "pipe", stderr: "pipe" });
+    const oracle = Bun.spawn([registeredToolExecutableV1("cargo"), "build", "--offline", "--target-dir", join(root, "oracle")], { cwd: root, stdout: "pipe", stderr: "pipe" });
     const [status, diagnostic] = await Promise.all([oracle.exited, new Response(oracle.stderr).text()]);
     assert.equal(status, 0, diagnostic);
     const executable = fixture.name + (process.platform === "win32" ? ".exe" : "");

@@ -6,11 +6,13 @@ use semio_framework_value_retained_clone::{ValueError, ValueRefusalKind, Retirem
 pub struct OriginalConstructionDemand{pub items:usize,pub copy_bytes:usize,pub capacity_bytes:usize,pub release_bytes:usize,pub depth:usize}
 impl OriginalConstructionDemand{
  pub fn fits(self,grant:RetainedCloneGrant)->bool{self.items>0&&self.depth>0&&self.items<=grant.maximum_items&&self.copy_bytes<=grant.maximum_copy_bytes&&self.capacity_bytes<=grant.maximum_capacity_bytes&&self.release_bytes<=grant.maximum_release_bytes&&self.depth<=grant.maximum_depth}
- fn physical(self)->RetirementDemand{RetirementDemand{copy_bytes:self.copy_bytes,capacity_bytes:self.capacity_bytes,release_bytes:self.release_bytes,depth:self.depth}}
+ pub fn physical(self)->RetirementDemand{RetirementDemand{copy_bytes:self.copy_bytes,capacity_bytes:self.capacity_bytes,release_bytes:self.release_bytes,depth:self.depth}}
 }
 /// 🚦️ Constructor progress never substitutes a summary for its retained complete causes.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum OriginalConstructionStatus{Pending,Ready,Failed}
+/// 🧮️ The items one failure transfer posts.
+pub const ORIGINAL_CONSTRUCTION_FAILURE_ITEMS:usize=4;
 /// 🧳️ The actual child and independent original Source refusals move together.
 #[derive(Debug,semio_framework_value::RetireOwned)]
 #[value(crate="::semio_framework_value")]
@@ -56,6 +58,14 @@ impl OriginalConstructionAdmission{
  pub fn reset_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.has_failure()||self.source.is_some()||self.child.is_some()||self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty{return Err(ValueError::invariant("constructor still owns an unfinished attempt").into())}if !self.complete{return Ok(true)}if construction_metadata(cx,std::mem::size_of::<bool>(),1)?{self.complete=false;return Ok(true)}Ok(false)}
  fn release_authority(&mut self){if let Some(authority)=self.authority.take(){if let Err(authority)=authority.into_producer().map(drop){self.authority=Some(authority)}}}
  pub fn pending_recovery(&mut self)->Option<&mut semio_framework_value_native_owned::native_decoding::NativeReceivingEffect>{self.frame.pending_recovery()}
+ /// 🧭️ Whether this admission's in-flight construction belongs to the caller's actual Source.
+ pub fn matches(&self,cx:&StepContext<'_>)->bool{self.binding.is_some_and(|binding|binding.matches(cx))}
+ /// 🪞️ One owner close turn over the admission's settled control: the step carries exactly the control this turn retired, and completes once the admission is terminal.
+ pub fn retire_step(&mut self,cx:&mut StepContext<'_>)->Result<crate::InteractiveJobCloseStep,OriginalTurnFailure>{
+  let before=cx.retained_progress();let settled=self.terminal_is_empty()||self.close_step(cx)?&&self.terminal_is_empty();let after=cx.retained_progress();
+  let progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
+  Ok(if settled{crate::InteractiveJobCloseStep::Complete{progress}}else{crate::InteractiveJobCloseStep::Pending{progress}})
+ }
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.authority.is_none()&&self.source.is_none()&&self.child.is_none()&&!self.complete&&!self.failed_taken&&self.frame.phase()==semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty}
  /// 📏️ Quotes exactly the metadata move the next [`Self::close_step`] performs, branch for branch.
  pub fn close_demand(&self)->RetirementDemand{
@@ -68,15 +78,39 @@ impl OriginalConstructionAdmission{
  }
  /// ♻️ Retires settled control metadata without starting another semantic constructor.
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.has_failure()&&!self.failed_taken{return Ok(false)}if self.source.is_some()||self.child.is_some(){let bytes=std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child);if construction_metadata(cx,bytes,2)?{self.source=None;self.child=None}return Ok(false)}if self.authority.is_some(){if !construction_metadata(cx,std::mem::size_of_val(&self.authority),1)?{return Ok(false)}self.release_authority();if self.authority.is_some(){return Err(ValueError::invariant("constructor authority still owns an action").into())}}if self.binding.is_some()||self.complete||self.failed_taken{if !construction_metadata(cx,std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>(),3)?{return Ok(false)}self.binding=None;self.complete=false;self.failed_taken=false}Ok(true)}
+ fn take_failure_bytes(&self)->usize{std::mem::size_of::<Option<OriginalConstructionFailure>>()+std::mem::size_of::<Option<super::OriginalNativeReceivingOutcome>>()+std::mem::size_of_val(&self.child)+std::mem::size_of::<bool>()}
+ /// 📐️ Quotes moving this admission's retained failure into its owner's empty resident slot: the items it posts and its physical demand.
+ pub fn take_failure_demand(&self)->OriginalConstructionDemand{OriginalConstructionDemand{items:ORIGINAL_CONSTRUCTION_FAILURE_ITEMS,copy_bytes:self.take_failure_bytes(),capacity_bytes:0,release_bytes:0,depth:1}}
  /// 📤️ Transfers all original causes only to the caller's actual empty destination.
- pub fn take_failure_into_step(&mut self,output:&mut Option<OriginalConstructionFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if output.is_some(){return Err(ValueError::invariant("construction failure destination is occupied").into())}if !self.has_failure()||self.failed_taken{return Ok(false)}let bytes=std::mem::size_of::<Option<OriginalConstructionFailure>>()+std::mem::size_of::<Option<super::OriginalNativeReceivingOutcome>>()+std::mem::size_of_val(&self.child)+std::mem::size_of::<bool>();if !construction_metadata(cx,bytes,4)?{return Ok(false)}*output=Some(OriginalConstructionFailure{source:self.source.take().expect("failed constructor retains its Source outcome"),child:self.child.take()});self.failed_taken=true;Ok(true)}
+ pub fn take_failure_into_step(&mut self,output:&mut Option<OriginalConstructionFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if output.is_some(){return Err(ValueError::invariant("construction failure destination is occupied").into())}if !self.has_failure()||self.failed_taken{return Ok(false)}let bytes=self.take_failure_bytes();if !construction_metadata(cx,bytes,ORIGINAL_CONSTRUCTION_FAILURE_ITEMS)?{return Ok(false)}*output=Some(OriginalConstructionFailure{source:self.source.take().expect("failed constructor retains its Source outcome"),child:self.child.take()});self.failed_taken=true;Ok(true)}
 }
 fn construction_metadata(cx:&mut StepContext<'_>,bytes:usize,items:usize)->Result<bool,OriginalTurnFailure>{let progress=RetainedCloneProgress{copied_items:items,copied_bytes:bytes,..Default::default()};if cx.retirement_should_yield()||cx.fuel_remaining()<items as u64||cx.retained_grant().maximum_depth==0||!progress.fits(cx.retained_grant()){return Ok(false)}cx.consume_retained(progress)?;cx.consume_fuel(items as u64);Ok(true)}
-/// 🧾️ Quotes exactly the control metadata that settles one finished construction after its constructor ran (bind, release of the Source outcome and child, reset): items, copy bytes and fuel.
+/// 🧾️ Quotes the control charged outside the constructor's own claim in one settled turn: the Source binding, then release of the Source outcome and child and the reset (items, copy bytes and fuel).
 pub fn original_construction_settle_overhead()->(usize,usize,u64){
  let release=std::mem::size_of::<Option<super::OriginalNativeReceivingOutcome>>()+std::mem::size_of::<Option<Result<RetainedCloneProgress,super::OriginalReceivingPrimary>>>()+std::mem::size_of::<Option<semio_framework_value_native_owned::native_decoding::OriginalEffectAuthority<ConstructionProducer>>>()+std::mem::size_of::<bool>();
  let copy=std::mem::size_of::<Option<super::OriginalSourceBinding>>()+release+std::mem::size_of::<bool>();
  (5,copy,5)
+}
+/// 🧮️ Quotes the full cost of one settled construction in a single turn, checked before any charge and assuming the decoder's Source loan and return table are already admitted (`admit_step`, `admit_original_return_table`): constructor, candidate, capture and Source outcome, the first receiving scope's headroom and the settle metadata including the Source binding, with its fuel.
+pub fn original_construction_settled_quote<O>(demand:OriginalConstructionDemand,work:u64)->Result<(OriginalConstructionDemand,u64),ValueError>{
+ let(complete,total)=original_construction_reserve::<O>(demand,work)?;let(items,copy,fuel)=original_construction_settle_overhead();let(scope_items,scope_copy,scope_fuel)=super::original_receiving_scope_headroom();
+ let overflow=||ValueError::invariant("settled construction quote overflow");
+ Ok((OriginalConstructionDemand{items:complete.items.checked_add(items).and_then(|n|n.checked_add(scope_items)).ok_or_else(overflow)?,copy_bytes:complete.copy_bytes.checked_add(copy).and_then(|n|n.checked_add(scope_copy)).ok_or_else(overflow)?,..complete},total.checked_add(fuel).and_then(|n|n.checked_add(scope_fuel)).ok_or_else(overflow)?))
+}
+fn construction_grant(demand:OriginalConstructionDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:demand.items,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+/// 🎫️ Quotes the whole grant and fuel a caller funds one turn with so a settled construction settles in it: the settled quote plus the origin refresh every turn of a decoder with a return table pays from its grant before the business runs.
+pub fn original_construction_settled_turn_quote<O>(demand:OriginalConstructionDemand,work:u64)->Result<(RetainedCloneGrant,u64),ValueError>{
+ let(business,fuel)=original_construction_settled_quote::<O>(demand,work)?;super::original_return_refresh_turn_quote()?.beneath(construction_grant(business),fuel)
+}
+/// 🪜️ The closing turns a decoder needs once every owner it served has retired: its receiving scope retires its stock after at most one pending Source observation, its state closes, and its Source loan returns through its closing phases.
+pub const ORIGINAL_DECODER_TEARDOWN_STEPS:usize=ORIGINAL_SCOPE_RETIREMENT_STEPS+1+ORIGINAL_SOURCE_LOAN_CLOSE_STEPS;
+const ORIGINAL_SCOPE_RETIREMENT_STEPS:usize=2;
+const ORIGINAL_SOURCE_LOAN_CLOSE_STEPS:usize=5;
+/// 🪜️ Quotes the grant and fuel of each closing turn of a decoder after every owner it served has retired: the origin refresh plus the larger of its state closure and its Source loan closure.
+pub fn original_decoder_teardown_quote(decoder:&super::OriginalJobDecodeOwner)->Result<(RetainedCloneGrant,u64),ValueError>{
+ let state=decoder.retirement_demands(0)?;let source=std::mem::size_of::<Option<super::OriginalCallerSourceLoan>>();
+ let step=RetainedCloneGrant{maximum_items:2,maximum_copy_bytes:state.copy_bytes.max(source),maximum_capacity_bytes:state.capacity_bytes,maximum_release_bytes:state.release_bytes,maximum_depth:state.depth.max(1)};
+ super::original_return_refresh_turn_quote()?.beneath(step,1)
 }
 /// 📏️ Quotes the complete same-turn constructor, candidate, capture and Source result plan.
 pub fn original_construction_reserve<O>(demand:OriginalConstructionDemand,work:u64)->Result<(OriginalConstructionDemand,u64),ValueError>{
@@ -151,3 +185,29 @@ pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admis
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+/// 🧭️ Drives bind, construct and settle as far as this turn allows over the caller's resident admission and output: `Ok(true)` when settled, `Ok(false)` when the next turn must continue with the same admission and output; a quote above the operation ceiling is a typed refusal. A turn commits only when it funds the full settled quote before charging anything, so bind, constructor and settle then finish in the same turn.
+pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission,output:&mut Option<O>,demand:OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>,&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{
+    let mut construct=Some(construct);
+    let(settle,fuel_floor)=original_construction_settled_quote::<O>(demand,work)?;
+    let(ceiling,ceiling_fuel)=context.original_turn_ceiling();
+    if !settle.fits(ceiling)||fuel_floor>ceiling_fuel{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction quote exceeds the largest grant any turn can have").into())}
+    let mut committed=false;
+    loop{
+        if output.is_some()&&admission.terminal_is_empty(){return Ok(true)}
+        if output.is_none()&&!committed{
+            if context.retirement_should_yield()||context.fuel_remaining()<fuel_floor||!settle.fits(context.retained_grant()){return Ok(false)}
+            committed=true;
+        }
+        let fuel=context.fuel_remaining();
+        let status=admit_original_construction(context,output,admission,demand,work,|scope,actual|match construct.take(){
+            Some(construct)=>construct(scope,actual),
+            None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original constructor ran twice")),work:0},
+        })?;
+        match status{
+            OriginalConstructionStatus::Ready=>{admission.reset_step(context)?;return Ok(true)}
+            OriginalConstructionStatus::Failed=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction failed; its complete causes remain in the admission").into()),
+            OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{return Ok(false)},
+        }
+    }
+}
+

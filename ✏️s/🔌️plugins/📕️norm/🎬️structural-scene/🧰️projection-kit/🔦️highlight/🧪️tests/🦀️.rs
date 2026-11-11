@@ -1,6 +1,6 @@
 use super::*;
 use crate::projection::{merge, SceneBuilder};
-use norm::{AnnexChoice, ClauseId, Quantity, QuantityKind, SubjectRef};
+use norm::{AnnexChoice, ClauseId, LocalizedCopy, Quantity, QuantityKind, SubjectRef};
 use std::sync::Arc;
 
 fn check(id: &str, owner: &str, demand: f64) -> CheckResult {

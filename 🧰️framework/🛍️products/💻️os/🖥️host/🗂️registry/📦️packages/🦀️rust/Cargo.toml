@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-ui-locale = { path = "../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

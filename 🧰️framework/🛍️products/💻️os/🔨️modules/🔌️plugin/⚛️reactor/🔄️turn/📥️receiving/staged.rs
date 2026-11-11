@@ -1,10 +1,10 @@
 //! 📥️ Standalone staged bytes remain original-owned through Pack, census, exact movement and close.
-use super::{ReceivingSource,retired};
+use super::ReceivingSource;
 use semio_framework::action_staging::{StagedFormLimits,StagedFormRequest,StagedFormRequestCursor};
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_framework_job_native_decode::{OriginalNativeDecodeIssued,OriginalNativeDecodePolicy,OriginalNativeDecodeSource};
 use semio_os_kernel::os_pack::pack_rt::{RetainedRecordReceiving,wire_value_spec,take_received_wire_value};
-use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
+use semio_framework_value::{RetainedWorkOutcome,DslValue,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
 use std::mem::{ManuallyDrop,size_of};
 
 fn fold(primary:semio_framework_job::OriginalReceivingPrimary)->ValueError{primary.primary.or(primary.quote_refusal).or(primary.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction refused"))}
@@ -57,9 +57,11 @@ impl StagedRequestInput {
                 let receiver=self.receiver.as_mut().unwrap();if receiver.is_ready(){self.phase=2;return Ok(None);}
                 let wire=&self.inputs.as_ref().unwrap().wire;let demand=receiver.demands(wire)?;
                 if !funded(cx,demand,false){return Ok(None);}
-                let Some(outcome)=self.native.receive_effect_step(cx,|control,effect|{
-                    let grant=effect.grant();let result=receiver.step(wire,control,effect);let progress=match &result.result {Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
-                    OriginalNativeDecodeIssued{value:result.result.map(|_|()),grant,progress,work:u64::try_from(result.work).unwrap_or(u64::MAX)}
+                let maximum=cx.fuel_remaining();
+                let Some(outcome)=self.native.receive_step(cx,|control,grant|{
+                    let turn=match control.with_effect(grant,maximum,|control,effect|receiver.step(wire,control,effect)){Ok(Some(turn))=>turn,Ok(None)=>RetainedWorkOutcome{result:Ok(Default::default()),work:0},Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}};
+                    let progress=match &turn.result {Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
+                    OriginalNativeDecodeIssued{value:turn.result.map(|_|()),grant,progress,work:u64::from(progress.copied_items!=0)}
                 })?else{return Ok(None)};
                 if let Some(ticket)=outcome.receiving_refusal{let failure=self.native.take_receiving_refusal(ticket);if let Err(error)=outcome.value{self.inputs.as_mut().ok_or_else(invalid)?.issue=Some(fold(error));}return Err(failure);}outcome.value.map_err(fold)?;Ok(None)
             },
@@ -94,11 +96,11 @@ impl StagedRequestInput {
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.witness.validate(cx)?;self.closing=true;
         if let Some(receiver)=self.receiver.as_mut(){
-            if !receiver.terminal_is_empty(){let demand=receiver.close_demands(cx.retained_grant().maximum_copy_bytes)?;retired(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;receiver.close_step(body,effect)})?;return Ok(false);}
+            if !receiver.terminal_is_empty(){let demand=receiver.close_demands(cx.retained_grant().maximum_copy_bytes)?;let body=cx.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,demand,|effect|receiver.close_step(body,effect))?;return Ok(false);}
             if !close_metadata(cx)?{return Ok(false);}self.receiver.take();return Ok(false);
         }
         if let Some(owner)=self.retiring.as_mut(){
-            if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false);}
+            if !owner.terminal_is_empty(){let body=cx.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,owner.selected_demand(body)?,|effect|owner.step(body,effect))?;return Ok(false);}
             if !close_metadata(cx)?{return Ok(false);}self.retiring.take();return Ok(false);
         }
         if self.inputs.is_some(){

@@ -11,6 +11,7 @@ package client
 import (
 	"fmt"
 	workspace "github.com/usalu/semio/repo/workspace"
+	strconv "strconv"
 	"strings"
 	"time"
 )
@@ -143,16 +144,73 @@ func (p *GitVersionControlProvider) CurrentBranch(repoRoot string) (string, erro
 	return strings.TrimSpace(stdout), nil
 }
 
+// 🫙️gitUnquotePath decodes one C-quoted path as git prints names with special bytes and returns it with the text after the closing quote.
+func gitUnquotePath(text string) (string, string, bool) {
+	if !strings.HasPrefix(text, "\"") {
+		return "", text, false
+	}
+	simple := map[byte]byte{'a': '\a', 'b': '\b', 't': '\t', 'n': '\n', 'v': '\v', 'f': '\f', 'r': '\r', '"': '"', '\\': '\\'}
+	var decoded []byte
+	for index := 1; index < len(text); index++ {
+		character := text[index]
+		if character == '"' {
+			return string(decoded), text[index+1:], true
+		}
+		if character != '\\' || index+1 >= len(text) {
+			decoded = append(decoded, character)
+			continue
+		}
+		if index+3 < len(text) {
+			if value, err := strconv.ParseUint(text[index+1:index+4], 8, 16); err == nil {
+				decoded = append(decoded, byte(value))
+				index += 3
+				continue
+			}
+		}
+		if replacement, known := simple[text[index+1]]; known {
+			decoded = append(decoded, replacement)
+		} else {
+			decoded = append(decoded, text[index+1])
+		}
+		index++
+	}
+	return string(decoded), "", true
+}
+
+// 🫙️gitPathField returns a path field of git output, unquoting it when git quoted it.
+func gitPathField(text string) string {
+	if path, _, quoted := gitUnquotePath(text); quoted {
+		return path
+	}
+	return text
+}
+
+// 🧭️gitDiffNewPath returns the new-side repository path named by a `diff --git` header line.
+func gitDiffNewPath(header string) string {
+	rest := strings.TrimPrefix(header, "diff --git ")
+	if strings.HasPrefix(rest, "\"") {
+		_, after, _ := gitUnquotePath(rest)
+		rest = strings.TrimPrefix(after, " ")
+	} else if half := (len(rest) + 1) / 2; half+2 <= len(rest) && strings.HasPrefix(rest[half:], "b/") && rest[:half-1] == "a/"+rest[half+2:] {
+		rest = rest[half:]
+	} else if index := strings.LastIndex(rest, " b/"); index >= 0 {
+		rest = rest[index+1:]
+	} else if index := strings.Index(rest, " \""); index >= 0 {
+		rest = rest[index+1:]
+	}
+	return strings.TrimPrefix(gitPathField(rest), "b/")
+}
+
 // 📄️StagedFiles holds the data fields for a StagedFiles record.
 func (p *GitVersionControlProvider) StagedFiles(repoRoot string) ([]string, error) {
-	stdout, stderr, exitCode := ExecCommand("git", []string{"diff", "--cached", "--name-only"}, repoRoot)
+	stdout, stderr, exitCode := ExecCommand("git", []string{"diff", "--cached", "--name-only", "-z"}, repoRoot)
 	if exitCode != 0 {
 		return nil, fmt.Errorf("git diff --cached --name-only failed: %s", strings.TrimSpace(stderr))
 	}
 	var files []string
-	for _, line := range strings.Split(strings.ReplaceAll(stdout, "\r\n", "\n"), "\n") {
-		if line != "" {
-			files = append(files, line)
+	for _, path := range strings.Split(stdout, "\x00") {
+		if path != "" {
+			files = append(files, path)
 		}
 	}
 	return files, nil

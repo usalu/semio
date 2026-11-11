@@ -215,9 +215,6 @@ pub use authoring::{FlowAuthoringWork,FlowAuthoringRequest,FlowAuthoringOutcome,
 use semio_os_flow_host_core::authoring_layout::DagLayoutOptions;
 
 #[cfg(test)]
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-#[cfg(test)]
 #[path="✏️authoring/🧪️laws/🎮️controller/🦀️.rs"]
 mod authoring_controller_laws;
 

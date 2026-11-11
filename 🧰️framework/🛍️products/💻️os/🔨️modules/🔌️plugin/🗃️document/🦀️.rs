@@ -22,6 +22,8 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
+/// 🎞️ Folds a pending child poll into a zero-progress retry and keeps a settled failure.
+pub(crate) fn poll_step(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result}}
 use semio_plugin_composition_emission::root::advance_original_child_root_retirement;
 use semio_plugin_composition_emission::root::original_child_root_retirement_demands;
 use semio_plugin_decl_app::ArtifactApp;
@@ -88,6 +90,3 @@ pub mod media_operation_refusal;
 pub mod lifted_app;
 pub use lifted_app::*;
 
-#[cfg(test)]
-#[global_allocator]
-static DOCUMENT_ADMISSION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

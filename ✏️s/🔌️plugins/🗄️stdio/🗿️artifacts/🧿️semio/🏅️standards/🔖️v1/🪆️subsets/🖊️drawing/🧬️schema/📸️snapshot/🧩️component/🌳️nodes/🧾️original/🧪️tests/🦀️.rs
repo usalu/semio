@@ -6,8 +6,6 @@ use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeRetirementRecipient};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, DrawCanvas, DrawLayer, SemioDrawingSnapshot};
-#[global_allocator]
-static DRAW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:4096}}
 fn demand(owner:&dyn ErasedSnapshotRetirement)->RetirementDemand{let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();owner.next_demand(if copy==0{release}else{copy}).unwrap()}

@@ -1,6 +1,6 @@
 //! 🎟️ One original source prepays fixed return capture and receiving without a context-free callback.
 use crate::{StepContext,OriginalTurnFailure,OriginalSourceBinding};
-use crate::original_job_continuation::{OriginalReturnClaimCredit,OriginalReturnWitness,OriginalReturnPhase,claim_original_sized_return,receive_original_return_witness};
+use crate::original_job_continuation::source::{OriginalReturnClaimCredit,OriginalReturnWitness,OriginalReturnPhase,claim_original_sized_return,receive_original_return_witness};
 use semio_framework_value_retained_clone::{ValueError,ValueRefusalKind};
 
 pub use semio_framework_job_return_budget::OriginalSizedClaimReserve;
@@ -11,7 +11,7 @@ impl OriginalCallerReturnPlace{
  /// 🧮️ See `README.md`.
  pub fn core_wire_sized_claim_actual_bytes()->Option<usize>{OriginalSizedClaimReserve::actual_bytes(crate::original_job_continuation::source::original_return_claim_copy_bytes(),size_of::<Option<OriginalSourceBinding>>(),size_of::<Option<(usize,usize)>>())}
  /// 🔎️ See `README.md`.
- pub(crate) fn qualify_preissued_budget(&self,budget:&crate::original_job_continuation::source::OriginalReturnBudget,destination:usize,extent:usize)->Result<(),ValueError>{if self.destination!=Some((destination,extent)){return Err(ValueError::invariant("exposure return destination changed"))}budget.qualify_preissued_destination(self.credit.as_ref().ok_or_else(||ValueError::invariant("exposure credit absent"))?,self.witness.as_ref().ok_or_else(||ValueError::invariant("exposure witness absent"))?,destination,extent)}
+ pub fn qualify_preissued_budget(&self,budget:&crate::original_job_continuation::source::OriginalReturnBudget,destination:usize,extent:usize)->Result<(),ValueError>{if self.destination!=Some((destination,extent)){return Err(ValueError::invariant("exposure return destination changed"))}budget.qualify_preissued_destination(self.credit.as_ref().ok_or_else(||ValueError::invariant("exposure credit absent"))?,self.witness.as_ref().ok_or_else(||ValueError::invariant("exposure witness absent"))?,destination,extent)}
  pub fn core_wire_sized_claim_reserve(extent:usize)->Result<OriginalSizedClaimReserve,ValueError>{OriginalSizedClaimReserve::for_target(extent,crate::original_job_continuation::source::original_return_claim_copy_bytes(),size_of::<Option<OriginalSourceBinding>>(),size_of::<Option<(usize,usize)>>())}
 
 pub const fn empty()->Self{Self{credit:None,witness:None,identity:None,destination:None}}

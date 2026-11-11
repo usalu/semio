@@ -1,6 +1,6 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
-import { runCmd } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runArtifactRustTests } from "@semio-tech/process/cargo-test";
+import { runCmd } from "@semio-tech/process/execution";
 import { join } from "node:path";
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */

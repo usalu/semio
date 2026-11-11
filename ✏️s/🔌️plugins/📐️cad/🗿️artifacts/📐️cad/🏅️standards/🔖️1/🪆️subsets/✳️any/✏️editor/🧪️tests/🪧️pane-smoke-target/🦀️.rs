@@ -15,5 +15,3 @@ use context::*;
 #[path = "../🔬️unit/🪧️pane-smoke/🦀️.rs"]
 mod pane_smoke;
 
-#[global_allocator]
-static COORDINATOR_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

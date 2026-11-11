@@ -1,7 +1,7 @@
 import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { join } from "node:path";
 import { verifyCapturedCargoArtifactsV1 } from "@semio-tech/process/native-build";
-import { scriptCompilerAdmissionControlV1 } from "@semio-tech/framework/process/compiler-capacity";
+import { scriptCompilerAdmissionControlV1 } from "@semio-tech/process/compiler-capacity";
 import { readBuildMode, buildModeEnvironment } from "@semio-tech/process/build-mode";
 import { buildAdmittedCargoArtifactsV1 } from "@semio-tech/process/cargo-test";
 import { runRepositoryCommand } from "@semio-tech/process/execution";

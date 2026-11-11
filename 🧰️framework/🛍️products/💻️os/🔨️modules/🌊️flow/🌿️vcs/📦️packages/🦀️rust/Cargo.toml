@@ -28,13 +28,13 @@ semio-framework-value-ordered = { path = "../../../../../../../🔨️modules/�
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-replication = { workspace = true }
 neural_engine = { path = "../../../../🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-os-kernel-neural-engine" }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-pack = { path = "../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 serde_json = "1"
 semio-framework-trace = { path = "../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }

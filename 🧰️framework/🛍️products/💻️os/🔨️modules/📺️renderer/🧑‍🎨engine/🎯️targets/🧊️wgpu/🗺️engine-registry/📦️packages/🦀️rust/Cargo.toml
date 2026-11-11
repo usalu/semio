@@ -30,10 +30,10 @@ semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packa
 flow = { path = "../../../../../../../🌊️flow/📦️packages/🦀️rust", package = "semio-os-flow" }
 framework_editor = { path = "../../../../../../../../../../🔨️modules/✍️editor/📦️packages/🦀️rust", package = "semio-framework-editor" }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-os-node-graph = { path = "../../../../../🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "../../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -46,12 +46,12 @@ semio-ui-wgpu-input = { path = "../../../../../../../../../../🔨️modules/�
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-slots = { workspace = true }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-async-slots = { workspace = true }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"] }
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasElement", "OffscreenCanvas", "CanvasRenderingContext2d", "Element", "Event", "MouseEvent", "WheelEvent", "KeyboardEvent", "InputEvent", "ResizeObserver", "ResizeObserverEntry", "DomRect", "Performance", "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response", "Headers", "Blob", "Url", "HtmlAnchorElement", "console", "MediaQueryList"] }
 js-sys = "0.3.83"

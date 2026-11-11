@@ -293,17 +293,14 @@ pub async fn cancel_job(job:u64,cx:&mut semio_framework_job::StepContext<'_>)->R
 #[doc(hidden)]
 pub fn close_original<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     use semio_framework_value::{RetainedCloneProgress,retirement::controlled::ControlledRetirement};
-    let remaining=cx.retained_grant();if source.is_none()&&closing.is_none(){return Ok(true)}if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(false)}let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,..remaining};
+    let remaining=cx.retained_grant();if source.is_none()&&closing.is_none(){return Ok(true)}if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(false)}
     if let Some(original)=source.take(){
         match ControlledRetirement::new(original){Ok(owner)=>*closing=Some(owner),Err((error,original))=>{*source=Some(original);return Err(error.into())}}
         cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
     }
     let owner=closing.as_mut().unwrap();
     if owner.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);*closing=None;return Ok(true)}
-    let body=grant.maximum_copy_bytes;let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.step(body,effect))?else{return Ok(false)};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
-    let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll else{return Ok(false)};
-    let step=turn.result.map_err(|error|{cx.consume_fuel(1);OriginalTurnFailure::debit_original(error,cx)})?;
-    cx.consume_retained(step.progress())?;Ok(false)
+    let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,..remaining};let body=grant.maximum_copy_bytes;let demand=owner.next_demand(body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect)).map(|_|false)
 }
 
 fn close_failed_owner(slot:&mut JobSlot,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -656,12 +653,12 @@ struct JobIoReceiving {
 /// 🌉️ Retains the original parsed request and exact hop result inside its admitted native recipient.
 async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>) -> Result<Vec<u8>, semio_framework::Fault> {
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
-    let mut output: Option<Result<Vec<u8>, semio_framework::Fault>> = None;
-    original.receive_nested::<JobIoReceiving, Result<Vec<u8>, semio_framework::Fault>, _>(&mut output, &mut |slot, out, _marker, _unwind, run| semio_os_kernel::io::control::native_snapshot_turn(|work| {
+    let mut produced: Option<Result<Vec<u8>, semio_framework::Fault>> = None;
+    let turn = original.receive_nested::<JobIoReceiving, Result<Vec<u8>, semio_framework::Fault>, semio_os_kernel::io::control::NativeSnapshotFailure>(&mut produced, &mut |slot, result, _marker, _unwind, run| semio_os_kernel::io::control::native_snapshot_turn(|work| {
         work.performed();
         *slot = Some(JobIoReceiving { input: None, source: None, target: None, route: None, payload: None, outcome: None });
         let frame = slot.as_mut().unwrap();
-        *out = Some(settle_in_step("job.io-run", async {
+        *result = Some(settle_in_step("job.io-run", async {
             let text = std::str::from_utf8(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
             frame.input = Some(semio_framework_pack_json::from_json_str::<IoRunInput>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?);
             let request = frame.input.as_ref().unwrap();
@@ -680,8 +677,9 @@ async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot:
             }
         }));
         Ok(())
-    })).result.map_err(|error| fault("job.io-run", error.message()))?;
-    output.take().ok_or_else(|| fault("job.io-run", "io-run produced no result"))?
+    }));
+    turn.result.map_err(|error| fault("job.io-run", error.message()))?;
+    produced.ok_or_else(|| fault("job.io-run", "io run produced no result"))?
 }
 
 /// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of

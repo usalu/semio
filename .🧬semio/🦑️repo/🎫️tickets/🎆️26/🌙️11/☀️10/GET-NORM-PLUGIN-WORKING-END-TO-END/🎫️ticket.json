@@ -1,0 +1,97 @@
+{
+  "title": "Get Norm Plugin Working End to End",
+  "emoji": "📕",
+  "status": "open",
+  "description": "Get norms plugin working end to end. Coordinate with Opus 5.5 main chat, Sonnet 5.5 agents for medium/high complexity execution, Haiku 5.5 agents for read-only exploration/audits/low complexity. Use a parallel fleet. Fix fundamental unrelated issues found along the way.",
+  "summary": "Fixed orphaned claims workers: exit-with-parent helper, hang no longer spins CPU, tests added. See orphaned-claims-workers.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2788"
+  },
+  "goal": "🎯runningnorm",
+  "sessions": [
+    "a86b4060-2c93-48b5-8b67-222227f9cde7",
+    "f2cc5acb-455b-4f8e-a247-8f65e30743e4",
+    "55f9c547-7cc4-431f-b2c1-f2b46a86d25e"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-10 03:55:16",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Get norms plugin working end to end. Coordinate with Opus 5.5 main chat, Sonnet 5.5 agents for medium/high complexity execution, Haiku 5.5 agents for read-only exploration/audits/low complexity. Use a parallel fleet. Fix fundamental unrelated issues found along the way.",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-10 04:51:51",
+      "author": "ueli",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "f6b3d6e63260fb75f3dcb01c3c38cffef02ce079",
+      "summary": "Fixed temp-dir leaks (declared disk scratch home, per-process test isolation, cache gc sweep) and capacity admission (swap by traffic, small grant while planning). Report: repo-tmp-and-admission.md.",
+      "files": [
+        {
+          "path": "bunfig.toml"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📏️decision/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/📡️sampling/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🧾️ledger/🔣️policy.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-10 04:52:04",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Reopened: a subagent closed this ticket prematurely after finishing its sub-task (repo tmp leaks + capacity admission). The norm plugin is not yet working end to end; work continues.",
+      "effort": "medium"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-10 04:55:03",
+      "author": "ueli",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "f6b3d6e63260fb75f3dcb01c3c38cffef02ce079",
+      "summary": "Fixed orphaned claims workers: exit-with-parent helper, hang no longer spins CPU, tests added. See orphaned-claims-workers.md.",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/package.json"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🏃️process/🧪️testing/🟨️bun/🪦️orphans/👶️child/🟦️.ts"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-10 04:55:14",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "Reopened again: a subagent (orphaned claims workers sub-task) closed the ticket prematurely. Norm plugin not yet working end to end; work continues. Only the coordinator closes this ticket.",
+      "effort": "medium"
+    }
+  ]
+}

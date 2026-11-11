@@ -327,5 +327,121 @@
         }
       ]
     }
+  ],
+  "delimiters": [
+    {
+      "id": "braces-in-string",
+      "source": "fn f() { let s = \"{ ( [ \\\" }\"; }\n",
+      "fault": null
+    },
+    {
+      "id": "braces-in-char",
+      "source": "fn f() { let a = '{'; let b = '}'; let c = '\\''; let d = '('; }\n",
+      "fault": null
+    },
+    {
+      "id": "braces-in-byte-char-and-byte-string",
+      "source": "fn f() { let a = b'{'; let b = b\"{{\"; let c = b'\\\\'; }\n",
+      "fault": null
+    },
+    {
+      "id": "braces-in-raw-strings",
+      "source": "fn f() { let a = r\"{\"; let b = r#\"} \" {\"#; let c = br##\"(\"#[\"##; }\n",
+      "fault": null
+    },
+    {
+      "id": "lifetimes-are-not-chars",
+      "source": "struct S<'a, 'b> { a: &'a str, b: &'b str }\nfn f<'a>(x: &'a str) -> &'a str { x }\nimpl<'a> S<'a, 'a> { fn g(&self) -> char { '{' } }\n",
+      "fault": null
+    },
+    {
+      "id": "braces-in-comments",
+      "source": "// {\n/// (\n//! [\n/* { /* } */ ( */\nfn f() {}\n",
+      "fault": null
+    },
+    {
+      "id": "braces-in-format-strings",
+      "source": "fn f(x: u8) { println!(\"{x:>{w}} {{}}\", x = x, w = 3); let _ = format!(\"{}\", \"}\"); }\n",
+      "fault": null
+    },
+    {
+      "id": "raw-identifiers-and-escapes",
+      "source": "fn r#match() { let a = \"\\\\\"; let b = \"\\\"{\"; let c = '\\u{7b}'; }\n",
+      "fault": null
+    },
+    {
+      "id": "unclosed-brace",
+      "source": "fn f() {\n    let x = 1;\n",
+      "fault": {
+        "kind": "unclosed",
+        "delimiter": "{",
+        "at": {
+          "line": 1,
+          "column": 8
+        }
+      }
+    },
+    {
+      "id": "unexpected-closer",
+      "source": "fn f() {}\n}\n",
+      "fault": {
+        "kind": "unexpected",
+        "delimiter": "}",
+        "at": {
+          "line": 2,
+          "column": 1
+        }
+      }
+    },
+    {
+      "id": "closer-mismatches-open-paren",
+      "source": "fn f() {\n    push(a(b);\n}\n",
+      "fault": {
+        "kind": "mismatched",
+        "delimiter": "(",
+        "at": {
+          "line": 2,
+          "column": 9
+        },
+        "closing": {
+          "delimiter": "}",
+          "at": {
+            "line": 3,
+            "column": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "brace-in-string-hides-nothing",
+      "source": "fn f() {\n    let s = \"}\";\n",
+      "fault": {
+        "kind": "unclosed",
+        "delimiter": "{",
+        "at": {
+          "line": 1,
+          "column": 8
+        }
+      }
+    },
+    {
+      "id": "columns-count-code-points",
+      "source": "fn f() { let s = \"漢字\"; (\n}\n",
+      "fault": {
+        "kind": "mismatched",
+        "delimiter": "(",
+        "at": {
+          "line": 1,
+          "column": 24
+        },
+        "closing": {
+          "delimiter": "}",
+          "at": {
+            "line": 2,
+            "column": 1
+          }
+        }
+      }
+    }
   ]
 }

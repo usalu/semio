@@ -13,7 +13,7 @@ import {createReaperV1} from "../../🏗️composition/🌐️host/👷️slice-
 import {createPressureWatchV1,cgroupMeasuresV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🌡️pressure/🟨️.mjs";
 import {HOST_POLICY_V1,renderBothV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {createCgroupLimiterV1} from "../../../🧱️job-limits/🐧️cgroup/🟦️.ts";
-import {sliceLimitPolicyV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
+import {hostAvailableBytesV1,sliceLimitPolicyV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🧱️limit/🟨️.mjs";
 import {PlanRefusedErrorV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
 
 const FIXTURE=JSON.parse(readFileSync(join(HERE,"🧫️fixtures/🛑️cancel.json"),"utf8")),BOUND=FIXTURE.boundMilliseconds as number;
@@ -47,7 +47,7 @@ describe("the host service cancels the job of a client that is gone",()=>{
  };
  for(const row of FIXTURE.client as {name:string;signal:"SIGTERM"|"SIGKILL"}[])test(row.name,async()=>{
   const h=harness("c-"+row.signal);await h.service.start();
-  const child=spawn("bun",[CLIENT,h.root,h.implementation],{env:h.env,stdio:["ignore","pipe","inherit"]});
+  const child=spawn(process.execPath,[CLIENT,h.root,h.implementation],{env:h.env,stdio:["ignore","pipe","inherit"]});
   const exited=new Promise<void>(resolve=>child.once("exit",()=>resolve()));
   expect(await waitFor(()=>h.calls.length===1,15000)).toBe(true);
   const started=performance.now();child.kill(row.signal);await exited;
@@ -130,8 +130,8 @@ describe("processes a slice worker thread starts are reaped with the load",()=>{
  const worker=new URL("./🧒️spawning-worker.mjs",import.meta.url);
  for(const row of FIXTURE.slice as {name:string;mode:"abort"|"done"|"reported"|"busy"|"dead-service"}[])test(row.name,async()=>{
   if(row.mode==="dead-service"){
-   const dead=spawn("bun",["-e","0"]),deadPid=dead.pid!;await new Promise(resolve=>dead.once("exit",resolve));
-   const orphan=spawn("bun",["-e","setInterval(()=>{},1000)"],{stdio:"ignore",env:{...process.env,SEMIO_SLICE_JOB:deadPid+".1.orphan"}});
+   const dead=spawn(process.execPath,["-e","0"]),deadPid=dead.pid!;await new Promise(resolve=>dead.once("exit",resolve));
+   const orphan=spawn(process.execPath,["-e","setInterval(()=>{},1000)"],{stdio:"ignore",env:{...process.env,SEMIO_SLICE_JOB:deadPid+".1.orphan"}});
    expect(alive(orphan.pid!)).toBe(true);
    const pool=createSlicePoolV1({workerUrl:worker,maximum:1,graceMilliseconds:500});
    expect(await waitFor(()=>!alive(orphan.pid!),BOUND)).toBe(true);await pool.close();return;
@@ -206,7 +206,7 @@ describe("the allocator purge setting of the policy reaches every process the se
 
 describe("a large slice result crosses the process boundary as a file",()=>{
  test("a result of several megabytes arrives intact and its spool directory is removed",async()=>{
-  const{readdirSync}=await import("node:fs"),spools=()=>readdirSync(tmpdir()).filter(name=>name.startsWith("semio-slice-")).length,before=spools();
+  const{readdirSync}=await import("node:fs"),{scratchHomeV1}=await import("../../../../../../../../🔨️modules/🏃️process/🧹️scratch/🟦️.ts"),spools=()=>{try{return readdirSync(scratchHomeV1()).filter(name=>/^[0-9]+-slice-/u.test(name)).length;}catch{return 0;}},before=spools();
   const pool=createSlicePoolV1({workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200});
   const result=await pool.run({root:base,mode:"big"});
   expect(Object.keys(result.graph.projects).length).toBe(60000);expect(result.graph.projects.p59999.root).toBe("libs/p59999");expect(result.generationPin).toBe("big");
@@ -222,17 +222,23 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
   return{files,removed,ports};
  };
  const headroom=()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB});
- test("the policy is the service limit minus its usage minus the margin, memory.high at 90%, no swap, never below the floor, none without a limit",()=>{
+ test("the policy is the service limit minus its usage minus the margin, a hard kill at the limit (no memory.high throttle), no swap, never below the floor, none without a limit",()=>{
   const policy=sliceLimitPolicyV1(headroom(),L.marginMegabytes)!;
-  expect(policy.memoryMegabytes).toBe(L.expect.memoryMaxMegabytes);expect(policy.softRatioBasisPoints).toBe(9000);expect(policy.swapMegabytes).toBe(0);
+  expect(policy.memoryMegabytes).toBe(L.expect.memoryMaxMegabytes);expect(policy.kind).toBe("job");expect(policy.swapMegabytes).toBe(0);
   expect(sliceLimitPolicyV1({limitBytes:4096*MiB,currentBytes:4090*MiB},100)!.memoryMegabytes).toBe(L.floorMegabytes);
   expect(sliceLimitPolicyV1({limitBytes:Infinity,currentBytes:1})).toBeUndefined();
  });
+ test("a host with memory to spare lends the load a bounded share above the service limit, and never less than the limit leaves",()=>{
+  const elasticity={maximumMegabytes:8192,hostShareBasisPoints:7500,hostFloorMegabytes:1536},at=(availableMegabytes:number|undefined)=>sliceLimitPolicyV1({limitBytes:4096*MiB,currentBytes:300*MiB,availableBytes:availableMegabytes===undefined?undefined:availableMegabytes*MiB},256,elasticity)!.memoryMegabytes;
+  expect(at(undefined)).toBe(3540);expect(at(2000)).toBe(3540);expect(at(12000)).toBe(7464);expect(at(20000)).toBe(8192);
+  expect(sliceLimitPolicyV1({limitBytes:4096*MiB,currentBytes:300*MiB,availableBytes:20000*MiB},256)!.memoryMegabytes).toBe(3540);
+ });
+ test("the host availability reads MemAvailable in kilobytes",()=>{expect(hostAvailableBytesV1(()=>"MemTotal: 1 kB\nMemAvailable:    2048 kB\n")).toBe(2048*1024);expect(hostAvailableBytesV1(()=>{throw Error("none");})).toBeGreaterThan(0);});
  test("a load is placed in its own cgroup with the computed limits and the group is killed and removed when the load ends",async()=>{
   const m=modelled(),pool=createSlicePoolV1({workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200,headroom,marginMegabytes:L.marginMegabytes,limiter:createCgroupLimiterV1("/cg/semio-jobs",m.ports)});
   await pool.run({root:base,mode:"done"});
   const dir=[...m.files.keys()].find(path=>path.endsWith("/memory.max"))!.replace("/memory.max","");
-  expect(Number(m.files.get(dir+"/memory.max"))).toBe(L.expect.memoryMaxMegabytes*MiB);expect(Number(m.files.get(dir+"/memory.high"))).toBe(Math.floor(L.expect.memoryMaxMegabytes*MiB*0.9));expect(Math.floor(Number(m.files.get(dir+"/memory.high"))/MiB)).toBe(L.expect.memoryHighMegabytes);expect(m.files.get(dir+"/memory.swap.max")).toBe("0");expect(m.files.get(dir+"/memory.oom.group")).toBe("1");
+  expect(Number(m.files.get(dir+"/memory.max"))).toBe(L.expect.memoryMaxMegabytes*MiB);expect(m.files.has(dir+"/memory.high")).toBe(false);expect(m.files.get(dir+"/memory.swap.max")).toBe("0");expect(m.files.get(dir+"/memory.oom.group")).toBe("1");
   expect(Number(m.files.get(dir+"/cgroup.procs"))).toBeGreaterThan(0);
   expect(await waitFor(()=>m.files.get(dir+"/cgroup.kill")==="1"&&m.removed.includes(dir),BOUND)).toBe(true);await pool.close();
  },30000);

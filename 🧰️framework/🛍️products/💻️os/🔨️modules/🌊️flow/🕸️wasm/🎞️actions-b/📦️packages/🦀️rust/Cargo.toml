@@ -31,8 +31,8 @@ semio-os-flow-drawing = { path = "../../../../🖍️drawing/📦️packages/�
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
-semio-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-os-infinite = { path = "../../../../../♾️infinite/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-abi = { path = "../../../../../../../../🔨️modules/🌉️abi/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 

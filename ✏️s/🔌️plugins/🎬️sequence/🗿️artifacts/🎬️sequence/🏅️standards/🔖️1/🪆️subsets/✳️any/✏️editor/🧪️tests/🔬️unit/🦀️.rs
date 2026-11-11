@@ -350,7 +350,7 @@ async fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
         media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
     };
-    app.0.import_media("steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
+    semio_plugin::artifact_app_laws::import_media(&mut app.0, "steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
     let after = live_host_snapshot(&app).await;
     assert_eq!(after.steps.len(), before + 1);
     let imported = after.steps.last().expect("imported step");
@@ -365,7 +365,7 @@ async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
         media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
     };
-    app.0.import_media("steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
+    semio_plugin::artifact_app_laws::import_media(&mut app.0, "steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("import steps:in");
     let after = live_host_snapshot(&app).await;
     let imported = after.steps.last().expect("imported step");
     assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
@@ -381,7 +381,7 @@ async fn import_media_steps_in_consumes_original_intrinsic_unicode_and_signed_sc
     let before=live_host_snapshot(&app).await.steps.len();
     for value in [DslValue::Object(vec![("message".into(),DslValue::String(text.clone()))]),DslValue::Number(Number::Int(42))]{
         let media=Media{media_type:semio_plugin::MediaType{class:semio_plugin::MediaClass::Computation,form:semio_plugin::MediaForm::Any},payload:MediaPayload::Intrinsic{schema:"computation.value".into(),value}};
-        app.0.import_media("steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("intrinsic steps import");
+        semio_plugin::artifact_app_laws::import_media(&mut app.0, "steps:in", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.expect("intrinsic steps import");
     }
     let after=live_host_snapshot(&app).await;
     assert_eq!(after.steps.len(),before+2);
@@ -396,7 +396,7 @@ async fn import_media_rejects_unknown_port() {
         media_type: semio_plugin::MediaType { class: semio_plugin::MediaClass::Computation, form: semio_plugin::MediaForm::Any },
         payload: MediaPayload::Structured { schema: "computation.value".into(), json: "{}".into() },
     };
-    assert!(app.0.import_media("not-a-port", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.is_err());
+    assert!(semio_plugin::artifact_app_laws::import_media(&mut app.0, "not-a-port", media, &semio_plugin::artifact_app_laws::meta("local"), app.1.cx()).await.is_err());
 }
 //#endregion 🔖️PortTests
 
@@ -410,7 +410,7 @@ async fn original_reserved_import_matches_neutral_parameter_vectors(){
             payload:MediaPayload::Structured{schema:"computation.value".into(),json:row["wire"].as_str().unwrap().into()},
         };
         let before=live_host_snapshot(&app).await.steps.len();
-        app.0.import_media("steps:in",media,&semio_plugin::artifact_app_laws::meta("local"),app.1.cx()).await.expect("original parameter import");
+        semio_plugin::artifact_app_laws::import_media(&mut app.0, "steps:in",media,&semio_plugin::artifact_app_laws::meta("local"),app.1.cx()).await.expect("original parameter import");
         let after=live_host_snapshot(&app).await;
         assert_eq!(after.steps.len(),before+1,"{}",row["id"]);
         let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.steps.last().unwrap().params)).unwrap();

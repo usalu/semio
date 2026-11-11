@@ -1,10 +1,10 @@
-import{canonicalJsonV1,compareCodePointsV1}from"../🧮️fact-codec/🟨️.mjs";
+import{canonicalKeyV1,compareCodePointsV1}from"../🧮️fact-codec/🟨️.mjs";
 import{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from"../🧱️chunk-classes/🟨️.mjs";
-import{P,aborted,createYielderV1,fail,requireKeys,sha256}from"../🧱️guards/🟨️.mjs";
+import{P,aborted,createYielderV1,fail,requireKeys}from"../🧱️guards/🟨️.mjs";
 
 const rowKeys=new WeakMap();
 /** 🪪️ The identity of one observation row: its canonical text, or `#` and the SHA-256 of that text when the text is longer than `ROW_KEY_TEXT_LIMIT_V1` (an analysis row carries kilobytes of nested facts, and a build keys every row of a graph: the key stays below 70 bytes however large the fact is); two rows have one key exactly when their canonical texts are equal, and a shared row object is keyed once. */
-export function rowKeyV1(row){let key=rowKeys.get(row);if(key===undefined){const text=canonicalJsonV1([row.kind,row.path,row.fact]);key=text.length<=ROW_KEY_TEXT_LIMIT_V1?text:"#"+sha256(text);rowKeys.set(row,key);}return key;}
+export function rowKeyV1(row){let key=rowKeys.get(row);if(key===undefined){key=canonicalKeyV1([row.kind,row.path,row.fact],ROW_KEY_TEXT_LIMIT_V1);rowKeys.set(row,key);}return key;}
 export const ROW_KEY_TEXT_LIMIT_V1=P.rowKeyTextLimit;
 
 const ownerIdMaps=new WeakMap();
@@ -80,8 +80,10 @@ export function refineFactIndexV1(index){
  for(let id=0;id<rowCount;id++){
   const list=flat.subarray(start[id],start[id+1]).sort();let unique=0;
   for(let at=0;at<list.length;at++)if(at===0||list[at]!==list[at-1])list[unique++]=list[at];
-  const owners=Array.from(list.subarray(0,unique)),key=owners.join(",");let group=groups.get(key);
-  if(!group){group={r:[],o:owners};groups.set(key,group);classes.push(group);}
+  let hash=unique|0;for(let at=0;at<unique;at++)hash=Math.imul(hash^list[at],0x01000193)>>>0;
+  let bucket=groups.get(hash);if(bucket===undefined)groups.set(hash,bucket=[]);
+  let group=bucket.find(candidate=>candidate.o.length===unique&&candidate.o.every((owner,at)=>owner===list[at]));
+  if(!group){group={r:[],o:Array.from(list.subarray(0,unique))};bucket.push(group);classes.push(group);}
   group.r.push(id);
  }
  const covered=new Set(classes.flatMap(cls=>cls.o));

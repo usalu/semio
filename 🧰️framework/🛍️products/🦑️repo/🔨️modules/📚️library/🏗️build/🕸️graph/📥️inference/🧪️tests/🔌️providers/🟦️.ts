@@ -8,7 +8,7 @@ import { build } from "esbuild";
 import ts from "typescript";
 import { findWorkspaceRoot } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { cacheInternals, createScriptInputCache } from "../../🟨️.mjs";
-import { closureApiV1, closureHandleOfV1 } from "../../🧭️script-inputs/🟨️.mjs";
+import { closureApiV1, closureHandleOfV1, resetClosureEntriesV1 } from "../../🧭️script-inputs/🟨️.mjs";
 import repositoryDesignation from "../../../../../🏃️process/🔌️providers/🔣️.json" with { type: "json" };
 import corpus from "./🔣️.json" with { type: "json" };
 import { buildSchedulingPrefixesV1 } from "../../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
@@ -94,6 +94,29 @@ test("editing a designated provider module changes the input hash of exactly the
         }
       } finally { write(edit.file, original); }
     }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+}, 120_000);
+
+test("an evicted closure entry is answered again, never refused as stale: the inputs under a closure entry budget that holds no entry equal the inputs under the declared budget", async () => {
+  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Provider input fixtures require owned test artifacts");
+  const root = mkdtempSync(join(resolve(artifacts), "provider-evicted-"));
+  const write = (name: string, content: string) => { mkdirSync(dirname(join(root, name)), { recursive: true }); writeFileSync(join(root, name), content); };
+  try {
+    const specifier = relative(join(root, "loads"), loaderPath);
+    for (const [name, content] of Object.entries(corpus.files)) write(name, content.replace("{loader}", specifier));
+    write("designation.json", JSON.stringify(corpus.designation));
+    write("📋️project.json", JSON.stringify({ name: "@fixture/provider-evicted", metadata: { semio: { scriptProviders: "designation.json" } }, targets: {} }));
+    write("🧬️schema/🔣️.json", JSON.stringify(designationReference));
+    const measure = async () => {
+      const cache = createScriptInputCache({ scriptProviderDesignation: join(root, "designation.json"), lateClosures: true }), api = closureApiV1(cache, workspace);
+      const list = await api.genericTargetCommandInputs({ options: { cwd: relative(workspace, join(root, "loads")), command: "repo ./📜️script.ts run" } }, relative(workspace, join(root, "loads")));
+      return { helper: await api.some(list, ["helper.ts"]), unrelated: await api.some(list, ["unrelated.ts"]), digest: await api.query(list, "digest") };
+    };
+    resetClosureEntriesV1();
+    const declared = await measure();
+    expect(declared.helper).toBe(true);
+    resetClosureEntriesV1(1);
+    try { expect(await measure()).toEqual(declared); } finally { resetClosureEntriesV1(); }
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 120_000);
 

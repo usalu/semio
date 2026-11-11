@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
@@ -316,7 +317,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy transaction dispositions v2", ()
       writeFileSync(planPath, `${canonicalJson(plan)}\n`);
       const modulePath = resolve(contractRoot, "../../🧹️normalization/🚀️apply/🟦️.ts");
       const child = `const [modulePath,planPath,repoRoot,ticketDir,baseline]=process.argv.slice(1);const {applyTaxonomyPlan}=await import(modulePath);const plan=JSON.parse(await Bun.file(planPath).text());applyTaxonomyPlan(plan,{repoRoot,ticketDir,expectedBaselineCommit:baseline,progress:(row)=>{if(row.phase==="retargeting-symlinks")process.exit(73)}});`;
-      const interrupted = spawnSync("bun", ["-e", child, modulePath, planPath, fixture.repoRoot, fixture.ticketDir, plan.baselineCommit], { encoding: "utf8" });
+      const interrupted = spawnSync(registeredToolExecutableV1("bun"), ["-e", child, modulePath, planPath, fixture.repoRoot, fixture.ticketDir, plan.baselineCommit], { encoding: "utf8" });
       expect(interrupted.status).toBe(73);
       const journals = ownedFilePaths(fixture.ticketDir)
         .filter((path) => (path.startsWith("🧾️taxonomy-transaction/") || path.includes("/🧾️taxonomy-transaction/")) && /\/🔂️attempts\/🔢️[^/]+\/🔣️\.json$/u.test(path))

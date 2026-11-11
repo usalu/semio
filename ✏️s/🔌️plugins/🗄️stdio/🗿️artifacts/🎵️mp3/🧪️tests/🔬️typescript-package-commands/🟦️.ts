@@ -1,8 +1,8 @@
-import { receiveScriptProcessInvocation } from "@semio-tech/framework/process/routing";
-import { runArtifactTypeScriptPackageMain } from "@semio-tech/framework/process/typescript-check";
+import { receiveScriptProcessInvocation } from "@semio-tech/process/routing";
+import { runArtifactTypeScriptPackageMain } from "@semio-tech/process/typescript-check";
 import { resolve } from "node:path";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
 const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🟦️typescript");

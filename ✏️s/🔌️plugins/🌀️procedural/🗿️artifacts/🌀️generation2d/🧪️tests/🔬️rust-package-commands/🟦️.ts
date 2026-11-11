@@ -1,6 +1,6 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runCargo } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { runCmd } from "@semio-tech/process/execution";
+import { runCargo } from "@semio-tech/process/execution";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { resolve as scriptDirectoryResolve } from "node:path";
@@ -19,7 +19,7 @@ if (segments[0] === "generation2d-window-camera-ownership") {
     testGeneration2dWindowCameraOwnershipOracle();
     runCmd("bun", [join(context.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(editorRoot, "🎭️modes/✏️edit/🪟️windows/🕸️flow/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/✏️edit/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), join(editorRoot, "🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config/🧬️schema/🟦️.ts"), oracle], { cwd: context.repoRoot });
     if (segments[1] === "native") {
-      const { runCargo } = await import("@semio-tech/framework/process/execution");
+      const { runCargo } = await import("@semio-tech/process/execution");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-procedural-2d-editor", "--test", "editor-routes", "editor_window_camera_ownership", "--", "--nocapture"], context.repoRoot);
     }
     return;

@@ -50,7 +50,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         let artifact_mutations = decode_lane::<A::Mutation>(&artifact_ops).await?;
         let config_mutations = decode_lane::<A::ConfigMutation>(&config_ops).await?;
         let draft_mutations = decode_lane::<A::DraftMutation>(&draft_ops).await?;
-        let result = self.dispatch_ctx().dispatch_emit("task-resume-emit", Emit { artifact_mutations, config_mutations, draft_mutations, ..Default::default() }, meta, identity, cx).await?;
+        let result = self.dispatch_ctx().dispatch_emit("task-resume-emit", Emit { artifact_mutations, config_mutations, draft_mutations, ..Default::default() }, meta, identity).await?;
         Ok(self.render_ctx().finish_recorded(log_generation_before, "task-resume-emit", result).await)
     }
 }

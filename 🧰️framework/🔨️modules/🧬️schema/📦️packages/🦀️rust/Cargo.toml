@@ -36,8 +36,8 @@ semio-framework-schema-state = { workspace = true }
 semio-framework-schema-validator = { path = "../../✅️validator/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
-semio-framework-schema-derive = { path = "../../✨️derive/📦️packages/🦀️rust", package = "semio-framework-schema-derive" }
-semio-framework-schema-registry = { path = "../../📇️registry/📦️packages/🦀️rust", package = "semio-framework-schema-registry" }
+semio-framework-schema-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../📇️registry/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

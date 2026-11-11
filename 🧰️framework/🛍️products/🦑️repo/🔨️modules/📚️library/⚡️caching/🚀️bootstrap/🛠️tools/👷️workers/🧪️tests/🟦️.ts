@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync} from "node:fs";
@@ -29,7 +30,7 @@ test("the worker plan becomes the Nx job count and batch mode the installed Nx r
   const directory=realpathSync(mkdtempSync(join(tmpdir(),"nx-parallel-")));
   try{
    writeFileSync(join(directory,"nx.json"),"{}\n");
-   var job=spawnSync("node",["-e","process.stdout.write(String(require(process.env.NX_OPTIONS).readParallelFromArgsAndEnv({})))"],{cwd:directory,encoding:"utf8",env:{...process.env,NX_OPTIONS:installed.resolve("nx/src/command-line/yargs-utils/shared-options"),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false",NX_PARALLEL:settings.environment.NX_PARALLEL}});
+   var job=spawnSync(registeredToolExecutableV1("node"),["-e","process.stdout.write(String(require(process.env.NX_OPTIONS).readParallelFromArgsAndEnv({})))"],{cwd:directory,encoding:"utf8",env:{...process.env,NX_OPTIONS:installed.resolve("nx/src/command-line/yargs-utils/shared-options"),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false",NX_PARALLEL:settings.environment.NX_PARALLEL}});
   }finally{rmSync(directory,{recursive:true,force:true});}
   expect(job.status,job.stderr).toBe(0);expect(Number(job.stdout),row.name).toBe(plan.localJobs);
  }

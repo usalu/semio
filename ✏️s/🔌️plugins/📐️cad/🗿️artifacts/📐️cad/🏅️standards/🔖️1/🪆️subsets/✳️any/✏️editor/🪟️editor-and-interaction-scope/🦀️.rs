@@ -178,7 +178,7 @@ impl ArtifactEditor for CadPlayApp {
         registry.register(CadRetainedCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !CAD_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
@@ -190,9 +190,9 @@ impl ArtifactEditor for CadPlayApp {
         semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, CadCommand::command_id, cad_retained_raw_bytes(tool_id), CAD_RETAINED_WORK_ITEMS, false, |request| CadRetainedCommandWork { tool_id, consumed: false })
     }
 
-    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|request.tool_id=="import-media"){return Ok(false)}
-        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,CadMediaWork>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,CadMediaWork>(request,body,construction,cx)
     }
 
     fn app_schema() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {

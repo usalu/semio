@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 📥️ Proves actual Nx dispatch issues exact original native child authority. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
@@ -109,7 +110,7 @@ test("production native caller binds canonical artifacts and actual selected arg
   expect(issued.policy).toEqual(original.policy);expect(issued.deadlineEpochMilliseconds).toBeNull();expect(issued.capabilities.arguments).toEqual(row.original);expect(issued.capabilities.selection).toEqual(["nx",...row.selected]);
   expect(issued.capabilities.native.transport).toEqual(row.native.transport);expect(issued.capabilities.native.child).toEqual(row.native.child);expect(issued.capabilities.native.artifactDirectory).toBe(observed.CARGO_TARGET_DIR);expect(observed.CARGO_BUILD_BUILD_DIR).toBe(observed.CARGO_TARGET_DIR);
   expect(observed.CARGO_NET_OFFLINE).toBe(String(issued.capabilities.native.network.offline));expect(issued.capabilities.native.network.offline).toBe(row.offline);expect(new Ajv({strict:true}).compile(schema)(issued.capabilities)).toBe(true);
-  const oracle=Bun.spawnSync(["node","-e","process.stdout.write(JSON.stringify(require('node:path').resolve(process.argv[1],process.argv[2])))","--","/repo",row.artifact]);
+  const oracle=Bun.spawnSync([registeredToolExecutableV1("node"),"-e","process.stdout.write(JSON.stringify(require('node:path').resolve(process.argv[1],process.argv[2])))","--","/repo",row.artifact]);
   expect(oracle.exitCode).toBe(0);expect(issued.capabilities.native.artifactDirectory).toBe(JSON.parse(new TextDecoder().decode(oracle.stdout)));
   expect(JSON.stringify(original)).toBe(before);expect(environment.SEMIO_SCRIPT_PROCESS_INVOCATION).toBe(before);expect(observed.SEMIO_SCRIPT_CAPABILITIES).toBeUndefined();
  }
@@ -170,7 +171,7 @@ test("trusted outer Nx issuer owns production policy and declares child selectio
   for(const selected of commands){const child=producer.issueSelectedNxCallerEnvelopeV1("/repo",parent,selected);expect(child.policy).toBe(parent.policy);expect(child.deadlineEpochMilliseconds).toBeNull();expect(child.capabilities.native).toBe(capabilities.native);expect(child.capabilities.arguments).toBe(capabilities.arguments);expect(child.capabilities.selection).toEqual(["nx",...selected]);expect(admit(child.capabilities)).toBe(true);}
   expect(()=>producer.issueSelectedNxCallerEnvelopeV1("/repo",parent,["run","undeclared:foreign"])).toThrow();expect(JSON.stringify(parent)).toBe(before);
   const bound=processApi.createScriptProcessEnvelope(parent.policy,{workspaceRoot:capabilities.workspaceRoot,buildMode:capabilities.buildMode,arguments:capabilities.arguments,native:capabilities.native,selection:capabilities.selection},Date.now());expect(producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,row.selected)).toBe(bound);expect(()=>producer.issueSelectedNxCallerEnvelopeV1("/repo",bound,["run","undeclared:foreign"])).toThrow();
-  const oracle=Bun.spawnSync(["node","-e","process.stdout.write(JSON.stringify(require('node:path').resolve(process.argv[1],process.argv[2])))","--","/repo",row.artifact]);expect(oracle.exitCode).toBe(0);expect(capabilities.native.artifactDirectory).toBe(JSON.parse(new TextDecoder().decode(oracle.stdout)));
+  const oracle=Bun.spawnSync([registeredToolExecutableV1("node"),"-e","process.stdout.write(JSON.stringify(require('node:path').resolve(process.argv[1],process.argv[2])))","--","/repo",row.artifact]);expect(oracle.exitCode).toBe(0);expect(capabilities.native.artifactDirectory).toBe(JSON.parse(new TextDecoder().decode(oracle.stdout)));
  }
 });
 
@@ -184,7 +185,7 @@ test("actual native private argument transport preserves selected child argv",as
  expect(arguments_).toEqual(issued.capabilities.command.arguments);
  const code="process.stdout.write(JSON.stringify(process.argv.slice(process.argv.indexOf('original-native-argv-boundary')+1)))";
  const actual=Bun.spawnSync([process.execPath,"-e",code,"--",marker,...arguments_],{env:transported.environment});
- const oracle=Bun.spawnSync(["node","-e",code,"--",marker,...arguments_],{env:transported.environment});
+ const oracle=Bun.spawnSync([registeredToolExecutableV1("node"),"-e",code,"--",marker,...arguments_],{env:transported.environment});
  expect(actual.exitCode,new TextDecoder().decode(actual.stderr)).toBe(0);expect(oracle.exitCode,new TextDecoder().decode(oracle.stderr)).toBe(0);
  expect(JSON.parse(new TextDecoder().decode(actual.stdout))).toEqual(arguments_);expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(arguments_);
 });

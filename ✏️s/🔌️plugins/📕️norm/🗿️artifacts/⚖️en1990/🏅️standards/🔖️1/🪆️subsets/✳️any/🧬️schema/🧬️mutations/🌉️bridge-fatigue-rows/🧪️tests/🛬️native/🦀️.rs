@@ -6,8 +6,6 @@ use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneProgress,Re
 use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneClose};
 use semio_framework_value_native_owned::{OriginalReceivingPrimary};
 
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:2_000_000,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<28,maximum_release_bytes:1<<28,maximum_depth:4096}}

@@ -82,11 +82,11 @@ struct FrameworkReservedBoundedJob {
     pub prefix:usize,
     pub matched:bool,
     pub cancelled:bool,
-
+    pub construction:semio_framework_job::OriginalConstructionAdmission,
 }
 
 impl FrameworkReservedBoundedJob{
- fn new(input:Vec<u8>,restored:Option<Vec<u8>>,binding:semio_framework_job::OriginalSourceBinding)->Self{Self{binding,source:Some((input,restored)),source_close:None,output:None,admission:Default::default(),output_close:None,phase:0,scan:0,prefix:0,matched:true,cancelled:false}}
+ fn new(input:Vec<u8>,restored:Option<Vec<u8>>,binding:semio_framework_job::OriginalSourceBinding)->Self{Self{binding,source:Some((input,restored)),source_close:None,output:None,admission:Default::default(),output_close:None,phase:0,scan:0,prefix:0,matched:true,cancelled:false,construction:Default::default()}}
  fn validate_original(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),ValueError>{cx.original_source_parent()?;if !self.binding.matches(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"reserved job requires its exact original source and clock"))}Ok(())}
  fn step_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_actor::OriginalJobStep,OriginalTurnFailure>{
   use semio_framework_actor::OriginalJobStep as JobStep;
@@ -109,8 +109,8 @@ impl FrameworkReservedBoundedJob{
    },
    1=>{
     let length=self.source.as_ref().unwrap().0.len()-self.prefix;
-    let settled=semio_framework_job::admit_original_construction_settled(cx,&mut self.admission,&mut self.output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:length,release_bytes:0,depth:1},1,|_,actual|semio_framework_value::RetainedWorkOutcome{work:1,result:(||{let mut output=Vec::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved job output allocation refused"))?;let capacity=output.capacity();*actual=Some(capacity);Ok((output,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}))})()})?;
-    if settled{self.phase=2;}Ok(JobStep::Running(None))
+    let status=semio_framework_job::admit_original_construction(cx,&mut self.output,&mut self.construction,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:length,release_bytes:0,depth:1},1,|_,actual|semio_framework_value::RetainedWorkOutcome{work:1,result:(||{let mut output=Vec::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved job output allocation refused"))?;let capacity=output.capacity();*actual=Some(capacity);Ok((output,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}))})()});
+    match status?{semio_framework_job::OriginalConstructionStatus::Ready=>self.phase=2,semio_framework_job::OriginalConstructionStatus::Failed=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved job output construction failed").into()),semio_framework_job::OriginalConstructionStatus::Pending=>{}}Ok(JobStep::Running(None))
    },
    2=>{
     let raw=&self.source.as_ref().unwrap().0;let remaining=raw.len()-self.prefix-self.scan;
@@ -131,7 +131,8 @@ impl crate::BoundedJob for FrameworkReservedBoundedJob {
   self.validate_original(cx)?;if self.terminal_drop_is_shallow(){return Ok(true)}
   if !self.cancelled{let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.cancelled=true;return Ok(false)}
   if !self.admission.terminal_is_empty(){self.admission.close_step(cx)?;return Ok(false)}
-  Ok(crate::close_original(&mut self.source,&mut self.source_close,cx)?&&crate::close_original(&mut self.output,&mut self.output_close,cx)?)
+  if !(crate::close_original(&mut self.source,&mut self.source_close,cx)?&&crate::close_original(&mut self.output,&mut self.output_close,cx)?){return Ok(false)}
+  Ok(matches!(self.construction.retire_step(cx)?,semio_framework_job::InteractiveJobCloseStep::Complete{..}))
  }
  fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if self.terminal_drop_is_shallow(){return Ok(Default::default())}
@@ -143,7 +144,7 @@ impl crate::BoundedJob for FrameworkReservedBoundedJob {
  }
  fn cancel(&mut self){self.cancelled=true}
  fn checkpoint(&self)->Option<Vec<u8>>{None}
- fn terminal_drop_is_shallow(&self)->bool{self.source.is_none()&&self.source_close.is_none()&&self.output.is_none()&&self.output_close.is_none()&&self.admission.terminal_is_empty()}
+ fn terminal_drop_is_shallow(&self)->bool{self.source.is_none()&&self.source_close.is_none()&&self.output.is_none()&&self.output_close.is_none()&&self.admission.terminal_is_empty()&&self.construction.terminal_is_empty()}
 }
 
 

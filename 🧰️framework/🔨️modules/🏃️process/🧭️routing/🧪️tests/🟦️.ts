@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../🧰️tools/🏃️run/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -149,7 +150,7 @@ for (const row of corpus.mainCases) {
 }
 console.log(JSON.stringify(results));`;
   const result = await build({ stdin: { contents: source, resolveDir: process.cwd(), sourcefile: "routing-product-refusal.ts" }, bundle: true, platform: "node", format: "esm", write: false, logLevel: "silent", plugins: [{ name: "refuse-specific-products", setup(builder) { builder.onLoad({ filter: /./ }, (args) => { if (args.path.replaceAll("\\", "/").includes("/🧰️framework/🛍️products/")) throw Error(`general routing loads specific product ${args.path}`); return undefined; }); } }] });
-  const child = spawnSync("node", ["--input-type=module", "-e", result.outputFiles[0]!.text], { encoding: "utf8" });
+  const child = spawnSync(registeredToolExecutableV1("node"), ["--input-type=module", "-e", result.outputFiles[0]!.text], { encoding: "utf8" });
   expect(child.status, child.stderr).toBe(0);
   expect(JSON.parse(child.stdout)).toEqual([...corpus.cases, ...corpus.mainCases].map(row => ({ id: row.id, actual: row.expected })));
 });
@@ -432,7 +433,7 @@ test("original ordinary no-deadline authority preserves cancellation and fractio
   const listeners=[process.listenerCount("SIGINT"),process.listenerCount("SIGTERM")];
   await expect(api.withScriptProcessEnvelope(api.createScriptProcessEnvelope(policy,capabilities,Date.now()),async original=>{expect(original.control.remainingMilliseconds()).toBe(null);await new Promise<void>(done=>setTimeout(done,20));expect(original.control.remainingMilliseconds()).toBe(null);expect(original.control.signal.aborted).toBe(false);process.emit("SIGINT");expect(original.control.signal.aborted).toBe(true);})).rejects.toThrow("Original Script process interrupted");
   expect([process.listenerCount("SIGINT"),process.listenerCount("SIGTERM")]).toEqual(listeners);
-  const oracle = Bun.spawnSync(["node", "--eval", 'const rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(row=>{const accepted=Number.isSafeInteger(row.parent)&&Number.isSafeInteger(row.requested)&&row.requested>=0&&((row.parent===0&&row.remaining===null)||(row.parent>0&&Number.isFinite(row.remaining)&&row.remaining>=1&&row.remaining<=row.parent));return{accepted,...(accepted?{expected:row.parent===0?row.requested:Math.floor(row.requested===0?row.remaining:Math.min(row.remaining,row.requested))}:{})}})))', JSON.stringify(rows.budgets)]);
+  const oracle = Bun.spawnSync([registeredToolExecutableV1("node"), "--eval", 'const rows=JSON.parse(process.argv[1]);console.log(JSON.stringify(rows.map(row=>{const accepted=Number.isSafeInteger(row.parent)&&Number.isSafeInteger(row.requested)&&row.requested>=0&&((row.parent===0&&row.remaining===null)||(row.parent>0&&Number.isFinite(row.remaining)&&row.remaining>=1&&row.remaining<=row.parent));return{accepted,...(accepted?{expected:row.parent===0?row.requested:Math.floor(row.requested===0?row.remaining:Math.min(row.remaining,row.requested))}:{})}})))', JSON.stringify(rows.budgets)]);
   expect(oracle.exitCode).toBe(0); expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(rows.budgets.map(row => ({ accepted: row.accepted, ...("expected" in row ? { expected: row.expected } : {}) })));
   const outcomes = [];
   for (const row of rows.budgets) {

@@ -3,8 +3,6 @@ use semio_os_channel::*;
 use protocol::wire::command_ingress::{CommandPageSet,FixedCommandPage,PagedCommand,COMMAND_PAGE_MAXIMUM_BYTES};
 use semio_framework_job::{OperationId,Generation,RetainedCloneGrant};
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1)}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:128,maximum_copy_bytes:32768,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:256}}
 fn observed<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(result,(heap.requested_bytes,heap.released_bytes))}

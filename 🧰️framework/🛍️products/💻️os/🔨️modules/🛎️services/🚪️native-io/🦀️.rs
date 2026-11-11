@@ -16,9 +16,6 @@ mod native_read;
 mod original_path_return;
 pub use original_path_return::{OriginalNativePathReturnRegistry,OriginalNativePathReservation,OriginalSuppliedNativePath};
 
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_NATIVE_IO_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[cfg(test)]
 #[path = "../🧪️tests/🔬️native-io-unit"]

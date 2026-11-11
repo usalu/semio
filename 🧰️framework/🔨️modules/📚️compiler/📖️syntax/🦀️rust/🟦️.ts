@@ -192,6 +192,32 @@ export function rustTokenPairs(tokens: readonly RustToken[]): ReadonlyMap<number
   return pairs;
 }
 
+/** 📍️ One place in source text, counted from 1 in code points. */
+export type RustSourcePositionV1 = Readonly<{ line: number; column: number }>;
+
+/** 🚧️ The first structural delimiter fault: a closer without opener (`unexpected`), a closer that does not match the innermost opener (`mismatched`, `closing` is the closer) or an opener never closed (`unclosed`). */
+export type RustDelimiterFaultV1 = Readonly<{ kind: "unexpected" | "mismatched" | "unclosed"; delimiter: string; at: RustSourcePositionV1; closing?: Readonly<{ delimiter: string; at: RustSourcePositionV1 }> }>;
+
+/** 🧭️ Finds the first delimiter fault of Rust source the way the compiler reports it: the innermost open delimiter is the culprit, and literals and comments never count.
+ * @see https://doc.rust-lang.org/reference/tokens.html */
+export function rustDelimiterFaultV1(source: string): RustDelimiterFaultV1 | null {
+  const tokens = rustTokens(source), closeFor: Readonly<Record<string, string>> = { "(": ")", "[": "]", "{": "}" }, stack: RustToken[] = [];
+  const position = (token: RustToken): RustSourcePositionV1 => {
+    const head = source.slice(0, token.start), line = head.split("\n").length;
+    return { line, column: Array.from(head.slice(head.lastIndexOf("\n") + 1)).length + 1 };
+  };
+  for (const token of tokens) {
+    if (Object.hasOwn(closeFor, token.text)) stack.push(token);
+    else if (token.text === ")" || token.text === "]" || token.text === "}") {
+      const open = stack.pop();
+      if (!open) return { kind: "unexpected", delimiter: token.text, at: position(token) };
+      if (closeFor[open.text] !== token.text) return { kind: "mismatched", delimiter: open.text, at: position(open), closing: { delimiter: token.text, at: position(token) } };
+    }
+  }
+  const open = stack.at(-1);
+  return open ? { kind: "unclosed", delimiter: open.text, at: position(open) } : null;
+}
+
 /** 🔑️ Normalizes identifier symbols while preserving raw keyword token spelling. */
 export function rustIdentifierSymbol(token: RustToken | undefined): string | null {
   return token?.kind === "identifier" ? token.text.replace(/^r#/u, "") : null;

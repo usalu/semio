@@ -30,7 +30,7 @@ semio-hub-trusted-catalog = { workspace = true, features = ["integration-fixture
 semio-hub-trusted-catalog-contract = { workspace = true }
 semio-hub-trusted-catalog-descriptor = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-hub-stdio-catalog = { workspace = true }
 semio-hub-gis = { workspace = true }
 semio-plugin-host = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }

@@ -22,5 +22,5 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio_ui_runtime = { path = "../../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-ui-runtime" }

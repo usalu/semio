@@ -27,9 +27,6 @@ mod preview_epoch;
 pub use preview_epoch::OriginalWindowPreviewEpoch;
 
 #[cfg(test)]
-#[global_allocator]
-static ORIGINAL_WINDOW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-#[cfg(test)]
 #[path="../🗄️store-owners/🌱️initialization/🎟️birth/🧪️tests/🧸️fixture/🦀️.rs"]
 mod fixture;
 #[cfg(test)]

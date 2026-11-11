@@ -24,7 +24,7 @@ async fn kit_in_retained_import_media_dispatches_the_exact_factory_and_applies_c
         "kindCompatibility": [{ "source": "retained-door", "target": "retained-door", "bidirectional": true }],
     });
     let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
-    let result = app.0.import_media("kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in dispatch");
+    let result = semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in dispatch");
     assert!(!result.mutations.is_empty(), "exact retained import must publish document mutations");
     let after = projection_of(&app);
     assert_ne!(after, before, "exact retained import must apply its completion output");
@@ -44,10 +44,10 @@ async fn kit_in_retained_import_media_enforces_exact_media_max_plus_one_before_d
     assert_eq!(maximum.len(), PUZZLE5D_IMPORT_MEDIA_BYTES);
     let mut app = app_with_registry();
     let exact = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: maximum.clone() } };
-    app.0.import_media("kit:in", exact, &meta("local"), app.1.cx()).await.expect("exact media maximum retained dispatch");
+    semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", exact, &meta("local"), app.1.cx()).await.expect("exact media maximum retained dispatch");
     let after_exact = projection_of(&app);
     let plus_one = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: format!("{maximum} ") } };
-    let error = app.0.import_media("kit:in", plus_one, &meta("local"), app.1.cx()).await.expect_err("media maximum plus one must fail before Serde");
+    let error = semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", plus_one, &meta("local"), app.1.cx()).await.expect_err("media maximum plus one must fail before Serde");
     assert!(error.message.contains("predecode cap"), "the plus-one refusal must be the predecode cap, got {:?} {:?}", error.code, error.message);
     assert_eq!(projection_of(&app), after_exact, "rejected plus-one media must not mutate the document");
 }
@@ -76,7 +76,7 @@ async fn kit_in_retained_import_media_upserts_part_and_grip_kinds_into_kind_cata
     });
     let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
-    let result = app.0.import_media("kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
+    let result = semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", media, &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
     assert!(!result.mutations.is_empty(), "importing a non-empty fragment must emit real operations");
     let next_projection = projection_of(&app);
 
@@ -111,7 +111,7 @@ async fn kit_in_retained_import_media_is_idempotent_on_repeated_delivery() {
     let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
     for _ in 0..2 {
-        app.0.import_media("kit:in", media.clone(), &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
+        semio_plugin::artifact_app_laws::import_media(&mut app.0, "kit:in", media.clone(), &meta("local"), app.1.cx()).await.expect("retained kit:in import succeeds");
     }
 
     let current = projection_of(&app);

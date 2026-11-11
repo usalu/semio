@@ -21,11 +21,11 @@ semio-framework-async = { workspace = true }
 semio-s-artifact-bim-model = { workspace = true }
 semio-ui-contract.workspace = true
 semio-framework-job.workspace = true
-semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-plugin = { workspace = true }
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 serde.workspace = true
 serde_json.workspace = true
 semio-s-artifact-bim-model-bim = { path = "../../../../../✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
@@ -40,4 +40,4 @@ semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️
 semio-plugin-host = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-semio-os-run = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust", package = "semio-os-run" }
+semio-os-run = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust" }

@@ -112,6 +112,3 @@ pub mod testkit {
 
 }
 
-#[cfg(test)]
-#[global_allocator]
-static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

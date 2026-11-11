@@ -7,7 +7,7 @@ use semio_ui_runtime::SurfaceReconcileReadyPatch;
 use semio_framework::kernel::UiPatch;
 use semio_plugin_reactor_patches as patches;
 use semio_ui_contract as ui_contract;
-use semio_framework_plugin_reactor_turn::turn_close_step::step_reactor_close;
+use semio_plugin_reactor_turn::turn_close_step::step_reactor_close;
 
 #[test]
 fn patch_frame_limit_does_not_limit_internal_reconciliation_steps() {

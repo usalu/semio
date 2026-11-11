@@ -7,8 +7,6 @@ use std::sync::atomic::{AtomicU64,Ordering};
 static NOW:AtomicU64=AtomicU64::new(1000);
 static CLOCK_LAW:std::sync::Mutex<()>=std::sync::Mutex::new(());
 fn clock()->Option<u64>{Some(NOW.load(Ordering::Acquire))}
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}
 fn total(law:&serde_json::Value)->RetainedCloneGrant{let row=&law["totalGrant"];RetainedCloneGrant{maximum_items:row[0].as_u64().unwrap()as usize,maximum_copy_bytes:row[1].as_u64().unwrap()as usize,maximum_capacity_bytes:row[2].as_u64().unwrap()as usize,maximum_release_bytes:row[3].as_u64().unwrap()as usize,maximum_depth:row[4].as_u64().unwrap()as usize}}
 fn call_policy(policy:RetainedCloneGrant,total:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:policy.maximum_items.min(total.maximum_items),maximum_copy_bytes:policy.maximum_copy_bytes.min(total.maximum_copy_bytes),maximum_capacity_bytes:policy.maximum_capacity_bytes.min(total.maximum_capacity_bytes),maximum_release_bytes:policy.maximum_release_bytes.min(total.maximum_release_bytes),maximum_depth:policy.maximum_depth.min(total.maximum_depth)}}

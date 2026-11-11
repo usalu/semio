@@ -23,7 +23,7 @@ pub(super) async fn supersede_cold_pair_document_load<PA: semio_plugin_reactor_a
         })
     });
     if let Some(operation) = stale {
-        let _ = semio_framework_plugin_runtime_ops::ops_document::plugin_cancel_document_archive_load(runtime, lifetime.instance_id, operation).await;
+        let _ = semio_plugin_runtime_ops::ops_document::plugin_cancel_document_archive_load(runtime, lifetime.instance_id, operation).await;
     }
 }
 
@@ -40,7 +40,7 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_plugin_reactor_app::P
         if pending.superseded {
             return finish(pending.load, Err(b"cold-pair.load-cancelled".to_vec()));
         }
-        match semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, lifetime.instance_id, pending.operation, &mut *pending.archive, &mut pending.admission, cx).await {
+        match semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, lifetime.instance_id, pending.operation, &mut *pending.archive, &mut pending.admission, cx).await {
             Ok(true) => pending.admitted = true,
             Ok(false) => {
                 let cursor = pending.cursor;
@@ -50,7 +50,7 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_plugin_reactor_app::P
             Err(failure) => return finish(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&admission_fault(&failure)))),
         }
     }
-    let status = match semio_framework_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, lifetime.instance_id, pending.operation, identity, cx).await {
+    let status = match semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, lifetime.instance_id, pending.operation, identity, cx).await {
         Ok(status) => status,
         Err(fault) => return finish(pending.load, Err(semio_framework_diagnostic::encode_fault_bytes(&fault))),
     };
@@ -59,7 +59,7 @@ pub(super) async fn step_cold_pair_document_load<PA: semio_plugin_reactor_app::P
         COLD_PAIR_DOCUMENT_LOAD.with(|slot| *slot.borrow_mut() = Some(pending));
         return ColdPairIngressStatus::Loading(cursor);
     }
-    let acknowledged = semio_framework_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, lifetime.instance_id, pending.operation).await;
+    let acknowledged = semio_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, lifetime.instance_id, pending.operation).await;
     let result = match (status.state, acknowledged) {
         (_, Err(fault)) => Err(semio_framework_diagnostic::encode_fault_bytes(&fault)),
         (DocumentArchiveLoadState::Ready, Ok(())) => Ok(()),
@@ -97,7 +97,7 @@ pub(super) async fn step_restored_document_loads<PA: semio_plugin_reactor_app::P
             continue;
         }
         if !load.admitted {
-            match semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance, operation, &mut *load.archive, &mut load.admission, cx).await {
+            match semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance, operation, &mut *load.archive, &mut load.admission, cx).await {
                 Ok(true) => load.admitted = true,
                 Ok(false) => {
                     running.push(load);
@@ -109,7 +109,7 @@ pub(super) async fn step_restored_document_loads<PA: semio_plugin_reactor_app::P
                 }
             }
         }
-        let status = match semio_framework_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance, operation, identity, cx).await {
+        let status = match semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance, operation, identity, cx).await {
             Ok(status) => status,
             Err(fault) => {
                 effects.push(shell_fault_effect(instance, &fault));
@@ -120,7 +120,7 @@ pub(super) async fn step_restored_document_loads<PA: semio_plugin_reactor_app::P
             running.push(load);
             continue;
         }
-        match semio_framework_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, instance, operation).await {
+        match semio_plugin_runtime_ops::ops_document::plugin_acknowledge_document_archive_load(runtime, instance, operation).await {
             Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
             Ok(()) if status.state == DocumentArchiveLoadState::Fault => effects.push(shell_fault_effect(instance, &semio_framework_diagnostic::decode_fault_bytes(&status.fault))),
             Ok(()) => {}

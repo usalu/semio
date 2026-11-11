@@ -25,6 +25,7 @@ name = "original-selected-retirement"
 path = "../../🧪️tests/🎯️selected/owning.rs"
 
 [dependencies]
+semio-framework-trace = { workspace = true }
 semio-framework-value-retirement-contract = { path="../../🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path="../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-allocation-return = { path="../../📦️allocation-return/📦️packages/🦀️rust" }

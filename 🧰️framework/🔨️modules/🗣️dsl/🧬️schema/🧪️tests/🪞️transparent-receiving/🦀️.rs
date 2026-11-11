@@ -5,8 +5,6 @@ use semio_framework_dsl_record::FieldValue;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetainedWorkOutcome,retirement::RetireOwned};
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,OriginalTurnFailure};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 #[derive(Debug,PartialEq,semio_framework_value::RetireOwned)]
 struct Octets(Vec<u8>);

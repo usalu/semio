@@ -5,8 +5,6 @@ use semio_os_kernel::{io::control::{NativeSnapshotDecodeOwner,NativeSnapshotEnco
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::sync::atomic::{AtomicBool,Ordering};
-#[global_allocator]
-static ORIGINAL_TEXT_ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn contract()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn grant()->RetainedCloneGrant{serde_json::from_value(contract()["originalGrant"].clone()).unwrap()}
 fn source(value:&serde_json::Value)->SemioTextSnapshot{SemioTextSnapshot{schema:value["schema"].as_str().unwrap().into(),runs:value["runs"].as_array().unwrap().iter().map(|run|SemioTextRun{language:run["language"].as_str().unwrap().into(),content:run["content"].as_str().unwrap().into(),marks:run["marks"].as_array().unwrap().iter().map(|mark|SemioTextMark{kind:match mark["kind"].as_str().unwrap(){"bold"=>SemioTextMarkKind::Bold,"italic"=>SemioTextMarkKind::Italic,"code"=>SemioTextMarkKind::Code,_=>SemioTextMarkKind::Link},href:mark["href"].as_str().unwrap().into()}).collect()}).collect()}}

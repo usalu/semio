@@ -46,7 +46,7 @@ semio-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱�
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 
-semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 semio-framework-pack-json = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-pack-json-float = { path = "../../../../../../🔨️modules/🎒️pack/🔤️json/🎯️float-writer/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
@@ -72,13 +72,13 @@ semio-os-mcp-http-transport = { path = "../../📮️http-transport/📦️packa
 semio-plugin-host-wake = { path = "../../../🔌️plugin/🖥️host/🔔️wake/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
-semio-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-plugin-host" }
+semio-plugin = { path = "../../../🔌️plugin/📦️packages/🦀️rust" }
+semio-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-plugin-guest-contract = { path = "../../../🔌️plugin/🧬️guest-contract/📦️packages/🦀️rust" }
 framework_hash = { path = "../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust", package = "semio-framework-actor" }
+semio-framework-actor = { path = "../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

@@ -14,7 +14,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_plugin_decl_emission::Emit;
 use semio_framework::{Fault, FaultFrom, MediaError};
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use std::mem::ManuallyDrop;
 use crate::docs_components::MediaTransfers;
 use store::{MemberFactory, Mutation, SpaceMember};
@@ -79,7 +79,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             if let Some(original)=self.media_export_preparation.as_mut(){
                 if let Some(checkpoint)=original.checkpoint.as_mut(){if !checkpoint.terminal_is_empty(){return checkpoint.close_step(stores,cx,grant).map(|progress|(PluginLifecycleStep::Progress(progress),false)).map_err(Into::into)}}
                 if let Some(progress)=original.close_material_step(cx,grant)?{return Ok((PluginLifecycleStep::Progress(progress),false))}
-                let step=if let Some(owner)=original.retirement.as_mut(){if owner.terminal_is_empty(){RetainedCloneStep::Progress(semio_plugin_operation::original_lease_cursor_release(&mut original.retirement,grant)?)}else{let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.close_step(&tools.tool_cancellations,effect))? else{return Ok((PluginLifecycleStep::Progress(Default::default()),false))};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result?,semio_framework_value::RetainedWorkPoll::Pending{..}=>RetainedCloneStep::Progress(Default::default())}}}else if original.lease.is_some(){let(owner,progress)=semio_plugin_operation::original_lease_cursor_admit(&mut original.lease,grant)?;original.retirement=owner;RetainedCloneStep::Progress(progress)}
+                let step=if let Some(owner)=original.retirement.as_mut(){if owner.terminal_is_empty(){RetainedCloneStep::Progress(semio_plugin_operation::original_lease_cursor_release(&mut original.retirement,grant)?)}else{semio_plugin_ownership::bounded_ownership::plugin_controlled_effect_close::<ValueError>(cx,grant,|effect,_|owner.close_step(&tools.tool_cancellations,effect))?}}else if original.lease.is_some(){let(owner,progress)=semio_plugin_operation::original_lease_cursor_admit(&mut original.lease,grant)?;original.retirement=owner;RetainedCloneStep::Progress(progress)}
                 else if let Some(owner)=original.snapshot_retention.as_mut(){if owner.terminal_is_empty(){original.snapshot_retention.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}else{return owner.close_step(cx,grant).map(|step|(PluginLifecycleStep::Progress(step.progress().unwrap_or_default()),false)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)}}
                 else if !original.snapshot_source.terminal_is_empty(){return original.snapshot_source.close_step(cx).map(|step|(PluginLifecycleStep::Progress(step.progress()),false)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)}
                 else{self.media_export_preparation.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<MediaExportPreparation<A>>(),..Default::default()})};
@@ -87,9 +87,9 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             }
             if let Some(owner)=self.media_submission_refusal_retirement.as_mut(){
                 if owner.terminal_is_empty(){drop(self.media_submission_refusal_retirement.take());self.media_submission_refusal_identity=None;return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),true))}
-                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+                let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(grant.maximum_copy_bytes,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
             }
-            if let Some(place)=self.media_submission_refusal_place.as_mut(){if place.terminal_is_empty(){*self.media_submission_refusal_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))}let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;place.close_step(body,effect)})?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}
+            if let Some(place)=self.media_submission_refusal_place.as_mut(){if place.terminal_is_empty(){*self.media_submission_refusal_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))}let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|place.close_step(grant.maximum_copy_bytes,effect))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}
         if let Some(source)=self.media_submission_refusal.take(){
                 match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>{*self.media_submission_refusal_retirement=Some(owner);Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))},Err((failure,source))=>{*self.media_submission_refusal=Some(source);Err(failure.into())}}
             }else{self.media_submission_refusal_identity=None;Ok((PluginLifecycleStep::Complete(Default::default()),true))}

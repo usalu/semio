@@ -1,0 +1,21 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Row pool law fixture / Zeilenpool Gesetzesdaten",
+ "description": "EN: Synthetic many-crate workspaces whose crates each hold analysis rows read from a shared set of files; however many crates hold equal rows, the rows must be one live object each, so the objects held grow with the distinct rows and not with the crates. DE: Synthetische Arbeitsbereiche mit vielen Crates, die je Analysezeilen aus einer gemeinsamen Dateimenge halten; gleiche Zeilen müssen ein lebendes Objekt sein, die gehaltenen Objekte wachsen also mit den verschiedenen Zeilen und nicht mit den Crates.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["version", "workspaces"],
+ "properties": {
+  "version": {"const": 1},
+  "workspaces": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["name", "crates", "rowsPerCrate", "files", "providers", "nested", "seed", "maximumObjectsPerDistinctRow"], "properties": {
+   "name": {"type": "string", "minLength": 1},
+   "crates": {"type": "integer", "minimum": 1},
+   "rowsPerCrate": {"type": "integer", "minimum": 1},
+   "files": {"type": "integer", "minimum": 1},
+   "providers": {"type": "integer", "minimum": 1},
+   "nested": {"type": "integer", "minimum": 0},
+   "seed": {"type": "integer"},
+   "maximumObjectsPerDistinctRow": {"type": "integer", "minimum": 1}
+  }}}
+ }
+}

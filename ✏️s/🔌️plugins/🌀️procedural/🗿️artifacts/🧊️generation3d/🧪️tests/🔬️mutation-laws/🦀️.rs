@@ -1,6 +1,5 @@
 //! 🧪️ Cross-layer mutation laws: graph-editor replay, touched regions, gesture leaves with their codec witnesses, store-backed mutation behavior and document restoration.
 
-semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;

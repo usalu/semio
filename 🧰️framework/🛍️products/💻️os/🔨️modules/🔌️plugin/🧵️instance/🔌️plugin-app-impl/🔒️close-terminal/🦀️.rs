@@ -39,6 +39,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.media.pending_reserved_producer_permit.is_none()
             && self.media.reserved_mount.is_none()
             && self.media.reserved_receipt.is_none()
+            && self.media.reserved_mount_construction.terminal_is_empty()
             && self.tools.tool_operations.is_empty()
             && self.original_typing.terminal_is_empty()
             && !self.original_emission.pending()
@@ -119,6 +120,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             self.media.pending_reserved_producer_permit.is_none(),
             self.media.reserved_mount.is_none(),
             self.media.reserved_receipt.is_none(),
+            self.media.reserved_mount_construction.terminal_is_empty(),
             self.tools.tool_operations.is_empty(),
             self.original_typing.terminal_is_empty(),
             !self.original_emission.pending(),

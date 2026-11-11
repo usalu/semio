@@ -34,7 +34,7 @@ use semio_plugin_window_config::WindowConfigOwner;
 use semio_plugin_time_travel_panel::panel_pointer::{time_travel_coerce, time_travel_default_value, time_travel_entity_names, time_travel_input_at, time_travel_json, time_travel_pointer_get, time_travel_pointer_insert, time_travel_pointer_remove, time_travel_pointer_set, time_travel_reference_fallback_label, time_travel_resolve_options, time_travel_resolve_snaps, time_travel_switch_variant, time_travel_variant_selector};
 use semio_ui_contract::*;
 use semio_plugin_instance_extension::InstanceExtension;
-use semio_framework_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
+use semio_plugin_instance_docs::docs_plugin_app_impl::history_changed_event;
 use semio_plugin_decl_emission::ActionMeta;
 use semio_plugin_command::{CommandLogAppend, HISTORY_STEP_BLOCKED_CODE};
 use semio_plugin_document_media::ActiveDocumentArchiveLoadState;
@@ -45,10 +45,10 @@ use store::{MemberFactory, ReferenceSpaceMember, SpaceMember};
 use semio_plugin_decl_app::is_time_travel_action_id;
 use semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
+use semio_plugin_instance_docs::docs_maintenance_ladder::item;
 use semio_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_plugin_instance_extension::{ExtensionCtx, ExtensionRef};
-use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
+use semio_plugin_instance_docs::docs_components::MediaTransfers;
 use crate::time_travel_bundle::{TimeTravelCtx, TimeTravelRef};
 use semio_plugin_tool_run::ToolRunLedger;
 

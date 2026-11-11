@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import Ajv from "ajv";
 import { afterAll, expect, test } from "bun:test";
 import { spawn } from "node:child_process";
@@ -26,7 +27,7 @@ let oracleFailure: Error | undefined, oracleClosed = false;
 function observe(path: string): Promise<PhysicalObservation> {
   if (oracleFailure || oracleClosed) return Promise.reject(oracleFailure ?? new Error("Physical oracle is closed"));
   if (!oracleProcess) {
-    oracleProcess = spawn("node", ["-e", oracle], { stdio: ["pipe", "pipe", "inherit"] });
+    oracleProcess = spawn(registeredToolExecutableV1("node"), ["-e", oracle], { stdio: ["pipe", "pipe", "inherit"] });
     const refuse = (error: Error): void => { oracleFailure = error; for (const request of requests.values()) request.reject(error); requests.clear(); };
     oracleCompletion = new Promise((resolve) => { oracleProcess!.once("close", (code) => { oracleClosed = true; if (requests.size) refuse(new Error("Physical oracle closed with pending observations: " + code)); resolve(code); }); oracleProcess!.once("error", (error) => { refuse(error); resolve(null); }); });
     oracleProcess.stdin!.on("error", refuse);

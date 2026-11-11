@@ -21,7 +21,7 @@ use semio_plugin_job::reserved_jobs::{FrameworkReservedCommit, FrameworkReserved
 use std::future::Future;
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, SpaceMember};
-use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 use protocol::OpText;
 use crate::jobs_instance_root::OriginalRenderTreeIdentity;
 use crate::jobs_lease::OriginalToolLeaseAdmission;
@@ -65,6 +65,7 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub reserved_commit_outcome: Option<Result<InvocationResult, Fault>>,
     pub pending_document_window_admission:std::mem::ManuallyDrop<Option<DocumentWindowResetAdmission>>,
     pub reserved_preparation:ManuallyDrop<Option<crate::reserved_preparation::ReservedPreparation<A>>>,
+    pub reserved_birth:ManuallyDrop<Option<semio_framework_job::OriginalConstructionAdmission>>,
 }
 
 impl<A: ArtifactApp> PendingReserved<A> {
@@ -73,7 +74,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
 
     /// 🛟️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
             /// 📋️ Enabled fields form one retained initialization inventory.
-    pub const INITIAL_FIELDS:usize=31;
+    pub const INITIAL_FIELDS:usize=32;
     /// 📏️ Quotes one bounded absent chunk or one atomic live field and its actual backing.
     pub fn initial_field_demands(field:usize,byte:usize,body:usize,backing:bool)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(match field{
   0=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.last_emit_wire);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
@@ -107,6 +108,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
   28=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.reserved_commit_outcome);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   29=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.pending_document_window_admission);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   30=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.reserved_preparation);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
+  31=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.reserved_birth);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   _=>return Err(semio_framework_value::ValueError::invariant("initial field cursor exceeds its inventory")),
  })}
     /// 🖋️ Copies one funded static absent chunk or initializes one selected live field in place.
@@ -144,10 +146,11 @@ impl<A: ArtifactApp> PendingReserved<A> {
   28=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).reserved_commit_outcome),byte,count)},
   29=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).pending_document_window_admission),byte,count)},
   30=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).reserved_preparation),byte,count)},
+  31=>unsafe{initialize_manual_absent_at(std::ptr::addr_of_mut!((*target).reserved_birth),byte,count)},
   _=>Err(semio_framework_value::ValueError::invariant("initial field cursor exceeds its inventory")),
  }}
 
-pub fn new(dispatch_report:protocol::DispatchReport)->Self{let backing=true;Self{reserved_preparation:ManuallyDrop::new(None),last_emit_wire:None,dispatch_report:dispatch_report,pending_render_tree:std::mem::ManuallyDrop::new(None),pending_render_tree_identity:None,pending_render_work:ManuallyDrop::new(None),pending_render_source:ManuallyDrop::new(None),pending_render_tree_ready:false,pending_render_tree_close:std::mem::ManuallyDrop::new(None),pending_configuration_source:None,pending_configuration_rejected:false,pending_configuration_worker:None,pending_configuration_completion:None,pending_configuration_command:std::mem::ManuallyDrop::new(None),pending_configuration_command_close:None,pending_configuration_permit:None,pending_configuration_failure:std::mem::ManuallyDrop::new(None),pending_configuration_identity:None,pending_configuration_retirement:None,pending_render_failure:std::mem::ManuallyDrop::new(None),pending_render_identity:None,pending_render_close_failure:std::mem::ManuallyDrop::new(None),pending_render_compound:std::mem::ManuallyDrop::new(None),pending_render_failure_place:std::mem::ManuallyDrop::new(None),pending_render_compound_place:std::mem::ManuallyDrop::new(None),pending_configuration_failure_place:std::mem::ManuallyDrop::new(None),pending_render_retirement:std::mem::ManuallyDrop::new(None),pending_reserved:if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},reserved_commits:if backing{std::collections::VecDeque::with_capacity(ARTIFACT_LIVE_OUTPUT_SLOTS)}else{std::collections::VecDeque::new()},reserved_commit_outcome:None,pending_document_window_admission:std::mem::ManuallyDrop::new(None)}}
+pub fn new(dispatch_report:protocol::DispatchReport)->Self{let backing=true;Self{reserved_preparation:ManuallyDrop::new(None),reserved_birth:ManuallyDrop::new(None),last_emit_wire:None,dispatch_report:dispatch_report,pending_render_tree:std::mem::ManuallyDrop::new(None),pending_render_tree_identity:None,pending_render_work:ManuallyDrop::new(None),pending_render_source:ManuallyDrop::new(None),pending_render_tree_ready:false,pending_render_tree_close:std::mem::ManuallyDrop::new(None),pending_configuration_source:None,pending_configuration_rejected:false,pending_configuration_worker:None,pending_configuration_completion:None,pending_configuration_command:std::mem::ManuallyDrop::new(None),pending_configuration_command_close:None,pending_configuration_permit:None,pending_configuration_failure:std::mem::ManuallyDrop::new(None),pending_configuration_identity:None,pending_configuration_retirement:None,pending_render_failure:std::mem::ManuallyDrop::new(None),pending_render_identity:None,pending_render_close_failure:std::mem::ManuallyDrop::new(None),pending_render_compound:std::mem::ManuallyDrop::new(None),pending_render_failure_place:std::mem::ManuallyDrop::new(None),pending_render_compound_place:std::mem::ManuallyDrop::new(None),pending_configuration_failure_place:std::mem::ManuallyDrop::new(None),pending_render_retirement:std::mem::ManuallyDrop::new(None),pending_reserved:if backing{ArtifactFixedRegistry::new()}else{ArtifactFixedRegistry::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)},reserved_commits:if backing{std::collections::VecDeque::with_capacity(ARTIFACT_LIVE_OUTPUT_SLOTS)}else{std::collections::VecDeque::new()},reserved_commit_outcome:None,pending_document_window_admission:std::mem::ManuallyDrop::new(None)}}
 
     pub fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<semio_ui_runtime::ComponentTree>,semio_framework_job::OriginalTurnFailure>{
         self.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source has no initiating identity"))?.validate(cx)?;
@@ -204,9 +207,9 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub tool_cancellations: semio_plugin_operation::ToolCancellationIssuer,
     pub live_runtime_instance_id: Option<u32>,
     pub tool_operations: ArtifactFixedRegistry<Box<MountedTypedCommandFullOperation<A>>>,
-    pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_framework_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
-    pub original_emission_construction:semio_framework::action_bus::ResidentConstruction<Box<semio_framework_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>,
+    pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
     pub original_emission_receipt:Option<semio_plugin_job::original_emission::OriginalEmissionReceipt>,
+    pub original_emission_construction:Option<semio_framework_job::OriginalConstructionAdmission>,
     #[cfg(test)]
     pub test_tool_clock: Option<fn() -> Option<u64>>,
     pub typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
@@ -286,7 +289,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
   35=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_order),capacity_bytes:if backing{semio_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,ARTIFACT_LIVE_OUTPUT_SLOTS)?}else{0},depth:1,..Default::default()},
   36=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_keys),capacity_bytes:if backing{0}else{0},depth:1,..Default::default()},
   37=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_turn),capacity_bytes:if backing{0}else{0},depth:1,..Default::default()},
-  38=>semio_framework_value::RetirementDemand{copy_bytes:2*initial_field_bytes::<Self,_>(|owner|&owner.original_emission_construction),capacity_bytes:if backing{0}else{0},depth:1,..Default::default()},
+  38=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.original_emission_construction);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   #[cfg(test)]
   39=>{let extent=initial_field_bytes::<Self,_>(|owner|&owner.test_tool_clock);if byte>extent{return Err(semio_framework_value::ValueError::invariant("absent field cursor exceeds its extent"))}semio_framework_value::RetirementDemand{copy_bytes:if byte==extent{0}else{body.max(1).min(extent-byte)},depth:1,..Default::default()}},
   _=>return Err(semio_framework_value::ValueError::invariant("initial field cursor exceeds its inventory")),
@@ -333,7 +336,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
   35=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_order){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_order).write(if backing{ArtifactFixedQueue::new(ARTIFACT_LIVE_OUTPUT_SLOTS)}else{ArtifactFixedQueue::unallocated(ARTIFACT_LIVE_OUTPUT_SLOTS)});}Ok(true)},
   36=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_keys){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_keys).write(ToolLatestWinsRegistry::new());}Ok(true)},
   37=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.latest_wins_turn){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).latest_wins_turn).write(true);}Ok(true)},
-  38=>{if byte!=0||count!=2*initial_field_bytes::<Self,_>(|owner|&owner.original_emission_construction){return Err(semio_framework_value::ValueError::invariant("live initial field requires its full atomic copy extent"))}unsafe{std::ptr::addr_of_mut!((*target).original_emission_construction).write(Default::default());}Ok(true)},
+  38=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).original_emission_construction),byte,count)},
   #[cfg(test)]
   39=>unsafe{semio_framework_value::initialization::initialize_absent_field_at(std::ptr::addr_of_mut!((*target).test_tool_clock),byte,count)},
   _=>Err(semio_framework_value::ValueError::invariant("initial field cursor exceeds its inventory")),
@@ -386,7 +389,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             tool_cancellations: semio_plugin_operation::ToolCancellationIssuer::empty(),
             live_runtime_instance_id: None,
             tool_operations: ArtifactFixedRegistry::new(),
-            original_emission_admission:std::mem::ManuallyDrop::new(None),original_emission_construction:Default::default(),original_emission_receipt:None,
+            original_emission_admission:std::mem::ManuallyDrop::new(None),original_emission_receipt:None,original_emission_construction:None,
             #[cfg(test)]
             test_tool_clock: None,
             typed_operation_reservations: [None; ARTIFACT_LIVE_OUTPUT_SLOTS],

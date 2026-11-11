@@ -1,18 +1,16 @@
 //! 🎛️ One shared driver maps every selected schema action to its exact reply-shaped or control-shaped call.
 use super::*;
 use super::walk::NativeSchemaMatchSelection as S;
+use engine::source::key_frame::{settlement_of,Settle};
 use semio_framework_value_control_contract::{OriginalConstructionAcceptStatus,OriginalConstructionCompletion,OriginalWorkActionIdentity,OriginalWorkActionProof,OriginalWorkBorrow};
 use semio_framework_value_native_decoding::native_decoding::{NativeReceivingFailure,OriginalEffectReply,OriginalEffectReplyComplete};
 use semio_framework_value_native_receiver_protocol::{native_relay,NativeAdvanceSelection};
 
-type Poll=crate::RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>;
+type Poll=engine::RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>;
 type Reply<'r,F>=OriginalEffectReply<'r,RetainedCloneStep,F>;
 type Complete<'r,F>=OriginalEffectReplyComplete<'r,RetainedCloneStep,F>;
-#[derive(Clone,Copy,Debug,PartialEq,Eq)]pub(crate) enum Settle{Outcome,Request}
-/// 🧾️ Maps one resident key frame to the settlement call selected by the matcher driver.
-pub(crate) fn settlement_of<I:NativeValueSource+?Sized>(frame:&NativeSchemaKeyFrame<I>)->Option<Settle>{let acknowledgement=frame.acknowledgement();if acknowledgement.acknowledgement_ready()||acknowledgement.semantic_ready(){Some(Settle::Outcome)}else if frame.request_needs_settlement(){Some(Settle::Request)}else{None}}
-fn idle(work:u128)->Poll{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work})}
-fn failed(error:ValueError)->Poll{crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})}
+fn idle(work:u128)->Poll{engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work})}
+fn failed(error:ValueError)->Poll{engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})}
 
 
 fn finish_partial(work:&mut OriginalWorkBorrow<'_>,action:Option<OriginalWorkActionIdentity>,actual:u128,proof:&mut Option<OriginalWorkActionProof>)->Result<(),ValueError>{let mut partial=None;if !work.settle_partial_into(action,&mut partial)?{return Err(ValueError::invariant("schema acknowledgement Work settlement pending"))}let(_,_,_,admitted,refusal)=partial.take().ok_or_else(invalid)?.into_parts();if !admitted||refusal.is_some(){return Err(ValueError::invariant("schema acknowledgement Work was refused"))}if !work.commit(actual,action,proof)?{return Err(ValueError::invariant("schema acknowledgement Work commit pending"))}Ok(())}
@@ -26,12 +24,12 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
  /// 🧭️ Selects the resident original Source action or one separately funded local action.
  pub fn select_advance(&self,_input:RetainedCloneRef<'_,I>,body:usize,maximum:u64)->Result<NativeAdvanceSelection,ValueError>{let selection=self.selection()?;if matches!(selection,S::KeyAction|S::KeyAcknowledgement|S::CheckpointRecovery|S::KeyMetadata(_)){return Ok(NativeAdvanceSelection::Nested)}let work=self.local_work(selection,body)?;if work>maximum{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema matcher action exceeds its original work ceiling"))}Ok(NativeAdvanceSelection::Local{work})}
  /// 🪢️ Polls only the resident original key Source action or its acknowledgement.
- pub fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:crate::OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->Poll{
+ pub fn advance_nested(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:engine::OriginalSourceTurnWitness<'_>,body:usize,maximum:u64,grant:RetainedCloneGrant)->Poll{
   match self.selection(){
    Ok(S::KeyAcknowledgement|S::KeyMetadata(_)) if !self.demands(input,body,maximum).is_ok_and(|demand|semio_framework_value_control_contract::retained_clone_grant_admits(grant,demand))=>idle(0),
-   Ok(S::KeyAction|S::CheckpointRecovery)=>match self.key_action_advance(input,control,witness,body,maximum,grant){Err(error)=>failed(error),Ok(NativeSchemaKeyPoll::Denied)=>idle(0),Ok(NativeSchemaKeyPoll::Pending{work})=>crate::RetainedWorkPoll::Pending{work},Ok(NativeSchemaKeyPoll::Ready{work,progress})=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})},
+   Ok(S::KeyAction|S::CheckpointRecovery)=>match self.key_action_advance(input,control,witness,body,maximum,grant){Err(error)=>failed(error),Ok(NativeSchemaKeyPoll::Denied)=>idle(0),Ok(NativeSchemaKeyPoll::Pending{work})=>engine::RetainedWorkPoll::Pending{work},Ok(NativeSchemaKeyPoll::Ready{work,progress})=>engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})},
    Ok(S::KeyAcknowledgement)=>self.advance_acknowledgement(control),
-   Ok(S::KeyMetadata(operation))=>{let before=control.actual_work();let advanced=self.advance_metadata(control,operation);let work=control.actual_work().saturating_sub(before);match advanced{Ok(progress)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work}),Err(error)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work})}},
+   Ok(S::KeyMetadata(operation))=>{let before=control.actual_work();let advanced=self.advance_metadata(control,operation);let work=control.actual_work().saturating_sub(before);match advanced{Ok(progress)=>engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work}),Err(error)=>engine::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work})}},
    Ok(_)=>failed(invalid()),
    Err(error)=>failed(error),
   }
@@ -43,14 +41,14 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
   loop{
    match self.key_advance_acknowledgement(control){
     Err(error)=>return failed(error),
-    Ok(State::Pending{work:0})=>return crate::RetainedWorkPoll::Pending{work:total},
+    Ok(State::Pending{work:0})=>return engine::RetainedWorkPoll::Pending{work:total},
     Ok(State::Pending{work})=>total=total.saturating_add(work),
     Ok(State::Ready{work})=>return idle(total.saturating_add(work)),
    }
   }
  }
  /// 📬️ Records exactly one selected local action into the borrowed original reply.
- pub fn advance_local<'r>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r,OriginalReceivingPrimary>)->Result<Complete<'r,OriginalReceivingPrimary>,ValueError>{
+ pub fn advance_local<'r>(&mut self,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut engine::RetainedAllocationEffect<'_>,reply:Reply<'r,OriginalReceivingPrimary>)->Result<Complete<'r,OriginalReceivingPrimary>,ValueError>{
   let selection=self.selection()?;let reply=reply.progress();
   match selection{
    S::Complete=>Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default())))),
@@ -60,7 +58,7 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
    _=>native_relay(reply,|reply|self.advance_selected(selection,input,body,effect,reply)),
   }
  }
- fn advance_selected<'r>(&mut self,selection:S,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r,ValueError>)->Result<Complete<'r,ValueError>,ValueError>{
+ fn advance_selected<'r>(&mut self,selection:S,input:RetainedCloneRef<'_,I>,body:usize,effect:&mut engine::RetainedAllocationEffect<'_>,reply:Reply<'r,ValueError>)->Result<Complete<'r,ValueError>,ValueError>{
   match selection{
    S::KeyBirth=>self.key_birth_into(effect,reply),
    S::KeyStart=>self.key_start_into(input,effect,reply),
@@ -76,7 +74,7 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
    _=>Err(invalid()),
   }
  }
- fn advance_key_error<'r>(&mut self,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r,OriginalReceivingPrimary>)->Result<Complete<'r,OriginalReceivingPrimary>,ValueError>{
+ fn advance_key_error<'r>(&mut self,effect:&mut engine::RetainedAllocationEffect<'_>,reply:Reply<'r,OriginalReceivingPrimary>)->Result<Complete<'r,OriginalReceivingPrimary>,ValueError>{
   let mut error=None;let mut slot=None;drop(self.key_error_into(&mut error,effect,OriginalEffectReply::borrow(&mut slot)?)?);
   Ok(match(error,slot.take()){(Some(error),Some(Ok(step)))=>reply.complete(Err(error.with_retained_progress(step.progress()).into())),(Some(error),_)=>reply.complete(Err(error.into())),(None,Some(Ok(step)))=>reply.complete(Ok(RetainedCloneStep::Progress(step.progress()))),(None,Some(Err(error)))=>reply.complete(Err(error.into())),(None,None)=>reply.pending()})
  }

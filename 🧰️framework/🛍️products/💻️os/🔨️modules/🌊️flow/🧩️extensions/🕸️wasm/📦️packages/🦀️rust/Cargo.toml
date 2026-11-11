@@ -28,7 +28,7 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-plugin = { path = "../../../../../🔌️plugin/📦️packages/🦀️rust" }

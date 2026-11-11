@@ -4,8 +4,8 @@ import { createClosureStoreV1 } from "./💾️entries/🟨️.mjs";
 import { rowKeyV1 } from "../../🕰️generations/🧮️fact-rows/🟨️.mjs";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import {buildInputSourceRoleV1,readBuildRuntimeSourceEntriesV1,readBuildSourceResourceEntriesV1} from "../../🚪️admission/🟦️.ts";
-import {createRequire} from "node:module";
-const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
+import managersV1 from "../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
+const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
 /** 🧭️ Tracks the literal import closure of command scripts and the packages they consume. */
 import { advanceScriptInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bindBuildCommandV1 } from "../../../../🏗️build/📤️arguments/🟨️.mjs";
@@ -17,7 +17,7 @@ import { createHash } from "node:crypto";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { activeTypeScriptProgramReuseV1 } from "./♨️reuse/🟨️.mjs";
-import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
+import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, observedSourceAnalysisV1, observedRequireResolve, observedTypeScriptHost, observedFs, observeDetachedV1, shareObservationRowsV1, detachedFailureV1, retainDetachedFailureV1, observationLayerHoldsV1, observationRoundV1, observationRowsHoldV1, recordClosureFactV1, registerClosureProviderV1, observedFieldV1, registerFieldExtractorV1, retainObservedRowsV1, observeDetachedSyncV1, withObservationPassRoundV1 , observationLayerHoldsAsyncV1, observationRowsHoldAsyncV1, OBSERVATION_LIMITS_V1 } from "../../../../🏗️build/👁️observation/🟨️.mjs";
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { REVISION_POLICY_V1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
 import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
@@ -1005,8 +1005,9 @@ const CLOSURE_QUERIES_V1 = new Map([
 /** 🌂️ Registers a pure query over the closure a recipe produces (the inferrer that owns the question, such as the whole-workspace key check, registers it). */
 export function registerClosureQueryV1(name, query) { CLOSURE_QUERIES_V1.set(name, query); }
 
+const closureEntryCacheV1 = maxBytes => createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * entry.rows.length + 2 * (entry.valueBytes ??= JSON.stringify(entry.value).length) });
+let closureEntriesV1 = closureEntryCacheV1(INFERENCE_LIMITS_V1.closureEntryCacheBytes);
 const closureScriptsV1 = createBoundedCacheV1({ name: "inference:closure-scripts", maxEntries: 16, maxBytes: 16 }),
-  closureEntriesV1 = createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes: INFERENCE_LIMITS_V1.closureEntryCacheBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + 2 * (entry.bytes ?? 0) }),
   closureStoresV1 = createBoundedCacheV1({ name: "inference:closure-stores", maxEntries: 16, maxBytes: 16 }),
   closureInflightV1 = createBoundedCacheV1({ name: "inference:closure-inflight", maxEntries: 4096, maxBytes: 4096 }),
   closureFailuresV1 = createBoundedCacheV1({ name: "inference:closure-failures", maxEntries: 1024, maxBytes: 1024 }),
@@ -1047,8 +1048,8 @@ const closureStoreOfV1 = workspaceRoot => {
 /** 🧊️ Binds the script input cache that computes the closure entries of one workspace (the inference binds its own, a verifier binds one of its own). */
 export function bindClosureScriptsV1(workspaceRoot, scripts) { closureScriptsV1.set(workspaceRoot, scripts); }
 
-/** 🧽️ Forgets every in-process entry, as a process that starts later has none. */
-export function resetClosureEntriesV1() { closureScriptsV1.clear(); closureEntriesV1.clear(); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); closureStoresV1.clear(); closureCountsV1.derived = closureCountsV1.loaded = closureCountsV1.stale = closureCountsV1.checked = 0; }
+/** 🧽️ Forgets every in-process entry, as a process that starts later has none; `entryBytes` sets the byte budget of the in-process entries for the new process (the declared limit by default). */
+export function resetClosureEntriesV1(entryBytes = INFERENCE_LIMITS_V1.closureEntryCacheBytes) { closureScriptsV1.clear(); closureEntriesV1.clear(); closureEntriesV1 = closureEntryCacheV1(entryBytes); closureInflightV1.clear(); closureFailuresV1.clear(); knownClosureRecipesV1.clear(); knownClosureInputsV1.clear(); closureStoresV1.clear(); closureCountsV1.derived = closureCountsV1.loaded = closureCountsV1.stale = closureCountsV1.checked = 0; }
 
 /** 🌃️ Produces what one recipe stands for, with the same functions the direct inference calls. */
 async function produceClosureRecipeV1(recipe, workspaceRoot, scripts) {
@@ -1123,7 +1124,7 @@ async function produceClosureEntryV1(workspaceRoot, recipe) {
   if (!flight) {
     const scripts = closureScriptsV1.get(workspaceRoot);
     if (!scripts) throw refuseBuildV1("missing", "closure.scripts-unbound", { workspace: String(workspaceRoot) });
-    const store = closureStoreOfV1(workspaceRoot), derive = () => observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(async ({ value, rows, layers }) => { closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
+    const store = closureStoreOfV1(workspaceRoot), derive = () => observeDetachedV1(() => produceClosureRecipeV1(recipe, workspaceRoot, scripts)).then(async ({ value, rows, layers }) => { shareObservationRowsV1(rows); for (const layer of layers) shareObservationRowsV1(layer); closureCountsV1.derived++; const pass = closurePassV1, entry = { recipe, value, rows, layers, answers: new Map(), checked: pass ? { round: pass, holds: true } : null, bytes: 0, store, digests: undefined }; try { const saved = store ? await store.save(id, { ...entry, sidecar: closureSidecarV1(layers) }) : undefined; entry.bytes = saved?.bytes ?? closureEntryBytesV1(entry); entry.digests = saved?.digests; } catch { entry.bytes = closureEntryBytesV1(entry); } closureEntriesV1.set(id, entry); return entry; });
     flight = (store ? store.load(id) : Promise.resolve(undefined)).then(async stored => { const entry = stored && { ...stored, layers: undefined, store, answers: new Map(), checked: null }; if (entry && await closureEntryHoldsAsyncV1(entry, scripts)) { closureCountsV1.loaded++; closureEntriesV1.set(id, entry); return entry; } if (entry) closureCountsV1.stale++; return derive(); }).then(entry => entry, error => { const facts = error?.code === "BUILD_SOURCE_UNPARSEABLE" ? detachedFailureV1(error) : undefined; if (facts) closureFailuresV1.set(id, { error, rows: facts.rows, layers: facts.layers, checked: null }); throw error; }).finally(() => closureInflightV1.delete(id));
     closureInflightV1.set(id, flight);
   }
@@ -1161,15 +1162,15 @@ export async function primeSharedClosuresV1(workspaceRoot, scripts, { signal, pr
 }
 
 /** 🚚️ Brings the shared entries of every reference an entry's value holds up to date, detached: the asking project holds only the answers its queries record. */
-async function ensureProviderEntriesV1(workspaceRoot, entry) { for (const reference of sharedReferencesOfV1(entry.value)) await ensureClosureEntryV1(workspaceRoot, reference.recipe); }
+async function ensureProviderEntriesV1(workspaceRoot, entry) { const providers = new Map(); for (const reference of sharedReferencesOfV1(entry.value)) { const key = closureRecipeKeyV1(reference.recipe); providers.set(key, await ensureClosureEntryV1(workspaceRoot, reference.recipe)); } return providers; }
 
 /** 🏺️ An entry's value with its shared references expanded into the files of the shared closures, or undefined while a shared entry is missing or no longer holds. */
-function expandedEntryValueV1(workspaceRoot, entry) {
+function expandedEntryValueV1(workspaceRoot, entry, providers) {
   const references = sharedReferencesOfV1(entry.value);
   if (!references.length) return entry.value;
   const files = [];
   for (const reference of references) {
-    const provider = closureEntriesV1.get(workspaceRoot + "\0" + closureRecipeKeyV1(reference.recipe));
+    const key = closureRecipeKeyV1(reference.recipe), provider = providers?.get(key) ?? closureEntriesV1.get(workspaceRoot + "\0" + key);
     if (!provider || !closureEntryHoldsV1(provider)) return undefined;
     for (const item of provider.value) if (typeof item === "string" && item.startsWith("{workspaceRoot}/")) files.push(item);
   }
@@ -1177,12 +1178,12 @@ function expandedEntryValueV1(workspaceRoot, entry) {
 }
 
 /** ❔️ One query answered over the closure an entry stands for, provider closures expanded; undefined while a provider entry does not hold. An entry without provider references keeps its answers. */
-const closureAnswerV1 = (workspaceRoot, entry, query) => {
+const closureAnswerV1 = (workspaceRoot, entry, query, providers) => {
   const key = JSON.stringify(query), stable = !sharedReferencesOfV1(entry.value).length;
   if (stable && entry.answers.has(key)) return entry.answers.get(key);
   const run = CLOSURE_QUERIES_V1.get(query[0]);
   if (!run) throw refuseBuildV1("invalid", "closure.query-unknown", { query: String(query[0]) });
-  const value = expandedEntryValueV1(workspaceRoot, entry);
+  const value = expandedEntryValueV1(workspaceRoot, entry, providers);
   if (value === undefined) return undefined;
   const answer = run(value, ...query.slice(1));
   if (stable) entry.answers.set(key, answer);
@@ -1211,7 +1212,7 @@ registerClosureProviderV1({
 export function closureApiV1(scripts, workspaceRoot) {
   const late = scripts.lateClosures === true;
   if (late) bindClosureScriptsV1(workspaceRoot, scripts);
-  const used = new Map(), fact = async (recipe, query) => { const key = closureRecipeKeyV1(recipe); knownClosureRecipesV1.set(key, recipe); used.set(key, recipe); const entry = await ensureClosureEntryV1(workspaceRoot, recipe); await ensureProviderEntriesV1(workspaceRoot, entry); const answer = closureAnswerV1(workspaceRoot, entry, query); if (answer === undefined) throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: sharedReferencesOfV1(entry.value).map(row => row.recipe.port ?? row.recipe.name).join(", ") }); recordClosureFactV1(JSON.stringify([workspaceRoot, key, query]), JSON.stringify(answer)); return answer; };
+  const used = new Map(), fact = async (recipe, query) => { const key = closureRecipeKeyV1(recipe); knownClosureRecipesV1.set(key, recipe); used.set(key, recipe); const entry = await ensureClosureEntryV1(workspaceRoot, recipe), providers = await ensureProviderEntriesV1(workspaceRoot, entry), answer = closureAnswerV1(workspaceRoot, entry, query, providers); if (answer === undefined) throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: sharedReferencesOfV1(entry.value).map(row => row.recipe.port ?? row.recipe.name).join(", ") }); recordClosureFactV1(JSON.stringify([workspaceRoot, key, query]), JSON.stringify(answer)); return answer; };
   const expanded = value => expandedCommandInputsV1(value, workspaceRoot, scripts);
   const relativeEntries = entries => entries.map(entry => relative(workspaceRoot, entry).split(sep).join("/"));
   return Object.freeze({
@@ -1239,7 +1240,7 @@ export function closureApiV1(scripts, workspaceRoot) {
       const key = closureRecipeKeyV1(recipe);
       knownClosureRecipesV1.set(key, recipe); used.set(key, recipe);
       const entry = await ensureClosureEntryV1(workspaceRoot, recipe);
-      recordClosureFactV1(JSON.stringify([workspaceRoot, key, ["digest"]]), JSON.stringify(closureAnswerV1(workspaceRoot, entry, ["digest"])));
+      recordClosureFactV1(JSON.stringify([workspaceRoot, key, ["digest"]]), JSON.stringify(closureAnswerV1(workspaceRoot, entry, ["digest"], await ensureProviderEntriesV1(workspaceRoot, entry))));
       return entry.value;
     },
     async some(list, substrings) {

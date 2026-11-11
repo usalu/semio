@@ -26,7 +26,7 @@ testkit = ["semio-renderer-wgpu-contracts/testkit", "semio-renderer-wgpu-ui-engi
 
 [dependencies]
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-renderer-wgpu-contracts = { path = "../../../🤝️contracts/📦️packages/🦀️rust" }
 semio-renderer-wgpu-engine-board = { path = "../../../🎲️engine-board/📦️packages/🦀️rust" }
@@ -71,7 +71,7 @@ web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasEle
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
 base64 = "0.22.1"
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

@@ -3,8 +3,6 @@ use semio_plugin::ArtifactEditor;
 use semio_plugin_host_configuration::{with_original_host_configuration,testkit::HeapWitness};
 use semio_framework_value::DslValue;
 
-#[global_allocator]
-static HOST_CONFIGURATION_HEAP: HeapWitness = HeapWitness;
 
 use semio_s_artifact_process_process3d_editor::Process3dPlayApp;
 use semio_s_artifact_process_process3d_config::{Process3dConfigMutation,Process3dConfigSetContributions};

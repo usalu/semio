@@ -13,7 +13,7 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let corpus: Value = serde_json::from_str(TIME_TRAVEL_BAND_CORPUS_JSON).expect("band corpus parses");
     let keys = &corpus["editorKeys"];
     assert_eq!(text(&keys["panel"]), semio_ui_layout::layout::FRAMEWORK_PANEL_TAB_HISTORY_ID, "the body mounts in the History panel tab");
@@ -47,7 +47,7 @@ async fn the_draft_editor_keys_are_the_shared_corpus_keys_every_shell_focuses() 
 
 //#region 🩹️HistoryViewPatch
 /// ✏️ Applies one toy edit straight on the document store — a row the command log backfills, like a seeded or ingested edit.
-async fn apply_toy_edit(app: &mut ToyApp, value: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn apply_toy_edit(app: &mut ToyApp, value: i32, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     app.stores.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value }.into()], transaction: None }, identity).await.expect("toy edit applies");
 }
 
@@ -70,7 +70,7 @@ async fn the_history_view_patches_only_the_rows_a_change_touched() {
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     for value in 0..200 {
@@ -123,7 +123,7 @@ async fn every_route_authors_as_its_acting_actor() {
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let acting = |actor: &str| ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("ada".into()), mounted_policy, &mut identity).await;
     PluginApp::bind_actor(&mut app, "ada").await;

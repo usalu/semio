@@ -7,7 +7,6 @@ use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetire
 use semio_os_kernel::os_store::snapshot_read as reads;
 use std::sync::Arc;
 type Mutation=crate::schema::mutations::SemioFlowMutation;
-#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 struct Bank{limit:RetainedCloneGrant,caller:semio_framework_job::OriginalJobFixtureCaller,calls:usize,maximum_work:u64,work_mismatch:bool,publication_calls:usize,owned_close_calls:usize}
 fn clock()->Option<u64>{Some(1000)}
 impl Bank{

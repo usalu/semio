@@ -20,8 +20,15 @@ use semio_ui_contract::*;
 use semio_plugin_decl_views::child_view::ChildContentRetainers;
 
 impl<A: ArtifactApp> ToolOperations<A> {
+    /// 🧪️ Borrows the original emission still resident in its stepped admission before its mounted birth.
+    #[cfg(any(test,feature="artifact-app-testing"))]
+    pub fn test_original_admission_emit_observation(&self)->Option<(usize,usize,usize)>{
+        let input=self.original_emission_admission.as_ref()?.capture.as_ref()?.borrow()?;
+        Some((input.emit.artifact_mutations.len(),input.emit.owned_child_emits.len(),input.emit.owned_child_emits.as_ptr() as usize))
+    }
+
     /// 🧪️ Borrows original completed-output ownership and refusal observations without widening production visibility.
-    #[cfg(test)]
+    #[cfg(any(test,feature="artifact-app-testing"))]
     pub fn test_original_owned_emit_observation(&self,operation:u64)->Option<(usize,usize,usize,bool,bool)>{
         let mounted=self.tool_operations.get(operation)?;
         let ArtifactToolCompletionValue::Emit(Ok(emit),_)=mounted.publication.as_ref()? else{return None;};

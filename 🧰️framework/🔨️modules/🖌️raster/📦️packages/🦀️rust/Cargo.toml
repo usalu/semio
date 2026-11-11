@@ -17,7 +17,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
-semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust" }
 
 # 🎯️ `SceneRasterizer` (device/queue/pipeline, headless GPU frame capture) is the only consumer of
 # either crate — gated `not(all(target_arch = "wasm32", target_env = "p2"))` in `../../🦀️.rs`.
@@ -30,5 +30,5 @@ wgpu = "29.0.4"
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../🔏️hash/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

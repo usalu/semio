@@ -1,7 +1,4 @@
 //! 🏗️ Native ADD2 structural and BIM domain exchange: FEM and BIM snapshots compose with the retained IFC4x3 graph under bounded, atomic projection.
-#[cfg(test)]
-#[global_allocator]
-static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 use pack::snapshot::ArtifactPack;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};

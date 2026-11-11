@@ -22,5 +22,5 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust" }

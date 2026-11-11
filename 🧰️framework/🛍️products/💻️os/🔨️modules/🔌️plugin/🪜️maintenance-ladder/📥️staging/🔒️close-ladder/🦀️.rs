@@ -3,7 +3,7 @@
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
 use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, PluginLifecycleStep, plugin_retirement_fault};
-use semio_framework_plugin_instance_stores::stores_components::{ActionIngress, PeerRoster};
+use semio_plugin_instance_stores::stores_components::{ActionIngress, PeerRoster};
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
@@ -20,14 +20,14 @@ use protocol::OpText;
 use semio_plugin_decl_views::PeerPresenceRoot;
 use semio_plugin_peer::{PeerPresenceRootRetirement, PeerRosterPublication};
 use semio_plugin_instance_jobs::jobs_components::PendingReserved;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_operation::TOOL_CANCELLATION_SLOTS;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_ui_contract::*;
 use semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::idle;
+use semio_plugin_instance_docs::docs_maintenance_ladder::idle;
 use semio_plugin_instance_jobs::jobs_close_ladder::{handoff, handoff_demand, release_demand};
 use crate::ladders_envelope_ladder::{erased_demand, erased_step};
 use crate::ladders_lifecycle_stores::ORIGINAL_STORE_LANES;
@@ -471,6 +471,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     }
 
     fn close_typed_operation_granted(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+        if let Some(admission)=self.tools.original_emission_construction.as_mut().filter(|admission|!admission.terminal_is_empty()){
+            let before=cx.retained_progress();admission.close_step(cx)?;let after=cx.retained_progress();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))
+        }
         if let Some(source)=self.tools.original_emission_admission.as_mut(){
             if source.terminal_is_empty(){let bytes=std::mem::size_of_val(&**source);drop(self.tools.original_emission_admission.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<usize>(),released_bytes:bytes,..Default::default()}))}
             let before=cx.retained_progress();source.close_step(&self.tools.tool_cancellations,cx)?;let after=cx.retained_progress();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))

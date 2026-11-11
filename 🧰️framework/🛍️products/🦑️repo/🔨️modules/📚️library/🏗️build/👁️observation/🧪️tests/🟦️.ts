@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 👁️ Inference observation law over `./🧫️fixtures/🔣️.json`: a persisted inference result is reused exactly while every filesystem fact the
  * computation observed still holds, identical rewrites stay hits, any observed change is a miss, and a hit always equals a fresh recomputation.
  * Oracles: Ajv validates every persisted record against `../🧬️schema/🔣️.json`; fast-glob independently lists the probed directory. */
@@ -310,6 +311,6 @@ test("semantic Source observation declaration roster matches actual runtime expo
 for(const row of JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.settlement.cases)test("semantic settlement retains original cancellation: "+row.id,async()=>{
  const input=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")).semantic.settlement,api=await import("../🟨️.mjs"),parent=artifactRoot;const root=mkdtempSync(join(parent,"settle-")),path=join(root,"source.txt"),controller=new AbortController();writeFileSync(path,input.before);let computations=0,rounds=0;
  try{const result=api.settleObservedComputationV1(async()=>{computations++;await Promise.resolve();if(row.phase==="compute"){controller.abort(Error(row.reason));return "completed";}api.observedFs.readFileSync(path);writeFileSync(path,input.after);api.observedFs.readFileSync(path);return "completed";},{signal:controller.signal,limit:1,onRound:async()=>{rounds++;await Promise.resolve();controller.abort(Error(row.reason));}});await expect(result).rejects.toThrow(row.reason);expect(computations).toBe(1);expect(rounds).toBe(row.phase==="round"?1:0);
- const oracle=Bun.spawnSync(["node","--input-type=module","-e",'const c=new AbortController();try{await Promise.resolve();c.abort(Error(process.argv[1]));c.signal.throwIfAborted();console.log("completed")}catch(e){console.log(e.message)}',row.reason],{stdout:"pipe",stderr:"pipe"});expect(oracle.exitCode).toBe(0);expect(oracle.stdout.toString().trim()).toBe(row.reason);
+ const oracle=Bun.spawnSync([registeredToolExecutableV1("node"),"--input-type=module","-e",'const c=new AbortController();try{await Promise.resolve();c.abort(Error(process.argv[1]));c.signal.throwIfAborted();console.log("completed")}catch(e){console.log(e.message)}',row.reason],{stdout:"pipe",stderr:"pipe"});expect(oracle.exitCode).toBe(0);expect(oracle.stdout.toString().trim()).toBe(row.reason);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

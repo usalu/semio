@@ -148,7 +148,4 @@ fn collect_record_spec_properties(spec: &RecordSpec, properties: &mut semio_fram
 #[path = "../🧪️tests/🔬️json-schema/🦀️.rs"]
 mod json_schema_tests;
 //#endregion 🔖️JsonSchema
-#[cfg(test)]
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 

@@ -316,7 +316,7 @@ pub fn test_restart_build<const RETAINED:bool,const TOOLS:u8>(request:&mut Optio
 /// `ArtifactEditor::build_tool_job` is sync for the same bounded-stack reason.
 #[doc(hidden)]
 #[inline(never)]
-pub fn test_app_command_job<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::job_close_fixture::admit_fixture_tool_job(request,output,cx,|mut request|{
+pub fn test_app_command_job<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{crate::job_close_fixture::admit_fixture_tool_job(request,output,construction,cx,|mut request|{
     let job = TestAppCommandJob {
         rejected: None,
         admitted: false,
@@ -376,7 +376,7 @@ pub async fn reactor_native_lifecycle_poll(runtime: &semio_plugin_reactor_lifecy
     assert!(events.len() <= 1, "a reactor turn admits at most one event");
     for attempt in 0..64 {
         let mut event = events.first().cloned();
-        match semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut event, &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
+        match semio_plugin_reactor_turn::poll_kernel(runtime, &mut event, &mut None, None, reactor_native_lifecycle_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
             Ok(result) => return result,
             Err(failure) if failure.primary_fault().is_some_and(|fault| fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable) => {
                 eprintln!("retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);

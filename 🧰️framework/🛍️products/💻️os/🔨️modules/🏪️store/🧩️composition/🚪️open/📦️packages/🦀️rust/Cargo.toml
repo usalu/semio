@@ -27,7 +27,7 @@ semio-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" 
 semio-os-store-owned-schema-decode = { path = "../../../../📦️codec/🧬️owned-schema/📦️packages/🦀️rust" }
 semio-os-store-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-os-pack = { path = "../../../../../🎒️pack/📦️packages/🦀️rust" }
 semio-os-store-envelope = { path = "../../../../✉️envelope/📦️packages/🦀️rust" }

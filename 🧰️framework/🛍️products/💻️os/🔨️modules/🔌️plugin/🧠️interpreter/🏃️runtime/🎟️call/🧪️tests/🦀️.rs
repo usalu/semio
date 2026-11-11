@@ -4,8 +4,6 @@ fn receive_scalar(runtime:&semio_plugin_interpreter_runtime::OwnedRuntime,state:
 use semio_plugin_interpreter_runtime::{OwnedRuntime,OwnedSemioExport,OwnedOriginalCallStatus,OriginalCoreValue as Value};
 use semio_framework_actor::{RetainedTurnInput,OriginalGuestExecutionBudget};
 use semio_framework_value::{ValueError,ValueRefusalKind};
-#[global_allocator]
-static TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};
 use semio_framework_value::RetainedCloneGrant;
 fn clock()->Option<u64>{Some(1000)}

@@ -9,7 +9,7 @@ import Ajv from "ajv";
 import scopeSchema from "../../../🧭️selection/🎯️scope/🧬️schema/🔣️.json" with {type:"json"};
 import {createHostServiceV1} from "../../../🏡️resident/🏛️service/🌐️host/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../../🏡️resident/🔌️ports/🧭️plan/🟨️.mjs";
-import {connectHostV1,requestPlanV1} from "../../../🏡️resident/🚪️client/🛰️plan/🟨️.mjs";
+import {HostUnavailableErrorV1,PlanRefusedErrorV1,connectHostV1,requestPlanV1} from "../../../🏡️resident/🚪️client/🛰️plan/🟨️.mjs";
 import {hostEndpointsV1} from "../../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {HOST_POLICY_V1} from "../../../🏡️resident/📨️protocol/🎚️policy/🟨️.mjs";
 import {appendFileSync} from "node:fs";
@@ -17,6 +17,9 @@ import {recordPlanSuccessV1} from "../../🏃️run/🟦️.ts";
 import {createCasStoreV1} from "../../../🗄️cas/🗃️store/🟦️.ts";
 import {createTaskRecorderV1} from "../../../🕸️graph/🧮️derived-nodes/🎯️task-state/🟨️.mjs";
 import {workspaceIdV1} from "../../../🏡️resident/📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
+import {isRepoErrorV1,repoErrorDataV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🟦️.ts";
+import repoErrorSchema from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/🚨️error/🧬️schema/🔣️.json" with {type:"json"};
+import {reportRepoErrorV1} from "../../../../../../../../🔨️modules/🏃️process/🏗️build/🗣️language/📣️progress/🟦️.ts";
 import {PLAN_HANDOFF_V1,invocationPlanRequestV1,planHandoffEnvironmentV1,readSliceV1,requestInvocationPlanV1,scopedPlanOfReplyV1,takePlannedGraphV1} from "../../🛰️plan/🟦️.ts";
 
 const here=fileURLToPath(new URL(".",import.meta.url)),root=realpathSync(fileURLToPath(new URL("../../../../../../../../../",import.meta.url))),fixture=JSON.parse(readFileSync(join(here,"🔣️.json"),"utf8"));
@@ -100,4 +103,21 @@ test("a successful run records the keys of its plan, a dry run, a failed command
  expect([...await ask()]).toEqual([]);
  expect(await recordPlanSuccessV1({root:workspace,args:["run","a:build"],keys,cas})).toBe(2);
  expect([...await ask()].sort()).toEqual(["a:build","b:build"]);
+});
+
+test("a refused or unreachable plan ends the command as a localized refusal with a failing exit status, in both languages",async()=>{
+ const ajv=new Ajv({strict:true});
+ for(const row of fixture.refusals){
+  const failure=row.error==="PlanRefusedErrorV1"?new PlanRefusedErrorV1(row.frame):new HostUnavailableErrorV1(row.reason);
+  for(const language of["en","de"]){
+   const caught=await requestInvocationPlanV1({root,request:{arguments:["run","app:build","--lang="+language],tool:"nx",targets:["app:build"]},environment:{SEMIO_BUILD_TOOL:"nx"},agent:"agent-1",write:()=>undefined,ports:{requestPlanV1:async()=>{throw failure;},spawnHostServiceV1:()=>undefined}}).then(()=>undefined,(error:unknown)=>error);
+   expect(isRepoErrorV1(caught),row.name).toBe(true);
+   expect(ajv.validate(repoErrorSchema,repoErrorDataV1(caught as never)),JSON.stringify(ajv.errors)).toBe(true);
+   const lines:string[]=[],codes:number[]=[];
+   expect(reportRepoErrorV1(caught,{args:["--lang="+language],environment:{},write:line=>lines.push(line),setExitCode:code=>codes.push(code)}),row.name).toBe(true);
+   expect(lines,row.name).toEqual([row.expected[language]]);
+   expect(codes,row.name).toEqual([row.expected.exit]);
+   expect((caught as {code:string}).code,row.name).toBe(row.expected.code);
+  }
+ }
 });

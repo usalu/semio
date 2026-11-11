@@ -37,7 +37,7 @@ semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-surface = { path = "../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust", package = "semio-framework-surface" }
+semio-framework-surface = { path = "../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 semio-ui-contract = { workspace = true }
 semio-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-ui-scene = { workspace = true }

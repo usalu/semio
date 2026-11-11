@@ -1,7 +1,7 @@
 //! 🌳️ Original heterogeneous value sources and bounded schema keys.
 use crate::{DslValue,Number,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use std::mem::size_of;
-#[path="🗝️key-frame.rs"] pub(crate) mod key_frame;
+#[path="🗝️key-frame.rs"] pub mod key_frame;
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum NativeTreeKind{Null,Bool,Number,Text,Array,Object}
 impl NativeTreeKind{pub const fn as_str(self)->&'static str{match self{Self::Null=>"null",Self::Bool=>"bool",Self::Number=>"number",Self::Text=>"text",Self::Array=>"array",Self::Object=>"object"}}}
@@ -13,7 +13,9 @@ pub enum NativeScalarQuery{Kind,Null,Boolean,Number,EnumOrdinal,RecordLength,Seq
 #[derive(Clone,Copy,Debug,PartialEq)]
 pub enum NativeSourceScalar{Kind(Option<NativeTreeKind>),Null(bool),Boolean(bool),Number(Number),EnumOrdinal(u32),Length(usize)}
 /// 🗝️ A Source key keeps borrowed name storage under its admitted original owner.
-#[derive(Clone,Copy)]pub(crate) enum NativeSourceKey{Name(*const str),Ordinal(u32)}
+/// 🔑️ Selects the one bounded schema key an original Source answers.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]pub enum NativeSchemaKeySource{Record(usize),Text,VariantTag,EnumOrdinal,RecordName(usize),RecordText(usize)}
+#[derive(Clone,Copy)]pub enum NativeSourceKey{Name(*const str),Ordinal(u32)}
 unsafe impl Send for NativeSourceKey{}
 semio_framework_value_retirement::artifact_retire_leaf!(NativeSourceKey);
 /// 📬️ Lends a private resident key result to the original Source operation.
@@ -31,9 +33,9 @@ impl<'reply,'source> NativeSourceKeyReply<'reply,'source>{
 }
 pub trait NativeValueSource:Sync+'static{
  /// 🗝️ Records a key selected from this exact original Source using the Work lent by the query frame.
- fn query_schema_key<'reply,'source>(&'source self,_query:crate::record::NativeSchemaKeySource,_effect:&mut crate::RetainedAllocationEffect<'_>,_reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Source lacks a recorded schema-key producer"))}
+ fn query_schema_key<'reply,'source>(&'source self,_query:NativeSchemaKeySource,_effect:&mut crate::RetainedAllocationEffect<'_>,_reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Source lacks a recorded schema-key producer"))}
  /// 🔁️ Recovers the same original key operation without replaying its query.
- fn recover_schema_key<'reply,'source>(&'source self,_query:crate::record::NativeSchemaKeySource,_effect:&mut crate::RetainedAllocationEffect<'_>,reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{Ok(reply.pending())}
+ fn recover_schema_key<'reply,'source>(&'source self,_query:NativeSchemaKeySource,_effect:&mut crate::RetainedAllocationEffect<'_>,reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{Ok(reply.pending())}
 
  /// 📬️ Records the actual scalar answer or original owned error in the borrowed reply.
  fn query_scalar<'reply>(&self,query:NativeScalarQuery,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_native_decoding::native_decoding::OriginalEffectReply<'reply,NativeSourceScalar,ValueError>)->Result<semio_framework_value_native_decoding::native_decoding::OriginalEffectReplyComplete<'reply,NativeSourceScalar,ValueError>,ValueError>;
@@ -57,11 +59,11 @@ pub trait NativeValueSource:Sync+'static{
  fn sequence_child(&self,_index:usize)->Result<&dyn NativeValueSource,ValueError>{Err(invalid())}
 }
 /// 🎛️ Retains the exact original key operation and its owned inner reply.
-pub(crate) struct NativeSchemaKeyProducer<I:NativeValueSource+?Sized>{identity:(u64,usize,usize,usize),query:crate::record::NativeSchemaKeySource,turn:crate::OriginalSourceTurnIdentity,answer:std::mem::ManuallyDrop<Option<Result<NativeSourceKey,ValueError>>>,input:std::marker::PhantomData<fn(&I)>}
+pub(crate) struct NativeSchemaKeyProducer<I:NativeValueSource+?Sized>{identity:(u64,usize,usize,usize),query:NativeSchemaKeySource,turn:crate::OriginalSourceTurnIdentity,answer:std::mem::ManuallyDrop<Option<Result<NativeSourceKey,ValueError>>>,input:std::marker::PhantomData<fn(&I)>}
 /// 🪢️ Lends only the authenticated original input and the frame-owned destination.
 pub(crate) struct NativeSchemaKeyOperation<'turn,'source,I:NativeValueSource+?Sized>{input:crate::retained_clone::RetainedCloneRef<'source,I>,turn:crate::OriginalSourceTurnWitness<'turn>,admission:Option<&'turn mut crate::retained_clone::RetainedOwnedProjectionAdmission<I>>,destination:Option<&'turn mut Option<Result<NativeSourceKey,ValueError>>>}
 impl<I:NativeValueSource+?Sized> NativeSchemaKeyProducer<I>{
- pub(crate) fn seed(input:crate::retained_clone::RetainedCloneRef<'_,I>,query:crate::record::NativeSchemaKeySource,turn:crate::OriginalSourceTurnIdentity)->Self{Self{identity:input.reference_identity(),query,turn,answer:std::mem::ManuallyDrop::new(None),input:std::marker::PhantomData}}
+ pub(crate) fn seed(input:crate::retained_clone::RetainedCloneRef<'_,I>,query:NativeSchemaKeySource,turn:crate::OriginalSourceTurnIdentity)->Self{Self{identity:input.reference_identity(),query,turn,answer:std::mem::ManuallyDrop::new(None),input:std::marker::PhantomData}}
  pub(crate) fn answer_ready(&self)->bool{self.answer.is_some()}
  pub(crate) fn demand(&self)->RetirementDemand{fixed(size_of::<Option<Result<NativeSourceKey,ValueError>>>()+size_of::<Option<Result<RetainedCloneStep,ValueError>>>())}
  pub(crate) fn work_demand(&self)->u64{2}
@@ -167,11 +169,11 @@ pub fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{
 pub fn nested(mut d:RetirementDemand,copy:usize)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(copy).ok_or_else(invalid)?;d.depth=d.depth.checked_add(1).ok_or_else(invalid)?;Ok(d)}
 pub fn child_grant(g:RetainedCloneGrant,copy:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(copy),maximum_depth:g.maximum_depth.saturating_sub(1),..g}}
 pub fn add_receipt(mut p:RetainedCloneProgress,copy:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(copy).ok_or_else(invalid)?;Ok(p)}
-fn dsl_schema_key<'a>(source:&'a DslValue,query:crate::record::NativeSchemaKeySource)->Result<NativeSourceKeyValue<'a>,ValueError>{use crate::record::NativeSchemaKeySource as Q;match(query,source){(Q::Text,DslValue::String(text))=>Ok(NativeSourceKeyValue::Name(text)),(Q::EnumOrdinal,DslValue::Number(number))=>match number{crate::Number::UInt(value)=>u32::try_from(*value).ok(),crate::Number::Int(value)=>u32::try_from(*value).ok(),_=>None}.map(NativeSourceKeyValue::Ordinal).ok_or_else(invalid),(Q::Record(index)|Q::RecordName(index),DslValue::Object(entries))=>entries.get(index).map(|(name,_)|NativeSourceKeyValue::Name(name.as_str())).ok_or_else(invalid),(Q::RecordText(index),DslValue::Object(entries))=>match entries.get(index){Some((_,DslValue::String(text)))=>Ok(NativeSourceKeyValue::Name(text)),_=>Err(invalid())},_=>Err(invalid())}}
-fn string_schema_key<'a>(source:&'a String,query:crate::record::NativeSchemaKeySource)->Result<NativeSourceKeyValue<'a>,ValueError>{match query{crate::record::NativeSchemaKeySource::Text=>Ok(NativeSourceKeyValue::Name(source.as_str())),_=>Err(invalid())}}
-fn tuple_schema_key<T>(source:&(String,T),query:crate::record::NativeSchemaKeySource)->Result<NativeSourceKeyValue<'_>,ValueError>{match query{crate::record::NativeSchemaKeySource::VariantTag=>Ok(NativeSourceKeyValue::Name(source.0.as_str())),_=>Err(invalid())}}
+fn dsl_schema_key<'a>(source:&'a DslValue,query:NativeSchemaKeySource)->Result<NativeSourceKeyValue<'a>,ValueError>{use NativeSchemaKeySource as Q;match(query,source){(Q::Text,DslValue::String(text))=>Ok(NativeSourceKeyValue::Name(text)),(Q::EnumOrdinal,DslValue::Number(number))=>match number{crate::Number::UInt(value)=>u32::try_from(*value).ok(),crate::Number::Int(value)=>u32::try_from(*value).ok(),_=>None}.map(NativeSourceKeyValue::Ordinal).ok_or_else(invalid),(Q::Record(index)|Q::RecordName(index),DslValue::Object(entries))=>entries.get(index).map(|(name,_)|NativeSourceKeyValue::Name(name.as_str())).ok_or_else(invalid),(Q::RecordText(index),DslValue::Object(entries))=>match entries.get(index){Some((_,DslValue::String(text)))=>Ok(NativeSourceKeyValue::Name(text)),_=>Err(invalid())},_=>Err(invalid())}}
+fn string_schema_key<'a>(source:&'a String,query:NativeSchemaKeySource)->Result<NativeSourceKeyValue<'a>,ValueError>{match query{NativeSchemaKeySource::Text=>Ok(NativeSourceKeyValue::Name(source.as_str())),_=>Err(invalid())}}
+fn tuple_schema_key<T>(source:&(String,T),query:NativeSchemaKeySource)->Result<NativeSourceKeyValue<'_>,ValueError>{match query{NativeSchemaKeySource::VariantTag=>Ok(NativeSourceKeyValue::Name(source.0.as_str())),_=>Err(invalid())}}
 macro_rules! schema_key_source{($read:expr)=>{
- fn query_schema_key<'reply,'source>(&'source self,query:crate::record::NativeSchemaKeySource,effect:&mut crate::RetainedAllocationEffect<'_>,reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{if effect.remaining_work_units()?<1{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query lacks original Work"))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query exceeded original Work"))))}Ok(reply.complete(($read)(self,query)))}
+ fn query_schema_key<'reply,'source>(&'source self,query:NativeSchemaKeySource,effect:&mut crate::RetainedAllocationEffect<'_>,reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{if effect.remaining_work_units()?<1{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query lacks original Work"))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query exceeded original Work"))))}Ok(reply.complete(($read)(self,query)))}
 };}
 macro_rules! scalar_source_methods{($read:expr)=>{
  fn query_scalar<'reply>(&self,query:NativeScalarQuery,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_native_decoding::native_decoding::OriginalEffectReply<'reply,NativeSourceScalar,ValueError>)->Result<semio_framework_value_native_decoding::native_decoding::OriginalEffectReplyComplete<'reply,NativeSourceScalar,ValueError>,ValueError>{if effect.maximum_work_units()==0{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"scalar query lacks its original work grant"))))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"scalar query exceeded its original work authority"))))}let result=($read)(self,query);Ok(reply.complete(result))}

@@ -1,0 +1,37 @@
+semio-s-plugin-norm-app-surface-live-editor 
+semio-s-plugin-norm-inspector-forms 
+@semio-s/plugin-norm-mechanics build check test
+@semio-tech/norm-artifact-contract-rs build check test test-byte-property
+@semio-tech/norm-din16798 build check test
+@semio-tech/norm-din16798-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-din18599 build check test
+@semio-tech/norm-din18599-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-din4108 build check test
+@semio-tech/norm-din4108-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1990 build check test
+@semio-tech/norm-en1990-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1991 build check test
+@semio-tech/norm-en1991-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1992 build check test
+@semio-tech/norm-en1992-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1993 build check test
+@semio-tech/norm-en1993-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1994 build check test
+@semio-tech/norm-en1994-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1995 build check test
+@semio-tech/norm-en1995-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1996 build check test
+@semio-tech/norm-en1996-rs build check regenerate-example-assets test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1997 build check test
+@semio-tech/norm-en1997-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source verify-snapshot-sqlite-source
+@semio-tech/norm-en1998 build check test
+@semio-tech/norm-en1998-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-en1999 build check test
+@semio-tech/norm-en1999-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-iso16757 build check test
+@semio-tech/norm-iso16757-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/norm-js test test-wire-twins
+@semio-tech/norm-plugin check component-budget-check mutation-leaf-taxonomy-check mutation-leaf-taxonomy-generate results-window-config-source results-window-config-test surface-render-source surface-render-test test
+@semio-tech/norm-vdi3805 build check test
+@semio-tech/norm-vdi3805-rs build check test test-snapshot-sqlite test-snapshot-sqlite-native test-snapshot-sqlite-source
+@semio-tech/s-norm-composition-tests verify-norm-document-contract verify-norm-results-window-ownership

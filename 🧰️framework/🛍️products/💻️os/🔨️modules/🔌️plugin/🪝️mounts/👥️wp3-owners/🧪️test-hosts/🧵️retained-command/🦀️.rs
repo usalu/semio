@@ -2,7 +2,7 @@
 
 #[doc(hidden)]
 pub mod retained_command_unit_1 {
-    use semio_framework_os_kernel::one_item_publication;
+    use semio_os_kernel::one_item_publication;
     use semio_framework_actor::typed_operation_page::{TypedOperationResultToken,TYPED_OPERATION_RESULT_PAGE_BYTES};
     use semio_plugin_job::reserved_jobs::{plugin_job_yield_once,QualifiedToolProof};
 use semio_plugin_instance_app::MAINTENANCE_STAGES;
@@ -20,8 +20,8 @@ use semio_plugin_window_kits::AppActionRegistry;
     use semio_plugin_instance_app::VcsArtifactApp;
     use semio_plugin_testing_laws::artifact_app_laws;
     use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-    use semio_framework_plugin_reactor_app::PluginApp;
-    use semio_framework_plugin_retained_command::typed_operation::PendingPublicationOutcome;
+    use semio_plugin_reactor_app::PluginApp;
+    use semio_plugin_retained_command::typed_operation::PendingPublicationOutcome;
     #[doc(hidden)]
 pub async fn test_retained_keyed_dispatch<A, F, R>(
         mut registry: F,
@@ -30,7 +30,7 @@ pub async fn test_retained_keyed_dispatch<A, F, R>(
         observe: fn(&A::Snapshot) -> i32,
         clock: Option<fn() -> Option<u64>>,
         mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1,
-        identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
+        identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     ) where A: ArtifactApp + Default, F: FnMut() -> R, R: std::future::Future<Output = AppActionRegistry> {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
@@ -172,7 +172,7 @@ pub async fn test_retained_keyed_dispatch<A, F, R>(
         }
     }
     #[doc(hidden)]
-pub async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         const VACANT: usize = 11;
@@ -238,7 +238,7 @@ pub async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(re
         eprintln!("[TRACE] actual typed ingress pre-admitted slot {VACANT} under 63 live foreign reservations and retained its funded input without minting an operation at true saturation");
     }
     #[doc(hidden)]
-pub async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         const ACTIONS: usize = 200;
@@ -261,7 +261,7 @@ pub async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + D
         eprintln!("[TRACE] actual {ACTIONS} storm actions each released their typed-operation slot within {HOST_CONTINUATIONS_PER_ACTION} host continuations, peak occupancy {highest}");
     }
     #[doc(hidden)]
-pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         const CONTINUATIONS: usize = 512;
@@ -299,7 +299,7 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
         assert!(pending.is_none() && active.is_none());
     }
 
-    async fn admit_fixture_typed_action<A: ArtifactApp + Default>(app: &mut VcsArtifactApp<A>, verb: &str, command: Box<A::Command>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) {
+    async fn admit_fixture_typed_action<A: ArtifactApp + Default>(app: &mut VcsArtifactApp<A>, verb: &str, command: Box<A::Command>, meta: &ActionMeta, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) {
         assert_eq!(A::command_id(command.as_ref()).await, verb);
         artifact_app_laws::ensure_fixture_cancellation_issuer(app, cx).expect("original fixture issuer admission");
         let mut source = semio_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource::<A>::default();
@@ -327,7 +327,7 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
     /// page for the bound receiver plus its mandatory ACK, then the effect, event, UI-scope and completion
     /// outboxes. Deliberately calls NO `maintenance_step`: a slot the host cannot release on this path alone
     /// is a leak, whatever the cooperative rotation would eventually have done about it.
-    async fn drive_host_typed_continuations<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt> {
+    async fn drive_host_typed_continuations<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt> {
         
         let mut ownership_receipts = Vec::new();
         artifact_app_laws::retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original fixture admission receipts");
@@ -358,7 +358,7 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
     /// and a `refresh-ui` settle whose surfaces are already published. Answers
     /// `(terminal completions, continuations spent, first parked continuation)`, where "parked" is a
     /// continuation that ended owing typed-operation work while the turn reported none runnable.
-    async fn drive_host_call_with_deferred_acks<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, stop_at_idle: bool, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> HostCallCensus {
+    async fn drive_host_call_with_deferred_acks<P: PluginApp>(app: &mut P, receiver: u32, continuations: usize, stop_at_idle: bool, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> HostCallCensus {
         
         let mut ownership_receipts = Vec::new();
         artifact_app_laws::retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts).expect("original deferred admission receipts");
@@ -413,7 +413,7 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
         assert_eq!(*lane, TypedOperationResultLane::Terminal, "'{verb}' terminated on the {lane:?} lane ({body:?}) within {spent} host continuations; a refused ladder publishes nothing, so this law would be vacuous over it");
     }
     #[doc(hidden)]
-pub async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         const CONTINUATIONS: usize = 512;
@@ -430,7 +430,7 @@ pub async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_wo
         eprintln!("[TRACE] actual one mutating typed operation kept its turn runnable through all {spent} continuations of the call that admitted it");
     }
     #[doc(hidden)]
-pub async fn test_typed_operation_completes_under_a_status_only_host_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn test_typed_operation_completes_under_a_status_only_host_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         const CONTINUATIONS: usize = 512;
@@ -452,7 +452,7 @@ pub async fn test_typed_operation_completes_under_a_status_only_host_call<A: Art
         eprintln!("[TRACE] actual a status-only host call finished its typed operation in {spent} continuations, with {drained} drain continuations after it");
     }
     #[doc(hidden)]
-pub async fn test_typed_operation_lands_its_edit_inside_the_admitting_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn test_typed_operation_lands_its_edit_inside_the_admitting_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
         const CONTINUATIONS: usize = 512;

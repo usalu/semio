@@ -100,3 +100,42 @@ fn settled_construction_refuses_a_quote_no_turn_can_fund_and_backpressures_a_nar
  let mut admission=Admission::default();let mut settled=false;for _ in 0..64{if caller.turn_with_decoder(grant(),&mut decoder,|cx|admit_original_tool_construction_settled(cx,&mut admission,&mut output,fits,|_|Ok((Box::new(1u8),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:1,..Default::default()})))).unwrap(){settled=true;break}}assert!(settled);
  assert!(output.is_some());output.take();close(&mut caller,&mut decoder);caller.retire(grant());
 }
+
+fn warm_constructor(_:&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>,actual:&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<(Box<u8>,RetainedCloneProgress)>{*actual=Some(1);semio_framework_value::RetainedWorkOutcome{result:Ok((Box::new(1u8),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:1,..Default::default()})),work:1}}
+fn below(grant:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:grant.maximum_items-1,..grant}}
+fn funded_prerequisites(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant,turns:usize)->Vec<(bool,RetainedCloneProgress)>{
+ (0..turns).map(|_|{let ready=caller.admit_decoder_step(decoder,grant);(ready,caller.receipt())}).collect()
+}
+fn teardown(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){
+ let steps=semio_framework_job::ORIGINAL_DECODER_TEARDOWN_STEPS;
+ for _ in 0..steps{let(quote,_)=semio_framework_job::original_decoder_teardown_quote(decoder).unwrap();caller.turn(quote,|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}
+ assert!(decoder.terminal_is_empty(),"decoder teardown exceeded its {steps} quoted steps");
+}
+#[test]
+fn cold_decoder_prerequisites_are_all_or_nothing_at_their_quote(){
+ let(prerequisite,fuel)=semio_framework_job::original_decoder_prerequisite_quote().unwrap();
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(119),Generation(49),grant(),clock,u64::MAX,10000);let mut decoder=OriginalJobDecodeOwner::empty();
+ let starved=funded_prerequisites(&mut caller,&mut decoder,below(prerequisite),8);
+ assert!(starved.iter().all(|(ready,_)|!ready));assert!(starved[3..].iter().all(|(_,receipt)|*receipt==RetainedCloneProgress::default()));
+ teardown(&mut caller,&mut decoder);caller.retire(grant());
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(120),Generation(49),grant(),clock,u64::MAX,10000);let mut decoder=OriginalJobDecodeOwner::empty();
+ let funded=funded_prerequisites(&mut caller,&mut decoder,prerequisite,4);
+ assert_eq!(funded.iter().position(|(ready,_)|*ready),Some(3));assert!(funded.iter().all(|(_,receipt)|receipt.fits(prerequisite)));assert!(fuel>0);
+ teardown(&mut caller,&mut decoder);caller.retire(grant());
+}
+#[test]
+fn settled_construction_admits_exactly_its_turn_quote_and_refuses_one_below_without_state_change(){
+ let demand=semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:1,release_bytes:0,depth:1};
+ let(quote,_)=semio_framework_job::original_construction_settled_turn_quote::<Box<u8>>(demand,1).unwrap();
+ let(prerequisite,_)=semio_framework_job::original_decoder_prerequisite_quote().unwrap();
+ let attempt=|turn_grant:RetainedCloneGrant|{
+  let operation=Operation::new(OperationId(118),RevisionId(0),Generation(48),0);let mut caller=OriginalJobFixtureCaller::admit(operation.operation,operation.generation,grant(),clock,u64::MAX,10000);let mut decoder=OriginalJobDecodeOwner::empty();
+  assert!(funded_prerequisites(&mut caller,&mut decoder,prerequisite,4).last().unwrap().0);
+  let mut output:Option<Box<u8>>=None;let mut admission=Admission::default();
+  let(settled,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(turn_grant,&mut decoder,|cx|admit_original_construction_settled(cx,&mut admission,&mut output,demand,1,warm_constructor)));
+  let state=(output.is_some(),admission.terminal_is_empty());if !settled.as_ref().is_ok_and(|done|*done){assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0))}
+  if settled.is_ok(){output.take();}teardown(&mut caller,&mut decoder);caller.retire(grant());(settled,state)
+ };
+ let(settled,state)=attempt(quote);assert!(settled.unwrap());assert_eq!(state,(true,false));
+ for starved in[below(quote),RetainedCloneGrant{maximum_copy_bytes:quote.maximum_copy_bytes-1,..quote}]{let(settled,state)=attempt(starved);assert!(!settled.unwrap());assert_eq!(state,(false,true))}
+}

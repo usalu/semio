@@ -199,8 +199,6 @@ fn original_completed_result_preserves_refused_donor_and_redispatch_occupancy(){
  let req=registry.for_instance(72).request_continuation("receive".into(),"{}".into(),|req|Effect::CancelJob{job:req.0}).unwrap();let continuation=registry.take_continuation(req).unwrap();assert_eq!(registry.instance_of(req),Some(72));assert!(registry.take_continuation(req).is_none());registry.release_completed(req);assert_eq!(registry.instance_of(req),None);drop(continuation);
 }
 
-#[global_allocator]
-static HOST_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[test]
 fn retained_request_is_send_preserves_original_body_and_requires_funded_close() {

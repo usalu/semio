@@ -25,11 +25,11 @@ path = "../../🦀️.rs"
 testkit = ["semio-os-infinite-world-model/testkit", "semio-os-infinite-world-components/testkit"]
 
 [dependencies]
-semio-framework-pixels = { path = "../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+semio-framework-pixels = { path = "../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

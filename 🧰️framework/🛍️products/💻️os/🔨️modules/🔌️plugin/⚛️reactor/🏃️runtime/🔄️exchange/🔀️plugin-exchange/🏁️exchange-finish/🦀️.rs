@@ -19,7 +19,7 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
     instance_id: u32,
     identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,
     cx: &mut semio_framework_job::StepContext<'_>,
-    state:&mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState,
+    state:&mut semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState,
     command_terminal_fault: Option<Vec<u8>>,
     presence_pending: Option<u64>,
     presence_terminal: Option<u64>,
@@ -36,7 +36,10 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
             Ok(pulled)
         })
         .await?;
-        if !record_pending_effects(state, pulled) { return Ok(PluginExchangeOutput::default()) }
+        let Some(effects) = pulled else { return Ok(PluginExchangeOutput::default()) };
+        for effect in &effects { state.effects.push(encode_wire_serialized(effect)); }
+        state.pending_effects = Some(effects);
+        state.effects_done = true;
     }
     let (typed_output,typed_leftover)= with_instances_original_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;

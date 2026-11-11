@@ -4,6 +4,7 @@ use semio_framework_value::{ErasedSnapshotRetirement, OriginalRetirementFailure,
 #[path="effect.rs"]
 mod effect;
 pub use effect::{settled, with_effect};
+use semio_framework_value::retirement::arc_custody::original::{SharedOriginalRelease, SharedOriginalStorage};
 use std::{mem::ManuallyDrop, sync::{Arc, atomic::{AtomicUsize, Ordering}}};
 
 pub const CLOSE_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
@@ -15,16 +16,16 @@ impl CountedPresence for i32 { fn counted(self) -> bool { self == 41 } }
 pub struct Factory(#[factory_child] pub Arc<AtomicUsize>);
 
 struct Retirement<P: CountedPresence> {
-    root: ManuallyDrop<Option<Arc<P>>>,
+    root: ManuallyDrop<Option<SharedOriginalStorage<P>>>,
     count: ManuallyDrop<Option<Arc<AtomicUsize>>>,
     counter_close: ManuallyDrop<Option<FactoryAuthority>>,
 }
 
 impl<P: CountedPresence> SnapshotRetirementFactory<P> for Factory {
-    fn retirement_birth_bytes(&self, _: &Arc<P>) -> usize { size_of::<Retirement<P>>() }
-    fn retire_demands(&self, _: &Arc<P>) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand { capacity_bytes: size_of::<Retirement<P>>(), depth: 1, ..Default::default() }) }
-    fn retire_work_demand(&self, _: &Arc<P>) -> Result<u64, ValueError> { Ok(1) }
-    fn retire<'reply>(&self, original: &mut Option<Arc<P>>, effect: &mut RetainedAllocationEffect<'_>, mut reply: FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, OriginalRetirementFailure>) -> FactoryProducerReplyComplete<'reply, OriginalRetirementFailure> {
+    fn retirement_birth_bytes(&self, _: &SharedOriginalStorage<P>) -> usize { size_of::<Retirement<P>>() }
+    fn retire_demands(&self, _: &SharedOriginalStorage<P>) -> Result<RetirementDemand, ValueError> { Ok(RetirementDemand { capacity_bytes: size_of::<Retirement<P>>(), depth: 1, ..Default::default() }) }
+    fn retire_work_demand(&self, _: &SharedOriginalStorage<P>) -> Result<u64, ValueError> { Ok(1) }
+    fn retire<'reply>(&self, original: &mut Option<SharedOriginalStorage<P>>, effect: &mut RetainedAllocationEffect<'_>, mut reply: FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, OriginalRetirementFailure>) -> FactoryProducerReplyComplete<'reply, OriginalRetirementFailure> {
         let grant = effect.grant();
         let bytes = size_of::<Retirement<P>>();
         if original.is_none() || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_capacity_bytes < bytes || effect.maximum_work_units() == 0 { return reply.complete(RetainedWorkOutcome { result: Ok(RetainedCloneProgress::default()), work: 0 }); }
@@ -37,24 +38,27 @@ impl<P: CountedPresence> SnapshotRetirementFactory<P> for Factory {
         reply.publish(Box::new(Retirement { root: ManuallyDrop::new(Some(root)), count: ManuallyDrop::new(Some(Arc::clone(&self.0))), counter_close: ManuallyDrop::new(None) }));
         reply.complete(RetainedWorkOutcome { result: Ok(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: bytes, ..Default::default() }), work: 1 })
     }
-    fn recover_retire<'reply>(&self, _: &mut Option<Arc<P>>, _: &mut RetainedAllocationEffect<'_>, reply: FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, OriginalRetirementFailure>) -> FactoryProducerReplyComplete<'reply, OriginalRetirementFailure> { reply.pending() }
+    fn recover_retire<'reply>(&self, _: &mut Option<SharedOriginalStorage<P>>, _: &mut RetainedAllocationEffect<'_>, reply: FactoryProducerReply<'reply, dyn ErasedSnapshotRetirement, OriginalRetirementFailure>) -> FactoryProducerReplyComplete<'reply, OriginalRetirementFailure> { reply.pending() }
 }
 
 impl<P: CountedPresence> Retirement<P> {
-    fn close(&mut self, effect: &mut RetainedAllocationEffect<'_>, work: &mut u128) -> Result<RetainedCloneStep, OriginalRetirementFailure> {
+    fn close(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>, work: &mut u128) -> Result<RetainedCloneStep, OriginalRetirementFailure> {
         let grant = effect.grant();
         let pay = |effect: &mut RetainedAllocationEffect<'_>, work: &mut u128| match semio_framework_value::retirement::record_retirement_work(effect, 1) { Ok(paid) => { *work += paid; Ok(()) } Err((error, paid)) => { *work += paid; Err(error) } };
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 || effect.maximum_work_units() == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let demand = self.demands(grant.maximum_copy_bytes)?;
+        let demand = self.demands(body)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "Presence test owner requires its original depth").into()); }
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if let Some(root) = self.root.as_ref() {
-            if Arc::weak_count(root) != 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if root.aliases() == 1 && !root.physically_unique() { return Ok(RetainedCloneStep::Progress(Default::default())); }
             pay(effect, work)?;
-            let released_bytes = match self.root.take().and_then(Arc::into_inner) {
-                Some(value) => { if value.counted() { if let Some(count) = self.count.as_ref() { count.fetch_add(1, Ordering::Relaxed); } } demand.release_bytes }
-                None => 0,
+            let released_bytes = match self.root.take().map(SharedOriginalStorage::retire) {
+                Some(SharedOriginalRelease::Original(mut original)) => match original.take_value() {
+                    Some(value) => { if value.counted() { if let Some(count) = self.count.as_ref() { count.fetch_add(1, Ordering::Relaxed); } } demand.release_bytes }
+                    None => return Err(ValueError::invariant("Presence test original lost its unique payload").into()),
+                },
+                _ => 0,
             };
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
         }
@@ -65,14 +69,14 @@ impl<P: CountedPresence> Retirement<P> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         let Some(owner) = self.counter_close.as_mut() else { return Err(ValueError::invariant("Presence test owner lost its counter close").into()); };
-        let turn = match owner.step(effect) { RetainedWorkPoll::Complete(turn) => turn, RetainedWorkPoll::Pending { work: pending } => { *work += pending; return Ok(RetainedCloneStep::Progress(Default::default())); } };
+        let turn = match owner.step(body, effect) { RetainedWorkPoll::Complete(turn) => turn, RetainedWorkPoll::Pending { work: pending } => { *work += pending; return Ok(RetainedCloneStep::Progress(Default::default())); } };
         *work += turn.work;
         let step = turn.result?;
         if owner.terminal_is_empty() { self.counter_close.take(); }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
     fn demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
-        if self.root.is_some() { return Ok(RetirementDemand { release_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<P>(), depth: 1, ..Default::default() }); }
+        if self.root.is_some() { return Ok(RetirementDemand { release_bytes: SharedOriginalStorage::<P>::allocation_bytes(), depth: 1, ..Default::default() }); }
         if self.count.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.counter_close.as_ref().map_or(Ok(Default::default()), |owner| owner.demands(copy))
     }
@@ -80,9 +84,9 @@ impl<P: CountedPresence> Retirement<P> {
 
 impl<P: CountedPresence> ErasedSnapshotRetirement for Retirement<P> {
     fn next_computational_work(&self, _: usize) -> Result<u64, ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
-    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+    fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         let mut work = 0;
-        let result = self.close(effect, &mut work);
+        let result = self.close(body, effect, &mut work);
         RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work })
     }
     fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.count.is_none() && self.counter_close.is_none() }
@@ -108,7 +112,7 @@ pub fn observed_step(grant: RetainedCloneGrant, close: impl FnOnce(&mut Retained
     step
 }
 
-pub fn observed_close(owner: &mut (impl ErasedSnapshotRetirement + ?Sized), grant: RetainedCloneGrant) -> RetainedCloneStep { observed_step(grant, |effect| settled(owner.close_step(effect))) }
+pub fn observed_close(owner: &mut (impl ErasedSnapshotRetirement + ?Sized), grant: RetainedCloneGrant) -> RetainedCloneStep { observed_step(grant, |effect| settled(owner.close_step(grant.maximum_copy_bytes, effect))) }
 
 pub fn finish(owner: &mut (impl ErasedSnapshotRetirement + ?Sized)) -> usize {
     let mut released = 0;

@@ -14,7 +14,7 @@ pub struct QuestionDictionaryEntry{pub question_id:String,pub value:DslValue}
 pub struct QuestionDictionary{pub entries:Vec<QuestionDictionaryEntry>}
 impl QuestionDictionary{
  /// 🛂️ Each question owns exactly one entry; intrinsic object members retain their literal order.
- pub fn validate(&self)->Result<(),ValueError>{let mut callback=|_|true;self.validate_controlled(&mut NativeDecodeControl::new(usize::MAX,&mut callback))}
+ pub fn validate(&self)->Result<(),ValueError>{let mut callback=|_|true;let mut control=NativeDecodeControl::new(usize::MAX,&mut callback);self.validate_controlled(&mut control)}
  /// 🔍️ Sort borrowed identities under explicit admission and bounded literal comparisons.
  pub fn validate_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(&self,control:&mut C)->Result<(),ValueError>{control.scoped_stage(|control|{control.begin_stage(0)?;let mut identities=control.allocate_vec(self.entries.len())?;for entry in &self.entries{control.step()?;identities.push(entry.question_id.as_str());}for root in(0..identities.len()/2).rev(){sift(&mut identities,root,self.entries.len(),control)?;}for end in(1..identities.len()).rev(){identities.swap(0,end);sift(&mut identities,0,end,control)?;}for pair in identities.windows(2){if compare(pair[0],pair[1],control)?.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate QuestionDictionary question identity"));}}Ok(())})}
  /// 🎞️ Consume the actual ordered dictionary object transported by a workflow wire.

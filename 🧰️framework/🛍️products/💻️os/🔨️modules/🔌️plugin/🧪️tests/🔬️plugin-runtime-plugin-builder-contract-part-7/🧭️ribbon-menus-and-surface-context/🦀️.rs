@@ -52,7 +52,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../../⚛️reactor/🪟️surfaces/🧪️tests/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
@@ -62,10 +62,10 @@
         runtime.instances.borrow_mut().insert_admitted(7, cell);
         for surface in fixture["surfaces"].as_array().unwrap() {
             let view = surface["windowId"].as_str().map(|window| host_view.for_window_instance(window).unwrap()).unwrap_or_else(|| host_view.clone());
-            semio_framework_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 7, surface["id"].as_str().unwrap().into(), surface["bodyKey"].as_str().unwrap().into(), &semio_plugin_plugin_program::encode_wire_serialized(&view)).await.unwrap();
+            semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 7, surface["id"].as_str().unwrap().into(), surface["bodyKey"].as_str().unwrap().into(), &semio_plugin_plugin_program::encode_wire_serialized(&view)).await.unwrap();
         }
         for surface in fixture["surfaces"].as_array().unwrap() {
-            semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, surface["id"].as_str().unwrap()).await.unwrap();
+            semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, surface["id"].as_str().unwrap()).await.unwrap();
             let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take().unwrap());
             assert_eq!(body, surface["bodyKey"].as_str().unwrap());
             assert_eq!(actual.window_id.as_deref(), surface["windowId"].as_str());
@@ -74,9 +74,9 @@
             assert_eq!(actual.terminology, host_view.terminology);
         }
         let hidden = fixture["hidden"].as_str().unwrap();
-        semio_framework_plugin_runtime_ops::ops_surface_render::plugin_hide_surface(&runtime, 7, hidden).await.unwrap();
-        assert!(semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, hidden).await.is_err());
-        assert!(semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, fixture["survivor"].as_str().unwrap()).await.is_ok());
+        semio_plugin_runtime_ops::ops_surface_render::plugin_hide_surface(&runtime, 7, hidden).await.unwrap();
+        assert!(semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, hidden).await.is_err());
+        assert!(semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, fixture["survivor"].as_str().unwrap()).await.is_ok());
     }
     //#endregion 🗂️GroupedContextMenu
 
@@ -88,7 +88,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../../⚛️reactor/🪟️surfaces/🧪️tests/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
@@ -98,7 +98,7 @@
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(semio_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         let mut sequence = 0;
         let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(4_096, u64::MAX, mounted_policy.preparation), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, semio_plugin_testing_laws::artifact_app_laws::fixture_progress());
-        let response = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap(), &mut cx).await.unwrap();
+        let response = semio_plugin_runtime_ops::ops_surface_render::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap(), &mut cx).await.unwrap();
         let response: Value = serde_json::from_str(&response).unwrap();
         assert_eq!(response["panels"][0]["key"], "properties");
         let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take().unwrap());
@@ -131,7 +131,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let fixture: Value = serde_json::from_str(include_str!("../../../⚛️reactor/🪟️surfaces/🧪️tests/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
@@ -151,8 +151,8 @@
         for surface in fixture["surfaces"].as_array().unwrap() {
             let id = surface["id"].as_str().unwrap();
             let view = surface["windowId"].as_str().map(|window| host_view.for_window_instance(window).unwrap()).unwrap_or_else(|| host_view.for_panel());
-            semio_framework_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 7, id.into(), surface["bodyKey"].as_str().unwrap().into(), &semio_plugin_plugin_program::encode_wire_serialized(&view)).await.unwrap();
-            let (_, presence) = semio_framework_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, id).await.unwrap();
+            semio_plugin_runtime_ops::ops_surface_render::plugin_mount_surface(&runtime, 7, id.into(), surface["bodyKey"].as_str().unwrap().into(), &semio_plugin_plugin_program::encode_wire_serialized(&view)).await.unwrap();
+            let (_, presence) = semio_plugin_runtime_ops::ops_surface_render::plugin_render_surface(&runtime, 7, id).await.unwrap();
             assert_eq!(presence.len(), 1);
             let mut expected = fixture["presence"]["expected"].clone();
             expected["surface"] = surface["id"].clone();
@@ -189,7 +189,7 @@
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         use semio_framework::InteractiveJobClassification::{BatchOnlyPendingRewrite, Deleted, ForbiddenFromUi, Unclassified};
         use semio_framework::manifest::{CommandAddress, CommandInvocation, CommandOwnerAddress};

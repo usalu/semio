@@ -2,8 +2,6 @@
 use super::*;
 use semio_plugin::artifact_app_laws::OriginalWorkFixture;
 use semio_framework_value::retirement::{RetirementCursor,RetirementStep};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 struct Probe{bytes:Vec<u8>,work:u64}
 impl RetireOwned for Probe{
  fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Cursor>())}

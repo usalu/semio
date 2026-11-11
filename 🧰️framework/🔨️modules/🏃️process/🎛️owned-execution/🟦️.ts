@@ -15,6 +15,8 @@ import { StringDecoder } from "node:string_decoder";
 import { spawn } from "node:child_process";
 import { settleOwnedChildV1 } from "./🏁️settlement/🟦️.ts";
 import { OwnedCommandFailure } from "./📪️outcome/🟦️.ts";
+import { refuseProcessV1 } from "../📖️texts/🟦️.ts";
+import type { RepoErrorV1 } from "../🏗️build/🗣️language/🚨️error/🟦️.ts";
 import stdoutDestination from "./🧬️schema/📤️stdout.json" with { type: "json" };
 import outputSchema from "./🧬️schema/📬️output.json" with { type: "json" };
 import heartbeat from "./🧬️schema/📣️heartbeat.json" with { type: "json" };
@@ -24,7 +26,7 @@ import{requireIssuedResourceControlV1}from"../🧭️routing/📥️invocation/�
 import{noteScriptProcessActivityV1}from"../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import{ProgressDeadlineExpiredV1}from"../⏱️budget/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-export { OwnedCommandFailure, readOwnedCommandOutcome, type OwnedCommandOutcome } from "./📪️outcome/🟦️.ts";
+export { OwnedCommandFailure, isOwnedCommandFailureV1, ownedCommandExitCodeV1, readOwnedCommandOutcome, type OwnedCommandOutcome } from "./📪️outcome/🟦️.ts";
 /** 🌓️ Names the closed stdout and stderr roles declared by the owned output stream schema. */
 export type OwnedCommandStreamV1="stdout"|"stderr";
 
@@ -80,6 +82,14 @@ export function startOwnedCommandTimeoutV1(milliseconds:number,expire:()=>void):
   return()=>{active=false;if(timer!==undefined)clearTimeout(timer);};
 }
 
+/** 🛑️ The typed refusal of a stop the owner decided: cancellation, termination, a timeout or an output limit, each with its exit class. */
+function stopRefusalV1(label: string, stop: "cancelled" | "SIGTERM" | "timeout" | "output-limit", milliseconds = 0): RepoErrorV1 {
+  return stop === "cancelled" ? refuseProcessV1("cancelled", "execution.cancelled", { label })
+    : stop === "SIGTERM" ? refuseProcessV1("terminated", "execution.terminated", { label, signal: "SIGTERM" })
+    : stop === "timeout" ? refuseProcessV1("timeout", "execution.timed-out", { label, milliseconds })
+    : refuseProcessV1("breach", "execution.output-limit", { label });
+}
+
 /** 🏃️ Runs a bounded owned command with progress and process-tree cancellation. Its stdout (unless ignored) and stderr are piped and
  * forwarded, never inherited: an inherited pipe shares this Bun process's `O_NONBLOCK`, and a burst from the command then fails with
  * `EAGAIN` once a slow reader lets the pipe fill ([[cargoStreamingStatus]], ticket 26/09/23 W4). */
@@ -92,18 +102,18 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   const auxiliary=options.auxiliaryInput===undefined?undefined:readOwnedCommandAuxiliaryInputV1(options.auxiliaryInput);
   if(auxiliary){if(!options.control)throw Error("Actual Original auxiliary input control required");requireIssuedResourceControlV1(options.control);if(options.signal!==undefined&&options.signal!==options.control.signal)throw Error("Same Original auxiliary input signal required");}
   const commandSignal=auxiliary?options.control!.signal:options.signal;
-  if (commandSignal?.aborted) {if(auxiliary)throw commandSignal.reason;throw new Error(`${label} stopped: cancelled`);}
+  if (commandSignal?.aborted) {if(auxiliary)throw commandSignal.reason;throw stopRefusalV1(label, "cancelled");}
   const ceiling = bunTestCeilingV1(command, args, cwd, options.env ?? process.env);
   const routed = routeRegisteredCommandV1(command, args, cwd, options.env ?? process.env), child = spawn(routed.command, [...routed.arguments], { cwd, env: routed.environment as NodeJS.ProcessEnv, detached: process.platform !== "win32", stdio: [options.input === undefined ? "inherit" : "pipe", options.stdout === "ignore" && options.output === undefined && !options.outputConsumer ? "ignore" : "pipe", "pipe", ...(auxiliary?["pipe" as const]:[])], windowsHide: true });
-  let stopped = "", closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
+  let stopped = "", stopRefusal: RepoErrorV1 | undefined, closed = false, publicationRefused = false, publicationFailure: unknown, interruptPublication!: () => void;
   const pending = new Set<Promise<void>>(), interrupted = new Promise<void>(accept => { interruptPublication = accept; });
-  const terminate = (reason: string): void => {
-    stopped ||= reason;
+  const terminate = (reason: string, refusal?: RepoErrorV1): void => {
+    if (!stopped) { stopped = reason; stopRefusal = refusal; }
     interruptPublication();
     if (!closed) terminateOwnedChildTree(child);
   };
   const release = ceiling !== undefined && child.pid !== undefined ? ceiling(child.pid, terminate) : undefined;
-  const abort = (): void => terminate(commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? commandSignal.reason.message : "cancelled");
+  const abort = (): void => commandSignal?.reason instanceof ProgressDeadlineExpiredV1 ? terminate(commandSignal.reason.message) : terminate("cancelled", stopRefusalV1(label, "cancelled"));
   const observe = (stream: NodeJS.ReadableStream,source:OwnedCommandStreamV1): void => {
     const decoder = new StringDecoder("utf8");
     let pending = "";
@@ -125,9 +135,9 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     let tail=false;
     const admitted:NodeJS.ReadableStream=limits?new Transform({transform(bytes:Buffer,_encoding,done){
       if(outputRefused||consumerRefused){done();return;}
-      if(bytes.length>limits.maximumBytes-outputBytes){outputRefused=true;terminate("output byte limit");done();return;}
+      if(bytes.length>limits.maximumBytes-outputBytes){outputRefused=true;terminate("output byte limit", stopRefusalV1(label, "output-limit"));done();return;}
       let lines=outputLines,open=tail;
-      for(const byte of bytes){if(!open)lines++;open=byte!==10;if(lines>limits.maximumLines){outputRefused=true;terminate("output line limit");done();return;}}
+      for(const byte of bytes){if(!open)lines++;open=byte!==10;if(lines>limits.maximumLines){outputRefused=true;terminate("output line limit", stopRefusalV1(label, "output-limit"));done();return;}}
       outputBytes+=bytes.length;outputLines=lines;tail=open;
       if(options.outputConsumer)try{const result=options.outputConsumer(bytes,source);if(result!==undefined){if(result&&typeof result==="object"&&typeof(result as PromiseLike<unknown>).then==="function")consumerWork.push(Promise.resolve(result).then(value=>({status:"fulfilled" as const,value}),reason=>({status:"rejected" as const,reason})));throw Error(`${label} output consumer must settle synchronously without a return value`);}}catch(error){consumerRefused=true;consumerFailure=error;terminate("output consumer refused");done();return;}done(null,bytes);
     }}):stream;
@@ -143,8 +153,8 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
   forward(child.stderr!,process.stderr,true,"stderr");
   commandSignal?.addEventListener("abort", abort, { once: true });
   if (commandSignal?.aborted) abort();
-  const interrupt = (): void => terminate("SIGINT");
-  const stop = (): void => terminate("SIGTERM");
+  const interrupt = (): void => terminate("SIGINT", stopRefusalV1(label, "cancelled"));
+  const stop = (): void => terminate("SIGTERM", stopRefusalV1(label, "SIGTERM"));
   process.once("SIGINT", interrupt);
   process.once("SIGTERM", stop);
   const publish = (line: string): void => {
@@ -158,7 +168,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     });
   };
   const stopProgress = startNativeProgress(label, options.progressIntervalMs ?? 10_000, publish);
-  const stopTimeout = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`));
+  const stopTimeout = startOwnedCommandTimeoutV1(timeoutMs,() => terminate(`timeout ${timeoutMs}ms`, stopRefusalV1(label, "timeout", timeoutMs)));
   let auxiliaryFailed=false,auxiliaryFailure:unknown;
   try {
     const auxiliaryPublication=auxiliary?publishOwnedAuxiliaryInputV1(child.stdio[3] as import("node:stream").Writable|null,auxiliary.text,(error,phase)=>{if(!auxiliaryFailed){auxiliaryFailed=true;auxiliaryFailure=new OwnedAuxiliaryPublicationFailureV1(error,phase);}terminate("auxiliary input publication refused");}):Promise.resolve();
@@ -181,7 +191,7 @@ export async function runOwnedCommand(command: string, args: string[], cwd: stri
     if(auxiliary&&commandSignal?.aborted)throw commandSignal.reason;
     if(auxiliaryFailed)throw auxiliaryFailure;
     if(auxiliary)requireIssuedResourceControlV1(options.control!);
-    if (stopped&&stopped!=="output delivery refused") throw new Error(`${label} stopped: ${stopped}`);
+    if (stopped&&stopped!=="output delivery refused") throw stopRefusal ?? new Error(`${label} stopped: ${stopped}`);
     if(stopped==="output delivery refused"&&status.signal!==null)throw deliveryFailure;
     if (status.signal !== null || status.code !== 0) throw new OwnedCommandFailure(label, { version: 1, status: status.code, signal: status.signal });
     if(deliveryFailed)throw deliveryFailure;

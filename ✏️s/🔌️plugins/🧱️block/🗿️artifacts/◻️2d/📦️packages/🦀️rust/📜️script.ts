@@ -1,7 +1,7 @@
 #!/usr/bin/env repo
 /** 📦️ block-2d Rust artifact package router. */
-import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runArtifactRustPackageMain, runArtifactRustTests } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
+import {BundleScript, ScriptRouter} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 class NativeSqliteBaselineScript extends BundleScript {
   async run(): Promise<void> { await runArtifactRustTests("semio-s-artifact-block-2d", this.repoRoot, ["--lib", "sqlite_snapshot_", "--no-fail-fast"], this.invocation); }
 }

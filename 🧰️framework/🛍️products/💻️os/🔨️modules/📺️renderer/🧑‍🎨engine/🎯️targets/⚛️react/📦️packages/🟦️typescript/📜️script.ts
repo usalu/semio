@@ -1,17 +1,17 @@
 #!/usr/bin/env repo
 /** 🎨️ `@semio-tech/framework-renderer-react` task router. */
 
-import { createIssuedResourceControlV1 } from "@semio-tech/framework/process/routing";
-import { typecheckAdmittedProjectV1 } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🏗️build/🟦️typescript/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { resolveTestLevel } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
+import { typecheckAdmittedProjectV1 } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
+import { receiveScriptProcessInvocation } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { resolveTestLevel } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runCmd } from "@semio-tech/framework/process/execution";
-import { runVitest } from "@semio-tech/framework/process/vitest";
-import { BundleScript, ScriptRouter } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { runCmd } from "@semio-tech/process/execution";
+import { runVitest } from "@semio-tech/process/vitest";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../../../../../🔨️modules/⚙️runtime/🏁️main/🟦️.ts";
 
 /** 🔮️ Runs one engine-owned oracle suite; the oracles live below the engine, not in this host package. */

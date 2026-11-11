@@ -4,7 +4,6 @@
 //! literal targets and parameters, every member edit stamped with the gesture's `TransactionRef`, and zero trace when
 //! nothing moves. The leaves stay editable: a history edit of the drag's offset replays onto any base.
 
-semio_plugin::install_fixture_heap_witness!();
 extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 #[path = "../../../../../../🧪️tests/🧰️support/🦀️.rs"]

@@ -27,5 +27,5 @@ path = "../../🦀️.rs"
 backend-testing = []
 
 [dependencies]
-semio-framework-geometry = { path = "../../../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-geometry = { path = "../../../../../📐️geometry/📦️packages/🦀️rust" }
 bytemuck = { version = "1.24.0", features = ["derive"] }

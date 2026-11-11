@@ -1,0 +1,13 @@
+{
+ "nowOffsetMs": 0,
+ "livePids": [4242],
+ "entries": [
+  {"name": "999991-rs-AbCdEf", "bytes": 4000, "ageMs": 7200000, "expect": "removed", "why": "owner gone and old"},
+  {"name": "999992-uc-GhIjKl", "bytes": 4000, "ageMs": 5400000, "expect": "removed", "why": "owner gone and older than an hour"},
+  {"name": "999993-drc-MnOpQr", "bytes": 4000, "ageMs": 300000, "expect": "kept", "why": "owner gone but touched five minutes ago"},
+  {"name": "999994-hold-StUvWx", "bytes": 4000, "ageMs": 1200000, "expect": "kept", "why": "owner gone but younger than an hour"},
+  {"name": "4242-process-YzAbCd", "bytes": 4000, "ageMs": 86400000, "expect": "kept", "why": "owner alive, however old"},
+  {"name": "stranger", "bytes": 4000, "ageMs": 86400000, "expect": "kept", "why": "not named by an owner: not a unit of the area"},
+  {"name": "12abc", "bytes": 4000, "ageMs": 86400000, "expect": "kept", "why": "no process id: not a unit of the area"}
+ ]
+}

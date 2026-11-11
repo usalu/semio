@@ -109,10 +109,13 @@ async fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnap
     let (policy,_)=original_time_travel_fixture_caller();let grant=policy.preparation;let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:policy.close});
     let started = owners.run(document, time_travel::TimeTravelStoreCommand::StartReplay { drafts: drafts.clone(), from: from.clone() },None).await.expect("the replay starts");
     assert!(matches!(started, time_travel::TimeTravelStoreOutput::ReplayStarted(true)), "the store starts the Report replay");
+    let starved=semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant};
+    let idle=receiving_job.receive(starved,|receiving|semio_framework_async::poll::resolve_ready(owners.run(document, time_travel::TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us,grant:starved },Some(receiving)))).expect("an underfunded replay slice");
+    assert!(matches!(idle, time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Unfunded)), "an underfunded turn defers the replay without consuming it");
     for _ in 0..65_536 {
         match receiving_job.receive(grant,|receiving|semio_framework_async::poll::resolve_ready(owners.run(document, time_travel::TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us,grant },Some(receiving)))).expect("a replay slice") {
             time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Completed(report,_)) => return report,
-            time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Pending { .. }) => {}
+            time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Pending { .. }|time_travel::TimeTravelReplayStep::Unfunded) => {}
             _ => panic!("the replay faulted"),
         }
     }

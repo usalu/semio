@@ -1688,7 +1688,12 @@
      "freeFloorMegabytes": 256,
      "sustainedSeconds": 30
     },
-    "sliceSafetyMarginMegabytes": 256
+    "sliceSafetyMarginMegabytes": 256,
+    "sliceHostElasticity": {
+     "maximumMegabytes": 8192,
+     "hostShareBasisPoints": 7500,
+     "hostFloorMegabytes": 1536
+    }
    }
   },
   "Policy": {

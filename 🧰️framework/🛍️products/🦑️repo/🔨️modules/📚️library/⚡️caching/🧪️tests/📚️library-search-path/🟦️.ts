@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -28,7 +29,7 @@ test("pinned Cargo launches a large static graph and its procedural macro withou
   expect(members.map(name=>join(build,"debug/build",name,"0123456789abcdef/out")).join(";").length).toBeGreaterThan(fixture.minimumUnfilteredCharacters);
   const toolchain=Bun.TOML.parse(readFileSync(join(workspace,"rust-toolchain.toml"),"utf8")) as {toolchain:{channel:string}};
   const {RUSTC_WRAPPER:_wrapper,RUSTC_WORKSPACE_WRAPPER:_workspaceWrapper,...ambient}=process.env;
-  const child=Bun.spawn(["cargo","-Zbuild-dir-new-layout","run","--quiet","--offline","--manifest-path",join(root,"Cargo.toml"),"-p","application"],{cwd:root,env:{...ambient,RUSTUP_TOOLCHAIN:toolchain.toolchain.channel,CARGO_TARGET_DIR:join(root,"target"),CARGO_BUILD_BUILD_DIR:build,CARGO_INCREMENTAL:"0"},stdout:"pipe",stderr:"pipe"});
+  const child=Bun.spawn([registeredToolExecutableV1("cargo"),"-Zbuild-dir-new-layout","run","--quiet","--offline","--manifest-path",join(root,"Cargo.toml"),"-p","application"],{cwd:root,env:{...ambient,RUSTUP_TOOLCHAIN:toolchain.toolchain.channel,CARGO_TARGET_DIR:join(root,"target"),CARGO_BUILD_BUILD_DIR:build,CARGO_INCREMENTAL:"0"},stdout:"pipe",stderr:"pipe"});
   const [output,errors,code]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
   expect(code,errors).toBe(0);expect(output.trim()).toBe(String(fixture.expected));
 }, {timeout:120000});
@@ -37,7 +38,7 @@ test("pinned Cargo launches a large static graph and its procedural macro withou
 test("the pinned Cargo consumes the current metadata configuration without obsolete keys", async () => {
   const workspace=getWorkspaceRoot(),text=readFileSync(join(workspace,".cargo/config.toml"),"utf8"),config=Bun.TOML.parse(text) as {unstable:Record<string,unknown>};
   const independent=parse(text);expect(config).toEqual<typeof independent>(independent);expect(config.unstable["no-embed-metadata"]).toBeUndefined();expect(config.unstable["embed-metadata"]).toBe("DoNotEmbed");
-  const child=Bun.spawn(["cargo","-Z","unstable-options","config","get","unstable.embed-metadata","--format","json"],{cwd:workspace,stdout:"pipe",stderr:"pipe"});
+  const child=Bun.spawn([registeredToolExecutableV1("cargo"),"-Z","unstable-options","config","get","unstable.embed-metadata","--format","json"],{cwd:workspace,stdout:"pipe",stderr:"pipe"});
   const [output,errors,code]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);
   expect(code,errors).toBe(0);expect(errors).not.toContain("unused config key");expect(JSON.parse(output)).toEqual({unstable:{"embed-metadata":"DoNotEmbed"}});
 });

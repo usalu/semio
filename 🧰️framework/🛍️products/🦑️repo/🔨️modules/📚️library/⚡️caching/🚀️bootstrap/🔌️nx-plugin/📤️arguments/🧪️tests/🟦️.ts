@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 📤️ Pins raw Nx owner argv to real Node process arguments across shell metacharacters. */
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
@@ -18,7 +19,7 @@ test("owner arguments are admitted then transported literally and consumed exact
   const consumed=api.consumeOwnerArgumentsV1(env);
   expect(consumed.arguments).toEqual(row.arguments);expect(consumed.environment).toEqual({KEEP:"original"});expect(env.SEMIO_OWNER_ARGUMENTS).toBe(encoded);
   expect(api.consumeOwnerArgumentsV1(consumed.environment).arguments).toEqual([]);
-  const oracle=Bun.spawnSync(["node","-e","process.stdout.write(JSON.stringify(process.argv.slice(1)))","--",...consumed.arguments]);
+  const oracle=Bun.spawnSync([registeredToolExecutableV1("node"),"-e","process.stdout.write(JSON.stringify(process.argv.slice(1)))","--",...consumed.arguments]);
   expect(oracle.exitCode).toBe(0);expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(row.arguments);
  }
  for(const row of fixture.invalid){expect(admit(row)).toBe(false);expect(()=>api.consumeOwnerArgumentsV1({SEMIO_OWNER_ARGUMENTS:JSON.stringify(row)})).toThrow();}

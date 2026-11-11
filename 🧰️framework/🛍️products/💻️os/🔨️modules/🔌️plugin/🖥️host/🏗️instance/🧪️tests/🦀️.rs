@@ -2,8 +2,6 @@
 use semio_plugin_host::{GuestRuntimes,GuestRuntime,GuestInstance,GuestActorOpening,CompiledHandle,PackageRef,PackageHash};
 use semio_framework_actor::{OriginalGuestExecutionBudget,RetainedTurnInput};
 use std::mem::size_of;
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use semio_plugin_interpreter::OwnedSemioExport;
 use semio_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework_job::{OriginalJobFixtureCaller,OperationId,Generation};

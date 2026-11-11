@@ -46,7 +46,7 @@ semio-ui-wgpu-widget-kit = { path = "../../../../../../../../../../🔨️module
 usvg = "0.45.1"
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 ui_render = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-ui-render" }

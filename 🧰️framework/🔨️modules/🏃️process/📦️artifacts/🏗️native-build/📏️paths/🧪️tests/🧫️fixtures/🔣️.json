@@ -1687,476 +1687,476 @@
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-abi",
-      "crateName": "semio_framework_plugin_abi",
+      "packageName": "semio-plugin-abi",
+      "crateName": "semio_plugin_abi",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-actor-host",
-      "crateName": "semio_framework_plugin_actor_host",
+      "packageName": "semio-plugin-actor-host",
+      "crateName": "semio_plugin_actor_host",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-app-builder",
-      "crateName": "semio_framework_plugin_app_builder",
+      "packageName": "semio-plugin-app-builder",
+      "crateName": "semio_plugin_app_builder",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-builder",
-      "crateName": "semio_framework_plugin_builder",
+      "packageName": "semio-plugin-builder",
+      "crateName": "semio_plugin_builder",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-child",
-      "crateName": "semio_framework_plugin_child",
+      "packageName": "semio-plugin-child",
+      "crateName": "semio_plugin_child",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-command",
-      "crateName": "semio_framework_plugin_command",
+      "packageName": "semio-plugin-command",
+      "crateName": "semio_plugin_command",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-component-receipt",
-      "crateName": "semio_framework_plugin_component_receipt",
+      "packageName": "semio-plugin-component-receipt",
+      "crateName": "semio_plugin_component_receipt",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-composition-emission",
-      "crateName": "semio_framework_plugin_composition_emission",
+      "packageName": "semio-plugin-composition-emission",
+      "crateName": "semio_plugin_composition_emission",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-composition-publication",
-      "crateName": "semio_framework_plugin_composition_publication",
+      "packageName": "semio-plugin-composition-publication",
+      "crateName": "semio_plugin_composition_publication",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-app",
-      "crateName": "semio_framework_plugin_decl_app",
+      "packageName": "semio-plugin-decl-app",
+      "crateName": "semio_plugin_decl_app",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-emission",
-      "crateName": "semio_framework_plugin_decl_emission",
+      "packageName": "semio-plugin-decl-emission",
+      "crateName": "semio_plugin_decl_emission",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-media",
-      "crateName": "semio_framework_plugin_decl_media",
+      "packageName": "semio-plugin-decl-media",
+      "crateName": "semio_plugin_decl_media",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-registry",
-      "crateName": "semio_framework_plugin_decl_registry",
+      "packageName": "semio-plugin-decl-registry",
+      "crateName": "semio_plugin_decl_registry",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-staged-form",
-      "crateName": "semio_framework_plugin_decl_staged_form",
+      "packageName": "semio-plugin-decl-staged-form",
+      "crateName": "semio_plugin_decl_staged_form",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-surface",
-      "crateName": "semio_framework_plugin_decl_surface",
+      "packageName": "semio-plugin-decl-surface",
+      "crateName": "semio_plugin_decl_surface",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-tool-contract",
-      "crateName": "semio_framework_plugin_decl_tool_contract",
+      "packageName": "semio-plugin-decl-tool-contract",
+      "crateName": "semio_plugin_decl_tool_contract",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-decl-views",
-      "crateName": "semio_framework_plugin_decl_views",
+      "packageName": "semio-plugin-decl-views",
+      "crateName": "semio_plugin_decl_views",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-document-media",
-      "crateName": "semio_framework_plugin_document_media",
+      "packageName": "semio-plugin-document-media",
+      "crateName": "semio_plugin_document_media",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-extension",
-      "crateName": "semio_framework_plugin_extension",
+      "packageName": "semio-plugin-extension",
+      "crateName": "semio_plugin_extension",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-guest-contract",
-      "crateName": "semio_framework_plugin_guest_contract",
+      "packageName": "semio-plugin-guest-contract",
+      "crateName": "semio_plugin_guest_contract",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-host-configuration",
-      "crateName": "semio_framework_plugin_host_configuration",
+      "packageName": "semio-plugin-host-configuration",
+      "crateName": "semio_plugin_host_configuration",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-identity",
-      "crateName": "semio_framework_plugin_identity",
+      "packageName": "semio-plugin-identity",
+      "crateName": "semio_plugin_identity",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-app",
-      "crateName": "semio_framework_plugin_instance_app",
+      "packageName": "semio-plugin-instance-app",
+      "crateName": "semio_plugin_instance_app",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-children",
-      "crateName": "semio_framework_plugin_instance_children",
+      "packageName": "semio-plugin-instance-children",
+      "crateName": "semio_plugin_instance_children",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-commands",
-      "crateName": "semio_framework_plugin_instance_commands",
+      "packageName": "semio-plugin-instance-commands",
+      "crateName": "semio_plugin_instance_commands",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-construction",
-      "crateName": "semio_framework_plugin_instance_construction",
+      "packageName": "semio-plugin-instance-construction",
+      "crateName": "semio_plugin_instance_construction",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-dispatch",
-      "crateName": "semio_framework_plugin_instance_dispatch",
+      "packageName": "semio-plugin-instance-dispatch",
+      "crateName": "semio_plugin_instance_dispatch",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-docs",
-      "crateName": "semio_framework_plugin_instance_docs",
+      "packageName": "semio-plugin-instance-docs",
+      "crateName": "semio_plugin_instance_docs",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-extension",
-      "crateName": "semio_framework_plugin_instance_extension",
+      "packageName": "semio-plugin-instance-extension",
+      "crateName": "semio_plugin_instance_extension",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-history",
-      "crateName": "semio_framework_plugin_instance_history",
+      "packageName": "semio-plugin-instance-history",
+      "crateName": "semio_plugin_instance_history",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-initialization",
-      "crateName": "semio_framework_plugin_instance_initialization",
+      "packageName": "semio-plugin-instance-initialization",
+      "crateName": "semio_plugin_instance_initialization",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-jobs",
-      "crateName": "semio_framework_plugin_instance_jobs",
+      "packageName": "semio-plugin-instance-jobs",
+      "crateName": "semio_plugin_instance_jobs",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-ladders",
-      "crateName": "semio_framework_plugin_instance_ladders",
+      "packageName": "semio-plugin-instance-ladders",
+      "crateName": "semio_plugin_instance_ladders",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-render",
-      "crateName": "semio_framework_plugin_instance_render",
+      "packageName": "semio-plugin-instance-render",
+      "crateName": "semio_plugin_instance_render",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-stores",
-      "crateName": "semio_framework_plugin_instance_stores",
+      "packageName": "semio-plugin-instance-stores",
+      "crateName": "semio_plugin_instance_stores",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-surface",
-      "crateName": "semio_framework_plugin_instance_surface",
+      "packageName": "semio-plugin-instance-surface",
+      "crateName": "semio_plugin_instance_surface",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-instance-typed-ops",
-      "crateName": "semio_framework_plugin_instance_typed_ops",
+      "packageName": "semio-plugin-instance-typed-ops",
+      "crateName": "semio_plugin_instance_typed_ops",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-interaction",
-      "crateName": "semio_framework_plugin_interaction",
+      "packageName": "semio-plugin-interaction",
+      "crateName": "semio_plugin_interaction",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-job",
-      "crateName": "semio_framework_plugin_job",
+      "packageName": "semio-plugin-job",
+      "crateName": "semio_plugin_job",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-job-receiving",
-      "crateName": "semio_framework_plugin_job_receiving",
+      "packageName": "semio-plugin-job-receiving",
+      "crateName": "semio_plugin_job_receiving",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-mounted-owner",
-      "crateName": "semio_framework_plugin_mounted_owner",
+      "packageName": "semio-plugin-mounted-owner",
+      "crateName": "semio_plugin_mounted_owner",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-operation",
-      "crateName": "semio_framework_plugin_operation",
+      "packageName": "semio-plugin-operation",
+      "crateName": "semio_plugin_operation",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-original-job-ownership",
-      "crateName": "semio_framework_plugin_original_job_ownership",
+      "packageName": "semio-plugin-original-job-ownership",
+      "crateName": "semio_plugin_original_job_ownership",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-ownership",
-      "crateName": "semio_framework_plugin_ownership",
+      "packageName": "semio-plugin-ownership",
+      "crateName": "semio_plugin_ownership",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-peer",
-      "crateName": "semio_framework_plugin_peer",
+      "packageName": "semio-plugin-peer",
+      "crateName": "semio_plugin_peer",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-plugin-program",
-      "crateName": "semio_framework_plugin_plugin_program",
+      "packageName": "semio-plugin-plugin-program",
+      "crateName": "semio_plugin_plugin_program",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-publication-mounted",
-      "crateName": "semio_framework_plugin_publication_mounted",
+      "packageName": "semio-plugin-publication-mounted",
+      "crateName": "semio_plugin_publication_mounted",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-app",
-      "crateName": "semio_framework_plugin_reactor_app",
+      "packageName": "semio-plugin-reactor-app",
+      "crateName": "semio_plugin_reactor_app",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-context",
-      "crateName": "semio_framework_plugin_reactor_context",
+      "packageName": "semio-plugin-reactor-context",
+      "crateName": "semio_plugin_reactor_context",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-core",
-      "crateName": "semio_framework_plugin_reactor_core",
+      "packageName": "semio-plugin-reactor-core",
+      "crateName": "semio_plugin_reactor_core",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-jobs",
-      "crateName": "semio_framework_plugin_reactor_jobs",
+      "packageName": "semio-plugin-reactor-jobs",
+      "crateName": "semio_plugin_reactor_jobs",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-lifecycle",
-      "crateName": "semio_framework_plugin_reactor_lifecycle",
+      "packageName": "semio-plugin-reactor-lifecycle",
+      "crateName": "semio_plugin_reactor_lifecycle",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-patches",
-      "crateName": "semio_framework_plugin_reactor_patches",
+      "packageName": "semio-plugin-reactor-patches",
+      "crateName": "semio_plugin_reactor_patches",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-surfaces",
-      "crateName": "semio_framework_plugin_reactor_surfaces",
+      "packageName": "semio-plugin-reactor-surfaces",
+      "crateName": "semio_plugin_reactor_surfaces",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-tasks",
-      "crateName": "semio_framework_plugin_reactor_tasks",
+      "packageName": "semio-plugin-reactor-tasks",
+      "crateName": "semio_plugin_reactor_tasks",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-turn",
-      "crateName": "semio_framework_plugin_reactor_turn",
+      "packageName": "semio-plugin-reactor-turn",
+      "crateName": "semio_plugin_reactor_turn",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-turn-limits",
-      "crateName": "semio_framework_plugin_reactor_turn_limits",
+      "packageName": "semio-plugin-reactor-turn-limits",
+      "crateName": "semio_plugin_reactor_turn_limits",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-reactor-wit-bridge",
-      "crateName": "semio_framework_plugin_reactor_wit_bridge",
+      "packageName": "semio-plugin-reactor-wit-bridge",
+      "crateName": "semio_plugin_reactor_wit_bridge",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-registration",
-      "crateName": "semio_framework_plugin_registration",
+      "packageName": "semio-plugin-registration",
+      "crateName": "semio_plugin_registration",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-retained-command",
-      "crateName": "semio_framework_plugin_retained_command",
+      "packageName": "semio-plugin-retained-command",
+      "crateName": "semio_plugin_retained_command",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-runtime-exchange",
-      "crateName": "semio_framework_plugin_runtime_exchange",
+      "packageName": "semio-plugin-runtime-exchange",
+      "crateName": "semio_plugin_runtime_exchange",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-runtime-instances",
-      "crateName": "semio_framework_plugin_runtime_instances",
+      "packageName": "semio-plugin-runtime-instances",
+      "crateName": "semio_plugin_runtime_instances",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-runtime-ops",
-      "crateName": "semio_framework_plugin_runtime_ops",
+      "packageName": "semio-plugin-runtime-ops",
+      "crateName": "semio_plugin_runtime_ops",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-scrub-host",
-      "crateName": "semio_framework_plugin_scrub_host",
+      "packageName": "semio-plugin-scrub-host",
+      "crateName": "semio_plugin_scrub_host",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-time-travel",
-      "crateName": "semio_framework_plugin_time_travel",
+      "packageName": "semio-plugin-time-travel",
+      "crateName": "semio_plugin_time_travel",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-time-travel-panel",
-      "crateName": "semio_framework_plugin_time_travel_panel",
+      "packageName": "semio-plugin-time-travel-panel",
+      "crateName": "semio_plugin_time_travel_panel",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-time-travel-turns",
-      "crateName": "semio_framework_plugin_time_travel_turns",
+      "packageName": "semio-plugin-time-travel-turns",
+      "crateName": "semio_plugin_time_travel_turns",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-tool-run",
-      "crateName": "semio_framework_plugin_tool_run",
+      "packageName": "semio-plugin-tool-run",
+      "crateName": "semio_plugin_tool_run",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-tool-run-operations",
-      "crateName": "semio_framework_plugin_tool_run_operations",
+      "packageName": "semio-plugin-tool-run-operations",
+      "crateName": "semio_plugin_tool_run_operations",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-tool-run-turns",
-      "crateName": "semio_framework_plugin_tool_run_turns",
+      "packageName": "semio-plugin-tool-run-turns",
+      "crateName": "semio_plugin_tool_run_turns",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-typing-edit",
-      "crateName": "semio_framework_plugin_typing_edit",
+      "packageName": "semio-plugin-typing-edit",
+      "crateName": "semio_plugin_typing_edit",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-config",
-      "crateName": "semio_framework_plugin_window_config",
+      "packageName": "semio-plugin-window-config",
+      "crateName": "semio_plugin_window_config",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-config-mutation",
-      "crateName": "semio_framework_plugin_window_config_mutation",
+      "packageName": "semio-plugin-window-config-mutation",
+      "crateName": "semio_plugin_window_config_mutation",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-config-original",
-      "crateName": "semio_framework_plugin_window_config_original",
+      "packageName": "semio-plugin-window-config-original",
+      "crateName": "semio_plugin_window_config_original",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-config-registry",
-      "crateName": "semio_framework_plugin_window_config_registry",
+      "packageName": "semio-plugin-window-config-registry",
+      "crateName": "semio_plugin_window_config_registry",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-config-replace",
-      "crateName": "semio_framework_plugin_window_config_replace",
+      "packageName": "semio-plugin-window-config-replace",
+      "crateName": "semio_plugin_window_config_replace",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-kits",
-      "crateName": "semio_framework_plugin_window_kits",
+      "packageName": "semio-plugin-window-kits",
+      "crateName": "semio_plugin_window_kits",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-kits-rich",
-      "crateName": "semio_framework_plugin_window_kits_rich",
+      "packageName": "semio-plugin-window-kits-rich",
+      "crateName": "semio_plugin_window_kits_rich",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },
     {
-      "packageName": "semio-framework-plugin-window-transient",
-      "crateName": "semio_framework_plugin_window_transient",
+      "packageName": "semio-plugin-window-transient",
+      "crateName": "semio_plugin_window_transient",
       "platform": "wasm32-wasip2",
       "profile": "prototype"
     },

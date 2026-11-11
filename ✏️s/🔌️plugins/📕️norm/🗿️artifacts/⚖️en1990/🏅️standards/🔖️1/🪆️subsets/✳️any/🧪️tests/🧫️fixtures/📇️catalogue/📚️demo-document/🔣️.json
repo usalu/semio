@@ -822,6 +822,18 @@
           "value": 3.8
         },
         {
+          "id": "e2_k",
+          "value": 25.0
+        },
+        {
+          "id": "e2_mean",
+          "value": 20.0
+        },
+        {
+          "id": "e2_sd",
+          "value": 6.0
+        },
+        {
           "id": "e_k",
           "value": 65.0
         },
@@ -847,6 +859,10 @@
         }
       ],
       "texts": [
+        {
+          "id": "e2_dist",
+          "value": "gumbel"
+        },
         {
           "id": "e_dist",
           "value": "normal"

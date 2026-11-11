@@ -1,4 +1,4 @@
-import { checkScriptInvocation, type ScriptInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+import { checkScriptInvocation, type ScriptInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runTwoHumanCli } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/👥️two-human/🟦️.ts";
 import scenarios from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import { inspectRemodelOpenedV1, inspectRemodelViewerV1, inspectRemodelColdV1, inspectRemodelWindowsV1 } from "./🧭️journey/🟦️.ts";

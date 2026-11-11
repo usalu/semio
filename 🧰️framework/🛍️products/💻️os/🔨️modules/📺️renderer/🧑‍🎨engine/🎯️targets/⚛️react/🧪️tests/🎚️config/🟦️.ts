@@ -1,7 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
-import { testCacheDirectoryV1 } from "@semio-tech/framework/process/vitest";
+import { testCacheDirectoryV1 } from "@semio-tech/process/vitest";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 

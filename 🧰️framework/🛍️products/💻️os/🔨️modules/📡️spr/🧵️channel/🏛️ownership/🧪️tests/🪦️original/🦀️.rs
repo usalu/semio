@@ -1,8 +1,6 @@
 //! 🪦️ Complete binary command/frame owners retire every original backing under independent budgets.
 use semio_os_channel::*;
 use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement}};
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn close<T:RetireOwned>(value:T,input_bytes:usize){
  assert!(T::controlled_retirement_supported());let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||ControlledRetirement::new(value).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:256};let(mut born,mut freed)=(input_bytes,0);
  for _ in 0..200000{if owner.terminal_is_empty(){assert_eq!(born,freed);return}let demand=owner.next_demand(grant.maximum_copy_bytes).unwrap();let mut denied=Vec::new();denied.push(RetainedCloneGrant{maximum_items:0,..grant});denied.push(RetainedCloneGrant{maximum_depth:0,..grant});if demand.copy_bytes>0{denied.push(RetainedCloneGrant{maximum_copy_bytes:0,..grant});}if demand.capacity_bytes>0{denied.push(RetainedCloneGrant{maximum_capacity_bytes:0,..grant});}if demand.release_bytes>0{denied.push(RetainedCloneGrant{maximum_release_bytes:0,..grant});}for denied in denied{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(denied));let step=result.unwrap();assert_eq!(step.progress(),Default::default());assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,0);}

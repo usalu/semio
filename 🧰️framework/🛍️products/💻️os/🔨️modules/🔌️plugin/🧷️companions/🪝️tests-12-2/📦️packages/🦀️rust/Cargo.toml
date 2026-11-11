@@ -36,7 +36,7 @@ semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/�
 semio-plugin-decl-tool-contract = { path = "../../../../📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
 semio-plugin-decl-media = { path = "../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
-semio-framework-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-plugin-instance-docs"}
+semio-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust", features = ["artifact-app-testing"]}
 semio-plugin-instance-ladders = { path = "../../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
@@ -45,14 +45,14 @@ semio-plugin-plugin-program = { path = "../../../../🏗️builder/🔌️progra
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-reactor-lifecycle = { path = "../../../../⚛️reactor/📨️pending/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"] }
 semio-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
-semio-framework-plugin-reactor-turn = { path = "../../../../⚛️reactor/🔄️turn/📦️packages/🦀️rust", package = "semio-plugin-reactor-turn"}
-semio-framework-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-plugin-retained-command"}
-semio-framework-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"], package = "semio-plugin-runtime-ops"}
+semio-plugin-reactor-turn = { path = "../../../../⚛️reactor/🔄️turn/📦️packages/🦀️rust"}
+semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"]}
+semio-plugin-runtime-ops = { path = "../../../../⚛️reactor/🏃️runtime/🧰️ops/📦️packages/🦀️rust", features = ["artifact-app-testing", "original-actor-context-testing"]}
 semio-plugin-testing-caller = { path = "../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures = { path = "../../../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures-publication = { path = "../../../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }
 semio-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
-semio-framework-plugin-tests-01 = { path = "../../../🍎️tests-01/📦️packages/🦀️rust", package = "semio-plugin-tests-01"}
+semio-plugin-tests-01 = { path = "../../../🍎️tests-01/📦️packages/🦀️rust"}
 semio-plugin-tests-02 = { path = "../../../🍐️tests-02/📦️packages/🦀️rust" }
 semio-plugin-tests-03 = { path = "../../../🍊️tests-03/📦️packages/🦀️rust" }
 semio-plugin-tests-05 = { path = "../../../🍌️tests-05/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
@@ -61,20 +61,20 @@ semio-plugin-window-config = { path = "../../../../🪟️window/🎚️config/�
 semio-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-window-kits-rich = { path = "../../../../🪟️window-kits/🧱️rich/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker-authority = { path = "../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
 semio-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 semio-framework-async = { workspace = true }
 semio-plugin-reactor-core = { path = "../../../../⚛️reactor/📦️packages/🦀️rust" }

@@ -27,8 +27,8 @@ semio-plugin-publication-mounted = { path = "../../../../📦️packages/🦀️
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 
 [dev-dependencies]
-semio-os-kernel = { path = "../../../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-os-kernel" }
-semio-framework = { path = "../../../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-os-kernel = { path = "../../../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-framework = { path = "../../../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value-clone-source-testing = { path = "../../../../../../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

@@ -1,6 +1,6 @@
 //! 🪪️ A real documentless app answers the binary identity command without a document revision read.
-use semio_framework_os_kernel as protocol;
-use semio_framework_plugin_reactor_app::{PluginApp, PluginAppDelegate};
+use semio_os_kernel as protocol;
+use semio_plugin_reactor_app::{PluginApp, PluginAppDelegate};
 use semio_plugin_instance_app::VcsArtifactApp;
 use semio_plugin_plugin_program::AppInstance;
 use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{contract_app_raw, TestApp};
@@ -44,7 +44,7 @@ async fn documentless_app_identity_abi_returns_authoritative_null_without_revisi
     let encoded = protocol::encode_app_command(&protocol::AppCommand::ReadDocumentIdentity { seq }).await.unwrap();
     let expected_command: Vec<u8> = serde_json::from_value(row["commandBytes"].clone()).unwrap();
     assert_eq!(encoded.front_page().unwrap().as_slice(), expected_command);
-    let mut command = Some((seq, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(encoded)));
+    let mut command = Some((seq, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::Encoded(encoded)));
     let mut frames = Vec::new();
     for turn in 0..128 {
         let mut output = semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(

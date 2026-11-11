@@ -27,7 +27,7 @@ artifact-app-testing = []
 [dependencies]
 semio-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }

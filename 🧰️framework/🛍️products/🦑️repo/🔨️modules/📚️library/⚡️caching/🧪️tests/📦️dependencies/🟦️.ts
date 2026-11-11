@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -62,13 +63,13 @@ export async function testNxTooling(workspace: string, output: string): Promise<
   await activateNxTools(root, installation, controller.signal);
   assert.equal(realpathSync(join(root, ".nx/installation")), dirname(installation.modulePath));
   assert.equal(existsSync(join(root, "node_modules")), false);
-  const native = Bun.spawnSync(["node", require.resolve("nx/bin/nx.js"), "--version"], { cwd: workspace, env: { ...process.env, NX_DAEMON: "false" }, stdout: "pipe", stderr: "pipe" });
+  const native = Bun.spawnSync([registeredToolExecutableV1("node"), require.resolve("nx/bin/nx.js"), "--version"], { cwd: workspace, env: { ...process.env, NX_DAEMON: "false" }, stdout: "pipe", stderr: "pipe" });
   const foreign = mkdtempSync(join(output, "nx-tooling-foreign-"));
   for (const folder of ["data", "cache"]) { mkdirSync(join(foreign, folder)); writeFileSync(join(foreign, folder, "sentinel.txt"), fixture.tooling.storage.sentinel); }
   writeFileSync(join(foreign, "data/file-map.json"), fixture.tooling.storage.sentinel);
   const inherited = { ...process.env, NX_WORKSPACE_DATA_DIRECTORY: join(foreign, "data"), NX_CACHE_DIRECTORY: join(foreign, "cache") };
   const env = { ...inherited, NX_WORKSPACE_DATA_DIRECTORY: join(root, fixture.tooling.storage.data), NX_CACHE_DIRECTORY: join(root, fixture.tooling.storage.cache), NODE_PATH: installation.modulePath, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT_PATH: root, SEMIO_WORKSPACE_ROOT: root, REPO_ROOT: root };
-  const actual = Bun.spawnSync(["node", installation.cli, "--version"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+  const actual = Bun.spawnSync([registeredToolExecutableV1("node"), installation.cli, "--version"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
   assert.equal(actual.exitCode, 0, actual.stderr.toString());
   assert.ok(actual.stdout.toString().includes(manifest.dependencies.nx));
   assert.ok(native.stdout.toString().includes(manifest.dependencies.nx));

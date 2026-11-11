@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, symlinkSync, rmSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -48,7 +49,7 @@ export async function testGeneratorOwnership(workspace: string, output: string):
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const execute = async () => {
-    const child = Bun.spawn(["node", cli, "run", "package:generate", "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn([registeredToolExecutableV1("node"), cli, "run", "package:generate", "--outputStyle=static"], { cwd: root, env: { ...process.env, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
     assert.equal(code, 0, stdout + stderr);
   };
@@ -133,7 +134,7 @@ appendFileSync(join(root, ".runs"), name + "\\n");
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
   const require = createRequire(import.meta.url), cli = join(dirname(require.resolve("nx/package.json")), "dist/bin/nx.js");
   const run = async () => {
-    const child = Bun.spawn(["node", cli, "run", "publication:package", "--outputStyle=static"], { cwd: root, env: { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
+    const child = Bun.spawn([registeredToolExecutableV1("node"), cli, "run", "publication:package", "--outputStyle=static"], { cwd: root, env: { ...process.env, SEMIO_REPO_ROOT: root, NX_DAEMON: "false", SEMIO_WORKSPACE_ROOT: root, SEMIO_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache") }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
     assert.equal(status, 0, stdout + stderr);
   };

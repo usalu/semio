@@ -2,10 +2,6 @@
 
 use semio_framework_test_fixtures::fixture_text;
 
-/// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
-#[cfg(test)]
-#[global_allocator]
-static EXTENSIONS_LAWS_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 pub use semio_os_flow_extensions::*;
 

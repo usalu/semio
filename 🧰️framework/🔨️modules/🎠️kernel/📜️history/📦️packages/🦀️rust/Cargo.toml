@@ -24,7 +24,7 @@ path = "../../🦀️.rs"
 semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { workspace = true }
 
 [dev-dependencies]

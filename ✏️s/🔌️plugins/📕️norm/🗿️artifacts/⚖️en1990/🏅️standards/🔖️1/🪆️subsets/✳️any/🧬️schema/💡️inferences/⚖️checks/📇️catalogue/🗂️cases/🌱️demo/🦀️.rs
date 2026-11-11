@@ -36,7 +36,7 @@ const DEMOS: &[Demo] = &[
     Demo { entry: "E90.26", numbers: &[("r_d", 3000.0)], texts: &[("actions", "G|G|1000;TS|Q|300|road_traffic|gr1a;UDL|Q|150|road_udl|gr1a;SA|Q|200|road_single_axle|gr1b;W|Q|80|wind_bridge;T|Q|50|temperature_bridge")], vectors: &[] },
     Demo { entry: "E90.27", numbers: &[("acc_h", 0.3), ("acc_v", 0.5), ("crowd", 1.0)], texts: &[], vectors: &[] },
     Demo { entry: "E90.28", numbers: &[("beta", 3.7), ("rc", 2.0)], texts: &[], vectors: &[] },
-    Demo { entry: "E90.29", numbers: &[("beta_t", 3.8), ("e_k", 65.0), ("e_mean", 60.0), ("e_sd", 12.0), ("r_k", 85.0), ("r_mean", 100.0), ("r_sd", 10.0)], texts: &[], vectors: &[] },
+    Demo { entry: "E90.29", numbers: &[("beta_t", 3.8), ("e2_k", 25.0), ("e2_mean", 20.0), ("e2_sd", 6.0), ("e_k", 65.0), ("e_mean", 60.0), ("e_sd", 12.0), ("r_k", 85.0), ("r_mean", 100.0), ("r_sd", 10.0)], texts: &[], vectors: &[] },
     Demo { entry: "E90.30", numbers: &[("eta_d", 0.9), ("gamma_m", 1.25), ("mean", 100.0), ("n", 6.0), ("v", 0.08)], texts: &[], vectors: &[] },
 ];
 

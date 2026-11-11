@@ -1,5 +1,5 @@
 //! 🪡️ Writer's original typing algebra moves whole edits and composes borrowed splice inputs boundedly.
-use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalCallerSourceLoan,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
+use semio_framework_job::{StepContext,OriginalConstructionAdmission,OriginalSourceBinding,OriginalCallerSourceLoan,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use semio_plugin_decl_app::tool_contract::{OriginalTypingFoldPolicy,ArtifactOriginalTypingFoldFactory,ArtifactOriginalTypingFoldProducer};
 use semio_framework_tool_typing_edit::OriginalTypingFold;
@@ -28,12 +28,12 @@ impl ArtifactOriginalTypingFoldFactory<WriterMutation> for WriterOriginalTypingF
  fn admit(&self,previous:&[WriterMutation],incoming:&[WriterMutation],cx:&mut StepContext<'_>,output:&mut Option<Box<dyn ArtifactOriginalTypingFoldProducer<WriterMutation>>>)->Result<bool,OriginalTurnFailure>{
   cx.original_source_parent()?;
   let d=self.birth_demands(previous,incoming,cx.retained_grant().maximum_copy_bytes)?;let binding=OriginalSourceBinding::borrow(cx);let identity=pair(previous,incoming);let body=cx.retained_grant().maximum_copy_bytes;
-  admit_original_construction(cx,output,demand(d),|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(invalid)?);Ok((Box::new(WriterOriginalTypingFold{binding,decoder,identity,body,phase:0,closing:false,caller:ManuallyDrop::new(None),composer:ManuallyDrop::new(None),composition:ManuallyDrop::new(None),decision:ManuallyDrop::new(None),retirement:Default::default()})as Box<dyn ArtifactOriginalTypingFoldProducer<WriterMutation>>,receipt(d)))})
+  admit_original_construction(cx,output,demand(d),|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(invalid)?);Ok((Box::new(WriterOriginalTypingFold{binding,decoder,identity,body,phase:0,closing:false,caller:ManuallyDrop::new(None),composer:ManuallyDrop::new(None),composition:ManuallyDrop::new(None),decision:ManuallyDrop::new(None),retirement:Default::default(),construction:Default::default()})as Box<dyn ArtifactOriginalTypingFoldProducer<WriterMutation>>,receipt(d)))})
  }
 }
 struct WriterOriginalTypingFold{
  binding:OriginalSourceBinding,decoder:(u64,u64),identity:(usize,usize,usize,usize),body:usize,phase:u8,closing:bool,
- caller:ManuallyDrop<Option<OriginalCallerSourceLoan>>,composer:ManuallyDrop<Option<Box<OriginalTextSpliceComposer>>>,composition:ManuallyDrop<Option<OriginalTextSpliceComposition>>,decision:ManuallyDrop<Option<OriginalTypingFold<WriterMutation>>>,retirement:RetainedCloneClose,
+ caller:ManuallyDrop<Option<OriginalCallerSourceLoan>>,composer:ManuallyDrop<Option<Box<OriginalTextSpliceComposer>>>,composition:ManuallyDrop<Option<OriginalTextSpliceComposition>>,decision:ManuallyDrop<Option<OriginalTypingFold<WriterMutation>>>,retirement:RetainedCloneClose,construction:OriginalConstructionAdmission,
 }
 impl WriterOriginalTypingFold{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{
@@ -80,7 +80,7 @@ impl ArtifactOriginalTypingFoldProducer<WriterMutation> for WriterOriginalTyping
   self.validate(cx)?;self.validate_pair(previous,incoming)?;if self.closing{return Err(invalid().into())}if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"Writer original typing fold was cancelled").into())}if self.ready(){return Ok(true)}
   if self.caller.is_none(){*self.caller=cx.original_source_parent()?.admit_loan(cx)?;return Ok(false)}
   match self.phase{
-   0=>{if let Some((a,b))=views(previous,incoming){if self.composer.is_none(){OriginalTextSpliceComposer::admit(a,b,semio_ui_scene_views::TEXT_SPLICE_CONTEXT_SCALARS,cx,&mut self.composer)?;}else{self.transition(1,cx)?;}}else{let replace=matches!((previous,incoming),([WriterMutation::EditText(_)],[WriterMutation::EditText(_)]));let d=fixed::<(OriginalTypingFold<WriterMutation>,u8)>();admit_original_construction(cx,&mut self.decision,demand(d),|_|{self.phase=3;Ok((if replace{OriginalTypingFold::ReplaceIncoming}else{OriginalTypingFold::Split},receipt(d)))})?;}},
+   0=>{if let Some((a,b))=views(previous,incoming){if self.composer.is_none(){OriginalTextSpliceComposer::admit(a,b,semio_ui_scene_views::TEXT_SPLICE_CONTEXT_SCALARS,cx,&mut self.construction,&mut self.composer)?;}else{self.transition(1,cx)?;}}else{let replace=matches!((previous,incoming),([WriterMutation::EditText(_)],[WriterMutation::EditText(_)]));let d=fixed::<(OriginalTypingFold<WriterMutation>,u8)>();admit_original_construction(cx,&mut self.decision,demand(d),|_|{self.phase=3;Ok((if replace{OriginalTypingFold::ReplaceIncoming}else{OriginalTypingFold::Split},receipt(d)))})?;}},
    1=>{if self.composition.is_some(){self.transition(2,cx)?;}else{let(a,b)=views(previous,incoming).ok_or_else(invalid)?;let composer=self.composer.as_mut().ok_or_else(invalid)?;if composer.ready(){composer.take_into(&mut self.composition,cx)?;}else{composer.advance(a,b,cx)?;}}},
    2=>{if self.composer.is_some(){self.close_composer(cx)?;}else{self.make_decision(cx)?;}},
    _=>return Err(invalid().into()),
@@ -107,9 +107,10 @@ impl ArtifactOriginalTypingFoldProducer<WriterMutation> for WriterOriginalTyping
   if self.composition.is_some(){let d=self.retirement.next_owner_demands::<OriginalTextSpliceComposition>(true,&None,self.body)?;close_original_retained_step(cx,d,|grant|Ok(self.retirement.begin_granted(&mut self.composition,grant)?.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;return Ok(false)}
   if self.decision.is_some(){let d=self.retirement.next_owner_demands::<OriginalTypingFold<WriterMutation>>(true,&None,self.body)?;close_original_retained_step(cx,d,|grant|Ok(self.retirement.begin_granted(&mut self.decision,grant)?.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;return Ok(false)}
   if let Some(caller)=self.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){drop(self.caller.take());}return Ok(false)}
+  if !self.construction.terminal_is_empty(){self.construction.close_step(cx)?;return Ok(false)}
   let d=fixed::<u8>();close_original_retained_step(cx,d,|_|{self.phase=5;Ok(RetainedCloneStep::Complete(receipt(d)))})?;Ok(self.terminal_is_empty())
  }
- fn terminal_is_empty(&self)->bool{self.phase==5&&self.caller.is_none()&&self.composer.is_none()&&self.composition.is_none()&&self.decision.is_none()&&self.retirement.is_empty()}
+ fn terminal_is_empty(&self)->bool{self.phase==5&&self.caller.is_none()&&self.composer.is_none()&&self.composition.is_none()&&self.decision.is_none()&&self.retirement.is_empty()&&self.construction.terminal_is_empty()}
 }
 impl Drop for WriterOriginalTypingFold{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Writer original typing producer requires paid closure")}}
 

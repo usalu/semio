@@ -1,22 +1,22 @@
 /** 🧬️ `Vdi3805Artifact` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireArray, normWireBoolean, normWireDefault, normWireInteger, normWireLiteral, normWireMap, normWireNullable, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRef, normWireRequired, normWireString, normWireTagged } from "@semio-tech/norm-js/registry/contract";
 
 export interface Vdi3805Artifact {
-  /** 📇️ @state artifact */
+  /** @state artifact */
   catalog: ManufacturerCatalog;
-  /** ⌨️ @state artifact */
+  /** @state artifact */
   editionProfile: { [key: string]: "legacy" | "current" };
-  /** 🩹️ @state artifact */
+  /** @state artifact */
   correctionAsOf: EditionId;
-  /** 🚦️ @state artifact */
+  /** @state artifact */
   strictMode: boolean;
-  /** 🗃️ @state artifact */
+  /** @state artifact */
   index: CatalogIndex;
-  /** 🧊️ @state artifact */
+  /** @state artifact */
   geometry: { [key: string]: ParametricGeometry };
-  /** 〰️ @state artifact */
+  /** @state artifact */
   curves: { [key: string]: CharacteristicCurve };
   limits: SecurityLimits;
 }

@@ -76,6 +76,18 @@ test.skipIf(!posix)("a test process whose runner is killed ends itself and what 
  expect(survived,"control: without the guard the orphan and its child keep running").toBe(true);
 },90000);
 
+test.skipIf(!posix)("a helper whose parent dies ends itself within seconds (the independent Python model agrees it is gone); without exitWithParentV1 it survives",async()=>{
+ const run=async(mode:string)=>{const{child,words}=await firstLine(process.execPath,[here("./👶️fixture/🚪️abandoner.ts"),process.execPath,here("./👶️fixture/🪦️guarded.ts"),mode,String(fixture.parentExit.dieMilliseconds)],"CHILD");await new Promise<void>(done=>child.once("exit",()=>done()));return Number(words[0]);};
+ const guarded=await run("guard");
+ expect(await until(()=>!alive(guarded),fixture.parentExit.endsWithinMilliseconds),"the guarded helper ended with its parent").toBe(true);
+ expect(python("alive",String(guarded))).toBe("0");
+ const control=await run("plain");
+ await sleep(fixture.parentExit.survivesMilliseconds);
+ const survived=alive(control)&&python("alive",String(control))==="1";
+ try{process.kill(control,"SIGKILL");}catch{}
+ expect(survived,"control: without the guard the orphaned helper keeps running").toBe(true);
+},60000);
+
 const fakeHost=(over:Partial<TestOrphansHostV1>):TestOrphansHostV1=>({rows:async()=>[],descriptors:()=>undefined,terminate:()=>{},sleep:async()=>{},...over});
 const row=(pid:number,parent:number,group:number,start="S",command="c")=>({pid,parent,group,start,command});
 

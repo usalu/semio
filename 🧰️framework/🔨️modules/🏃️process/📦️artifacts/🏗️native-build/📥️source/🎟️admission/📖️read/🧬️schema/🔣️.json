@@ -157,7 +157,8 @@
         "maximumBytes",
         "remainingFiles",
         "expectedBytes",
-        "reason"
+        "reason",
+        "key"
       ],
       "properties": {
         "bytes": {
@@ -191,6 +192,13 @@
             "files",
             "bytes",
             "extent"
+          ]
+        },
+        "key": {
+          "enum": [
+            "process.source.read-files-exhausted",
+            "process.source.read-bytes-exceeded",
+            "process.source.read-extent-mismatched"
           ]
         }
       }

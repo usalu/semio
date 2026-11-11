@@ -1,9 +1,9 @@
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runAdmittedExactCargoLawsV1 } from "@semio-tech/framework/process/cargo-test";
-import { BundleScript } from "@semio-tech/framework/process/routing";
+import { runAdmittedExactCargoLawsV1 } from "@semio-tech/process/cargo-test";
+import { BundleScript } from "@semio-tech/process/routing";
 import { compileSchemaScopeExport } from "@semio-tech/framework/schema/oracles/validator";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 

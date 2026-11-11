@@ -19,7 +19,7 @@ path = "../../🦀️.rs"
 
 [dev-dependencies]
 semio-renderer-wgpu-dock = { path = "../../../../../../🎯️targets/🧊️wgpu/🛰️dock/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework = { path = "../../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

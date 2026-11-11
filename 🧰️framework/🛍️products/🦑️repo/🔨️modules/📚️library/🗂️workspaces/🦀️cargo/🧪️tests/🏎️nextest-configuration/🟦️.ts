@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,readFileSync,writeFileSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
@@ -24,6 +25,6 @@ test("isolated artifact Nextest executes a real law without unrelated product fi
  const repository=process.cwd(),root=mkdtempSync(join(output,"nextest-native-witness-")),directory="product/artifact",native=join(root,directory),manifest=join(native,"Cargo.toml");
  for(const configured of [".","product"]){mkdirSync(join(root,configured,".config"),{recursive:true});writeFileSync(join(root,configured,".config/nextest.toml"),readFileSync(join(repository,configured==="."?".config/nextest.toml":"✏️s/.config/nextest.toml"),"utf8"));}
  mkdirSync(native,{recursive:true});writeFileSync(manifest,'[package]\nname="owned-profile-witness"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="🦀️.rs"\n[workspace]\nmembers=["."]\n');writeFileSync(join(native,"🦀️.rs"),'#[test]\nfn native_profile_witness(){println!("[TRACE] Isolated native profile law executed");assert_eq!(2+2,4);}\n');
- const selected=cargoNextestConfiguration(root,directory),result=Bun.spawnSync(["cargo","nextest","run","--offline","--manifest-path",manifest,"--config-file",selected,"--profile","quick","--no-tests","fail","--success-output","immediate","--target-dir",join(root,"target")],{cwd:native,stdout:"pipe",stderr:"pipe",env:{...process.env,CARGO_TARGET_DIR:join(root,"target"),CARGO_BUILD_BUILD_DIR:join(root,"target"),NEXTEST_PROFILE:"quick"}});
+ const selected=cargoNextestConfiguration(root,directory),result=Bun.spawnSync([registeredToolExecutableV1("cargo"),"nextest","run","--offline","--manifest-path",manifest,"--config-file",selected,"--profile","quick","--no-tests","fail","--success-output","immediate","--target-dir",join(root,"target")],{cwd:native,stdout:"pipe",stderr:"pipe",env:{...process.env,CARGO_TARGET_DIR:join(root,"target"),CARGO_BUILD_BUILD_DIR:join(root,"target"),NEXTEST_PROFILE:"quick"}});
   const transcript=(result.stdout.toString()+result.stderr.toString()).replace(/\u001b\[[0-9;]*m/g,"");if(result.exitCode!==0)throw Error(transcript);expect(transcript).toContain("[TRACE] Isolated native profile law executed");expect(transcript).toContain("1 test run");
 },120000);

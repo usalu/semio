@@ -5,16 +5,8 @@ use semio_os_kernel::NativeSnapshotBodyWallet;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::RetainedCloneGrant;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use std::{alloc::{GlobalAlloc,Layout,System},cell::Cell};
-thread_local!{static TRACE:Cell<Option<(usize,usize)>>=const{Cell::new(None)};}
-struct Allocator;
-unsafe impl GlobalAlloc for Allocator{
- unsafe fn alloc(&self,layout:Layout)->*mut u8{let pointer=unsafe{System.alloc(layout)};if !pointer.is_null(){TRACE.with(|trace|if let Some((born,released))=trace.get(){trace.set(Some((born+layout.size(),released)))});}pointer}
- unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout){TRACE.with(|trace|if let Some((born,released))=trace.get(){trace.set(Some((born,released+layout.size())))});unsafe{System.dealloc(pointer,layout)}}
- unsafe fn realloc(&self,pointer:*mut u8,layout:Layout,size:usize)->*mut u8{let next=unsafe{System.realloc(pointer,layout,size)};if !next.is_null(){TRACE.with(|trace|if let Some((born,released))=trace.get(){trace.set(Some((born+size,released+layout.size())))});}next}
-}
-#[global_allocator]static ALLOCATOR:Allocator=Allocator;
-fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){TRACE.with(|trace|{assert!(trace.get().is_none());trace.set(Some((0,0)));});let result=operation();let (born,released)=TRACE.with(|trace|trace.take().unwrap());(result,born,released)}
+use std::cell::Cell;
+fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize){let(result,observation)=semio_framework_trace::observe_heap_allocations_on_this_thread(operation);(result,observation.requested_bytes,observation.released_bytes)}
 fn fixture()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 #[test]

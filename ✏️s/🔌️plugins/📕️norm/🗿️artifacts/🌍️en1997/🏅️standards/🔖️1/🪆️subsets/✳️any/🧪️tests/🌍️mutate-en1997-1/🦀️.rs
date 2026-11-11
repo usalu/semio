@@ -555,6 +555,7 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-layer-water/⛔dupe/🔣️.mutation.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-layer-water/⛔dupe/🔣️.after.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-layer-water/⛔dupe/🔣️.outcome.json"),
+        ),
         "insert-characteristic-basis" => (
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-characteristic-basis/✅apply/🔣️.before.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-characteristic-basis/✅apply/🔣️.mutation.json"),
@@ -566,6 +567,7 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-characteristic-basis/⛔dupe/🔣️.mutation.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-characteristic-basis/⛔dupe/🔣️.after.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-characteristic-basis/⛔dupe/🔣️.outcome.json"),
+        ),
         "insert-ground-investigation" => (
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-ground-investigation/✅apply/🔣️.before.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➕insert-ground-investigation/✅apply/🔣️.mutation.json"),
@@ -1261,6 +1263,7 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str, &'stat
             include_str!("../🧫️fixtures/🧬️mutations/➖️remove-lab-point/✅apply/🔣️.mutation.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➖️remove-lab-point/✅apply/🔣️.after.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➖️remove-lab-point/✅apply/🔣️.outcome.json"),
+        ),
         "insert-ground-investigation-reading" => (
             include_str!("../🧫️fixtures/🧬️mutations/➕️insert-ground-investigation-reading/✅apply/🔣️.before.json"),
             include_str!("../🧫️fixtures/🧬️mutations/➕️insert-ground-investigation-reading/✅apply/🔣️.mutation.json"),

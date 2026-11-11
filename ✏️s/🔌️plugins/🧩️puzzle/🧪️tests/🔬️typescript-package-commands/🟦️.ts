@@ -1,9 +1,9 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { resolveTestLevel } from "@semio-tech/framework/process/test-budget";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { resolveTestLevel } from "@semio-tech/process/test-budget";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { runVitest } from "@semio-tech/framework/process/vitest";
+import { runVitest } from "@semio-tech/process/vitest";
 
 const variant = (value: string): string => value.split("-").map((part) => `${part[0]!.toUpperCase()}${part.slice(1)}`).join("");
 type PublicationGroup = {

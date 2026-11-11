@@ -35,12 +35,12 @@ pub(crate) use semio_plugin_document_media::media_export as media_export;
 pub(crate) use semio_plugin_document_media::media_operation_refusal as media_operation_refusal;
 pub(crate) use semio_plugin_job::reserved_job_bytes as reserved_job_bytes;
 pub(crate) use semio_plugin_job::reserved_job_outcomes as reserved_job_outcomes;
-pub(crate) use semio_framework_plugin_retained_command::reserved_route_capacity_lift as reserved_route_capacity_lift;
+pub(crate) use semio_plugin_retained_command::reserved_route_capacity_lift as reserved_route_capacity_lift;
 pub(crate) mod reserved_jobs {
     pub use semio_plugin_job::reserved_jobs::*;
     pub use super::reserved_route_capacity_lift::*;
 }
-pub extern crate semio_framework_plugin_retained_command as retained_command;
+pub extern crate semio_plugin_retained_command as retained_command;
 pub(crate) use semio_plugin_reactor_app::operation_progress as tool_jobs_operation_progress;
 pub(crate) extern crate semio_plugin_tool_run as tool_jobs_tool_run;
 pub(crate) extern crate semio_plugin_tool_machine as tool_jobs_tool_machine;
@@ -56,7 +56,7 @@ pub(crate) mod tool_jobs {
     pub use time_travel::{history_mutation_entry, HistoryMutationPage, HistoryMutationPages, SupersedeLedger, SupersedeRecord, SupersedeRole, TimeTravelActionOutcome, TimeTravelActionRefusal, TimeTravelEditor, TimeTravelEditorPanel, TimeTravelLedger, TimeTravelPanel, HISTORY_ROW_MUTATION_ROWS, TIME_TRAVEL_TURN_WALL_US};
 }
 pub(crate) mod typed_operation {
-    pub use semio_framework_plugin_retained_command::typed_operation::*;
+    pub use semio_plugin_retained_command::typed_operation::*;
 }
 //#endregion 👷️JobsFacet
 //#region ⚛️ReactorFacet

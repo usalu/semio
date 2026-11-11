@@ -28,9 +28,9 @@ pub mod publication_mounted_unit_2 {
     use semio_framework::Fault;
     use semio_framework::kernel::KernelMutation;
     use store::MemberFactory;
-    use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+    use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
     use semio_plugin_composition_publication::MountedTypedCommandFullOperationStage;
-    use semio_framework_plugin_retained_command::typed_operation::PendingPublicationOutcome;
+    use semio_plugin_retained_command::typed_operation::PendingPublicationOutcome;
     use semio_plugin_ownership::bounded_ownership::PluginLifecycleStep;
     use store::SpaceMember;
     use semio_plugin_operation::ToolOperationKey;

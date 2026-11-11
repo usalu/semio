@@ -1,7 +1,7 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
 import { resolve } from "node:path";
-import { runArtifactRustTests } from "@semio-tech/framework/process/cargo-test";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { runArtifactRustTests } from "@semio-tech/process/cargo-test";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 
 /** 🏃️ Runs the `RecursiveRetirementTest` command under the caller's roots and invocation. */
 export async function runRecursiveRetirementTest(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, args: string[]): Promise<void> {

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "holders": [
+    { "id": "progressing", "idleMilliseconds": 300, "maximumMilliseconds": 5000, "beatEveryMilliseconds": 100, "workMilliseconds": 900, "expected": "kept" },
+    { "id": "dead", "idleMilliseconds": 300, "maximumMilliseconds": 5000, "beatEveryMilliseconds": 0, "workMilliseconds": 900, "expected": "reclaimed" },
+    { "id": "capped", "idleMilliseconds": 300, "maximumMilliseconds": 450, "beatEveryMilliseconds": 40, "workMilliseconds": 900, "expected": "reclaimed" }
+  ],
+  "samplers": [
+    { "id": "slow-sample-outlives-its-loan", "intervalMilliseconds": 100, "firstSampleMilliseconds": 2300, "observeMilliseconds": 2600, "fails": false, "expected": "success" },
+    { "id": "faulty-sample", "intervalMilliseconds": 100, "firstSampleMilliseconds": 1, "observeMilliseconds": 400, "fails": true, "expected": "failure" }
+  ]
+}

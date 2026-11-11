@@ -87,6 +87,3 @@ impl Drop for OriginalDecodeState{fn drop(&mut self){assert!(self.terminal_is_em
 #[path="../🧪️tests/🔬️custody/🦀️.rs"]
 mod tests;
 
-#[cfg(test)]
-#[global_allocator]
-static RECEIVING_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

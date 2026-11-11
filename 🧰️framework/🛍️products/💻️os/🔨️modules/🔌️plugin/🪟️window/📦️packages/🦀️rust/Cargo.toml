@@ -22,9 +22,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
@@ -44,6 +44,6 @@ semio_ui_scene = { path = "../../../../../../../🔨️modules/🖱️ui/🎬️
 serde_json = "1.0.140"
 
 [dev-dependencies]
-semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }
+semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }

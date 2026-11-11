@@ -23,6 +23,15 @@ include!("♻️retirement/🦀️.rs");
 
 fn yields(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes}
 fn value_fault(error:impl Into<PluginLifecycleFailure>)->PluginLifecycleFailure{error.into()}
+/// 🔁️ A pending child poll made no progress; a settled poll keeps its result.
+fn settled<T>(poll:semio_framework_value::RetainedWorkPoll<T,semio_framework_value::OriginalRetirementFailure>,idle:T)->Result<T,semio_framework_value::OriginalRetirementFailure>{
+    match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(idle),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result}
+}
+/// 🔁️ Same rule for a ladder child that reports through a poll exit.
+fn exited(result:Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
+    match result{Ok(step)=>Ok(step),Err(semio_framework_value::RetirementPollExit::Pending(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_value::RetirementPollExit::Failed(failure))=>Err(failure)}
+}
+fn work_units(work:u128)->u64{u64::try_from(work).unwrap_or(u64::MAX)}
 
 pub enum ChildEmitPreparationStep {
     Pending(RetainedCloneProgress),
@@ -90,7 +99,7 @@ impl OwnedChildEmit {
         }
         if let Some(authority)=self.authority.as_mut(){
             authority.begin_close();
-            let step=match authority.close_step(grant.maximum_copy_bytes,effect){Ok(step)=>step,Err(semio_framework_value::RetirementPollExit::Pending(_))=>RetainedCloneStep::Progress(Default::default()),Err(semio_framework_value::RetirementPollExit::Failed(failure))=>return Err(failure)};
+            let step=exited(authority.close_step(child.maximum_copy_bytes,&mut effect.nested(child)))?;
             if authority.terminal_is_empty(){self.authority=None}
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
@@ -106,7 +115,7 @@ trait ChildEmitPreparationOwner: Send {
     fn as_any_mut(&mut self)->&mut dyn std::any::Any;
     fn last_turn_work(&self)->u64;
     fn matches_source(&self,mutation_type:std::any::TypeId,slot:&str,child_id:&str,maximum_operations:usize)->bool;
-    fn step(&mut self, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,PluginLifecycleFailure>;
+    fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,PluginLifecycleFailure>;
     fn step_demands(&self)->Result<RetirementDemand,ValueError>;
     fn preparation_is_ready(&self)->bool;
     fn take_ready(&mut self)->Option<ChildEmit>;
@@ -115,7 +124,7 @@ trait ChildEmitPreparationOwner: Send {
     fn next_owned_capacity_byte_demand(&self)->usize;
     fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>;
     fn begin_close(&mut self);
-    fn close_step(&mut self, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>;
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>;
     fn terminal_is_empty(&self)->bool;
     fn retirement_demands(&self, body:usize)->Result<RetirementDemand,ValueError>;
     fn retirement_work(&self, body:usize)->Result<u64,ValueError>;
@@ -207,8 +216,8 @@ impl ChildEmitPreparation {
         semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}
     }
     /// 🎟️ Advances one preparation unit under the complete caller grant: copy paces encoding, capacity funds births, release retires displaced owners.
-    pub fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,PluginLifecycleFailure>{self.owner.step(effect)}
-    /// 🎟️ Actual grant-shaped producer work, retained on both result branches; effect-shaped turns pay on their effect.
+    pub fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,PluginLifecycleFailure>{let result=self.owner.step(effect);self.last_work=self.owner.last_turn_work();result}
+    /// 🎟️ Actual producer or authority work, retained on both result branches.
     pub fn last_turn_work(&self)->u64{self.last_work}
     /// 📏️ The minimal grant on every independent axis that the next `step` needs.
     pub fn step_demands(&self)->Result<RetirementDemand,ValueError>{self.owner.step_demands()}
@@ -219,17 +228,17 @@ impl ChildEmitPreparation {
     /// 🎭️ Converts only this genuine original vector under its complete header-transfer grant.
     pub fn begin_preview_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>{
         self.last_work=0;if self.authority.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok((false,Default::default())),work:0}}
-        let outcome=self.owner.begin_preview_original(grant);self.last_work=u64::try_from(outcome.work).unwrap_or(u64::MAX);outcome
+        let outcome=self.owner.begin_preview_original(grant);self.last_work=work_units(outcome.work);outcome
     }
     pub fn next_owned_capacity_byte_demand(&self)->usize{self.owner.next_owned_capacity_byte_demand()}
     pub fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{self.last_work=0;if self.authority.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"qualified child preparation requires its authenticated output owner"))}let result=self.owner.take_ready_owned(grant);self.last_work=self.owner.last_turn_work();result}
     pub fn take_ready_owned_qualified(&mut self,grant:RetainedCloneGrant)->Result<Option<(OwnedChildEmit,RetainedCloneProgress)>,ValueError>{let result=self.owner.take_ready_owned(grant);self.last_work=self.owner.last_turn_work();let Some((metadata,mutations,progress))=result?else{return Ok(None)};Ok(Some((OwnedChildEmit{metadata:Some(metadata),mutations:Some(mutations),authority:self.authority.take()},progress)))}
     pub fn begin_close(&mut self){self.owner.begin_close();if let Some(authority)=self.authority.as_mut(){authority.begin_close()}}
     pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
-        if !self.owner.terminal_is_empty(){return self.owner.close_step(effect).map(|step|match step{PluginLifecycleStep::Complete(progress)if self.authority.is_some()=>PluginLifecycleStep::Progress(progress),other=>other})}
+        self.last_work=0;let grant=effect.grant();
+        if !self.owner.terminal_is_empty(){let result=self.owner.close_step(effect);self.last_work=self.owner.last_turn_work();return result.map(|step|match step{PluginLifecycleStep::Complete(progress)if self.authority.is_some()=>PluginLifecycleStep::Progress(progress),other=>other})}
         let Some(authority)=self.authority.as_mut()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};
-        authority.begin_close();
-        let step=match authority.close_step(effect.grant().maximum_copy_bytes,effect){Ok(step)=>step,Err(semio_framework_value::RetirementPollExit::Pending(_))=>RetainedCloneStep::Progress(Default::default()),Err(semio_framework_value::RetirementPollExit::Failed(failure))=>return Err(failure.into())};
+        authority.begin_close();let step=exited(authority.close_step(grant.maximum_copy_bytes,effect)).map_err(value_fault)?;
         if authority.terminal_is_empty(){self.authority=None}Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty()))
     }
     /// ⛽️ Quotes the original computational work of the next close action.
@@ -305,8 +314,7 @@ where M:Send+'static {
         Ok(1)
     }
     fn retire_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,PluginLifecycleFailure>{
-        self.last_work=0;
-        let grant=effect.grant();
+        self.last_work=0;let grant=effect.grant();
         let idle=RetainedCloneProgress::default();
         if self.retire_stage_is_empty(){return Ok(RetainedCloneStep::Complete(idle));}
         let demand=self.retire_demands(grant.maximum_copy_bytes).map_err(value_fault)?;
@@ -317,16 +325,16 @@ where M:Send+'static {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));
         }
         if self.retirement.is_some(){
-            let step=semio_plugin_ownership::bounded_ownership::plugin_settle_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant.maximum_copy_bytes,effect))?;
+            let step=settled(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant.maximum_copy_bytes,effect),RetainedCloneStep::Progress(idle))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.current.is_some(){
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
             let outcome:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>=match self.retire_builtin{
-                Some((admit,_))=>admit(&mut self.current,&mut self.retirement,effect).result.map_err(Into::into),
+                Some((admit,_))=>admit(&mut self.current,&mut self.retirement,&mut effect.nested(child)).result.map_err(Into::into),
                 None=>'retire:{
                     let Some(factory)=self.factory.as_ref()else{break 'retire Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"nonterminal owned mutation lost its retirement factory").into())};
-                    match semio_framework_value::factory_retire_owned(&**factory,&mut *self.current,&mut effect.nested(child)){
+                    match semio_framework_value::factory_retire_owned(factory.as_ref(),&mut self.current,&mut effect.nested(child)){
                         semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(idle)),
                         semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{
                             Ok((box_,progress))=>{
@@ -400,7 +408,7 @@ where M:Send+'static {
         self.last_work=1;self.ready=true;Ok(ChildEmitPreparationStep::Ready(RetainedCloneProgress{copied_items:1,..idle}))
     }
     fn close_granted(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
-        self.last_work=0;let grant=effect.grant();let before=effect.performed_work();
+        self.last_work=0;let grant=effect.grant();
         let idle=RetainedCloneProgress::default();
         if !self.closing{return Err(Fault::from("owned-child-emission-close-before-admission").into());}
         if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(idle));}
@@ -412,7 +420,7 @@ where M:Send+'static {
         if yields(grant,demand){return Ok(PluginLifecycleStep::Progress(idle));}
         if !self.retire_stage_is_empty(){
             let step=self.retire_one(effect)?;
-            if self.last_work!=0||effect.performed_work()!=before||step.progress()!=idle{return Ok(PluginLifecycleStep::Progress(step.progress()));}
+            if self.last_work!=0||effect.performed_work()!=0||step.progress()!=idle{return Ok(PluginLifecycleStep::Progress(step.progress()));}
         }
         if let Some(prefix)=self.prefix.as_mut(){
             if prefix.terminal_is_empty(){self.last_work=1;self.prefix.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
@@ -422,8 +430,11 @@ where M:Send+'static {
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.cause.is_some()||self.cause_close.is_some(){
-            let step=PluginLifecycleStep::retained(semio_plugin_ownership::bounded_ownership::plugin_settle_poll(semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.cause,&mut self.cause_close,effect))?,self.cause.is_none()&&self.cause_close.is_none());
-            if effect.performed_work()!=before||!matches!(step,PluginLifecycleStep::Complete(_)){return Ok(step);}
+            let step=match settled(semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.cause,&mut self.cause_close,effect),RetainedCloneStep::Progress(idle)).map(|step|PluginLifecycleStep::retained(step,self.cause.is_none()&&self.cause_close.is_none())){
+                Ok(step)=>step,
+                Err(error)=>return Err(error.into()),
+            };
+            if self.last_work!=0||effect.performed_work()!=0||!matches!(step,PluginLifecycleStep::Complete(_)){return Ok(step);}
         }
         if let Some(factory)=self.factory.take(){
             self.last_work=1;
@@ -432,7 +443,7 @@ where M:Send+'static {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));
         }
         if let Some(factory)=self.closing_factory.as_mut(){
-            let step=semio_plugin_ownership::bounded_ownership::plugin_settle_poll(factory.step(grant.maximum_copy_bytes,effect))?;
+            let step=settled(factory.step(grant.maximum_copy_bytes,effect),RetainedCloneStep::Progress(idle)).map_err(value_fault)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,factory.terminal_is_empty(),"original child preparation factory").map_err(value_fault)?;
             if factory.terminal_is_empty(){drop(self.closing_factory.take());}
             return Ok(PluginLifecycleStep::Progress(step.progress()));
@@ -525,10 +536,9 @@ where M:Send+'static {
         self.retire_demands(0)
     }
     fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,PluginLifecycleFailure>{
+        self.last_work=0;
         if effect.remaining_work_units().map_err(value_fault)?==0{return Ok(ChildEmitPreparationStep::Pending(Default::default()));}
-        let result=self.step_granted(effect);
-        let paid=pay_work(effect,std::mem::take(&mut self.last_work));
-        let step=result?;paid.map_err(value_fault)?;Ok(step)
+        self.step_granted(effect)
     }
     fn preview_demands(&self)->Option<RetirementDemand>{self.owned_source.as_ref().map(|_|RetirementDemand{copy_bytes:size_of::<Option<Vec<M>>>()+size_of::<Option<std::vec::IntoIter<M>>>(),depth:1,..Default::default()})}
     fn begin_preview_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(bool,RetainedCloneProgress)>{
@@ -556,10 +566,9 @@ where M:Send+'static {
     }
     fn begin_close(&mut self){self.closing=true;}
     fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+        self.last_work=0;
         if effect.remaining_work_units().map_err(value_fault)?==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-        let result=self.close_granted(effect);
-        let paid=pay_work(effect,std::mem::take(&mut self.last_work));
-        let step=result?;paid.map_err(value_fault)?;Ok(step)
+        self.close_granted(effect)
     }
     fn retirement_work(&self,body:usize)->Result<u64,ValueError>{
         if !self.retire_stage_is_empty(){return self.retire_work(body);}

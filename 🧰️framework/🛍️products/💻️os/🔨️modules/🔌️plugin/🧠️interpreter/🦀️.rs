@@ -26,9 +26,6 @@ pub const INTERPRETER_SOURCE: &str = concat!(
     include_str!("🏗️instance/▶️invocation/📞️host/🦀️.rs"),
 );
 
-#[cfg(test)]
-#[global_allocator]
-static INTERPRETER_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 

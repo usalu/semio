@@ -46,8 +46,8 @@ impl StagedEvent {
     async fn close<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if let Some(owner)=self.auxiliary.as_mut(){if !owner.terminal_is_empty(){owner.close_step(runtime,cx).await?;return Ok(false);}if metadata(cx,true)?{self.auxiliary.take();}return Ok(false);}
         if let Some(owner)=self.input.as_mut(){if !owner.terminal_is_empty(){owner.close_step(cx)?;return Ok(false);}if metadata(cx,true)?{self.input.take();}return Ok(false);}
-        if !self.retirement.is_empty()||self.wire.is_some(){let demand=self.retirement.next_owner_demands::<Vec<u8>>(self.wire.is_some(),&None,4096)?;super::retired(cx,demand,|effect|super::begin(&mut self.retirement,&mut self.wire,effect))?;return Ok(false);}
-        if self.event.is_some(){let demand=self.retirement.next_owner_demands::<Event>(true,&None,4096)?;super::retired(cx,demand,|effect|super::begin(&mut self.retirement,&mut self.event,effect))?;return Ok(false);}
+        if !self.retirement.is_empty()||self.wire.is_some(){let demand=self.retirement.next_owner_demands::<Vec<u8>>(self.wire.is_some(),&None,4096)?;if self.retirement.is_empty(){super::retired(cx,demand,|effect|self.retirement.begin_granted(&mut self.wire,effect).result?.ok_or_else(invalid))?;}else{let body=cx.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,demand,|effect|self.retirement.step_granted(body,effect))?;}return Ok(false);}
+        if self.event.is_some(){let demand=self.retirement.next_owner_demands::<Event>(true,&None,4096)?;super::retired(cx,demand,|effect|self.retirement.begin_granted(&mut self.event,effect).result?.ok_or_else(invalid))?;return Ok(false);}
         self.witness.close(cx)
     }
     async fn step<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{

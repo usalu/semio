@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import { spawnSync } from "node:child_process";
@@ -64,7 +65,7 @@ test("a second checkout poisons a shared build-dir, the gate names it and the re
     writeFileSync(join(first, "shared", "mod.rs"), "pub fn answer() -> u32 { 42 }\n");
     cpSync(first, second, { recursive: true });
     const cargo = (checkout: string) =>
-      spawnSync("cargo", ["-Zchecksum-freshness", "-Zbuild-dir-new-layout", "check", "--quiet"], {
+      spawnSync(registeredToolExecutableV1("cargo"), ["-Zchecksum-freshness", "-Zbuild-dir-new-layout", "check", "--quiet"], {
         cwd: join(checkout, "crate"),
         encoding: "utf8",
         env: { ...process.env, RUSTUP_TOOLCHAIN: toolchain.toolchain.channel, CARGO_BUILD_BUILD_DIR: build, CARGO_TARGET_DIR: join(root, "target"), CARGO_INCREMENTAL: "0" },
@@ -103,7 +104,7 @@ test("the issued profile selectors give every unit the incremental setting the p
     writeFileSync(join(scratch, "src", "lib.rs"), "");
     for (const row of fixture.profileUnitGraph as { mode: "prototype" | "release"; producer: string; target: string | null }[]) {
       const target = row.target ?? host!, rendered = renderCargoProfileConfigurationV1({ version: 1, mode: row.mode, target, producer: row.producer, operation: "check" }, "Cargo.toml", "repository");
-      const graph = spawnSync("cargo", ["check", "--unit-graph", "-Z", "unstable-options", "-Z", "trim-paths", "--offline", "--lib", "--target", target, "--profile", rendered.plan.profile, ...rendered.selectors.flatMap((selector) => ["--config", selector])], { cwd: scratch, encoding: "utf8", env: toolchain, maxBuffer: 64 * 1024 * 1024 });
+      const graph = spawnSync(registeredToolExecutableV1("cargo"), ["check", "--unit-graph", "-Z", "unstable-options", "-Z", "trim-paths", "--offline", "--lib", "--target", target, "--profile", rendered.plan.profile, ...rendered.selectors.flatMap((selector) => ["--config", selector])], { cwd: scratch, encoding: "utf8", env: toolchain, maxBuffer: 64 * 1024 * 1024 });
       expect(graph.status, graph.stderr).toBe(0);
       const units = (JSON.parse(graph.stdout) as { units: { platform: string | null; mode: string; profile: { name: string; incremental: boolean } }[] }).units;
       expect(units.length, `${row.mode} ${target}`).toBeGreaterThan(1);

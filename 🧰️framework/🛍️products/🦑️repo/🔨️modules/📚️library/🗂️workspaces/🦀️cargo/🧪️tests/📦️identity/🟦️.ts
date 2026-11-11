@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
@@ -19,7 +20,7 @@ test("current physical workspace dependency identities match independent Cargo a
   put(root,"Cargo.toml",workspace(["provider","consumer"],`[workspace.dependencies]\n${row.dependency}={path="provider"}\n`));
   put(root,"provider/Cargo.toml",pkg(row.package));put(root,"provider/🦀️.rs","");
   put(root,"consumer/Cargo.toml",pkg("consumer",`[dependencies]\n${row.dependency}.workspace=true\n`));put(root,"consumer/🦀️.rs","");
-  const native=Bun.spawnSync(["cargo","generate-lockfile","--offline","--manifest-path",join(root,"Cargo.toml")],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(native.exitCode===0,row.id+": "+native.stderr.toString()).toBe(row.valid);
+  const native=Bun.spawnSync([registeredToolExecutableV1("cargo"),"generate-lockfile","--offline","--manifest-path",join(root,"Cargo.toml")],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(native.exitCode===0,row.id+": "+native.stderr.toString()).toBe(row.valid);
  }
  const directory=join(process.cwd(),"🧰️framework"),source=readFileSync(join(directory,"Cargo.toml"),"utf8"),manifest=Bun.TOML.parse(source)as any;
  expect(manifest).toEqual(TOML.parse(source));let checked=0;

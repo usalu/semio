@@ -2,10 +2,10 @@
  * @see ../🟨️.mjs */
 import {fork} from "node:child_process";
 import {fileURLToPath} from "node:url";
-import {mkdtempSync,rmSync,writeFileSync} from "node:fs";
+import {writeFileSync} from "node:fs";
 import {readFile} from "node:fs/promises";
-import {tmpdir} from "node:os";
 import {join} from "node:path";
+import {createScratchDirectoryV1,removeScratchDirectoryV1} from "../../../../../../../../../../🔨️modules/🏃️process/🧹️scratch/🟦️.ts";
 import {SLICE_GRACE_MILLISECONDS_V1,signalProcessTreeV1} from "../🧹️reap/🟨️.mjs";
 
 export const SLICE_REQUEST_VARIABLE_V1="SEMIO_SLICE_REQUEST";
@@ -14,11 +14,13 @@ export const SLICE_SPOOL_VARIABLE_V1="SEMIO_SLICE_SPOOL";
 /** 📦 Why the result travels as a file: measured on generated graphs, JSON over the IPC pipe cost 0.9 s for 50 MB, 4 s for 200 MB and 43 s (2 GB peak in both processes) for 600 MB; stringifying into a file in the child and parsing it in the service cost 0.9 s, 2.9 s and 9.5 s.
  * 🚀 Starts the load script at `url` as a process with the request in its environment and an IPC channel; answers a `Worker`-shaped handle (`on("message"|"error"|"exit")`, `pid`, `terminate()`). */
 export function createProcessWorkerV1(url,data,env,{spawn=fork,graceMilliseconds=SLICE_GRACE_MILLISECONDS_V1,platform=process.platform}={}){
- const spool=mkdtempSync(join(tmpdir(),"semio-slice-")),child=spawn(url instanceof URL?fileURLToPath(url):String(url),[],{execPath:process.execPath,env:{...env,[SLICE_REQUEST_VARIABLE_V1]:JSON.stringify(data),[SLICE_SPOOL_VARIABLE_V1]:spool},detached:platform!=="win32",windowsHide:true,stdio:["ignore","ignore","inherit","ipc"]});
+ const spool=createScratchDirectoryV1("slice");
+ let child;
+ try{child=spawn(url instanceof URL?fileURLToPath(url):String(url),[],{execPath:process.execPath,env:{...env,[SLICE_REQUEST_VARIABLE_V1]:JSON.stringify(data),[SLICE_SPOOL_VARIABLE_V1]:spool},detached:platform!=="win32",windowsHide:true,stdio:["ignore","ignore","inherit","ipc"]});}catch(error){removeScratchDirectoryV1(spool);throw error;}
  const pending=new Set();
  let exited=child.exitCode!==null||child.signalCode!==null;
  const gone=new Promise(resolve=>{if(exited)resolve();else child.once("exit",()=>{exited=true;resolve();});});
- void gone.then(()=>Promise.allSettled([...pending])).then(()=>rmSync(spool,{recursive:true,force:true}));
+ void gone.then(()=>Promise.allSettled([...pending])).then(()=>removeScratchDirectoryV1(spool));
  return{
   pid:child.pid,
   on:(event,listener)=>{

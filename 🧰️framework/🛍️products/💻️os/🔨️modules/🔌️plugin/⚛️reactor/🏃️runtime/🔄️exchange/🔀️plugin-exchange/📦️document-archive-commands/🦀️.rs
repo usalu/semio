@@ -8,7 +8,7 @@ pub(super) async fn arm_load_document_archive<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: &mut protocol::AppCommand,
-    admission:&mut semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
+    admission:&mut semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LoadDocumentArchive { seq, archive } = command else { unreachable!("arm_load_document_archive is dispatched only for its own command") };
@@ -23,7 +23,7 @@ pub(super) async fn arm_merge_document_archive<PA: PluginApp>(
     instance_id: u32,
     frames: &mut Vec<protocol::AppFrame>,
     command: &mut protocol::AppCommand,
-    admission:&mut semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
+    admission:&mut semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::MergeDocumentArchive { seq, archive } = command else { unreachable!("arm_merge_document_archive is dispatched only for its own command") };

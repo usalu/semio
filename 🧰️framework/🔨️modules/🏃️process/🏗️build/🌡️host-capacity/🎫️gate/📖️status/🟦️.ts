@@ -2,7 +2,7 @@ import {mkdirSync,readdirSync,readFileSync,renameSync,statSync,unlinkSync,writeF
 import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
 import {requireMaterializedPathV1,type ResourceLeaseControl} from "../../../../🔒️leases/🎛️control/🟦️.ts";
-import {evaluateHostCapacityV1,hostBootAnchorV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,requireHostCapacityV1,withUnmanagedHostV1,type HostBootAnchorV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../📏️decision/🟦️.ts";
+import {agedHostSampleV1,evaluateHostCapacityV1,hostBootAnchorV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,requireHostCapacityV1,withUnmanagedHostV1,type HostBootAnchorV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostSampleV1,type HostWaiterV1} from "../../📏️decision/🟦️.ts";
 import {currentHostProbeV1,readHostSampleV1,type HostSampleRecordV1} from "../../📡️sampling/🟦️.ts";
 import {hostDeclarationKeyV1} from "../../🪞️profile/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
@@ -79,7 +79,9 @@ export function readWaiters(directory:string,now:number,policy:HostCapacityPolic
 export async function currentSample(directory:string,policy:HostCapacityPolicyV1,control:ResourceLeaseControl,ports:HostCapacityPortsV1,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<HostSampleV1>{
  const now=ports.now??Date.now,path=join(directory,"sample.json"),prior=readJson(path) as HostSampleRecordV1|undefined,cached=isHostCapacityV1("Host",prior?.host)?prior!.host:undefined,declared=hostDeclarationKeyV1(environment);
  if(cached&&(prior!.declared??"")===declared&&now()>=cached.atMs&&now()-cached.atMs<=policy.wait.sampleMaximumAgeMilliseconds)return cached;
- const previous=cached?{atMs:cached.atMs,swappedOutMegabytes:prior!.swappedOutMegabytes}:undefined,record=await(ports.sample?ports.sample(previous):readHostSampleV1(policy,currentHostProbeV1(control.signal),previous,now,environment));
+ const known=cached&&(prior!.declared??"")===declared?cached:undefined,previous=cached?{atMs:cached.atMs,swappedOutMegabytes:prior!.swappedOutMegabytes}:undefined;
+ const record=await(async()=>ports.sample?ports.sample(previous):readHostSampleV1(policy,currentHostProbeV1(control.signal),previous,now,environment))().catch((error:unknown)=>{if(known===undefined||control.signal.aborted)throw error;return undefined;});
+ if(record===undefined)return agedHostSampleV1(known!,now());
  requireHostCapacityV1<HostSampleV1>("Host",record.host);
  try{writeJson(path,{...record,declared});}catch{}
  return record.host;

@@ -5,8 +5,6 @@ use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,Retai
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeAllocation,NativeDecodeAllocationOutcome};
 use semio_framework_value_retained_clone::NativeAllocationFailure;
 use OriginalDomainView as V;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn error(name:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,format!("{} 源",name))}
 fn decode()->NativeDecodeAllocationOutcome{NativeDecodeAllocationOutcome{request:Some(NativeDecodeAllocation{bytes:7,owned_bytes:13,next_owned_bytes:20,maximum_bytes:73}),admitted:false,primary:Some(error("decode primary")),quote_refusal:Some(error("decode quote")),extent_refusal:Some(error("decode extent")),settlement_refusal:Some(error("decode settlement")),actual:Some(11)}}
 fn encode()->NativeEncodeAllocationOutcome{NativeEncodeAllocationOutcome{request:Some(NativeEncodeAllocation{bytes:7,owned_bytes:13,next_owned_bytes:20,maximum_bytes:73}),admitted:true,primary:Some(error("encode primary")),forwarded_quote:Some(error("encode forwarded quote")),scoped_quote:Some(error("encode scoped quote")),extent_refusal:Some(error("encode extent")),forwarded_refusal:Some(error("encode forwarded refusal")),scoped_refusal:Some(error("encode scoped refusal")),actual:Some(11)}}

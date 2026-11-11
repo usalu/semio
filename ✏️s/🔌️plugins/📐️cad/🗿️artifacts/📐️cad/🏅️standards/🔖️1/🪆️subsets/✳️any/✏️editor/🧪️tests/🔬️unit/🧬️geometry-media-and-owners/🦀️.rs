@@ -184,8 +184,9 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
     let large_source = format!("{}{}", pricing["prefix"].as_str().unwrap().repeat(pricing["repeat"].as_u64().unwrap() as usize), text);
     assert!(large_source.len() > pricing["closeMaximumBytes"].as_u64().unwrap() as usize);
     let media = Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh }, payload: MediaPayload::Structured { schema: "obj.3.0.geometry".into(), json: large_source } };
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let outcome: Result<(), String> = async {
-        PluginApp::import_media(&mut app, "geometry:in", media, &meta(semio_os_kernel::LOCAL_ACTOR_ID)).await.map_err(|error| format!("{error:?}"))?;
+        semio_plugin::artifact_app_laws::import_media(&mut app, "geometry:in", media, &meta(semio_os_kernel::LOCAL_ACTOR_ID), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         settle(&mut app).await;
         let after = app.snapshot().unwrap();
         if after.breps.len() != before.breps.len() + 1 { return Err("import did not create exactly one retained geometry sibling".into()); }

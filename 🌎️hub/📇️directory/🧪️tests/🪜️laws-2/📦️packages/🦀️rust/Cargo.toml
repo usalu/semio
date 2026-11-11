@@ -44,5 +44,5 @@ rusqlite = { version = "0.38.0", features = ["bundled"] }
 neo4rs = { version = "0.8" }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
 semio-framework-pack-json = { path = "../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }

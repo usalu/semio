@@ -44,7 +44,7 @@ semio-renderer-wgpu-ui-engine-dump = { path = "../../../🔎️ui-engine-dump/�
 semio-renderer-wgpu-ui-engine-focus = { path = "../../../👆️ui-engine-focus/📦️packages/🦀️rust" }
 infinite_canvas = { path = "../../../../../../../♾️infinite/📦️packages/🦀️rust", package = "semio-os-infinite" }
 semio-framework-job = { workspace = true }
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-ui-action = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
@@ -57,10 +57,10 @@ semio-ui-wgpu-paint = { path = "../../../../../../../../../../🔨️modules/�
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync", "ureq"] }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
-semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"], package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["sync"] }
 web-sys = { version = "0.3.98", features = ["Window", "Document", "HtmlCanvasElement", "OffscreenCanvas", "CanvasRenderingContext2d", "Element", "Event", "MouseEvent", "WheelEvent", "KeyboardEvent", "InputEvent", "ResizeObserver", "ResizeObserverEntry", "DomRect", "Performance", "WorkerGlobalScope", "Request", "RequestInit", "RequestMode", "Response", "Headers", "Blob", "Url", "HtmlAnchorElement", "console", "MediaQueryList"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]

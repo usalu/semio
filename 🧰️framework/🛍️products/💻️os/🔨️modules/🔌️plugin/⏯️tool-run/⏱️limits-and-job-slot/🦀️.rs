@@ -2,7 +2,6 @@
 
 use super::*;
 use semio_plugin_interaction::UiAssemblyResult;
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 //#region 🔖️Limits
 /// ⏱️ Wall budget of one driver turn; every job step inside it keeps its own interactive-lane slice.
@@ -178,17 +177,15 @@ impl<C> ToolRunJobSlot<C> {
             let step=self.origin.close_step(cx)?;
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
-        type Poll=semio_framework_value::OriginalRetirementPoll;
-        let settled=|result:Result<RetainedCloneStep,ValueError>,work:u128|->Poll{semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(Into::into),work})};
-        let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|->Poll{
-        if let Some(owner)=self.failure_retirement.as_mut(){if owner.terminal_is_empty(){drop(self.failure_retirement.take());return settled(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),1)}return owner.close_step(4096,effect)}
-        if self.original_failure.is_some(){let turn=semio_framework_value::retirement::admit_owned_retirement(&mut *self.original_failure,effect);return settled(turn.result.map(|admitted|match admitted{Some((owner,progress))=>{self.failure_retirement=Some(owner);RetainedCloneStep::Progress(progress)},None=>RetainedCloneStep::Progress(Default::default())}),turn.work)}
+        let step=retired(cx,demand,|effect|->Result<RetainedCloneStep,semio_framework_value::RetirementPollExit>{let grant=effect.grant();
+        if self.failure_retirement.is_some(){if self.failure_retirement.as_ref().is_some_and(|owner|owner.terminal_is_empty()){drop(self.failure_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}return Ok(close_tool_erased_retirement(&mut self.failure_retirement,effect)?)}
+        if self.original_failure.is_some(){return Ok(match semio_framework_value::retirement::admit_owned_retirement(&mut self.original_failure,effect).result?{Some((owner,progress))=>{self.failure_retirement=Some(owner);RetainedCloneStep::Progress(progress)},None=>RetainedCloneStep::Progress(Default::default())})}
         if self.job_is_empty(){
-            if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){drop(self.authority.take());return settled(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),1)}let turn=owner.close_step(effect);return settled(turn.result,turn.work)}
-            if let Some(retirement)=self.cancel_retirement.as_mut(){if retirement.terminal_is_empty(){drop(self.cancel_retirement.take());return settled(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),1)}let turn=retirement.close_step(effect);return settled(match turn.result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)},turn.work)}
-            if let Some(token)=self.cancel.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(token));return settled(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),1)}
+            if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){drop(self.authority.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return Ok(RetainedCloneStep::Progress(owner.close_step(effect).result?.progress()))}
+            if let Some(retirement)=self.cancel_retirement.as_mut(){if retirement.terminal_is_empty(){drop(self.cancel_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return match retirement.close_step(effect).result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error.into())}}
+            if let Some(token)=self.cancel.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(token));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
         }
-            settled(Ok(RetainedCloneStep::Complete(Default::default())),0)
+            Ok(RetainedCloneStep::Complete(Default::default()))
         })?;Ok(RetainedCloneStep::Progress(step.progress()))
     }
 }

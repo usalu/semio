@@ -39,6 +39,3 @@ pub mod editor {
 mod child_publication;
 pub use child_publication::{FlowChildPublicationWork, FlowLeafMode, FlowLeafWork};
 
-#[cfg(test)]
-#[global_allocator]
-static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

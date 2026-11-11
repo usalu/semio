@@ -23,7 +23,7 @@ semio-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/�
 semio-framework = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
-semio-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-os" }
+semio-os = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

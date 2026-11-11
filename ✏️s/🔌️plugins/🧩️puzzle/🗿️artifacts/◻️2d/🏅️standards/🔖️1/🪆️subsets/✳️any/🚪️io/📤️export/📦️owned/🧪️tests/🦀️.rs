@@ -10,8 +10,6 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use serde_json::Value;
 use std::mem::size_of_val;
 
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[path="../../../🧪️tests/🧱️material/🦀️.rs"]
 mod oracle;
 type Store=store::ArtifactStore<Puzzle2dSnapshot,Puzzle2dMutation>;

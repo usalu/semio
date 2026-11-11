@@ -66,7 +66,7 @@ export const readFleetCapacityV1:FleetReaderV1=async context=>{
   const store=readHostEstimateStoreV1(directory),wanted=new Set([...grants.map(row=>row.operation),...waiters.map(row=>row.operation)]),active:Record<string,readonly number[]>={};
   for(const operation of wanted){const samples=store.classes[operation]?.samples;if(samples)active[operation]=samples.map(row=>row.activeMilliseconds).reverse();}
   const host=snapshot.host;
-  return {host:{platform:host.platform,cores:host.cores,totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,pressure:host.pressure,swapUsedMegabytes:host.swapUsedMegabytes,load:host.load},capacity:{floorMegabytes:snapshot.evaluation.floorMegabytes,headroomMegabytes:snapshot.evaluation.headroomMegabytes,capacityMegabytes:Math.max(0,host.totalMegabytes-snapshot.evaluation.floorMegabytes),grants,waiters},activeMilliseconds:active};
+  return {host:{ageSeconds:Math.max(0,Math.floor((now-host.atMs)/1000)),platform:host.platform,cores:host.cores,totalMegabytes:host.totalMegabytes,availableMegabytes:host.availableMegabytes,pressure:host.pressure,swapUsedMegabytes:host.swapUsedMegabytes,load:host.load},capacity:{floorMegabytes:snapshot.evaluation.floorMegabytes,headroomMegabytes:snapshot.evaluation.headroomMegabytes,capacityMegabytes:Math.max(0,host.totalMegabytes-snapshot.evaluation.floorMegabytes),grants,waiters},activeMilliseconds:active};
  }finally{control.dispose();}
 };
 

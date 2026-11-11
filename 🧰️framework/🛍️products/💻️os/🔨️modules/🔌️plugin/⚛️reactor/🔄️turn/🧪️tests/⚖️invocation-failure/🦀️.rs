@@ -4,15 +4,15 @@ use semio_framework::kernel::MessageEndpoint;
 use semio_framework::kernel::RequestOutcome;
 use semio_plugin_reactor_lifecycle::instance_lifetime;
 use semio_plugin_reactor_lifecycle as pending;
-use semio_framework_plugin_reactor_turn as turn;
+use semio_plugin_reactor_turn as turn;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
 use semio_framework_job::{OriginalTurnFailure, close_original_retained_step};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework::Effect;
-use semio_framework_plugin_reactor_turn::CommandIngressOwner;
-use semio_framework_plugin_reactor_turn::RetainedExtensionInvocation;
+use semio_plugin_reactor_turn::CommandIngressOwner;
+use semio_plugin_reactor_turn::RetainedExtensionInvocation;
 
 #[test]
 fn original_guest_failure_debit_failed_ingress_retiring_lane_returns_same_three_causes_after_paid_close(){
@@ -29,7 +29,7 @@ fn original_guest_failure_debit_failed_ingress_retiring_lane_returns_same_three_
                 let pointers=(failure.primary.message().as_ptr(),failure.receipt_refusal.as_ref().unwrap().message.as_ptr(),failure.context_refusal.as_ref().unwrap().message.as_ptr());
                 let command=semio_os_kernel::DecodedAppCommandOwner::new(semio_os_kernel::AppCommand::SubmitMediaExport{seq:input["command"]["seq"].as_str().unwrap().parse().unwrap(),port:input["command"]["port"].as_str().unwrap().into(),expected_parent_document_id:input["command"]["parent"].as_str().unwrap().into(),expected_base_revision:input["command"]["revision"].as_str().unwrap().parse().unwrap(),checkpoint_id:None});
                 let cursor=semio_framework::kernel::CommandPageCursor{owner:7,generation:11,command_index:0,command_count:1,instance:13,seq:17,kind:19,page_index:0,page_count:1,item_count:0,metadata:0};
-                (CommandIngressOwner::Generic{cursor,command:Some((17,semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{owner:semio_framework_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand::from_wire(command),failure:Some(failure),identity:(cx.operation(),cx.generation()),close_failure:None,compound:None,raw_media:None})),exchange:None,exchange_close:None,output:None,output_close:None},pointers)
+                (CommandIngressOwner::Generic{cursor,command:Some((17,semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress::FailedDecoded{owner:semio_plugin_runtime_ops::ops_ingress::OriginalDecodedPluginCommand::from_wire(command),failure:Some(failure),identity:(cx.operation(),cx.generation()),close_failure:None,compound:None,raw_media:None})),exchange:None,exchange_close:None,output:None,output_close:None},pointers)
             });
             cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth.requested_bytes,..Default::default()})?;cx.consume_fuel(1);let(mut born,mut freed)=(birth.requested_bytes,birth.released_bytes);
             let mut retained=std::pin::pin!(CommandIngressLoan::empty(slot));assert!(retained.lend(cx)?);assert!(retained.admit_entry(key,cx)?);let copy_bytes=std::mem::size_of::<Option<CommandIngressOwner>>();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()})?;cx.consume_fuel(1);retained.put_state(Some(state));

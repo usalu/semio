@@ -1,10 +1,10 @@
 use semio_plugin_reactor_lifecycle::with_state as with_pending;
-use semio_framework_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn, take_turn_patch_page, turn_patch_budget_bytes};
+use semio_plugin_reactor_turn::{drive_reconcile_within, reconcile_arms_turn, take_turn_patch_page, turn_patch_budget_bytes};
 use semio_plugin_reactor_turn_limits::{PATCH_RETIREMENT_BYTES_PER_UNIT, PATCH_RETIREMENT_ITEMS_PER_UNIT};
 use semio_framework::kernel::UiPatch;
 use semio_plugin_reactor_patches as patches;
 use semio_plugin_reactor_lifecycle as pending;
-use semio_framework_plugin_reactor_turn as turn;
+use semio_plugin_reactor_turn as turn;
 use semio_ui_contract as ui_contract;
 use semio_framework::kernel::{ActorInstanceLifetime, ActorUiPatchReceipt, UiTurnPatchTransfer, UiTurnPatches, UI_TURN_PATCHES_MAXIMUM, UI_TURN_PATCH_BUDGET_BYTES, UI_TURN_PATCH_OWNER_BYTES};
 use semio_ui_runtime::{ComponentTree, TreeNode};

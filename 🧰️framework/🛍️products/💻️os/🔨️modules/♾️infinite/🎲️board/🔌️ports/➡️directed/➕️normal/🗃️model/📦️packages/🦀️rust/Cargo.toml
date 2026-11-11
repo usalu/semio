@@ -27,7 +27,7 @@ testkit = ["semio-os-infinite-board-schema/testkit", "semio-os-infinite-board-en
 [dependencies]
 semio-framework-value = { path = "../../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-canvas = { path = "../../../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
-semio-framework-value-derive = { path = "../../../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-graph-manifest = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 graph = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-graph-engine" }
 semio-framework-graph-drawing = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🖊️drawing/📦️packages/🦀️rust" }

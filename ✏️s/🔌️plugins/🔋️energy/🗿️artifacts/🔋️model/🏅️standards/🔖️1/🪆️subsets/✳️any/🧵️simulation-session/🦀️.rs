@@ -349,6 +349,3 @@ pub use run_job::EnergySimulationRunJob;
 mod tests;
 //#endregion 🧪️Laws
 
-#[cfg(test)]
-#[global_allocator]
-static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

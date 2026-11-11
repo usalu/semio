@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
@@ -82,7 +83,7 @@ for (const vector of fixture.contexts) test(`immutable source facts resolve curr
         writeFileSync(join(dirname(manifest), "index.js"), "module.exports = {};\n");
       }
       const imported=[...new Set(ts.preProcessFile(vector.source,true,true).importedFiles.map(file=>file.fileName))].sort();
-      const resolved = spawnSync("node", ["-e", 'const fs=require("node:fs"),{TargetProjectLocator}=require(process.argv[1]),x=JSON.parse(fs.readFileSync(0,"utf8")),l=new TargetProjectLocator(x.nodes,x.externalNodes,new Map(),new Map()); const core=x.imported.filter(require("node:module").isBuiltin);console.log(JSON.stringify({core,targets:[...new Set(x.imported.map(s=>l.findProjectFromImport(s,s.startsWith(".")?x.file:x.absolute)).filter(Boolean))].sort()}));', require.resolve("nx/src/plugins/js/project-graph/build-dependencies/target-project-locator")], { input: JSON.stringify({ nodes, externalNodes, imported, file: phase.file, absolute }), env:{...process.env,SEMIO_WORKSPACE_ROOT_PATH:root}, encoding: "utf8", timeout: 10000 });
+      const resolved = spawnSync(registeredToolExecutableV1("node"), ["-e", 'const fs=require("node:fs"),{TargetProjectLocator}=require(process.argv[1]),x=JSON.parse(fs.readFileSync(0,"utf8")),l=new TargetProjectLocator(x.nodes,x.externalNodes,new Map(),new Map()); const core=x.imported.filter(require("node:module").isBuiltin);console.log(JSON.stringify({core,targets:[...new Set(x.imported.map(s=>l.findProjectFromImport(s,s.startsWith(".")?x.file:x.absolute)).filter(Boolean))].sort()}));', require.resolve("nx/src/plugins/js/project-graph/build-dependencies/target-project-locator")], { input: JSON.stringify({ nodes, externalNodes, imported, file: phase.file, absolute }), env:{...process.env,SEMIO_WORKSPACE_ROOT_PATH:root}, encoding: "utf8", timeout: 10000 });
       expect(resolved.status, resolved.stderr).toBe(0);
       const { targets: expected, core } = JSON.parse(resolved.stdout) as { targets: string[]; core: string[] };
       expect(expected, `${vector.id}: installed Nx resolution`).toEqual(phase.targets);

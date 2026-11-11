@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {boundedNxNamespaceV1} from "../../../💾️storage/🔒️enforcement/🔌️nx/🟦️.ts";
 /** 📦️ Portable locked-install and owner-requested lock refresh command laws. */
 import { expect, test } from "bun:test";
@@ -55,7 +56,7 @@ test("Bun ownership excludes mutable outputs and preserves authored custody agai
   if(row.outcome==="admitted"){expect(actual.packages).toEqual(["source/member"]);expect(actual.visitedOutputs).toEqual([]);expect(glob.sync("source/**/package.json",{cwd:root,ignore:input.outputs.map((name:string)=>"**/"+name+"/**"),onlyFiles:true}).map(path=>path.replace(/\/package.json$/u,""))).toEqual(actual.packages);}
   else {expect(actual.changed).toBe(true);expect(actual.error).toContain(row.outcome==="canceled"?"Neutral census canceled":"Bun current");}
   const oracleRoot=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"q")),entry='import {mkdirSync,writeFileSync,renameSync,rmSync} from "node:fs";import {join,dirname} from "node:path";import {createRequire} from "node:module";const api=createRequire(import.meta.url)('+JSON.stringify(join(censusOwner,"🟨️.cjs"))+').createBunWorkspaceOwnershipV1({ownershipPath:'+JSON.stringify(join(censusOwner,"../🔣️policy.json"))+',ownershipSource:'+JSON.stringify(readFileSync(join(censusOwner,"../🔣️policy.json"),"utf8"))+'});'+compiled.code+'console.log(JSON.stringify(await outputCensus('+JSON.stringify(oracleRoot)+','+JSON.stringify(input)+','+JSON.stringify(row.mutation)+',api)));';
-  const child=Bun.spawn(["node","--input-type=module","-e",entry.replace('import {join,dirname}', 'import {join,dirname,resolve,isAbsolute}')],{stdout:"pipe",stderr:"pipe",signal:new AbortController().signal}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);const reference=JSON.parse(stdout);expect(reference.outcome).toBe(row.outcome);if(row.outcome==="admitted")expect(reference).toEqual(actual);else expect(reference.changed).toBe(true);
+  const child=Bun.spawn([registeredToolExecutableV1("node"),"--input-type=module","-e",entry.replace('import {join,dirname}', 'import {join,dirname,resolve,isAbsolute}')],{stdout:"pipe",stderr:"pipe",signal:new AbortController().signal}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);const reference=JSON.parse(stdout);expect(reference.outcome).toBe(row.outcome);if(row.outcome==="admitted")expect(reference).toEqual(actual);else expect(reference.changed).toBe(true);
  }
 });
 
@@ -100,7 +101,7 @@ test("initial work starts before watcher readiness and Node observes the same ac
 const events=['initial'], watcher=Object.assign(new EventEmitter(),{stdout:new EventEmitter()});
 let complete;const prepared=new Promise(accept=>{complete=accept});activateWhenNxWatcherReady(watcher,prepared,()=>true,()=>events.push('activation'),error=>{throw error;});
 if(events.length!==1)throw Error('startup blocked');watcher.stdout.emit('data',Buffer.from('watch process waiting...'));await new Promise(setImmediate);if(events.length!==1)throw Error('overlapping initial preparation');complete();await new Promise(setImmediate);console.log(JSON.stringify(events));`;
-  const child = Bun.spawn(["node", "--input-type=module", "-e", reference], { stdout: "pipe", stderr: "pipe" });
+  const child = Bun.spawn([registeredToolExecutableV1("node"), "--input-type=module", "-e", reference], { stdout: "pipe", stderr: "pipe" });
   const output = await new Response(child.stdout).text(), errors = await new Response(child.stderr).text();
   expect(await child.exited, errors).toBe(0); expect(JSON.parse(output)).toEqual(events);
   let active = true, activated = false;
@@ -147,7 +148,7 @@ test("an independent Node bundle executes the same authored command corpus", asy
   await build({ bundle: true, stdin: { contents: "import {selectPackageManagerV1} from "+JSON.stringify(join(owner, "🔌️managers/📚️catalog/🟦️.ts"))+";const installSchema="+JSON.stringify(dependencyInstallSchema)+";Object.defineProperty(installSchema.$defs.ManagerProtocol,\"manager\",{value:selectPackageManagerV1(\"javascript\")});"+operation.getText(source), loader: "ts", resolveDir: owner }, outfile: module, platform: "node", format: "esm", logLevel: "silent" });
   const entry = join(output, "oracle.mjs");
   writeFileSync(entry, `import { javascriptDependencyProducerArgumentsV1 } from ${JSON.stringify(pathToFileURL(module).href)}; const cases = ${JSON.stringify(fixture.operations)};process.stdout.write(JSON.stringify(cases.map(operation=>({args:javascriptDependencyProducerArgumentsV1(operation.mode,"/cache"),cwd:"workspace"}))));`);
-  const child = Bun.spawn(["node", entry], { stdout: "pipe", stderr: "pipe" });
+  const child = Bun.spawn([registeredToolExecutableV1("node"), entry], { stdout: "pipe", stderr: "pipe" });
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
   expect({ code, stderr }).toEqual({ code: 0, stderr: "" });
   expect(JSON.parse(stdout)).toEqual(fixture.operations.map(operation => ({ args: operation.arguments.map(item => item.replace("{backend}", fixture.backends[process.platform]!)), cwd: "workspace" })));
@@ -165,7 +166,7 @@ test("package-declared Node entry points resolve without platform launcher shims
   expect(resolveWorkspaceBin("@fixture/tool", root)).toBe(executable);
   const source = parseConfigFileTextToJson("package.json", readFileSync(manifest, "utf8")).config;
   expect(source.bin.tool).toBe("cli.js");
-  const child = Bun.spawn(["node", resolveWorkspaceBin("@fixture/tool", root)!], { stdout: "pipe", stderr: "pipe" });
+  const child = Bun.spawn([registeredToolExecutableV1("node"), resolveWorkspaceBin("@fixture/tool", root)!], { stdout: "pipe", stderr: "pipe" });
   const result = await new Response(child.stdout).text();
   expect(await child.exited).toBe(0); expect(JSON.parse(result)).toEqual({ready:true});
 });
@@ -188,7 +189,7 @@ test("initial preparation waits for an exact complete serving target and release
   const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"target-start-")),module=join(directory,"target.mjs");
   await build({stdin:{contents:operation.getText(source),loader:"ts"},outfile:module,platform:"node",format:"esm"});
   const reference="import {EventEmitter} from 'node:events';import {waitForNxTargetStart} from "+JSON.stringify(pathToFileURL(module).href)+";const child=Object.assign(new EventEmitter(),{stdout:new EventEmitter()}),states=[];let ready=false;const prepared=waitForNxTargetStart(child,'application:dev').then(()=>ready=true);for(const chunk of "+JSON.stringify(chunks)+"){child.stdout.emit('data',Buffer.from(chunk));await new Promise(setImmediate);states.push(ready);}await prepared;console.log(JSON.stringify(states));";
-  const oracle=Bun.spawn(["node","--input-type=module","-e",reference],{stdout:"pipe",stderr:"pipe"});
+  const oracle=Bun.spawn([registeredToolExecutableV1("node"),"--input-type=module","-e",reference],{stdout:"pipe",stderr:"pipe"});
   const [output,errors,code]=await Promise.all([new Response(oracle.stdout).text(),new Response(oracle.stderr).text(),oracle.exited]);
   expect(code,errors).toBe(0);expect(JSON.parse(output)).toEqual(states);
 });
@@ -205,7 +206,7 @@ test("automatic watcher callbacks register only after initial preparation and ho
   const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"watcher-registration-")),module=join(directory,"watcher.mjs");
   await build({stdin:{contents:operation.getText(source),loader:"ts"},outfile:module,platform:"node",format:"esm"});
   const reference="import {startNxWatcherAfterPreparation} from "+JSON.stringify(pathToFileURL(module).href)+";import {ChildProcess} from 'node:child_process';let complete;const registered=new ChildProcess(),prepared=new Promise(accept=>complete=accept),events=['initial'];const watcher=startNxWatcherAfterPreparation(prepared,()=>true,()=>{events.push('watcher');return registered;});await new Promise(setImmediate);if(events.length!==1)throw Error('premature registration');complete();if(await watcher!==registered)throw Error('Watcher owner identity changed');console.log(JSON.stringify(events));";
-  const oracle=Bun.spawn(["node","--input-type=module","-e",reference],{stdout:"pipe",stderr:"pipe"});
+  const oracle=Bun.spawn([registeredToolExecutableV1("node"),"--input-type=module","-e",reference],{stdout:"pipe",stderr:"pipe"});
   const [output,errors,code]=await Promise.all([new Response(oracle.stdout).text(),new Response(oracle.stderr).text(),oracle.exited]);expect(code,errors).toBe(0);expect(JSON.parse(output)).toEqual(events);
 });
 
@@ -216,7 +217,7 @@ test("Nx producers and watchers inherit the pinned Bun runtime on every host", a
   const source=createSourceFile("bootstrap.ts",readFileSync(resolve(owner,"../📜️script.ts"),"utf8"),ScriptTarget.Latest),operation=source.statements.find(statement=>isFunctionDeclaration(statement)&&statement.name?.text==="pinnedNxRuntimeEnvironment")!;
   const directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"pinned-bun-env-")),module=join(directory,"environment.mjs");
   await build({stdin:{contents:'import {win32,posix} from "node:path";\n'+operation.getText(source),loader:"ts"},outfile:module,platform:"node",format:"esm"});
-  const oracle=Bun.spawn(["node","--input-type=module","-e",'import {pinnedNxRuntimeEnvironment} from '+JSON.stringify(pathToFileURL(module).href)+';console.log(JSON.stringify('+JSON.stringify(rows)+'.map(row=>pinnedNxRuntimeEnvironment(row.environment,row.bun,row.platform))));'],{stdout:"pipe",stderr:"pipe"});
+  const oracle=Bun.spawn([registeredToolExecutableV1("node"),"--input-type=module","-e",'import {pinnedNxRuntimeEnvironment} from '+JSON.stringify(pathToFileURL(module).href)+';console.log(JSON.stringify('+JSON.stringify(rows)+'.map(row=>pinnedNxRuntimeEnvironment(row.environment,row.bun,row.platform))));'],{stdout:"pipe",stderr:"pipe"});
   const [stdout,stderr,status]=await Promise.all([new Response(oracle.stdout).text(),new Response(oracle.stderr).text(),oracle.exited]);
   expect(status,stderr).toBe(0);
   const observed=rows.map((row:any)=>bootstrap.pinnedNxRuntimeEnvironment(row.environment,row.bun,row.platform));expect(observed).toEqual(rows.map((row:any)=>row.expected));expect(JSON.parse(stdout)).toEqual(observed);
@@ -267,6 +268,6 @@ test("loaded Nx toolkit root comes from the exact live bootstrap module",async()
  const ts=await import("typescript"),rows=JSON.parse(readFileSync(join(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8")).loadedToolkit,source=ts.createSourceFile("bootstrap.ts",readFileSync(resolve(owner,"../📜️script.ts"),"utf8"),ts.ScriptTarget.Latest,true),objects:any[]=[];
  const visit=(node:any)=>{if(ts.isObjectLiteralExpression(node)&&node.properties.some((entry:any)=>ts.isPropertyAssignment(entry)&&entry.name.getText(source)==="NODE_PATH"&&entry.initializer.getText(source)==="tooling.modulePath"))objects.push(node);ts.forEachChild(node,visit);};visit(source);expect(objects).toHaveLength(1);
  const fields=objects[0].properties.filter((entry:any)=>ts.isPropertyAssignment(entry)&&entry.name.getText(source)===rows.field);expect(fields).toHaveLength(1);expect(fields[0].initializer.getText(source)).toBe(rows.expression);
- const child=Bun.spawn(["node","--input-type=module","-e",'import{posix}from"node:path";console.log(JSON.stringify('+JSON.stringify(rows.cases)+'.map(row=>posix.dirname(row.modulePath))));'],{stdout:"pipe",stderr:"pipe"}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);expect(JSON.parse(stdout)).toEqual(rows.cases.map((row:any)=>row.root));
+ const child=Bun.spawn([registeredToolExecutableV1("node"),"--input-type=module","-e",'import{posix}from"node:path";console.log(JSON.stringify('+JSON.stringify(rows.cases)+'.map(row=>posix.dirname(row.modulePath))));'],{stdout:"pipe",stderr:"pipe"}),[stdout,stderr,status]=await Promise.all([new Response(child.stdout).text(),new Response(child.stderr).text(),child.exited]);expect(status,stderr).toBe(0);expect(JSON.parse(stdout)).toEqual(rows.cases.map((row:any)=>row.root));
  const validate=new Ajv({strict:true}).compile({type:"object",required:["modulePath","root"],additionalProperties:false,properties:{modulePath:{type:"string",pattern:"/node_modules$"},root:{type:"string",pattern:"/[a-f0-9]{64}$"}}});for(const row of rows.cases){expect(validate(row)).toBe(true);expect(row.root).not.toBe(row.modulePath);}
 });

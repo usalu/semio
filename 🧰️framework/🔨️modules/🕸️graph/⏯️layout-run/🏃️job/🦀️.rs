@@ -802,7 +802,10 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
     }
 
     fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
-        let step = self.publication.close_step(cx.retained_grant()).result.map_err(|error| OriginalTurnFailure::debit_original(error, cx))?;
+        let grant = cx.retained_grant();
+        let publication = &mut self.publication;
+        let Some((turn, _)) = cx.with_original_effect(grant, |_, effect| publication.close_step(effect))? else { return Ok(None); };
+        let step = turn.result.map_err(|error| OriginalTurnFailure::debit_original(error, cx))?;
         cx.consume_retained(step.progress())?;
         if self.publication.terminal_is_empty() {
             if let Some((_, bytes)) = self.staged.as_ref() {
@@ -914,7 +917,9 @@ impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
         }
         cx.consume_fuel(1);
         let progress = if !self.publication.terminal_is_empty() {
-            self.publication.close_step(grant).result.map_err(|error| OriginalTurnFailure::debit_original(error, cx))?.progress()
+            let publication = &mut self.publication;
+            let Some((turn, _)) = cx.with_original_effect(grant, |_, effect| publication.close_step(effect))? else { return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); };
+            turn.result.map_err(|error| OriginalTurnFailure::debit_original(error, cx))?.progress()
         } else if let Some((_, bytes)) = self.staged.take() {
             let released_bytes = bytes.capacity();
             drop(bytes);

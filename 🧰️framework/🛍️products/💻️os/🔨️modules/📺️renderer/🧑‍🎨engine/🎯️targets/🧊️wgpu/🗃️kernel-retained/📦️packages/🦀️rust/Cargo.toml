@@ -29,7 +29,7 @@ semio-ui-contract-validation = { path = "../../../../../../../../../../🔨️mo
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-renderer-wgpu-kernel-protocol = { path = "../../../📡️kernel-protocol/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
 semio-framework-async-slots = { workspace = true }

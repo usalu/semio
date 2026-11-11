@@ -195,9 +195,8 @@ impl<S, M> SnapshotBuilder<S, M> {
 
 impl<S, M> ArtifactBuilder for SnapshotBuilder<S, M>
 where
-    S: Default + PartialEq + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + protocol::StoreState,
-    M: protocol::StoreMutationFor<S>,
-    M::ReferenceDiff: protocol::ColdMutationDiff<S>,
+    S: Default + Clone + PartialEq + pack::snapshot::ArtifactDsl + ArtifactPack,
+    M: protocol::ColdMutation<S>,
 {
     type Snapshot = S;
     type Mutation = M;

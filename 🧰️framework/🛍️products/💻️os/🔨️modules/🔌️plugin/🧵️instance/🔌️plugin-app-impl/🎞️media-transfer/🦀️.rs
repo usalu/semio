@@ -54,23 +54,42 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         whole_document_media(port, self.artifact_schema().await.to_string(), &archive).await.map(Some).map_err(Into::into)
     }
 
-    pub(super) async fn consume_media(&mut self, port: &str, artifact: MediaArtifact, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaConsumption, MediaArtifactError> {
-        if port != NATURAL_FILE_PORT {
-            let schema_now = self.artifact_schema().await.to_string();
-            return match artifact.descriptor.wire {
-                MediaWireFormat::Document { schema } if schema == schema_now => whole_document_archive(&artifact.data).await.map(MediaConsumption::DocumentLoad),
-                MediaWireFormat::Document { schema } => Err(MediaArtifactError::SchemaMismatch { expected: schema_now, found: schema }),
-                MediaWireFormat::Binary { format_kind } => Err(MediaArtifactError::NoImporter(format_kind)),
-                MediaWireFormat::Intrinsic { .. } => Err(MediaArtifactError::Payload("intrinsic media import is driven by the original media import owner, never by a one-shot consume".into())),
+    pub(super) async fn consume_media(&mut self,port:&str,artifact:&mut Option<MediaArtifact>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<MediaConsumption>,semio_plugin_decl_app::MediaArtifactOperationFailure>{
+        let wire=artifact.as_ref().ok_or_else(||MediaArtifactError::Payload("media artifact was already consumed".into()))?.descriptor.wire.clone();
+        if port!=NATURAL_FILE_PORT{
+            let schema_now=self.artifact_schema().await.to_string();
+            return match wire{
+                MediaWireFormat::Document{schema} if schema==schema_now=>{let data=artifact.take().map(|consumed|consumed.data).unwrap_or_default();Ok(Some(MediaConsumption::DocumentLoad(whole_document_archive(&data).await?)))}
+                MediaWireFormat::Document{schema}=>Err(MediaArtifactError::SchemaMismatch{expected:schema_now,found:schema}.into()),
+                MediaWireFormat::Binary{format_kind}=>Err(MediaArtifactError::NoImporter(format_kind).into()),
+                MediaWireFormat::Intrinsic{..}=>{
+                    let mut media=None;
+                    if self.render_ctx().reserved_media_due(cx){
+                        let mut accept=|_|true;
+                        let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES,&mut accept);
+                        media=Some(artifact.as_ref().ok_or_else(||MediaArtifactError::Payload("media artifact was already consumed".into()))?.decode_intrinsic(&mut control)?);
+                    }
+                    Ok(self.import_artifact_media(port,&mut media,cx).await?)
+                }
             };
         }
-        let codec = A::natural_file_codec().await.ok_or_else(|| MediaArtifactError::NoImporter(port.to_string()))?;
-        let MediaWireFormat::Binary { format_kind } = artifact.descriptor.wire else {
-            return Err(MediaArtifactError::NoImporter(codec.format_kind.to_string()));
-        };
-        if format_kind != codec.format_kind {
-            return Err(MediaArtifactError::NoImporter(format_kind));
+        let codec=A::natural_file_codec().await.ok_or_else(||MediaArtifactError::NoImporter(port.to_string()))?;
+        let MediaWireFormat::Binary{format_kind}=wire else{return Err(MediaArtifactError::NoImporter(codec.format_kind.to_string()).into())};
+        if format_kind!=codec.format_kind{return Err(MediaArtifactError::NoImporter(format_kind).into())}
+        let mut media=None;
+        if self.render_ctx().reserved_media_due(cx){
+            let media_type=A::io().await.map_or(MediaType{class:MediaClass::Data,form:MediaForm::Value},|io|io.artifact_media_type);
+            let data=artifact.as_mut().map(|source|std::mem::take(&mut source.data)).unwrap_or_default();
+            media=Some(natural_file_input_media(codec,media_type,data));
         }
-        Err(MediaArtifactError::Payload("natural file import is driven by the original media import owner, never by a one-shot consume".into()))
+        let consumption=self.import_artifact_media(port,&mut media,cx).await?;
+        Ok(consumption)
+    }
+
+    /// 🧲️ Imports one decoded artifact media through the stepped reserved producer under the instance's mounted identity.
+    async fn import_artifact_media(&mut self,port:&str,media:&mut Option<Media>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<MediaConsumption>,semio_framework_job::OriginalTurnFailure>{
+        let instance_id=self.tools.live_runtime_instance_id.ok_or_else(||plugin_sdk_fault("media import requires a bound live app instance"))?;
+        let actor=self.stores.store.local_actor_id().0.clone();
+        Ok(self.dispatch_ctx().dispatch_import_media(port,media,&ActionMeta{expected_document_revision:None,actor,instance_id,view_state:None},cx).await?.map(|_|MediaConsumption::Applied))
     }
 }

@@ -32,12 +32,12 @@ impl Puzzle2dFillRunJob {
             }
             if self.pending_snapshot.is_some() {
                 let operation = Operation::new(OperationId(self.pending_search_serial), RevisionId(0), Generation(0), self.seed);
-                if !BoardFillJob::admit_original(&mut self.pending_snapshot, u32::MAX, operation, &mut self.search, context)? { return Ok(JobTurn::Yield); }
+                if !BoardFillJob::admit_original(&mut self.construction, &mut self.pending_snapshot, u32::MAX, operation, &mut self.search, context)? { return Ok(JobTurn::Yield); }
                 self.stage = FillRunStage::Search;
                 continue;
             }
             if let Some(capture) = self.capture.as_mut() {
-                if capture.ingress.is_none() && !BoardFillSnapshotIngress::admit_original(capture.suggestion_offset, &PUZZLE_2D_BOARD_NAMING, &mut capture.ingress, context)? { return Ok(JobTurn::Yield); }
+                if capture.ingress.is_none() && !BoardFillSnapshotIngress::admit_original(&mut capture.construction, capture.suggestion_offset, &PUZZLE_2D_BOARD_NAMING, &mut capture.ingress, context)? { return Ok(JobTurn::Yield); }
                 match capture.advance(self.document.as_ref().expect("original fill snapshot remains until close").value(), &self.kinds, FILL_RUN_CAPTURE_UNITS) {
                     Ok(None) => {}
                     Ok(Some(snapshot)) => {
@@ -149,6 +149,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
             if InteractiveJob::terminal_is_empty(job) { *slot = None; }
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
         }
+        if !self.construction.terminal_is_empty() { return self.construction.retire_step(cx); }
         if !self.owners_staged {
             self.owners_staged = true;
             let identity = self.writer.identity();
@@ -180,7 +181,7 @@ impl InteractiveJob for Puzzle2dFillRunJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.pending_snapshot.is_none() && self.document.is_none() && self.outbox.terminal_is_empty() && self.capture.is_none() && self.search.is_none() && self.closing_search.is_none() && self.retiring_placement.is_none() && self.owners_staged && self.close_owners.is_empty()
+        self.closing && self.pending_snapshot.is_none() && self.document.is_none() && self.outbox.terminal_is_empty() && self.capture.is_none() && self.search.is_none() && self.closing_search.is_none() && self.construction.terminal_is_empty() && self.retiring_placement.is_none() && self.owners_staged && self.close_owners.is_empty()
     }
 }
 
@@ -200,6 +201,7 @@ impl Puzzle2dFillRunJob {
         if let Some(job) = self.closing_search.as_ref().or(self.search.as_ref()) {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: job.next_close_copy_byte_demand()?, capacity_bytes: job.next_close_capacity_byte_demand(0)?, release_bytes: job.next_close_release_byte_demand()?, depth: job.next_close_depth_demand()?.saturating_add(1) });
         }
+        if !self.construction.terminal_is_empty() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<semio_framework_job::OriginalConstructionAdmission>(), depth: 1, ..Default::default() }); }
         if self.owners_staged {
             return self.close_owners.demands(0);
         }

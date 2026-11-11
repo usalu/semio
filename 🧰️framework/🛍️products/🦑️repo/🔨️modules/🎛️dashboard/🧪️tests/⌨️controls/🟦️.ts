@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import ts from "typescript";
 import { Database } from "bun:sqlite";
 import "../../📂️workspace/🖥️view/🧪️tests/🟦️.ts";
@@ -118,7 +119,7 @@ test("an independent keymap builder resolves every customization vector like the
 
 test("Node readline independently decodes terminal bytes into the keymap's canonical spellings", async () => {
   const source = "const {PassThrough}=require('node:stream'),{emitKeypressEvents}=require('node:readline'),rows=JSON.parse(process.argv[1]),out=[];(async()=>{for(const row of rows){const input=new PassThrough(),events=[];emitKeypressEvents(input);input.on('keypress',(_,key)=>events.push({name:key.name,sequence:key.sequence,ctrl:Boolean(key.ctrl),meta:Boolean(key.meta),shift:Boolean(key.shift)}));input.write(Buffer.from(row.bytes));await new Promise((resolve)=>setImmediate(resolve));input.end();out.push(events)}console.log(JSON.stringify(out))})();";
-  const child = Bun.spawn(["node", "-e", source, JSON.stringify(vectors.terminal)], { stdout: "pipe", stderr: "pipe" });
+  const child = Bun.spawn([registeredToolExecutableV1("node"), "-e", source, JSON.stringify(vectors.terminal)], { stdout: "pipe", stderr: "pipe" });
   const output = await new Response(child.stdout).text();
   expect(await child.exited, await new Response(child.stderr).text()).toBe(0);
   const decoded: Pressed[][] = JSON.parse(output);

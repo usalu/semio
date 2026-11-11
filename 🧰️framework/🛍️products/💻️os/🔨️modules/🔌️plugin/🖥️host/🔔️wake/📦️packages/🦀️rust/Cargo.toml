@@ -26,8 +26,8 @@ doctest = false
 semio-plugin-host-wake-policy = { path = "../../🎟️root/📃️policy/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-paged-list = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1-host-native): `GuestRuntime`'s `RuntimeActorId`/
 # `PackageId`/`PackageHash` vocabulary (design-runtime.md §2) — packet A1's pure, domain-neutral
 # actor crate, already a `[workspace.dependencies]` entry.

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runArtifactRustPackageMain } from "@semio-tech/framework/process/cargo-test";
+import { runArtifactRustPackageMain } from "@semio-tech/process/cargo-test";
 import { resolve as scriptDirectoryResolve } from "node:path";
 
 const SCRIPT_DIR = scriptDirectoryResolve(import.meta.dir, "../../📦️packages/🦀️rust");

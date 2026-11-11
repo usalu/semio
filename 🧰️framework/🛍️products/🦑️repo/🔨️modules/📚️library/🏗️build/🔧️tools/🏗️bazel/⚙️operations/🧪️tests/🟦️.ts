@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🧪️ Bazel operations: neutral parity of affected, dry-run plans, exec and cache status|clear against Nx's own code and Bazel's own binary. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
@@ -61,7 +62,7 @@ const {filterAffected}=require(process.env.NX_AFFECTED),{WholeFileChange}=requir
  }
  process.stdout.write(JSON.stringify(result));
 })().catch(error=>{process.stderr.write(String(error&&error.stack||error));process.exit(1);});`;
-  const run=spawnSync("node",["-e",source],{cwd:directory,encoding:"utf8",maxBuffer:64*1024*1024,env:{...process.env,NX_AFFECTED:installed.resolve("nx/src/project-graph/affected/affected-project-graph"),NX_FILES:installed.resolve("nx/src/project-graph/file-utils"),NX_PLAN:installed.resolve("nx/src/tasks-runner/create-task-graph"),NX_CASES:JSON.stringify(fixture.cases),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
+  const run=spawnSync(registeredToolExecutableV1("node"),["-e",source],{cwd:directory,encoding:"utf8",maxBuffer:64*1024*1024,env:{...process.env,NX_AFFECTED:installed.resolve("nx/src/project-graph/affected/affected-project-graph"),NX_FILES:installed.resolve("nx/src/project-graph/file-utils"),NX_PLAN:installed.resolve("nx/src/tasks-runner/create-task-graph"),NX_CASES:JSON.stringify(fixture.cases),NX_WORKSPACE_ROOT_PATH:directory,NX_DAEMON:"false"} as NodeJS.ProcessEnv});
   if(run.status!==0)throw Error("nx oracle: "+run.stderr);
   return JSON.parse(run.stdout);
  }finally{rmSync(directory,{recursive:true,force:true});}

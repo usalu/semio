@@ -20,13 +20,13 @@ impl BoardFillSnapshotIngress {
     pub fn admission_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let mut demand = BoardFillSnapshot::descriptor_demands(); demand.copy_bytes += size_of::<Self>(); Ok(demand)
     }
-    pub fn admit_original(suggestion_offset: f64, naming: &'static BoardNaming, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    pub fn admit_original(admission: &mut semio_framework_job::OriginalConstructionAdmission, suggestion_offset: f64, naming: &'static BoardNaming, output: &mut Option<Self>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_action_bus::{admit_original_tool_construction_settled, ToolJobAdmissionDemand};
         use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
         let demand = Self::admission_demands()?;
         let mut allocation_failed = false;
         let mut constructed_progress = RetainedCloneProgress::default();
-        let admitted = admit_original_tool_construction_settled(cx, &mut Default::default(), output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
+        let admitted = admit_original_tool_construction_settled(cx, admission, output, ToolJobAdmissionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |scope| {
             scope.admit_owner(demand)?;
             let mut candidate = Self::new(suggestion_offset, naming);
             let snapshot = candidate.snapshot.as_mut().expect("original snapshot construction carrier");

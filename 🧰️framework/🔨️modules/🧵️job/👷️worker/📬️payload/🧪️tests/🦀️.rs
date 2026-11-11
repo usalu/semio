@@ -4,8 +4,6 @@ use semio_framework_job_worker::*;
 use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 fn now()->Option<u64>{Some(1)}
 struct Job{closing:bool}

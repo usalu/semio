@@ -117,11 +117,11 @@ impl VersionControlProvider for GitVersionControlProvider {
     }
 
     fn staged_files(&self, repo_root: &str) -> ProviderResult<Vec<String>> {
-        let outcome = self.git(&["diff", "--cached", "--name-only"], repo_root);
+        let outcome = self.git(&["diff", "--cached", "--name-only", "-z"], repo_root);
         if outcome.status != 0 {
-            return Err(ProviderError::new(format!("git diff --cached --name-only failed: {}", outcome.stderr.trim())));
+            return Err(ProviderError::new(format!("git diff --cached --name-only -z failed: {}", outcome.stderr.trim())));
         }
-        Ok(outcome.stdout.replace("\r\n", "\n").split('\n').filter(|line| !line.is_empty()).map(str::to_string).collect())
+        Ok(outcome.stdout.split('\0').filter(|path| !path.is_empty()).map(str::to_string).collect())
     }
 
     fn stage_all(&self, repo_root: &str) -> ProviderResult<()> {

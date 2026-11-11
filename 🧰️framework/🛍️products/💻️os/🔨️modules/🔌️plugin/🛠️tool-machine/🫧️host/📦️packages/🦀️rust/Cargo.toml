@@ -20,6 +20,7 @@ semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/�
 semio-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-plugin-tool-machine = { path = "../../../../🛠️tool-machine/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-plugin-job-receiving = { path = "../../../../👷️job/🛬️receiving/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-tool-machine = { path = "../../../../../../../../🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }

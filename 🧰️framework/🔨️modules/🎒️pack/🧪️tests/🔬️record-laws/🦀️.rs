@@ -7,8 +7,6 @@ use semio_framework_dsl_record::{FieldSpec, FieldValue, RecordLayout, RecordSpec
 use semio_framework_replication_codec::PackLimits;
 
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;
-#[global_allocator]
-static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
 
 #[path = "../../🌱️value/🧪️tests/📦️operation-pages/🦀️.rs"]
 mod operation_page_tests;

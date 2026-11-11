@@ -23,10 +23,10 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
-semio-ui-contract = { path = "../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-ui-contract" }
+semio-ui-contract = { path = "../../../../🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned.workspace = true
-semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
 serde = { workspace = true }
 
 [dev-dependencies]

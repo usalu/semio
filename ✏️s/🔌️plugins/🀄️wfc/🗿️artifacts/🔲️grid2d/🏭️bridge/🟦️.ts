@@ -1,9 +1,9 @@
-import { createIssuedResourceControlV1 } from "@semio-tech/framework/process/routing";
+import { createIssuedResourceControlV1 } from "@semio-tech/process/routing";
 import {join} from "node:path";
 import { runRepositoryMutationBridgeScriptV1 } from "@semio-tech/framework/test/mutation/inventory/execution";
-import { runAdmittedCargoCommandV1 } from "@semio-tech/framework/process/cargo-test";
-import { findWorkspaceRoot } from "@semio-tech/framework/process/routing";
-import { receiveScriptProcessInvocation } from "@semio-tech/framework/process/routing";
+import { runAdmittedCargoCommandV1 } from "@semio-tech/process/cargo-test";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { receiveScriptProcessInvocation } from "@semio-tech/process/routing";
 import collector from "./🔣️.json" with {type:"json"};
 
 const packageRoot=join(import.meta.dir,"📦️packages/🦀️rust"),binary="semio-wfc-grid2d-mutation-bridge";

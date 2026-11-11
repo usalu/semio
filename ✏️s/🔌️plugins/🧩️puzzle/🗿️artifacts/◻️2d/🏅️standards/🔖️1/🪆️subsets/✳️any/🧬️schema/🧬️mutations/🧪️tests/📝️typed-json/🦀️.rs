@@ -6,8 +6,6 @@ use protocol::ColdMutation;
 use semio_framework_test_fixtures::fixture_text;
 use serde_json::{json,Value};
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[path = "🔬️oracle/🦀️.rs"]
 mod json_oracle;

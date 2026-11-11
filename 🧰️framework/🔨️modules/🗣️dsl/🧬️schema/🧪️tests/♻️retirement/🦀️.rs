@@ -4,8 +4,6 @@ use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{DslValue, NativeEncodeControl, retained_clone::{RetainedCloneGrant, RetainedCloneStep}, retirement::{RetireOwned, controlled::ControlledRetirement}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/♻️retirement/🔣️.json")).unwrap()}
 fn spec()->RecordSpec{RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(0,"text",Shape::Text)])}

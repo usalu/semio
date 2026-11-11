@@ -23,7 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-pack = { path = "../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { workspace = true }
 semio-framework-artifact-space-collection = { workspace = true }
@@ -36,4 +36,4 @@ semio-framework-deflate = { path = "../../../../../../🔨️modules/🗜️defl
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["mutation-testing", "protocol-laws"] }
+semio-os-kernel = { path = "../../../../📦️packages/🦀️rust", features = ["mutation-testing", "protocol-laws"] }

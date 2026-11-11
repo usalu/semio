@@ -94,7 +94,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
         let mut carried = Some(page);
         let mut turns = 0;
         loop {
-            let result = semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut None, &mut carried, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
+            let result = semio_plugin_reactor_turn::poll_kernel(runtime, &mut None, &mut carried, None, command_page_authority_budget(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns),
@@ -127,7 +127,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
         for _ in 0..32 {
             reactor_native_lifecycle_poll(&runtime, Vec::new()).await;
         }
-        assert_eq!(semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "a settled reactor holds no ingress owner");
+        assert_eq!(semio_plugin_reactor_turn::retained_command_ingress_occupancy(), 0, "a settled reactor holds no ingress owner");
         let mut warmed = 0;
         let mut settled = 0;
         let mut faulted = 0;
@@ -141,7 +141,7 @@ pub fn assert_maintenance_reports_block<A: ArtifactApp, M: ReferenceSpaceMember 
             if !completed {
                 faulted += 1;
             }
-            let occupancy = semio_framework_plugin_reactor_turn::retained_command_ingress_occupancy();
+            let occupancy = semio_plugin_reactor_turn::retained_command_ingress_occupancy();
             peak_occupancy = peak_occupancy.max(occupancy);
             assert_eq!(occupancy, 0, "command {index} left an owner in the retained ingress authority — every later command queues behind it");
             if warmed == 0 && index + 1 == INGRESS_COMMANDS / 4 {

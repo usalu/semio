@@ -1,7 +1,7 @@
 //! 🔗️ Immutable original view roots make routing aliases bounded independently of the view body.
 use crate::ActionMeta;
 use semio_framework::ViewModel;
-use semio_framework_job::{StepContext,OriginalTurnFailure,close_original_effect_step,close_original_retained_effect_step};
+use semio_framework_job::{StepContext,OriginalConstructionAdmission,OriginalConstructionDemand,OriginalTurnFailure,close_original_effect_step,close_original_retained_effect_step};
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementFailure,RetirementDemand,ValueError,ValueRefusalKind,RetainedAllocationEffect,retained_clone::RetainedCloneClose,retirement::RetireOwned};
 use std::{sync::Arc,mem::size_of};
 #[path="routing.rs"]
@@ -32,18 +32,19 @@ pub(crate) fn begin_close<T:RetireOwned>(cx:&mut StepContext<'_>,demand:Retireme
 impl ActionMeta{
  /// 🌱️ The actual decoded view moves into its original native Arc receiving turn without cloning its body.
  pub fn admit_view_root(original:&mut Option<ViewModel>,output:&mut Option<Arc<ViewModel>>,frame:&mut semio_framework_value::native_decoding::NativeSharedAdmission<ViewModel>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if !frame.can_advance(){return Err(ValueError::invariant("original view allocation callback requires resolution").into())}
+  if !frame.can_advance(){return Err(semio_framework_value::ValueError::invariant("original view allocation callback requires resolution").into())}
   if output.is_some()||original.is_none(){return Ok(true)}
-  let mut scope=None;let mut captured=None;
-  cx.with_native_receiving(&mut scope,|native,_|{captured=Some(native.receive_arc(original,output,frame));Ok(())})?;
-  captured.ok_or_else(||ValueError::invariant("native receiving did not run the view receipt"))?.result.map_err(|primary|OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(primary)))?;
+  let mut scope:Option<semio_framework_job::OriginalNativeReceivingOutcome>=None;let mut stepped=None;
+  if !cx.with_native_receiving(&mut scope,|native,_|{stepped=Some(native.receive_arc(original,output,frame));Ok(())})?{return Ok(output.is_some())}
+  let invalid=|message:&'static str|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message);
+  let scope=scope.ok_or_else(||invalid("original view receiving scope vanished"))?;
+  if scope.source_refusal.is_some()||scope.call.is_err(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original view receiving scope refused").with_retained_progress(scope.retained_progress()).into())}
+  let turn=stepped.ok_or_else(||invalid("original view receiving step vanished"))?;
+  semio_framework_job::receive_original_receiving_work(cx,semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(semio_framework_value::RetainedCloneStep::Progress).map_err(semio_framework_job::OriginalTurnPrimary::Receiving)})?;
   Ok(output.is_some())
  }
  /// 📏️ An actor and immutable view alias own only their concrete typed metadata headers.
  pub fn routing_alias_demands()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<Self>(),depth:1,..Default::default()}}
- /// 🪪️ Routing retains the actual actor, instance and admitted view under this original effect.
- pub fn admit_routing_alias(&self,output:&mut Option<Self>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if output.is_some(){return Ok(true)}let d=Self::routing_alias_demands();
-  Ok(funded(cx,d,|_|{let mut meta=self.clone();meta.expected_document_revision=None;Ok((meta,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?.map(|meta|*output=Some(meta)).is_some())
- }
+ /// 🪪️ Routing retains the actual actor, instance and admitted view under this original construction grant.
+ pub fn admit_routing_alias(&self,admission:&mut OriginalConstructionAdmission,output:&mut Option<Self>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let d=Self::routing_alias_demands();semio_framework_job::admit_original_construction_settled(cx,admission,output,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:0,release_bytes:0,depth:d.depth},1,|_,_|{let mut meta=self.clone();meta.expected_document_revision=None;semio_framework_value::RetainedWorkOutcome{result:Ok((meta,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}})}
 }

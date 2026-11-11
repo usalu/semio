@@ -258,4 +258,4 @@ pub mod io;
 #[path="🌱️initialization/🦀️.rs"]
 pub mod original_genesis;
 
-#[cfg(test)]#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+#[cfg(test)]

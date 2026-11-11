@@ -1,5 +1,5 @@
 /** 🧬️ `Din16798Artifact` wire twin: the artifact document across its state lanes, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { type NormJson, normWireArray, normWireJson, normWireNumber, normWireObject, normWireOptional, type NormWireReader, normWireString } from "@semio-tech/norm-js/registry/contract";
 

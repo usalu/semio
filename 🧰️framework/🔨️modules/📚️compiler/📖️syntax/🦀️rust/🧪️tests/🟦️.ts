@@ -12,7 +12,7 @@ const fixture = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixt
 async function api() { const module = await import(resolve(owner, "🟦️.ts")); expect(typeof module.inspectRustCompileReferences).toBe("function"); return module; }
 
 test("language-neutral syntax examples have unique identifiers", () => {
-  for (const rows of [fixture.cases, fixture.unsupported, fixture.oracle]) expect(new Set(rows.map((row: { id: string }) => row.id)).size).toBe(rows.length);
+  for (const rows of [fixture.cases, fixture.unsupported, fixture.oracle, fixture.delimiters]) expect(new Set(rows.map((row: { id: string }) => row.id)).size).toBe(rows.length);
 });
 
 test("canonical neutral owner preserves all original syntax outputs and fail-closed refusals", async () => {
@@ -46,6 +46,24 @@ test("literal include syntax agrees with independent installed tree-sitter Rust 
         });
         expect(independent).toEqual(row.references);
         expect(module.inspectRustCompileReferences(row.source)).toEqual(independent);
+      } finally { tree.delete(); }
+    }
+  } finally { parser.delete(); }
+});
+
+test("delimiter faults agree with the independent tree-sitter Rust grammar and name the exact place", async () => {
+  const module = await api();
+  const validate = new Ajv({ strict: true }).addSchema(contract).compile({ $ref: contract.$id + "#/$defs/delimiterFault" });
+  await Parser.init({ locateFile: () => resolve(dirname(fileURLToPath(import.meta.resolve("web-tree-sitter"))), "tree-sitter.wasm") });
+  const parser = new Parser();
+  parser.setLanguage(await Parser.Language.load(resolve(dirname(fileURLToPath(import.meta.resolve("tree-sitter-wasms/package.json"))), "out/tree-sitter-rust.wasm")));
+  try {
+    for (const row of fixture.delimiters) {
+      const actual = module.rustDelimiterFaultV1(row.source), tree = parser.parse(row.source);
+      try {
+        expect(actual, row.id).toEqual(row.fault);
+        if (actual) expect(validate(actual), row.id).toBe(true);
+        expect(tree.rootNode.hasError(), row.id).toBe(actual !== null);
       } finally { tree.delete(); }
     }
   } finally { parser.delete(); }

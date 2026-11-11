@@ -8,8 +8,6 @@ use semio_framework_value::retirement::RetireOwned;
 use semio_framework_actor::retained_context::{OriginalActorContextSlot,OriginalActorCallError};
 use semio_framework_actor::RetainedTurnInput;
 use semio_framework_job::{OriginalSourceBinding,StepBudget,receive_original_retained_work};
-#[global_allocator]
-static ORIGINAL_VIEW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}
 struct Rig{caller:OriginalJobFixtureCaller,decoder:OriginalJobDecodeOwner,stock:RetainedCloneGrant,calls:usize,born:usize,released:usize,seed:usize}
 impl Rig{
@@ -70,9 +68,9 @@ fn original_surface_read_pins_actual_registry_without_view_clone_and_restores_al
    let view:ViewModel=serde_json::from_value(wire.clone()).unwrap();let registry=match surface{Some(surface)=>SurfaceContexts::original_surface_read_fixture(surface,&view),None=>SurfaceContexts::original_read_fixture(&view)};(registry,view)
   });assert!(!seed.overflowed);
   let original_pointers=pointers(selected(&registry,surface).unwrap());let original_address=selected(&registry,surface).unwrap()as*const ViewModel as usize;
-  let mut rig=Rig::new(&policy,seed.requested_bytes.checked_sub(seed.released_bytes).unwrap());let mut read=None;
-  let denied=RetainedCloneGrant{maximum_items:0,..rig.stock};assert!(!rig.event(denied,|cx|OriginalSurfaceViewRead::admit(cx,&mut read)));assert!(read.is_none());
-  let before=rig.born;rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut read));let mut turns=0;
+  let mut rig=Rig::new(&policy,seed.requested_bytes.checked_sub(seed.released_bytes).unwrap());let mut read=None;let mut read_admission=Default::default();
+  let denied=RetainedCloneGrant{maximum_items:0,..rig.stock};assert!(!rig.event(denied,|cx|OriginalSurfaceViewRead::admit(cx,&mut read_admission,&mut read)));assert!(read.is_none());
+  let before=rig.born;rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut read_admission,&mut read));let mut turns=0;
   loop{
    if cut==Some(turns){rig.caller.cancel().cancel_now();break}
    let ready=rig.turn(|cx|match surface{Some(surface)=>read.as_mut().unwrap().advance_surface(&mut registry,surface,cx),None=>read.as_mut().unwrap().advance(&mut registry,cx)});turns+=1;if ready{break}assert!(turns<1000)
@@ -80,7 +78,7 @@ fn original_surface_read_pins_actual_registry_without_view_clone_and_restores_al
   if cut.is_none(){
    let admission_born=rig.born-before;if let Some(expected)=birth{assert_eq!(admission_born,expected,"pin birth is independent of original view text size")}else{birth=Some(admission_born)}
    for _ in 0..3{rig.turn(|cx|{let source=read.as_ref().unwrap().borrow(&registry,cx)?.unwrap();let actual=source.get();assert_eq!(pointers(actual),original_pointers);assert_eq!(actual as*const ViewModel,selected(&registry,surface).unwrap()as*const ViewModel);Ok(())});}
-   let mut busy=None;rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut busy));assert!(!rig.turn(|cx|busy.as_mut().unwrap().advance(&mut registry,cx)));release_read(&mut busy,&mut registry,&mut rig);
+   let mut busy=None;let mut busy_admission=Default::default();rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut busy_admission,&mut busy));assert!(!rig.turn(|cx|busy.as_mut().unwrap().advance(&mut registry,cx)));release_read(&mut busy,&mut registry,&mut rig);
    assert_eq!(pointers(selected(&registry,surface).unwrap()),original_pointers);
    let copied_surface=surface.map(str::to_owned);
    if let Some(copied)=copied_surface.as_deref(){let failure=rig.turn(|cx|Ok(read.as_mut().unwrap().advance_surface(&mut registry,copied,cx).err().expect("foreign selector allocation")));rig.close(failure)}
@@ -97,16 +95,16 @@ fn original_surface_read_pins_actual_registry_without_view_clone_and_restores_al
 fn original_surface_read_pending_is_not_absence_and_denials_leave_the_owner_unchanged(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️command/📥️custody/🛂️manifest/metadata.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
  let((mut registry,original),seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();(SurfaceContexts::original_read_fixture(&view),view)});assert!(!seed.overflowed);
- let mut rig=Rig::new(&policy,seed.requested_bytes-seed.released_bytes);let mut read=None;
+ let mut rig=Rig::new(&policy,seed.requested_bytes-seed.released_bytes);let mut read=None;let mut read_admission=Default::default();
  let d=OriginalSurfaceViewRead::birth_demand();
- for axis in 0..4{let mut denied=rig.stock;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes=d.copy_bytes-1,2=>denied.maximum_capacity_bytes=d.capacity_bytes-1,_=>denied.maximum_depth=d.depth-1}assert!(!rig.event(denied,|cx|OriginalSurfaceViewRead::admit(cx,&mut read)));assert!(read.is_none());}
- rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut read));
+ for axis in 0..4{let mut denied=rig.stock;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes=d.copy_bytes-1,2=>denied.maximum_capacity_bytes=d.capacity_bytes-1,_=>denied.maximum_depth=d.depth-1}assert!(!rig.event(denied,|cx|OriginalSurfaceViewRead::admit(cx,&mut read_admission,&mut read)));assert!(read.is_none());}
+ rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut read_admission,&mut read));
  let failure=rig.turn(|cx|Ok(read.as_ref().unwrap().borrow(&registry,cx).err().expect("pending original is not business absence")));rig.close(failure);
  for _ in 0..100{if read.as_ref().unwrap().ready(){break}let denied=RetainedCloneGrant{maximum_items:0,..rig.stock};assert!(!rig.event(denied,|cx|read.as_mut().unwrap().advance(&mut registry,cx)));rig.turn(|cx|read.as_mut().unwrap().advance(&mut registry,cx));}
  assert!(read.as_ref().unwrap().ready());
  while !read.as_ref().unwrap().terminal_is_empty(){let d=read.as_ref().unwrap().close_demands(&registry).unwrap();for axis in 0..5{let mut denied=rig.stock;match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes=d.copy_bytes-1,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes=d.capacity_bytes-1,3 if d.release_bytes>0=>denied.maximum_release_bytes=d.release_bytes-1,4 if d.depth>0=>denied.maximum_depth=d.depth-1,_=>continue}assert!(!rig.event(denied,|cx|read.as_mut().unwrap().close_step(&mut registry,cx)));assert_eq!(read.as_ref().unwrap().close_demands(&registry).unwrap(),d);}rig.turn(|cx|read.as_mut().unwrap().close_step(&mut registry,cx));}
  release_read(&mut read,&mut registry,&mut rig);rig.registry(&mut registry);rig.close(original);rig.finish();
- let mut registry=SurfaceContexts::default();let mut rig=Rig::new(&policy,0);let mut read=None;rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut read));while !read.as_ref().unwrap().ready(){rig.turn(|cx|read.as_mut().unwrap().advance(&mut registry,cx));}
+ let mut registry=SurfaceContexts::default();let mut rig=Rig::new(&policy,0);let mut read=None;let mut read_admission=Default::default();rig.turn(|cx|OriginalSurfaceViewRead::admit(cx,&mut read_admission,&mut read));while !read.as_ref().unwrap().ready(){rig.turn(|cx|read.as_mut().unwrap().advance(&mut registry,cx));}
  assert!(rig.turn(|cx|Ok(read.as_ref().unwrap().borrow(&registry,cx)?.is_none())));release_read(&mut read,&mut registry,&mut rig);rig.registry(&mut registry);rig.finish();
 }
 #[test]
@@ -114,7 +112,7 @@ fn original_surface_clone_capture_still_materializes_its_typed_output_and_restor
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️command/📥️custody/🛂️manifest/metadata.json")).unwrap();let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
  for cut in [None,Some(0),Some(1),Some(7),Some(32)]{
   let((mut registry,original),seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();(SurfaceContexts::original_read_fixture(&view),view)});assert!(!seed.overflowed);
-  let source_pointers=pointers(registry.view().unwrap());let mut rig=Rig::new(&policy,seed.requested_bytes-seed.released_bytes);let mut capture=None;rig.turn(|cx|OriginalSurfaceViewCapture::admit(cx,&mut capture));let mut turns=0;let mut output=None;
+  let source_pointers=pointers(registry.view().unwrap());let mut rig=Rig::new(&policy,seed.requested_bytes-seed.released_bytes);let mut capture=None;let mut capture_admission=Default::default();rig.turn(|cx|OriginalSurfaceViewCapture::admit(cx,&mut capture_admission,&mut capture));let mut turns=0;let mut output=None;
   loop{if cut==Some(turns){rig.caller.cancel().cancel_now();break}let ready=rig.turn(|cx|{for _ in 0..512{if cx.should_yield(){return Ok(false)}let before=cx.retained_progress();if capture.as_mut().unwrap().advance(&mut registry,cx)?{return Ok(true)}if before==cx.retained_progress(){break}}Ok(false)});turns+=1;if ready{rig.turn(|cx|capture.as_mut().unwrap().take_into(&mut output,cx));break}assert!(turns<1000)}
   let matched=output.as_ref().is_none_or(|output|serde_json::to_value(output).unwrap()==serde_json::to_value(&original).unwrap());
   while !capture.as_ref().unwrap().terminal_is_empty(){rig.turn(|cx|{for _ in 0..512{if capture.as_ref().unwrap().terminal_is_empty()||cx.retirement_should_yield(){break}let before=cx.retained_progress();capture.as_mut().unwrap().close_step(&mut registry,cx)?;if before==cx.retained_progress(){break}}Ok(())});}
@@ -196,8 +194,8 @@ fn original_surface_read_resumes_across_genuine_actor_epochs_and_refuses_another
   assert!(!seed.overflowed);
   let source_pointers=pointers(selected(&registry,selected_surface).unwrap());let source_address=selected(&registry,selected_surface).unwrap()as*const ViewModel as usize;
   let mut rig=Rig::new(&policy,seed.requested_bytes-seed.released_bytes);
-  let mut actor=ActorEpoch::new();actor.admit(&mut rig);let mut read=None;
-  actor.turn(&mut rig,|cx|OriginalSurfaceViewRead::admit(cx,&mut read));
+  let mut actor=ActorEpoch::new();actor.admit(&mut rig);let mut read=None;let mut read_admission=Default::default();
+  actor.turn(&mut rig,|cx|OriginalSurfaceViewRead::admit(cx,&mut read_admission,&mut read));
   for _ in 0..4096{if read.as_ref().unwrap().ready(){break}actor.turn(&mut rig,|cx|match selected_surface{Some(surface)=>read.as_mut().unwrap().advance_surface(&mut registry,surface,cx),None=>read.as_mut().unwrap().advance(&mut registry,cx)});}
   let job_aliases_while_pinned=actor.slot.original_loans_are_returned();
   let mut first=None;let mut last_epoch=0;let mut matched=true;let mut borrowed=0;
@@ -207,8 +205,8 @@ fn original_surface_read_resumes_across_genuine_actor_epochs_and_refuses_another
    if let Some(expected)=first{matched&=current==expected}else{first=Some(current)}
    last_epoch=actor.epoch;borrowed+=1;
   }
-  let first=first.unwrap();let mut foreign=ActorEpoch::new();foreign.admit(&mut rig);let mut foreign_read=None;
-  foreign.turn(&mut rig,|cx|OriginalSurfaceViewRead::admit(cx,&mut foreign_read));
+  let first=first.unwrap();let mut foreign=ActorEpoch::new();foreign.admit(&mut rig);let mut foreign_read=None;let mut foreign_read_admission=Default::default();
+  foreign.turn(&mut rig,|cx|OriginalSurfaceViewRead::admit(cx,&mut foreign_read_admission,&mut foreign_read));
   let(failure,other)=foreign.turn(&mut rig,|cx|Ok((read.as_ref().unwrap().borrow(&registry,cx).err(),(OriginalSourceBinding::borrow(cx),cx.native_receiving_identity(),cx.original_source_parent()?.source_identity()?,cx.original_clock_binding()))));
   let refused=failure.is_some();
   matched&=other.0.operation()==first.0.operation()&&other.0.generation()==first.0.generation()&&other.3==first.5&&other.0!=first.0&&other.2!=first.2&&other.1.is_some()&&other.1!=first.1;
@@ -223,4 +221,18 @@ fn original_surface_read_resumes_across_genuine_actor_epochs_and_refuses_another
   assert!(matched,"same genuine caller, decoder, clock and original view survive every issued epoch");
   assert_eq!(borrowed,case["expected"]["borrowed"].as_u64().unwrap());assert_eq!(usize::from(refused),case["expected"]["refused"].as_u64().unwrap()as usize);assert_eq!(restored,case["expected"]["restored"].as_bool().unwrap());
  }
+}
+#[test]
+fn removed_surface_view_retires_within_the_next_funded_turns(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️command/📥️custody/🛂️manifest/metadata.json")).unwrap();
+ let policy:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap();
+ let((mut registry,original),seed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
+  let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();let mut registry=SurfaceContexts::default();
+  registry.insert("removed-surface".into(),"body".into(),view.clone()).unwrap();registry.remove("removed-surface");(registry,view)
+ });assert!(!seed.overflowed);
+ assert!(registry.borrow("removed-surface").is_none());assert!(!registry.original_terminal_is_empty());
+ let mut rig=Rig::new(&policy,seed.requested_bytes.checked_sub(seed.released_bytes).unwrap());
+ while !rig.turn(|cx|registry.retire_displaced_step(cx)){assert!(rig.calls<200,"displaced view retires within the funded turns")}
+ assert!(registry.original_terminal_is_empty());
+ rig.registry(&mut registry);rig.close(original);rig.finish();
 }

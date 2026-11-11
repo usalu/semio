@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🗿️ Actual third-party Nx execution proves semantic verification invalidation and reuse. */
 import { expect, test } from "bun:test";
 import { mkdirSync, readFileSync, writeFileSync, symlinkSync } from "node:fs";
@@ -40,7 +41,7 @@ test("artifact verification reruns for semantic provider, fixture, DDL and share
     const run = async (name: string): Promise<string> => {
       const env: Record<string, string | undefined> = { ...process.env, NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false", NX_TUI: "false", NX_NATIVE_COMMAND_RUNNER: "false", NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data") };
       for (const key of Object.keys(env)) if (key.startsWith("NX_TASK_") || ["NX_SKIP_NX_CACHE", "NX_SKIP_REMOTE_CACHE", "NX_FORCE_REUSE_CACHED_GRAPH"].includes(key)) delete env[key];
-      const child = Bun.spawn(["node", nx, "run", "artifact-source-probe:test", "--output-style=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
+      const child = Bun.spawn([registeredToolExecutableV1("node"), nx, "run", "artifact-source-probe:test", "--output-style=static"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });
       const timer = setTimeout(() => child.kill(), 30_000);
       const [stdout, stderr, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]); clearTimeout(timer);
       writeFileSync(join(root, `${name}.log`), stdout + stderr); expect(status, stdout + stderr).toBe(0); return stdout;

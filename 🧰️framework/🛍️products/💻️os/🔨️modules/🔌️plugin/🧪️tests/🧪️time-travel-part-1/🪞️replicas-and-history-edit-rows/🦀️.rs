@@ -3,7 +3,7 @@
 //#region 🪞️Replicas
 /// 🪞️ A registered toy replica on its own memory backbone, authoring as `actor`; `seed` dispatches the fixture seed
 /// through its store, so every seed edit leaves in its outbox.
-async fn replica(fixture: &Value, uri: &str, actor: &str, seed: bool, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ToyApp, MemoryBackbone) {
+async fn replica(fixture: &Value, uri: &str, actor: &str, seed: bool, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ToyApp, MemoryBackbone) {
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), mounted_policy, identity).await;
     let (backbone, probe) = MemoryBackbone::pair(uri, uri).await;
     app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("attach the replica backbone");
@@ -19,7 +19,7 @@ async fn replica(fixture: &Value, uri: &str, actor: &str, seed: bool, mounted_po
 
 /// 🔀️ Delivers every event batch `from` published since the last relay into `to` (through its probe `into`) and ingests it.
 #[doc(hidden)]
-pub async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+pub async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     for message in from.receive().await.expect("replica outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         into.send(message).await.expect("relay an event batch");
     }
@@ -28,7 +28,7 @@ pub async fn relay(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mu
 }
 
 /// 🔀️ [`relay`], then drives `to`'s turns until the relayed change is adopted — its replay may span turns (gap N17).
-async fn relay_adopted(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn relay_adopted(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to: &mut ToyApp, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     let mut original_caller=semio_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original external fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
 
     relay(from, into, to, mounted_policy, identity).await;
@@ -39,7 +39,7 @@ async fn relay_adopted(from: &mut MemoryBackbone, into: &mut MemoryBackbone, to:
 }
 
 /// ↩️ Runs a framework history verb (`undo`, `redo`, `revertToCommand`) as `actor` through its reserved admission.
-async fn history_verb(app: &mut ToyApp, actor: &str, action: &str, args: Option<DslValue>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
+async fn history_verb(app: &mut ToyApp, actor: &str, action: &str, args: Option<DslValue>, mounted_policy:semio_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     let meta = ActionMeta { view_state: Some(semio_plugin_testing_laws::receive_view_fixture(ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native), semio_plugin_testing_laws::OriginalWorkFixture::stock())), ..artifact_app_laws::meta(actor) };
     let admitted = app.handle_action(action, args.as_ref(), &meta, identity).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
     semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|fault| panic!("{action} settles: {fault:?}"));
@@ -71,7 +71,7 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let (mut local, mut local_probe) = replica(&fixture, "history-edit-row-local", &actor, true, mounted_policy, &mut identity).await;
@@ -121,7 +121,7 @@ async fn undo_and_redo_of_a_finalize_author_restoring_supersedes_on_both_replica
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let (mut local, mut local_probe) = replica(&fixture, "history-edit-undo-local", &actor, true, mounted_policy, &mut identity).await;
@@ -192,7 +192,7 @@ async fn an_alternative_history_edit_is_undone_within_its_alternative() {
 
     let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();
     let mut observer=|_|true;
-    let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let fixture = fixture();
     let actor = text(&fixture["actor"]).to_string();
     let (mut app, probe) = replica(&fixture, "history-edit-alternative", &actor, true, mounted_policy, &mut identity).await;

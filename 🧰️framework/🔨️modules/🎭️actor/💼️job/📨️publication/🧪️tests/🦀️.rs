@@ -884,5 +884,3 @@ use std::collections::VecDeque;
         drive_progress_close(&mut right);
     }
 
-#[global_allocator]
-static ACTOR_PUBLICATION_TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

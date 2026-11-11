@@ -1,7 +1,8 @@
 import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import{REVISION_POLICY_V1,physicalSourceOriginV1}from"./🔏️revision/🟨️.mjs";
 import limitsSchema from"./🧬️schema/🔣️.json"with{type:"json"};
-const javascriptManagerV1 = createRequire(import.meta.url)("../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
+import managersV1 from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs";
+const javascriptManagerV1 = managersV1.selectedManagerV1("javascript");
 import{captureSourceInputInventoryV1,captureCargoLockInventoryV1}from"./📋️data/📥️load/🟨️.mjs";
 import {repositoryBuildGraphWriterDirectoryV1, withBuildGraphOptionalPublicationV1, withBuildGraphOptionalPublicationsV1, noteBuildGraphStagedLeafV1} from "./💾️storage/🟨️.mjs";
 import { brotliDecompressSync } from "node:zlib";

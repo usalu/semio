@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import {createHash} from "node:crypto";
@@ -98,7 +99,7 @@ test("serve starts the store, the service and a worker process, prints what a cl
  try{
   const running=runRemoteExecutionCommandV1(["serve","--grpc-port","0","--worker-port","0","--local-workers","1","--sandbox","isolated-root","--concurrency","2","--lang","de"],{
    root,environment:{PATH:process.env.PATH},signal:controller.signal,progress:async stage=>{stages.push(stage);},write:line=>{lines.push(line);},
-   spawnWorker:(args,environment)=>{const child=Bun.spawn(["bun",entry,...args],{cwd:root,env:{...process.env,...environment},stdout:"pipe",stderr:"pipe"});children.push(child);return {exited:child.exited,stop:async()=>{child.kill("SIGTERM");await child.exited;}};},
+   spawnWorker:(args,environment)=>{const child=Bun.spawn([registeredToolExecutableV1("bun"),entry,...args],{cwd:root,env:{...process.env,...environment},stdout:"pipe",stderr:"pipe"});children.push(child);return {exited:child.exited,stop:async()=>{child.kill("SIGTERM");await child.exited;}};},
   });
   await eventuallyV1(()=>lines.some(line=>line.includes("Beitritt")||line.includes("tritt")||line.includes("repo remote-execution workers --join")),30000,"serve must print how to join");
   const endpoint=/^\[remote-execution\] listening (grpc:\/\/\S+)$/mu.exec(lines.join("\n"))?.[1],join=/--join (http:\/\/\S+)$/mu.exec(lines.join("\n"))?.[1];

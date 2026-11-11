@@ -178,15 +178,16 @@ impl PendingDocumentArchiveMember {
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         if let Some(pages)=self.pages.as_mut() {
-            if let Some(page)=pages.close_take_page(){Exit::pay(effect,1)?;let bytes=page.len();drop(page);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..empty}));}
-            if !pages.terminal_is_empty(){let step=pages.close_backing_step(grant)?;Exit::pay(effect,u128::from(pages.last_backing_close_work()))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-            Exit::pay(effect,1)?;drop(self.pages.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
+            if let Some(page)=pages.close_take_page(){let bytes=page.len();drop(page);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..empty}));}
+            if !pages.terminal_is_empty(){let result=pages.close_backing_step(grant);Exit::pay(effect,u128::from(pages.last_backing_close_work()))?;return Ok(RetainedCloneStep::Progress(result?.progress()));}
+            drop(self.pages.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
         }
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if self.entry_retirement.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.entry_retirement,grant.maximum_copy_bytes,&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        match semio_framework_value::retirement::admit_owned_retirement(&mut self.entry,&mut effect.nested(child)).result? {
-            Some((owner,progress))=>{self.entry_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive member birth")?;Ok(RetainedCloneStep::Progress(progress))}
-            None=>Ok(RetainedCloneStep::Progress(empty))
+        if self.entry_retirement.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.entry_retirement,grant.maximum_copy_bytes,effect))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        match semio_framework_value::retirement::admit_owned_retirement(&mut self.entry,effect).result {
+            Ok(Some((owner,progress)))=>{self.entry_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive member birth")?;Ok(RetainedCloneStep::Progress(progress))}
+            Ok(None)=>Ok(RetainedCloneStep::Progress(empty)),
+            Err(error)=>Err(error.into())
         }
         })();
         Exit::settle(effect,result)
@@ -383,26 +384,26 @@ where
         let demand=self.retirement_demands(body)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if self.retained.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,body,&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.archive_retirement.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,body,&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.retained.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,grant.maximum_copy_bytes,effect))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.archive_retirement.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,grant.maximum_copy_bytes,effect))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(hydration)=self.hydration.as_mut(){
-            if store::ErasedSnapshotRetirement::terminal_is_empty(hydration){Exit::pay(effect,1)?;drop(self.hydration.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let step=Exit::resume(store::ErasedSnapshotRetirement::close_step(hydration,body,&mut effect.nested(child)))?;
+            if store::ErasedSnapshotRetirement::terminal_is_empty(hydration){drop(self.hydration.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            let step=Exit::resume(store::ErasedSnapshotRetirement::close_step(hydration,grant.maximum_copy_bytes,effect))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,store::ErasedSnapshotRetirement::terminal_is_empty(hydration),"original archive hydration")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(ingress)=self.rejected_ingress.as_mut(){
-            if ingress.terminal_is_empty(){Exit::pay(effect,1)?;drop(self.rejected_ingress.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let result=ingress.close_step(child);Exit::pay(effect,u128::from(ingress.last_turn_work()))?;let step=result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,ingress.terminal_is_empty(),"original archive ingress")?;
+            if ingress.terminal_is_empty(){drop(self.rejected_ingress.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            let result=ingress.close_step(child);Exit::pay(effect,u128::from(ingress.last_turn_work()))?;let step=result.map_err(semio_framework_value::OriginalRetirementFailure::from)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,ingress.terminal_is_empty(),"original archive ingress")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(member)=self.member.as_mut(){
-            if member.terminal_is_empty(){Exit::pay(effect,1)?;drop(self.member.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let step=Exit::resume(member.close_step(&mut effect.nested(child)))?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,member.terminal_is_empty(),"original archive pending member")?;
+            if member.terminal_is_empty(){drop(self.member.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            let step=Exit::resume(member.close_step(effect))?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,member.terminal_is_empty(),"original archive pending member")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(history)=self.history.as_mut(){
-            if history.terminal_is_empty(){Exit::pay(effect,1)?;drop(self.history.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            if history.terminal_is_empty(){drop(self.history.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
             let source=&self.archive.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive history decoder lost its original source"))?.parent_spr;
             let turn=match self.work.with_loan(&mut (work_turn as &dyn ArchiveWorkTurn),|loan|history.close_step(source,&protocol::RetainedHistoryUninterrupted,child,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};Exit::pay(effect,turn.work)?;self.last_native_work=history.last_turn_native_work();let step=turn.result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,history.terminal_is_empty(),"original archive history decoder")?;
@@ -410,15 +411,17 @@ where
         }
         if self.history_custody.is_none(){self.history_custody=self.decoded_history.take();}
         if self.history_custody.is_some(){
-            return match semio_framework_value::retirement::admit_owned_retirement(&mut self.history_custody,&mut effect.nested(child)).result? {
-                Some((owner,progress))=>{self.retained=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive history birth")?;Ok(RetainedCloneStep::Progress(progress))}
-                None=>Ok(RetainedCloneStep::Progress(empty))
+            return match semio_framework_value::retirement::admit_owned_retirement(&mut self.history_custody,effect).result {
+                Ok(Some((owner,progress)))=>{self.retained=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive history birth")?;Ok(RetainedCloneStep::Progress(progress))}
+                Ok(None)=>Ok(RetainedCloneStep::Progress(empty)),
+                Err(error)=>Err(error.into())
             };
         }
         if self.archive.is_some(){
-            return match semio_framework_value::retirement::admit_owned_retirement(&mut self.archive,&mut effect.nested(child)).result? {
-                Some((owner,progress))=>{self.archive_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original physical archive birth")?;Ok(RetainedCloneStep::Progress(progress))}
-                None=>Ok(RetainedCloneStep::Progress(empty))
+            return match semio_framework_value::retirement::admit_owned_retirement(&mut self.archive,effect).result {
+                Ok(Some((owner,progress)))=>{self.archive_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original physical archive birth")?;Ok(RetainedCloneStep::Progress(progress))}
+                Ok(None)=>Ok(RetainedCloneStep::Progress(empty)),
+                Err(error)=>Err(error.into())
             };
         }
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive close lost its quoted original frontier").into())
@@ -490,9 +493,9 @@ mod original_archive_admission_laws{
   let mut caller=OriginalJobFixtureCaller::admit(OperationId(9801),Generation(1),grant,clock,1000000,1000000);let mut donor=protocol::DocumentArchivePack{parent_pack:vec![1],parent_spr:vec![2],members:Vec::new()};let mut cursor=OriginalDocumentArchiveAdmission::empty();
   let denied=RetainedCloneGrant{maximum_copy_bytes:0,..grant};assert!(!caller.turn(denied,|cx|cursor.validate_step(17,&mut donor,cx)).unwrap());assert!(cursor.source.is_none());assert_eq!(caller.receipt(),Default::default());
   let mut ready=false;for _ in 0..32{ready=caller.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).unwrap();if ready{break}}assert!(ready);assert_eq!(donor.parent_pack,[1]);assert_eq!(donor.parent_spr,[2]);
-  let mut foreign=OriginalJobFixtureCaller::admit(OperationId(9801),Generation(1),grant,clock,1000000,1000000);assert!(foreign.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).is_err());assert_eq!(foreign.receipt(),Default::default());foreign.retire(grant);
+  let mut foreign=OriginalJobFixtureCaller::admit(OperationId(9801),Generation(1),grant,clock,1000000,1000000);assert!(foreign.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).is_err());assert_eq!(foreign.receipt(),Default::default());foreign.fund_closure(65536,0);foreign.retire(grant);
   assert!(caller.turn(grant,|cx|cursor.transfer_step(cx,|_|Err(ValueError::literal(ValueRefusalKind::WorkLimit,"retained recipient refused").into()))).is_err());assert!(!cursor.completed());assert_eq!(donor.parent_pack,[1]);assert_eq!(donor.parent_spr,[2]);
-  caller.cancel().cancel_now();assert!(caller.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).is_err());assert!(!cursor.completed());assert_eq!(donor.parent_pack,[1]);caller.retire(grant);
+  caller.cancel().cancel_now();assert!(caller.turn(grant,|cx|cursor.validate_step(17,&mut donor,cx)).is_err());assert!(!cursor.completed());assert_eq!(donor.parent_pack,[1]);caller.fund_closure(65536,0);caller.retire(grant);
  }
  #[test]
  fn actual_source_validation_matches_the_portable_ordinal_corpus_without_payload_allocation(){
@@ -502,7 +505,7 @@ mod original_archive_admission_laws{
    let members=row["ordinals"].as_array().unwrap().iter().map(|value|protocol::OwnedDocumentMemberPackEntry{ordinal:value.as_u64().unwrap()as u32,reference:reference(),owner:protocol::DocumentArchiveOwnerRef{parent:reference(),slot:"slot".into(),child_id:"child".into()},envelope_pack:vec![3]}).collect();
    let mut donor=protocol::DocumentArchivePack{parent_pack:vec![1],parent_spr:vec![2],members};let mut cursor=OriginalDocumentArchiveAdmission::empty();let mut caller=OriginalJobFixtureCaller::admit(OperationId(9802),Generation(1),grant,clock,1000000,1000000);let mut accepted=false;let mut refused=false;
    for _ in 0..4096{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|cursor.validate_step(18,&mut donor,cx)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));match result{Ok(true)=>{accepted=true;break},Ok(false)=>{},Err(_)=>{refused=true;break}}}
-   assert_eq!(accepted,row["accepted"].as_bool().unwrap());if accepted{assert_eq!(donor.members.iter().map(|member|u64::from(member.ordinal)).collect::<Vec<_>>(),row["expected"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()).collect::<Vec<_>>());}else{assert!(refused)}assert_eq!(donor.parent_pack,[1]);assert_eq!(donor.parent_spr,[2]);caller.retire(grant);
+   assert_eq!(accepted,row["accepted"].as_bool().unwrap());if accepted{assert_eq!(donor.members.iter().map(|member|u64::from(member.ordinal)).collect::<Vec<_>>(),row["expected"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()).collect::<Vec<_>>());}else{assert!(refused)}assert_eq!(donor.parent_pack,[1]);assert_eq!(donor.parent_spr,[2]);caller.fund_closure(65536,0);caller.retire(grant);
   }
  }
 

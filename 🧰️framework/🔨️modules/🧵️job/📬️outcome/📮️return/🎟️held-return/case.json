@@ -8,7 +8,6 @@
   "heldWitnesses": 2,
   "witnessWork": 1,
   "witnessItems": 1,
-  "witnessCopyBytes": 0,
   "witnessCapacityBytes": 0,
   "witnessReleaseBytes": 0,
   "maximumAdmissionTurns": 8,

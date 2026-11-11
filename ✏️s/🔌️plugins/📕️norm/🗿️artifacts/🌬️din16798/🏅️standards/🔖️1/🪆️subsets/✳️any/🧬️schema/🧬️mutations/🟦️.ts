@@ -1,7 +1,8 @@
 /** 🧺️ `Din16798Mutation` wire twin: the mutation aggregate, branch for branch as `./🔣️.json` spells it, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `📇️registry/🧬️contract/🏭️generator/🟦️.ts`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireExternal, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type ChangeVentFanRunHours, parseChangeVentFanRunHours } from "./⏱️change-vent-fan-run-hours/🧬️schema/🟦️.ts";
 import { type ChangeZoneTOpSummer, parseChangeZoneTOpSummer } from "./☀️change-zone-t-op-summer/🧬️schema/🟦️.ts";
 import { type ChangeVentHeatRecovery, parseChangeVentHeatRecovery } from "./♻️change-vent-heat-recovery/🧬️schema/🟦️.ts";
 import { type ChangeVentSystemType, parseChangeVentSystemType } from "./⚙️change-vent-system-type/🧬️schema/🟦️.ts";
@@ -12,6 +13,7 @@ import { type ChangeCellarVentilation, parseChangeCellarVentilation } from "./�
 import { type ChangeVentSfp, parseChangeVentSfp } from "./🌀️change-vent-sfp/🧬️schema/🟦️.ts";
 import { type ChangeAnnex, parseChangeAnnex } from "./🌍️change-annex/🧬️schema/🟦️.ts";
 import { type ChangeNightSetback, parseChangeNightSetback } from "./🌙️change-night-setback/🧬️schema/🟦️.ts";
+import { type ChangeVentFanFlow, parseChangeVentFanFlow } from "./🌪️change-vent-fan-flow/🧬️schema/🟦️.ts";
 import { type ChangeOutdoorCo2, parseChangeOutdoorCo2 } from "./🌫️change-outdoor-co2/🧬️schema/🟦️.ts";
 import { type ChangeVentDesignAirflow, parseChangeVentDesignAirflow } from "./🌬️change-vent-design-airflow/🧬️schema/🟦️.ts";
 import { type ChangeVentSfpClass, parseChangeVentSfpClass } from "./🎓️change-vent-sfp-class/🧬️schema/🟦️.ts";
@@ -21,9 +23,11 @@ import { type ChangeVentOdaClass, parseChangeVentOdaClass } from "./🏞️chang
 import { type ChangeEnvelopeN50, parseChangeEnvelopeN50 } from "./🏠️change-envelope-n50/🧬️schema/🟦️.ts";
 import { type ChangeZoneUsageType, parseChangeZoneUsageType } from "./🏢️change-zone-usage-type/🧬️schema/🟦️.ts";
 import { type ChangeZonePollutionClass, parseChangeZonePollutionClass } from "./🏭️change-zone-pollution-class/🧬️schema/🟦️.ts";
+import { type ChangeZoneName, parseChangeZoneName } from "./🏷️change-zone-name/🧬️schema/🟦️.ts";
 import { type ChangeZoneClothing, parseChangeZoneClothing } from "./👔change-zone-clothing/🧬️schema/🟦️.ts";
 import { type ChangeZoneOccupants, parseChangeZoneOccupants } from "./👥️change-zone-occupants/🧬️schema/🟦️.ts";
 import { type ChangeZoneIlluminance, parseChangeZoneIlluminance } from "./💡change-zone-illuminance/🧬️schema/🟦️.ts";
+import { type ChangeVentHumidificationRequired, parseChangeVentHumidificationRequired } from "./💦change-vent-humidification-required/🧬️schema/🟦️.ts";
 import { type ChangeZoneRh, parseChangeZoneRh } from "./💧️change-zone-rh/🧬️schema/🟦️.ts";
 import { type ChangeZoneAirSpeed, parseChangeZoneAirSpeed } from "./💨change-zone-air-speed/🧬️schema/🟦️.ts";
 import { type ChangeZoneOutdoorAir, parseChangeZoneOutdoorAir } from "./💨️change-zone-outdoor-air/🧬️schema/🟦️.ts";
@@ -31,26 +35,22 @@ import { type ChangeZoneTurbulence, parseChangeZoneTurbulence } from "./💨chan
 import { type ChangeVentInspection, parseChangeVentInspection } from "./📅️change-vent-inspection/🧬️schema/🟦️.ts";
 import { type ChangeZoneFloorArea, parseChangeZoneFloorArea } from "./📐️change-zone-floor-area/🧬️schema/🟦️.ts";
 import { type ChangeZoneVentMethod, parseChangeZoneVentMethod } from "./📐️change-zone-vent-method/🧬️schema/🟦️.ts";
+import { type ChangeVentName, parseChangeVentName } from "./📛change-vent-name/🧬️schema/🟦️.ts";
 import { type ChangeEnvelopeVolume, parseChangeEnvelopeVolume } from "./📦️change-envelope-volume/🧬️schema/🟦️.ts";
 import { type ChangeThetaRm, parseChangeThetaRm } from "./🔄️change-theta-rm/🧬️schema/🟦️.ts";
 import { type ChangeZoneNoise, parseChangeZoneNoise } from "./🔊️change-zone-noise/🧬️schema/🟦️.ts";
-import { type ChangeZoneName, parseChangeZoneName } from "./🏷️change-zone-name/🧬️schema/🟦️.ts";
-import { type ChangeZoneId, parseChangeZoneId } from "./🆔️change-zone-id/🧬️schema/🟦️.ts";
-import { type ChangeVentName, parseChangeVentName } from "./📛change-vent-name/🧬️schema/🟦️.ts";
-import { type ChangeVentId, parseChangeVentId } from "./🪪change-vent-id/🧬️schema/🟦️.ts";
-import { type ChangeVentFanFlow, parseChangeVentFanFlow } from "./🌪️change-vent-fan-flow/🧬️schema/🟦️.ts";
-import { type ChangeVentFanRunHours, parseChangeVentFanRunHours } from "./⏱️change-vent-fan-run-hours/🧬️schema/🟦️.ts";
-import { type ChangeVentDuctTestPressure, parseChangeVentDuctTestPressure } from "./🧪change-vent-duct-test-pressure/🧬️schema/🟦️.ts";
-import { type ChangeVentHumidificationRequired, parseChangeVentHumidificationRequired } from "./💦change-vent-humidification-required/🧬️schema/🟦️.ts";
-import { type ChangeVentHumidificationProvided, parseChangeVentHumidificationProvided } from "./🚿change-vent-humidification-provided/🧬️schema/🟦️.ts";
 import { type ChangeZoneVentSystemId, parseChangeZoneVentSystemId } from "./🔗change-zone-vent-system-id/🧬️schema/🟦️.ts";
 import { type ChangeVentDuctLeakage, parseChangeVentDuctLeakage } from "./🕳️change-vent-duct-leakage/🧬️schema/🟦️.ts";
 import { parseRemoveVentSystem, type RemoveVentSystem } from "./🗑️remove-vent-system/🧬️schema/🟦️.ts";
+import { type ChangeVentDuctTestPressure, parseChangeVentDuctTestPressure } from "./🧪change-vent-duct-test-pressure/🧬️schema/🟦️.ts";
 import { type ChangeZoneComfortModel, parseChangeZoneComfortModel } from "./🧭️change-zone-comfort-model/🧬️schema/🟦️.ts";
 import { type ChangeVentDuctClass, parseChangeVentDuctClass } from "./🧱change-vent-duct-class/🧬️schema/🟦️.ts";
 import { type ChangeVentFilterSup, parseChangeVentFilterSup } from "./🧽change-vent-filter-sup/🧬️schema/🟦️.ts";
+import { type ChangeVentId, parseChangeVentId } from "./🪪change-vent-id/🧬️schema/🟦️.ts";
 import { type ChangeZoneCo2, parseChangeZoneCo2 } from "./🫧change-zone-co2/🧬️schema/🟦️.ts";
+import { type ChangeVentHumidificationProvided, parseChangeVentHumidificationProvided } from "./🚿change-vent-humidification-provided/🧬️schema/🟦️.ts";
 import { type ChangeZoneComfortCategory, parseChangeZoneComfortCategory } from "./🛋️change-zone-comfort-category/🧬️schema/🟦️.ts";
+import { type ChangeZoneId, parseChangeZoneId } from "./🆔️change-zone-id/🧬️schema/🟦️.ts";
 import { type InsertVentSystem, parseInsertVentSystem } from "./🆕️insert-vent-system/🧬️schema/🟦️.ts";
 
 export type Din16798Mutation =

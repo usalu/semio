@@ -1839,6 +1839,132 @@
           }
         ]
       }
+    },
+    {
+      "expected": {
+        "admitted": [
+          "a",
+          "b",
+          "c",
+          "cat",
+          "gen"
+        ]
+      },
+      "owners": {
+        "a": {
+          "edges": [
+            "b"
+          ],
+          "root": "pkg/a",
+          "targets": {
+            "build": {
+              "dependsOn": [
+                "^build"
+              ]
+            },
+            "local": {
+              "dependsOn": [
+                "build"
+              ]
+            },
+            "test": {
+              "dependsOn": [
+                {
+                  "projects": "*",
+                  "target": "all"
+                }
+              ]
+            }
+          }
+        },
+        "b": {
+          "edges": [
+            "c"
+          ],
+          "root": "pkg/b",
+          "targets": {
+            "build": {
+              "dependsOn": [
+                "^build",
+                "gen:codegen"
+              ]
+            }
+          }
+        },
+        "big": {
+          "edges": [
+            "huge"
+          ],
+          "root": "pkg/big",
+          "targets": {
+            "build": {}
+          }
+        },
+        "c": {
+          "edges": [],
+          "root": "pkg/c",
+          "targets": {
+            "build": {}
+          }
+        },
+        "cat": {
+          "edges": [
+            "big"
+          ],
+          "root": "pkg/cat",
+          "targets": {
+            "build": {}
+          }
+        },
+        "gen": {
+          "edges": [],
+          "root": "pkg/gen",
+          "targets": {
+            "codegen": {}
+          }
+        },
+        "huge": {
+          "edges": [],
+          "root": "pkg/huge",
+          "targets": {
+            "build": {}
+          }
+        },
+        "w": {
+          "edges": [
+            "a"
+          ],
+          "root": "pkg/w",
+          "targets": {
+            "build": {}
+          }
+        },
+        "z": {
+          "edges": [],
+          "root": "pkg/z",
+          "targets": {
+            "build": {}
+          }
+        }
+      },
+      "providers": [
+        {
+          "consumerRoots": [
+            "pkg/a"
+          ],
+          "sourcePath": "pkg/cat/catalog.json"
+        }
+      ],
+      "roots": [],
+      "selection": {
+        "kind": "tasks",
+        "tasks": [
+          {
+            "project": "a",
+            "target": "build"
+          }
+        ]
+      }
     }
   ],
   "implementation": [

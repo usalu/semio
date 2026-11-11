@@ -56,9 +56,9 @@ function isObjectName(value: string): boolean {
 }
 
 function stagedFiles(root: string): string[] {
-  const outcome = git(root, ["diff", "--cached", "--name-only"]);
-  if (outcome.status !== 0) throw new Error(`git diff --cached --name-only failed: ${outcome.stderr.trim()}`);
-  return outcome.stdout.replace(/\r\n/gu, "\n").split("\n").filter((line) => line !== "");
+  const outcome = git(root, ["diff", "--cached", "--name-only", "-z"]);
+  if (outcome.status !== 0) throw new Error(`git diff --cached --name-only -z failed: ${outcome.stderr.trim()}`);
+  return outcome.stdout.split("\0").filter((path) => path !== "");
 }
 
 function head(root: string): string {
@@ -90,6 +90,16 @@ export default defineTestAdapter({
         const staged = git(root, ["add", "-A"]);
         if (staged.status !== 0) throw new Error(`git add -A failed: ${staged.stderr.trim()}`);
         return { projection: { before, after: stagedFiles(root).sort() } };
+      },
+    },
+    "staging-lists-an-emoji-path-verbatim": {
+      oracle: (ctx) => {
+        const root = scratchRepo(ctx, true);
+        mkdirSync(join(root, "🧰️emoji folder"), { recursive: true });
+        writeFileSync(join(root, "🧰️emoji folder/🌿️notes.txt"), "notes\n");
+        const added = git(root, ["add", "-A"]);
+        if (added.status !== 0) throw new Error(`git add -A failed: ${added.stderr.trim()}`);
+        return { projection: { staged: stagedFiles(root) } };
       },
     },
     "a-checkpoint-commits-and-advances-head": {

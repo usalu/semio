@@ -110,7 +110,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
     let turn=page.owner.as_mut().unwrap().write_raw_step(&source,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-overhead,..g});
     let mut p=turn.progress;
     if let Err(failure)=turn.result{page.failure=Some(failure);*stage=MountedTypedCommandFullOperationStage::Retiring;p.copied_bytes+=error_copy;}
-    RetainedWorkOutcome{work:u128::from(turn.work),result:Ok(RetainedCloneStep::Progress(p))}
+    RetainedWorkOutcome::<RetainedCloneStep,ValueError>{work:u128::from(turn.work),result:Ok(RetainedCloneStep::Progress(p))}
    })?;Ok(())})?;
   }else{
    let grant=cx.retained_grant();let maximum_work=cx.fuel_remaining();let mut actual=None;

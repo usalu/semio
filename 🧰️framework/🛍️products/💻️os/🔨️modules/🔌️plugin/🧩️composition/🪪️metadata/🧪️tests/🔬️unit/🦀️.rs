@@ -14,6 +14,21 @@ pub fn grant(copy: usize, capacity: usize, release: usize) -> RetainedCloneGrant
 pub fn reference(value: &serde_json::Value) -> ArtifactRef { ArtifactRef { artifact_id: value["artifact_id"].as_str().unwrap().into(), dialect: ArtifactDialect { artifact_kind: value["dialect"]["artifact_kind"].as_str().unwrap().into(), standard: value["dialect"]["standard"].as_str().unwrap().into(), subset: value["dialect"]["subset"].as_str().unwrap().into() } } }
 
 #[doc(hidden)]
+pub fn funded_advance(grant: RetainedCloneGrant, advance: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError>) -> (RetainedCloneStep, semio_framework_trace::HeapAllocationObservation) {
+    let mut bank = semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::new(grant, 1 << 20));
+    let mut observed = None;
+    let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, grant, 1 << 20, |effect| {
+        let (result, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| advance(effect));
+        observed = Some(events);
+        semio_framework_value_testing_admission::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() })
+    });
+    match poll {
+        semio_framework_value_testing_admission::RetainedWorkPoll::Complete(turn) => (turn.result.unwrap(), observed.expect("funded turn ran")),
+        semio_framework_value_testing_admission::RetainedWorkPoll::Pending { .. } => panic!("funded turn stayed pending"),
+    }
+}
+
+#[doc(hidden)]
 pub fn retire(owner: &mut PrivateChildMemberMetadataIssuer) {
     let mut count = 0;
     while !owner.terminal_is_empty() {
@@ -127,13 +142,13 @@ fn private_parent_metadata_shares_exact_bounded_birth_copy_and_typed_transfer() 
             let capacity = issuer.next_capacity_byte_demand(source).unwrap();
             if capacity != 0 {
                 for denied in [RetainedCloneGrant { maximum_items: 0, ..grant(64, capacity, 0) }, grant(64, capacity - 1, 0)] {
-                    let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| issuer.advance(source, denied).unwrap());
+                    let (step, events) = funded_advance(denied, |effect| issuer.advance(source, effect));
                     assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
                     assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
                     assert_eq!(issuer.next_capacity_byte_demand(source), Some(capacity));
                 }
             }
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| issuer.advance(source, grant(64, capacity, 0)).unwrap());
+            let (step, events) = funded_advance(grant(64, capacity, 0), |effect| issuer.advance(source, effect));
             let progress = step.progress();
             assert!(progress.copied_bytes <= 64 && progress.copied_items <= 1);
             assert_eq!((events.requested_bytes, events.released_bytes), (progress.retained_capacity_bytes, 0));
@@ -178,7 +193,7 @@ fn private_parent_metadata_cancellation_never_frees_a_fractionally_funded_origin
     let source = PrivatePublicationMetadataSource { actor: &actor, transaction: Some(&transaction), group_id: Some(&transaction.id) };
     for stop in [0, 1, 3, 7, 8] {
         let mut issuer = PrivatePublicationMetadataIssuer::new();
-        for _ in 0..stop { let capacity = issuer.next_capacity_byte_demand(source).unwrap(); issuer.advance(source, grant(64, capacity, 0)).unwrap(); }
+        for _ in 0..stop { let capacity = issuer.next_capacity_byte_demand(source).unwrap(); funded_advance(grant(64, capacity, 0), |effect| issuer.advance(source, effect)); }
         for _ in 0..6 {
             if issuer.terminal_is_empty() { break; }
             let demand = issuer.next_close_byte_demand();
@@ -211,7 +226,7 @@ fn private_publication_metadata_preserves_group_id_independently_of_transaction(
             for _ in 0..80 {
                 if !parent.ready() {
                     let capacity = parent.next_capacity_byte_demand(parent_source).unwrap();
-                    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| parent.advance(parent_source, grant(64, capacity, 0)).unwrap());
+                    let (step, heap) = funded_advance(grant(64, capacity, 0), |effect| parent.advance(parent_source, effect));
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, 0));
                 }
                 if !child.ready() {
@@ -244,15 +259,15 @@ fn private_parent_metadata_carries_the_original_admitted_actor_lease_without_rec
     let original_grant = RetainedCloneGrant { maximum_items: policy["items"].as_u64().unwrap() as usize, maximum_copy_bytes: policy["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: policy["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: policy["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: policy["depth"].as_u64().unwrap() as usize };
     let original_text = fixture["actor"].as_str().unwrap().to_owned();
     let original_pointer = original_text.as_ptr();
-    let (original_actor, _) = semio_framework_value::SharedUtf8::admit(original_text, original_grant).map_err(|(error, _)| error).unwrap();
+    let (original_actor, _) = semio_framework_value::SharedUtf8::admit(original_text, original_grant, &mut None).result.map_err(|(error, _)| error).unwrap();
     let source = PrivatePublicationMetadataSource { actor: &original_actor, transaction: None, group_id: None };
     let mut issuer = PrivatePublicationMetadataIssuer::new();
     for _ in 0..fixture["actorLease"]["maximumTurns"].as_u64().unwrap() {
         if issuer.ready() { break; }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| issuer.advance(source, RetainedCloneGrant { maximum_items: 0, ..original_grant }).unwrap());
+        let (step, heap) = funded_advance(RetainedCloneGrant { maximum_items: 0, ..original_grant }, |effect| issuer.advance(source, effect));
         assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| issuer.advance(source, original_grant).unwrap());
+        let (step, heap) = funded_advance(original_grant, |effect| issuer.advance(source, effect));
         assert!(step.progress().fits(original_grant));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }

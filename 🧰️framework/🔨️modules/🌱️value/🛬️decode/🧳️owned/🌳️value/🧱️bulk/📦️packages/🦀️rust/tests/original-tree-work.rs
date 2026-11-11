@@ -1,5 +1,5 @@
 //! 🌲️ Actual tree frontiers obey finite work loans and preserve every cancelled prefix.
-use semio_framework_value_native_tree::*;
+use semio_framework_value_native_tree_engine::*;
 use semio_framework_value_native_receiving_contract::NativeReceiver;
 use semio_framework_value_native_decoding::native_decoding::NativeDecodeControl;
 use semio_framework_value_control_contract::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand};

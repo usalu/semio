@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 /** 🔁 Contract: a launcher skips the Cargo preparation child exactly while the witnessed receipt still holds: unrelated files, directories no listing plan can find a manifest in, and vanished manifest-free directories keep it; manifests, lock, configuration, environment and tool move it. The independent Python oracle agrees on every edit, and whenever the child is skipped Cargo's own `metadata` of the workspace is unchanged.
  * @see ../🟦️.ts
  * @see ../../🟦️.ts */
@@ -36,7 +37,7 @@ test("a launcher skips the Cargo preparation child exactly while the witnessed r
   if(row.edit==="member-manifest")writeFileSync(join(root,"kernel/Cargo.toml"),readFileSync(join(root,"kernel/Cargo.toml"),"utf8").replace('version="0.1.0"','version="0.2.0"'));
   if(row.edit==="owner-manifest")writeFileSync(join(root,"Cargo.toml"),readFileSync(join(root,"Cargo.toml"),"utf8")+"# owner note\n");
   if(row.edit==="lock")writeFileSync(join(root,"Cargo.lock"),lock+"# changed lock\n");
-  const put=(path:string,body:string)=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),body);},cargo=()=>{const result=spawnSync("cargo",["metadata","--no-deps","--format-version","1","--offline","--manifest-path",join(root,"Cargo.toml")],{encoding:"utf8"});return result.status===0?JSON.stringify((JSON.parse(result.stdout).packages as {name:string;manifest_path:string;targets:unknown}[]).map(row=>[row.name,row.manifest_path,row.targets])):"refused";},members=cargo(),stray='[package]\nname="stray"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="lib.rs"\n';
+  const put=(path:string,body:string)=>{mkdirSync(join(root,path,".."),{recursive:true});writeFileSync(join(root,path),body);},cargo=()=>{const result=spawnSync(registeredToolExecutableV1("cargo"),["metadata","--no-deps","--format-version","1","--offline","--manifest-path",join(root,"Cargo.toml")],{encoding:"utf8"});return result.status===0?JSON.stringify((JSON.parse(result.stdout).packages as {name:string;manifest_path:string;targets:unknown}[]).map(row=>[row.name,row.manifest_path,row.targets])):"refused";},members=cargo(),stray='[package]\nname="stray"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="lib.rs"\n';
   if(row.edit==="new-directory")mkdirSync(join(root,"docs"));
   if(row.edit==="new-tree-without-manifest")put("docs/guide/deep/readme.md","notes\n");
   if(row.edit==="new-directory-in-member")put("kernel/fixtures/data.json","{}\n");

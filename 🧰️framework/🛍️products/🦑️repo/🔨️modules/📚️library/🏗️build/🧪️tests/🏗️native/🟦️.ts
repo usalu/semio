@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../../../../../🔨️modules/🏃️process/🧰️tools/🏃️run/🟦️.ts";
 import {repositoryCargoPreparationStorageV1} from "../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import { build } from "esbuild";
 import { expect, test } from "bun:test";
@@ -59,7 +60,7 @@ test("Cargo synchronization reuses content-bound admission and observes manifest
  const started=performance.now(),progress:string[]=[],baseControl=createIssuedResourceControlV1(original,"native:sync-preparation",fixture.originalPreparationControl.maximumElapsedMilliseconds),controlFor=(signal:AbortSignal)=>createRequestedIssuedResourceControlV1(baseControl,0,signal),publishFor=async(control:ReturnType<typeof controlFor>,event:unknown)=>{progress.push(JSON.stringify(event));await control.publish(event as never);},yieldFor=async(control:ReturnType<typeof controlFor>)=>{progress.push("yield");await control.yieldContinuation();};
  const identityFor=(control:ReturnType<typeof controlFor>)=>async(cwd:string,signal:AbortSignal)=>{expect(signal).toBe(control.signal);let output="";await runOwnedCommand("cargo",["--version"],cwd,"original-paired-cargo-identity",Math.floor(control.remainingMilliseconds()!),{signal,output:fixture.originalPreparationControl.transport,stdout:"stderr",onLine:line=>{output+=line+"\n";},onProgress:async()=>{await publishFor(control,{resource:"cargo-preparation:"+owner,mode:"exclusive",elapsedMs:performance.now()-started});await yieldFor(control);}});return output;};
  const preparationFor=(control:ReturnType<typeof controlFor>)=>({leaseControl:control,signal:control.signal,async advance(event:unknown){progress.push(JSON.stringify(event));await yieldFor(control);},childBudget:(requested:number)=>Math.min(requested,Math.floor(control.remainingMilliseconds()!)),childOptions:(environment:Readonly<Record<string,string|undefined>>)=>({signal:control.signal,env:environment,output:fixture.originalPreparationControl.transport,onProgress:async()=>{await publishFor(control,{resource:"cargo-preparation:"+owner,mode:"exclusive",elapsedMs:performance.now()-started});await yieldFor(control);}})});
- const run=async(argv:string[],cwd:string):Promise<void>=>{commands.push(argv);const result=spawnSync("cargo",argv,{cwd,encoding:"utf8"});expect(result.status,result.stderr).toBe(0);};
+ const run=async(argv:string[],cwd:string):Promise<void>=>{commands.push(argv);const result=spawnSync(registeredToolExecutableV1("cargo"),argv,{cwd,encoding:"utf8"});expect(result.status,result.stderr).toBe(0);};
  const schemaOracle=new Ajv({strict:true}).compile(synchronizationSchema);
  for(let index=0;index<fixture.synchronization.actions.length;index++){
   const action=fixture.synchronization.actions[index];if(action==="manifest-changed")writeFileSync(packagePath,readFileSync(packagePath,"utf8").replace('version="0.1.0"','version="0.2.0"'));
@@ -69,6 +70,6 @@ test("Cargo synchronization reuses content-bound admission and observes manifest
  }
  const receipts=readdirSync(output).filter(name=>name.endsWith(".sync.json"));expect(receipts.length).toBeGreaterThan(0);for(const name of receipts)expect(schemaOracle(JSON.parse(readFileSync(join(output,name),"utf8")))).toBe(true);
  expect(progress.length).toBeGreaterThan(0);expect(progress).toContain("yield");
- const oracle=spawnSync("cargo",["metadata","--locked","--no-deps","--format-version=1"],{cwd:owner,encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout).packages[0].version).toBe("0.2.0");
+ const oracle=spawnSync(registeredToolExecutableV1("cargo"),["metadata","--locked","--no-deps","--format-version=1"],{cwd:owner,encoding:"utf8"});expect(oracle.status,oracle.stderr).toBe(0);expect(JSON.parse(oracle.stdout).packages[0].version).toBe("0.2.0");
 }),120_000);
 

@@ -14,6 +14,3 @@ pub mod testkit { pub use super::native_tree::testkit as tree; }
 
 #[cfg(test)]
 extern crate self as semio_framework_pack_json;
-#[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

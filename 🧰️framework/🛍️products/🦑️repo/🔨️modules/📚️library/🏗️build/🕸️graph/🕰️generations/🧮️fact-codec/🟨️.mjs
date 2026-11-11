@@ -1,4 +1,5 @@
 import{isUtf8}from"node:buffer";
+import{createHash}from"node:crypto";
 import{createBoundedCacheV1}from"../../../🧊️bounded/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
@@ -15,8 +16,30 @@ export function compareCodePointsV1(a,b){
 
 /** 🧾️ Serializes JSON with recursively code point sorted keys and no whitespace: the byte identity of every stored document and the identity of a fact. */
 export function canonicalJsonV1(value){
- const walk=item=>{if(item===null||typeof item!=="object")return item;if(Array.isArray(item))return item.map(walk);const out={};for(const key of Object.keys(item).sort(compareCodePointsV1))Object.defineProperty(out,key,{value:walk(item[key]),enumerable:true,writable:true,configurable:true});return out;};
- return JSON.stringify(walk(value));
+ const ordered=object=>{let previous;for(const key of Object.keys(object)){if(previous!==undefined&&compareCodePointsV1(previous,key)>0)return false;previous=key;}return true;};
+ const sorted=object=>{const out={};for(const key of Object.keys(object).sort(compareCodePointsV1))Object.defineProperty(out,key,{value:object[key],enumerable:true,writable:true,configurable:true});return out;};
+ return JSON.stringify(value,(_,item)=>item!==null&&typeof item==="object"&&!Array.isArray(item)&&!ordered(item)?sorted(item):item);
+}
+
+/** 🪪️ The identity of a value: its canonical text when that is at most `limit` characters, else `#` and the SHA-256 of the canonical text, which is hashed in bounded pieces while it is written so that a fact of megabytes never exists as one string (the same answer as hashing `canonicalJsonV1`). */
+export function canonicalKeyV1(value,limit){
+ let pending="",length=0,hash;
+ const emit=text=>{
+  length+=text.length;
+  if(hash===undefined&&length>limit){hash=createHash("sha256");}
+  pending+=text;
+  if(hash!==undefined&&pending.length>=65536){hash.update(pending,"utf8");pending="";}
+ };
+ const write=item=>{
+  if(item!==null&&typeof item==="object"&&typeof item.toJSON==="function")item=item.toJSON();
+  if(item===null||typeof item!=="object"){emit(JSON.stringify(item)??"null");return;}
+  if(Array.isArray(item)){emit("[");for(let at=0;at<item.length;at++){if(at)emit(",");write(item[at]);}emit("]");return;}
+  const keys=Object.keys(item).filter(key=>{const member=item[key];return member!==undefined&&typeof member!=="function"&&typeof member!=="symbol";}).sort(compareCodePointsV1);
+  emit("{");keys.forEach((key,at)=>{if(at)emit(",");emit(JSON.stringify(key)+":");write(item[key]);});emit("}");
+ };
+ write(value);
+ if(hash===undefined)return pending;
+ hash.update(pending,"utf8");return"#"+hash.digest("hex");
 }
 
 /** ✍️ A growable byte sink that refuses to grow beyond the finite document limit. */

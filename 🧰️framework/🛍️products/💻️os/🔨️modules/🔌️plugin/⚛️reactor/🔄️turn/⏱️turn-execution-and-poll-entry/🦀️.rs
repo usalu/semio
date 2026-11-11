@@ -102,11 +102,11 @@ pub async fn poll_kernel_output<PA: semio_plugin_reactor_app::PluginApp, T, Prep
 pub(super) async fn plugin_exchange_turn<'a, 'b, 'context, PA: semio_plugin_reactor_app::PluginApp>(
     runtime: &'a semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,
     instance_id: u32,
-    command: &'a mut Option<(u64, semio_framework_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
-    state:&'a mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState,
+    command: &'a mut Option<(u64, semio_plugin_runtime_ops::ops_ingress::PluginCommandIngress)>,
+    state:&'a mut semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState,
     identity: &'a mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,
     cx:&'a mut semio_framework_job::StepContext<'context>,
-) -> Result<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,semio_framework_job::OriginalTurnFailure> {
+) -> Result<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput,semio_framework_job::OriginalTurnFailure> {
         let mut output=semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,command,state,identity,cx).await?;
         if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){return Err(retain_refused_publication(instance_id,output,refusal,cx));}
         Ok(output)

@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import {expect,test} from "bun:test";
 import {mkdtempSync,mkdirSync,writeFileSync} from "node:fs";
 import {spawnSync} from "node:child_process";
@@ -15,7 +16,7 @@ test("owned child stdout destination preserves machine output with independent N
  for(const row of fixture.cases){
   expect(admit(row.mode)).toBe(row.accepted);const actual=Bun.spawnSync([process.execPath,helper,row.mode],{cwd:root,env:process.env,stdout:"pipe",stderr:"pipe"});
   if(!row.accepted){expect(actual.exitCode).not.toBe(0);expect(lines(actual.stdout)).toEqual([]);continue;}
-  const oracle=spawnSync("node",["--eval",'const fs=require("node:fs");'+(row.mode==="ignore"?'': 'fs.writeSync('+ (row.mode==="stderr"?2:1)+',"stdout Ω\\n");')+'fs.writeSync(2,"stderr 😀\\n");'],{cwd:root});
+  const oracle=spawnSync(registeredToolExecutableV1("node"),["--eval",'const fs=require("node:fs");'+(row.mode==="ignore"?'': 'fs.writeSync('+ (row.mode==="stderr"?2:1)+',"stdout Ω\\n");')+'fs.writeSync(2,"stderr 😀\\n");'],{cwd:root});
   expect(actual.exitCode,actual.stderr.toString()).toBe(0);expect(oracle.status,oracle.stderr.toString()).toBe(0);expect(lines(actual.stdout)).toEqual(row.stdout!);expect(lines(actual.stderr)).toEqual([...row.stderr!].sort());expect(lines(actual.stdout)).toEqual(lines(oracle.stdout));expect(lines(actual.stderr)).toEqual(lines(oracle.stderr));
  }
 });

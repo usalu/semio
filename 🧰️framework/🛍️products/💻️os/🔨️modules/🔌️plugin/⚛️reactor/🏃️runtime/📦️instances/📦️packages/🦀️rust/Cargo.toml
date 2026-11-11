@@ -31,12 +31,12 @@ semio-plugin-reactor-tasks = { path = "../../../../⏲️tasks/📦️packages/�
 semio-plugin-decl-registry = { path = "../../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-plugin-plugin-program = { path = "../../../../../🏗️builder/🔌️program/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../../📨️pending/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
-semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

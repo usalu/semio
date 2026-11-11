@@ -1,4 +1,5 @@
-"""Independent model of the binary fact index (see the schema file next to the code): `encode` turns a logical index (JSON on stdin) into the document (hex on stdout), `decode` turns a document (hex on stdin) back into canonical JSON, `strings` lists the table strings. Standard library only."""
+"""Independent model of the binary fact index (see the schema file next to the code): `key` answers the identity of a value under a text limit (JSON on stdin), `encode` turns a logical index (JSON on stdin) into the document (hex on stdout), `decode` turns a document (hex on stdin) back into canonical JSON, `strings` lists the table strings. Standard library only."""
+import hashlib
 import json
 import re
 import struct
@@ -291,6 +292,10 @@ def main():
     command = sys.argv[1]
     if command == "encode":
         sys.stdout.write(encode(json.load(sys.stdin)).hex())
+    elif command == "key":
+        request = json.load(sys.stdin)
+        text = canonical(request["value"])
+        sys.stdout.write(text if len(text.encode("utf-16-le")) // 2 <= request["limit"] else "#" + hashlib.sha256(text.encode("utf-8")).hexdigest())
     elif command in ("decode", "strings"):
         try:
             index, table = decode(bytes.fromhex(sys.stdin.read().strip()))

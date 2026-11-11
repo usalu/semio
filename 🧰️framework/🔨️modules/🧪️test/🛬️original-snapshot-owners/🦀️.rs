@@ -10,9 +10,9 @@ use semio_os_kernel::sqlite_snapshot::{SqliteDatabaseLimits, SqliteSnapshotContr
 use semio_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
-use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl, OriginalRetirementFailure, OriginalRetirementPoll, ReplyStash, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneStep, RetainedWorkPoll};
+use semio_framework_value::{ErasedSnapshotRetirement as _, NativeEncodeControl, OriginalRetirementFailure, RetainedAllocationEffect, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-use semio_framework_job::OriginalRetirementPump;
+use semio_framework_value_testing_admission::{bank_run, driven, BankWallet, EffectBank, RetainedWorkPoll};
 
 /// 📏️ Native allocation ceiling the original test callers grant.
 pub const NATIVE_MAXIMUM_BYTES: usize = 1 << 30;
@@ -22,34 +22,33 @@ pub const fn original_grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4_096 }
 }
 
-/// 🔒️ Turns an owner-less close may stay pending or denied before the fixture declares the recipient stalled.
-const STALL_TURNS: usize = 4_096;
+/// 📏️ Body bytes every original close turn may borrow.
+const CLOSE_BODY: usize = 4_096;
 
-type Settled = Result<RetainedCloneStep, OriginalRetirementFailure>;
+/// ⚙️ Work units every original close turn may perform.
+const CLOSE_WORK: u64 = 1 << 20;
 
-/// 🪙️ Runs one host-funded owner-less close turn; `None` means the turn was denied or the child stayed pending with its state kept.
-fn pump_turn(grant: RetainedCloneGrant, close: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll) -> Option<Settled> {
-    let mut turn = OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant).expect("original retirement turn issues");
-    match turn.with_effect(close).expect("original retirement effect runs")?.0 {
-        RetainedWorkPoll::Complete(turn) => Some(turn.result),
-        RetainedWorkPoll::Pending { .. } => None,
+/// 🏦️ The finite effect wallet the original test caller closes its owners from.
+pub fn original_bank() -> EffectBank {
+    EffectBank::new(BankWallet::new(original_grant(), 1 << 40))
+}
+
+/// 🧾️ Takes the progress a settled close turn paid; a pending turn paid nothing.
+fn settled(poll: RetainedWorkPoll<RetainedCloneStep, OriginalRetirementFailure>, what: &str) -> RetainedCloneProgress {
+    match poll {
+        RetainedWorkPoll::Complete(turn) => turn.result.expect(what).progress(),
+        RetainedWorkPoll::Pending { .. } => RetainedCloneProgress::default(),
     }
 }
 
-/// 📬️ Runs one reply-shaped encoder close turn, recovering a child an earlier turn left pending.
-fn encode_turn(native: &mut NativeEncodeControl<'_>, stash: &mut ReplyStash<OriginalRetirementFailure>, grant: RetainedCloneGrant) -> Option<Settled> {
-    let body = grant.maximum_copy_bytes;
-    pump_turn(grant, |effect| {
-        let answer = stash
-            .run(|reply, recover| {
-                (if recover { native.recover_close_retirement_recipient_into(body, effect, reply) } else { native.close_retirement_recipient_into(body, effect, reply) }).map(drop)
-            })
-            .expect("original encode recipient close lends its reply");
-        match answer {
-            Some(result) => RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: 0 }),
-            None => RetainedWorkPoll::Pending { work: 0 },
-        }
-    })
+/// ♻️ Runs one funded close turn of the original caller and returns its paid progress.
+fn close_turn(bank: &mut EffectBank, what: &str, close: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<RetainedCloneStep, OriginalRetirementFailure>) -> RetainedCloneProgress {
+    settled(bank_run(bank, original_grant(), CLOSE_WORK, close).0, what)
+}
+
+/// ♻️ Runs one funded reply-shaped close turn of the original caller and returns its paid progress.
+fn encode_turn(bank: &mut EffectBank, what: &str, native: &mut NativeEncodeControl<'_>) -> RetainedCloneProgress {
+    settled(driven::<OriginalRetirementFailure>(bank, original_grant(), CLOSE_WORK, |effect, reply, recover| if recover { native.recover_close_retirement_recipient_into(CLOSE_BODY, effect, reply) } else { native.close_retirement_recipient_into(CLOSE_BODY, effect, reply) }).0, what)
 }
 
 /// 🧲️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
@@ -62,17 +61,11 @@ pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_
     let mut owner = NativeSnapshotDecodeOwner::new(&mut native, grant);
     let result = operation(&mut owner);
     drop(owner);
-    for turn in 0..=STALL_TURNS {
-        if !native.has_retirement_owner() {
-            return result;
-        }
-        assert!(turn < STALL_TURNS, "original decode recipient stalled");
-        let body = grant.maximum_copy_bytes;
-        if let Some(step) = pump_turn(grant, |effect| native.close_retirement_recipient(body, effect)) {
-            step.expect("original decode recipient closes");
-        }
+    let mut bank = original_bank();
+    while native.has_retirement_owner() {
+        close_turn(&mut bank, "original decode recipient closes", |effect| native.close_retirement_recipient(CLOSE_BODY, effect));
     }
-    unreachable!()
+    result
 }
 
 /// 🛫️ Runs `operation` under an original native encode owner and closes every retired owner afterwards.
@@ -85,39 +78,26 @@ pub fn with_encoding<T>(operation: impl FnOnce(&mut NativeSnapshotEncodeOwner<'_
     let mut owner = NativeSnapshotEncodeOwner::new(&mut native, grant);
     let result = operation(&mut owner);
     drop(owner);
-    let mut stash = ReplyStash::default();
-    for turn in 0..=STALL_TURNS {
-        if !native.has_retirement_owner() {
-            return result;
-        }
-        assert!(turn < STALL_TURNS, "original encode recipient stalled");
-        if let Some(step) = encode_turn(&mut native, &mut stash, grant) {
-            step.expect("original encode recipient closes");
-        }
+    let mut bank = original_bank();
+    while native.has_retirement_owner() {
+        encode_turn(&mut bank, "original encode recipient closes", &mut native);
     }
-    unreachable!()
+    result
 }
 
 /// 🗄️ Runs `operation` under a SQLite snapshot control whose caller installed the original retirement recipient, then closes it.
 pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn FnMut(SqliteSnapshotProgress) -> bool, operation: impl FnOnce(&mut SqliteSnapshotControl<'_>) -> T) -> T {
-    let grant = original_grant();
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let result = {
         let mut control = SqliteSnapshotControl::new(accept, limits);
         control.install_native_retirement_recipient(&mut recipient).expect("original SQLite recipient installs");
         operation(&mut control)
     };
-    for turn in 0..=STALL_TURNS {
-        if recipient.terminal_is_empty() {
-            return result;
-        }
-        assert!(turn < STALL_TURNS, "original SQLite recipient stalled");
-        let body = grant.maximum_copy_bytes;
-        if let Some(step) = pump_turn(grant, |effect| recipient.close_step(body, effect)) {
-            step.expect("original SQLite recipient closes");
-        }
+    let mut bank = original_bank();
+    while !recipient.terminal_is_empty() {
+        close_turn(&mut bank, "original SQLite recipient closes", |effect| recipient.close_step(CLOSE_BODY, effect));
     }
-    unreachable!()
+    result
 }
 
 /// 🚏️ Executes a routed IO payload under original native and SQLite authorities, then closes both native directions.
@@ -141,40 +121,17 @@ pub async fn io_run(route: &IoRoute, payload: IoPayload, limits: SqliteDatabaseL
 
 /// 🧹️ Closes both native directions of one routed run through host-funded turns charged to their original grants.
 fn close_original(native: &mut IoRunControl<'_, '_>) {
+    let mut bank = original_bank();
     {
         let mut owner = native.snapshot_decode().expect("original decode direction");
-        for turn in 0..=STALL_TURNS {
-            if !owner.native().has_retirement_owner() {
-                break;
-            }
-            assert!(turn < STALL_TURNS, "original decode direction stalled");
-            let grant = owner.remaining_grant();
-            let body = grant.maximum_copy_bytes;
-            if let Some(step) = pump_turn(grant, |effect| owner.native().close_retirement_recipient(body, effect)) {
-                let progress = match &step {
-                    Ok(step) => step.progress(),
-                    Err(error) => error.retained_progress(),
-                };
-                owner.record_progress(progress).expect("original decode close is funded");
-                step.expect("original decode recipient closes");
-            }
+        while owner.native().has_retirement_owner() {
+            let progress = close_turn(&mut bank, "original decode recipient closes", |effect| owner.native().close_retirement_recipient(CLOSE_BODY, effect));
+            owner.record_progress(progress).expect("original decode close is funded");
         }
     }
     let mut owner = native.snapshot_encode().expect("original encode direction");
-    let mut stash = ReplyStash::default();
-    for turn in 0..=STALL_TURNS {
-        if !owner.native().has_retirement_owner() {
-            break;
-        }
-        assert!(turn < STALL_TURNS, "original encode direction stalled");
-        let grant = owner.remaining_grant();
-        if let Some(step) = encode_turn(owner.native(), &mut stash, grant) {
-            let progress = match &step {
-                Ok(step) => step.progress(),
-                Err(error) => error.retained_progress(),
-            };
-            owner.record_progress(progress).expect("original encode close is funded");
-            step.expect("original encode recipient closes");
-        }
+    while owner.native().has_retirement_owner() {
+        let progress = encode_turn(&mut bank, "original encode recipient closes", owner.native());
+        owner.record_progress(progress).expect("original encode close is funded");
     }
 }

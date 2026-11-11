@@ -1,8 +1,6 @@
 //! 🧪️ Actual decoder retirement returns its finite Source alias after pure recipient and issuer closure.
 use semio_framework_job_context::*;
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
-#[global_allocator]
-static CLOSE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 #[test]
 fn actual_original_decoder_receipt_closes_only_on_distinct_paid_metadata_turns(){
  let row:serde_json::Value=serde_json::from_str(include_str!("../📐️.json")).unwrap();let s=&row["stock"];let stock=RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize};let q=RetainedCloneGrant{maximum_items:1,..stock};

@@ -10,7 +10,7 @@ use semio_plugin_reactor_patches as patches;
 use semio_plugin_reactor_lifecycle as pending;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_plugin_reactor_wit_bridge::wit_bridge::poll;
-use semio_framework_plugin_reactor_turn as turn;
+use semio_plugin_reactor_turn as turn;
 use semio_ui_contract as ui_contract;
 
 #[doc(hidden)]

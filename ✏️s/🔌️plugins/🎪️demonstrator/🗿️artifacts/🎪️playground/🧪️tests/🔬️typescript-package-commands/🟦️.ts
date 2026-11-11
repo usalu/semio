@@ -1,6 +1,6 @@
-import { receiveScriptProcessInvocation } from "@semio-tech/framework/process/routing";
-import { runArtifactTypeScriptPackageMain } from "@semio-tech/framework/process/typescript-check";
-import { runRepositoryCommand } from "@semio-tech/framework/process/execution";
+import { receiveScriptProcessInvocation } from "@semio-tech/process/routing";
+import { runArtifactTypeScriptPackageMain } from "@semio-tech/process/typescript-check";
+import { runRepositoryCommand } from "@semio-tech/process/execution";
 import { readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { resolve as scriptDirectoryResolve } from "node:path";

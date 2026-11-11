@@ -382,5 +382,54 @@
         }
       ]
     }
+  ],
+  "refusals": [
+    {
+      "name": "unclosed-brace-after-lexemes",
+      "source": "fn f<'a>(s: &'a str) -> char {\n    let _ = r#\"}\"#; /* { */ '}'\n",
+      "key": "process.source.delimiter-unclosed",
+      "values": {
+        "file": "unit.rs",
+        "line": 1,
+        "column": 30,
+        "delimiter": "{"
+      }
+    },
+    {
+      "name": "unexpected-closing-brace",
+      "source": "fn f() {}\n    }\n",
+      "key": "process.source.delimiter-unexpected",
+      "values": {
+        "file": "unit.rs",
+        "line": 2,
+        "column": 5,
+        "delimiter": "}"
+      }
+    },
+    {
+      "name": "missing-paren-before-closing-brace",
+      "source": "fn f() {\n    report.push(info(a(b));\n}\n",
+      "key": "process.source.delimiter-mismatched",
+      "values": {
+        "file": "unit.rs",
+        "line": 2,
+        "column": 16,
+        "delimiter": "(",
+        "closingLine": 3,
+        "closingColumn": 1,
+        "closing": "}"
+      }
+    },
+    {
+      "name": "unclosed-square-bracket",
+      "source": "const A: [u8; 2 = [1, 2];\n",
+      "key": "process.source.delimiter-unclosed",
+      "values": {
+        "file": "unit.rs",
+        "line": 1,
+        "column": 10,
+        "delimiter": "["
+      }
+    }
   ]
 }

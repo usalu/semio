@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve,join} from "node:path";
@@ -10,7 +11,7 @@ test("explicit progress output preserves canonical stdout against the independen
  const source=`setTimeout(()=>process.stdout.write(${JSON.stringify(fixture.expectedStdout)}),${fixture.delayMs})`,invocation=`try{await runOwnedCommand("node",["-e",${JSON.stringify(source)}],process.cwd(),${JSON.stringify(fixture.label)},${fixture.budgetMs},{onProgress:line=>process.stderr.write(line+"\\n")});}catch(error){console.error(error);process.exit(1)}`;
  let code=`const{runOwnedCommand}=await import(${JSON.stringify(join(owner,"🟦️.ts"))});${invocation}`;
  if(process.env.SEMIO_OWNED_PROGRESS_SOURCE_PAIRS){const pair=JSON.parse(readFileSync(process.env.SEMIO_OWNED_PROGRESS_SOURCE_PAIRS,"utf8")).sources[0],bundle=await build({stdin:{contents:pair.before,loader:"ts",resolveDir:owner},bundle:true,write:false,platform:"node",format:"iife",globalName:"progressModule",logLevel:"silent"});code=bundle.outputFiles![0]!.text+`\nconst{runOwnedCommand}=progressModule;${invocation}`;}
- const independent=Bun.spawn(["node","-e",source],{stdout:"pipe",stderr:"pipe"}),owned=Bun.spawn([process.execPath,"--eval",code],{stdout:"pipe",stderr:"pipe"});
+ const independent=Bun.spawn([registeredToolExecutableV1("node"),"-e",source],{stdout:"pipe",stderr:"pipe"}),owned=Bun.spawn([process.execPath,"--eval",code],{stdout:"pipe",stderr:"pipe"});
  const [oracleStatus,status,oracleStdout,stdout,stderr]=await Promise.all([independent.exited,owned.exited,new Response(independent.stdout).text(),new Response(owned.stdout).text(),new Response(owned.stderr).text()]);
  expect(oracleStatus).toBe(0);expect(status).toBe(0);expect(stdout).toBe(oracleStdout);expect(stdout).toBe(fixture.expectedStdout);expect(JSON5.parse(stdout)).toEqual(JSON.parse(fixture.expectedStdout));expect(stderr).toMatch(new RegExp(`\\[${fixture.label}\\] (?:still running after|läuft seit) \\d+ s`,"u"));
 },20000);

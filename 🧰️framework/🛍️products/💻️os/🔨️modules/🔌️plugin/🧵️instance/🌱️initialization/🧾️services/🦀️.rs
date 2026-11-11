@@ -1,6 +1,6 @@
 //! 🧾️ Registration resources, framework service owners and the retained controller closure port from which a mounted instance is assembled.
 use crate::stores::{OriginalArtifactAppBirth,OriginalArtifactStores};
-use semio_framework_plugin_instance_stores::stores_components::ActionIngress;
+use semio_plugin_instance_stores::stores_components::ActionIngress;
 use semio_framework::kernel::ActorId;
 use std::sync::Arc;
 use semio_plugin_decl_app::ArtifactApp;
@@ -10,17 +10,17 @@ use semio_plugin_instance_children::children_components::ChildComposition;
 use semio_plugin_instance_ladders::ladders_components::CloseCursors;
 use semio_plugin_instance_history::history_components::CommandHistory;
 use store::os_store::composition_coordinator::CompositionCoordinator;
-use semio_framework_plugin_instance_docs::docs_components::EnvelopeJobs;
+use semio_plugin_instance_docs::docs_components::EnvelopeJobs;
 use semio_framework::Fault;
 use semio_plugin_instance_history::history_components::HostEvents;
-use semio_framework_plugin_instance_stores::stores_components::LocalInteraction;
+use semio_plugin_instance_stores::stores_components::LocalInteraction;
 use semio_plugin_instance_ladders::ladders_components::MaintenanceCursors;
-use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
+use semio_plugin_instance_docs::docs_components::MediaTransfers;
 use store::MemberFactory;
 use store::Mutation;
 use semio_framework_job::OriginalConstructionDemand;
 use semio_framework_job::OriginalTurnFailure;
-use semio_framework_plugin_instance_stores::stores_components::PeerRoster;
+use semio_plugin_instance_stores::stores_components::PeerRoster;
 use semio_plugin_instance_jobs::jobs_components::PendingReserved;
 use semio_plugin_window_kits::RegisteredDefinitionSource;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
@@ -37,7 +37,7 @@ use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
 use semio_plugin_window_config::WindowConfigOwnerRegistry;
 use semio_plugin_window_transient::window_transient::WindowTransientOwnerRegistry;
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
+use semio_plugin_instance_docs::docs_maintenance_ladder::item;
 use std::mem::size_of;
 /// 🫧️ Actual admitted ephemeral roots, Window registries and installed concrete factories belong to the registration source.
 pub struct OriginalInstanceLiveStores<A:ArtifactApp>{

@@ -13,9 +13,6 @@ extern crate semio_os_kernel as pack;
 #[path = "../../🪝️mounts/⚛️wp4-reactor/🧪️test-hosts/🔂️reactor-turn/🧱️unit-3/🦀️.rs"]
 pub mod reactor_turn_unit_3;
 
-#[cfg(test)]
-#[global_allocator]
-static TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 #[cfg(test)]
 #[test]

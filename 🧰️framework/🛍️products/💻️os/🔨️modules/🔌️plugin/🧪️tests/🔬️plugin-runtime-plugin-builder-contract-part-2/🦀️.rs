@@ -26,10 +26,10 @@ use semio_plugin_plugin_program::decode_wire_serialized;
 use semio_plugin_plugin_program::encode_wire_serialized;
 use semio_plugin_job::reserved_jobs::plugin_job_yield_once;
 use semio_plugin_plugin_program::plugin_runtime;
-use semio_framework_os_kernel as protocol;
+use semio_os_kernel as protocol;
 use semio_plugin_job::reserved_job_outcomes;
 use semio_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission;
-use semio_framework_os_kernel as store;
+use semio_os_kernel as store;
 use semio_plugin_tool_run as tool_run;
 use semio_plugin_abi::ArtifactAnalysis;
 use semio_plugin_abi::ArtifactAnalyzer;
@@ -50,7 +50,7 @@ use semio_plugin_decl_views::child_view::ChildContentRetainers;
 use semio_plugin_abi::DerivedArtifactSpec;
 use semio_plugin_window_kits::LabelAxes;
 use semio_plugin_decl_app::NaturalFileDecodeCursor;
-use semio_framework_os_kernel::io::SubsetValidator;
+use semio_os_kernel::io::SubsetValidator;
 use semio_plugin_decl_emission::ToolCommandCatalog;
 use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 use semio_plugin_window_config::WindowConfigOwner;
@@ -61,14 +61,14 @@ use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::{KE
 use semio_ui_contract::*;
 use semio_framework::*;
 use semio_framework::kernel::*;
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_plugin_reactor_app::__semio_dispatch_PluginApp;
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_ui_locale::LocalizedLabel;
 use semio_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
 use semio_plugin_app_builder::App;
 use semio_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_window_kits::AppActionRegistry;
 use semio_plugin_decl_views::NoDraftMutation;
 use semio_plugin_instance_app::VcsArtifactApp;
@@ -76,7 +76,7 @@ use semio_plugin_abi::{ArtifactDeserializer, ArtifactSerializer};
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework::IconName;
 use semio_framework::ViewModel;
-use semio_framework_os_kernel::Mutation;
+use semio_os_kernel::Mutation;
 use semio_framework::Fault;
 use semio_framework::kernel::{Effect, UiDirtyScope};
 use semio_framework::ActionKind;
@@ -84,8 +84,8 @@ use semio_framework_job::InteractiveJob as _;
 use serde_json::json;
 use semio_framework_artifact_reference::ArtifactRef;
 use pack::snapshot::ArtifactPack;
-use semio_framework_os_kernel::os_store::backbone::Backbone;
-use semio_framework_os_kernel::{MemberFactory, SpaceMember};
+use semio_os_kernel::os_store::backbone::Backbone;
+use semio_os_kernel::{MemberFactory, SpaceMember};
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
 use semio_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::set_count::SetCount;
@@ -145,7 +145,7 @@ use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::Tes
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
@@ -182,7 +182,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     pump.faulted
                 );
             }
-            let (output, scan) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("drive one production publication turn");
+            let (output, scan) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::turn(reactor_native_budget(cx),cx), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("drive one production publication turn");
             let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -211,7 +211,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                                 }
                             }
                             assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
-                            let (output, _) = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_framework_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("delayed renderer ACK does not fault continuation");
+                            let (output, _) = semio_plugin_runtime_ops::ops_typed_operations::plugin_continue_typed_operations(&runtime, semio_plugin_runtime_ops::ops_typed_operations::TypedOperationGrant::UNIT, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("delayed renderer ACK does not fault continuation");
                             assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_results.first()).is_none(), "presented result page must not be republished before an explicit retry deadline");
                         }
                         assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
@@ -232,10 +232,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                             assert_eq!(active.app.typed_operation_result_state_for_test(delayed_token.operation), Some((delayed_token, TypedOperationResultLane::Child, true, true)));
                         }
                         assert_eq!(cell.maintenance_stalled_steps.load(std::sync::atomic::Ordering::SeqCst), 0);
-                        semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, delayed_token).await.expect("delayed exact retained result ACK");
+                        semio_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, delayed_token).await.expect("delayed exact retained result ACK");
                         more = true;
                     } else {
-                        semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.expect("ack exact retained result");
+                        semio_plugin_runtime_ops::ops_typed_operations::plugin_acknowledge_typed_operation_result(&runtime, page.close(mounted_policy.close)).await.expect("ack exact retained result");
                         more = true;
                     }
                 }
@@ -318,7 +318,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
             progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
         };
-        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+        let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let id = 47u32;
         let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");

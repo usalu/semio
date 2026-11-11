@@ -15,7 +15,7 @@
     },
     "native": {
       "directory": ".cache",
-      "maximumBytes": 268435456,
+      "maximumBytes": 805306368,
       "undeclaredUnusedAgeMs": 604800000,
       "undeclaredQuietMs": 3600000,
       "ignored": [
@@ -276,6 +276,28 @@
       "purpose": {
         "en": "Checkout scratch of sandboxed test runs (the sandbox protocol's checkoutScratchDirectory) and its reclaim stamp.",
         "de": "Checkout-Arbeitsfläche sandboxbasierter Testläufe (checkoutScratchDirectory des Sandbox-Protokolls) und ihr Rückgewinnungsstempel."
+      }
+    },
+    {
+      "id": "scratch",
+      "root": "native",
+      "kind": "tree",
+      "directory": "scratch",
+      "budget": {
+        "bytes": 536870912
+      },
+      "collect": {
+        "unusedAgeMs": 3600000,
+        "quietMs": 600000,
+        "custody": "pid",
+        "units": "^(?<pid>[0-9]+)-[A-Za-z0-9._-]+$"
+      },
+      "writers": [
+        "🧰️framework/🔨️modules/🏃️process/🧹️scratch/🟦️.ts"
+      ],
+      "purpose": {
+        "en": "Temporary directories of repo tools and test processes (<pid>-<name>-<random>), on disk instead of the OS temporary directory (RAM on many hosts); a directory of a dead process goes once old, one of a live process never.",
+        "de": "Temporäre Verzeichnisse von Repo-Werkzeugen und Testprozessen (<pid>-<name>-<zufall>), auf der Platte statt im temporären Betriebssystemverzeichnis (oft RAM); das eines beendeten Prozesses geht, sobald es alt ist, das eines lebenden nie."
       }
     },
     {

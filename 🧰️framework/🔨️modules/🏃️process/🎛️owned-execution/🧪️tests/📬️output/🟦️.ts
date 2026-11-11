@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import {expect,test} from "bun:test";
 import {mkdirSync,mkdtempSync,existsSync,readFileSync} from "node:fs";
 import {join} from "node:path";
@@ -11,7 +12,7 @@ const child='const fs=require("node:fs"),r=JSON.parse(process.argv[1]);fs.writeF
 const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("Caller-owned ticket output required");mkdirSync(output,{recursive:true});const storage=mkdtempSync(join(output,"owned-output-"));
 const admit=new Ajv({strict:true}).compile(domain);
 for(const row of fixture.cases)test("owned output "+row.id,async()=>{
- expect(admit(row.limits)).toBe(true);const expected=Bun.spawnSync(["node","-e",oracle,"--",JSON.stringify(row)]);expect(expected.exitCode).toBe(0);const independent=JSON.parse(new TextDecoder().decode(expected.stdout));expect(independent.bytes<=row.limits.maximumBytes&&independent.lines<=row.limits.maximumLines).toBe(row.accepted);
+ expect(admit(row.limits)).toBe(true);const expected=Bun.spawnSync([registeredToolExecutableV1("node"),"-e",oracle,"--",JSON.stringify(row)]);expect(expected.exitCode).toBe(0);const independent=JSON.parse(new TextDecoder().decode(expected.stdout));expect(independent.bytes<=row.limits.maximumBytes&&independent.lines<=row.limits.maximumLines).toBe(row.accepted);
  const marker=join(storage,row.id+".pid"),observed:string[]=[],options={output:row.limits,stdout:row.mode??"inherit",...(row.observe?{onLine:(line:string)=>observed.push(line)}:{})} as OwnedCommandOptions;
  let failure:unknown;try{await runOwnedCommand("node",["-e",child,"--",JSON.stringify(row),marker],storage,"owned-output",fixture.policy.childMilliseconds,options);}catch(error){failure=error;}
  expect(existsSync(marker)).toBe(true);const pid=Number(readFileSync(marker,"utf8"));expect(()=>process.kill(pid,0)).toThrow();

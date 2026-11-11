@@ -2,9 +2,6 @@
 
 #![allow(async_fn_in_trait)]
 
-#[cfg(test)]
-#[global_allocator]
-static GUEST_RUNTIME_TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;

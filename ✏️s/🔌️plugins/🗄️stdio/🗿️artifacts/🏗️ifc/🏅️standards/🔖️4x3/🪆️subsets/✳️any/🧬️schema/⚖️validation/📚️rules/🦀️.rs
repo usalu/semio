@@ -1,7 +1,4 @@
 //! 📚️ IFC-domain frame kinds of the retained machine: header normalization, domain checks, population rule lanes and procedural root reads, plus the local-rule candidate adapter.
-#[cfg(test)]
-#[global_allocator]
-static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 pub use semio_s_artifact_stdio_ifc4x3_machine::machine::{self, *};
 pub use semio_s_artifact_stdio_ifc4x3_machine::{admission, ast, ifc4x3_express_program, metadata, overlay, program_index, receive, retained, IFC4X3_NATIVE_EXPRESS_EXECUTION, IFC4X3_NATIVE_EXPRESS_IMPLEMENTATION, IFC4X3_RETAINED_EXPRESS_IMPLEMENTATION, IFC4X3_RETAINED_EXPRESS_RECEIVING_IMPLEMENTATION};

@@ -1,6 +1,6 @@
 //! 🔌️ The assembled plugin program and its app instances.
 #![allow(async_fn_in_trait)]
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_plugin_job_receiving::original_steps::retired(cx,demand,|effect|{let result=advance(effect);semio_plugin_job_receiving::original_steps::settle(effect,result)})}
+use semio_plugin_job::original_steps::retired;
 extern crate semio_os_kernel as store;
 
 #[doc(hidden)]

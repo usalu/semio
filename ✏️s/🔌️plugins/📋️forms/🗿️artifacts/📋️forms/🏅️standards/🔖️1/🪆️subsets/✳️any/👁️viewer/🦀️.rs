@@ -94,7 +94,7 @@ impl ArtifactViewer for FormsViewer {
         registry.register(retained_commands::FormsViewContributionFactory::new(registry.controller_id()))
     }
 
-    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::ViewerApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_framework_job::OriginalConstructionAdmission,cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         retained_commands::build(request, output, cx)
     }
 

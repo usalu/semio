@@ -41,10 +41,10 @@ semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
-semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
-semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
-semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 # 🚪️ NO `semio-os` / `semio-framework-3d` here, deliberately (ticket
 # 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION D2). The demonstrator used to
@@ -53,7 +53,7 @@ semio-framework-job = { workspace = true }
 # for a process-global key. Those registrations now live with 📐️cad and 🌍️gis, so this crate needs
 # neither the host crate nor the BRep kernel it passed to it. `POLICY_PLUGIN_DEP_OS_SYMBOLS` carries
 # no carve-out for `🎪️demonstrator` any more: reintroducing the dependency is a plain breach.
-semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 
 value_derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-sourcing-curation = { workspace = true }
@@ -74,7 +74,7 @@ semio-hub-procedural = { path = "../../../🌀️procedural/📦️packages/🦀
 semio-hub-process = { path = "../../../🏭️process/📦️packages/🦀️rust" }
 semio-hub-puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust" }
 semio-hub-sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust" }
-semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-plugin" }
+semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -32,7 +32,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
         artifact.data = String::from_utf8(artifact.data).expect("a text-only host edge carries the carrier").into_bytes();
 
         let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;
-        let semio_plugin_decl_app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact).await.expect("consumed") else {
+        let semio_plugin_decl_app::MediaConsumption::DocumentLoad(archive) = semio_plugin_testing_laws::artifact_app_laws::consume_media(&mut consumer, "artifact:in", artifact, cx).await.expect("consumed") else {
             panic!("a whole document is answered as a document archive load");
         };
         assert_eq!(archive.members.iter().map(|entry| (entry.owner.slot.as_str(), entry.owner.child_id.as_str())).collect::<Vec<_>>(), vec![("slot", "child-1")]);

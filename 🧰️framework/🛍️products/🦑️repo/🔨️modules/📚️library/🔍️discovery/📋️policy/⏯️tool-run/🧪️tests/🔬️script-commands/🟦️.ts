@@ -1,6 +1,6 @@
 import { join, resolve } from "node:path";
-import { receiveScriptProcessInvocation, BundleScript, ScriptRouter, advanceScriptInvocation, scriptInvocationBudget, runScriptMain } from "@semio-tech/framework/process/routing";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import { receiveScriptProcessInvocation, BundleScript, ScriptRouter, advanceScriptInvocation, scriptInvocationBudget, runScriptMain } from "@semio-tech/process/routing";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 import { dirname as scriptModuleDirname, resolve as scriptModuleResolve } from "node:path";
 
 /** 📍️ Location of the former `📜️script.ts` of this module, kept for code that resolves siblings of its entry. */

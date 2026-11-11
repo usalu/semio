@@ -1,10 +1,10 @@
-import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
-import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/framework/process/compiler-capacity";
-import { configuredExactCargoLawPolicyV1 } from "@semio-tech/framework/process/cargo-laws";
-import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/framework/process/cargo-test";
-import { readCargoTestPolicyV1 } from "@semio-tech/framework/process/cargo-test";
-import { scriptInvocationBudget } from "@semio-tech/framework/process/routing";
-import { runOwnedCommand } from "@semio-tech/framework/process/execution";
+import type { ScriptInvocation } from "@semio-tech/process/routing";
+import { scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1 } from "@semio-tech/process/compiler-capacity";
+import { configuredExactCargoLawPolicyV1 } from "@semio-tech/process/cargo-laws";
+import { runAdmittedExactCargoLawsV1 as runExactCargoLaws } from "@semio-tech/process/cargo-test";
+import { readCargoTestPolicyV1 } from "@semio-tech/process/cargo-test";
+import { scriptInvocationBudget } from "@semio-tech/process/routing";
+import { runOwnedCommand } from "@semio-tech/process/execution";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";

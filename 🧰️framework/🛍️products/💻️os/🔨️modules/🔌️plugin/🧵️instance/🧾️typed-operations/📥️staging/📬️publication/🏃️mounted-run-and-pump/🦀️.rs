@@ -1,7 +1,7 @@
 //! 🏃️ Mounted run and pump of the typed operation publication: the mounted run with its admitted variant, the publication pump and the mounted interaction unit. See [`super`].
 
 use super::*;
-use semio_framework_plugin_retained_command::typed_operation::pending_result_page::{PublicationPagePlan,PublicationPageIntent};
+use semio_plugin_retained_command::typed_operation::pending_result_page::{PublicationPagePlan,PublicationPageIntent};
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     /// 🏃️ Drives ONE mounted operation's publication ladder for a bounded slice of this continuation

@@ -15,7 +15,7 @@ use semio_plugin_decl_emission::Emit;
 use crate::docs_components::{EnvelopeJobs, MediaTransfers};
 use semio_framework::{Fault, FaultFrom};
 use std::future::Future;
-use semio_framework_plugin_instance_stores::stores_components::InstanceStores;
+use semio_plugin_instance_stores::stores_components::InstanceStores;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_plugin_reactor_app::PluginApp;
@@ -56,8 +56,7 @@ fn archive_retirement_failure(error:semio_framework_value::OriginalRetirementFai
 }
 fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T,semio_framework_value::OriginalRetirementFailure>,progress:RetainedCloneProgress,observed:u128)->Result<T,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
  use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued};
- let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:u64::try_from(turn.work).unwrap_or(u64::MAX)},u64::try_from(observed).unwrap_or(u64::MAX));
- match (outcome.value,outcome.receiving_refusal) {
+ let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:u64::try_from(turn.work).unwrap_or(u64::MAX)},u64::try_from(observed).unwrap_or(u64::MAX)); match (outcome.value,outcome.receiving_refusal) {
   (Ok(value),None)=>Ok(value),
   (Ok(_),Some(failure))=>{let mut failure:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure=failure.into();failure.effects=progress;Err(failure)},
   (Err(error),receiving)=>Err(archive_retirement_failure(error,receiving,progress)),
@@ -196,9 +195,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         }
         let fuel=cx.fuel_remaining();
         let Some((poll,_))=cx.with_original_effect(grant,|cx,effect|{let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:true};active.close_step(effect,&actual)})? else{return Ok(idle())};
-        let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
-        let progress=match &turn.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
-        let observed=active.last_turn_native_work();
+        let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};        let progress=match &turn.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
+        let observed=u64::try_from(active.last_turn_native_work()).unwrap_or(u64::MAX);
         match receive_archive(cx,grant,fuel,turn,progress,observed)? {
             RetainedCloneStep::Complete(progress) => {
                 if !active.inputs_are_empty() {
@@ -236,7 +234,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                 let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:false};
                 let turn=match active.work.with_loan(&mut (&actual as &dyn semio_plugin_document_media::ArchiveWorkTurn),|loan|decoder.step(&archive.parent_spr,&actual,grant,&mut active.decoded_history,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};drop(actual);
                 let progress=decoder.take_receipt().map_or_else(||match &turn.result {Err(error)=>error.retained_progress(),_=>Default::default()},|(_,progress)|progress);
-                let observed=decoder.last_turn_native_work();
+                let observed=u64::try_from(decoder.last_turn_native_work()).unwrap_or(u64::MAX);
                 let step=receive_archive(cx,grant,fuel,turn,progress,observed)?;
                 match step {
                     protocol::RetainedHistorySourceStep::Fault => Err(document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, format!("document archive parent SPR was rejected: {:?}", decoder.fault())).with_retained_progress(progress).into()),
@@ -463,8 +461,8 @@ mod archive_retirement_cause_tests {
   let mut caller=OriginalJobFixtureCaller::admit(OperationId(1771),Generation(1),grant(),||Some(1),u64::MAX,100_000);let mut failure=None;let mut probe=None;
   caller.turn(grant(),|cx|cx.with_original_work_loan(4096,cx.deadline_us(),|cx|{let (bytes,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||Vec::<u8>::with_capacity(73));assert_eq!(heap.requested_bytes,73);let progress=RetainedCloneProgress{copied_items:1,retained_capacity_bytes:heap.requested_bytes,..Default::default()};cx.consume_retained(progress)?;cx.consume_fuel(1);let (out,fold)=semio_framework_trace::observe_heap_allocations_on_this_thread(||archive_retirement_failure(OriginalRetirementFailure::from_primary_and_work(child,work),Some(outer),progress));assert_eq!((fold.requested_bytes,fold.released_bytes),(0,0));failure=Some(out);probe=Some(bytes);Ok(())})).unwrap();
   let owned=failure.as_ref().unwrap();assert_eq!(owned.effects.retained_capacity_bytes,73);match &owned.primary{PluginLifecyclePrimary::RetirementReceiving(value)=>{assert_eq!(value.retirement.primary().unwrap().message.as_ptr(),child_ptr);assert_eq!(value.retirement.work_refusal().unwrap().message.as_ptr(),work_ptr);assert_eq!(value.receiving_primary.message,"outer quote");assert!(value.receiving_receipt_refusal.is_some());assert!(value.receiving_context_refusal.is_some());assert!(value.receiving_work_refusal.is_some());assert_eq!(value.receiving_effects.copied_bytes,5);},_=>panic!("original combined owner required")};
-  let mut owner=None;caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::admit_owned_retirement(failure.take().unwrap(),grant()));let (value,progress)=turn.result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));cx.consume_retained(progress)?;cx.consume_fuel(turn.work);owner=Some(value);Ok(())})).unwrap();
-  for _ in 0..100_000{if owner.is_none(){break}caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let (turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner,grant()));let progress=turn.result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));cx.consume_retained(progress)?;cx.consume_fuel(turn.work);turn.result?;Ok(())})).unwrap();}assert!(owner.is_none());
+  let mut owner=None;caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let ((turn,heap),_)=cx.with_original_effect(grant(),|_,effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::admit_owned_retirement(&mut failure,effect)))?.expect("funded fixture turn");let (value,progress)=turn.result.unwrap().expect("admitted retirement owner");assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));cx.consume_retained(progress)?;cx.consume_fuel(u64::try_from(turn.work).unwrap());owner=Some(value);Ok(())})).unwrap();
+  for _ in 0..100_000{if owner.is_none(){break}caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let ((poll,heap),_)=cx.with_original_effect(grant(),|_,effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner,grant().maximum_copy_bytes,effect)))?.expect("funded fixture turn");let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{..}=>panic!("fixture retirement turn stayed pending")};let progress=turn.result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));cx.consume_retained(progress)?;cx.consume_fuel(u64::try_from(turn.work).unwrap());turn.result?;Ok(())})).unwrap();}assert!(owner.is_none());
   caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(probe.take().unwrap()));assert_eq!(heap.released_bytes,73);cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:heap.released_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(())})).unwrap();caller.retire(grant());
   let work_only=archive_retirement_failure(OriginalRetirementFailure::from_work_refusal(ValueError::literal(ValueRefusalKind::WorkLimit,"work only")),None,Default::default());assert!(matches!(work_only.primary,PluginLifecyclePrimary::Retirement(_)));
  }

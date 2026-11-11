@@ -71,28 +71,32 @@
       "maximumBytes": 8,
       "remainingFiles": 1,
       "expectedBytes": null,
-      "reason": "bytes"
+      "reason": "bytes",
+      "key": "process.source.read-bytes-exceeded"
     },
     {
       "bytes": 0,
       "maximumBytes": 8,
       "remainingFiles": 0,
       "expectedBytes": null,
-      "reason": "files"
+      "reason": "files",
+      "key": "process.source.read-files-exhausted"
     },
     {
       "bytes": 3,
       "maximumBytes": 8,
       "remainingFiles": 1,
       "expectedBytes": 4,
-      "reason": "extent"
+      "reason": "extent",
+      "key": "process.source.read-extent-mismatched"
     },
     {
       "bytes": 9,
       "maximumBytes": 8,
       "remainingFiles": 0,
       "expectedBytes": null,
-      "reason": "files"
+      "reason": "files",
+      "key": "process.source.read-files-exhausted"
     }
   ]
 }

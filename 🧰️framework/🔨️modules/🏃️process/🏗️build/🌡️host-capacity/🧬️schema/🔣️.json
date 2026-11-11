@@ -104,7 +104,8 @@
         "coresEnvironment": "SEMIO_HOST_CAPACITY_CORES",
         "growSpareJobs": 1,
         "growSettleAttempts": 2,
-        "upgradeNarrowedMinimumJobs": 1
+        "upgradeNarrowedMinimumJobs": 1,
+        "staleSampleMilliseconds": 30000
       }
     },
     "Level": {
@@ -282,6 +283,7 @@
           "additionalProperties": false,
           "required": [
             "ceilingBasisPoints",
+            "activeMegabytesPerSecond",
             "outMegabytesPerSecond"
           ],
           "properties": {
@@ -289,6 +291,10 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 10000
+            },
+            "activeMegabytesPerSecond": {
+              "type": "number",
+              "minimum": 0
             },
             "outMegabytesPerSecond": {
               "type": "number",

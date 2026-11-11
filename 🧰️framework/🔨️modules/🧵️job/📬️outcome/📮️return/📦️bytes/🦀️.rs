@@ -13,11 +13,9 @@ impl OriginalContiguousJobBytes{
   owner.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;
   if owner.bytes.is_some()&&!owner.admission.has_failure(){return if owner.admission.terminal_is_empty(){Ok(true)}else{owner.admission.reset_step(cx)}}
   if owner.failure.is_some(){return Err(refusal("contiguous birth construction already failed").into())}
-  let status=admit_original_construction(cx,&mut owner.bytes,&mut owner.admission,demand,1,|_,_|{let mut bytes=Vec::new();let result=bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original contiguous backing allocation refused")).map(|()|{let capacity=bytes.capacity();(bytes,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})});semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:1}})?;
-  match status{
-   OriginalConstructionStatus::Ready=>owner.admission.reset_step(cx),
-   OriginalConstructionStatus::Pending=>Ok(false),
-   OriginalConstructionStatus::Failed=>{if !owner.admission.take_failure_into_step(&mut owner.failure,cx)?{return Ok(false)}Err(refusal("contiguous birth native construction failed").into())}
+  match admit_original_construction_settled(cx,&mut owner.admission,&mut owner.bytes,demand,1,|_,_|{let mut bytes=Vec::new();let result=bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original contiguous backing allocation refused")).map(|()|{let capacity=bytes.capacity();(bytes,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})});semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:1}}){
+   Err(error)=>{if !owner.admission.has_failure(){return Err(error)}if !owner.admission.take_failure_into_step(&mut owner.failure,cx)?{return Ok(false)}Err(refusal("contiguous birth native construction failed").into())}
+   settled=>settled
   }
  }
  pub fn borrowed_bytes(&self)->Option<&[u8]>{self.bytes.as_deref()}

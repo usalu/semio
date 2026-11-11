@@ -25,7 +25,7 @@ path = "../../🦀️.rs"
 semio-hub-artifact-authority = { workspace = true }
 semio-hub-directory = { workspace = true }
 semio-hub-directory-dispatch = { workspace = true }
-semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-hash = { path = "../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 protocol = { path = "../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 directory = { path = "../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-os-kernel" }
 

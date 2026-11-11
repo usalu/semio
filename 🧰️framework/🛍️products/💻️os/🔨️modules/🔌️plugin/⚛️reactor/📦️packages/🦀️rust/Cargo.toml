@@ -34,9 +34,9 @@ semio-plugin-runtime-instances = { path = "../../🏃️runtime/📦️instances
 semio-plugin-reactor-patches = { path = "../../🩹️patches/📦️packages/🦀️rust" }
 semio-plugin-reactor-surfaces = { path = "../../📥️cold-pair/📦️packages/🦀️rust" }
 semio-plugin-reactor-tasks = { path = "../../⏲️tasks/📦️packages/🦀️rust" }
-semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
-semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-framework = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

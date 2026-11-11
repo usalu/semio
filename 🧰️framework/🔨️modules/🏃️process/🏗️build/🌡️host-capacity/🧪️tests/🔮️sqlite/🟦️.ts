@@ -20,7 +20,7 @@ export function sqliteHostOracleV1(policy:HostCapacityPolicyV1,item:Omit<HostCas
   const observed=host.availableMegabytes-floor-totals.unrealized,budget=Math.floor(cap*policy.memory.budgetBasisPoints/10000)-totals.committed,room=Math.min(observed,budget);
   const ceiling=policy.load.perCoreCeiling*host.cores,unlimited=host.load===null&&totals.cpu===0,load=unlimited?null:ceiling-Math.max(host.load??0,totals.cpu);
   const swapCeiling=Math.floor(host.totalMegabytes*policy.swap.ceilingBasisPoints/10000),rate=host.swapOutMegabytesPerSecond;
-  const hard=host.pressure==="critical"?"pressure-critical":host.swapUsedMegabytes!==null&&host.swapUsedMegabytes>swapCeiling&&(rate===null||rate>0)?"swap":rate!==null&&rate>policy.swap.outMegabytesPerSecond?"swap-activity":null;
+  const hard=host.pressure==="critical"?"pressure-critical":host.swapUsedMegabytes!==null&&host.swapUsedMegabytes>swapCeiling&&rate!==null&&rate>=policy.swap.activeMegabytesPerSecond?"swap":rate!==null&&rate>policy.swap.outMegabytesPerSecond?"swap-activity":null;
   if(hard!==null&&!HARD.has(hard))throw Error("Unknown hard reason");
   const filesOver=host.openFiles!==null&&host.openFilesMaximum!==null&&host.openFiles/host.openFilesMaximum>policy.files.ceilingBasisPoints/10000,imagesOver=host.attachedImages!==null&&host.attachedImages>=policy.attaches.maximum;
   const softReason=host.pressure==="warn"?"pressure-warn":filesOver?"files":imagesOver?"attaches":null,soft=softReason===null?0:1,quoted=hard===null?"NULL":`'${hard}'`,empty=totals.n===0?1:0;

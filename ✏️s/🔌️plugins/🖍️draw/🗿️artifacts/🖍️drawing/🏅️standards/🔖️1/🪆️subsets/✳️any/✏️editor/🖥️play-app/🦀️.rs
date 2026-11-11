@@ -161,7 +161,7 @@ impl ArtifactEditor for DrawingPlayApp {
         registry.register(DrawingExportCommandJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         let tool_id = original.tool_id.as_str();
         if DRAWING_EXPORT_TOOL_IDS.contains(&tool_id) {return export_job::build(request, output, cx);}
@@ -209,9 +209,9 @@ impl ArtifactEditor for DrawingPlayApp {
         semio_s_artifact_draw_drawing_editor_interaction::clipboard::cut(doc.snapshot,&interaction.selection(DRAWING_INTERACTION_DOMAIN).ids).unwrap_or_default()
     }
 
-    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_reserved_tool_job(request:&mut Option<semio_plugin::ArtifactReservedToolJobRequest<semio_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if body.is_none()&&!request.as_ref().is_some_and(|request|DRAWING_CLIPBOARD_RESERVED_IDS.contains(&request.tool_id.as_str())){return Ok(false);}
-        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<semio_plugin::EditorApp<Self>,crate::clipboard_job::DrawingClipboardJob>(request,body,cx)
+        semio_plugin::plugin_app_close_prelude::admit_reserved_work::<semio_plugin::EditorApp<Self>,crate::clipboard_job::DrawingClipboardJob>(request,body,construction,cx)
     }
 
     /// 🏷️ `app_commands!`'s generated `command_id()`.

@@ -2,10 +2,6 @@
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 
-/// 🧮️ The heap witness this crate's allocation laws read through `semio_framework_trace::observe_heap_allocations_on_this_thread`.
-#[cfg(test)]
-#[global_allocator]
-static OWNERSHIP_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 
 #[path = "../🦀️.rs"]
 pub mod bounded_ownership;

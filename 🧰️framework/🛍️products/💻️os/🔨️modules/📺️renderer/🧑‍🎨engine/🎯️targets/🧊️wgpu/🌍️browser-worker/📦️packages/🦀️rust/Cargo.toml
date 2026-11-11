@@ -46,7 +46,7 @@ semio-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️p
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3.83"
 semio-framework-job = { workspace = true }
-semio-plugin = { path = "../../../../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-plugin" }
+semio-plugin = { path = "../../../../../../../🔌️plugin/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 ui_host = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust", package = "semio-ui-host" }

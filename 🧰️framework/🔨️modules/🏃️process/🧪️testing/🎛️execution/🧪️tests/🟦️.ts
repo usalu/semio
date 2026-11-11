@@ -1,3 +1,4 @@
+import {registeredToolExecutableV1} from "../../../🧰️tools/🏃️run/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createRequire } from "node:module";
 import { readFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
@@ -33,7 +34,7 @@ test("test commands require explicit budgets and preserve failure and cancellati
       expect(child.status, child.stderr).toBe(row.throwOnFailure ? 0 : row.exitCode);
       if (row.throwOnFailure) expect(child.stdout).toContain(row.expected);
     }
-    const oracle = spawnSync("node", ["-e", fixture.cases[1].program], { cwd: temporary, encoding: "utf8" }); expect(oracle.status).toBe(fixture.cases[1].exitCode);
+    const oracle = spawnSync(registeredToolExecutableV1("node"), ["-e", fixture.cases[1].program], { cwd: temporary, encoding: "utf8" }); expect(oracle.status).toBe(fixture.cases[1].exitCode);
     await expect(api.runBudgetedTestCommand("node", ["-e", ""], { cwd: temporary, budgetMs: -1, throwOnFailure: true })).rejects.toThrow("Invalid test command budget");
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }, 60000);

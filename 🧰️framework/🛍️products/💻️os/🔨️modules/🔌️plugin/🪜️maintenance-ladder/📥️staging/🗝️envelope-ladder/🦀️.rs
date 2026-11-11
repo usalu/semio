@@ -17,7 +17,7 @@ use semio_plugin_reactor_app::PluginApp;
 use semio_ui_contract::*;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
-use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
+use semio_plugin_instance_docs::docs_maintenance_ladder::item;
 
 #[doc(hidden)]
 pub fn handoff_demand() -> RetirementDemand {

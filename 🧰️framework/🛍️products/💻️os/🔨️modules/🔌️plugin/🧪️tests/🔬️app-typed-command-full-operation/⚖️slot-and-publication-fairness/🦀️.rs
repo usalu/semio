@@ -30,7 +30,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
         let mounted_policy=semio_plugin_mounted_owner::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
-        let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
+        let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
         let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await.expect("the reference snapshot births");
         let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
         let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
@@ -58,7 +58,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     original_emission_caller: None,
                     original_emission_decoder: None,
                     original_emission_body: None,
-                    tool_stage: semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,
+                    tool_stage: semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,
                     tool_press_result: None,
                     pending_stream_abort: None,
                     stream_abort_resident: Default::default(),
@@ -93,7 +93,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
-                    page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,
+                    page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,
                     result_page_presented: false,
                     result_sequence: 0,
                     publication_progress: 0,
@@ -174,14 +174,14 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: None,
-                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                    tool_stage:semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
                     owned_child_result_pending: false,
                     captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
-                    page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page: Some(page),
+                    page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page: Some(page),
                     result_page_presented: true,
                     result_sequence: 0,
                     publication_progress: 0,
@@ -277,14 +277,14 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     terminal_seen: true,
                 worker_resume_pending: false,
                     publication: None,
-                    tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                    tool_stage:semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                     pending_child_publication: None,
                     owned_child_group: None,
                     owned_child_committed: false,
                     owned_child_result_pending: false,
                     captured_child_content: None,
                     captured_child_content_generation: 0,
-                    page_publication:semio_framework_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page: Some(page),
+                    page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page: Some(page),
                     result_page_presented: true,
                     result_sequence,
                     publication_progress: 0,
@@ -313,12 +313,18 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
         let payload = fixture["initial"]["payloadOctets"].as_array().unwrap();
         let copy_bytes = TYPED_OPERATION_RESULT_PAGE_BYTES + payload.len() + 2 * std::mem::size_of::<TypedOperationResultPage>();
         let mut page = None;
+        let mut admission = semio_framework_job::OriginalConstructionAdmission::default();
         let demand = semio_framework::action_bus::ToolJobAdmissionDemand { items: 1, copy_bytes, capacity_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES, release_bytes: 0, depth: 1 };
-        assert!(cx.with_retained_loan(grant, |same| semio_framework::action_bus::admit_original_tool_construction_settled(same, &mut Default::default(), &mut page, demand, |_| {
+        assert!(cx.with_retained_loan(grant, |same| semio_framework::action_bus::admit_original_tool_construction_settled(same, &mut admission, &mut page, demand, |_| {
             let mut bytes = vec![0; TYPED_OPERATION_RESULT_PAGE_BYTES];
             for (destination, byte) in bytes.iter_mut().zip(payload) { *destination = byte.as_u64().unwrap() as u8; }
             Ok((TypedOperationResultPage::from_original(token, lane, bytes, payload.len()), RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, retained_capacity_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES, ..Default::default() }))
         })).unwrap());
+        for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+            if admission.terminal_is_empty() { break; }
+            cx.with_retained_loan(grant, |same| admission.close_step(same)).unwrap();
+        }
+        assert!(admission.terminal_is_empty());
         page.unwrap()
     }
 

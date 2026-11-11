@@ -231,7 +231,7 @@ async fn raster_import_media_appends_layer_from_incoming_image() {
         media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
         payload: MediaPayload::Structured { schema: "2d.image".into(), json: semio_framework_io_base64::base64_standard_encode(semio_s_artifact_raster_raster_examples::art_raster_demo::emblem_image_asset().data) },
     };
-    app.0.import_media("image:in", media, &artifact_app_laws::meta("local"), app.1.cx()).await.expect("import image:in");
+    semio_plugin::artifact_app_laws::import_media(&mut app.0, "image:in", media, &artifact_app_laws::meta("local"), app.1.cx()).await.expect("import image:in");
     let imported = app.snapshot().expect("snapshot");
     let layers = imported.layers.len();
     let image_key = match imported.layers.last().expect("imported layer") {

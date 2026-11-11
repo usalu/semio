@@ -21,7 +21,7 @@ import { sha256HexV1, utf8TextV1 } from "../🧂️text-bytes/🟨️.mjs";
 /** 🔢️ A hex SHA-256 digest, compiled once. */
 const SHA256_HEX_V1 = /^[a-f0-9]{64}$/u;
 import { GRAPH_MEMORY_POLICY_V1, graphStringInternerV1, internJsonStringsV1 } from "../🧠️memory/🟨️.mjs";
-import { createRowTableV1, factKeyV1 } from "./🔢️row-table/🟨️.mjs";
+import { createRowPoolV1, createRowTableV1, factKeyV1 } from "./🔢️row-table/🟨️.mjs";
 import { brotliCompress, brotliCompressSync, brotliDecompressSync, constants as zlibConstants } from "node:zlib";
 
 /** 🗜️ Persisted inference records are brotli streams: their observation rows repeat across projects and shrink about 15 times. */
@@ -214,6 +214,11 @@ const rowTableV1=createRowTableV1({maximumRows:OBSERVATION_LIMITS_V1.rowStoreRow
 const observationJsons=new WeakMap();
 function observationRowsJsonV1(rows){return "["+rows.map(row=>{let text=observationJsons.get(row);if(text===undefined){text=JSON.stringify(row);observationJsons.set(row,text);}return text;}).join(",")+"]";}
 function internObservationsV1(rows){return rows.map(row=>rowTableV1.canonical(row.kind,row.path,row.fact,path=>{if(typeof row.path==="string")row.path=path;return row;}));}
+const rowPoolV1=createRowPoolV1();
+
+/** 🪢️ Makes the rows of a stored or detached closure one live instance per distinct row, in place: the caches that keep thousands of such rows cost one object per distinct row, not one per holder. */
+export function shareObservationRowsV1(rows){return rowPoolV1.rows(rows);}
+
 function canonicalObservationV1(kind,path,fact){return rowTableV1.canonical(kind,path,fact,shared=>({kind,path:shared,fact}));}
 function recordRowV1(row){
  const capture=sourceCaptures.getStore(),target = scopes.getStore() ?? (loadSealed||capture ? undefined : loadObservations);
