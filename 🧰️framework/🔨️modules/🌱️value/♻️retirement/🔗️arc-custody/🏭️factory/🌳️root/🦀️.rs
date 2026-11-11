@@ -1,5 +1,5 @@
 //! 🌳️ A returned Arc root elects its unique payload, converts it once into original shared storage and retires it through its captured issuer.
-use crate::{OriginalRetirementCloseLoan,ArtifactOwnedValueRetirementFactory,SnapshotRetirementFactory,ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementPoll,OriginalRetirementFailure,RetainedAllocationEffect,FactoryProducerReply};
+use crate::{FactoryAuthority,FactoryRetirement,OriginalRetirementCloseLoan,ArtifactOwnedValueRetirementFactory,SnapshotRetirementFactory,ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementPoll,OriginalRetirementFailure,RetainedAllocationEffect,FactoryProducerReply};
 use crate::retirement::{record_retirement_work,arc_custody::{arc_bytes,original::SharedOriginalStorage}};
 use crate::retained_clone::{retained_clone_grant_admits,admit_retained_clone_close,OriginalEffectReply,OriginalEffectReplyComplete};
 use semio_framework_value_retirement::{FactoryTicketClose,RetirementHeaderRelease};
@@ -35,19 +35,22 @@ pub fn box_close_step(slot:&mut Option<Retired>,body:usize,effect:&mut RetainedA
         return done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:extent,..empty})),work)
     }
     let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-    let turn=match owner.close_step(body,&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>return RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>turn};
+    let turn=match crate::close_owner(owner.as_mut(),body,&mut effect.nested(child)){RetainedWorkPoll::Pending{work}=>return RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>turn};
     let step=match turn.result{Ok(step)=>step,Err(error)=>return done(Err(error),turn.work)};
     match admit_retained_clone_close(child,step,owner.terminal_is_empty(),"boxed retirement child"){Ok(step)=>done(Ok(RetainedCloneStep::Progress(step.progress())),turn.work),Err(error)=>done(Err(error.into()),turn.work)}
 }
 enum RootIssuer<P:Send+Sync+'static>{Owned(Arc<dyn ArtifactOwnedValueRetirementFactory<P>>),Snapshot(Arc<dyn SnapshotRetirementFactory<P>>)}
+impl<P:Send+Sync+'static> RootIssuer<P>{
+    /// 🔐️ Hands the captured issuer to the factory authority that retires its Arc header under a receipt.
+    fn into_authority(self)->FactoryAuthority{let factory:Arc<dyn FactoryRetirement>=match self{Self::Owned(factory)=>factory,Self::Snapshot(factory)=>factory};FactoryAuthority::new(factory)}}
 /// 🏛️ The one Arc-root retirement: alias, elected payload, shared storage and captured issuer stay resident until physical return.
-pub struct ArcRootRetirement<P:Send+Sync+'static>{alias:ManuallyDrop<Option<Arc<P>>>,elected:ManuallyDrop<Option<P>>,storage:ManuallyDrop<Option<SharedOriginalStorage<P>>>,issuer:Option<RootIssuer<P>>,active:ManuallyDrop<Option<Retired>>,ticket:FactoryTicketClose}
+pub struct ArcRootRetirement<P:Send+Sync+'static>{alias:ManuallyDrop<Option<Arc<P>>>,elected:ManuallyDrop<Option<P>>,storage:ManuallyDrop<Option<SharedOriginalStorage<P>>>,issuer:Option<RootIssuer<P>>,closing:ManuallyDrop<Option<FactoryAuthority>>,active:ManuallyDrop<Option<Retired>>,ticket:FactoryTicketClose,reply:semio_framework_value_retirement::ReplyStash<OriginalRetirementFailure>}
 impl<P:Send+Sync+'static> ArcRootRetirement<P>{
     pub const fn constructor_capacity_bytes()->usize{size_of::<Self>()}
     pub fn admission_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Arc<P>>>()+size_of::<Option<RootIssuer<P>>>()+size_of::<Self>()+size_of::<Option<Retired>>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
     pub fn admit_original_source_work_demand(original:&Option<Arc<P>>)->u64{u64::from(original.is_some())}
     pub fn original_admission_demands(original:&Option<Arc<P>>)->RetirementDemand{if original.is_none(){Default::default()}else{Self::admission_demand()}}
-    fn from_parts(alias:Option<Arc<P>>,issuer:Option<RootIssuer<P>>)->Self{Self{alias:ManuallyDrop::new(alias),elected:ManuallyDrop::new(None),storage:ManuallyDrop::new(None),issuer,active:ManuallyDrop::new(None),ticket:FactoryTicketClose::vacant()}}
+    fn from_parts(alias:Option<Arc<P>>,issuer:Option<RootIssuer<P>>)->Self{Self{alias:ManuallyDrop::new(alias),elected:ManuallyDrop::new(None),storage:ManuallyDrop::new(None),issuer,closing:ManuallyDrop::new(None),active:ManuallyDrop::new(None),ticket:FactoryTicketClose::vacant(),reply:Default::default()}}
     /// 🆕️ Takes custody of a root and its owned-value issuer before any election.
     pub fn new(alias:Arc<P>,issuer:Arc<dyn ArtifactOwnedValueRetirementFactory<P>>)->Self{Self::from_parts(Some(alias),Some(RootIssuer::Owned(issuer)))}
     /// 🆕️ Takes custody of a root and its snapshot issuer before any election.
@@ -69,7 +72,8 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
     pub fn admit_original(original:&mut Option<Arc<P>>,factory:&mut Option<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::admit(original,factory.take().map(RootIssuer::Owned),output,effect)}
     /// 🪑️ Moves the root and a snapshot issuer into one resident frame.
     pub fn admit_snapshot(original:&mut Option<Arc<P>>,factory:&mut Option<Arc<dyn SnapshotRetirementFactory<P>>>,output:&mut Option<Retired>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{Self::admit(original,factory.take().map(RootIssuer::Snapshot),output,effect)}
-    fn terminal(&self)->bool{self.alias.is_none()&&self.elected.is_none()&&self.storage.is_none()&&self.active.is_none()&&self.ticket.is_empty()}
+    fn terminal(&self)->bool{self.alias.is_none()&&self.elected.is_none()&&self.storage.is_none()&&self.active.is_none()&&self.ticket.is_empty()&&self.issuer.is_none()&&self.closing.is_none()}
+    fn issuer_closing(&self)->bool{self.alias.is_none()&&self.elected.is_none()&&self.storage.is_none()&&self.active.is_none()&&self.ticket.is_empty()&&self.closing.as_ref().is_some_and(|owner|!owner.terminal_is_empty())}
     fn lost()->ValueError{ValueError::invariant("store root storage lost its issuer")}
     fn child_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let mut demand=self.ticket.next_demand(&self.active,body)?;
@@ -77,6 +81,13 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
         Ok(demand)
     }
     fn close_reply<'r>(&mut self,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>,recover:bool)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{
+        if self.issuer_closing(){
+            let grant=effect.grant();
+            if grant.maximum_items==0||effect.maximum_work_units()==0{return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}
+            let depth=grant.maximum_depth.checked_sub(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"store root issuer depth absent"))?;
+            let remaining=effect.remaining_work_units()?;let mut child=effect.reborrow(RetainedCloneGrant{maximum_depth:depth,..grant},remaining)?;
+            return self.closing.as_mut().expect("store root issuer authority").close_erased_into(original,body,&mut child,reply.progress(),recover)
+        }
         if self.active.is_none()&&self.ticket.is_empty(){
             if recover{return Err(ValueError::invariant("store root has no original child to recover"))}
             return match self.stage(body,effect){RetainedWorkPoll::Complete(turn)=>Ok(reply.complete(turn.result)),RetainedWorkPoll::Pending{..}=>Err(ValueError::invariant("store root stage left its producer reply pending"))}
@@ -97,6 +108,13 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
         if self.active.is_some(){return self.child_demands(body)}
         if let Some(storage)=self.storage.as_ref(){return match self.issuer.as_ref(){Some(RootIssuer::Snapshot(issuer))=>issuer.retire_demands(storage),Some(RootIssuer::Owned(_))=>Ok(FactorySharedRetirement::<P>::original_admission_demands(&self.storage)),None=>Err(Self::lost())}}
         if self.elected.is_some(){return SharedOriginalStorage::<P>::source_admission_demand()}
+        if let Some(owner)=self.closing.as_ref(){
+            if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<FactoryAuthority>>(),depth:1,..Default::default()})}
+            let mut demand=owner.demands(body)?;
+            demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"store root issuer depth overflow"))?;
+            return Ok(demand)
+        }
+        if self.issuer.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<RootIssuer<P>>>()+size_of::<Option<FactoryAuthority>>(),depth:1,..Default::default()})}
         Ok(Default::default())
     }
     fn work_demand(&self,body:usize)->Result<u64,ValueError>{
@@ -104,7 +122,8 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
         if self.active.is_some(){return self.ticket.next_work(&self.active,body)}
         if let Some(storage)=self.storage.as_ref(){return match self.issuer.as_ref(){Some(RootIssuer::Snapshot(issuer))=>issuer.retire_work_demand(storage),Some(RootIssuer::Owned(_))=>Ok(FactorySharedRetirement::<P>::admit_original_source_work_demand(&self.storage)),None=>Err(Self::lost())}}
         if self.elected.is_some(){return Ok(SharedOriginalStorage::<P>::source_admission_work_demand())}
-        Ok(0)
+        if let Some(owner)=self.closing.as_ref(){return if owner.terminal_is_empty(){Ok(1)}else{owner.next_computational_work(body)}}
+        Ok(u64::from(self.issuer.is_some()))
     }
     fn elect(&mut self,effect:&mut RetainedAllocationEffect<'_>,demand:RetirementDemand)->OriginalRetirementPoll{
         let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return done(Err(error.into()),work)};
@@ -122,7 +141,7 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
         let answer=(||->Result<Option<Result<RetainedCloneStep,OriginalRetirementFailure>>,ValueError>{
             match self.issuer.as_mut(){
                 Some(RootIssuer::Snapshot(issuer))=>{let borrowed=FactoryProducerReply::borrow(&mut output,&mut reply,&mut attempted)?;let _=issuer.retire(&mut self.storage,effect,borrowed);Ok(reply.take().map(|turn|turn.result.map(|progress|{if let Some(owner)=output.take(){*self.active=Some(owner)}RetainedCloneStep::Progress(progress)})))}
-                Some(RootIssuer::Owned(factory))=>{let mut captured=Some(Arc::clone(factory));let reply=OriginalEffectReply::borrow(&mut slot)?;drop(FactorySharedRetirement::<P>::admit_original_into(&mut self.storage,&mut captured,&mut self.active,effect,reply)?);Ok(slot.take())}
+                Some(RootIssuer::Owned(factory))=>{let mut captured=Some(Arc::clone(factory));let reply=OriginalEffectReply::borrow(&mut slot)?;drop(FactorySharedRetirement::<P>::admit_original_into(&mut self.storage,&mut captured,&mut self.active,effect,reply)?);Ok(slot.take().map(|turn|turn.map(|step|RetainedCloneStep::Progress(step.progress()))))}
                 None=>Err(Self::lost()),
             }
         })();
@@ -136,7 +155,13 @@ impl<P:Send+Sync+'static> ArcRootRetirement<P>{
         if grant.maximum_items==0||effect.maximum_work_units()<work||!retained_clone_grant_admits(grant,demand){return done(Ok(RetainedCloneStep::Progress(Default::default())),0)}
         if self.alias.is_some(){return self.elect(effect,demand)}
         if self.storage.is_some(){return self.retire(effect)}
-        self.convert(effect)
+        if self.elected.is_some(){return self.convert(effect)}
+        self.release_issuer(effect,demand)
+    }
+    fn release_issuer(&mut self,effect:&mut RetainedAllocationEffect<'_>,demand:RetirementDemand)->OriginalRetirementPoll{
+        let work=match record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return done(Err(error.into()),work)};
+        if let Some(issuer)=self.issuer.take(){*self.closing=Some(issuer.into_authority())}else{drop(self.closing.take())}
+        done(Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work)
     }
 }
 impl<P:Send+Sync+'static> ErasedSnapshotRetirement for ArcRootRetirement<P>{
@@ -147,12 +172,13 @@ impl<P:Send+Sync+'static> ErasedSnapshotRetirement for ArcRootRetirement<P>{
     fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.close_reply(None,body,effect,reply,true)}
     fn close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.close_reply(Some(original),body,effect,reply,false)}
     fn recover_close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>,ValueError>{self.close_reply(Some(original),body,effect,reply,true)}
-    fn requires_original_birth(&self)->bool{self.active.as_ref().is_some_and(|child|!child.terminal_is_empty()&&child.requires_original_birth())}
+    fn requires_original_birth(&self)->bool{self.active.as_ref().is_some_and(|child|!child.terminal_is_empty()&&child.requires_original_birth())||self.issuer_closing()&&self.closing.as_ref().is_some_and(FactoryAuthority::requires_original_birth)}
     fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{
         let Some(depth)=grant.maximum_depth.checked_sub(1)else{return RetainedWorkPoll::Pending{work:0}};
-        match self.active.as_mut(){Some(child)=>child.close_original_birth_step(original,RetainedCloneGrant{maximum_depth:depth,..grant}),None=>refuse("store root has no selected original birth")}
+        match(self.active.as_mut(),self.closing.as_mut()){(Some(child),_)=>child.close_original_birth_step(original,RetainedCloneGrant{maximum_depth:depth,..grant}),(None,Some(owner))=>owner.close_original_birth_step(original,RetainedCloneGrant{maximum_depth:depth,..grant}),(None,None)=>refuse("store root has no selected original birth")}
     }
-    fn requires_original_control(&self)->bool{self.active.as_ref().is_some_and(|child|!child.terminal_is_empty()&&child.requires_original_control())}
+    fn requires_original_control(&self)->bool{self.active.as_ref().is_some_and(|child|!child.terminal_is_empty()&&child.requires_original_control())||self.issuer_closing()&&self.closing.as_ref().is_some_and(FactoryAuthority::requires_original_control)}
+    fn resident_reply(&mut self)->Option<&mut semio_framework_value_retirement::ReplyStash<OriginalRetirementFailure>>{Some(&mut self.reply)}
     fn close_step(&mut self,_body:usize,_effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{done(Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"store root retirement requires its borrowed producer").into()),0)}
     fn terminal_is_empty(&self)->bool{self.terminal()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -160,4 +186,4 @@ impl<P:Send+Sync+'static> ErasedSnapshotRetirement for ArcRootRetirement<P>{
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.depth)}
 }
-impl<P:Send+Sync+'static> Drop for ArcRootRetirement<P>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"store root retirement abandoned its payload");if self.terminal(){unsafe{ManuallyDrop::drop(&mut self.alias);ManuallyDrop::drop(&mut self.elected);ManuallyDrop::drop(&mut self.storage);ManuallyDrop::drop(&mut self.active);}}}}
+impl<P:Send+Sync+'static> Drop for ArcRootRetirement<P>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal(),"store root retirement abandoned its payload");if self.terminal(){unsafe{ManuallyDrop::drop(&mut self.alias);ManuallyDrop::drop(&mut self.elected);ManuallyDrop::drop(&mut self.storage);ManuallyDrop::drop(&mut self.active);ManuallyDrop::drop(&mut self.closing);}}}}

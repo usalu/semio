@@ -92,6 +92,14 @@ impl<M:OpBinaryReceiving+Sync> OriginalBinaryReceiving<M>{
   if self.authority.is_some(){let d=FactoryOwnedSourceAuthority::<M>::transfer_original_demand();return Ok(RetirementDemand{copy_bytes:d.copy_bytes+size_of::<Option<M>>(),..d})}
   Err(invalid("original binary owned handoff lost its unique authority"))
  }
+ /// ⛽️ Quotes the exact work of the next owned handoff turn, including its unit payment.
+ pub fn take_owned_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  self.take_owned_demands(body)?;
+  if !self.taking_owned{return Ok(1)}
+  if let Some(output)=self.output.as_ref(){return if output.terminal_is_empty(){Ok(1)}else{output.close_work_demand(body)?.checked_add(1).ok_or_else(||invalid("original binary handoff work overflow"))}}
+  if let Some(source)=self.typed_source.as_ref(){return if source.terminal_is_empty(){Ok(1)}else{source.next_take_work_demand(body)?.checked_add(1).ok_or_else(||invalid("original binary handoff work overflow"))}}
+  Ok(1)
+ }
  pub fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let result=self.take_owned_turn(output,control,body,effect);RetainedWorkOutcome{result,work:effect.performed_work()}}
  fn take_owned_turn(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   let g=effect.grant();
@@ -164,6 +172,7 @@ impl<M:OpBinaryReceiving+Sync+Send+'static> ArtifactOriginalOperationReceiving<M
  fn owned_handoff_pending(&self)->bool{self.owned_handoff_pending()}
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>>{self.take(grant)}
  fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.take_owned_demands(body)}
+ fn take_owned_work_demand(&self,body:usize,_ceiling:u64)->Result<u64,ValueError>{self.take_owned_work_demand(body)}
  fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.take_owned_into(output,control,body,effect)}
  fn begin_close(&mut self){self.begin_close()}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}

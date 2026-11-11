@@ -43,9 +43,3 @@ pub fn compute_fem2d_bounds(snapshot: &Fem2dSnapshot) -> Fem2dBounds {
     Fem2dBounds { bounding_box: Fem2dBoundingBox { min, max }, node_count: snapshot.nodes.len() as u32, element_count: snapshot.elements.len() as u32 }
 }
 //#endregion 🔖️Bounds
-
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

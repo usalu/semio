@@ -72,7 +72,8 @@ impl ReservedJobOutcomes {
     /// ♻️ Retires the previous publication one paid turn at a time inside the wallet of a running step.
     pub fn retire(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
         if !self.publication.terminal_is_empty() {
-            let step = self.publication.close_step(cx.retained_grant()).result;
+            let grant = cx.retained_grant();
+            let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, grant, |effect| self.publication.close_step(effect).result);
             receive_step(cx, step)?;
         }
         if self.publication.terminal_is_empty() {
@@ -132,12 +133,12 @@ impl ReservedJobOutcomes {
     }
 
     /// ♻️ Closes the publication before the commit pages, never both in one turn.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(grant).result;
+            return self.publication.close_step(effect).result;
         }
         if !self.commit.terminal_is_empty() {
-            let step = self.commit.close_step_granted(grant).result?;
+            let step = self.commit.close_step(effect).result?;
             if self.commit.terminal_is_empty() {
                 self.commit_cursor = 0;
                 self.delivered = false;

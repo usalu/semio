@@ -1,7 +1,7 @@
 //! 📦️ Publication slots return inner custody before paying their separate physical header removal.
 use super::Publication;
 use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, RetainedCloneProgress, RetainedCloneStep, StepContext};
-use semio_framework_value::{RetirementDemand, RetainedWorkOutcome, ValueError};
+use semio_framework_value::{OriginalRetirementFailure, RetirementDemand, RetainedWorkOutcome, ValueError};
 
 /// 📏️ Quotes inner retirement or the exact remaining publication box allocation.
 pub fn publication_retirement_demands(slot: &Option<Box<Publication>>) -> Result<RetirementDemand, ValueError> {
@@ -18,13 +18,11 @@ pub fn close_publication_step(slot: &mut Option<Box<Publication>>, cx: &mut Step
         return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() });
     };
     if !publication.terminal_is_empty() {
-        return semio_framework_job::close_original_granted_step(cx, |grant| publication.close_step(grant)).map(|step| match step {
-            InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-            step => step,
-        });
+        let demand = publication.retirement_demands()?;
+        return semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| publication.close_step(effect).result.map_err(OriginalRetirementFailure::from));
     }
     let demand = publication_retirement_demands(slot)?;
-    semio_framework_job::close_original_retained_step(cx, demand, |_| {
+    semio_framework_job::close_original_retained_step::<ValueError>(cx, demand, |_| {
         drop(slot.take());
         RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })), work: 1 }
     })

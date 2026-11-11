@@ -43,7 +43,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
                 let step=match children.get(&(member.slot.clone(),member.child_id.clone())){
                     Some(child)=>child.member.visit_member(ToolRunMemberEmissionRetire{owner:owner.as_mut(),grant,effect:&mut *effect})?,
-                    None=>owner.close_step(grant)?,
+                    None=>owner.close_step(&mut *effect)?,
                 };return Ok(Some(step));
             }
             if !member.retired_emits.is_empty()||everything&&member.emit.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"tool member metadata retains its granted native emission retirement authority").into_fault());}

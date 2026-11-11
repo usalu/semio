@@ -842,7 +842,7 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
 pub fn artifact_retirement_shared_lease_birth_demands<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &Option<Arc<T>>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     if pending.is_none() { return Ok(Default::default()); }
     if !T::controlled_retirement_supported() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "shared lease has no controlled owner authority")); }
-    Ok(semio_framework_value::RetirementDemand { capacity_bytes: retained_read_retirement::arc_lease_birth_bytes::<T>(), depth: 2, ..Default::default() })
+    let mut demand = retained_read_retirement::arc_lease_admission_demand::<T>(); demand.depth += 1; Ok(demand)
 }
 
 pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &mut Option<Arc<T>>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
@@ -921,7 +921,7 @@ pub fn advance_returned_snapshot_read_root<P: Send + Sync + 'static>(
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs"]
 pub mod retained_read_retirement;
 pub use semio_framework_value::factory::shared::root::{box_demands as artifact_retirement_box_demands, box_depth as artifact_retirement_box_depth, box_close_step as artifact_retirement_box_close_step};
-pub use retained_read_retirement::{admit_arc_lease, arc_lease_birth_bytes};
+pub use retained_read_retirement::{admit_arc_lease, arc_lease_admission_demand, arc_lease_birth_bytes};
 use semio_framework_value::factory::ArcRootRetirement;
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🦀️.rs"]
 pub mod retained_read_return_retirement;

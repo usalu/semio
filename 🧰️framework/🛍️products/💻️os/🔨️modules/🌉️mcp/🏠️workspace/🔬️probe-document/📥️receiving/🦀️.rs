@@ -1,7 +1,7 @@
 //! 📥️ The probe's exact bare-JSON mutation keeps its parser, unique value and complete syntax cause through bounded native turns.
 use super::ProbeMutation;
 use semio_framework_pack_json::{JsonError,JsonGrammarCursor,JsonMemberPolicy};
-use semio_framework_value::{DslValue,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::NativeAllocationIdentity,retirement::{RetireOwned,RetirementCursor,RetirementStep,erased_cursor_turn}};
+use semio_framework_value::{DslValue,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{NativeAllocationIdentity,OriginalEffectReply,OriginalEffectReplyComplete},retirement::{RetireOwned,RetirementCursor,RetirementStep,erased_cursor_turn}};
 use semio_framework_value_native_owned::{OriginalReceivingPrimary,native_decoding::NativeDecodeControl};
 use semio_framework_dsl_record::receiving::OwnedSlot;
 use store::{OpBinaryReceiving,OpBinaryReceivingCursor};
@@ -108,7 +108,10 @@ impl RetireOwned for ProbeMutationReceiving{
  fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for ProbeReceivingRetirement{
- fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{erased_cursor_turn(self.0.close(effect))}
+ fn close_into<'reply>(&mut self,_body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'reply,RetirementStep,OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'reply,RetirementStep,OriginalRetirementFailure>,ValueError>{
+  if effect.invocation().is_none(){return Err(invalid("probe mutation close requires its original producer invocation"))}
+  Ok(match erased_cursor_turn(self.0.close(effect)){RetirementStep::Failure(error,_)=>reply.complete(Err(error)),step=>reply.complete(Ok(step))})
+ }
  fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.depth)}

@@ -96,21 +96,21 @@ fn every_app_of_a_multi_app_plugin_routes_to_its_own_instance_slot() {
 #[test]
 fn routing_artifact_channel_purecommand_unknown_capability_is_not_found_before_opening_any_channel() {
     let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None, crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
-    let fault = router.exchange(0, vec![AppCommand::PureCommand {  capability_id: "totally.unknown.capability".to_string(), input: serde_json::json!({}), view_state: None }]).expect_err("unknown capability must not route to any plugin");
+    let fault = exchange_blocking(&mut router, 0, vec![AppCommand::PureCommand {  capability_id: "totally.unknown.capability".to_string(), input: serde_json::json!({}), view_state: None }]).expect_err("unknown capability must not route to any plugin");
     assert_eq!(fault.code, "capability.not-found");
 }
 
 #[test]
 fn routing_artifact_channel_purecommand_gateway_owned_capability_is_plugin_unavailable() {
     let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(note_and_cad_catalog())), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None, crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
-    let fault = router.exchange(0, vec![AppCommand::PureCommand {  capability_id: "capabilities.search".to_string(), input: serde_json::json!({}), view_state: None }]).expect_err("a gateway-owned capability names no plugin channel");
+    let fault = exchange_blocking(&mut router, 0, vec![AppCommand::PureCommand {  capability_id: "capabilities.search".to_string(), input: serde_json::json!({}), view_state: None }]).expect_err("a gateway-owned capability names no plugin channel");
     assert_eq!(fault.code, "plugin.unavailable");
 }
 
 #[test]
 fn routing_artifact_channel_exchange_on_an_unrouted_instance_without_a_purecommand_is_plugin_unavailable() {
     let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(empty_catalog())), None, "agent:test#sess".to_string(), unbound_plugin_artifacts(), None, crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
-    let fault = router.exchange(0, vec![AppCommand::ReadHistory]).expect_err("no known plugin for this instance and no PureCommand to derive one from");
+    let fault = exchange_blocking(&mut router, 0, vec![AppCommand::ReadHistory]).expect_err("no known plugin for this instance and no PureCommand to derive one from");
     assert_eq!(fault.code, "plugin.unavailable");
 }
 
@@ -156,13 +156,13 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
     let cad_instance = capability_instance_slot(&catalog, &cad_verb).expect("cad's verb has a route slot");
     let mut router = RoutingArtifactChannel::new(Arc::new(WorkspaceCatalog::fixed(Arc::clone(&catalog))), Some(PluginComponentSource::Repo(repo_root)), "agent:routing-test#sess".to_string(), unbound_plugin_artifacts(), None, crate::test_host_driver_policy(), serde_json::from_str(include_str!("../../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy"));
 
-    let note_result = router.exchange(note_instance, vec![AppCommand::PureCommand {  capability_id: note_verb.clone(), input: serde_json::json!({}), view_state: None }]);
+    let note_result = exchange_blocking(&mut router, note_instance, vec![AppCommand::PureCommand {  capability_id: note_verb.clone(), input: serde_json::json!({}), view_state: None }]);
     assert_ne!(note_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{note_verb} must route to a real note channel: {note_result:?}");
 
-    let cad_result = router.exchange(cad_instance, vec![AppCommand::PureCommand {  capability_id: cad_verb.clone(), input: serde_json::json!({}), view_state: None }]);
+    let cad_result = exchange_blocking(&mut router, cad_instance, vec![AppCommand::PureCommand {  capability_id: cad_verb.clone(), input: serde_json::json!({}), view_state: None }]);
     assert_ne!(cad_result.as_ref().err().map(|fault| fault.code.as_str()), Some("plugin.unavailable"), "{cad_verb} must route to a real cad channel: {cad_result:?}");
 
-    let _ = router.exchange(note_instance, vec![AppCommand::ReadHistory]);
+    let _ = exchange_blocking(&mut router, note_instance, vec![AppCommand::ReadHistory]);
     assert_eq!(router.channels.lock().expect("cache lock").len(), 2, "exactly one cached channel per distinct app routed to (note, cad), never one per call");
 }
 

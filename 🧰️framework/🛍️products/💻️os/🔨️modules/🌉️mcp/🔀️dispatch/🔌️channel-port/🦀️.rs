@@ -334,21 +334,26 @@ pub struct InferenceOutcome {
 
 /// 🔌️ Drives capability previews and transactions through the owning channel.
 /// Selected session-local instances retain the owner's resolved artifact and live surface identity.
-#[dyn_enum]` here + `dyn_enum_close!` at `🏠️workspace`'s
-// `ArtifactChannels` (the module both implementors are jointly nameable from) closes it into an enum
-// instead of `Box<dyn ArtifactChannel>`.
+/// `#[dyn_enum]` here + `dyn_enum_close!` at `🏠️workspace`'s `ArtifactChannels` (the module both
+/// implementors are jointly nameable from) closes it into an enum instead of `Box<dyn ArtifactChannel>`.
 #[dyn_enum]
 pub trait ArtifactChannel: Send {
     fn select_target(&mut self, _instance: u32, _capability_id: &str, _target: &ActionTarget) -> Result<ActionTarget, Fault> {
         Err(Fault { code: "plugin.unavailable".to_string(), message: "this channel has no target directory".to_string() })
     }
 
-    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault>;
+    async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault>;
 
     /// 🔌️ Brings `instance`'s session up to where its next exchange runs without opening anything:
     /// the component compiled, the guest open. Reports each phase to `scope` and stops at the next
     /// interruptible boundary once `scope` is cancelled, leaving no half-open guest behind.
     fn activate(&mut self, instance: u32, scope: &ActivationScope) -> Result<(), Fault>;
+}
+
+/// 🌉️ The synchronous tool boundary's one entry into [`ArtifactChannel::exchange`]: the tool registry's handlers are plain
+/// functions, so the exchange future is driven here and nowhere inside a channel.
+pub fn exchange_blocking<C: ArtifactChannel>(channel: &mut C, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+    semio_framework_async::block_on(channel.exchange(instance, commands))
 }
 
 /// ↩️ Private durable-history port; only a Hub-bound workspace implements the remote member.
@@ -484,7 +489,7 @@ impl UnboundArtifactChannel {
 }
 
 impl ArtifactChannel for UnboundArtifactChannel {
-    fn exchange(&mut self, _instance: u32, _commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+    async fn exchange(&mut self, _instance: u32, _commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         Err(Self::fault())
     }
 
@@ -681,7 +686,7 @@ impl Default for MockArtifactChannel {
 
 #[cfg(any(test, feature = "testkit"))]
 impl ArtifactChannel for MockArtifactChannel {
-    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+    async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let mut state = self.state.lock().expect("mock channel lock poisoned");
         let mut frames = Vec::with_capacity(commands.len());
         for command in commands {

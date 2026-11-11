@@ -37,6 +37,15 @@ pub fn released(bytes: usize) -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }
 }
 
+/// 🏷️ A declared-tool close poll keeps a pending effect as an unfunded retry and surfaces a settled failure as the plugin fault.
+#[doc(hidden)]
+pub fn declared_poll(poll: semio_framework_value::OriginalRetirementPoll) -> Result<RetainedCloneStep, Fault> {
+    match poll {
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(RetainedCloneStep::Progress(Default::default())),
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string())),
+    }
+}
+
 #[doc(hidden)]
 pub fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "retained field depth overflow"))?;
@@ -178,8 +187,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             return self.tools.registry.close_step(&mut effect.nested(child)).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|fault| fault);
         }
         if !self.tools.tool_jobs.original_terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.tools.tool_jobs.original_close_step(child).progress()))}
-        if let Some(owner)=self.tools.declared_tools.as_mut(){if owner.terminal_is_empty(){self.tools.declared_tools.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),..Default::default()})}return owner.close_step(&mut effect.nested(child)).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
-        if let Some(owner)=self.tools.declared_owner.as_mut(){if owner.terminal_is_empty(){self.tools.declared_owner.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>(),..Default::default()})}return owner.close_step(&mut effect.nested(child)).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
+        if let Some(owner)=self.tools.declared_tools.as_mut(){if owner.terminal_is_empty(){self.tools.declared_tools.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),..Default::default()})}return declared_poll(owner.close_step(&mut effect.nested(child)))}
+        if let Some(owner)=self.tools.declared_owner.as_mut(){if owner.terminal_is_empty(){self.tools.declared_owner.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>(),..Default::default()})}return declared_poll(owner.close_step(&mut effect.nested(child)))}
         if self.tools.bounded_tool_proofs.pop_first().is_some() {
             return done(handoff());
         }

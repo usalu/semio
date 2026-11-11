@@ -23,10 +23,6 @@ pub fn print_dsl(document: &Fem2dSnapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(document)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
-mod semio_grammar_conformance;
-
 //#region 🚚️Carrier
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type Fem2dSnapshotText = String;

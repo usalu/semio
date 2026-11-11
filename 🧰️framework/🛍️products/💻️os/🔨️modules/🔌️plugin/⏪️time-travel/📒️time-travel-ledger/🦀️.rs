@@ -390,8 +390,8 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     fn retire_step_with_control(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<Option<RetainedCloneStep>,Fault>{
         let grant=effect.grant();
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-        if let Some(step)=self.pending_command_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
-        if let Some(step)=self.session_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
+        if let Some(step)=self.pending_command_retirement_step(effect).map_err(ValueError::into_fault)?{return Ok(Some(step));}
+        if let Some(step)=self.session_retirement_step(effect).map_err(ValueError::into_fault)?{return Ok(Some(step));}
         if let Some(step)=match control.as_mut(){Some(control)=>self.document.retire_step_controlled(effect,*control),None=>self.document.retire_step(effect)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
         if let Some(owners)=self.member.as_mut().and_then(|member|member.owners.as_mut()){if let Some(step)=match control.as_mut(){Some(control)=>owners.retire_step_controlled(effect,*control),None=>owners.retire_step(effect)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}}
         if let Some(owners)=self.retiring.last_mut(){

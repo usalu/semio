@@ -1,26 +1,19 @@
 //! 📥️ Latest-wins command admission and the typed command wire writer.
 use semio_framework::Fault;
-use semio_framework_value::{RetirementDemand, ValueError};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetainedCloneStep,ValueError,ValueRefusalKind};
+use semio_framework_value::retained_clone::{NativeAllocationIdentity,RetainedCloneClose};
+use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
+use semio_framework_value_ordered::ordered::{OrderedMap,SharedOwner,UpdateCursor};
 use semio_framework_async::PublicationClaimHandle;
-use std::mem::ManuallyDrop;
-use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_plugin_ownership::bounded_ownership::plugin_grant_funds;
+use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_plugin_decl_app::ArtifactApp;
-use semio_plugin_decl_emission::ActionMeta;
-use semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-use semio_plugin_ownership::bounded_ownership::{PluginLifecycleStep, PluginLifecycleFailure};
-use semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand;
-use semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original;
+use semio_plugin_decl_emission::{ActionMeta,ViewLease};
+use semio_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS,PluginLifecycleFailure,plugin_typed_owner_demand,plugin_typed_owner_original};
+use semio_plugin_job::original_steps::{acted,begin,fixed,forward,retired,settle,produced};
 use semio_plugin_job::reserved_jobs::QualifiedToolProof;
 use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_operation::ToolCancellationLease;
-use semio_plugin_job::TYPED_OPERATION_RESULT_PAGE_BYTES;
-fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
-
-
+use std::mem::{ManuallyDrop,size_of};
 
 #[doc(hidden)]
 #[path="../🗝️latest/🦀️.rs"]
@@ -31,8 +24,19 @@ pub mod original_typed_command;
 
 use crate::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
 
+fn invalid(detail:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,detail)}
+fn duplicated(key:&SharedOwner<String>,output:&mut Option<SharedOwner<String>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+    let result=(||{
+        if effect.remaining_work_units()?<SharedOwner::<String>::DUPLICATE_WORK{return Ok(RetainedCloneStep::Progress(Default::default()))}
+        key.duplicate_into(output,effect).result
+    })();
+    settle(effect,result)
+}
+
+/// 🎫️ One live latest-wins entry: the operation, its cancellation handles and the key alias that removes it.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ToolLatestWinsScope {
-    pub key: semio_framework_value_ordered::ordered::SharedOwner<String>,
+    pub key: SharedOwner<String>,
     pub operation: u64,
     pub token: semio_framework_job::CancelToken,
     pub claim: PublicationClaimHandle,
@@ -45,44 +49,110 @@ impl ToolLatestWinsScope {
     }
 }
 
+/// 🪆️ One resident owner custody: the original waits in `value` until its controlled retirement frame is born in `owner`.
+struct Slot<T:RetireOwned>{value:Option<T>,owner:Option<ControlledRetirement<T>>}
+impl<T:RetireOwned> Default for Slot<T>{fn default()->Self{Self{value:None,owner:None}}}
+impl<T:RetireOwned> Slot<T>{
+    fn is_empty(&self)->bool{self.value.is_none()&&self.owner.is_none()}
+    fn retire(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        let d=plugin_typed_owner_demand(&self.value,&self.owner,cx.retained_grant().maximum_copy_bytes)?;
+        retired(cx,d,|effect|plugin_typed_owner_original(&mut self.value,&mut self.owner,effect))?;
+        Ok(())
+    }
+}
+
+/// 🗝️ The bounded latest-wins registry: every turn performs exactly one funded unit against the ordered live-scope map.
 #[doc(hidden)]
 pub struct ToolLatestWinsRegistry {
-    pub map: Option<semio_framework_value_ordered::ordered::OrderedMap<ToolLatestWinsScope>>,
-    pub update: Option<semio_framework_value_ordered::ordered::UpdateCursor<ToolLatestWinsScope>>,
-    pub retirement: Option<semio_framework_value_ordered::ordered::Retirement<ToolLatestWinsScope>>,
-    pub retired_key: Option<String>,
-    retired_shared_key: Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,
-    retired_token: Option<semio_framework_job::CancelToken>,
-    retired_claim: Option<PublicationClaimHandle>,
-    token_retirement: Option<ControlledRetirement<semio_framework_job::CancelToken>>,
-    claim_retirement: Option<ControlledRetirement<PublicationClaimHandle>>,
-    removed_scope: Option<semio_framework_value_ordered::ordered::SharedOwner<ToolLatestWinsScope>>,
-    retired_scope:ManuallyDrop<Option<ToolLatestWinsScope>>,
-    pending_scope:ManuallyDrop<Option<ToolLatestWinsScope>>,
+    map: Option<OrderedMap<ToolLatestWinsScope>>,
+    update: Slot<UpdateCursor<ToolLatestWinsScope>>,
+    candidate: Option<OrderedMap<ToolLatestWinsScope>>,
+    previous: Slot<OrderedMap<ToolLatestWinsScope>>,
+    removed: Slot<SharedOwner<ToolLatestWinsScope>>,
+    alias: Slot<SharedOwner<String>>,
+    source: Slot<ToolLatestWinsScope>,
+    shared: Slot<SharedOwner<ToolLatestWinsScope>>,
     pub active_operation: Option<u64>,
     pub outcome: Option<(u64, bool)>,
     pub scan: usize,
     admission_scan: Option<usize>,
+    phase: u8,
+    removal: Option<usize>,
+    taken: bool,
     update_closing: bool,
     pub closing: bool,
 }
 
 impl ToolLatestWinsRegistry {
     pub fn new() -> Self {
-        Self { map: Some(semio_framework_value_ordered::ordered::OrderedMap::new()), update: None, retirement: None, retired_key: None, retired_shared_key: None, retired_token: None, retired_claim: None, token_retirement: None, claim_retirement: None, removed_scope: None, retired_scope:ManuallyDrop::new(None),pending_scope:ManuallyDrop::new(None),active_operation: None, outcome: None, scan: 0, admission_scan: None, update_closing: false, closing: false }
+        Self { map: Some(OrderedMap::new()), update: Slot::default(), candidate: None, previous: Slot::default(), removed: Slot::default(), alias: Slot::default(), source: Slot::default(), shared: Slot::default(), active_operation: None, outcome: None, scan: 0, admission_scan: None, phase: 0, removal: None, taken: false, update_closing: false, closing: false }
     }
 
+    fn idle(&self)->bool{
+        self.phase==0&&!self.update_closing&&self.candidate.is_none()&&self.update.is_empty()&&self.previous.is_empty()&&self.removed.is_empty()&&self.alias.is_empty()&&self.source.is_empty()&&self.shared.is_empty()&&self.active_operation.is_none()
+    }
+
+    fn abandoning(&self)->bool{self.closing||self.update_closing}
+
+    /// 🚦️ A new operation may start only while the whole frontier of the previous update has returned its owners.
     pub fn can_begin(&self) -> bool {
-        !self.closing && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none() && self.retired_shared_key.is_none() && self.removed_scope.is_none() && self.retired_scope.is_none()&&self.pending_scope.is_none()&&self.retired_token.is_none()&&self.retired_claim.is_none()&&self.token_retirement.is_none()&&self.claim_retirement.is_none()&&self.outcome.is_none()
+        !self.closing&&self.outcome.is_none()&&self.idle()
     }
 
-    pub fn begin(&mut self,operation:u64,key:&semio_framework_value_ordered::ordered::SharedOwner<String>,lease:&ToolCancellationLease,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,Fault>{
-        let capacity=semio_framework_value_ordered::ordered::SharedOwner::<ToolLatestWinsScope>::allocation_bytes();
-        if !self.can_begin()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity{return Ok(None);}
-        if self.map.as_ref().expect("live original key map").len()>=ARTIFACT_LIVE_OUTPUT_SLOTS{match self.admission_scan{None=>{self.admission_scan=Some(ARTIFACT_LIVE_OUTPUT_SLOTS);return Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}));},Some(0)=>{},Some(_)=>return Ok(None)}}
-        let scope=ToolLatestWinsScope{key:key.clone(),operation,token:lease.cancel_token().clone(),claim:lease.publication_claim().clone()};
-        let(scope,progress)=match semio_framework_value_ordered::ordered::SharedOwner::admit(scope,grant).result {Ok(value)=>value,Err((error,original))=>{*self.pending_scope=Some(original);return Err(semio_plugin_decl_emission::retirement_refusal_fault(&error));}};
-        self.update=Some(self.map.as_ref().expect("original live key map").begin_set_shared(key.clone(),scope));self.active_operation=Some(operation);self.update_closing=false;Ok(Some(progress))
+    fn live(&self)->Result<&OrderedMap<ToolLatestWinsScope>,ValueError>{self.map.as_ref().ok_or_else(||invalid("latest-wins registry lost its live map"))}
+
+    fn alias_key(&mut self,key:&SharedOwner<String>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        let d=SharedOwner::<String>::duplicate_demand();
+        forward(cx,d,|effect|duplicated(key,&mut self.alias.value,effect))?;
+        Ok(())
+    }
+
+    fn admit_update(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        let Self{map,alias,shared,update,..}=self;
+        let map=map.as_ref().ok_or_else(||invalid("latest-wins registry lost its live map"))?;
+        let d=map.update_constructor_demand();
+        forward(cx,d,|effect|{let turn=map.admit_update_cursor(&mut alias.value,&mut shared.value,&mut update.value,effect);settle(effect,turn.result)})?;
+        if self.update.value.is_some(){self.phase=0;self.removal=None;}
+        Ok(())
+    }
+
+    /// 🌱️ Starts or continues the insertion of one operation; `true` once its update cursor is admitted. While another frontier is busy this turn advances that frontier instead.
+    pub fn begin(&mut self,operation:u64,key:&SharedOwner<String>,lease:&ToolCancellationLease,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        let beginning=self.active_operation==Some(operation)&&(1..=4).contains(&self.phase);
+        if self.active_operation==Some(operation)&&self.phase==0&&self.update.value.is_some(){return Ok(true);}
+        if beginning&&self.abandoning()||!beginning&&!self.can_begin(){self.advance(cx)?;return Ok(false);}
+        match self.phase{
+            0=>{
+                if self.live()?.len()>=ARTIFACT_LIVE_OUTPUT_SLOTS{match self.admission_scan{
+                    None=>{acted(cx,fixed::<Option<usize>>(),||{self.admission_scan=Some(ARTIFACT_LIVE_OUTPUT_SLOTS);Ok(())})?;return Ok(false);},
+                    Some(0)=>{},
+                    Some(_)=>{self.advance(cx)?;return Ok(false);},
+                }}
+                self.alias_key(key,cx)?;
+                if self.alias.value.is_some(){self.phase=1;self.active_operation=Some(operation);}
+            },
+            1=>{
+                let d=RetirementDemand{copy_bytes:2*size_of::<ToolLatestWinsScope>()+size_of::<Option<SharedOwner<String>>>(),depth:1,..Default::default()};
+                let Self{alias,source,..}=self;
+                produced(cx,d,&mut source.value,||Ok(ToolLatestWinsScope{key:alias.value.take().ok_or_else(||invalid("latest-wins scope lost its key alias"))?,operation,token:lease.cancel_token().clone(),claim:lease.publication_claim().clone()}))?;
+                if self.source.value.is_some(){self.phase=2;}
+            },
+            2=>{
+                let d=SharedOwner::<ToolLatestWinsScope>::source_admission_demand()?;
+                let Self{source,shared,..}=self;
+                forward(cx,d,|effect|{let turn=SharedOwner::admit_from(&mut source.value,&mut shared.value,effect);settle(effect,turn.result)})?;
+                if self.shared.value.is_some(){self.phase=3;}
+            },
+            3=>{
+                self.alias_key(key,cx)?;
+                if self.alias.value.is_some(){self.phase=4;}
+            },
+            _=>{
+                self.admit_update(cx)?;
+                return Ok(self.update.value.is_some());
+            },
+        }
+        Ok(false)
     }
 
     pub fn take_outcome(&mut self, operation: u64) -> Option<bool> {
@@ -93,84 +163,126 @@ impl ToolLatestWinsRegistry {
         }
     }
 
+    /// 🛑️ A canceled operation loses its pending insertion: its update and every unadmitted owner retire through paid turns.
     pub fn cancel(&mut self, operation: u64) {
         if self.active_operation == Some(operation) && !self.update_closing {
-            if let Some(update) = self.update.as_mut() {
-                update.begin_close();
-            }
             self.update_closing = true;
             self.outcome = Some((operation, false));
         }
     }
 
-    fn retire_scope(&mut self,scope:ToolLatestWinsScope){assert!(self.retired_scope.is_none(),"one original latest scope frontier");*self.retired_scope=Some(scope);}
-    pub fn retirement_step(&mut self,step:semio_framework_value_ordered::ordered::RetirementStep<ToolLatestWinsScope>)->Result<RetainedCloneStep,Fault>{
-        use semio_framework_value_ordered::ordered::RetirementStep;
-        Ok(match step{RetirementStep::Blocked=>RetainedCloneStep::Progress(Default::default()),RetirementStep::Progress{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}),RetirementStep::ProcessedBytes(copied_bytes)=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()}),RetirementStep::OwnedValue(scope)=>{self.retire_scope(scope);RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})},RetirementStep::Failure(error)=>return Err(semio_plugin_decl_emission::retirement_refusal_fault(&error)),RetirementStep::Complete=>RetainedCloneStep::Progress(Default::default())})
-    }
-    /// 📏️ Quotes the exact next [`Self::advance`] turn, one original owner at a time in the same order.
-    pub fn advance_demands(&self)->Result<RetirementDemand,ValueError>{
-        let item=RetirementDemand{depth:1,..Default::default()};
-        let body=TYPED_OPERATION_RESULT_PAGE_BYTES;
-        let scope_copy=RetirementDemand{copy_bytes:size_of::<ToolLatestWinsScope>(),..item};
-        if self.pending_scope.is_some()&&self.retired_scope.is_none(){return Ok(scope_copy);}
-        if self.retired_token.is_some()||self.token_retirement.is_some(){return plugin_typed_owner_demand(&self.retired_token,&self.token_retirement,body);}
-        if self.retired_claim.is_some()||self.claim_retirement.is_some(){return plugin_typed_owner_demand(&self.retired_claim,&self.claim_retirement,body);}
-        if let Some(scope)=self.retired_scope.as_ref(){
-            if !scope.key.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:scope.key.next_release_byte_demand(),..item});}
-            if self.retired_key.is_none()&&self.retired_shared_key.is_none()&&self.removed_scope.is_none(){return Ok(scope_copy);}
-        }
-        if let Some(scope)=self.removed_scope.as_ref(){return Ok(if scope.terminal_is_empty(){item}else{RetirementDemand{release_bytes:scope.next_release_byte_demand(),..item}});}
-        if let Some(key)=self.retired_shared_key.as_ref(){return Ok(if key.terminal_is_empty(){item}else{RetirementDemand{release_bytes:key.next_release_byte_demand(),..item}});}
-        if let Some(key)=self.retired_key.as_ref(){return Ok(RetirementDemand{release_bytes:key.capacity(),..item});}
-        if let Some(retirement)=self.retirement.as_ref(){return Ok(if retirement.terminal_is_empty(){item}else{RetirementDemand{copy_bytes:retirement.next_copy_byte_demand(),release_bytes:retirement.next_close_byte_demand()?,depth:retirement.next_depth_demand().max(1),..Default::default()}});}
-        if let Some(update)=self.update.as_ref(){
-            if self.update_closing{return Ok(if update.terminal_is_empty(){item}else{RetirementDemand{copy_bytes:update.next_close_copy_byte_demand(),release_bytes:update.next_close_byte_demand()?,depth:update.next_close_depth_demand().max(1),..Default::default()}});}
-            if !update.is_complete(){return Ok(RetirementDemand{copy_bytes:update.next_copy_byte_demand(),capacity_bytes:update.next_capacity_byte_demand()?,depth:update.next_depth_demand().max(1),..Default::default()});}
-            return Ok(item);
-        }
-        Ok(if self.map.as_ref().is_some_and(|map|self.closing||!map.is_empty()){item}else{Default::default()})
-    }
-    pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{
-        let idle=RetainedCloneProgress::default();let item=RetainedCloneProgress{copied_items:1,..idle};
-        let demand=self.advance_demands().map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;
-        if !plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(idle));}
-        if self.retired_scope.is_none(){if let Some(scope)=self.pending_scope.take(){self.retire_scope(scope);return Ok(RetainedCloneStep::Progress(item));}}
-        if self.retired_token.is_some()||self.token_retirement.is_some(){let step=plugin_typed_owner_original(&mut self.retired_token,&mut self.token_retirement,grant).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.retired_claim.is_some()||self.claim_retirement.is_some(){let step=plugin_typed_owner_original(&mut self.retired_claim,&mut self.claim_retirement,grant).map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if let Some(scope)=self.retired_scope.as_mut(){
-            if !scope.key.terminal_is_empty(){let step=scope.key.release_step(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;self.retired_key=step.value;return Ok(RetainedCloneStep::Progress(step.progress));}
-            if self.retired_key.is_none()&&self.retired_shared_key.is_none()&&self.removed_scope.is_none(){
-                let ToolLatestWinsScope{key,token,claim,..}=self.retired_scope.take().expect("original retired latest scope");
-                drop(key);self.retired_token=Some(token);self.retired_claim=Some(claim);
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ToolLatestWinsScope>(),..idle}));
+    fn settle_update(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        let d=RetirementDemand{copy_bytes:3*size_of::<Option<OrderedMap<ToolLatestWinsScope>>>()+size_of::<Option<SharedOwner<ToolLatestWinsScope>>>()+size_of::<Option<(u64,bool)>>(),depth:1,..Default::default()};
+        acted(cx,d,||{
+            let candidate=self.candidate.take().ok_or_else(||invalid("complete original key candidate is absent"))?;
+            self.admission_scan=None;self.taken=false;
+            let operation=self.active_operation;
+            if candidate.len()>ARTIFACT_LIVE_OUTPUT_SLOTS{
+                self.previous.value=Some(candidate);
+                if let Some(operation)=operation{self.outcome=Some((operation,false));}
+            }else{
+                let previous=self.map.replace(candidate).ok_or_else(||invalid("latest-wins registry lost its live map"))?;
+                self.previous.value=Some(previous);
+                if let Some(scope)=self.update.value.as_mut().and_then(UpdateCursor::take_removed){
+                    if operation.is_some_and(|operation|operation!=scope.operation){scope.cancel();}
+                    self.removed.value=Some(scope);
+                }
+                if let Some(operation)=operation{self.outcome=Some((operation,true));}
             }
-        }
-        if let Some(scope)=self.removed_scope.as_mut(){if scope.terminal_is_empty(){self.removed_scope.take();return Ok(RetainedCloneStep::Progress(item));}let step=scope.release_step(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;if let Some(scope)=step.value{self.retire_scope(scope);}return Ok(RetainedCloneStep::Progress(step.progress));}
-        if let Some(key)=self.retired_shared_key.as_mut(){if key.terminal_is_empty(){self.retired_shared_key.take();return Ok(RetainedCloneStep::Progress(item));}let step=key.release_step(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;self.retired_key=step.value;return Ok(RetainedCloneStep::Progress(step.progress));}
-        if let Some(key)=self.retired_key.as_ref(){let released_bytes=key.capacity();if released_bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(idle));}drop(self.retired_key.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes,..item}));}
-        if let Some(retirement)=self.retirement.as_mut(){if retirement.terminal_is_empty(){self.retirement.take();return Ok(RetainedCloneStep::Progress(item));}let step=retirement.advance(grant);return self.retirement_step(step);}
-        if let Some(update)=self.update.as_mut(){
-            if self.update_closing{if update.terminal_is_empty(){self.update.take();self.active_operation=None;self.update_closing=false;return Ok(RetainedCloneStep::Progress(item));}let step=update.close_step(grant);return self.retirement_step(step);}
-            if !update.is_complete(){let step=update.advance(grant).result.map_err(|error|semio_plugin_decl_emission::retirement_refusal_fault(&error))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-            let candidate=update.take_result().expect("complete original key candidate");self.admission_scan=None;
-            if candidate.len()>ARTIFACT_LIVE_OUTPUT_SLOTS{self.retirement=Some(candidate.retire());if let Some(operation)=self.active_operation{self.outcome=Some((operation,false));}}
-            else{let previous=self.map.replace(candidate).expect("original live key map");self.retirement=Some(previous.retire());if let Some(scope)=update.take_removed(){if self.active_operation.is_some_and(|operation|operation!=scope.operation){scope.cancel();}self.removed_scope=Some(scope);}if let Some(operation)=self.active_operation{self.outcome=Some((operation,true));}}
-            update.begin_close();self.update_closing=true;return Ok(RetainedCloneStep::Progress(item));
-        }
-        if self.closing{if let Some(map)=self.map.take(){self.retirement=Some(map.retire());return Ok(RetainedCloneStep::Progress(item));}return Ok(RetainedCloneStep::Complete(idle));}
-        let map=self.map.as_ref().expect("original live key map");if map.is_empty(){return Ok(RetainedCloneStep::Progress(idle));}self.scan%=map.len();let(_,scope)=map.entry_at_rank(self.scan).expect("bounded original map rank");self.scan+=1;if let Some(remaining)=self.admission_scan.as_mut(){*remaining=remaining.saturating_sub(1);}if scope.claim.is_finished(){self.update=Some(map.begin_remove_shared(scope.key.clone()));self.update_closing=false;}Ok(RetainedCloneStep::Progress(item))
+            self.update_closing=true;
+            Ok(())
+        })?;
+        Ok(())
     }
+
+    fn advance_update(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        let body=cx.retained_grant().maximum_copy_bytes;
+        let Self{update,candidate,taken,..}=self;
+        let cursor=update.value.as_mut().ok_or_else(||invalid("latest-wins registry lost its update cursor"))?;
+        if !cursor.is_complete(){
+            let d=cursor.native_demands(body)?;
+            forward(cx,d,|effect|{let turn=cursor.advance_native(body,effect);settle(effect,turn.result)})?;
+        }else if !*taken{
+            let d=cursor.result_transfer_demand();
+            forward(cx,d,|effect|{let turn=cursor.take_result_into(candidate,effect);if matches!(turn.result,Ok(RetainedCloneStep::Complete(_))){*taken=true;}settle(effect,turn.result)})?;
+        }else{
+            return self.settle_update(cx);
+        }
+        Ok(())
+    }
+
+    fn scan_unit(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        if self.phase==8{
+            let Self{map,removal,alias,..}=self;
+            let map=map.as_ref().ok_or_else(||invalid("latest-wins registry lost its live map"))?;
+            let rank=removal.ok_or_else(||invalid("latest-wins removal lost its scanned rank"))?;
+            let(_,scope)=map.entry_at_rank(rank).ok_or_else(||invalid("latest-wins removal lost its scanned entry"))?;
+            let d=SharedOwner::<String>::duplicate_demand();
+            forward(cx,d,|effect|duplicated(&scope.key,&mut alias.value,effect))?;
+            if self.alias.value.is_some(){self.phase=9;}
+            return Ok(());
+        }
+        if self.phase==9{return self.admit_update(cx);}
+        let Self{map,scan,admission_scan,removal,phase,..}=self;
+        let map=map.as_ref().ok_or_else(||invalid("latest-wins registry lost its live map"))?;
+        if map.is_empty(){return Ok(());}
+        acted(cx,fixed::<(usize,usize,u8)>(),||{
+            *scan%=map.len();
+            let(_,scope)=map.entry_at_rank(*scan).ok_or_else(||invalid("latest-wins scan lost its ranked entry"))?;
+            let rank=*scan;*scan+=1;
+            if let Some(remaining)=admission_scan.as_mut(){*remaining=remaining.saturating_sub(1);}
+            if scope.claim.is_finished(){*removal=Some(rank);*phase=8;}
+            Ok(())
+        })?;
+        Ok(())
+    }
+
+    /// ⏩️ Performs exactly one funded unit of the registry frontier; an unfunded unit leaves every owner in place.
+    pub fn advance(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+        if !self.removed.is_empty(){return self.removed.retire(cx);}
+        if self.abandoning()&&self.phase!=0&&self.update.value.is_none(){
+            if !self.alias.is_empty(){return self.alias.retire(cx);}
+            if !self.source.is_empty(){return self.source.retire(cx);}
+            if !self.shared.is_empty(){return self.shared.retire(cx);}
+            acted(cx,fixed::<(u8,Option<usize>)>(),||{self.phase=0;self.removal=None;Ok(())})?;
+            return Ok(());
+        }
+        if !self.previous.is_empty(){return self.previous.retire(cx);}
+        if self.update_closing{
+            if self.candidate.is_some(){acted(cx,fixed::<[Option<OrderedMap<ToolLatestWinsScope>>;2]>(),||{self.previous.value=self.candidate.take();self.taken=false;Ok(())})?;return Ok(());}
+            if !self.update.is_empty(){return self.update.retire(cx);}
+            acted(cx,fixed::<(Option<u64>,bool)>(),||{self.active_operation=None;self.update_closing=false;self.taken=false;Ok(())})?;
+            return Ok(());
+        }
+        if self.update.value.is_some(){return self.advance_update(cx);}
+        if (1..=4).contains(&self.phase){return Ok(());}
+        if self.closing{
+            if self.map.is_some(){acted(cx,fixed::<[Option<OrderedMap<ToolLatestWinsScope>>;2]>(),||{self.previous.value=self.map.take();Ok(())})?;}
+            return Ok(());
+        }
+        self.scan_unit(cx)
+    }
+
+    /// 🔒️ Stops admitting new operations; every pending update and unadmitted owner retires through `advance`.
     pub fn begin_close(&mut self) {
         self.closing = true;
-        if let Some(update) = self.update.as_mut() {
-            update.begin_close();
-            self.update_closing = true;
-        }
+        if self.update.value.is_some()||self.phase!=0{self.update_closing=true;}
+    }
+
+    /// ♻️ One retirement turn of the whole registry; `true` once every owner returned.
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        if !self.closing{self.begin_close();}
+        if self.terminal_is_empty(){return Ok(true);}
+        self.advance(cx)?;
+        Ok(self.terminal_is_empty())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.map.is_none() && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none() && self.retired_shared_key.is_none() && self.removed_scope.is_none()&&self.retired_scope.is_none()&&self.pending_scope.is_none()&&self.retired_token.is_none()&&self.retired_claim.is_none()&&self.token_retirement.is_none()&&self.claim_retirement.is_none()
+        self.closing&&self.map.is_none()&&self.idle_owners()
+    }
+
+    fn idle_owners(&self)->bool{
+        self.phase==0&&self.candidate.is_none()&&self.update.is_empty()&&self.previous.is_empty()&&self.removed.is_empty()&&self.alias.is_empty()&&self.source.is_empty()&&self.shared.is_empty()
     }
 }
 
@@ -185,18 +297,19 @@ pub struct AdmittedToolCommand {
     pub raw_wire: semio_framework::action_bus::RetainedToolWireInput,
 }
 
+/// 🎟️ One pending latest-wins command keeps every original owner until the registry accepts or retires it.
 #[doc(hidden)]
 pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub command: ManuallyDrop<Option<Box<A::Command>>>,
-    pub command_retirement:semio_framework_value::retained_clone::RetainedCloneClose,
+    pub command_retirement:RetainedCloneClose,
     pub admission: Option<AdmittedToolCommand>,
     pub meta: ManuallyDrop<Option<ActionMeta>>,
     pub original_caller:ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
     pub original_body:usize,
-    pub original_decoder:(u64,u64),
-    pub metadata_retirement:semio_framework_value::retained_clone::RetainedCloneClose,
+    pub original_decoder:(NativeAllocationIdentity,u64),
+    pub metadata_retirement:RetainedCloneClose,
     pub context_metadata:ManuallyDrop<Option<ActionMeta>>,
-    pub context_view:ManuallyDrop<Option<std::sync::Arc<semio_framework::ViewModel>>>,
+    pub context_view:ManuallyDrop<Option<ViewLease>>,
     pub context_phase:u8,
     pub operation: semio_framework_job::Operation,
     pub source_identity:semio_framework_job::OriginalSourceBinding,
@@ -204,88 +317,111 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub lease: Option<ToolCancellationLease>,
     pub cancellation_retirement:Option<Box<semio_plugin_operation::ToolCancellationLeaseRetirement>>,
     pub key_copy: Option<ToolLatestWinsKeyCopy>,
-    pub key: Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,
-    pub retired_key: Option<String>,
+    pub key: Option<SharedOwner<String>>,
+    pub key_retirement: Option<ControlledRetirement<SharedOwner<String>>>,
     pub lookup_started: bool,
     pub accepted: bool,
     pub restarting: bool,
     pub closing: bool,
-    pub receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub fault:ManuallyDrop<Option<PluginLifecycleFailure>>,
-    pub fault_retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
+    pub fault_retirement:Option<ControlledRetirement<PluginLifecycleFailure>>,
 }
 
 impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
-    pub fn metadata(&self)->Result<&ActionMeta,ValueError>{self.meta.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command lost its original metadata"))}
-    pub fn validate_original(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if !self.source_identity.matches(cx)||cx.native_receiving_identity()!=Some(self.original_decoder){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command requires its original receiving continuation").into())}if let Some(caller)=self.original_caller.as_ref(){caller.validate_retirement_context(cx)?}Ok(())}
-    pub fn prepare_context_metadata(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn metadata(&self)->Result<&ActionMeta,ValueError>{self.meta.as_ref().ok_or_else(||invalid("pending command lost its original metadata"))}
+    pub fn validate_original(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.source_identity.matches(cx)||cx.native_receiving_identity()!=Some(self.original_decoder){return Err(invalid("pending command requires its original receiving continuation").into())}if let Some(caller)=self.original_caller.as_ref(){caller.validate_retirement_context(cx)?}Ok(())}
+    /// 🪪️ Routing metadata and its view lease are prepared in four funded phases before the command may dispatch.
+    pub fn prepare_context_metadata(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.validate_original(cx)?;
         match self.context_phase{
             0=>{
-                if self.context_metadata.is_none(){self.meta.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command lost its original metadata"))?.admit_routing_alias(&mut self.context_metadata,cx)?;return Ok(false)}
-                let mut done=None;built(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:size_of::<u8>(),capacity_bytes:0,release_bytes:0,depth:1},||{self.context_phase=1;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}))})?;
+                if self.context_metadata.is_none(){self.meta.as_ref().ok_or_else(||invalid("pending command lost its original metadata"))?.admit_routing_alias(&mut self.context_metadata,cx)?;return Ok(false)}
+                acted(cx,fixed::<u8>(),||{self.context_phase=1;Ok(())})?;
             },
-            1=>{let bytes=2*size_of::<Option<std::sync::Arc<semio_framework::ViewModel>>>()+size_of::<u8>();let mut done=None;built(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},||{*self.context_view=self.context_metadata.as_mut().unwrap().view_state.take();self.context_phase=2;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})?;},
-            2=>{if !self.metadata_retirement.is_empty(){let selected=self.metadata_retirement.select(self.original_body)?;let d=selected.demands();retired(cx,d,|g|selected.step(g).result)?;}else if self.context_metadata.is_some(){let d=self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)?;retired(cx,d,|g|Ok(self.metadata_retirement.begin_granted(&mut self.context_metadata,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;}else{let mut done=None;built(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:size_of::<u8>(),capacity_bytes:0,release_bytes:0,depth:1},||{self.context_phase=3;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}))})?;}},
+            1=>{
+                let d=RetirementDemand{copy_bytes:2*size_of::<Option<ViewLease>>()+size_of::<u8>(),depth:1,..Default::default()};
+                acted(cx,d,||{*self.context_view=self.context_metadata.as_mut().ok_or_else(||invalid("pending command lost its routing metadata"))?.view_state.take().map(ViewLease::new);self.context_phase=2;Ok(())})?;
+            },
+            2=>{
+                let body=self.original_body;
+                if !self.metadata_retirement.is_empty(){let d=self.metadata_retirement.demands(body)?;retired(cx,d,|effect|self.metadata_retirement.step_granted(body,effect))?;}
+                else if self.context_metadata.is_some(){let d=self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,body)?;retired(cx,d,|effect|begin(&mut self.metadata_retirement,&mut self.context_metadata,effect))?;}
+                else{acted(cx,fixed::<u8>(),||{self.context_phase=3;Ok(())})?;}
+            },
             3=>return Ok(true),
-            _=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original command metadata phase changed").into())
+            _=>return Err(invalid("original command metadata phase changed").into()),
         }
         Ok(self.context_phase==3)
     }
     pub fn context_metadata_is_empty(&self)->bool{self.context_metadata.is_none()&&self.context_view.is_none()&&self.metadata_retirement.is_empty()}
-    pub fn context_metadata_close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.metadata_retirement.is_empty(){return self.metadata_retirement.demands(self.original_body)}if self.context_metadata.is_some(){return self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)}if self.context_view.is_some(){return self.metadata_retirement.next_owner_demands::<std::sync::Arc<semio_framework::ViewModel>>(true,&None,self.original_body)}Ok(Default::default())}
-    pub fn close_context_metadata(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_original(cx)?;if self.context_metadata_is_empty(){return Ok(true)}let d=self.context_metadata_close_demands()?;retired(cx,d,|g|{if !self.metadata_retirement.is_empty(){return self.metadata_retirement.select(self.original_body)?.step(g).result}if self.context_metadata.is_some(){return Ok(self.metadata_retirement.begin_granted(&mut self.context_metadata,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}Ok(self.metadata_retirement.begin_granted(&mut self.context_view,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))})?;Ok(false)}
+    pub fn context_metadata_close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.metadata_retirement.is_empty(){return self.metadata_retirement.demands(self.original_body)}if self.context_metadata.is_some(){return self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)}if self.context_view.is_some(){return self.metadata_retirement.next_owner_demands::<ViewLease>(true,&None,self.original_body)}Ok(Default::default())}
+    pub fn close_context_metadata(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        self.validate_original(cx)?;if self.context_metadata_is_empty(){return Ok(true)}
+        let d=self.context_metadata_close_demands()?;let body=self.original_body;
+        retired(cx,d,|effect|{
+            if !self.metadata_retirement.is_empty(){return self.metadata_retirement.step_granted(body,effect)}
+            if self.context_metadata.is_some(){return begin(&mut self.metadata_retirement,&mut self.context_metadata,effect)}
+            begin(&mut self.metadata_retirement,&mut self.context_view,effect)
+        })?;
+        Ok(false)
+    }
     pub fn metadata_close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.context_metadata_is_empty(){return self.context_metadata_close_demands()}if !self.metadata_retirement.is_empty(){return self.metadata_retirement.demands(self.original_body)}if self.meta.is_some(){return self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)}if let Some(caller)=self.original_caller.as_ref(){return Ok(caller.retirement_demands())}Ok(Default::default())}
-    pub fn close_metadata(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_original(cx)?;if !self.context_metadata_is_empty(){self.close_context_metadata(cx)?;return Ok(false)}if self.meta.is_none()&&self.metadata_retirement.is_empty(){if let Some(caller)=self.original_caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.original_caller.take();}return Ok(false)}return Ok(true)}let d=self.metadata_close_demands()?;retired(cx,d,|g|{if self.meta.is_some(){return Ok(self.metadata_retirement.begin_granted(&mut self.meta,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}self.metadata_retirement.select(self.original_body)?.step(g).result})?;Ok(false)}
+    pub fn close_metadata(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        self.validate_original(cx)?;
+        if !self.context_metadata_is_empty(){self.close_context_metadata(cx)?;return Ok(false)}
+        if self.meta.is_none()&&self.metadata_retirement.is_empty(){if let Some(caller)=self.original_caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.original_caller.take();}return Ok(false)}return Ok(true)}
+        let d=self.metadata_close_demands()?;let body=self.original_body;
+        retired(cx,d,|effect|{
+            if self.meta.is_some(){return begin(&mut self.metadata_retirement,&mut self.meta,effect)}
+            self.metadata_retirement.step_granted(body,effect)
+        })?;
+        Ok(false)
+    }
     pub fn metadata_is_empty(&self)->bool{self.context_metadata_is_empty()&&self.meta.is_none()&&self.metadata_retirement.is_empty()&&self.original_caller.is_none()}
 
-    pub fn admit_original_lease(&mut self,issuer:&mut semio_plugin_operation::ToolCancellationIssuer,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn admit_original_lease(&mut self,issuer:&mut semio_plugin_operation::ToolCancellationIssuer,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if self.closing||self.lease.is_some(){return Ok(self.lease.is_some())}
-        if !self.source_identity.matches(cx){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted pending lease requires its original command caller").into())}
+        if !self.source_identity.matches(cx){return Err(invalid("mounted pending lease requires its original command caller").into())}
         let key=semio_plugin_operation::ToolOperationKey{app_instance_id:self.metadata()?.instance_id,document:semio_plugin_operation::ArtifactDocumentAuthority(self.metadata()?.instance_id),operation_id:self.operation.operation,base_revision:self.operation.base_revision,generation:self.operation.generation};
         self.lease=issuer.begin_keyed(&key,cx)?;
         Ok(self.lease.is_some())
     }
 
-    pub fn record_original_receipt(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),Fault>{
-        if progress!=RetainedCloneProgress::default(){if self.receipt.is_some(){return Err(plugin_sdk_fault("latest-wins original receipt awaits its caller handback").with_retained_progress(progress));}self.receipt=Some((grant,progress));}
-        if !progress.fits(grant){return Err(plugin_sdk_fault("latest-wins original receipt exceeded its caller").with_retained_progress(progress));}
-        Ok(())
-    }
-    fn key_demands(&self)->Result<RetirementDemand,ValueError>{
-        if let Some(copy)=self.key_copy.as_ref(){return Ok(if copy.key.is_none(){RetirementDemand{depth:1,..Default::default()}}else{copy.retirement_demands()});}
-        if let Some(key)=self.key.as_ref(){return Ok(RetirementDemand{release_bytes:key.next_release_byte_demand(),depth:1,..Default::default()});}
-        Ok(RetirementDemand{release_bytes:self.retired_key.as_ref().map_or(0,String::capacity),depth:usize::from(self.retired_key.is_some()),..Default::default()})
-    }
+    /// 📏️ Quotes the next close turn of the command, key or fault owner this pending command still holds.
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if let Some(owner)=self.fault_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
-        if self.fault.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<PluginLifecycleFailure>(),depth:1,..Default::default()})}
+        if self.fault.is_some()||self.fault_retirement.is_some(){return plugin_typed_owner_demand(&self.fault,&self.fault_retirement,body)}
         if !self.command_retirement.is_empty(){return self.command_retirement.demands(self.original_body)}
         if self.command.is_some(){return self.command_retirement.next_owner_demands::<Box<A::Command>>(true,&None,self.original_body)}
-        if self.key_copy.is_some()||self.key.is_some()||self.retired_key.is_some(){return self.key_demands();}
+        if self.key_copy.is_some()||self.key.is_some()||self.key_retirement.is_some(){return self.key_demands(body)}
         if self.admission.is_some(){return self.command_retirement.next_owner_demands::<AdmittedToolCommand>(true,&None,self.original_body)}
         Ok(Default::default())
     }
-    pub fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
-        let idle=RetainedCloneProgress::default();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
-        if !Self::permits(grant,demand){return Ok(PluginLifecycleStep::Progress(idle))}
-        if let Some(owner)=self.fault_retirement.as_mut(){let step=owner.close_step(grant).result?;if owner.terminal_is_empty(){self.fault_retirement.take();}return Ok(PluginLifecycleStep::Progress(step.progress()))}
-        if let Some(original)=self.fault.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result {Ok((owner,progress))=>{self.fault_retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{*self.fault=Some(original);Err(error.into())}}}
-        if !self.command_retirement.is_empty(){return Ok(PluginLifecycleStep::Progress(self.command_retirement.select(self.original_body)?.step(grant).result?.progress()))}
-        if self.command.is_some(){let step=self.command_retirement.begin_granted(&mut self.command,grant).result?.unwrap_or(RetainedCloneStep::Progress(Default::default()));return Ok(PluginLifecycleStep::Progress(step.progress()))}
-        if self.key_copy.is_some()||self.key.is_some()||self.retired_key.is_some(){return self.close_key_step(grant)}
-        if self.admission.is_some(){let step=self.command_retirement.begin_granted(&mut self.admission,grant).result?.unwrap_or(RetainedCloneStep::Progress(Default::default()));return Ok(PluginLifecycleStep::Progress(step.progress()))}
-        Ok(PluginLifecycleStep::AwaitingInput{reason:"latest-wins original metadata and cancellation await their native retirement issuer"})
+    fn key_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(copy)=self.key_copy.as_ref(){return Ok(if copy.key.is_none(){fixed::<Option<ToolLatestWinsKeyCopy>>()}else{copy.close_demands()});}
+        plugin_typed_owner_demand(&self.key,&self.key_retirement,body)
     }
-    pub fn close_key_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
-        let idle=RetainedCloneProgress::default();if !Self::permits(grant,self.key_demands()?){return Ok(PluginLifecycleStep::Progress(idle))}
-        if let Some(copy)=self.key_copy.as_mut(){if copy.key.is_none(){self.key_copy.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}))}return Ok(PluginLifecycleStep::Progress(copy.close_step(grant).progress()))}
-        if let Some(key)=self.key.as_mut(){if key.terminal_is_empty(){self.key.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}))}let step=key.release_step(grant).result?;self.retired_key=step.value;return Ok(PluginLifecycleStep::Progress(step.progress))}
-        if let Some(key)=self.retired_key.as_ref(){let released_bytes=key.capacity();drop(self.retired_key.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..idle}))}
-        Ok(PluginLifecycleStep::Complete(idle))
+    /// ♻️ One funded retirement turn of the command, key or fault; `true` once the command owners are empty and only metadata and cancellation remain for their issuers.
+    pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        let body=cx.retained_grant().maximum_copy_bytes;let original=self.original_body;
+        if self.fault.is_some()||self.fault_retirement.is_some(){let d=plugin_typed_owner_demand(&self.fault,&self.fault_retirement,body)?;retired(cx,d,|effect|plugin_typed_owner_original(&mut self.fault,&mut self.fault_retirement,effect))?;return Ok(false)}
+        if !self.command_retirement.is_empty(){let d=self.command_retirement.demands(original)?;retired(cx,d,|effect|self.command_retirement.step_granted(original,effect))?;return Ok(false)}
+        if self.command.is_some(){let d=self.command_retirement.next_owner_demands::<Box<A::Command>>(true,&None,original)?;retired(cx,d,|effect|begin(&mut self.command_retirement,&mut self.command,effect))?;return Ok(false)}
+        if self.key_copy.is_some()||self.key.is_some()||self.key_retirement.is_some(){self.close_key_step(cx)?;return Ok(false)}
+        if self.admission.is_some(){let d=self.command_retirement.next_owner_demands::<AdmittedToolCommand>(true,&None,original)?;retired(cx,d,|effect|begin(&mut self.command_retirement,&mut self.admission,effect))?;return Ok(false)}
+        Ok(true)
     }
-    pub fn command_owners_are_empty(&self)->bool{self.command.is_none()&&self.command_retirement.is_empty()&&self.admission.is_none()&&self.key_copy.is_none()&&self.key.is_none()&&self.retired_key.is_none()&&self.fault.is_none()&&self.fault_retirement.is_none()}
+    /// 🗝️ One funded retirement turn of the key byte cursor, its shared alias or that alias's controlled frame; `true` once the key is gone.
+    pub fn close_key_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        let body=cx.retained_grant().maximum_copy_bytes;
+        if let Some(empty)=self.key_copy.as_ref().map(|copy|copy.key.is_none()){
+            if empty{acted(cx,fixed::<Option<ToolLatestWinsKeyCopy>>(),||{self.key_copy=None;Ok(())})?;}
+            else if let Some(copy)=self.key_copy.as_mut(){copy.close_step(cx)?;}
+            return Ok(false);
+        }
+        if self.key.is_some()||self.key_retirement.is_some(){let d=plugin_typed_owner_demand(&self.key,&self.key_retirement,body)?;retired(cx,d,|effect|plugin_typed_owner_original(&mut self.key,&mut self.key_retirement,effect))?;return Ok(false)}
+        Ok(true)
+    }
+    pub fn command_owners_are_empty(&self)->bool{self.command.is_none()&&self.command_retirement.is_empty()&&self.admission.is_none()&&self.key_copy.is_none()&&self.key.is_none()&&self.key_retirement.is_none()&&self.fault.is_none()&&self.fault_retirement.is_none()}
 }
 
 impl<A: ArtifactApp> Drop for PendingLatestWinsCommand<A> {
@@ -295,6 +431,7 @@ impl<A: ArtifactApp> Drop for PendingLatestWinsCommand<A> {
         }
     }
 }
+
 
 #[doc(hidden)]
 pub struct TypedCommandWireWriter {

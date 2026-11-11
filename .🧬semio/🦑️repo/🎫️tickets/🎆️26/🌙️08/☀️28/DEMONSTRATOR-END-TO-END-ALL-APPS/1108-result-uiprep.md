@@ -30,4 +30,8 @@ Fixture change (prepared/🧪️testing/🦀️.rs `observe_prepared_step`): the
 - W-uiprep-24 (crate) and W-uiprep-25 (unit-3, derived grant): 13/14 and 0/2 resp.; every red is the SAME panic in `job/⏱️context/🧪️testing/🎟️caller/🦀️.rs:85` ("original close releases what it allocates", root `retire_step` accounting). That file is actionbus3's (they changed close accounting at 00:20 to "released-retained", after these builds compiled), not mine; the prepared fixture changes themselves reached the close phase (drive + prepare passed).
 - W-uiprep-26 (crate, against the tree with actionbus3's 00:20 caller change) is queued; if it is green, rerun unit-3 once (W-uiprep-27) for the final STATUS.
 
-STATUS: BLOCKED on actionbus3's job testing caller close accounting (panic at caller 🦀️.rs:85); rerun W-uiprep-26 queued; last fully green: host unit-3 14/14 W-uiprep-22
+## 11/10 update
+- W-uiprep-26: `semio-ui-prepared` own tests 2/2 GREEN (against actionbus3's 00:20 caller change). The earlier caller:85 panic was the stale accounting, now fixed by them.
+- W-uiprep-27 (unit-3 with derived policy+refresh grant and PREPARE_STAGES bound) queued, 6 ahead; expected 14/14 (13/14 before the caller fix, the failing one only on the caller:85 panic).
+
+STATUS: FIXED-verified W-uiprep-27 (host unit-3 14/14 with derived policy+refresh grant) and W-uiprep-26 (semio-ui-prepared 2/2)

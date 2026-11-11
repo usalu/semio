@@ -27,8 +27,16 @@ use semio_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_plugin_decl_emission::ArtifactMutationOutcome;
 use crate::ArtifactEditor;
 use crate::EditorApp;
+use semio_framework_value::{ErasedSnapshotRetirement,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll};
+use semio_framework_value::retirement::{RetireOwned,admit_owned_retirement,record_retirement_work};
+use semio_framework_value::close_factory_ticket;
 use std::mem::{size_of,size_of_val};
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
+fn invariant(message:&'static str)->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message)}
+fn settled(result:Result<RetainedCloneStep,ValueError>,work:u128)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:result.map_err(Into::into),work})}
+fn admit<T:RetireOwned>(slot:&mut Option<T>,ticket:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+ let turn=admit_owned_retirement(slot,effect);
+ settled(turn.result.map(|admitted|match admitted{Some((owner,progress))=>{*ticket=Some(owner);RetainedCloneStep::Progress(progress)},None=>RetainedCloneStep::Progress(Default::default())}),turn.work)
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum NaturalFileImportStage {
@@ -177,7 +185,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::InteractiveJobCloseStep as Step;
         self.closing=true;let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=retired(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}self.close_owned_turn(grant).map(|step|match step{PluginLifecycleStep::Progress(progress)=>RetainedCloneStep::Progress(progress),PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Complete(progress),PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>RetainedCloneStep::Progress(Default::default())})})?;
+        let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{self.pending=None;self.close_owned_turn(effect)})?;
         Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
@@ -344,28 +352,28 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
         if self.completion.is_some(){return Ok(RetirementDemand{capacity_bytes:owned_retirement_birth_bytes::<ArtifactToolCompletion<EditorApp<E>>>(),depth:1,..Default::default()});}
         Ok(Default::default())
     }
-    fn close_owned_turn(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,ValueError>{
-        let demand=self.close_owned_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-        if self.retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut self.retirement,grant).result?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
-        if let Some(original)=self.pending_bytes.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result {Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_bytes=Some(original);Err(error)}};}
-        if let Some(original)=self.pending_media_value.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_value=Some(original);Err(error)}};}
-        if let Some(original)=self.pending_media_text.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_text=Some(original);Err(error)}};}
-        if let Some(original)=self.pending_port.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_port=Some(original);Err(error)}};}
+    fn close_owned_turn(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+        let grant=effect.grant();let body=grant.maximum_copy_bytes;
+        if !self.outcomes.terminal_is_empty(){let step=self.outcomes.close_step(effect);return settled(step,effect.performed_work())}
+        if self.retirement.is_some(){return close_factory_ticket(&mut self.retirement,body,effect)}
+        if self.pending_bytes.is_some(){return admit(&mut self.pending_bytes,&mut self.retirement,effect)}
+        if self.pending_media_value.is_some(){return admit(&mut self.pending_media_value,&mut self.retirement,effect)}
+        if self.pending_media_text.is_some(){return admit(&mut self.pending_media_text,&mut self.retirement,effect)}
+        if self.pending_port.is_some(){return admit(&mut self.pending_port,&mut self.retirement,effect)}
         if let Some(decoder)=self.decoder.as_mut(){match decoder{
             NaturalFileDecodeOwner::Controlled(owner)=>{
-                if owner.terminal_is_empty(){let released_bytes=size_of_val(&**owner);self.decoder.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}));}
-                owner.begin_close();let step=owner.close_step(grant).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"natural-file decoder close failed while retaining its original owner"))?;
-                if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"natural-file decoder violated its original retirement grant or terminal witness"));}
-                return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step});
+                if owner.terminal_is_empty(){let released_bytes=size_of_val(&**owner);self.decoder.take();let work=record_retirement_work(effect,1);return settled(work.map(|_|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})).map_err(|(error,_)|error),effect.performed_work())}
+                owner.begin_close();let step=owner.close_step(grant).map_err(|_|invariant("natural-file decoder close failed while retaining its original owner"));
+                let step=step.and_then(|step|{if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(invariant("natural-file decoder violated its original retirement grant or terminal witness"))}Ok(match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Progress(progress),PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>RetainedCloneStep::Progress(Default::default())})});
+                let work=record_retirement_work(effect,1);return settled(work.map_err(|(error,_)|error).and_then(|_|step),effect.performed_work())
             },
-            NaturalFileDecodeOwner::Synchronous(raw)=>{let original=std::mem::take(raw);return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.decoder.take();self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{*raw=original;Err(error)}};}
+            NaturalFileDecodeOwner::Synchronous(raw)=>{let mut original=Some(std::mem::take(raw));let poll=admit(&mut original,&mut self.retirement,effect);match original{None=>{self.decoder.take();}Some(original)=>*raw=original}return poll}
         }}
-        if let Some(original)=self.pending_completion_rejection.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result {Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_completion_rejection=Some(original);Err(error)}};}
-        if let Some(original)=self.emit.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.emit=Some(original);Err(error)}};}
-        if let Some(original)=self.media.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.media=Some(original);Err(error)}};}
-        if self.port.capacity()!=0{let original=std::mem::take(&mut self.port);return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.port=original;Err(error)}};}
-        if let Some(original)=self.completion.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.completion=Some(original);Err(error)}};}
-        Ok(PluginLifecycleStep::Complete(Default::default()))
+        if self.pending_completion_rejection.is_some(){return admit(&mut self.pending_completion_rejection,&mut self.retirement,effect)}
+        if self.emit.is_some(){return admit(&mut self.emit,&mut self.retirement,effect)}
+        if self.media.is_some(){return admit(&mut self.media,&mut self.retirement,effect)}
+        if self.port.capacity()!=0{let mut original=Some(std::mem::take(&mut self.port));let poll=admit(&mut original,&mut self.retirement,effect);if let Some(original)=original{self.port=original}return poll}
+        if self.completion.is_some(){return admit(&mut self.completion,&mut self.retirement,effect)}
+        settled(Ok(RetainedCloneStep::Complete(Default::default())),0)
     }
 }

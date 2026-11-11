@@ -52,7 +52,7 @@ impl<M:Send+Sync+'static> OriginalMemberBatchReceiving<M>{
  fn active_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(receiver)=self.receiver.as_ref(){return if receiver.terminal_is_empty(){Ok(RetirementDemand{release_bytes:receiver.allocation_bytes(),..header::<Option<Box<dyn ArtifactOriginalOperationReceiving<M>>>>()})}else{receiver.close_demands(body)}}
   if let Some(wire)=self.wire.as_ref(){return if wire.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<Vec<u8>>>>())}else{wire.close_demand(body)}}
-  if let Some(admission)=self.source_admission.as_ref(){return if admission.phase()=="ready"{admission.next_demand()}else{admission.next_return_demand()}}
+  if let Some(admission)=self.source_admission.as_ref(){return match(admission.phase(),admission.projection_result()){("ready",_)=>admission.next_demand(),(_,Some(true))=>Ok(admission.discard_projection_demand()),(_,Some(false))=>Ok(admission.take_projection_failure_demand()),_=>admission.next_return_demand()}}
   if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<Vec<u8>>>>())}else{source.next_take_demand(body)}}
   Ok(Default::default())
  }
@@ -75,7 +75,7 @@ impl<M:Send+Sync+'static> OriginalMemberBatchReceiving<M>{
    let poll=receiver.advance(control,self.body,maximum_work_units,grant);
    return match poll{RetainedWorkPoll::Pending{work:pending}=>{*work=pending;Ok(RetainedCloneStep::Progress(Default::default()))},RetainedWorkPoll::Complete(turn)=>{*work=turn.work;turn.result.map_err(refused)}};
   }}
-  let quote=match self.source_admission.as_ref(){Some(admission)=>match admission.phase(){"ready"=>admission.take_output_work_demand(),"projectionStart"=>1,_=>admission.advance_work_demand()?},None=>if self.receiver.is_none()&&self.wire.is_none()&&self.source.is_some(){maximum_work_units}else{1}};
+  let quote=match self.source_admission.as_ref(){Some(admission)=>match admission.phase(){"ready"=>admission.take_output_work_demand(),"projectionStart"=>1,_=>admission.advance_work_demand()?},None=>if self.receiver.is_none()&&self.wire.is_none()&&self.source.is_some(){maximum_work_units}else if let Some(receiver)=self.receiver.as_ref().filter(|receiver|receiver.ready()||receiver.owned_handoff_pending()){receiver.take_owned_work_demand(self.body,maximum_work_units)?}else{1}};
   if quote>maximum_work_units{return Ok(RetainedCloneStep::Progress(Default::default()))}
   let Some((result,spent))=control.with_allocated_effect(d,quote,|control,effect|{
    let result=self.advance_local(control,d,grant,effect);
@@ -101,13 +101,12 @@ impl<M:Send+Sync+'static> OriginalMemberBatchReceiving<M>{
   let d=self.active_demands(self.body)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let grant=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes,..grant};
   if let Some(receiver)=self.receiver.as_mut(){if !receiver.terminal_is_empty(){receiver.begin_close();return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(receiver.close_step(control,&mut effect.nested(grant)))?.progress()))}self.receiver=None;return Ok(RetainedCloneStep::Progress(receipt(d)))}
   if let Some(wire)=self.wire.as_mut(){if wire.terminal_is_empty(){self.wire=None;return Ok(RetainedCloneStep::Progress(receipt(d)))}control.charge(d.capacity_bytes)?;return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(wire.close_step(grant.maximum_copy_bytes,&mut effect.nested(grant)))?.progress()))}
-  if let Some(admission)=self.source_admission.as_mut(){if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,&mut effect.nested(grant)).result?;if self.source.is_some()&&self.source_admission.as_ref().is_some_and(RetainedCloneSourceAdmission::terminal_is_empty){self.source_admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}let mut inputs=None;let step=admission.return_inputs(&mut inputs,&mut effect.nested(grant)).result?;if let Some((bytes,()))=inputs{self.wires.as_mut().ok_or_else(invalid)?[self.index]=bytes;}if admission.terminal_is_empty(){self.source_admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}
+  if let Some(admission)=self.source_admission.as_mut(){if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,&mut effect.nested(grant)).result?;if self.source.is_some()&&self.source_admission.as_ref().is_some_and(RetainedCloneSourceAdmission::terminal_is_empty){self.source_admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}let mut inputs=None;let mut refused=None;let step=match admission.projection_result(){Some(true)=>admission.discard_projection(&mut effect.nested(grant)).result?,Some(false)=>admission.take_projection_failure(&mut refused,&mut effect.nested(grant)).result?,None=>admission.return_inputs(&mut inputs,&mut effect.nested(grant)).result?};if let Some((bytes,()))=inputs{self.wires.as_mut().ok_or_else(invalid)?[self.index]=bytes;}if admission.terminal_is_empty(){self.source_admission=None;}return Ok(RetainedCloneStep::Progress(step.progress()))}
   if let Some(source)=self.source.as_mut(){
    if source.terminal_is_empty()&&!self.take_pending{self.source=None;return Ok(RetainedCloneStep::Progress(receipt(d)))}
-   {let slot=&mut self.wires.as_mut().ok_or_else(invalid)?[self.index];if !slot.is_empty()||slot.capacity()!=0{return Err(invalid().into())}}
    if !self.take_pending{control.charge(d.capacity_bytes)?;}
    if self.take_reply.is_none(){let reply=OriginalEffectReply::borrow(&mut self.take_reply)?;let done=if self.take_pending{source.recover_take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?}else{source.take_authority_into(&mut self.returned,grant.maximum_copy_bytes,effect,reply)?};drop(done);}
-   return match self.take_reply.take(){None=>{self.take_pending=true;Err(RetirementPollExit::Pending(0))},Some(result)=>{self.take_pending=false;let step=result?;if let Some(bytes)=self.returned.take(){self.wires.as_mut().ok_or_else(invalid)?[self.index]=bytes;}Ok(RetainedCloneStep::Progress(step.progress()))}}
+   return match self.take_reply.take(){None=>{self.take_pending=true;Err(RetirementPollExit::Pending(0))},Some(result)=>{self.take_pending=false;let step=result?;if let Some(bytes)=self.returned.take(){let slot=&mut self.wires.as_mut().ok_or_else(invalid)?[self.index];if !slot.is_empty()||slot.capacity()!=0{return Err(invalid().into())}*slot=bytes;}Ok(RetainedCloneStep::Progress(step.progress()))}}
   }
   Ok(RetainedCloneStep::Complete(Default::default()))
  }

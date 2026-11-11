@@ -46,9 +46,9 @@ impl<T:RetireOwned+Send+Sync+'static> KeyPreservingPersistentSet<T>{
  fn close_reply_set<'r>(&mut self,mut original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
   if !self.closing{return Err(invalid())}
   if !recover&&self.close_route.is_none()&&self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
-  let identity=invocation_identity(effect,recover)?;let loan=match original.as_deref_mut(){Some(loan)=>Some(loan_key(loan,effect)?),None=>None};
+  let identity=invocation_identity(effect,recover)?;let body=if recover{self.close_route.map_or(body,|key|key.2)}else{body};let loan=match original.as_deref_mut(){Some(loan)=>Some(loan_key(loan,effect)?),None=>None};
   if recover{
-   let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.2!=body||key.3!=loan{return Err(ValueError::invariant("key-preserving close recovery changed its invocation, body or loan"))}
+   let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.3!=loan{return Err(ValueError::invariant("key-preserving close recovery changed its invocation, body or loan"))}
    let mut scope=reply.progress().scope(&mut self.close_route,key)?;let inner=scope.borrow()?;
    let done=match key.1{1=>self.set.as_mut().ok_or_else(invalid)?.close_reply(original,body,effect,inner,true),2=>self.index.as_mut().ok_or_else(invalid)?.close_reply(original,body,effect,inner,true),4=>self.retirement.close_reply(original,body,effect,inner,true),5=>self.source.as_mut().ok_or_else(invalid)?.close_reply(original,body,effect,inner,true),_=>RetainedCloneBinding::recover_close_into(&mut self.authored,body,effect,inner)}?;drop(done);return Ok(scope.forwarded());
   }

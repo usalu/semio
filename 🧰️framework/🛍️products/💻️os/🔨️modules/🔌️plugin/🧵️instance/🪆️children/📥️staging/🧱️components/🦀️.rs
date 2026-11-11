@@ -12,9 +12,9 @@ use std::future::Future;
 use std::mem::ManuallyDrop;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
-use semio_framework_plugin_publication_mounted::owner::MountedPrivateChildGroup;
+use semio_plugin_publication_mounted::owner::MountedPrivateChildGroup;
 use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_ui_contract::*;
 
 /// 🏕️ Child composition: the live owned children, their private groups, content roots and retirement registries.

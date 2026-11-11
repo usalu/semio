@@ -36,21 +36,7 @@ pub mod registry_driver;
 
 //#region 🔖️PublicTypes
 
-/// 🗺️ Absorbed from the peer's guest export `io-run` (single hop, this plugin's own registry —
-/// never chains into another plugin; multi-hop routing is the host's `io-run` EFFECT, not this
-/// job kind).
-pub const JOB_KIND_IO_RUN: &str = "semio.io-run";
-/// 🗺️ Absorbed from the peer's guest export `io-sniff`.
-pub const JOB_KIND_IO_SNIFF: &str = "semio.io-sniff";
-/// 💡️ design-abi.md §2: absorbed from the deleted `contributor.artifact-infer` export — see
-/// `💡️infer/🦀️.rs`.
-pub const JOB_KIND_INFER: &str = "semio.infer";
-/// 🧬️ design-abi.md §2: absorbed from the deleted `contributor.artifact-mutation-plan` export —
-/// see `🧬️mutation-plan/🦀️.rs`.
-pub const JOB_KIND_MUTATION_PLAN: &str = "semio.mutation-plan";
-/// 🔀️ design-abi.md §2: absorbed from the deleted `migrate-artifact` export — see
-/// `🔀️migrate/🦀️.rs`.
-pub const JOB_KIND_MIGRATE: &str = "semio.migrate";
+pub use semio_plugin_abi::job_kinds::{JOB_KIND_INFER, JOB_KIND_IO_RUN, JOB_KIND_IO_SNIFF, JOB_KIND_MIGRATE, JOB_KIND_MUTATION_PLAN};
 
 /// 📜️ Every kind a plugin gets for free, in the order `builtin_registry` installs them. This is
 /// the list the admitted-set law compares the live registry against, so a builtin added without a
@@ -314,9 +300,9 @@ pub fn close_original<T:semio_framework_value::retirement::RetireOwned>(source:&
     }
     let owner=closing.as_mut().unwrap();
     if owner.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);*closing=None;return Ok(true)}
-    let step=owner.step(grant);
-    let progress=match &step{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};if progress!=RetainedCloneProgress::default(){cx.consume_fuel(1);}
-    let step=step.map_err(|error|{OriginalTurnFailure::debit_original(error,cx)})?;
+    let body=grant.maximum_copy_bytes;let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.step(body,effect))?else{return Ok(false)};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+    let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll else{return Ok(false)};
+    let step=turn.result.map_err(|error|{cx.consume_fuel(1);OriginalTurnFailure::debit_original(error,cx)})?;
     cx.consume_retained(step.progress())?;Ok(false)
 }
 
@@ -670,11 +656,12 @@ struct JobIoReceiving {
 /// 🌉️ Retains the original parsed request and exact hop result inside its admitted native recipient.
 async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot: &mut SqliteSnapshotControl<'_>) -> Result<Vec<u8>, semio_framework::Fault> {
     use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
-    original.receive_nested::<JobIoReceiving, Result<Vec<u8>, semio_framework::Fault>, _>(|slot, run| semio_os_kernel::io::control::native_snapshot_turn(|work| {
+    let mut output: Option<Result<Vec<u8>, semio_framework::Fault>> = None;
+    original.receive_nested::<JobIoReceiving, Result<Vec<u8>, semio_framework::Fault>, _>(&mut output, &mut |slot, out, _marker, _unwind, run| semio_os_kernel::io::control::native_snapshot_turn(|work| {
         work.performed();
         *slot = Some(JobIoReceiving { input: None, source: None, target: None, route: None, payload: None, outcome: None });
         let frame = slot.as_mut().unwrap();
-        Ok(settle_in_step("job.io-run", async {
+        *out = Some(settle_in_step("job.io-run", async {
             let text = std::str::from_utf8(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
             frame.input = Some(semio_framework_pack_json::from_json_str::<IoRunInput>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?);
             let request = frame.input.as_ref().unwrap();
@@ -691,8 +678,10 @@ async fn run_io_run(input: &[u8], original: &mut IoRunControl<'_, '_>, snapshot:
                 Ok(outcome) => Ok(semio_framework_pack_json::to_json_string(&outcome.value).into_bytes()),
                 Err(error) => Err(fault("job.io-run", error.cause.message())),
             }
-        }))
-    })).result.map_err(|error| fault("job.io-run", error.message()))?
+        }));
+        Ok(())
+    })).result.map_err(|error| fault("job.io-run", error.message()))?;
+    output.take().ok_or_else(|| fault("job.io-run", "io-run produced no result"))?
 }
 
 /// 🔍️ Body unchanged from the pre-rewrite `run_io_sniff` — `Ok` carries a single-byte `Vec<u8>` of

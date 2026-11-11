@@ -31,6 +31,7 @@ semio-plugin-runtime-ops-document = { path = "../../📄️document/📦️packa
 semio-plugin-runtime-ops-surface = { path = "../../🖥️surface-render/📦️packages/🦀️rust" }
 semio-plugin-testing-caller = { path = "../../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust", optional = true }
 semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-original = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-plugin-window-config = { path = "../../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-plugin-abi = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-plugin-actor-host = { path = "../../../../../🌐host/📦️packages/🦀️rust" }

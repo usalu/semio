@@ -44,3 +44,11 @@ semio-framework-value-retirement = { path = "../../../../♻️retirement/📦�
 semio-framework-value-paged-list = { path = "../../../../📋️list/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-read = { path = "../../../../🔗️read/📦️packages/🦀️rust" }
+
+[[test]]
+name = "value-arc-root"
+path = "../../../../♻️retirement/🔗️arc-custody/🏭️factory/🌳️root/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-shared-recover-grant"
+path = "../../../../♻️retirement/🔗️arc-custody/🧪️tests/shared-recover-grant.rs"

@@ -30,10 +30,23 @@ impl<I:NativeValueSource+?Sized> NativeRecordMatcher<I>{
   match self.selection(){
    Ok(S::KeyAcknowledgement|S::KeyMetadata(_)) if !self.demands(input,body,maximum).is_ok_and(|demand|semio_framework_value_control_contract::retained_clone_grant_admits(grant,demand))=>idle(0),
    Ok(S::KeyAction|S::CheckpointRecovery)=>match self.key_action_advance(input,control,witness,body,maximum,grant){Err(error)=>failed(error),Ok(NativeSchemaKeyPoll::Denied)=>idle(0),Ok(NativeSchemaKeyPoll::Pending{work})=>crate::RetainedWorkPoll::Pending{work},Ok(NativeSchemaKeyPoll::Ready{work,progress})=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})},
-   Ok(S::KeyAcknowledgement)=>match self.key_advance_acknowledgement(control){Err(error)=>failed(error),Ok(semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectState::Pending{work})=>crate::RetainedWorkPoll::Pending{work},Ok(semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectState::Ready{work})=>idle(work)},
+   Ok(S::KeyAcknowledgement)=>self.advance_acknowledgement(control),
    Ok(S::KeyMetadata(operation))=>{let before=control.actual_work();let advanced=self.advance_metadata(control,operation);let work=control.actual_work().saturating_sub(before);match advanced{Ok(progress)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work}),Err(error)=>crate::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work})}},
    Ok(_)=>failed(invalid()),
    Err(error)=>failed(error),
+  }
+ }
+ /// 🧾️ Settles the resident acknowledgement within one call so a finalizing step never reports zero progress and zero work; work already reported by an earlier pending poll stays charged there.
+ fn advance_acknowledgement(&mut self,control:&mut NativeDecodeControl<'_>)->Poll{
+  use semio_framework_value_native_decoding::native_decoding::NativeReceivingEffectState as State;
+  let mut total=0u128;
+  loop{
+   match self.key_advance_acknowledgement(control){
+    Err(error)=>return failed(error),
+    Ok(State::Pending{work:0})=>return crate::RetainedWorkPoll::Pending{work:total},
+    Ok(State::Pending{work})=>total=total.saturating_add(work),
+    Ok(State::Ready{work})=>return idle(total.saturating_add(work)),
+   }
   }
  }
  /// 📬️ Records exactly one selected local action into the borrowed original reply.

@@ -18,9 +18,7 @@ pub use semio_framework_value_intrinsic::bytes;
 
 #[path = "🧬️clone/🦀️.rs"]
 pub mod bounded_clone;
-#[path = "📬️reply-stash/🦀️.rs"]
-pub mod reply_stash;
-pub use reply_stash::ReplyStash;
+pub use semio_framework_value_retirement_contract::ReplyStash;
 
 pub use semio_framework_value_native_encoding::native_encoding;
 pub use native_encoding::{NativeEncodeControl,NativeEncodeContinuation,NativeScopedEncodeContinuation,NativeScopedEncodePauseFailure};

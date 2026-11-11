@@ -16,7 +16,7 @@ pub struct IoRouter {
 
 struct IoRouterState {
     pub(super) routes: HashMap<semio_os_kernel::io::IoKey, String>,
-    pub(super) runtimes: HashMap<String, Arc<PluginInstanceHandle>>,
+    pub(super) runtimes: HashMap<String, PluginRegistration>,
     /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW mechanism's merged cross-plugin
     /// graph — `(from, into) -> IoEntryRoute` — built from every plugin's `list-io-entries` roster,
     /// separate from `routes` above (OLD `IoKey`-keyed graph). `BTreeMap` (not `HashMap`) is load-
@@ -187,6 +187,19 @@ pub fn route_reenters_calling_plugin<'route>(
     })
 }
 
+/// 🌉️ The `semio.io-run` / `semio.io-sniff` job input: source and target coordinates over the decoded payload.
+fn io_job_input(source: &str, target: &str, payload: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+    #[derive(ToValue)]
+    struct IoJobInputWire<'a> {
+        source: &'a str,
+        target: &'a str,
+        payload: semio_framework::io_schema::IoPayload,
+    }
+    let payload_text = std::str::from_utf8(payload).map_err(|error| PluginHostError::Json(error.to_string()))?;
+    let payload: semio_framework::io_schema::IoPayload = semio_framework_pack_json::from_json_str(payload_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
+    Ok(semio_framework_pack_json::to_json_string(&IoJobInputWire { source, target, payload }).into_bytes())
+}
+
 impl IoRouter {
     pub fn new() -> Self {
         Self { state: Mutex::new(IoRouterState { routes: HashMap::new(), runtimes: HashMap::new(), io_entries: BTreeMap::new() }) }
@@ -205,7 +218,7 @@ impl IoRouter {
     pub async fn register_plugin(
         &self,
         plugin_id: &str,
-        handle: Arc<PluginInstanceHandle>,
+        registration: PluginRegistration,
         artifact_dialect_entries: &[(semio_framework_artifact_reference::ArtifactDialect, Vec<semio_framework_artifact_reference::ArtifactDialect>)],
         io_entries: &[semio_framework::io_schema::IoEntryDescriptor],
     ) -> Result<(), PluginHostError> {
@@ -234,7 +247,7 @@ impl IoRouter {
         }
         let mut state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
         if let Some(existing) = state.runtimes.get(plugin_id) {
-            if !Arc::ptr_eq(existing, &handle) {
+            if *existing != registration {
                 return Err(PluginHostError::PluginRuntimeConflict { plugin_id: plugin_id.to_owned() });
             }
         }
@@ -248,7 +261,7 @@ impl IoRouter {
         if let Some(conflict) = io_entries_conflict(&state.io_entries, plugin_id, io_entries) {
             return Err(conflict);
         }
-        state.runtimes.entry(plugin_id.to_owned()).or_insert(handle);
+        state.runtimes.entry(plugin_id.to_owned()).or_insert(registration);
         for key in candidate_routes {
             state.routes.entry(key).or_insert_with(|| plugin_id.to_owned());
         }
@@ -280,10 +293,10 @@ impl IoRouter {
     /// (a real, dynamic failure reflecting actual guest state) rather than the previous hand-written
     /// permanent host refusal. Once `compose-await` lands, this exact code starts succeeding with no
     /// further host change.
-    pub async fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8], drivers: PluginCallDrivers<'_>) -> Result<Vec<u8>, PluginHostError> {
         let key_text = std::str::from_utf8(key_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let key: semio_os_kernel::io::IoKey = semio_framework_pack_json::from_json_str(key_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let handle = {
+        let registration = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
             let owner = state
                 .routes
@@ -295,7 +308,13 @@ impl IoRouter {
             }
             state.runtimes.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("plugin `{owner}` owns this key but its instance handle is not registered with the router")))?
         };
-        handle.compose(key_bytes, sources_bytes).await
+        #[derive(serde::Serialize, ToValue)]
+        struct ComposeInput {
+            key: Vec<u8>,
+            sources: Vec<u8>,
+        }
+        let input = semio_framework_pack_json::to_json_string(&ComposeInput { key: key_bytes.to_vec(), sources: sources_bytes.to_vec() }).into_bytes();
+        call_plugin(&registration, JOB_KIND_COMPOSE, &input, drivers().map_err(PluginHostError::NativeIo)?).await
     }
 
     /// 📚️ Every dialect ANY loaded plugin can move `artifact_kind` through in `direction`
@@ -342,7 +361,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     ///
     /// 🚫️async: R10 residue shape 1 — `to_coordinate` is external/async, hoisted out of
     /// the `ok_or_else` sync closures below.
-    pub async fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn run_io(&self, calling_plugin_id: &str, from: &str, into: &str, payload: Vec<u8>, drivers: PluginCallDrivers<'_>) -> Result<Vec<u8>, PluginHostError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let from_dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(from).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
@@ -370,7 +389,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         };
         let mut current = payload;
         for (from_coordinate, into_coordinate, runtime) in hops {
-            current = runtime.io_run(&from_coordinate, &into_coordinate, current).await?;
+            let input = io_job_input(&from_coordinate, &into_coordinate, &current)?;
+            current = call_plugin(&runtime, JOB_KIND_IO_RUN, &input, drivers().map_err(PluginHostError::NativeIo)?).await?;
         }
         Ok(current)
     }
@@ -384,7 +404,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     ///
     /// 🚫️async: R10 residue shape 1 — `Confidence::rank`/`ArtifactDialect::to_coordinate` are
     /// external async accessors, so the sort key is precomputed before the sync `sort_by`.
-    pub async fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn identify(&self, calling_plugin_id: &str, payload_bytes: Vec<u8>, drivers: PluginCallDrivers<'_>) -> Result<Vec<u8>, PluginHostError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let payload_text = std::str::from_utf8(&payload_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
@@ -405,7 +425,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             };
             let carrier_coord = carrier.to_coordinate();
             let into_coord = into.to_coordinate();
-            let rank = runtime.io_sniff(&carrier_coord, &into_coord, &payload_bytes).await?;
+            let input = io_job_input(&carrier_coord, &into_coord, &payload_bytes)?;
+            let sniffed = call_plugin(&runtime, JOB_KIND_IO_SNIFF, &input, drivers().map_err(PluginHostError::NativeIo)?).await?;
+            let rank = sniffed.first().copied().ok_or_else(|| PluginHostError::Plugin("semio.io-sniff job returned an empty result".to_string()))?;
             let confidence = rank_to_io_confidence(rank);
             if confidence != semio_framework::io_schema::Confidence::None {
                 found.push((into, confidence));

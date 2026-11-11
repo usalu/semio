@@ -67,7 +67,6 @@ pub trait SemanticEdit<P,M>:Send+'static{
 }
 /// 📤️ Preserves original inverse and diagnostic owners before independent output admission.
 pub enum SemanticEditStep<M>{CompleteSingle(RetainedCloneProgress,M),Progress(RetainedCloneProgress),Complete(RetainedCloneProgress,Vec<M>,Vec<semio_os_spr::MutationMessage>,bool),Refused(RetainedCloneProgress,Vec<semio_os_spr::MutationMessage>)}
-std::thread_local!{pub(crate) static DEBUG_STAGE:std::cell::Cell<u8>=const{std::cell::Cell::new(0)};}
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Stage{RefusalRows,RefusalCode,RefusalTextBirth,RefusalText,SourceCapture,Source,ProjectionBirth,Projection,TakeProjection,CloseProjection,EditBirth,PostCapture,Edit,CloseEdit,InverseBirth,Inverse,CloseInverse,Share,Ready}
 /// 🧳️ One retained producer owns every original lease and candidate through cancellation.
@@ -154,7 +153,6 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   let p=admit_retained_clone_progress(grant,p,"metadata-free original semantic producer")?;Ok(ArtifactReplayPreparationStep::Pending(p))
  }
  fn advance_effect(&mut self,body:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,effect:Effect<'_,'_>)->Result<ArtifactReplayPreparationStep,Failure>{
-  DEBUG_STAGE.with(|cell|cell.set(self.stage as u8));
   let grant=effect.grant();let maximum_work_units=effect.maximum_work_units();
   let d=self.demands(body,maximum_work_units)?;if !retained_clone_grant_admits(grant,d){return Ok(ArtifactReplayPreparationStep::Blocked);}
   if self.closing{return Ok(ArtifactReplayPreparationStep::Blocked);}control.checkpoint()?;if self.stage!=Stage::Edit||self.custody.due(self.edit.post_mode(),body)?.is_some(){control.admit_turn_capacity(grant.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}}

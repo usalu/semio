@@ -1,6 +1,6 @@
 //! 📦️ Native byte chunks retain their original copy cursor through funded payload assembly.
 use semio_framework_job_payload::{JobPayloadStep,JobPayloadStream,RetainedJobPayload,RetainedPayloadBuilder};
-use semio_framework_value_retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value_retained_clone::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 pub(super) struct NativePayloadPump{builder:RetainedPayloadBuilder,source:Option<(usize,usize)>,cursor:usize,finished:bool}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"native payload chunk changed its retained source or phase")}
 fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
@@ -40,8 +40,9 @@ impl NativePayloadPump{
   let turn=self.builder.take_finished(output,cx.retained_grant());if output.is_some(){self.finished=true}turn
  }
  pub(super) fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{if !self.builder.terminal_is_empty(){self.builder.retirement_demands()}else{Ok(RetirementDemand{depth:usize::from(self.source.is_some()),..Default::default()})}}
- pub(super) fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
-  if !self.builder.terminal_is_empty(){let turn=self.builder.close_step_granted(g);return RetainedWorkOutcome{result:turn.result.map(|step|if self.source.is_some(){RetainedCloneStep::Progress(step.progress())}else{step}),work:turn.work}}
+ pub(super) fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+  let g=effect.grant();
+  if !self.builder.terminal_is_empty(){let turn=self.builder.close_step(effect);return RetainedWorkOutcome{result:turn.result.map(|step|if self.source.is_some(){RetainedCloneStep::Progress(step.progress())}else{step}),work:turn.work}}
   if self.source.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
   if !permits(g,RetirementDemand{depth:1,..Default::default()}){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
   self.source=None;self.cursor=0;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}

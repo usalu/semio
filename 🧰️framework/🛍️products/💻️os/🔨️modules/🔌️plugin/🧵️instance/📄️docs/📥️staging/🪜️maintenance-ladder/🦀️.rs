@@ -54,9 +54,9 @@ fn archive_retirement_failure(error:semio_framework_value::OriginalRetirementFai
  };
  PluginLifecycleFailure{effects:progress,primary,receipt_refusal:None,context_refusal:None,work_refusal:None}
 }
-fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T,semio_framework_value::OriginalRetirementFailure>,progress:RetainedCloneProgress,observed:u64)->Result<T,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T,semio_framework_value::OriginalRetirementFailure>,progress:RetainedCloneProgress,observed:u128)->Result<T,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
  use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued};
- let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:turn.work},observed);
+ let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:u64::try_from(turn.work).unwrap_or(u64::MAX)},u64::try_from(observed).unwrap_or(u64::MAX));
  match (outcome.value,outcome.receiving_refusal) {
   (Ok(value),None)=>Ok(value),
   (Ok(_),Some(failure))=>{let mut failure:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure=failure.into();failure.effects=progress;Err(failure)},
@@ -195,8 +195,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
             return Ok(removed(RetainedCloneProgress::default()));
         }
         let fuel=cx.fuel_remaining();
-        let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:true};
-        let turn=active.close_step(grant,&actual);drop(actual);
+        let Some((poll,_))=cx.with_original_effect(grant,|cx,effect|{let actual=StepTurn{actual:std::sync::Mutex::new(&mut *cx),closing:true};active.close_step(effect,&actual)})? else{return Ok(idle())};
+        let turn=match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn,semio_framework_value::RetainedWorkPoll::Pending{work}=>semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
         let progress=match &turn.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
         let observed=active.last_turn_native_work();
         match receive_archive(cx,grant,fuel,turn,progress,observed)? {

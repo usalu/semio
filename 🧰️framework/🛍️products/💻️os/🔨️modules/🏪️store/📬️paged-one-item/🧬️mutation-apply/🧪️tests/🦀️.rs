@@ -213,6 +213,9 @@ impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation
 }
 
 const RECEIVER_TURNS:usize=1_100_032;
+const RECEIVER_WORK:u64=1<<20;
+/// 🔥️ Exact turns the fixture Source needs to birth its decoder, return table and receiving scope; the first turns must not open it and the last must.
+const RECEIVER_OPEN_TURNS:usize=4;
 fn receiver_clock()->Option<u64>{Some(1)}
 fn receiver_source(original:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retained_clone::RetainedCloneGrant{
     let extent=|bytes:usize|bytes.max(WIDE).checked_mul(RECEIVER_TURNS).expect("finite fixture source extent");
@@ -229,27 +232,35 @@ impl<T:ReceiverReceipt> ReceiverReceipt for Result<T,semio_framework_value::Orig
 impl<T:ReceiverReceipt,U> ReceiverReceipt for (T,U){fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.0.receipt()}}
 struct Received<T>{value:T,progress:semio_framework_value::retained_clone::RetainedCloneProgress}
 impl<T> ReceiverReceipt for Received<T>{fn receipt(&self)->semio_framework_value::retained_clone::RetainedCloneProgress{self.progress}}
-struct Receiver { owner: semio_framework_job::OriginalJobDecodeOwner, caller:semio_framework_job::OriginalJobFixtureCaller }
+struct Receiver { owner: semio_framework_job::OriginalJobDecodeOwner, caller:semio_framework_job::OriginalJobFixtureCaller, born:bool }
 impl Receiver {
-    fn new(original: semio_framework_value::retained_clone::RetainedCloneGrant) -> Self { Self { owner: semio_framework_job::OriginalJobDecodeOwner::empty(),caller:semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),receiver_source(original),receiver_clock,u64::MAX,RECEIVER_TURNS as u64*16) } }
+    fn new(original: semio_framework_value::retained_clone::RetainedCloneGrant) -> Self { Self { owner: semio_framework_job::OriginalJobDecodeOwner::empty(),caller:semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),receiver_source(original),receiver_clock,u64::MAX,RECEIVER_TURNS as u64*16),born:false } }
     fn run<T:ReceiverReceipt,E:Into<semio_framework_value::OriginalReceivingPrimary>>(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<T, E>) -> Result<T, ValueError> {
         use semio_framework_job::{OriginalTurnFailure,OriginalTurnPrimary};
-        self.caller.turn_with_decoder(grant,&mut self.owner,|cx|{
-            let mut out=None;let mut produced=None;
-            if !cx.with_native_receiving(&mut out,|control,_|{produced=Some(operation(control));Ok(())})?{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiving scope did not open").into())}
-            if let Some(source)=out{return Err(OriginalTurnFailure{effects:Default::default(),primary:OriginalTurnPrimary::NativeSource(source),receipt_refusal:None,context_refusal:None,work_refusal:None})}
-            match produced.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiving produced nothing"))?{
-                Ok(value)=>{cx.consume_receiving_retained(grant,value.receipt())?;Ok(value)}
-                Err(failure)=>{let failure:semio_framework_value::OriginalReceivingPrimary=failure.into();let progress=failure.retained_progress();cx.consume_receiving_retained(grant,progress)?;Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(failure),receipt_refusal:None,context_refusal:None,work_refusal:None})}
-            }
-        }).map_err(|failure|{
-            assert!(failure.receipt_refusal.is_none()&&failure.context_refusal.is_none(),"original fixture failure must retain coherent receipts: {failure:?}");
-            match failure.primary{
-                OriginalTurnPrimary::Receiving(primary)=>receiving_value(primary),
-                OriginalTurnPrimary::Value(error)=>error.with_retained_progress(failure.effects),
-                other=>panic!("fixture returns its original value refusal: {other:?}"),
-            }
-        })
+        let mut operation=Some(operation);
+        let turns=if self.born{1}else{RECEIVER_OPEN_TURNS};
+        for turn in 0..turns{
+            let step=self.caller.turn_with_decoder(grant,&mut self.owner,|cx|{
+                let mut out=None;let mut produced=None;
+                let opened=cx.with_native_receiving_quoted(&mut out,(grant,RECEIVER_WORK),|control,_|{produced=Some(operation.take().expect("receiving operation runs once")(control));Ok(())})?;
+                assert_eq!(opened,turn+1==turns,"fixture receiving scope opens exactly on turn {turns}");
+                if !opened{return Ok(None)}
+                if let Some(source)=out{return Err(OriginalTurnFailure{effects:Default::default(),primary:OriginalTurnPrimary::NativeSource(source),receipt_refusal:None,context_refusal:None,work_refusal:None})}
+                match produced.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture receiving produced nothing"))?{
+                    Ok(value)=>{cx.consume_receiving_retained(grant,value.receipt())?;Ok(Some(value))}
+                    Err(failure)=>{let failure:semio_framework_value::OriginalReceivingPrimary=failure.into();let progress=failure.retained_progress();cx.consume_receiving_retained(grant,progress)?;Err(OriginalTurnFailure{effects:progress,primary:OriginalTurnPrimary::Receiving(failure),receipt_refusal:None,context_refusal:None,work_refusal:None})}
+                }
+            }).map_err(|failure|{
+                assert!(failure.receipt_refusal.is_none()&&failure.context_refusal.is_none(),"original fixture failure must retain coherent receipts: {failure:?}");
+                match failure.primary{
+                    OriginalTurnPrimary::Receiving(primary)=>receiving_value(primary),
+                    OriginalTurnPrimary::Value(error)=>error.with_retained_progress(failure.effects),
+                    other=>panic!("fixture returns its original value refusal: {other:?}"),
+                }
+            })?;
+            if let Some(value)=step{self.born=true;return Ok(value)}
+        }
+        unreachable!("the final opening turn returns its value")
     }
     fn retire(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant, run: impl for<'a,'b,'c,'d,'e> FnOnce(&'a mut semio_framework_value::RetainedAllocationEffect<'b>, &'c mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'d,'e>) -> semio_framework_value::OriginalRetirementPoll) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
         let mut output = None;

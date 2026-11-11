@@ -10,7 +10,7 @@ pub use semio_framework_job_headless::{payload_bytes,payload_equals,run_headless
 
 #[path = "📤️publication/🦀️.rs"]
 mod publication;
-pub use publication::{close_result, Kind as PublicationKind, Publication};
+pub use publication::{Kind as PublicationKind, Publication};
 #[path = "📤️publication/📦️owner/🦀️.rs"]
 mod publication_owner;
 pub use publication_owner::{close_publication_step, publication_retirement_demands};

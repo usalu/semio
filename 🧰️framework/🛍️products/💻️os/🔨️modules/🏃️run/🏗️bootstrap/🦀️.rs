@@ -304,11 +304,9 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let identity_policy:semio_plugin_host_shard::identity::ShardIdentityPolicy=serde_json::from_str(include_str!("../../🔌️plugin/🖥️host/🧵️shard/🪪️identity/⚙️configuration/🔣️.json")).map_err(|error|error.to_string())?;
     let original_cancel=semio_framework_async::CancelToken::root_now();
     let identity_cancel=original_cancel.clone();
-    let direct_cancel=original_cancel.clone();
     let identity=semio_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=identity_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
-    let direct_identity=semio_plugin_host::shard::native_identity_issuer(identity_policy,move |_|{let original=direct_cancel.clone();Box::new(move |_|!original.is_cancelled_now())});
     let host_driver_policy = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(&args.host_driver_policy)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
-    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity,host_driver_policy,semio_framework_job::default_now_us,original_cancel.clone(),direct_identity).await?;
+    let host = WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::clone(&blob_store),identity,host_driver_policy,semio_framework_job::default_now_us,original_cancel.clone()).await?;
     let mut runner = SpaceRunner::new(host, blob_store, args.policy,original_cancel).with_document_load_progress(document_load_reporter());
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 

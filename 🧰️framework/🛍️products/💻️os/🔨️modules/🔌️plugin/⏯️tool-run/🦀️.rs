@@ -108,6 +108,8 @@ mod selected_entry_required_tests {
     fn dangling_selection_is_a_typed_fault(){assert!(fault(&mut Ledger{selected:Some(3),entries:vec![Box::new(7)]}).is_err());}
 }
 
+/// 🧊️ Cold retirement of one shared original: the last alias is elected and its plain value dropped; never a bare drop of the owner.
+pub(crate) fn retire_cold_shared<T>(mut owner:semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage<T>){if let Some(mut original)=owner.elect_cold(){while !original.physical_is_unique(){std::hint::spin_loop()}drop(original.take_value());}}
 #[path="🎞️tick/📦️payload/🦀️.rs"]
 pub mod original_tick_payload;
 #[cfg(test)]

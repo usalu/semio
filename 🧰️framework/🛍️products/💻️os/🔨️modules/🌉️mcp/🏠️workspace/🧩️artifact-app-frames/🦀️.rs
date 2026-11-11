@@ -374,9 +374,21 @@ pub fn bind_inference_document(declared: &semio_framework::ContributedInferenceM
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+impl PluginArtifactChannel {
+    /// 📖️ The guest session's live canonical `pack`/`spr` pair — one synchronous guest turn, no reply to wait on.
+    pub(crate) fn read_artifact_pair(&mut self, instance: u32) -> Result<(Vec<u8>, Vec<u8>), Fault> {
+        match self.exchange_one_real(instance, store::AppCommand::ReadDocument { seq: 0 })? {
+            store::AppFrame::Document { pack, spr, .. } => Ok((pack, spr)),
+            store::AppFrame::Error { fault, .. } => Err(decode_guest_fault(&fault)),
+            other => Err(Self::not_wired("ReadArtifact", format!("unexpected real AppFrame variant {other:?}"))),
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 impl ArtifactChannel for PluginArtifactChannel {
     /// 💡️ `Infer` never touches the retained command-page lane, so it must not be gated on the [Design notes](README.md#source-notes-456).
-    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+    async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         if commands.len() != 1 {
             return Err(Self::not_wired("exchange", format!("expected exactly one command, received {}", commands.len())));
         }
@@ -451,7 +463,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                     other => return Err(Self::not_wired("TransactionUndo", format!("unexpected real AppFrame variant {other:?}"))),
                 },
                 AppCommand::Infer(command) => {
-                    let result = self.infer_real(&command)?;
+                    let result = self.infer_real(&command).await?;
                     AppFrame::Inferred { inference_schema: result.inference_schema, complete: result.complete, payload: result.canonical_payload }
                 }
                 AppCommand::TransactionRedo { group_id } => match self.exchange_one_real(instance, store::AppCommand::TransactionRedo { seq: 0, group_id: group_id.clone() })? {
@@ -468,11 +480,10 @@ impl ArtifactChannel for PluginArtifactChannel {
                         other => return Err(Self::not_wired("ExportMedia/MediaOut", format!("unexpected real AppFrame variant {other:?}"))),
                     }
                 }
-                AppCommand::ReadArtifact => match self.exchange_one_real(instance, store::AppCommand::ReadDocument { seq: 0 })? {
-                    store::AppFrame::Document { pack, spr, .. } => AppFrame::Artifact { pack, spr },
-                    store::AppFrame::Error { fault, .. } => return Err(decode_guest_fault(&fault)),
-                    other => return Err(Self::not_wired("ReadArtifact", format!("unexpected real AppFrame variant {other:?}"))),
-                },
+                AppCommand::ReadArtifact => {
+                    let (pack, spr) = self.read_artifact_pair(instance)?;
+                    AppFrame::Artifact { pack, spr }
+                }
             };
             frames.push(frame);
         }

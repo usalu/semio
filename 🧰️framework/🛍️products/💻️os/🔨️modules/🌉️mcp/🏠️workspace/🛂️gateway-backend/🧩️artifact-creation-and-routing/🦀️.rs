@@ -60,7 +60,7 @@ impl HeadlessWorkspace {
         let mut channel = self.open_session_artifact_channel_scoped(&kind.plugin_id, Some(&kind.app_id), scope)?;
         channel.activate(0, scope).map_err(activation_fault)?;
         scope.enter(ActivationPhase::ReadingDocument).map_err(activation_fault)?;
-        let frames = channel.exchange(0, vec![AppCommand::ReadArtifact]).map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` refused ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message)))?;
+        let frames = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact]).map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` refused ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message)))?;
         let (pack, spr) = match frames.into_iter().next() {
             Some(AppFrame::Artifact { pack, spr }) => (pack, spr),
             Some(AppFrame::Error(fault)) => return Err(GatewayError::new(GatewayErrorCode::SideEffectRejected, format!("`{}` rejected ReadArtifact ({}): {}", kind.plugin_id, fault.code, fault.message))),
@@ -87,8 +87,7 @@ impl HeadlessWorkspace {
         let (pack, spr) = self.read_artifact_bytes(artifact_id)?.ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("no such artifact: {artifact_id}")))?;
         let app_id = self.plugin_artifact_binding(artifact_id).map(|binding| binding.app_id);
         let mut channel = self.open_session_artifact_channel(plugin_id, app_id.as_deref())?;
-        let frames = channel
-            .exchange(0, vec![AppCommand::ExportMedia { port: port.to_string(), document: pack, document_spr: spr }])
+        let frames = exchange_blocking(&mut channel, 0, vec![AppCommand::ExportMedia { port: port.to_string(), document: pack, document_spr: spr }])
             .map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` refused ExportMedia on `{port}` ({}): {}", fault.code, fault.message)))?;
         match frames.into_iter().next() {
             Some(AppFrame::Exported { port, descriptor, data }) => Ok((descriptor, data, port)),

@@ -20,7 +20,7 @@ use semio_plugin_runtime_instances::inst_wire_frames::{instance_actor, with_inst
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 #[cfg(test)]
 use std::mem::size_of;
-fn funded<T,E>(result:Result<T,E>)->semio_framework_value::RetainedWorkOutcome<T,E>{let work=u64::from(result.is_ok());semio_framework_value::RetainedWorkOutcome{result,work}}
+fn funded<T,E>(result:Result<T,E>)->semio_framework_value::RetainedWorkOutcome<T,E>{let work=u128::from(result.is_ok());semio_framework_value::RetainedWorkOutcome{result,work}}
 /// 🎯️ `AppCommand::ArtifactCommand`'s Wave 1 mapping — the same magic action-name strings
 /// `VcsArtifactApp::dispatch_action` already intercepts for `store::os_store::store_schema::ArtifactCommand` verbs (duplicated
 /// here rather than imported since `app`'s `HISTORY_ACTION_IDS` const is private — see
@@ -172,7 +172,7 @@ pub struct OriginalCommandExchangeState{
  pub dispatch:Option<protocol::AppCommand>,
  pub manifest:Option<(u64,InvocationResult)>,pub preview:Option<(InvocationResult,semio_plugin_job::EmitWire)>,pub configuration:Option<InvocationResult>,
  pub archive_admission:semio_plugin_document_media::OriginalDocumentArchiveAdmission,
- pub media_artifact:Option<semio_plugin_decl_app::MediaArtifact>,pub media_input:Option<(protocol::AppCommand,semio_plugin_decl_app::MediaArtifactDescriptor)>,
+ pub media_artifact:Option<semio_plugin_document_media::lifted_app::MediaArtifact>,pub media_input:Option<(protocol::AppCommand,semio_plugin_decl_app::MediaArtifactDescriptor)>,
  pub typed_output:Option<PluginExchangeOutput>,pub typed_leftover:Option<semio_plugin_job::TypedOperationLeftover>,
  pub applied:bool,pub mutated:bool,pub started_operation:Option<u64>,pub effects_done:bool,pub typed_done:bool,pub snapshots_done:bool,
 }
@@ -318,8 +318,8 @@ include!("../../../../🧪️tests/🔬️plugin-runtime-paged-command-ingress/�
 pub struct PluginExchangeOutput {
     pub original_receiving:Option<OriginalPublicationReceiving>,
     pub constructor_receipt: Option<(semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind, semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase, RetainedCloneGrant, RetainedCloneProgress)>,
-    pub preparation_receipt: Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>,
-    pub retirement_receipt: Option<(semio_framework_job::OperationId, RetainedCloneGrant, RetainedCloneProgress)>,
+    pub preparation_receipt: Option<(u64, RetainedCloneGrant, RetainedCloneProgress)>,
+    pub retirement_receipt: Option<(u64, RetainedCloneGrant, RetainedCloneProgress)>,
     pub history_command_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
     pub tool_run_receipt: Option<(RetainedCloneGrant, RetainedCloneProgress)>,
     pub frames: Vec<Vec<u8>>,

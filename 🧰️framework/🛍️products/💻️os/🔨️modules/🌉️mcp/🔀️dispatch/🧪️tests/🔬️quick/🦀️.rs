@@ -20,7 +20,7 @@ use semio_os_mcp_foundation::audit::{AgentAuditEvent, AuditDecision, AuditSinks,
 use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHandle};
 use semio_os_mcp_foundation::reports::{InvocationStatus, RevisionStamp};
-use semio_os_mcp_port::channel_port::{AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, AGENT_LANE_UNCARRIED_REMEDY, AppCommand, ArtifactChannel, COMMAND_NO_EFFECT_FAULT_CODE, COMMAND_NO_EFFECT_REMEDY, COMMAND_TARGETS_REQUIRED_FAULT_CODE, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, HubRelayOutcome, InferCommand, InferenceCancel, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedOps, REVISION_GUARD_REQUIRED_FAULT_CODE, UnboundArtifactChannel, VIEWER_READ_ONLY_FAULT_CODE, WORKSPACE_UNBOUND_FAULT_CODE, map_fault};
+use semio_os_mcp_port::channel_port::{exchange_blocking, AGENT_LANE_PREVIEW_BUDGET_FAULT_CODE, AGENT_LANE_UNCARRIED_FAULT_CODE, AGENT_LANE_UNCARRIED_REMEDY, AppCommand, ArtifactChannel, COMMAND_NO_EFFECT_FAULT_CODE, COMMAND_NO_EFFECT_REMEDY, COMMAND_TARGETS_REQUIRED_FAULT_CODE, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, HUB_RELAY_UNACKNOWLEDGED_FAULT_CODE, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, HubRelayOutcome, InferCommand, InferenceCancel, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedOps, REVISION_GUARD_REQUIRED_FAULT_CODE, UnboundArtifactChannel, VIEWER_READ_ONLY_FAULT_CODE, WORKSPACE_UNBOUND_FAULT_CODE, map_fault};
 use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
 use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
 use semio_os_mcp_wire::protocol::ClientFeatures;
@@ -450,9 +450,11 @@ fn instance_busy_retries_then_precondition_failed() {
     let session = SessionHandle::new("sess_1");
     let principal = principal(&["artifact.write"]);
 
-    let _ = channel
-        .clone()
-        .exchange(0, vec![AppCommand::TransactionPrepare { txn_id: "external".into(), ops: PreparedOps::default(), origin: MutationOrigin::Agent { principal: "someone-else".into(), invocation_id: "x".into() } }]);
+    let _ = exchange_blocking(
+        &mut channel.clone(),
+        0,
+        vec![AppCommand::TransactionPrepare { txn_id: "external".into(), ops: PreparedOps::default(), origin: MutationOrigin::Agent { principal: "someone-else".into(), invocation_id: "x".into() } }],
+    );
 
     let prepared = adapter.prepare(&catalog, &principal, &session, "cad.editor.translateSelection", serde_json::json!({"dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"]}), 0, 0).unwrap();
     let error = adapter.invoke(&catalog, &principal, &session, InvokeRequest { prepared_handle: Some(prepared.prepared_handle), ..Default::default() }, 0, 1).unwrap_err();
@@ -831,7 +833,7 @@ fn an_unbound_gateway_answers_a_typed_retryable_error_instead_of_a_scripted_comm
 fn the_unbound_channel_never_answers_a_frame_for_any_command() {
     let mut channel = UnboundArtifactChannel;
     for command in [AppCommand::ReadHistory, AppCommand::TransactionCommit { txn_id: "txn".into() }, AppCommand::TransactionUndo { group_id: "grp".into() }] {
-        let fault = channel.exchange(0, vec![command]).expect_err("an unbound channel has nothing to answer with");
+        let fault = exchange_blocking(&mut channel, 0, vec![command]).expect_err("an unbound channel has nothing to answer with");
         assert_eq!(fault.code, WORKSPACE_UNBOUND_FAULT_CODE);
     }
 }

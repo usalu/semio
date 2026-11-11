@@ -3,6 +3,7 @@
 #[value(rename_all="camelCase")]
 #[canonical_json(owner=semio_framework_pack_json)]
 pub struct BrowserTickOutput {
+    #[value(serialize_with="decimal_to_value")]
     #[canonical_json(decimal_string)]
     pub presentation_generation:u64,
     pub media_slots:BrowserMediaOutput,
@@ -17,6 +18,8 @@ pub struct BrowserTickOutput {
     pub fault_detail: Option<String>,
 }
 
+fn decimal_to_value(value:&u64)->semio_framework_value::DslValue{semio_framework_value::DslValue::String(value.to_string())}
+
 #[derive(semio_framework_value::RetireOwned)]
 pub enum BrowserMediaOutput{Empty,Snapshot(crate::render_snapshot::RenderSnapshotOutputLoan)}
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for BrowserMediaOutput{
@@ -25,7 +28,7 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for BrowserMediaOutput
 }
 
 use semio_framework_pack_json::ArtifactCanonicalJsonTreeWireCursor;
-use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneProgress,RetirementDemand,RetainedCloneGrant,ValueError};
+use semio_framework_value::{retirement::controlled::ControlledRetirement,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use std::mem::ManuallyDrop;
 pub struct OriginalBrowserOutput{encoding:ManuallyDrop<Option<ArtifactCanonicalJsonTreeWireCursor<BrowserTickOutput>>>,wire:ManuallyDrop<Option<ControlledRetirement<Vec<u8>>>>,closing:bool}
@@ -34,20 +37,21 @@ impl OriginalBrowserOutput{
  pub fn bytes(&self)->Option<&[u8]>{self.wire.as_ref().and_then(ControlledRetirement::original).map(|bytes|bytes.as_slice())}
  pub fn terminal_is_empty(&self)->bool{self.encoding.is_none()&&self.wire.is_none()}
  pub fn advance_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.wire.is_some(){return Ok(Default::default())}self.encoding.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(body))}
- fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_depth>=demand.depth&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes}
  pub fn advance(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.closing{return Ok(false)}if self.wire.is_some(){return Ok(true)}if cx.should_yield(){return Ok(false)}let grant=cx.retained_grant();
   let Some(encoding)=self.encoding.as_mut()else{return Ok(false)};let demand=encoding.next_demand(grant.maximum_copy_bytes)?;
-  if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(false)}
-  cx.consume_fuel(1);let step=encoding.advance(grant).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
-  if let Some(original)=step.output{*self.wire=Some(ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original wire Vec has typed retirement")))}
-  cx.consume_retained(step.progress)?;Ok(self.wire.is_some())
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false)}
+  let Some((result,performed))=cx.with_original_effect(grant,|_,effect|encoding.advance(effect))?else{return Ok(false)};
+  let mut output=None;let result=result.map(|step|{output=step.output;RetainedCloneStep::Progress(step.progress)});
+  semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome{result,work:performed})?;
+  if let Some(original)=output{*self.wire=Some(ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original wire Vec has typed retirement")))}
+  Ok(self.wire.is_some())
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   if !self.closing{cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.closing=true;if let Some(owner)=self.encoding.as_mut(){owner.begin_close()}return Ok(false)}
-  if let Some(owner)=self.wire.as_mut(){if !owner.terminal_is_empty(){if !Self::permits(grant,owner.selected_demand(grant.maximum_copy_bytes)?){return Ok(false)}let demand=owner.selected_demand(grant.maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*self.wire=None;return Ok(false)}
-  if let Some(owner)=self.encoding.as_mut(){if !owner.terminal_is_empty(){let demand=owner.next_demand(grant.maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.close_step(grant).map(semio_framework_value::RetainedCloneStep::Progress))?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*self.encoding=None;return Ok(false)}
+  if let Some(owner)=self.wire.as_mut(){if !owner.terminal_is_empty(){let body=grant.maximum_copy_bytes;let demand=owner.selected_demand(body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*self.wire=None;return Ok(false)}
+  if let Some(owner)=self.encoding.as_mut(){if !owner.terminal_is_empty(){let demand=owner.next_demand(grant.maximum_copy_bytes)?;semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|owner.close_step(effect).map(RetainedCloneStep::Progress))?;return Ok(false)}cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;*self.encoding=None;return Ok(false)}
   Ok(true)
  }
 }

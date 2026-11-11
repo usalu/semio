@@ -187,7 +187,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     pub fn provisional_entities(&self) -> Option<&BTreeSet<u64>> {
-        selected_entry!(self).map(|entry| entry.entities.as_ref())
+        selected_entry!(self).map(|entry| &*entry.entities)
     }
 
     pub fn steps(&self) -> Option<&ToolRunStepRing> {
@@ -450,7 +450,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         let Some(entry) = selected_entry_mut!(self) else { return };
         self.discarded.append(&mut entry.provisional);
         entry.entity_marks.clear();
-        entry.entities = Arc::new(BTreeSet::new());
+        crate::retire_cold_shared(std::mem::replace(&mut entry.entities, semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(BTreeSet::new())));
         if let Some(running) = entry.refold.take().and_then(|refold| refold.running) {
             entry.displaced.push(Arc::new(running));
         }
@@ -462,7 +462,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         }
         if !keep_payload {
             entry.native.request_close();
-            entry.payload = None;
+            if let Some(payload) = entry.payload.take() { crate::retire_cold_shared(payload); }
         }
     }
 
@@ -521,13 +521,12 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|store.retire_owned_mutation(&mut self.pending_discarded,effect).map(|result|RetainedCloneStep::Progress(match result{Some((owner,progress))=>{self.snapshot_retirement=Some(owner);progress},None=>Default::default()})))?;
             return Ok(Some(RetainedCloneStep::Progress(step.progress())))
         }
-        let step=retired(cx,demand,|grant|{
+        let step=semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|{let grant=effect.grant();
         if let Some(publication)=self.retired_publications.last_mut(){
             if publication.terminal_is_empty(){drop(self.retired_publications.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-            publication.begin_close();let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=publication.close_step(child)?;
-            let step=admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool publication original")?;return Ok(RetainedCloneStep::Progress(step.progress()));
+            publication.begin_close();let exit=publication.close_step(effect);let step=semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::RetirementPollExit::settle(effect,exit))?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.snapshot_retirement.is_some(){return close_tool_erased_retirement(&mut self.snapshot_retirement,grant);}
+        if self.snapshot_retirement.is_some(){return close_tool_erased_retirement(&mut self.snapshot_retirement,effect);}
         let alias=self.retired_snapshots.pop().or_else(||self.entries.iter_mut().find(|entry|!entry.displaced.is_empty()).and_then(|entry|entry.displaced.pop()));
         if let Some(alias)=alias{self.pending_snapshot_alias=Some(alias);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(operation)=self.discarded.pop(){self.pending_discarded=Some(operation);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}

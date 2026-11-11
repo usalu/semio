@@ -177,13 +177,13 @@ impl<'a, A: ArtifactApp> ArtifactToolFactoryRegistry<'a, A> {
 }
 
 impl semio_framework_value::retirement::RetireOwned for ArtifactToolRegistration{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;(self.key,self.schema_id).retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<semio_framework::ToolFactoryKey>(),semio_framework_value::retirement::deferred_birth_bytes::<String>()])}
+ type RetirementCursor=<(semio_framework::ToolFactoryKey,String) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;(self.key,self.schema_id).retirement_seed()}
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetireOwned for ArtifactToolPublicContract{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;(self.controller_id,self.tool_id,self.schema_id).retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<String>();3])}
+ type RetirementCursor=<(String,String,String) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{use semio_framework_value::retirement::RetireOwned;(self.controller_id,self.tool_id,self.schema_id).retirement_seed()}
  fn controlled_retirement_supported()->bool{true}
 }
 

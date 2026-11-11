@@ -23,7 +23,7 @@ impl WasmActor {
             return;
         }
         let max_frame = self.socket.as_ref().map_or(usize::MAX, |socket| socket.max_frame_bytes());
-        let(wire_envelopes,identity_receipt)=match wire_envelopes_with_original_actor(envelopes,socket_actor,self.actor_identity_grant){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
+        let(wire_envelopes,identity_receipt)=match actor_identity_turn(envelopes.len(),self.actor_identity_grant,|effect|wire_envelopes_with_original_actor(envelopes,socket_actor,effect)){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
         add_actor_identity_progress(&mut self.actor_identity_progress,identity_receipt);
         let plan = commands_frames_within(max_frame, self.next_batch_id, envelopes.to_vec(), wire_envelopes).await;
         for frame in plan.frames {
@@ -254,7 +254,8 @@ impl WasmActor {
             }
             codec.print_mirror(&pair.pack, &pair.spr).await.map_err(|error| format!("artifact bootstrap decode failed: {error}"))?;
         }
-        let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+        let log = spr_history(&pair.spr).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+        let events = history_events_in_turn(&log, &self.document_id, &self.schema, self.actor_identity_grant).map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
         self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
         if !events.is_empty() {
             self.remote.push(BackboneMessage::from_envelopes(&events)).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;

@@ -207,6 +207,17 @@ impl<Mutation: 'static> ArtifactStoreDecodedEditRetirement<Mutation> {
 }
 
 impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement<Mutation> {
+    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> {
+        if let Some(active) = self.active.as_ref() { return if active.terminal_is_empty() { Ok(1) } else { active.next_computational_work(body) }; }
+        let Some(edit) = self.edit.as_ref() else {
+            if self.mutation_factory.is_some() { return Ok(0); }
+            return self.closing_factory.as_ref().map_or(Ok(0), |factory| factory.next_computational_work(body));
+        };
+        let mutation = self.pending_mutation.as_ref().or_else(|| edit.inverse.last().or_else(|| edit.forwards.last()));
+        if let Some(mutation) = mutation { return self.mutation_factory.as_ref().ok_or_else(|| ValueError::invariant("mutation_factory absent"))?.retire_owned_work_demand(mutation); }
+        if edit.forwards.capacity() != 0 && size_of::<Mutation>() != 0 { return Ok(0); }
+        Ok(u64::from(!edit.inverse.terminal_is_empty()))
+    }
     fn native_header_release(&self) -> Option<semio_framework_value::RetirementHeaderRelease> { self.terminal_is_empty().then(|| unsafe { semio_framework_value::RetirementHeaderRelease::native(self, 0, 0) }) }
     fn close_into<'r>(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'r, RetainedCloneStep, OriginalRetirementFailure>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r, RetainedCloneStep, OriginalRetirementFailure>, ValueError> {
         match self.close_step(body, effect) { semio_framework_value::RetainedWorkPoll::Complete(turn) => Ok(reply.complete(turn.result)), semio_framework_value::RetainedWorkPoll::Pending { .. } => Err(ValueError::invariant("synchronous decoded edit close left its reply pending")) }

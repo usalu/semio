@@ -166,7 +166,7 @@ pub fn fixture_instance_close_event() -> Event {
 #[cfg(any(test, feature = "testkit"))]
 pub fn test_identity_issuer()->OriginalShardIdentityIssuer{
  let policy:ShardIdentityPolicy=serde_json::from_value(serde_json::from_str::<serde_json::Value>(include_str!("../../⚡️effects/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()["identityPolicy"].clone()).unwrap();
- Box::new(move |_|OriginalShardIdentity::issue(policy,Box::new(|_|true),Box::new(move |request|{if request.bytes>policy.grant.maximum_capacity_bytes||policy.grant.maximum_items==0||policy.grant.maximum_depth==0{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original fixture refuses native shard allocation"))}else{Ok(())}})))
+ Box::new(move |_|OriginalShardIdentity::issue(policy,Box::new(|_|true)))
 }
 
 /// 🧪️ [`LoopbackTransport`] (module level, above — moved there so [`ShardTransports`] can name

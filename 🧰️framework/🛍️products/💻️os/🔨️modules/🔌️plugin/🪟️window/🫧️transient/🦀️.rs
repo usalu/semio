@@ -13,7 +13,7 @@ use semio_plugin_window_config_mutation::ErasedWindowMutationValue;
 use semio_framework_value::{FactoryBoxedValue,FactoryBoxedPublication,retirement::controlled::ControlledRetirement};
 use std::collections::BTreeMap;
 use std::sync::Arc;
-fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
+fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework::action_bus::admit_original_construction_settled(cx,&mut Default::default(),output,demand,1,|_,actual|{let result=construct();if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}}semio_framework_value::RetainedWorkOutcome{work:u128::from(result.is_ok()),result}})}
 
 fn next_key<K: Ord + Clone, V>(map: &BTreeMap<K, V>, cursor: Option<&K>) -> Option<K> {
     cursor.and_then(|cursor| map.range((std::ops::Bound::Excluded(cursor), std::ops::Bound::Unbounded)).next().map(|(key, _)| key.clone())).or_else(|| map.keys().next().cloned())
@@ -234,13 +234,13 @@ impl<O: WindowTransientOwner> ErasedWindowTransientPublication for TypedWindowTr
     }
 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<semio_framework_value::RetainedCloneStep, ValueError> {
-        if !self.ingress.terminal_is_empty(){return self.ingress.step(grant).map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));}
+        if !self.ingress.terminal_is_empty(){return crate::window_mutation::owner_less_step(grant,|effect|self.ingress.step(grant.maximum_copy_bytes,effect)).map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));}
         if self.publication.terminal_is_empty(){return crate::window_mutation::address_close(&mut self.window_id,&mut self.address_retirement,grant);}
-        self.publication.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items, maximum_copy_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth })
+        crate::window_mutation::owner_less_step(grant,|effect|self.publication.close_step(grant.maximum_copy_bytes,effect))
     }
 
     fn ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{Ok(self.ingress.next_demand(body)?)}
-    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{self.ingress.step(grant)}
+    fn close_ingress(&mut self,grant:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{crate::window_mutation::owner_less_step(grant,|effect|self.ingress.step(grant.maximum_copy_bytes,effect))}
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.ingress.terminal_is_empty(){self.ingress_demands(body)}else if !self.publication.terminal_is_empty(){self.publication.retirement_demands(body)}else{crate::window_mutation::address_demands(&self.window_id,&self.address_retirement,body)}}
     fn terminal_is_empty(&self) -> bool {
         self.publication.terminal_is_empty()&&self.ingress.terminal_is_empty()&&crate::window_mutation::address_terminal(&self.window_id,&self.address_retirement)
@@ -377,7 +377,8 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         let factory = &self.owners.as_ref().expect("live transient issuer remains").state_retirement;
         for partition in self.partitions.values_mut() {
             if partition.store.maintenance_returned_reads_demands(grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))? != RetirementDemand::default() {
-                let step = partition.store.maintenance_returned_reads_step(factory, grant).map_err(|error| Fault::from(error.into_message()))?;
+                let polled = crate::window_mutation::owner_less(grant, |effect| partition.store.maintenance_returned_reads_step(factory, effect)).map_err(|error| Fault::from(error.into_message()))?;
+                let step = match polled { Some(poll) => semio_plugin_window_config_registry::settle_step(poll).map_err(|error| Fault::from(error.into_message()))?, None => return Ok(PluginLifecycleStep::Progress(Default::default())) };
                 return Ok(PluginLifecycleStep::Progress(step.progress()));
             }
         }
@@ -407,7 +408,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         let demand = self.retirement_demands(grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
         if !fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
         if let Some(owner) = self.partition_address.as_mut() {
-            let step = semio_plugin_window_config_registry::settle_step(owner.step(&mut effect.nested(grant))).map_err(|error| Fault::from(error.into_message()))?;
+            let step = semio_plugin_window_config_registry::settle_step(owner.step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
             if owner.terminal_is_empty() { self.partition_address = None; }
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
@@ -415,7 +416,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         if let Some(partition) = (self.partition_open != 0).then(|| self.partitions.get_index_mut(self.partition_close_cursor)).flatten() {
             if let Some(owner) = partition.disposer.as_mut() {
                 if !owner.terminal_is_empty(&partition.store) {
-                    let step = owner.close_step(&mut partition.store, grant)?;
+                    let step = owner.close_step(&mut partition.store, effect)?;
                     if matches!(step, PluginLifecycleStep::AwaitingInput { .. } | PluginLifecycleStep::Blocked { .. }) || step.progress().is_some_and(|progress| progress == RetainedCloneProgress::default()) {
                         self.partition_close_cursor = (self.partition_close_cursor + 1) % partition_count;
                         return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<usize>(), ..Default::default() }));
@@ -449,7 +450,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         }
         let slot = self.factory_close.iter_mut().find(|slot| slot.is_some()).expect("original transient issuer retirement remains");
         let factory = slot.as_mut().unwrap();
-        let step = factory.step(grant).result.map_err(|error| Fault::from(error.into_message()))?;
+        let step = semio_plugin_window_config_registry::settle_step(factory.step(grant.maximum_copy_bytes, effect)).map_err(|error| Fault::from(error.into_message()))?;
         if factory.terminal_is_empty() { *slot = None; }
         Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty()))
     }

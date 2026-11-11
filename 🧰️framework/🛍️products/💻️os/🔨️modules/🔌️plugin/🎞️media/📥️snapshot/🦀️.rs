@@ -1,10 +1,14 @@
 //! 📥️ Original media snapshot and installed retirement supplier remain paired through every denied turn.
 use super::{PluginLifecycleStep,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ManuallyDrop};
 use semio_framework_job::{OriginalCallerSourceLoan,OriginalTurnFailure,StepContext,InteractiveJobCloseStep};
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,ValueRefusalKind,factory::ArcRootRetirement};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,OriginalRetirementFailure,ReplyStash,RetainedAllocationEffect,ValueRefusalKind,factory::ArcRootRetirement};
 use std::sync::{Arc,Weak,atomic::{AtomicBool,Ordering}};
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn funds(cx:&StepContext<'_>,demand:RetirementDemand)->bool{let grant=cx.retained_grant();!cx.retirement_should_yield()&&grant.maximum_items>0&&grant.maximum_depth>=demand.depth&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes}
+/// 📮️ Closes a borrowed-producer owner through its reply form; an unanswered turn stays pending with its state kept in `reply`.
+fn close_borrowed(owner:&mut dyn ErasedSnapshotRetirement,reply:&mut ReplyStash<OriginalRetirementFailure>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+ match reply.run(|slot,recover|(if recover{owner.recover_close_into(body,effect,slot)}else{owner.close_into(body,effect,slot)}).map(drop))?{Some(answer)=>answer.map_err(crate::bounded_ownership::plugin_failure_error),None=>Ok(RetainedCloneStep::Progress(Default::default()))}
+}
 fn post(cx:&mut StepContext<'_>,progress:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{cx.consume_retained(progress)?;if progress.copied_items>0{cx.consume_fuel(1)}Ok(())}
 
 pub struct ArtifactSnapshotCloseLease<T>{identity:ManuallyDrop<Option<Weak<T>>>,runtime_retained:ManuallyDrop<Option<Arc<AtomicBool>>>}
@@ -20,7 +24,7 @@ impl<T> ArtifactSnapshotCloseLease<T>{
 }
 impl<T> Drop for ArtifactSnapshotCloseLease<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"snapshot lease requires its paid original return")}}
 
-pub struct ArtifactSnapshotCloseRetention{source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,inner:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,runtime_retained:ManuallyDrop<Option<Arc<AtomicBool>>>}
+pub struct ArtifactSnapshotCloseRetention{source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,inner:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,runtime_retained:ManuallyDrop<Option<Arc<AtomicBool>>>,reply:ReplyStash<OriginalRetirementFailure>}
 impl ArtifactSnapshotCloseRetention{
  pub fn terminal_is_empty(&self)->bool{self.inner.is_none()&&self.runtime_retained.is_none()&&self.source.is_none()}
  pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{self.source.as_ref().ok_or_else(||refused("published snapshot retention lacks its actual original source"))?.validate_context(cx).map_err(OriginalTurnFailure::from)}
@@ -37,15 +41,15 @@ impl ArtifactSnapshotCloseRetention{
   if self.terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}let flag=self.runtime_retained.as_ref().ok_or_else(||refused("snapshot retention lost original flag"))?;
   if Arc::strong_count(flag)!=1||Arc::weak_count(flag)!=0{return Ok(PluginLifecycleStep::Progress(Default::default()))}let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
   if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(PluginLifecycleStep::Progress(Default::default()))}
-  if let Some(inner)=self.inner.as_mut(){if inner.terminal_is_empty(){self.inner.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}return crate::bounded_ownership::plugin_effect_close(cx,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},|effect|crate::bounded_ownership::plugin_settle_value(inner.close_step(effect.grant().maximum_copy_bytes,effect))).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(OriginalTurnFailure::from)}
+  if let Some(inner)=self.inner.as_mut(){if inner.terminal_is_empty(){self.inner.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}return crate::bounded_ownership::plugin_effect_close(cx,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},|effect|{let body=effect.grant().maximum_copy_bytes;close_borrowed(&mut **inner,&mut self.reply,body,effect)}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(OriginalTurnFailure::from)}
   flag.store(false,Ordering::Release);self.runtime_retained.take();let progress=RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()};Ok(if self.source.is_none(){PluginLifecycleStep::Complete(progress)}else{PluginLifecycleStep::Progress(progress)})
  }
 }
 impl Drop for ArtifactSnapshotCloseRetention{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"snapshot retention requires complete original supplier retirement")}}
 
-pub struct ArtifactMediaSnapshotSource<T:Send+Sync+'static>{source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,snapshot:ManuallyDrop<Option<Arc<T>>>,factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,flag:ManuallyDrop<Option<Arc<AtomicBool>>>,lease:ManuallyDrop<Option<ArtifactSnapshotCloseLease<T>>>,retention:ManuallyDrop<Option<ArtifactSnapshotCloseRetention>>,partial:ManuallyDrop<Option<ArcRootRetirement<T>>>}
+pub struct ArtifactMediaSnapshotSource<T:Send+Sync+'static>{source:ManuallyDrop<Option<OriginalCallerSourceLoan>>,snapshot:ManuallyDrop<Option<Arc<T>>>,factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>,flag:ManuallyDrop<Option<Arc<AtomicBool>>>,lease:ManuallyDrop<Option<ArtifactSnapshotCloseLease<T>>>,retention:ManuallyDrop<Option<ArtifactSnapshotCloseRetention>>,partial:ManuallyDrop<Option<ArcRootRetirement<T>>>,partial_reply:Option<ReplyStash<OriginalRetirementFailure>>}
 impl<T:Send+Sync+'static> ArtifactMediaSnapshotSource<T>{
- pub const fn empty()->Self{Self{source:ManuallyDrop::new(None),snapshot:ManuallyDrop::new(None),factory:ManuallyDrop::new(None),flag:ManuallyDrop::new(None),lease:ManuallyDrop::new(None),retention:ManuallyDrop::new(None),partial:ManuallyDrop::new(None)}}
+ pub const fn empty()->Self{Self{source:ManuallyDrop::new(None),snapshot:ManuallyDrop::new(None),factory:ManuallyDrop::new(None),flag:ManuallyDrop::new(None),lease:ManuallyDrop::new(None),retention:ManuallyDrop::new(None),partial:ManuallyDrop::new(None),partial_reply:None}}
  pub fn ready(&self)->bool{self.snapshot.is_some()&&self.lease.is_some()&&self.retention.is_some()}
  pub fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{self.source.as_ref().ok_or_else(||refused("media snapshot lacks its admitted original source"))?.validate_context(cx).map_err(OriginalTurnFailure::from)}
  pub fn validate_retirement(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{{let source=self.source.as_ref().ok_or_else(||refused("media snapshot retirement lacks its admitted original source"))?;if source.terminal_is_empty(){Ok(())}else{source.validate_retirement_context(cx).map_err(OriginalTurnFailure::from)}}}
@@ -57,7 +61,7 @@ impl<T:Send+Sync+'static> ArtifactMediaSnapshotSource<T>{
   let bytes=size_of::<ArcRootRetirement<T>>();let copy=size_of::<Arc<T>>()+size_of::<Weak<T>>()+size_of::<Arc<AtomicBool>>();if !funds(cx,RetirementDemand{copy_bytes:copy,capacity_bytes:bytes,depth:1,..Default::default()}){return Ok(false)}
   let layout=std::alloc::Layout::new::<ArcRootRetirement<T>>();let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<ArcRootRetirement<T>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"original snapshot supplier frame allocation refused"))?;
   let snapshot=self.snapshot.as_ref().unwrap();let flag=self.flag.as_ref().unwrap();let owner=unsafe{pointer.as_ptr().write(ArcRootRetirement::new(Arc::clone(snapshot),self.factory.take().unwrap()));Box::from_raw(pointer.as_ptr())};
-  *self.lease=Some(ArtifactSnapshotCloseLease{identity:ManuallyDrop::new(Some(Arc::downgrade(snapshot))),runtime_retained:ManuallyDrop::new(Some(Arc::clone(flag)))});*self.retention=Some(ArtifactSnapshotCloseRetention{source:ManuallyDrop::new(None),inner:ManuallyDrop::new(Some(owner)),runtime_retained:ManuallyDrop::new(self.flag.take())});
+  *self.lease=Some(ArtifactSnapshotCloseLease{identity:ManuallyDrop::new(Some(Arc::downgrade(snapshot))),runtime_retained:ManuallyDrop::new(Some(Arc::clone(flag)))});*self.retention=Some(ArtifactSnapshotCloseRetention{source:ManuallyDrop::new(None),inner:ManuallyDrop::new(Some(owner)),runtime_retained:ManuallyDrop::new(self.flag.take()),reply:ReplyStash::default()});
   post(cx,RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()})?;Ok(false)
  }
  pub fn handoff(&mut self,snapshot:&mut Option<Arc<T>>,lease:&mut Option<ArtifactSnapshotCloseLease<T>>,retention:&mut Option<ArtifactSnapshotCloseRetention>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -75,7 +79,7 @@ impl<T:Send+Sync+'static> ArtifactMediaSnapshotSource<T>{
   let progress=if self.snapshot.is_some(){if self.retention.is_some(){if !self.lease.as_ref().is_some_and(|lease|lease.can_release(self.snapshot.as_ref().unwrap())){return Err(refused("prepared snapshot lost original paired retention").into())}self.snapshot.take();}else{*self.partial=Some(ArcRootRetirement::new(self.snapshot.take().unwrap(),self.factory.take().ok_or_else(||refused("prepared snapshot lost installed supplier"))?));}RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
   else if let Some(lease)=self.lease.as_mut(){if lease.terminal_is_empty(){self.lease.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{lease.close_step(grant)?.progress()}}
   else if let Some(retention)=self.retention.as_mut(){if retention.terminal_is_empty(){self.retention.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{retention.close_step(cx,grant)?.progress().unwrap_or_default()}}
-  else if let Some(partial)=self.partial.as_mut(){if partial.terminal_is_empty(){self.partial.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{crate::bounded_ownership::plugin_effect_close(cx,grant,|effect|crate::bounded_ownership::plugin_settle_value(partial.close_step(effect.grant().maximum_copy_bytes,effect)))?.progress()}}
+  else if let Some(partial)=self.partial.as_mut(){if partial.terminal_is_empty(){self.partial.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{crate::bounded_ownership::plugin_effect_close(cx,grant,|effect|{let body=effect.grant().maximum_copy_bytes;close_borrowed(partial,self.partial_reply.get_or_insert_default(),body,effect)})?.progress()}}
   else if let Some(flag)=self.flag.as_ref(){if Arc::strong_count(flag)!=1||Arc::weak_count(flag)!=0{return Err(refused("partial snapshot flag acquired an unissued alias").into())}self.flag.take();RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}}
   else if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{let parent=cx.original_source_parent()?;return source.close_step(parent,cx).map(|step|match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}
   else{return Err(refused("original snapshot close retains an uncovered supplier").into())};post(cx,progress)?;Ok(InteractiveJobCloseStep::Pending{progress})

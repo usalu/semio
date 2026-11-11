@@ -90,6 +90,7 @@ impl<I:NativeListSource+?Sized,T:crate::retirement::RetireOwned+Send+Sync+'stati
   Phase::RowClose=>Ok(Local{work:if self.child_needs_close(){self.child_backing.work_demand::<I::Row,SealedShared<T>,Row<I,T,C,S>>(&self.child,&self.child_retired,body)?}else{1}}),
   Phase::Build=>Ok(Local{work:if self.builder()?.output_ready()||self.builder()?.accepts_row(){1}else{self.builder()?.advance_work_demand()?}}),
   Phase::FinalTake=>Ok(Local{work:self.builder()?.take_work_demand()?}),_=>Err(phase_error())}}
+ fn advance_work_demand(&self,original:RetainedCloneRef<'_,I>,body:usize)->Result<u64,ValueError>{if matches!(self.phase,Phase::RowAdvance)&&!self.child()?.output_ready(){return self.child()?.advance_work_demand(self.row_source(original)?,body)}match self.select_advance(original,body,u64::MAX)?{NativeAdvanceSelection::Local{work}=>Ok(work),NativeAdvanceSelection::Nested=>Err(phase_error())}}
  fn advance_nested(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,g:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>{
   use crate::RetainedWorkPoll::Complete;let refuse=|error:ValueError|Complete(RetainedWorkOutcome{result:Err(error.into()),work:0});
   match self.select_advance(original,body,maximum_work_units){Ok(NativeAdvanceSelection::Nested)=>{},Ok(_)=>return refuse(phase_error()),Err(error)=>return refuse(error)}

@@ -4,29 +4,29 @@ use super::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,sto
 use store::{io::control::{NativeSnapshotBodyWallet,NativeSnapshotDecodeOwner,NativeSnapshotEncodeOwner},sqlite_snapshot::{SqliteDatabase,SqliteTable,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::receiving::{Port,Direction,Projection,Scalar,row,cell,text_cell,push_row,sort,integer,ordinal,identity_position,validate_schema_sql,check_database}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use std::mem::size_of;
-type Result<T>=std::result::Result<T,ValueError>;
+type Fallible<T>=std::result::Result<T,ValueError>;
 type Paid<'a,'b,'c>=Port<'a,'b,'c,NativeSnapshotBodyWallet>;
 const SQL:&str=include_str!("../🗄️.sql");
 const TABLES:[(&str,usize);5]=[("collection_document",3),("collection_folder",6),("collection_entry",8),("collection_document_body",3),("collection_blob_body",5)];
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"Collection complete semantic state differs")}
-fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Collection semantic extent overflow"))}
+fn add(a:usize,b:usize)->Fallible<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"Collection semantic extent overflow"))}
 fn empty()->CollectionSnapshot{CollectionSnapshot{schema:String::new(),name:String::new(),folders:Vec::new(),entries:Vec::new()}}
 #[derive(semio_framework_value::RetireOwned)]
-struct Frame{projection:Projection,snapshot:CollectionSnapshot,ids:[Vec<usize>;5],ordered:[Vec<usize>;2],pending_body:Option<Box<ArtifactBody>>,result:Option<Result<()>>}
-impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),pending_body:None}}}
+struct Frame{projection:Projection,snapshot:CollectionSnapshot,ids:[Vec<usize>;5],ordered:[Vec<usize>;2],pending_body:Option<Box<ArtifactBody>>,result:Option<std::result::Result<(),ValueError>>}
+impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),pending_body:None,result:None}}}
 fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}
-fn table(database:&SqliteDatabase,index:usize)->Result<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
-fn text(row:&SqliteRow,column:usize)->Result<&str>{match row.values.get(column){Some(SqliteValue::Text(value))=>Ok(value),_=>Err(invalid())}}
-fn optional(row:&SqliteRow,column:usize)->Result<Option<&str>>{match row.values.get(column){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Text(value))=>Ok(Some(value)),_=>Err(invalid())}}
-fn copy(value:&str,output:&mut String,port:&mut Paid<'_,'_,'_>,depth:usize)->Result<()>{port.control.admit_reconstruction_bytes(value.len())?;port.text(value,output,depth)}
-fn copy_optional(value:Option<&str>,output:&mut Option<String>,port:&mut Paid<'_,'_,'_>,depth:usize)->Result<()>{port.work(depth,size_of::<Option<String>>())?;if let Some(value)=value{*output=Some(String::new());copy(value,output.as_mut().unwrap(),port,depth)?}Ok(())}
-fn optional_cell(frame:&mut Projection,value:Option<&str>,port:&mut Paid<'_,'_,'_>)->Result<()>{match value{Some(value)=>text_cell(frame,value,port),None=>cell(frame,Scalar::Null,port)}}
-fn indexes(database:&SqliteDatabase,frame:&mut Frame,root:i64,port:&mut Paid<'_,'_,'_>)->Result<()>{
+fn table(database:&SqliteDatabase,index:usize)->Fallible<&SqliteTable>{database.tables.iter().find(|table|table.name.eq_ignore_ascii_case(TABLES[index].0)).ok_or_else(invalid)}
+fn text(row:&SqliteRow,column:usize)->Fallible<&str>{match row.values.get(column){Some(SqliteValue::Text(value))=>Ok(value),_=>Err(invalid())}}
+fn optional(row:&SqliteRow,column:usize)->Fallible<Option<&str>>{match row.values.get(column){Some(SqliteValue::Null)=>Ok(None),Some(SqliteValue::Text(value))=>Ok(Some(value)),_=>Err(invalid())}}
+fn copy(value:&str,output:&mut String,port:&mut Paid<'_,'_,'_>,depth:usize)->Fallible<()>{port.control.admit_reconstruction_bytes(value.len())?;port.text(value,output,depth)}
+fn copy_optional(value:Option<&str>,output:&mut Option<String>,port:&mut Paid<'_,'_,'_>,depth:usize)->Fallible<()>{port.work(depth,size_of::<Option<String>>())?;if let Some(value)=value{*output=Some(String::new());copy(value,output.as_mut().unwrap(),port,depth)?}Ok(())}
+fn optional_cell(frame:&mut Projection,value:Option<&str>,port:&mut Paid<'_,'_,'_>)->Fallible<()>{match value{Some(value)=>text_cell(frame,value,port),None=>cell(frame,Scalar::Null,port)}}
+fn indexes(database:&SqliteDatabase,frame:&mut Frame,root:i64,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
  for index in 0..5{let rows=&table(database,index)?.rows;let ids=&mut frame.ids[index];port.vector(rows.len(),ids,2)?;for(position,row)in rows.iter().enumerate(){port.work(2,size_of::<usize>())?;if row.values.len()!=TABLES[index].1||integer(row,0)?!=row.rowid{return Err(invalid())}ids.push(position)}sort(ids,port,|a,b|Ok(rows[a].rowid.cmp(&rows[b].rowid)))?;for pair in ids.windows(2){port.work(2,0)?;if rows[pair[0]].rowid==rows[pair[1]].rowid{return Err(invalid())}}
   if index==1||index==2{let order=&mut frame.ordered[index-1];port.vector(rows.len(),order,2)?;for position in 0..rows.len(){port.work(2,size_of::<usize>())?;order.push(position)}sort(order,port,|a,b|Ok(integer(&rows[a],2)?.cmp(&integer(&rows[b],2)?)))?;for(position,index)in order.iter().copied().enumerate(){port.work(2,0)?;if integer(&rows[index],1)?!=root||integer(&rows[index],2)?!=ordinal(position)?{return Err(invalid())}}}
  }Ok(())
 }
-fn project(source:&CollectionSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
+fn project(source:&CollectionSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
  let(mut documents,mut blobs)=(0,0);for entry in &source.entries{port.work(2,0)?;match entry.body.as_ref(){ArtifactBody::Document{..}=>documents=add(documents,1)?,ArtifactBody::Blob{..}=>blobs=add(blobs,1)?}}
  let counts=[1,source.folders.len(),source.entries.len(),documents,blobs];let total=counts.into_iter().try_fold(0,add)?;port.control.check_rows(total)?;let schema=TABLES.iter().enumerate().try_fold(0,|sum,(index,(name,_))|add(sum,add(name.len(),definition(index).len())?))?;let limits=port.control.limits();if limits.max_tables<5||limits.max_columns<8||SQL.len()>limits.max_schema_bytes||schema>limits.max_schema_bytes{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"Collection authored schema exceeds original allowance"))}
  let output=&mut frame.projection;port.vector(5,&mut output.database.tables,1)?;for(index,(name,_))in TABLES.iter().enumerate(){port.work(2,size_of::<SqliteTable>())?;output.database.tables.push(SqliteTable{name:String::new(),sql:String::new(),rows:Vec::new()});let table=&mut output.database.tables[index];port.text(name,&mut table.name,2)?;port.text(definition(index),&mut table.sql,2)?;port.vector(counts[index],&mut table.rows,2)?}
@@ -36,10 +36,10 @@ fn project(source:&CollectionSnapshot,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)
   match value.body.as_ref(){ArtifactBody::Document{schema,document_id}=>{row(output,id,3,port)?;text_cell(output,schema,port)?;text_cell(output,document_id,port)?;push_row(output,3,port)?},ArtifactBody::Blob{blob}=>{row(output,id,5,port)?;text_cell(output,&blob.hash,port)?;cell(output,Scalar::Integer((blob.size>>32)as i64),port)?;cell(output,Scalar::Integer((blob.size&0xffff_ffff)as i64),port)?;text_cell(output,&blob.media_type,port)?;push_row(output,4,port)?}}port.control.checkpoint(port.phase(),index+1,source.entries.len())?
  }port.control.checkpoint(port.phase(),total,total)
 }
-fn body<'a>(entry:&SqliteRow,database:&'a SqliteDatabase,frame:&Frame,port:&mut Paid<'_,'_,'_>)->Result<(&'a SqliteRow,bool)>{
+fn body<'a>(entry:&SqliteRow,database:&'a SqliteDatabase,frame:&Frame,port:&mut Paid<'_,'_,'_>)->Fallible<(&'a SqliteRow,bool)>{
  let documents=&table(database,3)?.rows;let blobs=&table(database,4)?.rows;let document=identity_position(documents,&frame.ids[3],entry.rowid,port)?;let blob=identity_position(blobs,&frame.ids[4],entry.rowid,port)?;port.work(3,0)?;match(text(entry,7)?,document,blob){("document",Some(index),None)=>Ok((&documents[index],true)),("blob",None,Some(index))=>Ok((&blobs[index],false)),_=>Err(invalid())}
 }
-fn read(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Result<()>{
+fn read(database:&SqliteDatabase,frame:&mut Frame,port:&mut Paid<'_,'_,'_>)->Fallible<()>{
  validate_schema_sql(database,SQL,port)?;check_database(database,port)?;let documents=&table(database,0)?.rows;port.work(2,0)?;if documents.len()!=1{return Err(invalid())}let root=&documents[0];indexes(database,frame,root.rowid,port)?;let folders=&table(database,1)?.rows;let entries=&table(database,2)?.rows;if add(table(database,3)?.rows.len(),table(database,4)?.rows.len())?!=entries.len(){return Err(invalid())}
  {copy(text(root,1)?,&mut frame.snapshot.schema,port,2)?;copy(text(root,2)?,&mut frame.snapshot.name,port,2)?;port.vector(folders.len(),&mut frame.snapshot.folders,2)?;port.vector(entries.len(),&mut frame.snapshot.entries,2)?}
  for index in 0..frame.ordered[0].len(){let row=&folders[frame.ordered[0][index]];{port.work(3,size_of::<CollectionFolder>())?;frame.snapshot.folders.push(CollectionFolder{id:String::new(),parent_id:None,name:String::new()});let output=frame.snapshot.folders.last_mut().unwrap();copy(text(row,3)?,&mut output.id,port,3)?;copy_optional(optional(row,4)?,&mut output.parent_id,port,3)?;copy(text(row,5)?,&mut output.name,port,3)?}port.control.checkpoint(port.phase(),index+1,folders.len())?}

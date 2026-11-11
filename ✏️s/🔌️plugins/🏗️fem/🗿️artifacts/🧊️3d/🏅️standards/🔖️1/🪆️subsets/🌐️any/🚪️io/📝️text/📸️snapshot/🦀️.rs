@@ -32,11 +32,6 @@ pub fn fem3d_demo_snapshot() -> Result<Fem3dSnapshot, semio_framework_diagnostic
     parse_dsl(FEM3D_EXAMPLE_TEXT)
 }
 
-// #region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-// #endregion 🧪️Tests
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]

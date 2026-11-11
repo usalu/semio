@@ -2,7 +2,8 @@
 use semio_framework_job::{OriginalNativeLease,OriginalTurnFailure,StepContext};
 use semio_framework_pack_json::JsonWriteSource;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use super::{GuestRelayOutput,GuestRelayNativeHome};
+use super::GuestRelayNativeHome;
+use crate::GuestRelayOutput;
 /// 🔤️ A producer and the native parent lend their values under one actual Source callback.
 pub trait GuestRelayJsonSource{fn with_home_json(&mut self,home:&mut OriginalNativeLease<GuestRelayNativeHome>,cx:&mut StepContext<'_>,receive:&mut dyn FnMut(&dyn JsonWriteSource,&mut GuestRelayNativeHome,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>;}
 /// 📎️ The caller retains this immutable view for the complete live future.

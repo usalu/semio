@@ -140,8 +140,7 @@ impl HeadlessWorkspace {
             return Ok(None);
         }
         let mut channel = ArtifactChannels::ShellDirect(ShellArtifactChannel::new(Arc::clone(binding), Arc::clone(catalog)).for_plugin(plugin_id));
-        let frames = channel
-            .exchange(0, vec![AppCommand::ReadArtifact])
+        let frames = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact])
             .map_err(|fault| GatewayError::new(GatewayErrorCode::Internal, format!("`{plugin_id}` refused ReadArtifact ({}): {}", fault.code, fault.message)))?;
         match frames.into_iter().next() {
             Some(AppFrame::Artifact { pack, spr }) => Ok(Some((pack, spr))),

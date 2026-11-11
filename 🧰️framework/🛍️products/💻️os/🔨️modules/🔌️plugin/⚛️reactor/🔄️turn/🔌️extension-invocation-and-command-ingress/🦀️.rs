@@ -1,7 +1,7 @@
 //! 🔌️ Extension invocation and command ingress of the reactor turn: the retained extension invocation with its receive and advance steps and the retained command ingress with its owner cursor, retirement, park and close steps. See [`super`].
 
 use super::*;
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
+fn retired<T:semio_framework_value::RetireOwned>(cx:&mut semio_framework_job::StepContext<'_>,closing:&mut semio_framework_value::retirement::controlled::ControlledRetirement<T>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{let bytes=cx.retained_grant().maximum_copy_bytes;let demand=closing.selected_demand(bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|closing.step(bytes,effect))}
 
 #[doc(hidden)]
 pub struct RetainedExtensionInvocation{
@@ -26,7 +26,7 @@ impl RetainedExtensionInvocation{
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         if let Some(closing)=self.refused_output.as_mut(){
             if closing.terminal_is_empty(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.refused_output=None;return Ok(None)}
-            retired(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;
+            retired(cx,closing)?;
             return Ok(None)
         }
         if let Some(failure)=self.failure.as_mut(){
@@ -34,7 +34,7 @@ impl RetainedExtensionInvocation{
             return Ok(None)
         }
         if let Some(closing)=self.closing.as_mut(){
-            if !closing.terminal_is_empty(){retired(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;return Ok(None)}
+            if !closing.terminal_is_empty(){retired(cx,closing)?;return Ok(None)}
             cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.closing=None;return Ok(self.result.take())
         }
         if self.result.is_some(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.begin_source_close();return Ok(None)}
@@ -68,7 +68,7 @@ pub fn receive_retained_extension_invocation(index:usize,owner:RetainedExtension
 #[doc(hidden)]
 pub enum CommandIngressOwner {
     ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: semio_plugin_peer::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
-    Presence { cursor:semio_framework::kernel::CommandPageCursor,publication_generation:u64,exchange:Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>,exchange_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>,terminal:bool,terminal_fault:Option<Vec<u8>> },
+    Presence { cursor:semio_framework::kernel::CommandPageCursor,publication_generation:u64,exchange:Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>,exchange_close:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>,construction:semio_framework_job::OriginalConstructionAdmission,terminal:bool,terminal_fault:Option<Vec<u8>> },
     PendingPresencePage { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64, page: semio_framework::kernel::FixedCommandPage },
     GenericAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
     ClosingAssembly { cursor:semio_framework::kernel::CommandPageCursor,pages:Option<semio_framework::kernel::CommandPageSet>,retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework::kernel::CommandPageSet>> },
@@ -81,7 +81,7 @@ pub struct RetainedCommandIngress {
     pub state: Option<CommandIngressOwner>,
 }
 pub(super) fn close_exchange_owner<T:semio_framework_value::RetireOwned>(owner:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
- if owner.is_none()&&closing.is_none(){return Ok(true)}let bytes=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(owner,closing,bytes)?;let work=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_work_demand(owner,closing,bytes)?;cx.with_original_retirement(|cx|semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(owner,closing,grant)).map(|_|()))?;Ok(owner.is_none()&&closing.is_none())
+ if owner.is_none()&&closing.is_none(){return Ok(true)}let bytes=cx.retained_grant().maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(owner,closing,bytes)?;cx.with_original_retirement(|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(owner,closing,effect)).map(|_|()))?;Ok(owner.is_none()&&closing.is_none())
 }
 
 pub(super) struct CommandIngressLoan{index:usize,entry:std::mem::ManuallyDrop<Option<RetainedCommandIngress>>,acquired:bool}
@@ -135,7 +135,7 @@ pub(super) fn retire_command_ingress(slot:&mut Option<CommandIngressOwner>,cx:&m
     }
     if let Some(CommandIngressOwner::ClosingAssembly{pages,retirement,..})=slot.as_mut(){if !close_exchange_owner(pages,retirement,cx)?{return Ok(())}let bytes=std::mem::size_of::<Option<CommandIngressOwner>>();let p=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};if cx.retirement_should_yield()||cx.fuel_remaining()==0||cx.retained_grant().maximum_depth==0||!p.fits(cx.retained_grant()){return Ok(())}cx.retained_progress().checked_add(p)?;slot.take();let posted=cx.consume_retained(p);cx.consume_fuel(1);posted?;return Ok(())}
     if let Some(CommandIngressOwner::ReservedPresence{admission,..})=slot.as_mut(){admission.cancel.cancel_now();return Ok(())}
-    if let Some(CommandIngressOwner::Presence{exchange,exchange_close,..})=slot.as_mut(){if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}return Ok(())}
+    if let Some(CommandIngressOwner::Presence{exchange,exchange_close,construction,..})=slot.as_mut(){if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}if !construction.terminal_is_empty(){construction.close_step(cx)?;}return Ok(())}
     if matches!(slot,Some(CommandIngressOwner::PendingPresencePage{..})){return Ok(())}
     if let Some(CommandIngressOwner::Generic{exchange,exchange_close,output,output_close,..})=slot.as_mut(){if !close_exchange_owner(output,output_close,cx)?||!close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}}
     let Some(state)=slot.take()else{return Ok(())};*slot=match state {

@@ -34,7 +34,7 @@ use semio_plugin_decl_app::tool_contract::ArtifactToolPublicationContract;
 use semio_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
 use semio_plugin_decl_app::tool_contract::ArtifactToolRegistration;
 use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
-use crate::{retired};
+use crate::{retired,settle};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FrameworkReservedStage {
@@ -170,7 +170,7 @@ macro_rules! framework_reserved_job {
                 let demand=self.close_demand()?;
                 let remaining=cx.retained_grant();
                 if !cx.should_yield()&&remaining.maximum_items>0&&remaining.maximum_depth<demand.depth{return Err(semio_framework_job::OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::DepthLimit,"original reserved close exceeds caller depth")))}
-                let step=retired(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){self.outcomes.close_step(grant)}else{crate::reserved_job_bytes::close(&mut self.raw,&mut self.operation,grant)}})?;
+                let step=retired(cx,demand,|effect|{self.pending=None;if !self.outcomes.terminal_is_empty(){let r=self.outcomes.close_step(effect);settle(effect,r)}else{crate::reserved_job_bytes::close(&mut self.raw,&mut self.operation,effect)}})?;
                 Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
             }
 
@@ -368,24 +368,27 @@ impl<M: semio_framework_value::retirement::RetireOwned> ConfigurationDecodeRetir
         }
         Ok(Default::default())
     }
-    pub fn step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let demand = self.demand(grant.maximum_copy_bytes)?;
-        let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.original.is_some() {
-            let original = self.original.take().expect("admitted original configuration completion");
-            let Some(mutex) = std::sync::Arc::into_inner(original) else { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Option<ConfigurationDecodeCompletion<M>>>(), ..empty })); };
-            let original = mutex.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);
-            self.payload = Some(ControlledRetirement::new(original).unwrap_or_else(|_| unreachable!("configuration command and fault declare controlled retirement")));
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..empty }));
-        }
-        let owner = self.payload.as_mut().expect("original configuration completion payload");
-        if owner.terminal_is_empty() { drop(self.payload.take()); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
-        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.step(child)?;
-        semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "configuration completion payload")?;
-        Ok(RetainedCloneStep::Progress(step.progress()))
+    pub fn step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        use semio_framework_value::RetirementPollExit as Exit;
+        let grant = effect.grant();
+        let result = (|| -> Result<RetainedCloneStep, Exit> {
+            let demand = self.demand(grant.maximum_copy_bytes)?;
+            let empty = RetainedCloneProgress::default();
+            if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(empty)); }
+            if self.original.is_some() {
+                let original = self.original.take().expect("admitted original configuration completion");
+                let Some(mutex) = std::sync::Arc::into_inner(original) else { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Option<ConfigurationDecodeCompletion<M>>>(), ..empty })); };
+                let original = mutex.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);
+                self.payload = Some(ControlledRetirement::new(original).unwrap_or_else(|_| unreachable!("configuration command and fault declare controlled retirement")));
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..empty }));
+            }
+            let owner = self.payload.as_mut().expect("original configuration completion payload");
+            if owner.terminal_is_empty() { drop(self.payload.take()); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
+            let step = Exit::resume(owner.step(grant.maximum_copy_bytes, effect))?;
+            Ok(RetainedCloneStep::Progress(step.progress()))
+        })();
+        Exit::settle(effect, result)
     }
 }
 
@@ -451,13 +454,17 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurat
             if let Some(owner)=self.receiving.as_mut(){if !owner.terminal_is_empty(){if let Some(outcome)=owner.close_on_original(cx,&mut self.native)?{let progress=outcome.progress;let receiving=outcome.receiving_refusal.map(|ticket|self.native.take_receiving_refusal(ticket));match(outcome.value,receiving){(Err(producer),Some(receiving))=>*self.failure=Some(OriginalConfigurationFailure::Native{producer:semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(producer)),receiving}),(Err(producer),None)=>return Err(semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(producer))),(Ok(_),Some(receiving))=>return Err(receiving),(Ok(_),None)=>{}}return Ok(Step::Pending{progress})}return Ok(Step::Pending{progress:Default::default()})}}
             if self.receiving.is_none()&&!self.native.terminal_is_empty(){let step=self.native.close_step(cx)?;return Ok(Step::Pending{progress:step.progress()})}
         }
-        let step=retired(cx,demand,|grant|{
-            self.pending=None;if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}
+        let step=retired(cx,demand,|effect|{
+            self.pending=None;if !self.outcomes.terminal_is_empty(){let r=self.outcomes.close_step(effect);return settle(effect,r)}
+            if self.receiving.is_none()&&self.raw.capacity()==0{if let Some(owner)=self.decoded_close.as_mut(){if !owner.terminal_is_empty(){return owner.step(effect)}}}
+            let result=(||->Result<RetainedCloneStep,ValueError>{
             if self.receiving.as_ref().is_some_and(|owner|owner.terminal_is_empty()){self.receiving.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
             if self.raw.capacity()!=0{let released_bytes=self.raw.capacity();drop(std::mem::take(&mut self.raw));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:0,released_bytes,..Default::default()}))}
-            if let Some(owner)=self.decoded_close.as_mut(){if !owner.terminal_is_empty(){return owner.step(grant)}drop(self.decoded_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+            if self.decoded_close.is_some(){drop(self.decoded_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
             if let Some(original)=self.decoded.take(){self.decoded_close=Some(ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(original)),payload:None});return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
             self.operation=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+            })();
+            semio_framework_value::RetirementPollExit::settle(effect,result.map_err(Into::into))
         })?;
         Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
@@ -616,8 +623,9 @@ pub enum QualifiedToolProof {
 }
 
 impl semio_framework_value::retirement::RetireOwned for QualifiedToolProof{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{Self::Bounded(_)=>().retirement(),Self::FrameworkOwned(row)|Self::AppOwned(row)=>row.retirement()}}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;match self{Self::Bounded(_)=>().retirement_birth_bytes(),Self::FrameworkOwned(row)|Self::AppOwned(row)=>row.retirement_birth_bytes()}}
+ type RetirementCursor=crate::original_declared_tools::DeclaredToolAliasRetirement;
+ fn retirement_seed(self)->Self::RetirementCursor{match self{Self::Bounded(_)=>crate::original_declared_tools::DeclaredToolAliasRetirement::bounded(),Self::FrameworkOwned(row)|Self::AppOwned(row)=>semio_framework_value::retirement::RetireOwned::retirement_seed(row)}}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{true}
 }
 
@@ -729,7 +737,7 @@ impl FrameworkReservedCommitPermit {
     pub fn new(operation: semio_framework_job::Operation, lease: ToolCancellationLease, maximum_identity_bytes: usize) -> Result<Self, Fault> {
         let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| !lease.cancel_token().is_cancelled_now() && !lease.publication_claim().is_cancelled();
         let control = semio_framework_value::NativeEncodeControl::new(maximum_identity_bytes, &mut observer);
-        let identity = control.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?;
+        let identity = control.pause().map_err(|(error, _)| plugin_sdk_fault(error.to_string()))?;
         Ok(Self { operation, lease: ReservedLease::new(lease), producer_fault: None, identity: Some(identity), identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 } })
     }
 
@@ -770,8 +778,7 @@ impl ReservedLease {
             if !owner.terminal_is_empty() {
                 let body = cx.retained_grant().maximum_copy_bytes;
                 let demand = owner.retirement_demands(canonical, body)?;
-                let work = owner.retirement_work_demand(body)?;
-                semio_framework_job::close_original_quoted_retained_step(cx, demand, work, |grant| owner.close_step(canonical, grant))?;
+                semio_framework_job::close_original_effect_step(cx, demand, |effect| owner.close_step(canonical, effect))?;
                 return Ok(false);
             }
             let progress = semio_plugin_operation::original_lease_cursor_release(&mut self.close, cx.retained_grant())?;

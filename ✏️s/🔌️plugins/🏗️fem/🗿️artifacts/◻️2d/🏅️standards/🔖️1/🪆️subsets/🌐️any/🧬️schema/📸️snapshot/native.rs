@@ -2,11 +2,11 @@
 use super::{Fem2dSnapshot, Fem2dSnapshotValue};
 use semio_framework_value::{
     OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind,
-    retained_clone::{OriginalEffectReply, OriginalEffectReplyComplete, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep, StagedSourceAdmission, retained_clone_grant_admits},
+    retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep, StagedSourceAdmission, retained_clone_grant_admits},
     retirement::{RetireOwned, RetirementCursor, RetirementStep},
 };
-use semio_framework_value_native_owned::{OriginalReceivingPrimary, native_decoding::NativeReceivingFailure};
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, OriginalConstructionAccept, OriginalConstructionAcceptComplete, OriginalConstructionAuthority, OriginalConstructionGrant, OriginalConstructionGrantComplete, OriginalConstructionRecipient, OriginalSourceTurnIdentity, owned::{NativeReceiveSlot, native_work_limit}};
+use semio_s_fem_receiving::reply::{admission_advance, admission_demand, OriginalStepRecipient, receiving_failure, settled};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, OriginalConstructionAuthority, owned::{NativeReceiveSlot, native_work_limit}};
 use semio_framework_value_persistent::list::persistent::PersistentList;
 use semio_s_fem_material::planar::{FemMaterial, FemMaterialValue};
 use semio_s_fem_node::planar::{FemNode, FemNodeValue};
@@ -23,26 +23,6 @@ fn settle<T, E: From<ValueError>>(poll: RetainedWorkPoll<T, E>) -> RetainedWorkO
         RetainedWorkPoll::Pending { work } => RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "FEM receiving child cannot stay pending on a synchronous recipient").into()), work },
     }
 }
-/// 📬️ Runs one reply-shaped step inside its own action; a reply left pending is refused typed.
-fn settled<T, E: From<ValueError>>(effect: &mut RetainedAllocationEffect<'_>, call: impl for<'r, 'e, 'a> FnOnce(&'e mut RetainedAllocationEffect<'a>, OriginalEffectReply<'r, T, E>) -> Result<OriginalEffectReplyComplete<'r, T, E>, ValueError>) -> RetainedWorkPoll<T, E> {
-    let before = effect.performed_work();
-    let mut slot = None;
-    let result = (|| -> Result<Result<T, E>, ValueError> {
-        let done = call(&mut *effect, OriginalEffectReply::borrow(&mut slot)?)?;
-        drop(done);
-        slot.take().ok_or_else(invalid)
-    })();
-    RetainedWorkPoll::Complete(RetainedWorkOutcome { result: match result { Ok(result) => result, Err(error) => Err(error.into()) }, work: effect.performed_work().saturating_sub(before) })
-}
-/// 🪢️ Maps a native receiving failure onto the snapshot failure that keeps its exact cause and progress.
-fn receiving_failure(failure: NativeReceivingFailure) -> store::NativeSnapshotFailure {
-    match failure {
-        NativeReceivingFailure::Primary(primary) => primary.into(),
-        NativeReceivingFailure::ValueEffect(effect) => effect.child.or(effect.producer_refusal).or(effect.work_refusal).map_or_else(|| effect.receiving.into(), Into::into),
-        NativeReceivingFailure::RetirementEffect(effect) => effect.child.map(store::NativeSnapshotFailure::from).or_else(|| effect.producer_refusal.or(effect.work_refusal).map(Into::into)).unwrap_or_else(|| effect.receiving.into()),
-        NativeReceivingFailure::ReceivingEffect(effect) => effect.child.map(store::NativeSnapshotFailure::from).or_else(|| effect.producer_refusal.or(effect.work_refusal).map(Into::into)).unwrap_or_else(|| effect.receiving.into()),
-    }
-}
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvariantViolated, "FEM receiving requires its original source and funded phase")
 }
@@ -54,43 +34,6 @@ fn receipt(d: RetirementDemand) -> RetainedCloneProgress {
 }
 
 
-struct OriginalStepRecipient {
-    grant: RetainedCloneGrant,
-    progress: RetainedCloneProgress,
-    submitted: RetainedCloneProgress,
-}
-impl OriginalStepRecipient {
-    fn submitted_progress(&self)->RetainedCloneProgress{self.submitted}
-    fn grant_for(&mut self, d: RetirementDemand) -> Result<RetainedCloneGrant, ValueError> {
-        let remaining = RetainedCloneGrant {
-            maximum_items: self.grant.maximum_items.saturating_sub(self.progress.copied_items),
-            maximum_copy_bytes: self.grant.maximum_copy_bytes.saturating_sub(self.progress.copied_bytes),
-            maximum_capacity_bytes: self.grant.maximum_capacity_bytes.saturating_sub(self.progress.retained_capacity_bytes),
-            maximum_release_bytes: self.grant.maximum_release_bytes.saturating_sub(self.progress.released_bytes),
-            ..self.grant
-        };
-        if !retained_clone_grant_admits(remaining, d) {
-            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "FEM sealed row exceeds the original receiving step grant"));
-        }
-        Ok(remaining)
-    }
-    fn accept_for(&mut self, g: RetainedCloneGrant, p: RetainedCloneProgress) -> Result<(), ValueError> {
-        self.submitted=self.submitted.checked_add(p)?;
-        if !p.fits(g) {
-            return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "FEM sealed row receipt exceeds its original receiving grant").with_retained_progress(p));
-        }
-        self.progress = self.progress.checked_add(p)?;
-        Ok(())
-    }
-}
-impl OriginalConstructionRecipient for OriginalStepRecipient {
-    type Context<'turn, 'source> = () where 'source: 'turn;
-    fn validate_context<'turn, 'source>(&self, _: &()) -> Result<(), ValueError> where 'source: 'turn { Ok(()) }
-    fn source_turn<'turn, 'source>(&self, _: &()) -> Option<OriginalSourceTurnIdentity> where 'source: 'turn { None }
-    fn grant<'reply, 'turn, 'source>(&mut self, _: &mut (), quote: OriginalConstructionGrant<'reply>) -> OriginalConstructionGrantComplete<'reply> where 'source: 'turn { let result = self.grant_for(quote.demand()); quote.complete(result) }
-    fn accept<'reply, 'turn, 'source>(&mut self, _: &mut (), receipt: OriginalConstructionAccept<'reply>) -> OriginalConstructionAcceptComplete<'reply> where 'source: 'turn { let result = self.accept_for(receipt.grant(), receipt.progress()); receipt.complete(result) }
-    fn submitted<'turn, 'source>(&self, _: &()) -> RetainedCloneProgress where 'source: 'turn { self.submitted_progress() }
-}
 
 impl Fem2dSnapshot {
     /// 🫴️ Receives an already admitted authoring owner inside the original snapshot wallet and retirement publication frame.
@@ -107,8 +50,11 @@ impl Fem2dSnapshot {
                 if rx.ready(){
                     let turn=rx.take(g);
                     RetainedWorkOutcome{work:turn.work,result:turn.result.and_then(|out|out.map_or(Ok(()),|(value,p)|{*output=Some(value);body.record_progress(p)})).map_err(store::NativeSnapshotFailure::from)}
+                }else if native.has_construction_recipient(){
+                    let turn=rx.advance(native,g.maximum_copy_bytes,g);
+                    RetainedWorkOutcome{work:turn.work,result:turn.result.and_then(|step|body.record_progress(step.progress()).map_err(store::NativeSnapshotFailure::from))}
                 }else{
-                    let mut recipient=OriginalConstructionAuthority::new(OriginalStepRecipient{grant:g,progress:Default::default(),submitted:Default::default()});
+                    let mut recipient=OriginalConstructionAuthority::new(OriginalStepRecipient::new(g));
                     let mut work=0;
                     let result=match recipient.with_loan(&mut (),|loan|native.with_construction_recipient(loan,|native|{let turn=rx.advance(native,g.maximum_copy_bytes,g);work=turn.work;turn.result})){Ok(result)=>result,Err(error)=>Err(error.into())};
                     RetainedWorkOutcome{work,result:result.and_then(|step|body.record_progress(step.progress()).map_err(store::NativeSnapshotFailure::from))}
@@ -154,7 +100,7 @@ impl semio_framework_value::FromValue for Fem2dSnapshot {
         Self::from_reference(<Fem2dSnapshotValue as semio_framework_value::FromValue>::from_value(value)?)
     }
     fn retire_decoded(self) {
-        super::cold::retire(self);
+        semio_s_fem_receiving::cold::retire(self);
     }
 }
 
@@ -266,15 +212,15 @@ impl Fem2dReceiving {
         }
         match self.phase {
             0 => match self.admission.as_ref() {
-                Some(admission) => if admission.terminal_is_empty() { Ok(fixed(2 * size_of::<Option<StagedSourceAdmission<Fem2dSnapshotValue, Fem2dSnapshotValue>>>())) } else { admission.next_demand() },
+                Some(admission) => if admission.terminal_is_empty() { Ok(fixed(2 * size_of::<Option<StagedSourceAdmission<Fem2dSnapshotValue, Fem2dSnapshotValue>>>())) } else { admission_demand(admission) },
                 None => Ok(fixed(2 * size_of::<StagedSourceAdmission<Fem2dSnapshotValue, Fem2dSnapshotValue>>())),
             },
             1 => Ok(fixed(size_of::<NodeReceiver>())),
-            2 => self.nodes_receiver.as_ref().ok_or_else(invalid)?.demands(self.source.as_ref().ok_or_else(invalid)?.borrow().project(0, |s| &s.nodes), body, ACTION_WORK),
+            2 => { let rx = self.nodes_receiver.as_ref().ok_or_else(invalid)?; let source = self.source.as_ref().ok_or_else(invalid)?.borrow().project(0, |s| &s.nodes); rx.demands(source, body, rx.advance_work_demand(source, body)?) },
             3 => self.nodes_receiver.as_ref().ok_or_else(invalid)?.take_demand(),
             4 => if self.nodes_receiver.as_ref().ok_or_else(invalid)?.terminal_is_empty() { Ok(fixed(2 * size_of::<Option<NodeReceiver>>())) } else { self.nodes_receiver.as_ref().ok_or_else(invalid)?.close_demands(body) },
             5 => Ok(fixed(size_of::<MaterialReceiver>())),
-            6 => self.materials_receiver.as_ref().ok_or_else(invalid)?.demands(self.source.as_ref().ok_or_else(invalid)?.borrow().project(3, |s| &s.materials), body, ACTION_WORK),
+            6 => { let rx = self.materials_receiver.as_ref().ok_or_else(invalid)?; let source = self.source.as_ref().ok_or_else(invalid)?.borrow().project(3, |s| &s.materials); rx.demands(source, body, rx.advance_work_demand(source, body)?) },
             7 => self.materials_receiver.as_ref().ok_or_else(invalid)?.take_demand(),
             8 => if self.materials_receiver.as_ref().ok_or_else(invalid)?.terminal_is_empty() { Ok(fixed(2 * size_of::<Option<MaterialReceiver>>())) } else { self.materials_receiver.as_ref().ok_or_else(invalid)?.close_demands(body) },
             9 => self.source.as_ref().ok_or_else(invalid)?.next_take_demand(body),
@@ -292,7 +238,7 @@ impl Fem2dReceiving {
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         control.checkpoint()?;
-        macro_rules! effect { ($e:ident => $run:expr) => { match work.measured(control, |c| c.with_allocated_effect(d, ACTION_WORK, |_, $e| $run))? { Some(turn) => turn, None => return Ok(RetainedCloneStep::Progress(Default::default())) } } }
+        macro_rules! effect { ($units:expr; $e:ident => $run:expr) => { match work.measured(control, |c| c.with_allocated_effect(d, $units, |_, $e| $run))? { Some(turn) => turn, None => return Ok(RetainedCloneStep::Progress(Default::default())) } }; ($e:ident => $run:expr) => { effect!(ACTION_WORK; $e => $run) } }
         macro_rules! child { ($rx:ident, $out:ident, $base:expr, $at:expr, $project:expr, $ty:ty) => {{
             match self.phase - $base {
                 0 => {
@@ -304,7 +250,7 @@ impl Fem2dReceiving {
                 1 => {
                     let source = self.source.as_ref().ok_or_else(invalid)?.borrow().project($at, $project);
                     let rx = self.$rx.as_mut().ok_or_else(invalid)?;
-                    let maximum = native_work_limit(control, ACTION_WORK)?;
+                    let maximum = native_work_limit(control, rx.advance_work_demand(source, body)?)?;
                     let witness = control.source_witness()?;
                     let turn = settle(rx.advance(source, control, witness, body, maximum, g));
                     let p = work.take(RetainedWorkOutcome { result: turn.result.map_err(receiving_failure), work: turn.work })?.progress();
@@ -350,7 +296,8 @@ impl Fem2dReceiving {
                         receipt(d)
                     } else {
                         let source = &mut self.source;
-                        effect!(effect => admission.advance(source, effect)).result?.progress()
+                        let units = admission.advance_work_demand()?;
+                        effect!(units; effect => admission_advance(admission, source, effect)).result?.progress()
                     }
                 }
             }
@@ -442,6 +389,10 @@ impl Fem2dReceiving {
         work=1;self.phase = 14;
         Ok(Some((self.output.take().ok_or_else(invalid)?, receipt(d))))
         })();RetainedWorkOutcome{work,result}
+    }
+    /// 🪫️ True once every source, receiver, page and output frontier is released.
+    pub fn terminal_is_empty(&self) -> bool {
+        self.pending.is_none() && self.admission.is_none() && self.source.is_none() && self.nodes_receiver.is_none() && self.materials_receiver.is_none() && self.nodes.is_none() && self.materials.is_none() && self.output.is_none() && self.retirement.is_empty()
     }
     /// 🛑️ Cancellation switches to closure without dropping source, row, page or output ownership.
     pub fn begin_close(&mut self) {

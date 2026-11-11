@@ -11,9 +11,9 @@ fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1
 pub mod root;
 pub use root::ArcRootRetirement;
 /// 🧳️ The issued alias, elected original and installed payload issuer remain resident.
-pub struct FactorySharedRetirement<T:Send+Sync+'static>{alias:ManuallyDrop<Option<SharedOriginalStorage<T>>>,elected:ManuallyDrop<Option<SharedOriginal<T>>>,owned:crate::owned::FactoryOwnedRetirement<T>,work:Option<OriginalWorkBindingIdentity>}
+pub struct FactorySharedRetirement<T:Send+Sync+'static>{alias:ManuallyDrop<Option<SharedOriginalStorage<T>>>,elected:ManuallyDrop<Option<SharedOriginal<T>>>,owned:crate::owned::FactoryOwnedRetirement<T>,work:Option<OriginalWorkBindingIdentity>,reply:semio_framework_value_retirement::ReplyStash<crate::OriginalRetirementFailure>}
 impl<T:Send+Sync+'static> FactorySharedRetirement<T>{
- pub fn new(alias:SharedOriginalStorage<T>,factory:Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{alias:ManuallyDrop::new(Some(alias)),elected:ManuallyDrop::new(None),owned:crate::owned::FactoryOwnedRetirement::from_captured(None,factory),work:None}}
+ pub fn new(alias:SharedOriginalStorage<T>,factory:Arc<dyn ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{alias:ManuallyDrop::new(Some(alias)),elected:ManuallyDrop::new(None),owned:crate::owned::FactoryOwnedRetirement::from_captured(None,factory),work:None,reply:Default::default()}}
  pub const fn constructor_capacity_bytes()->usize{size_of::<Self>()}
  pub fn original_admission_demands(original:&Option<SharedOriginalStorage<T>>)->RetirementDemand{if original.is_none(){return Default::default()}RetirementDemand{copy_bytes:size_of::<Option<SharedOriginalStorage<T>>>()+size_of::<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>>()+size_of::<Self>()+size_of::<Option<Box<dyn ErasedSnapshotRetirement>>>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  pub fn admit_original_source_work_demand(original:&Option<SharedOriginalStorage<T>>)->u64{u64::from(original.is_some())}
@@ -43,6 +43,7 @@ impl<T:Send+Sync+'static> ErasedSnapshotRetirement for FactorySharedRetirement<T
  fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{self.close(None,body,effect,reply,true)}
  fn close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{if !original.original_work().binding_identity()?.matches_effect(effect){return Err(invalid())}self.close(Some(original),body,effect,reply,false)}
  fn recover_close_original_into<'r>(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>)->Result<Complete<'r>,ValueError>{if !original.original_work().binding_identity()?.matches_effect(effect){return Err(invalid())}self.close(Some(original),body,effect,reply,true)}
+ fn resident_reply(&mut self)->Option<&mut semio_framework_value_retirement::ReplyStash<crate::OriginalRetirementFailure>>{Some(&mut self.reply)}
  fn close_step(&mut self,body:usize,_:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"captured shared retirement requires its borrowed producer").into()),work:0})}
  fn terminal_is_empty(&self)->bool{self.alias.is_none()&&self.elected.is_none()&&self.owned.terminal_is_empty()}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}

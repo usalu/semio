@@ -1,6 +1,6 @@
 # Lane declviews result (semio-plugin-decl-views, 237 errors in W-main-182)
 
-## State (step 1: all red files edited, verify W-declviews-1 wasm)
+## State (all red files ported; verified)
 - tool-run: `ToolRunTraceKeys` holds `SharedOriginalStorage<AtomicU64>` (manual Default via `from_cold`); `ToolRunView` holds `SharedOriginalStorage<BTreeSet<u64>>` / `Option<SharedOriginalStorage<Vec<u8>>>` (manual PartialEq); `OriginalToolRunJobPortRetirement` = inherent `close_step(body,effect)` + `native_retirement_reply!`, `RetireOwned` via `retirement_seed`.
 - operation-contexts: `AppOperationContext` derives `RetireOwned`.
 - empty-lanes: derive(RetireOwned) uninhabited enums fixed in the derive (`value/✨️derive/🧬️retained-clone`: wildcard arm in every cursor match when there are no variants).
@@ -15,3 +15,11 @@
 
 ## Debts
 - cfg(test) code in `lifted/👁️read` (`shared_root_laws`), `command/🧪️tests.rs`, `📖️vector/🧪️tests.rs` still uses grant shapes.
+
+## Verified
+- wasm32-wasip2 lib: W-declviews-8 rc0. Native lib: W-declviews-9 rc0. Hub map W-declviews-hub-1 rc1: decl-views is no longer red; remaining reds are downstream: semio-plugin-decl-app 99 (`🧩️app/🛬️lifted/📸️fields` ContextToolRunSources must hold SharedOriginalStorage, `SharedControlledRetirement::lease` gone, child-read callers), semio-plugin-job-receiving 77, semio-plugin-host-configuration 13.
+- Mid-run, a peer pass rewrote the child files back to an older state (03:14); re-applied (lifted read `try_return_to_registry_witness(effect)`, `pub` cursor structs) before W-declviews-4+.
+- Derive: uninhabited-enum fix in `value/✨️derive/🧬️retained-clone` (wildcard arm when no variants); test `uninhabited_enum_owner_derives_a_retirement_cursor` in `value/✨️derive/🧪️tests/🧬️generic-owner` added, not yet run.
+Rerun: `chk.sh W-declviews-<n> 🌎️hub/Cargo.toml wasm -p semio-plugin-decl-views`, `chk.sh W-declviews-<n> Cargo.toml native -p semio-plugin-decl-views`.
+
+STATUS: FIXED-verified W-declviews-8 (wasm), W-declviews-9 (native)

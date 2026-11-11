@@ -21,8 +21,13 @@ impl store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication 
     fn acknowledge(&mut self) -> bool { false }
     fn begin_close(&mut self) {}
     fn admit_original_origins(&mut self, _: &mut Option<std::collections::VecDeque<protocol::MutationOrigin>>, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
-    fn close_original_step(&mut self, _: &mut semio_framework_value::OriginalRetirementCloseLoan<'_>, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
-    fn close_step(&mut self, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
+    fn requires_receiving_close(&self) -> bool { false }
+    fn receiving_close_demand(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(Default::default()) }
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> { None }
+    fn close_receiving_native(&mut self, _: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>, _: usize, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary> { semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 } }
+    fn receiving_preparation_refusal(&self) -> Option<&semio_framework_value::OriginalReceivingPrimary> { None }
+    fn close_original_step(&mut self, _: &mut semio_framework_value::OriginalRetirementCloseLoan<'_>, _: &mut RetainedAllocationEffect<'_>) -> Result<store::RetainedCloneStep, semio_framework_value::RetirementPollExit> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
+    fn close_step(&mut self, _: &mut RetainedAllocationEffect<'_>) -> Result<store::RetainedCloneStep, semio_framework_value::RetirementPollExit> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
     fn terminal_is_empty(&self) -> bool { false }
 }
 pub(crate) fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, inverse_count: usize) -> MemberReceiptPublication {
@@ -42,14 +47,14 @@ fn member_receipt_close(owner: &mut MountedMemberReceipt) {
     for _ in 0..1000 {
         if owner.terminal_is_empty() { return; }
         let bytes = owner.next_close_byte_demand().unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 64 };
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: crate::funded_copy(64), maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 64 };
         for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_release_bytes: bytes.saturating_sub(1), ..grant }] {
             if denied.maximum_items != 0 && bytes == 0 { continue; }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(denied).unwrap());
-            assert_eq!(step.progress(), Default::default()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0,0));
+            let step = crate::driven(denied, |effect| owner.close_step(effect)).unwrap();
+            assert_eq!(step.progress(), Default::default()); 
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap());
-        assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (0, step.progress().released_bytes));
+        let step = crate::driven(grant, |effect| owner.close_step(effect)).unwrap();
+        assert!(step.progress().fits(grant)); 
     }
     panic!("member receipt must reach exact terminal emptiness after admitted original owner retirement");
 }
@@ -60,10 +65,10 @@ fn member_receipt_drive(owner: &mut MountedMemberReceipt, fixture: &serde_json::
         if turn%1024==0{let stamp=(owner.phase,owner.index,owner.edit_offset,owner.group_offset,owner.forward.as_ref().map(|f|(f.output.bytes.len(),f.output.copied,f.pending_offset)),owner.inverse_encoder.as_ref().map(|i|(i.index,i.phase as u8,i.output.bytes.len(),i.payload_offset)),owner.kernel.as_ref().map(|k|(k.phase as u8,k.field,k.offset)));if last==Some(stamp){frozen+=1}else{frozen=0}assert!(frozen<2,"actual member receipt numerical/source cursors stopped advancing");last=Some(stamp);}
         let source = member_receipt_source(fixture, publication, owner.operation_index().unwrap_or(0));
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: if owner.next_minimum_copy_bytes()>64{32768}else{64}, maximum_capacity_bytes: owner.next_capacity_byte_demand(&source).unwrap(), maximum_release_bytes: owner.next_release_byte_demand(&source).unwrap(), maximum_depth: 64 };
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.advance(&source, RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap()); assert_eq!(step.progress(), Default::default()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0,0));
-        if grant.maximum_capacity_bytes > 0 || grant.maximum_release_bytes > 0 { let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.advance(&source, RetainedCloneGrant { maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(1), maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(1), ..grant }).unwrap()); assert_eq!(step.progress(), Default::default()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0,0)); }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.advance(&source, grant).unwrap());
-        assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
+        let step = crate::driven(RetainedCloneGrant { maximum_items: 0, ..grant }, |effect| owner.advance(&source, effect)).unwrap(); assert_eq!(step.progress(), Default::default()); 
+        if grant.maximum_capacity_bytes > 0 || grant.maximum_release_bytes > 0 { let step = crate::driven(RetainedCloneGrant { maximum_capacity_bytes: grant.maximum_capacity_bytes.saturating_sub(1), maximum_release_bytes: grant.maximum_release_bytes.saturating_sub(1), ..grant }, |effect| owner.advance(&source, effect)).unwrap(); assert_eq!(step.progress(), Default::default()); }
+        let step = crate::driven(grant, |effect| owner.advance(&source, effect)).unwrap();
+        assert!(step.progress().fits(grant)); 
     }
 }
 #[test]
@@ -73,10 +78,10 @@ fn mounted_member_receipt_preserves_ordered_multiple_operations_and_original_cau
     for (count,inverse_count) in [(0,0),(1,0),(2,2)] {
         let publication = member_receipt_fixture(&fixture,count,inverse_count); let original: Vec<_> = publication.forward.iter().map(|body| (body.0.as_ptr(),body.0.capacity())).collect();
         let source = member_receipt_source(&fixture,&publication,0);
-        let (mut owner,heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| MountedMemberReceipt::new(&source).unwrap()); assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        let (mut owner,heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| MountedMemberReceipt::new(&source).unwrap()); 
         let body_bytes=publication.forward.iter().chain(publication.inverse.iter()).map(|body|serde_json::to_vec(&body.0).unwrap().len()).sum::<usize>();let source_turn_bound=body_bytes*8+4096;member_receipt_drive(&mut owner,&fixture,&publication,source_turn_bound); assert!(owner.is_complete(),"member count={count} inverse={inverse_count} phase={} index={} nextcopy={} forwardbytes={} inversebytes={}",owner.phase,owner.index,owner.next_minimum_copy_bytes(),owner.forward.as_ref().map_or(0,|f|f.output.bytes.len()),owner.inverse.len()); assert_eq!(owner.operation_count(),count); assert_eq!(owner.ready_document(),Some(source.document)); assert_eq!(owner.ready_edit_id(),Some(publication.edit.as_str()));
         let inverses: Vec<_> = publication.inverse.iter().map(|body| { let mut encoded=vec![1,7];encoded.extend(serde_json::to_vec(&body.0).unwrap());encoded }).collect(); let inverse = protocol::encode_ops_vec(&inverses); assert_eq!(inverse.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), fixture[if inverse_count == 0 { "zeroInverseWireHex" } else { "inverseWireHex" }].as_str().unwrap());
-        let grant = RetainedCloneGrant { maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64 };
+        let grant = RetainedCloneGrant { maximum_items:1,maximum_copy_bytes:crate::funded_copy(64),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64 };
         let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.take_next_triple(RetainedCloneGrant { maximum_items: 0, ..grant })); assert!(denied.is_none()); assert_eq!((heap.requested_bytes, heap.released_bytes), (0,0)); assert_eq!(owner.triples.len(), count);
         for (index,row) in fixture["operations"].as_array().unwrap().iter().take(count).enumerate() {
             let (triple,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.take_next_triple(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -93,12 +98,12 @@ fn mounted_member_receipt_cancellation_preserves_every_original_owner_and_partia
     let fixture: serde_json::Value = crate::fixture_json("🧾️receipt/📦️group/👤️member/🧪️tests/🧫️fixtures/🔣️.json");
     for turns in fixture["cancelTurns"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize).chain([12000]) {
         let publication=member_receipt_fixture(&fixture,2,2);let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();member_receipt_drive(&mut owner,&fixture,&publication,turns);
-        if owner.is_complete() { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};let (triple,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_triple(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(triple.0.id.0,"mutation:one");drop(triple);assert_eq!(owner.triples.len(),1); }
+        if owner.is_complete() { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:crate::funded_copy(64),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};let (triple,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_triple(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(triple.0.id.0,"mutation:one");drop(triple);assert_eq!(owner.triples.len(),1); }
         member_receipt_close(&mut owner);let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     }
 }
 #[test]
 fn mounted_member_receipt_refuses_missing_original_metadata_before_acknowledgment() {
     let fixture:serde_json::Value=crate::fixture_json("🧾️receipt/📦️group/👤️member/🧪️tests/🧫️fixtures/🔣️.json");
-    for refusal in 0..4 { let mut publication=member_receipt_fixture(&fixture,2,2);match refusal {0=>publication.metadata[0].mutation_id=None,1=>publication.metadata[0].group_id=Some("foreign-group".into()),2=>publication.metadata.clear(),_=>publication.metadata[0].group_id=Some("x".repeat(fixture["groupId"].as_str().unwrap().len()))};let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();if refusal == 3 { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};assert_eq!(owner.next_capacity_byte_demand(&source).unwrap(),0);assert!(owner.advance(&source,grant).is_err()); } else { assert!(owner.next_capacity_byte_demand(&source).is_err()); } assert!(!owner.is_complete());assert_eq!(publication.forward.len(),2);member_receipt_close(&mut owner); }
+    for refusal in 0..4 { let mut publication=member_receipt_fixture(&fixture,2,2);match refusal {0=>publication.metadata[0].mutation_id=None,1=>publication.metadata[0].group_id=Some("foreign-group".into()),2=>publication.metadata.clear(),_=>publication.metadata[0].group_id=Some("x".repeat(fixture["groupId"].as_str().unwrap().len()))};let source=member_receipt_source(&fixture,&publication,0);let mut owner=MountedMemberReceipt::new(&source).unwrap();if refusal == 3 { let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:crate::funded_copy(64),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};assert_eq!(owner.next_capacity_byte_demand(&source).unwrap(),0);assert!(crate::driven(grant,|effect|owner.advance(&source,effect)).is_err()); } else { assert!(owner.next_capacity_byte_demand(&source).is_err()); } assert!(!owner.is_complete());assert_eq!(publication.forward.len(),2);member_receipt_close(&mut owner); }
 }

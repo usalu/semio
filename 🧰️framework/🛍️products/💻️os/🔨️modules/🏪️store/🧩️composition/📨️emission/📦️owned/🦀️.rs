@@ -20,6 +20,7 @@ trait BatchOwner: Send {
     fn terminal_is_empty(&self) -> bool;
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
+    fn work(&self, maximum_body_bytes: usize) -> Result<u64, ValueError>;
 }
 struct TypedBatch<M: Send + 'static> {
     pub values: ManuallyDrop<Option<Vec<M>>>,
@@ -66,6 +67,10 @@ impl<M: Send + 'static> BatchOwner for TypedBatch<M> {
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
     fn terminal_is_empty(&self) -> bool { self.values.is_none() && self.retirement.is_none() }
+    fn work(&self, maximum_body_bytes: usize) -> Result<u64, ValueError> {
+        if self.values.is_some() { return Ok(semio_framework_value::retirement::retirement_cursor_birth_work()); }
+        match self.retirement.as_ref() { Some(retirement) if retirement.terminal_is_empty() => Ok(1), Some(retirement) => retirement.work(maximum_body_bytes), None => Ok(0) }
+    }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { if self.values.is_some() { return Ok(self.birth_copy_bytes()); } self.retirement.as_ref().map_or(Ok(0), |retirement| retirement.next_copy_byte_demand()) }
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::RetirementDemand;
@@ -157,6 +162,10 @@ impl MemberStoreOwnedBatch {
         semio_os_store_one_item_publication::native_source::pay(effect,1)?;
         self.owner.take();
         Ok(RetainedCloneStep::Complete(progress))
+    }
+    /// ⛽️ Quotes the original computational work of the next close action.
+    pub fn next_work(&self, maximum_body_bytes: usize) -> Result<u64, ValueError> {
+        match self.owner.as_ref() { Some(owner) if owner.terminal_is_empty() => Ok(1), Some(owner) => owner.work(maximum_body_bytes), None => Ok(0) }
     }
     pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() }
 }

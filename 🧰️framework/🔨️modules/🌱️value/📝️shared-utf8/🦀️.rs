@@ -19,7 +19,7 @@ impl SharedUtf8 {
     }
     /// 🧳️ Adopts a shared allocation whose birth an earlier funded turn already reported, so the transfer itself allocates nothing.
     pub fn from_funded_arc(original:Arc<String>)->Self {Self(Some(original))}
-    pub fn admission_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,capacity_bytes:shared_retirement_allocation_bytes::<String>(),depth:1,..Default::default()}}
+    pub fn admission_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:crate::retirement::arc_custody::shared_allocation_value_demand::<String>().map_or(usize::MAX,|demand|demand.copy_bytes),capacity_bytes:shared_retirement_allocation_bytes::<String>(),depth:1,..Default::default()}}
     pub fn lease_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,depth:1,..Default::default()}}
     pub fn admit(original:String,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,String)> {
         let turn=crate::retirement::arc_custody::admit_shared_allocation(original,grant,actual);

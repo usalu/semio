@@ -144,18 +144,18 @@ pub struct ColdPairDocumentLoad {
     pub operation: u64,
     pub cursor: ColdDocumentPairCursor,
     pub superseded: bool,
+    pub archive: Box<store::DocumentArchivePack>,
+    pub admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
+    pub admitted: bool,
 }
 
 impl ColdPairDocumentLoad {
     pub fn new(load: ColdDocumentPairLoad, transfer_generation: u64, cursor: ColdDocumentPairCursor) -> Self {
-        Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false }
+        let files = load.files();
+        let archive = Box::new(store::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr: files.spr.clone(), members: Vec::new() });
+        Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false, archive, admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false }
     }
 
-    /// 🧬️ The whole-document archive of the verified pair: its pack and spr, no members.
-    pub fn archive(&self) -> store::DocumentArchivePack {
-        let files = self.load.files();
-        store::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr: files.spr.clone(), members: Vec::new() }
-    }
 }
 
 impl Drop for ColdDocumentPairLoad {
@@ -463,5 +463,7 @@ semio_plugin_abi::component_persistent_local! {
     pub static COLD_PAIR_DOCUMENT_LOAD: RefCell<Option<ColdPairDocumentLoad>> = RefCell::new(None);
     /// 📸️ Instances whose checkpoint-restored document still loads under `checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION`,
     /// each stepped once per turn.
-    pub static RESTORED_DOCUMENT_LOADS: RefCell<Vec<u32>> = RefCell::new(Vec::new());
+    pub static RESTORED_DOCUMENT_LOADS: RefCell<Vec<checkpoint::RestoredDocumentLoad>> = RefCell::new(Vec::new());
+    /// 📸️ Original work the checkpoint restore performed before any turn existed; the next restored-load step charges it to its own turn.
+    pub static RESTORED_WORK: RefCell<u128> = RefCell::new(0);
 }

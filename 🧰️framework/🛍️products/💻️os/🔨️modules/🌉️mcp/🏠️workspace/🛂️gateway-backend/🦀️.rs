@@ -25,7 +25,7 @@ use semio_os_mcp_foundation::handles::{HandleTable, IdempotencyStore, SessionHan
 use semio_os_mcp_foundation::reports::{ContextSummary, InvocationReport, PreparedActionReport, RevisionStamp, SearchHit};
 use semio_os_mcp_hub_remote::remote::{AuthorizedCatalogSnapshot, AuthorizedDescriptorSnapshot, HubRemoteBinding, checkpoint_resource_uri, descriptor_resource_uri, parse_checkpoint_resource_uri, parse_descriptor_resource_uri};
 use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
-use semio_os_mcp_port::channel_port::{ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, InvokeRequest};
+use semio_os_mcp_port::channel_port::{exchange_blocking, ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, InvokeRequest};
 use semio_os_mcp_port::policy::{AgentPrincipal, AutoApprovePolicy};
 use semio_os_mcp_probe_document::probe_document::{PROBE_PACK_SCHEMA_HASH, PROBE_SCHEMA, ProbeMutation, ProbeSnapshot, ProbeStore, ensure_probe_codec_registered, probe_store_owners};
 use semio_os_mcp_routing::hub_relay::{HUB_RELAY_ACK_WAIT_MS, HUB_SESSION_LIVE_LINK_LIMIT, HubInbound, HubLinkClose, HubRelay, InstalledArtifactKind, SessionDocumentPair, document_link_terminal_code, hub_link_tick, hub_links_to_close};

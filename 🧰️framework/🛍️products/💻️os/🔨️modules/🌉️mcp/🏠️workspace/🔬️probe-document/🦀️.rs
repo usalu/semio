@@ -69,10 +69,10 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 }
 
 impl store::ArtifactPackReceiving for ProbeSnapshot {
- fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
+ fn receive_pack(bytes:&[u8],output:&mut Option<Self>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<(),store::NativeSnapshotFailure>{
   if let Err(error)=owner.native().checkpoint(){return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}
   let text=match std::str::from_utf8(bytes){Ok(text)=>text,Err(_)=>return semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"Probe receiving JSON input is not UTF8").into()),work:0}};
-  probe_json::receive_snapshot(text,owner)
+  probe_json::receive_snapshot(text,output,owner)
  }
 }
 

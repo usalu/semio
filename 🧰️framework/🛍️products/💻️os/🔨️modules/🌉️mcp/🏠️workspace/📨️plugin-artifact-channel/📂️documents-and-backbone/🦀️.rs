@@ -37,10 +37,7 @@ impl PluginArtifactChannel {
             actor_label,
             host_driver_policy,
             operation_policy,
-            startup_custody:None,
-            startup_instance_custody:None,
             startup_failure:None,
-            operation_refusal:None,
             host_driver:Arc::new(semio_plugin_host::GuestRelayWakeDriver::new(host_driver_policy,semio_framework_job::default_now_us,Box::new(||false)).expect("headless wake driver admission")),
             instances: HashMap::new(),
             closing_instances:std::collections::BTreeSet::new(),
@@ -52,7 +49,6 @@ impl PluginArtifactChannel {
             session_documents: HashMap::new(),
             backbone_egress: Vec::new(),
             backbone_bindings: std::collections::BTreeSet::new(),
-            inference: None,
         }
     }
 

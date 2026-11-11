@@ -71,6 +71,8 @@ pub trait NativeReceiver<I:?Sized,T>:Send+'static{
  fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<RetirementDemand,ValueError>;
  /// 🧭️ Selects the actual resident child or local action before any original callback.
  fn select_advance(&self,original:RetainedCloneRef<'_,I>,body:usize,maximum_work_units:u64)->Result<NativeAdvanceSelection,ValueError>;
+ /// ⏱️ Quotes the exact work of the next resident child or local action; a nested receiver must override it.
+ fn advance_work_demand(&self,original:RetainedCloneRef<'_,I>,body:usize)->Result<u64,ValueError>{match self.select_advance(original,body,u64::MAX)?{NativeAdvanceSelection::Local{work}=>Ok(work),NativeAdvanceSelection::Nested=>Err(ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"native receiver lacks its nested work quote"))}}
  /// 🪢️ Polls only the selected resident child without mutating parent metadata.
  fn advance_nested(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,witness:semio_framework_value_control_contract::OriginalSourceTurnWitness<'_>,body:usize,maximum_work_units:u64,grant:RetainedCloneGrant)->crate::RetainedWorkPoll<RetainedCloneStep,NativeReceivingFailure>;
  /// 📬️ Records one local action before its original borrowed reply can unwind.

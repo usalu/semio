@@ -5775,9 +5775,11 @@ dependencies = [
 name = "semio-framework-job-recorded-clock"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "semio-framework-value-control-contract",
  "semio-framework-value-receiving",
  "semio-framework-value-retirement",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -7955,6 +7957,7 @@ dependencies = [
 name = "semio-framework-test-original-snapshot-owners"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-job",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-os-kernel",
@@ -9556,6 +9559,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-testing-effect-bank",
  "semio-os-flow-drawing",
  "semio-os-flow-host-core",
  "semio-os-flow-host-read",
@@ -10106,6 +10110,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-testing-effect-bank",
  "semio-os-infinite-board-dag-graph",
  "semio-os-infinite-board-dag-model",
  "semio-os-infinite-board-engine",
@@ -11925,6 +11930,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-job",
  "semio-framework-pack-json",
  "semio-framework-pack-json-float",
  "semio-framework-schema-composition",
@@ -13849,6 +13855,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-process-routing-workspace",
@@ -15677,6 +15684,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-actor",
  "semio-framework-async",
+ "semio-framework-job",
  "semio-framework-value",
  "semio-os-vcs",
  "semio-plugin-guest-contract",
@@ -15783,6 +15791,7 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-async",
  "semio-framework-async-macros",
+ "semio-framework-job",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-os-kernel",
@@ -15790,6 +15799,7 @@ dependencies = [
  "semio-os-vcs",
  "semio-plugin-guest-contract",
  "semio-plugin-host-guest-runtime",
+ "semio-plugin-host-operation",
  "semio-plugin-host-process-transport",
  "semio-ui-runtime",
  "serde",
@@ -16825,6 +16835,7 @@ dependencies = [
  "semio-plugin-decl-views",
  "semio-plugin-identity",
  "semio-plugin-job",
+ "semio-plugin-job-receiving",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-reactor-app",
@@ -16843,6 +16854,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-os-kernel",
  "semio-plugin-child",
  "semio-plugin-composition-publication",
@@ -16862,6 +16874,7 @@ dependencies = [
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-clone-source-testing",
  "semio-os-kernel",
  "semio-plugin-publication-mounted",
  "serde_json",
@@ -17046,6 +17059,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-job",
  "semio-framework-value",
+ "semio-plugin-job-receiving",
 ]
 
 [[package]]
@@ -17110,6 +17124,7 @@ dependencies = [
  "semio-plugin-extension",
  "semio-plugin-job",
  "semio-plugin-operation",
+ "semio-plugin-ownership",
  "semio-plugin-peer",
  "semio-plugin-plugin-program",
  "semio-plugin-reactor-app",
@@ -17319,6 +17334,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-receiving-original",
  "semio-os-kernel",
  "semio-plugin-abi",
  "semio-plugin-actor-host",
@@ -17556,10 +17572,12 @@ dependencies = [
  "semio-framework-actor",
  "semio-framework-job",
  "semio-framework-job-payload",
+ "semio-framework-job-testing-caller",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-native-receiving-original",
+ "semio-framework-value-testing-effect-bank",
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-tool-contract",
@@ -24943,6 +24961,8 @@ dependencies = [
  "semio-ui-wgpu-events",
  "semio-ui-wgpu-input",
  "semio-ui-wgpu-layout",
+ "wasm-bindgen",
+ "web-sys",
  "winit",
 ]
 

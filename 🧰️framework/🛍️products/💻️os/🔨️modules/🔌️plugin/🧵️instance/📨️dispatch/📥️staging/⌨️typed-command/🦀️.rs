@@ -67,7 +67,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let body=source.original_body()?;let decoder=source.original_decoder()?;let binding=source.original_binding()?;
         let mut pending=None;
         if source.handoff(cx,&mut pending,&mut *self.tool_machines,tool_tag,|source|PendingLatestWinsCommand{
-            command:ManuallyDrop::new(source.command.take()),command_retirement:Default::default(),admission:source.admission.take(),meta:ManuallyDrop::new(source.metadata.take()),original_caller:ManuallyDrop::new(source.caller.take()),original_body:body,original_decoder:decoder,metadata_retirement:Default::default(),context_metadata:ManuallyDrop::new(None),context_view:ManuallyDrop::new(None),context_phase:0,operation,source_identity:binding,revision,lease:None,cancellation_retirement:None,key_copy:None,key:None,retired_key:None,lookup_started:false,accepted:ordinary,restarting:false,closing:false,receipt:None,fault:ManuallyDrop::new(None),fault_retirement:None,
+            command:ManuallyDrop::new(source.command.take()),command_retirement:Default::default(),admission:source.admission.take(),meta:ManuallyDrop::new(source.metadata.take()),original_caller:ManuallyDrop::new(source.caller.take()),original_body:body,original_decoder:decoder,metadata_retirement:Default::default(),context_metadata:ManuallyDrop::new(None),context_view:ManuallyDrop::new(None),context_phase:0,operation,source_identity:binding,revision,lease:None,cancellation_retirement:None,key_copy:None,key:None,key_retirement:None,lookup_started:false,accepted:ordinary,restarting:false,closing:false,fault:ManuallyDrop::new(None),fault_retirement:None,
         })?{self.tools.latest_wins_commands.insert_admitted(id,pending.unwrap());self.tools.latest_wins_order.push(id).expect("original typed FIFO reservation");source.receipt=Some(receipt);}
         Ok(None)
     }
@@ -132,7 +132,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         metadata:&mut Option<ActionMeta>,
         original_caller:&mut Option<semio_framework_job::OriginalCallerSourceLoan>,
         original_body:usize,
-        original_decoder:(u64,u64),
+        original_decoder:(semio_framework_value::retained_clone::NativeAllocationIdentity,u64),
         context_view:&mut Option<std::sync::Arc<semio_framework::ViewModel>>,
         operation_id: semio_framework_job::OperationId,
         cancellation_lease: ToolCancellationLease,
@@ -173,7 +173,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let publication_lanes = admission.proof.publication_lanes();
         let completion = ArtifactToolCompletion::<A>::new();
         let mut identity_observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| !cancellation_lease.token.is_cancelled_now() && !cancellation_lease.publication_claim.is_cancelled();
-        let identity = semio_framework_value::NativeEncodeControl::new(admission.proof.contract().max_output_bytes, &mut identity_observer).pause().map_err(|error| plugin_sdk_fault(error.to_string()))?;
+        let identity = semio_framework_value::NativeEncodeControl::new(admission.proof.contract().max_output_bytes, &mut identity_observer).pause().map_err(|(error, _)| error.to_fault())?;
         drop(identity_observer);
         completion.install_authoring_identity(identity, &cancellation_lease)?;
         let app_owned_retained_route = matches!(&admission.proof, QualifiedToolProof::AppOwned(_));
@@ -183,8 +183,8 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let mut request_window_config = if app_owned_retained_route { window_config_authority.as_ref().map(|authority| authority.snapshot.try_duplicate()).transpose().map_err(|error| error.into_fault())? } else { None };
         let owned_context = if app_owned_retained_route {
             let presence_local = self.stores.presence_store.local_read().map_err(Fault::from)?;
-            let gesture = self.as_render().admit_gesture_slot(operation_id.0, &canonical_base_revision, meta,artifact_owned_tool_birth_grant(),artifact_owned_tool_handoff_grant())?;
-            Some(ArtifactOwnedContextHandle::admit(
+            let gesture = self.as_render().admit_gesture_slot(operation_id.0, &canonical_base_revision, meta,artifact_owned_tool_birth_grant(),artifact_owned_tool_handoff_grant(),cx)?;
+            let mut context = Some(
             ArtifactOwnedToolJobContext::new(
                 meta.instance_id,
                 context_view.take(),
@@ -203,9 +203,11 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             .with_presence(presence_local, std::sync::Arc::clone(&presence_peers), self.stores.presence_store.peer_retirement_factory())
             .with_original_tool_run(self.tool_runs.capture_original_view_for(meta.view_state.as_deref().and_then(|view|view.window_id.as_deref()),cx).map_err(FaultFrom::into_fault)?)
             .with_provisional(self.tool_machines.provisional_values(), self.tool_machines.provisional_generation())
-            .with_gesture(gesture),
-            artifact_owned_tool_birth_grant(),
-        ).0) } else { None };
+            .with_gesture(gesture));
+            let Some(((handle, birth), performed)) = cx.with_original_effect(artifact_owned_tool_birth_grant(), |_, effect| ArtifactOwnedContextHandle::admit(context.take().expect("original context awaits its admission"), effect)).map_err(FaultFrom::into_fault)? else { return Err(plugin_sdk_fault("original context admission awaits a funded turn")) };
+            cx.consume_retained(birth).map_err(FaultFrom::into_fault)?;
+            cx.consume_work(performed);
+            Some(handle) } else { None };
         let producer_request = Some(ArtifactOwnedToolJobRequest {
             source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,
@@ -259,7 +261,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
                 producer_source: producer_request.as_ref().map(|request|request.source_binding),
                 producer_request,
                 producer_request_retirement: None,
-                reserved_producer: None,
+                reserved_producer: None,reserved_construction: Default::default(),
                 completion: Some(completion),
                 completion_retirement:None,
                 publication_retirement:None,
@@ -309,31 +311,10 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if let QualifiedToolProof::FrameworkOwned(mut alias)|QualifiedToolProof::AppOwned(mut alias)=admission.proof{
             while !alias.terminal_is_empty(){
                 let demand=alias.close_demands(cx.retained_grant().maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-                semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:alias.close_step(grant),work:1}).map_err(|_|plugin_sdk_fault("typed operation admission proof refused its original close"))?;
+                semio_framework_job::close_original_effect_step(cx,demand,|effect|alias.close_step(effect)).map_err(|_|plugin_sdk_fault("typed operation admission proof refused its original close"))?;
             }
         }
         Ok(())
-    }
-
-    /// 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
-    ///
-    /// 🔒️ Contract §2.3 clause 1 — `import` is not a string action (see `VIEWER_REJECTED_ACTION_IDS`'s
-    /// own doc), so it is guarded here instead of `dispatch_action`.
-    pub async fn dispatch_import_media(&mut self, port: &str, media: Media, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        if A::ROLE == AppRole::Viewer {
-            return Err(viewer_read_only_fault("import"));
-        }
-        let proof = self.tools.qualified_tool_proof(&*self.stores, "import-media")?;
-        let key = proof.key();
-        let admission = self.tools.tool_jobs.admit_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), &[]).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
-        if !proof.admits::<A>(&admission) {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.factory-identity"), "media import resolved outside its exact controller/owner/factory/tool/schema proof"));
-        }
-        let (authority,source)=self.media.pending_reserved_producer_permit.take().ok_or_else(||plugin_sdk_fault("media source requires its original pre-admitted import permit"))?;
-        if (source.0,source.1)!=(cx.operation(),cx.generation()){*self.media.pending_reserved_producer_permit=Some((authority,source));return Err(plugin_sdk_fault("media import requires its unchanged original caller"))}
-        let (job, completion) = match self.as_render().build_artifact_reserved_media_job(port, media, meta,semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx)).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(&mut self.pending,authority); return Err(fault); } };
-        let raw = Vec::new();
-        self.dispatch_reserved_original_producer("import-media",&raw,1,job,completion,meta,Some(admission),authority, cx).await
     }
 
     /// 🧮️ B1: dispatches a binary-encoded `store::os_store::store_schema::ArtifactCommand<A::ConfigMutation>` against
@@ -378,7 +359,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if let Some(owner)=self.pending.pending_configuration_completion.as_mut(){
             let demand=if owner.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{owner.demand(cx.retained_grant().maximum_copy_bytes)?};
             let terminal=owner.terminal_is_empty();let mut removed=false;
-            semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=if terminal{removed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{owner.step(grant)};semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+            semio_framework_job::close_original_effect_step(cx,demand,|effect|if terminal{removed=true;semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})}else{owner.step(effect)})?;
             if removed{self.pending.pending_configuration_completion.take();}return Ok(None)
         }
         let permit=self.pending.pending_configuration_permit.as_ref().expect("configuration commit retains its admitted permit");self.stores.validate_framework_reserved_commit(X::reserved_action_refusal(&*self.time_travel, &*self.tool_runs, "configuration-binary"), "configuration-binary", permit).await?;

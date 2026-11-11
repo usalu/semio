@@ -2,6 +2,11 @@
 use semio_framework_dsl_record::{FieldValue,RecordValue,receiving::{DslReceivingField,NativeSnapshotDecodeOwner,NativeSnapshotFailure,NativeSnapshotEffectProgress,NativeSnapshotDecodeEffectQuote,NativeSnapshotDecodeWorkQuote,ReceivingWork,receiving_turn}};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,retirement::RetireOwned};
 use std::mem::size_of;
+#[path="🧊️cold/🦀️.rs"]pub mod cold;
+#[path="🪢️reply/🦀️.rs"]pub mod reply;
+#[path="📨️write-pack/🦀️.rs"]mod write_pack;
+#[cfg(feature="testkit")]
+#[path="🧪️testkit/🦀️.rs"]pub mod testkit;
 
 /// 🎯️ Performs one exact retained metadata transfer and posts its actual physical and work receipts.
 fn transfer(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,bytes:usize,progress:&mut NativeSnapshotEffectProgress,unwind:&mut Option<NativeSnapshotFailure>,meter:&mut ReceivingWork,mut effect:impl FnMut())->Result<(),NativeSnapshotFailure>{

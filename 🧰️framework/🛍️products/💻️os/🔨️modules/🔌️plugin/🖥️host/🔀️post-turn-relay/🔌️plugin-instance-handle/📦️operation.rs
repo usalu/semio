@@ -66,6 +66,8 @@ impl GuestRelayOperation{
  /// ♻️ Retires the complete original Source after its caller-owned recipients have returned.
  pub async fn close(&mut self)->GuestRelayOperationStatus{if self.failure.is_some()||self.cleanup_failure.is_some(){return GuestRelayOperationStatus::Failed}match self.close_inner().await{Ok(())=>GuestRelayOperationStatus::Complete,Err(error)=>{*self.cleanup_failure=Some(error);GuestRelayOperationStatus::Failed}}}
  async fn close_inner(&mut self)->Result<(),GuestRelayAdmissionFailure>{while !self.close_contents_step_inner()?{semio_framework_async::yield_once().await}self.driver.close_operation().await?;self.closed=true;Ok(())}
+ /// 🧯️ A failed operation is captured, read and retired under its own driver before the owner closes.
+ pub async fn retire_refusal(&mut self,read:&mut dyn FnMut(&GuestRelayAdmissionFailure,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<(),GuestRelayAdmissionFailure>{super::operation_admission::retire_failure(&self.driver,&mut*self.failure,read).await?;super::operation_admission::retire_failure(&self.driver,&mut*self.cleanup_failure,read).await}
  /// 👁️ Borrows one complete failure only within a paid receiving callback.
  pub fn with_failure_step(&self,cleanup:bool,cx:&mut StepContext<'_>,receive:impl FnOnce(&GuestRelayAdmissionFailure,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>{let slot=if cleanup{&*self.cleanup_failure}else{&*self.failure};let Some(failure)=slot.as_ref()else{return Ok(false)};if !pay(cx,size_of::<&GuestRelayAdmissionFailure>())?{return Ok(false)}receive(failure,cx)?;Ok(true)}
  /// 🧯️ A paid receiver captures either complete body failure or independent cleanup failure.

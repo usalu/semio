@@ -403,28 +403,29 @@ impl semio_framework_dsl_record::receiving::owned::OwnedReceivingMap<RunTriggerF
     fn map_demand(_: &RunTriggerFields) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         Ok(semio_framework_dsl_record::receiving::owned::metadata::<()>())
     }
-    fn map_into(input: &mut Option<RunTriggerFields>, output: &mut Option<RunTrigger>, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress> {
-        use semio_framework_dsl_record::receiving::owned::{funds, invalid, invariant, metadata, receipt};
+    fn map_into(input: &mut Option<RunTriggerFields>, output: &mut Option<RunTrigger>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_dsl_record::receiving::owned::OwnedTake {
+        use semio_framework_dsl_record::receiving::owned::{admits, done, idle, invalid, invariant, metadata, perform, receipt};
         if input.is_none() || output.is_some() {
-            return semio_framework_value::RetainedWorkOutcome { result: Err(invariant()), work: 0 };
+            return done(effect, Err(invariant()));
         }
         let demand = metadata::<()>();
-        if !funds(grant, demand) {
-            return semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 };
+        if !admits(effect, demand) {
+            return idle(effect);
         }
-        let Some(fields) = input.take() else {
-            return semio_framework_value::RetainedWorkOutcome { result: Err(invariant()), work: 0 };
-        };
-        match run_trigger_from_fields(fields) {
-            Ok(trigger) => {
-                *output = Some(trigger);
-                semio_framework_value::RetainedWorkOutcome { result: Ok(receipt(demand)), work: 1 }
+        let result = perform(effect).and_then(|()| {
+            let Some(fields) = input.take() else { return Err(invariant()) };
+            match run_trigger_from_fields(fields) {
+                Ok(trigger) => {
+                    *output = Some(trigger);
+                    Ok(receipt(demand))
+                }
+                Err(fields) => {
+                    *input = Some(fields);
+                    Err(invalid())
+                }
             }
-            Err(fields) => {
-                *input = Some(fields);
-                semio_framework_value::RetainedWorkOutcome { result: Err(invalid()), work: 1 }
-            }
-        }
+        });
+        done(effect, result)
     }
 }
 
@@ -436,16 +437,21 @@ impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for Ru
 }
 
 impl semio_framework_dsl_record::DslReceivingField for RunTrigger {
-    fn receive_value(value: &semio_framework_dsl_record::FieldValue, owner: &mut semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, semio_framework_dsl_record::receiving::NativeSnapshotFailure> {
+    fn receive_value(value: &semio_framework_dsl_record::FieldValue, output: &mut Option<Self>, owner: &mut semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<(), semio_framework_dsl_record::receiving::NativeSnapshotFailure> {
         use semio_framework_dsl_record::DslReceivingRecord;
         let semio_framework_dsl_record::FieldValue::Record(record) = value else {
             return semio_framework_value::RetainedWorkOutcome { result: Err(semio_framework_dsl_record::receiving::owned::invalid().into()), work: 0 };
         };
-        let turn = RunTriggerFields::receive_record(record, owner);
+        let mut fields = None;
+        let turn = RunTriggerFields::receive_record(record, &mut fields, owner);
         let work = turn.work;
-        let result = match turn.result {
-            Ok(fields) => run_trigger_from_fields(fields).map_err(|_| semio_framework_dsl_record::receiving::owned::invalid().into()),
-            Err(error) => Err(error),
+        let result = match (turn.result, fields.take().map(run_trigger_from_fields)) {
+            (Ok(()), Some(Ok(trigger))) => {
+                *output = Some(trigger);
+                Ok(())
+            }
+            (Ok(()), _) => Err(semio_framework_dsl_record::receiving::owned::invalid().into()),
+            (Err(error), _) => Err(error),
         };
         semio_framework_value::RetainedWorkOutcome { result, work }
     }

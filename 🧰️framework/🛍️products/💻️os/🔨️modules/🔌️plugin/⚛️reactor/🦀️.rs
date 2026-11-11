@@ -12,8 +12,8 @@
 //! module never reimplements command dispatch, only translates its `AppFrame` output into
 //! `Effect`/`UiPatch`.
 
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
 use semio_plugin_reactor_tasks::tasks_task_lane::PendingResume;
 use semio_plugin_reactor_tasks::tasks_fixed_slots::ReactorFixedSlots;
 use semio_plugin_reactor_tasks::tasks_task_lane::TaskResumeOutcome;
@@ -71,7 +71,7 @@ semio_plugin_abi::component_persistent_local! {
     /// pack (design-abi.md §4).
     pub static ARMED_TIMERS: RefCell<FixedTimerRegistry> = RefCell::new(FixedTimerRegistry::new());
 }
-pub use semio_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS};
+pub use semio_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS, RESTORED_WORK};
 pub use semio_plugin_reactor_lifecycle::{REACTOR_CLOSES, REACTOR_CLOSE_CURSOR};
 pub use semio_plugin_reactor_patches::PATCHES;
 pub use semio_plugin_reactor_tasks::{INSTANCE_METADATA, JOB_RENDER_BINDINGS, REACTOR_EXECUTOR, REGISTRY, TASK_EXECUTOR, TASK_RECORDS, TASK_RESUMES};
@@ -285,7 +285,7 @@ impl semio_plugin_reactor_lifecycle::instance_lifetime::ClosePeers for ReactorCl
 /// serialized (`TASK_RECORDS`/`EXECUTOR` are process memory, not pack state) — only the
 /// `restart` command bytes of every LIVE task that declared one via `.restartable(..)` survive
 /// into the pack, one `TaskRestart{instance, command}` per such task.
-pub async fn checkpoint_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
+pub async fn checkpoint_now<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
     let instances = INSTANCE_METADATA.with(|metadata| metadata.borrow().checkpoint_rows());
     let timers = ARMED_TIMERS.with(|timers| timers.borrow().rows());
     let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
@@ -303,15 +303,16 @@ pub async fn checkpoint_now<PA: semio_framework_plugin_reactor_app::PluginApp>(r
 /// `TaskResolution::Command` takes), drained by the first `poll` after restore — restoring is a
 /// pure state-load, it must not itself re-enter app dispatch.
 #[expect(clippy::result_large_err, reason = "The fixed resume queue returns the admitted view snapshot, task metadata, and payload owner intact without allocating on rejection.")]
-pub async fn restore_now<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
+pub async fn restore_now<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
     let mut observe = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
-    let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observe;
-    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(semio_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, observer).map_err(semio_framework::FaultFrom::into_fault)?;
+    let observer: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observe;
+    let mut identity = semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(semio_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, observer).map_err(semio_framework::FaultFrom::into_fault)?;
     let mut accept = |_| true;
     let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(semio_plugin_reactor_surfaces::checkpoint::RESTORE_AUTHORITY_BYTES, &mut accept);
-    let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, runtime.mounted_owner_policy().preparation);
-    let semio_plugin_reactor_surfaces::checkpoint::RestoredCheckpoint { pack, document_loads } = semio_plugin_reactor_surfaces::checkpoint::restore(runtime, state, &mut identity, &mut original).await?;
+    let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, runtime.mounted_owner_policy().preparation);
+    let semio_plugin_reactor_surfaces::checkpoint::RestoredCheckpoint { pack, document_loads, work } = semio_plugin_reactor_surfaces::checkpoint::restore(runtime, state, &mut identity, &mut original).await?;
     RESTORED_DOCUMENT_LOADS.with(|loads| loads.borrow_mut().extend(document_loads));
+    RESTORED_WORK.with(|owed| *owed.borrow_mut() += work);
     let instances = pack.instances().await;
     let armed_timers = pack.timers().await.to_vec();
     INSTANCE_METADATA.with(|metadata| {

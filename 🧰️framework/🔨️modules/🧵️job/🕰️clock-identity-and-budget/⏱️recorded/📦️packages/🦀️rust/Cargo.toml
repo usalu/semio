@@ -27,3 +27,7 @@ semio-framework-value-retirement = { path = "../../../../../🌱️value/♻️r
 
 [dev-dependencies]
 serde_json = { workspace = true }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"

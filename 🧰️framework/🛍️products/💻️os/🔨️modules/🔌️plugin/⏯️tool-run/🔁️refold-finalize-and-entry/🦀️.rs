@@ -71,11 +71,11 @@ pub struct ToolRunEntry<A: ArtifactApp> {
     pub settings_values: ToolRunSettingsValues,
     pub window: Option<(String, String)>,
     pub window_bodies: Vec<String>,
-    pub payload: Option<Arc<Vec<u8>>>,
+    pub payload: Option<semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage<Vec<u8>>>,
     pub trace_keys: ToolRunTraceKeys,
     pub provisional: Vec<A::Mutation>,
     pub entity_marks: Vec<(u32, u64)>,
-    pub entities: Arc<BTreeSet<u64>>,
+    pub entities: semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage<BTreeSet<u64>>,
     pub overlay: Arc<A::Snapshot>,
     pub refold: Option<ToolRunRefold<A::Snapshot>>,
     pub trace: ToolRunTraceStore,
@@ -110,7 +110,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     pub fn view(&self) -> ToolRunView {
-        ToolRunView { tool_id: self.tool_id.clone(), identity: self.identity, state: self.slot.state, provisional_entities: Arc::clone(&self.entities), progress: self.progress(), payload: self.payload.clone() }
+        ToolRunView { tool_id: self.tool_id.clone(), identity: self.identity, state: self.slot.state, provisional_entities: self.entities.clone(), progress: self.progress(), payload: self.payload.clone() }
     }
 
     pub fn progress(&self) -> semio_framework_tool_run::ToolRunProgress {
@@ -187,7 +187,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     fn rebuild_entities(&mut self) {
         let length = self.provisional.len() as u32;
         self.entity_marks.retain(|(end, _)| *end <= length);
-        self.entities = Arc::new(self.entity_marks.iter().map(|(_, entity)| *entity).collect());
+        let rebuilt = semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(self.entity_marks.iter().map(|(_, entity)| *entity).collect()); crate::retire_cold_shared(std::mem::replace(&mut self.entities, rebuilt));
     }
 
     #[cfg(test)]
@@ -238,7 +238,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             return Ok(receipt);
         }
         if let Some(payload) = tick.payload.take() {
-            self.payload = Some(Arc::new(payload));
+            if let Some(previous) = self.payload.replace(semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(payload)) { crate::retire_cold_shared(previous); }
         }
         self.sequence = self.sequence.max(tick.sequence);
         if let Some(member) = self.member.as_mut() {
@@ -253,7 +253,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
             member.ops.extend(tick.append_ops.drain(..).take(room));
             let length = member.ops.len() as u32;
             self.entity_marks.retain(|(end, _)| *end <= length);
-            self.entities = Arc::new(self.entity_marks.iter().map(|(_, entity)| *entity).collect());
+            let rebuilt = semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(self.entity_marks.iter().map(|(_, entity)| *entity).collect()); crate::retire_cold_shared(std::mem::replace(&mut self.entities, rebuilt));
         } else if let Some(retract) = tick.retract_to.map(|length| length as usize).filter(|length| *length < self.provisional.len()) {
             receipt.retracted = (self.provisional.len() - retract) as u32;
             discarded.extend(self.provisional.drain(retract..));
@@ -288,11 +288,12 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         self.provisional.extend(appended);
         let end = self.member.as_ref().map_or(self.provisional.len(), |member| member.ops.len()) as u32;
         if !tick.append_entities.is_empty() {
-            let entities = Arc::make_mut(&mut self.entities);
+            let mut entities = BTreeSet::clone(&self.entities);
             for entity in tick.append_entities {
                 self.entity_marks.push((end, entity));
                 entities.insert(entity);
             }
+            crate::retire_cold_shared(std::mem::replace(&mut self.entities, semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(entities)));
         }
         for mut step in tick.steps {
             self.step_sequence = self.step_sequence.saturating_add(1);

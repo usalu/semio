@@ -108,7 +108,7 @@ if self.active.is_some() { return semio_os_store_read::settle_close_poll(semio_o
         if let Some(slot)=self.external_strings.iter_mut().find(|slot|slot.is_some()){let original=match slot.take(){Some(v)=>v,None=>return Err(ValueError::invariant("slot absent"))};let mut original=Some(original);let turn=semio_framework_value::retirement::admit_owned_retirement(&mut original,&mut effect.nested(child));return match turn.result {Ok(Some((owner,receipt)))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Ok(None)=>{*slot=original;Ok(RetainedCloneStep::Progress(empty))},Err(error)=>{*slot=original;Err(error)}};}
         if let Some(owner) = self.inline_owner_mut() {
             if !owner.terminal_is_empty() {
-                let step = semio_os_store_read::settle_close_poll(owner.close_step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
+                let step = semio_os_store_read::settle_close_poll(semio_framework_value::close_owner(owner, child.maximum_copy_bytes, &mut effect.nested(child)))?;
                 return semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "staged inline owner").map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             self.clear_inline();

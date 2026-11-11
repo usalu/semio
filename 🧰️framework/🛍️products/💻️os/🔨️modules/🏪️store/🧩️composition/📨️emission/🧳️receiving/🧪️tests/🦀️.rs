@@ -8,6 +8,8 @@ use semio_framework_value_testing_admission::Authorities;
 type Owner=Box<dyn MemberOriginalBatchReceiving>;
 const WORK:u64=1<<20;
 const STALL_TURNS:usize=64;
+const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:65_536,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:64};
+const TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:64};
 fn advance(payer:&mut Authorities,control:&mut NativeDecodeControl<'_>,owner:&mut Owner,g:RetainedCloneGrant)->(RetainedCloneStep,semio_framework_trace::HeapAllocationObservation){
  let mut heap=None;control.admit_turn_capacity(g.maximum_capacity_bytes).unwrap();
  let poll=payer.nested(control,g,|control,_|{let(poll,observed)=observe(||owner.advance(control,WORK,g));heap=Some(observed);poll});
@@ -36,7 +38,7 @@ fn run(row:&serde_json::Value,cut:Option<usize>)->usize{
   for axis in 0..5{
    if axis==1&&d.copy_bytes==0||axis==2&&d.capacity_bytes==0||axis==3&&d.release_bytes==0{continue}
    let denied=match axis{0=>RetainedCloneGrant{maximum_items:0,..g},1=>RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g},2=>RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..g},3=>RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g},_=>RetainedCloneGrant{maximum_depth:d.depth-1,..g}};
-   if owner.settling(){let step=retire(&mut control,&mut owner,denied,true,&mut pendings);assert_eq!(step.progress(),Default::default());}else{let(step,heap)=advance(&mut payer,&mut control,&mut owner,denied);physical(step.progress(),heap,denied);assert_eq!(step.progress(),Default::default());}
+   if owner.settling(){if denied.maximum_items==0||denied.maximum_depth==0{assert!(control.with_retirement(denied,|_|Ok::<_,ValueError>(())).is_err());}else{let step=retire(&mut control,&mut owner,denied,true,&mut pendings);assert_eq!(step.progress(),Default::default());}}else{let(step,heap)=advance(&mut payer,&mut control,&mut owner,denied);physical(step.progress(),heap,denied);assert_eq!(step.progress(),Default::default());}
    assert_eq!(owner.demands(4096).unwrap(),d);
   }
   let progress=if owner.settling(){retire(&mut control,&mut owner,g,true,&mut pendings).progress()}else{let(step,heap)=advance(&mut payer,&mut control,&mut owner,g);physical(step.progress(),heap,g);step.progress()};
@@ -45,7 +47,7 @@ fn run(row:&serde_json::Value,cut:Option<usize>)->usize{
  if cut.is_none(){assert!(owner.ready());let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:64};let(step,heap)=observe(||owner.take(&mut output,&mut originals,&control,g).unwrap());physical(step.progress(),heap,g);assert_eq!(originals.as_ref().unwrap().as_ptr(),pointer);for(wire,pointer)in originals.as_ref().unwrap().iter().zip(wire_pointers){assert_eq!(wire.as_ptr(),pointer)}assert_eq!(serde_json::to_value(output.as_ref().unwrap().mutations::<u64>().unwrap()).unwrap(),*row);}
  owner.begin_close();for _ in 0..100000{if owner.terminal_is_empty(){break}let d=owner.close_demands(4096).unwrap();retire(&mut control,&mut owner,grant(d),false,&mut pendings);}assert!(owner.terminal_is_empty());let bytes=owner.allocation_bytes();let((),heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,bytes));
  drop(control);assert!(recipient.terminal_is_empty());
- if let Some(batch)=output.as_mut(){for _ in 0..100000{if batch.terminal_is_empty(){break}let d=batch.next_demands(4096).unwrap();let g=grant(d);let mut actual=None;let(turn,_)=semio_framework_value::testing::with_effect(g,WORK,&mut actual,|effect|observe(||batch.close_granted(effect)));let(step,heap)=(turn.0.unwrap(),turn.1);physical(step.progress(),heap,g);}assert!(batch.terminal_is_empty());}
+ if let Some(batch)=output.as_mut(){let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(52),semio_framework_job::Generation(1),STOCK,||Some(1),1_000_000,1_000_000_000);for _ in 0..100000{if batch.terminal_is_empty(){break}let d=batch.next_demands(4096).unwrap();let g=grant(d);let((result,heap),_)=caller.turn(TURN,|cx|Ok(cx.with_original_effect(g,|_,effect|observe(||batch.close_granted(effect)))?)).expect("original fixture effect turn").unwrap_or_else(||panic!("original effect quote refused the funded close grant {g:?}"));let step=result.unwrap();physical(step.progress(),heap,g);}caller.retire(STOCK);assert!(batch.terminal_is_empty());}
  pendings
 }
 #[test]

@@ -10,6 +10,7 @@ use std::mem::ManuallyDrop;
 pub enum ArtifactStoreConstructorKind { Recipient, Document, Config, Draft, Interaction }
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum ArtifactStoreConstructorPhase { Preparation, Close }
+semio_framework_value::artifact_retire_leaf!(ArtifactStoreConstructorKind, ArtifactStoreConstructorPhase);
 
 #[doc(hidden)]
 pub struct OriginalCatalogConstructor<P,Mu>

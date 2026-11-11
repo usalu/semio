@@ -36,17 +36,16 @@ impl<T:Send+Sync+'static,A:OriginalSourceProjection<T>+Send> HoldCustody<T,A>{
  pub(crate) fn busy(&self)->bool{self.pending.is_some()||!self.retirement.is_empty()}
  pub(crate) fn delegates(&self)->bool{self.pending.is_none()&&!self.retirement.is_empty()}
  pub(crate) fn quote(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some((demand,_))=self.pending{return Ok(demand);}self.hold()?.quote(body)}
- pub(crate) fn drive(&mut self,body:usize,demand:RetirementDemand,effect:Effect<'_,'_>)->Result<RetainedCloneStep,ValueError>{Ok(self.drive_once(body,demand,effect)?.0)}
- fn drive_once(&mut self,body:usize,demand:RetirementDemand,effect:Effect<'_,'_>)->Result<(RetainedCloneStep,bool),ValueError>{
+ pub(crate) fn drive(&mut self,body:usize,demand:RetirementDemand,effect:Effect<'_,'_>)->Result<RetainedCloneStep,ValueError>{
   let turn=effect.work_source_turn().ok_or_else(||invalid("original source hold requires its original Source"))?;
   let(_,body)=*self.pending.get_or_insert((demand,body));
   let hold=self.hold.as_mut().ok_or_else(||invalid("original source hold absent"))?;let authority=self.frame.get_or_insert_with(||OriginalEffectAuthority::new(Producer{turn,marker:PhantomData}));
   let mut call=Call{hold,body,turn};
-  if !authority.drive(&mut call,effect,&mut self.action)?{return Ok((RetainedCloneStep::Progress(Default::default()),false));}
-  let mut answer=None;if !self.action.as_mut().ok_or_else(||invalid("original source hold action absent"))?.transfer_reply(&mut answer)?{return Ok((RetainedCloneStep::Progress(Default::default()),false));}
+  if !authority.drive(&mut call,effect,&mut self.action)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
+  let mut answer=None;if !self.action.as_mut().ok_or_else(||invalid("original source hold action absent"))?.transfer_reply(&mut answer)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
   authority.finish(&mut self.action)?;self.pending=None;
   if let Some(frame)=self.frame.take(){frame.into_producer().map_err(|_|invalid("original source hold producer retains an action"))?;}
-  let step=answer.ok_or_else(||invalid("original source hold reply absent"))?.map_err(OriginalRetirementFailure::into_value_error)?;Ok((RetainedCloneStep::Progress(step.progress()),true))
+  let step=answer.ok_or_else(||invalid("original source hold reply absent"))?.map_err(OriginalRetirementFailure::into_value_error)?;Ok(RetainedCloneStep::Progress(step.progress()))
  }
  pub(crate) fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some((demand,_))=self.pending{return Ok(demand);}
@@ -58,7 +57,7 @@ impl<T:Send+Sync+'static,A:OriginalSourceProjection<T>+Send> HoldCustody<T,A>{
   self.retirement.next_owner_work::<Hold<T,A>>(self.hold.is_some(),&None,body)
  }
  pub(crate) fn close_step(&mut self,body:usize,effect:Effect<'_,'_>)->Result<RetainedCloneStep,ValueError>{
-  if let Some((demand,pending))=self.pending{return Ok(self.drive_once(pending,demand,effect)?.0);}
+  if let Some((demand,pending))=self.pending{return self.drive(pending,demand,effect);}
   if !self.retirement.is_empty(){return settled(self.retirement.step_granted(body,effect));}
   if let Some(step)=self.retirement.begin_granted(&mut self.hold,effect).result?{return Ok(step);}
   Ok(RetainedCloneStep::Complete(Default::default()))
@@ -89,11 +88,23 @@ impl<M:Send+Sync+'static> ArtifactMutationSource<M>{
   if self.closing{return self.close_demand(body);}if self.projection.is_some(){return Ok(header::<Option<RetainedOwnedProjection<M>>>());}
   if self.custody.ready(){retained_alias_demand(self.custody.original()?)}else{self.custody.quote(body)}
  }
- pub fn advance(&mut self,effect:Effect<'_,'_>)->Result<RetainedCloneStep,ValueError>{
+ pub(crate) fn advance(&mut self,effect:Effect<'_,'_>)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();let body=self.custody.pending_body().unwrap_or(grant.maximum_copy_bytes);let d=self.demands(body)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if self.closing{return self.close_step(effect);}
   if self.projection.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if self.custody.ready(){let Some((projection,p))=retained_alias(self.custody.original()?,effect)? else{return Ok(RetainedCloneStep::Progress(Default::default()))};*self.projection=Some(projection);return Ok(RetainedCloneStep::Complete(p));}
   self.custody.drive(body,d,effect)
+ }
+ /// 🔗️ The one public advance: opens one original effect per action over the grant a wide turn still holds, so a wide grant finishes the source in few turns while a quote-exact grant stays at one action; every Pending keeps its action in the custody and resumes on the next turn.
+ pub fn advance_chained(&mut self,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  let mut total=RetainedCloneProgress::default();
+  loop{
+   let rest=RetainedCloneGrant{maximum_items:grant.maximum_items.saturating_sub(total.copied_items),maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(total.copied_bytes),maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(total.retained_capacity_bytes),maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(total.released_bytes),..grant};
+   let Some(step)=probe_effect(control,rest,|_,effect|self.advance(effect))?else{break};let step=step?;
+   let progress=step.progress();total=total.checked_add(progress)?;
+   if matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Complete(total))}
+   if progress==RetainedCloneProgress::default(){break}
+  }
+  Ok(RetainedCloneStep::Progress(total))
  }
  pub fn take(&mut self,output:&mut Option<RetainedOwnedProjection<M>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{if output.is_some(){return Err(invalid("original mutation projection output already occupied"));}if self.closing||self.projection.is_none(){return Ok(None);}let d=header::<Option<RetainedOwnedProjection<M>>>();if !retained_clone_grant_admits(grant,d){return Ok(None);}*output=self.projection.take();Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
  pub fn ready(&self)->bool{!self.closing&&self.projection.is_some()}

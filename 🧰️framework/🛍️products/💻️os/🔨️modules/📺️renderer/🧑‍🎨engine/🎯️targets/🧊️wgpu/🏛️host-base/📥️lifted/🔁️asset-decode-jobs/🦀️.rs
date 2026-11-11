@@ -164,8 +164,8 @@ impl RendererIoCaller {
         if !owner.terminal_is_empty() {
             let _ = self.turn_under(semio_framework_job::root_cancel_token(), |cx| {
                 let grant = cx.retained_grant();
-                let step = owner.close_step(grant);
-                cx.consume_fuel(step.work);
+                let Some((step, _)) = cx.with_original_effect(grant, |_, effect| owner.close_step(effect))? else { return Ok(()) };
+                cx.consume_work(step.work);
                 match step.result {
                     Ok(step) => {
                         cx.consume_retained(step.progress())?;
@@ -262,10 +262,19 @@ impl RendererIoNode {
         if !self.detached {
             return false;
         }
-        let Some(result) = self.result.as_mut() else { return false };
+        let Self { caller, result, .. } = self;
+        let Some(result) = result.as_mut() else { return false };
         match result {
             Ok(value) if !value.terminal_is_empty() => {
-                let _ = value.close_step(RENDERER_IO_RESULT_CLOSE_GRANT);
+                let _ = caller.turn(|cx| -> Result<(), semio_framework_job::OriginalTurnFailure> {
+                    let Some((step, _)) = cx.with_original_effect(RENDERER_IO_RESULT_CLOSE_GRANT, |_, effect| value.close_step(effect))? else { return Ok(()) };
+                    cx.consume_work(step.work);
+                    match step.result {
+                        Ok(step) => cx.consume_retained(step.progress())?,
+                        Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
+                    }
+                    Ok(())
+                });
                 return true;
             }
             Ok(_) => {}
@@ -318,7 +327,8 @@ impl RendererIoNode {
             }
             if let Some(owner) = params_retirement.as_mut() {
                 if !owner.terminal_is_empty() {
-                    let step = cx.with_original_effect(grant, |cx, effect| owner.return_alias_step(cx.original_cancel_token(), effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0}, |(turn, _)| turn);
+                    let Some((step, _)) = cx.with_original_effect(grant, |cx, effect| owner.return_alias_step(cx.original_cancel_token(), effect))? else { return Ok(()) };
+                    cx.consume_work(step.work);
                     match step.result {
                         Ok(step) => {
                             cx.consume_retained(step.progress())?;
@@ -359,8 +369,8 @@ impl RendererIoNode {
             }
             match owner.has_original_cancel_alias_witness(cx.original_cancel_token()) {
                 Ok(true) => {
-                    let alias = cx.with_original_effect(grant,|cx,effect|owner.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);
-                    cx.consume_fuel(alias.work);
+                    let Some((alias, _)) = cx.with_original_effect(grant, |cx, effect| owner.return_original_cancel_alias_step(cx.original_cancel_token(), effect))? else { return Ok(false) };
+                    cx.consume_work(alias.work);
                     match alias.result {
                         Ok(Some(step)) => {
                             cx.consume_retained(step.progress())?;
@@ -616,22 +626,6 @@ pub fn submit_renderer_io(request: semio_os_services_native_io::NativeIoRequest)
     RENDERER_IO_SLOTS[slot_index].state.store(RENDERER_IO_LIVE, Ordering::Release);
     RENDERER_IO_WAKE.store(true, Ordering::Release);
     Ok(RendererIoHandle { slot: slot_index, generation, completed: false })
-}
-
-/// 🧮️ The bounded number of page and ledger frontiers one completed payload may need.
-#[cfg(not(target_arch = "wasm32"))]
-const RENDERER_IO_PAYLOAD_CLOSE_STEPS: usize = 4096;
-
-/// ♻️ Releases a completed native I/O payload one page or ledger frontier per step until it is terminal empty; false when the bounded walk left an owner behind.
-#[cfg(not(target_arch = "wasm32"))]
-pub fn close_renderer_io_payload(payload: &mut semio_framework_job_payload::RetainedJobPayload) -> bool {
-    for _ in 0..RENDERER_IO_PAYLOAD_CLOSE_STEPS {
-        if payload.terminal_is_empty() {
-            return true;
-        }
-        let _ = payload.close_step(RENDERER_IO_RESULT_CLOSE_GRANT);
-    }
-    payload.terminal_is_empty()
 }
 
 #[cfg(not(target_arch = "wasm32"))]

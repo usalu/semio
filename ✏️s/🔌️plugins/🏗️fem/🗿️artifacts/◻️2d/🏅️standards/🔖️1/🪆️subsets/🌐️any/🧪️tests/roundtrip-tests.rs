@@ -3,14 +3,7 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapsh
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::inferences::bounds::compute_fem2d_bounds;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::inferences::{Fem2dBounds, Fem2dInference};
 use protocol::Inference;
-
-fn drain<T: RetireOwned>(value: T) {
-    let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap();
-    let grant = RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 256 * 1048576, maximum_capacity_bytes: 256 * 1048576, maximum_release_bytes: 256 * 1048576, maximum_depth: 128 };
-    while !owner.terminal_is_empty() {
-        owner.step(grant).unwrap();
-    }
-}
+use semio_s_fem_receiving::testkit::retire;
 
 fn persist(value: &Fem2dSnapshotValue) -> Fem2dSnapshot {
     Fem2dSnapshot::from_reference(value.clone()).expect("fixture loads as a persistent snapshot")
@@ -93,16 +86,16 @@ fn round_trips(value: &Fem2dSnapshotValue) {
     assert_eq!(&via_dsl.to_reference(), value, "dsl round trip diverged from source snapshot");
     assert_eq!(&via_pack.to_reference(), value, "pack round trip diverged from source snapshot");
     assert_eq!(via_pack.to_reference(), via_dsl.to_reference(), "pack and dsl round trips diverged from each other");
-    drain(source);
-    drain(via_dsl);
-    drain(via_pack);
+    retire(source);
+    retire(via_dsl);
+    retire(via_pack);
 }
 
 #[test]
 fn fem2d_dsl_round_trips_bundled_default_example() {
     let document = parse_dsl(FEM2D_EXAMPLE_TEXT).expect("parse default example");
     round_trips(&document.to_reference());
-    drain(document);
+    retire(document);
 }
 
 #[test]
@@ -125,11 +118,11 @@ fn inference_determinism_default_and_node_extent_laws() {
     assert_eq!(inferred.bounds.node_count, 3);
     assert_eq!(inferred.bounds.bounding_box.min, [0.0, 0.0]);
     assert_eq!(inferred.bounds.bounding_box.max, [4.0, 3.0]);
-    drain(snapshot);
+    retire(snapshot);
     let empty = Fem2dSnapshot::default();
     assert_eq!(Fem2dInference::infer(&empty).expect("inference"), Fem2dInference::default());
     assert_eq!(compute_fem2d_bounds(&empty), Fem2dBounds::default());
-    drain(empty);
+    retire(empty);
 }
 
 #[test]
@@ -141,5 +134,5 @@ fn bounds_match_hand_built_node_extent() {
     assert_eq!(bounds.bounding_box.max, [5.0, 7.5]);
     assert_eq!(bounds.node_count, 3);
     assert_eq!(bounds.element_count, 1);
-    drain(snapshot);
+    retire(snapshot);
 }

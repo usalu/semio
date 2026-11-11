@@ -128,6 +128,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
 
     fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if stage==26{return self.pending.close_document_window_admission(cx, false)}
+        if stage==17{let before=cx.retained_progress();self.tools.latest_wins_keys.advance(cx)?;return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
         if stage==18{
             let before=cx.retained_progress();let complete=self.tools.tool_cancellations.cleanup_slot(self.maintenance.maintenance_cancellation_cursor,cx,true)?;
             let progress=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
@@ -235,14 +236,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                     }
                 }
             }
-            7 => self.maintenance_peer_roster_step(grant),
+            7 => self.maintenance_peer_roster_step(cx, grant),
             8 => {
                 for _ in 0..3 {
                     let demand = self.ingest.snapshot_read_returns_demands(&*self.stores, &*self.interaction, grant.maximum_copy_bytes).map_err(value_fault)?;
                     if !plugin_turn_admitted(demand, grant)? {
                         break;
                     }
-                    let step = self.ingest.advance_snapshot_read_returns_one(&mut *self.stores, &mut *self.interaction, grant)?;
+                    let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.ingest.advance_snapshot_read_returns_one(&mut *self.stores, &mut *self.interaction, effect).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from))?;
                     if step.progress() != RetainedCloneProgress::default() {
                         return Ok(progressed(step));
                     }
@@ -255,7 +256,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             12 => unreachable!("original decoder return handled before the fault-only ladder"),
             13 => unreachable!("original completed record return handled before fault-only ladder"),
 
-            17 => self.tools.latest_wins_keys.advance(grant).map(progressed),
+            17 => unreachable!("original latest-wins key advance handled before the fault-only ladder"),
             18 => unreachable!("original cancellation cleanup requires its actual caller"),
             19 => self.stores.presence_store.maintenance_local_reads_step(grant).map(progressed).map_err(value_fault),
             MAINTENANCE_CHILD_MEMBER_STAGE => unreachable!("original child retirement handled before the fault-only ladder"),
@@ -271,7 +272,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     }
 
     /// 🧭️ Walks one mounted peer roster through decode, validation, atomic publication and outcome hand-off, or through its cleanup once faulted.
-    fn maintenance_peer_roster_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn maintenance_peer_roster_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         let Some(generation) = self.roster.maintenance_peer_roster_generation() else { return Ok(idle()) };
         let index = InstanceStores::<A>::peer_roster_slot(generation);
         let authority = || maintenance_fault("interactive-job.maintenance-peer-roster-authority", "peer roster publication changed during one fixed step");
@@ -279,11 +280,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         let faulted = publication.is_faulted();
         let ready = !faulted && publication.stage == PeerRosterPublicationStage::Ready;
         let step = if faulted {
-            publication.close_step(grant)?
+            match cx.with_original_effect(grant, |_, effect| publication.close_step(effect)).map_err(value_fault)? { Some((result, performed)) => { cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX)); result? } None => PluginLifecycleStep::Progress(RetainedCloneProgress::default()) }
         } else if ready {
             PluginLifecycleStep::Complete(RetainedCloneProgress::default())
         } else {
-            match publication.step(&self.stores.presence_store, grant) {
+            match publication.step(&self.stores.presence_store, cx, grant) {
                 Ok(step) => step,
                 Err(fault) => {
                     publication.fail(fault);
@@ -750,7 +751,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
                 _ => None,
             },
             16 => (!self.tools.instance_operation_owner.terminal_is_empty().unwrap_or(false)).then(|| self.tools.instance_operation_owner.retirement_demands(body)).transpose()?,
-            17 => Some(self.tools.latest_wins_keys.advance_demands()?).filter(|demand| *demand != RetirementDemand::default()),
+            17 => (!(self.tools.latest_wins_keys.map.as_ref().is_some_and(|map| map.is_empty()) && self.tools.latest_wins_keys.can_begin())).then(|| RetirementDemand { depth: 1, ..Default::default() }),
             26 => self.pending.pending_document_window_admission.as_ref().filter(|admission|admission.committed).map(|_|self.pending.document_window_admission_demands()),
             18 => {let mut demand=self.tools.tool_cancellations.cancellation_cleanup_demands(self.maintenance.maintenance_cancellation_cursor,body,true)?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original maintenance cancellation cursor quote overflow"))?;Some(demand)},
             19 => (!self.stores.presence_store.local_read_maintenance_is_idle()).then(|| self.stores.presence_store.maintenance_local_reads_demands(body)).transpose()?,

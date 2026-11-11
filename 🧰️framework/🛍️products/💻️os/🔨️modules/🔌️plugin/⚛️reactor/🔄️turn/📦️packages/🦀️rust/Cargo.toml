@@ -35,6 +35,7 @@ semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀
 semio-plugin-peer = { path = "../../../../👥️peer/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../🔌️app/📦️packages/🦀️rust" }
 semio-plugin-reactor-lifecycle = { path = "../../../📨️pending/📦️packages/🦀️rust" }
+semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-runtime-instances = { path = "../../../🏃️runtime/📦️instances/📦️packages/🦀️rust" }
 semio-framework-plugin-runtime-ops = { path = "../../../🏃️runtime/🧰️ops/📦️packages/🦀️rust", package = "semio-plugin-runtime-ops" }
 semio-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust" }

@@ -35,17 +35,22 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if !self.ingest.reclaim_document_snapshot_read_returns(&*self.stores).map_err(semio_framework_job::OriginalTurnFailure::from)?{return Ok(())}
         let entry=selected_entry_required!(self.tool_runs,"publication advance")?;
         let publication=entry.finalize.as_mut().and_then(|finalize|finalize.publication.as_mut()).ok_or_else(||tool_run_slot_lost("publication advance owner"))?;
-        let result=cx.with_native_receiving(|native|self.stores.store.advance_apply_batch(publication,grant.maximum_copy_bytes,store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:grant.maximum_items.min(1),maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth},native));
+        let mut out=None;let mut stepped=None;
+        if !cx.with_native_receiving(&mut out,|native,issued|{stepped=Some(self.stores.store.advance_apply_batch(publication,issued.maximum_copy_bytes,store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:issued.maximum_items.min(1),maximum_copy_bytes:issued.maximum_copy_bytes,maximum_capacity_bytes:issued.maximum_capacity_bytes,maximum_release_bytes:issued.maximum_release_bytes,maximum_depth:issued.maximum_depth},native));Ok(())})?{return Ok(())}
+        let outcome=out.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original ToolRun publication receiving scope vanished"))?;cx.settle_receiving_scope()?;
+        if outcome.source_refusal.is_some()||outcome.call.is_err(){return Err(semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::NativeSource(outcome)))}
+        let result=stepped.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original ToolRun publication receiving step vanished"))?;
+        cx.consume_fuel(publication.last_turn_work());
         use store::os_store::one_item_publication::ArtifactStoreOneItemAdvance as Advance;
-        let p=match &result{Ok(Advance::Published(_,p)|Advance::PreparationProgress(_,p))=>*p,Err(store::os_vcs::VcsError::InverseRefused(error))=>error.retained_progress(),_=>Default::default()};
-        cx.consume_fuel(publication.last_turn_work());if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)?;}
         match result{
             Ok(Advance::Published(..)|Advance::AwaitingAck(_))=>{
                 if publication.outbound{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original ToolRun publication requires its committed native causal intent").into())}
                 if cx.should_yield(){return Ok(())}
-                let outbound=self.stores.store.advance_original_outbound(cx.retained_grant());
+                let issued=cx.retained_grant();
+                let Some((outbound,performed))=cx.with_original_effect(issued,|_,effect|self.stores.store.advance_original_outbound(effect))?else{return Ok(())};
+                cx.consume_work(performed);
                 let p=match &outbound{Ok(Some((_,p)))=>*p,Err(error)=>error.retained_progress(),_=>Default::default()};
-                cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);
+                cx.consume_retained(p)?;
                 if let Err(error)=outbound{return Err(error.into())}
                 if p!=Default::default(){return Ok(())}
                 let coordination=size_of::<ToolRunFinalizePhase>()+size_of::<bool>();let mut d=publication.acknowledgement_demands();d.copy_bytes=d.copy_bytes.checked_add(coordination).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original ToolRun acknowledgement quote overflow"))?;
@@ -70,7 +75,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let entry = selected_entry_required!(self.tool_runs,"finalize close")?;
         let Some(finalize)=entry.finalize.as_mut()else{return Ok(true)};
         if let Some(publication) = finalize.publication.as_mut() {
-            if let Some(p)=self.stores.store.prepare_apply_batch_close(publication,grant).map_err(FaultFrom::into_fault)?{self.tool_runs.retain_original_receipt(grant,p)?;return Ok(false);}
+            {let mut ran=false;let mut prepared=false;semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|{ran=true;self.stores.store.prepare_apply_batch_close(publication,effect).map(|p|{prepared=p.is_some();RetainedCloneStep::Progress(p.unwrap_or_default())})})?;if !ran||prepared{return Ok(false)}}
             if publication.terminal_is_empty(){
                 let copy=size_of::<Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<A::Snapshot,A::Mutation>>>();
                 if !tool_grant_funds(grant,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()}){return Ok(false);}
@@ -79,11 +84,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let mut demand=publication.retirement_demands(grant.maximum_copy_bytes).map_err(FaultFrom::into_fault)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun final publication depth overflow").into_fault())?;
             if !tool_grant_funds(grant,demand){return Ok(false);}
             publication.begin_close();
-            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=match publication.close_step(child){Ok(step)=>step,Err(error)=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into());}};
-            let step=match admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool final publication"){Ok(step)=>step,Err(error)=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into());}};
-            self.tool_runs.retain_original_receipt(grant,step.progress())?;return Ok(false);
+            semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|{let result=publication.close_step(effect);semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::RetirementPollExit::settle(effect,result))})?;return Ok(false);
         }
-        if !finalize.ingress.terminal_is_empty(){let d=finalize.ingress.close_demands(grant.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|g|finalize.ingress.close_step(g))?;return Ok(false);}
+        if !finalize.ingress.terminal_is_empty(){let d=finalize.ingress.close_demands(grant.maximum_copy_bytes)?;semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx,|effect|finalize.ingress.close_step(effect))?;return Ok(false);}
         Ok(true)
     }
 

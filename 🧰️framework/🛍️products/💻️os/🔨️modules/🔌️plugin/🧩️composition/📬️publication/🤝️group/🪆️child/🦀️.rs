@@ -62,8 +62,9 @@ impl PrivateChildPublicationInput {
         self.genesis.next_capacity_byte_demand(store::MemberGenesisEnvelopeSource { schema: self.schema.unwrap(), expected: &parts.expected, owner: &parts.owner, initial_pack: &genesis.initial_pack })
     }
     /// 🪜️ Processes one original metadata or canonical genesis input phase under independent work and release grants.
-    pub fn advance(&mut self, parent_id: &str, parent_dialect: &ArtifactDialect, existing: Option<&ArtifactRef>, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: Option<&str>, declarations: &'static [store::MemberOpenDeclaration], operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_copy_bytes: grant.maximum_copy_bytes.min(64), ..grant };
+    pub fn advance(&mut self, parent_id: &str, parent_dialect: &ArtifactDialect, existing: Option<&ArtifactRef>, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: Option<&str>, declarations: &'static [store::MemberOpenDeclaration], operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let outer = effect.grant();
+        let grant = RetainedCloneGrant { maximum_items: outer.maximum_items.min(1), maximum_copy_bytes: outer.maximum_copy_bytes.min(64), ..outer };
         let paused = || RetainedCloneStep::Progress(Default::default());
         if grant.maximum_items == 0 { return Ok(paused()); }
         if self.closing { return Err(input_error("private child input cannot advance after cancellation")); }
@@ -77,7 +78,7 @@ impl PrivateChildPublicationInput {
             if self.issuer.ready() { self.metadata = self.issuer.take_ready(grant)?; return Ok(structural()); }
             let source = self.source.as_ref().and_then(OwnedChildEmit::metadata).ok_or_else(|| input_error("private child retains its original metadata"))?;
             let expected = source.genesis.as_ref().map(|genesis| &genesis.reference).or(existing).ok_or_else(|| input_error("private child requires its exact declared target"))?;
-            return self.issuer.advance(PrivateChildMemberMetadataSource { expected, parent_id, parent_dialect, key: MemberKeyRef { owner: &source.owner, slot: &source.slot, child_id: &source.child_id }, actor, transaction, group_id }, grant).map(input_pending);
+            return self.issuer.advance(PrivateChildMemberMetadataSource { expected, parent_id, parent_dialect, key: MemberKeyRef { owner: &source.owner, slot: &source.slot, child_id: &source.child_id }, actor, transaction, group_id }, effect).map(input_pending);
         }
         if self.source().is_some_and(|source| source.genesis.is_none()) { self.ready = true; return Ok(structural()); }
         if self.declaration < declarations.len() {

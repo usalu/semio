@@ -74,7 +74,7 @@ pub use axis_solving_and_stack_rendering::dock_tab_content_width;
 mod window_silhouette_and_stack_geometry;
 pub use window_silhouette_and_stack_geometry::{
     layout_stack_cap, parse_path, path_str, push_window_silhouette_border, stack_window_silhouette,
-    WindowSilhouette, WindowSilhouetteEdge, WindowSilhouetteSpan,
+    StackCapGroupLayout, StackCapLayout, StackCapTabLayout, WindowSilhouette, WindowSilhouetteEdge, WindowSilhouetteSpan,
 };
 use window_silhouette_and_stack_geometry::{
     collect_stack_bodies, collect_stack_frames, dock_stack_body_rect, dock_text,

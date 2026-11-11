@@ -148,18 +148,21 @@ pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: &WindowSil
 }
 //#endregion WindowSilhouetteGeometry
 
-struct StackCapTabLayout {
+/// 🏷️ One painted tab of a stack cap group, as returned inside [`StackCapGroupLayout`] by [`layout_stack_cap`].
+pub struct StackCapTabLayout {
     pub window_id: String,
     pub label: String,
     pub(super) icon_id: String,
     pub rect: Rect,
 }
 
-struct StackCapGroupLayout {
+/// 🧷️ The tabs of one corner group of a stack cap, as returned inside [`StackCapLayout`] by [`layout_stack_cap`].
+pub struct StackCapGroupLayout {
     pub tabs: Vec<StackCapTabLayout>,
 }
 
-struct StackCapLayout {
+/// 🧢️ The solved cap of a dock stack: [`layout_stack_cap`] produces it and [`stack_window_silhouette`] consumes it, so it is public.
+pub struct StackCapLayout {
     pub groups: Vec<StackCapGroupLayout>,
     top_spans: Vec<WindowSilhouetteSpan>,
     bottom_spans: Vec<WindowSilhouetteSpan>,

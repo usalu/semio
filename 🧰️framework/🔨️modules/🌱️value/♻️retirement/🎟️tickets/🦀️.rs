@@ -14,13 +14,13 @@ pub fn close_factory_ticket<T:ErasedSnapshotRetirement+?Sized>(slot:&mut Option<
  let work=if ticket.terminal_is_empty(){1}else{match ticket.next_computational_work(body){Ok(work)=>work,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})}};
  if grant.maximum_items==0||effect.maximum_work_units()<work{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(empty)),work:0})}
  if ticket.terminal_is_empty(){if grant.maximum_depth==0{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"terminal ticket requires admitted depth").into()),work:0})}let bytes=size_of_val(ticket.as_ref());if grant.maximum_release_bytes<bytes||grant.maximum_copy_bytes<size_of::<Option<Box<T>>>(){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(empty)),work:0})}let work=match crate::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work})};drop(slot.take());return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<Box<T>>>(),released_bytes:bytes,..empty})),work})}
- let turn=ticket.close_step(body,effect);admit(ticket.as_ref(),grant,turn)
+ let turn=close_owner(ticket.as_mut(),body,effect);admit(ticket.as_ref(),grant,turn)
 }
 pub fn close_factory_ticket_controlled<T:ErasedSnapshotRetirement+?Sized>(slot:&mut Option<Box<T>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->OriginalRetirementPoll{
  let grant=effect.grant();let Some(ticket)=slot.as_ref()else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})};
  match retirement_birth(Some(ticket.as_ref()),body,control){Ok(None)=>{},Ok(Some(_))=>return skipped_birth(),Err(error)=>return birth_refusal(error)}
  let demand=match factory_ticket_demands(ticket,body){Ok(d)=>d,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
- if !ticket.terminal_is_empty()&&ticket.requires_original_control(){let ticket=slot.as_mut().unwrap();let turn=ticket.close_step_controlled(body,effect,control);return admit(ticket.as_ref(),grant,turn)}
+ if !ticket.terminal_is_empty()&&ticket.requires_original_control(){let ticket=slot.as_mut().unwrap();let turn=close_owner_controlled(ticket.as_mut(),body,effect,control);return admit(ticket.as_ref(),grant,turn)}
  close_factory_ticket(slot,body,effect)
 }
 /// 🧷️ Native erased children keep their same original cleanup loan and physical effect.
@@ -28,9 +28,12 @@ pub fn close_factory_ticket_original<T:ErasedSnapshotRetirement+?Sized>(slot:&mu
  let grant=effect.grant();let Some(ticket)=slot.as_ref()else{return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0})};
  match retirement_birth(Some(ticket.as_ref()),body,original){Ok(None)=>{},Ok(Some(_))=>return skipped_birth(),Err(error)=>return birth_refusal(error)}
  let demand=match factory_ticket_demands(ticket,body){Ok(d)=>d,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0})}
- if !ticket.terminal_is_empty()&&ticket.requires_original_control(){let ticket=slot.as_mut().unwrap();let turn=ticket.close_original_step(original,body,effect);return admit(ticket.as_ref(),grant,turn)}
+ if !ticket.terminal_is_empty()&&ticket.requires_original_control(){let ticket=slot.as_mut().unwrap();let turn=close_owner_original(ticket.as_mut(),original,body,effect);return admit(ticket.as_ref(),grant,turn)}
  close_factory_ticket(slot,body,effect)
 }
+#[path="📮️resident/🦀️.rs"]
+mod resident;
+pub use resident::{close_owner,close_owner_original,close_owner_controlled};
 #[path="🎯️selection/🦀️.rs"]
 mod selection;
 pub use selection::{RetirementSelection,select_retirement_cursor,select_factory_ticket};

@@ -1,59 +1,13 @@
-# 1108 lane matcher: shared NativeRecordMatcher driver
+# Lane matcher: record matcher KeyAcknowledgement zero step
 
-## Step 1 findings
-- 733 did NOT port any record/variant receiver onto selection(); no consumer of NativeSchemaMatchSelection existed. Old pre-732 matcher bound via `input.bind`; the 733 model has no binding step (key frame owns the retained projection).
-- The key frame protocol needs: Bind (construction binding, derivable from the construction effect), Source Post accept (external, matcher reports pending), witness (identity only; now taken from effect).
+## Diagnosis (W-matcherack-5, probe)
+Fem 3d `original_job_receives_typed_record_into_caller_slot`: `[DEBUG] ack ready work=0 next=KeySettlement actual=829`. The acknowledgement effect had already reported its unit of work in an earlier `Pending{work}` poll (`claim_child_work` returns the unreported delta); the finalizing poll is `Ready{work:0}`, mapped to `idle(0)` = zero progress, zero work, which the snapshot cursor loop refuses.
 
-## Step 2 driver (schema crate, new file 🔎️schema/🎛️drive.rs, 6 methods on NativeRecordMatcher)
-- demands(input,body,max), select_advance(input,body,max)->NativeAdvanceSelection, advance_nested(input,control,witness,body,max,grant)->Poll<..,NativeReceivingFailure>, advance_local(input,body,effect,reply<OriginalReceivingPrimary>), advance_pending().
-- Nested: KeyAction, CheckpointRecovery (key_action_advance), KeyAcknowledgement. Local: everything else; KeyPost replies pending; KeyError fails the reply with the moved original refusal; KeyMetadata binding = NativeReceivingConstructionBinding::from_effect(effect) (new).
-- Edits: key-frame start/release/error/quote now witness-free (turn from effect); key.rs key_action_quote replaces key_action_demand; frame crate gains from_effect.
-- Checks: W-matcher-1 native rc0, W-matcher-2 wasm see below.
+## Fix
+`record/🔎️schema/🎛️drive.rs`: new `advance_acknowledgement` settles the acknowledgement inside one `advance_nested` call: it keeps polling while the effect reports `Pending{work>0}` (summing the work), returns `Pending{total}` on `Pending{0}` (state kept), and returns `idle(total + ready_work)` on `Ready`. The finalizing step now carries the work performed by the same call.
 
-## Step 3 variant + unit (edited, W-matcher-3: only derive-expansion errors left in the variant/unit files)
-- NativeVariantSelector: select_advance forwards matcher.select_advance; advance_nested forwards matcher.advance_nested; advance_local is reply-shaped `(input,body,effect,reply<OriginalReceivingPrimary>)` (callers pass `reply.progress()`), delegates to matcher.advance_local on a nested effect; new settle_into (completes the reply once the matcher is released), advance_pending; close auto-starts the selector (begin_close_paid) so receivers need not call begin_close.
-- NativeUnitEnumReceiver: advance_local reply-shaped, close_step/recover/original variants via one close_route, original birth/control forwards.
-- NativeResultReceiver advance_local/advance_pending ported.
+## Law
+`record/🔎️schema/🎟️work/🧪️tests/🦀️.rs` (`record_matcher_driver`): nested turns run under an exact-quote grant (items 1, copy/capacity/release/depth = `demands()`); an admitted turn that starts at KeyAcknowledgement must report work>0 or progress.
 
-## Step 4 derive record + enum receive (matcher/selector sites)
-- derive receive 🦀️.rs: scan plan uses matcher.select_advance (Nested -> action 3 with nested_work_demand, Local -> new action 22 forwarding matcher.advance_local with reply.progress()); action 3 calls matcher.advance_nested; advance_pending includes the matcher; fixed `?` on begin_close_demand/begin_close_work_demand (plain values); nested field/default steps now pass `witness`.
-- derive enum 🔀️enum/🦀️.rs: selector advance_local/settle_into reply-forwarded before the closure, selector close via native_close_settle(close_into), advance_pending includes the selector.
-- Driver also gained `nested_work_demand(input)` (quote for the Nested arm).
-
-## Verification
-- Driver crate semio-framework-value-native-schema-engine: native W-matcher-5 rc0, wasm W-matcher-6 rc0, 0 errors.
-- semio-framework-value-native-owned W-matcher-4 (native) / W-matcher-7 (wasm): 0 errors in variant, unit, drive, key-frame, enum; matcher call sites in derive receive type-check. Crate still red: 15x E0599 `RetainedCloneRef::try_project_owned` (removed by 733; used by derive receive field projection 🦀️.rs:72 and enum 🔀️enum:57, replaced upstream by the OriginalProjectionFrame protocol in 🧬️retained-clone/🔗️source/🎟️admission) + 13 E0308 that follow from them (all at derive/value_codec sites, ⚠️refusal and root 🦀️.rs lines 19-23). Not matcher work.
-- rerun: `"$C/1105b-tools/chk.sh" W-matcher-<n> 🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml wasm`
-
-## Open items / debts
-- ack metadata (Bind/Prepare/CloseMetadata/Rearm/CloseAuthority) binding uses new NativeReceivingConstructionBinding::from_effect(effect); KeyPost replies pending until the construction owner calls matcher.key_accept_post(proof); KeySettlement (acknowledgement_ready case) maps to key_take_action_result_into: unverified against a real flow, no runtime test yet.
-- schema tests (🎟️work/🧪️tests, 🧪️tests/close.rs) still call the removed cursor.demands/advance API in 🎟️work tests; port needed (language-agnostic law + third-party oracle per AGENTS).
-- try_project_owned replacement (see above) owned by receivers2/foundation.
-## Step 5 field projection port (coordinator request)
-- `RetainedCloneRef::try_project_owned` replaced by `try_project::<dyn NativeValueSource,ValueError,_>` (child ref) + `RetainedOwnedProjectionAdmission::admit` (action 23) and `take` into `source` (action 24). Record: stage 0 admit, new stage 8 take, then stage 1. Enum: phase 1 admit-or-take, then phase 2. Both states own a `projection` admission that is closed before `source` (close_plan/close_poll/empty).
-- Also fixed: `required_checks` returned a bare ValueError inside the Primary closure (the E0308 chain); explicit try_project type args (E0282/E0283 on tagged enums).
-- Result: semio-framework-value-native-owned native W-matcher-13 rc0, wasm W-matcher-14 rc0.
-
-## Step 6 tests
-- semio-framework-value-native-schema-engine `--lib`: W-matcher-18 native, 8 passed. New `🌳️source/🧪️tests/key-settlement.rs`: key request settlement mapping (`settlement_of` -> Settle::Request) and its funded `clear_request_into` through the effect bank. `pending_schema_page_denial_keeps_the_original_frame` was failing at 733 (quote 109 work > fixture fuel 64); it now caps the ceiling at the law fuel, denial semantics unchanged.
-- (superseded by Step 7) `🔎️schema/🎟️work/🧪️tests/🦀️.rs` (old flattened-name walk, uses removed cursor API and a vanished `source_fixture`) is not compiled; porting needs the clone-source-testing fixture as dev-dependency (LOCK NEEDED) and a construction-action harness for the Bind step. KeySettlement(Outcome) arm and driver-level end-to-end flow remain untested.
-## Step 7 end-to-end driver test (coordinator request)
-- Ported `🔎️schema/🎟️work/🧪️tests/🦀️.rs` to the driver API as `[[test]] record_matcher_driver` of the native-owned crate (no new dependency, no lock needed; clone-source-testing and the decode `source-bank.rs` Bank were already dev inputs there). It runs every case of `🎟️work/📐️.json` through genuine Source, Work and construction authorities: Local arms via `receive_original_effect` + a `Local` producer; KeyMetadata arms via an explicit construction action followed by the Source Post dance (stage_completion, publish_completion, `OriginalConstructionAcceptedProof::authenticate`, `matcher.key_accept_post`, retire_completion); Nested arms via `bank.run_with_turn` + `advance_nested`; close via `key_close_metadata` (CancelBinding), `begin_close_paid` and `close_into` with `recover_close_into` on pending, then a terminal-empty assertion and Source drop.
-- Asserts the flow visits KeyBirth, KeyStart, KeyAction, KeySettlement and the outcome-resident settlement (the `Settle::Outcome` arm).
-- Bug found and fixed by the flow: `Finish` is quoted at 2 Work (was 1) in `local_work`, so the finish action never ran.
-- Harness notes: the close producer must report the Bank Source turn (`source_turn`), and every `OriginalEffectAuthority` must be transferred back (`into_producer`).
-- Results: W-matcher-42 (test) 1 passed; W-matcher-43 owned wasm rc0; W-matcher-44 owned native rc0; W-matcher-45 schema-engine lib 8 passed.
-- Remaining debt: the KeyError arm and the ack Prepare/Rearm/CloseAuthority arms are not exercised (the happy path only visits Bind and CancelBinding); no failing-key case.
-## Step 8 key-error, cut-at-every-step, key-acknowledgement stall
-- Fixture `🎟️work/📐️.json` now holds exact values: a `refused` case (message "original key refusal", KeyError arm: the driver fails the reply with the original refusal and the matcher still closes to terminal-empty), a `cut` case (turns 157: cut after every turn 0..=157, quiesce, close, terminal-empty) and per-kind `visits` lists. The alpha field case pins `turns: 157`.
-- Prepare, Rearm, CloseMetadata, KeyAcknowledgement and CancelBinding are visited by the happy path; `CloseAuthority` is only reachable with an unsettled outcome, which no closable state has (see below).
-- Stall root cause (probe: W-matcher-54): the settle loop of the original-crate laws ran 4096 turns at demand (0,0,0,depth 1) and zero work with `advance_pending` true: the matcher stood at `KeyPost` and nobody authenticates the Source Post of an acknowledgement metadata action (the receiving frame finishes the action itself; only hand-written tests did the Post). Fix at source: `NativeRecordMatcher::advance_metadata(control, op)` in 🎛️drive.rs performs the metadata action AND its Post (stage_completion, publish, `OriginalConstructionAcceptedProof::authenticate`, `key_accept_post`, release) under the control's Work and construction authorities; every `KeyMetadata` selection is now Nested; `KeyPost` is never selected afterwards. The original-crate laws no longer stall.
-- Still red (W-matcher-66, not a stall): the 3 original-crate laws now fail at close with "schema key action must settle before close". A cut between two driver turns leaves the key frame with an unposted/unsettled acknowledgement (binding without CancelBinding, resident outcome, uncleared request). The retirement close path only has an effect plus an `OriginalRetirementCloseLoan` (Work and failure storage, no construction authority), so it cannot run the Post dance that CancelBinding/CloseMetadata/CloseAuthority require. This needs a design decision of the 733 authors (either lend the construction authority to retirement close, or give the key frame a cancellation that discards unposted metadata); I did not invent it.
-- Driver test: W-matcher-69 passes all cases; native-owned wasm W-matcher-68 rc0.
-## Step 9 ruling (b): close-path cancellation, no construction authority at retirement
-- Frame crate: `NativeResidentSuccessAck::cancel_phase/cancel_demand/cancel_needed/cancel_into` discard the acknowledgement in six exactly quoted effect-only phases (resident outcome, resident metadata, destination, metadata binding, producer authority, semantic binding); never-posted metadata is dropped without a Post, settled custody is released through the retirement effect. The producer context binding is now an `Option` so authority transfer needs no construction binding.
-- Key frame: `cancel_needed/cancel_demand/cancel_into` (acknowledgement phases, then the settled request clear). Matcher `close_dispatch`/`close_demands` run cancel-then-close instead of refusing with "schema key action must settle before close"; the cost is quoted by `close_demands`.
-- Law: `🎟️work/📐️.json` has `forbidden.*: ["close metadata"]`; the `cut` case cuts after every turn 0..=157 and closes without any metadata construction action (the test's close() no longer has one). W-matcher-80 passes; schema-engine lib 8 pass (W-matcher-83); native-owned native W-matcher-82 rc0, wasm W-matcher-81 rc0.
-- Original-crate laws (W-nested-55 set), W-matcher-79: matcher-related failures are gone (no stall, no "must settle before close", no construction-effect-absent). Fixed on the way: `NativeStringReceiver` now begins its field cursor close before closing it (quote included); `native_terminal_release` added to every owned receiver impl that lacked it; cut sweeps read `cutBound` (512) from the fixture because the key birth alone takes ~90 turns.
-- Still red, not matcher: list law asserts heap `(48, 0)` instead of `(0, 0)` on a denied turn (list receiver accounting); projection and cancellation laws end with "original shared receiving owner is closed, foreign or already transferred" (shared-receiver owner transfer in the original wrapper). Receivers array, unit, try-map, list, tuple and the mapped-receiver macro still lack `native_terminal_release` (my insertion only matched impls with a plain `fn terminal_is_empty(&self)` line); the next failure may be there.
-STATUS: BLOCKED original-crate laws: matcher cancellation done and verified (W-matcher-80/82/83, wasm W-matcher-81); remaining reds are list heap accounting and shared-owner transfer in the original wrapper
+## Open / status
+Verification runs in progress (see below).

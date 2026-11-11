@@ -20,6 +20,7 @@ use store::SpaceMember;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::SharedUtf8;
+use semio_framework_value::RetainedAllocationEffect;
 use std::mem::ManuallyDrop;
 
 
@@ -33,6 +34,8 @@ pub fn mounted_nested_retirement_demand(mut demand: RetirementDemand, layers: us
 }
 
 pub const MOUNTED_RECEIPT_MAXIMUM_BYTES: usize = 1_048_576;
+/// ⛽️ Work units one shared author admission records on its original effect.
+const SHARED_UTF8_ADMISSION_WORK: u64 = 2;
 
 #[doc(hidden)]
 pub struct MountedReceiptBytes {
@@ -135,7 +138,8 @@ impl MountedPreparedOperationBytes {
     pub fn next_minimum_copy_bytes(&self)->usize{if self.pending_offset<self.pending_len{1}else{self.cursor.next_minimum_copy_bytes()}}
     pub fn is_complete(&self) -> bool { !self.failed && !self.closing && self.encoded_complete && self.cursor_closed && self.pending_len == self.pending_offset }
     /// 🧵️ Retains the exact encoded prefix before copying it into independently admitted output backing.
-    pub fn advance(&mut self, source: store::ArtifactPreparedOperationSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: store::ArtifactPreparedOperationSource<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if self.failed || self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted prepared operation requires funded close after refusal")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.pending_offset < self.pending_len {
@@ -147,11 +151,11 @@ impl MountedPreparedOperationBytes {
         }
         if self.encoded_complete {
             if self.cursor_closed { return Ok(RetainedCloneStep::Complete(Default::default())); }
-            let progress = self.cursor.close(grant).map_err(|error| error.reason)?;
+            let progress = self.cursor.close(effect).map_err(|error| error.reason)?;
             self.cursor_closed = progress.complete;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.processed_items, copied_bytes: progress.copied_bytes, retained_capacity_bytes: progress.retained_capacity_bytes, released_bytes: progress.released_bytes, ..Default::default() }));
         }
-        match self.cursor.advance(source, &mut self.pending, grant) {
+        match self.cursor.advance(source, &mut self.pending, effect) {
             Ok(progress) => {
                 self.pending_offset = 0;
                 self.pending_len = progress.written_bytes;
@@ -171,13 +175,14 @@ impl MountedPreparedOperationBytes {
         mounted_nested_retirement_demand(self.output.retirement_demands()?, 1)
     }
     /// 🍂️ Closes inline codec authority before retiring either original output allocation.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(self.retirement_demands()?,grant){ return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if !self.cursor_closed {
-            let progress = self.cursor.close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).map_err(|error| error.reason)?;
+            let progress = self.cursor.close(&mut effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })).map_err(|error| error.reason)?;
             self.cursor_closed = progress.complete;
             if self.cursor_closed { self.pending_len = 0; self.pending_offset = 0; }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: progress.processed_items, copied_bytes: progress.copied_bytes, retained_capacity_bytes: progress.retained_capacity_bytes, released_bytes: progress.released_bytes, ..Default::default() }));
@@ -220,13 +225,14 @@ impl MountedPreparedOperationsBytes {
     pub fn next_release_byte_demand(&self) -> Result<usize, ValueError> { match self.phase { MountedOperationFramingPhase::Encoding => self.operation.as_ref().unwrap().next_growth_release_byte_demand(), MountedOperationFramingPhase::Release => Ok(self.encoded.as_ref().unwrap().capacity()), _ => Ok(self.output.next_growth_release_byte_demand()) } }
     pub fn is_complete(&self) -> bool { !self.closing && self.phase == MountedOperationFramingPhase::Complete }
     /// 📦️ Frames every original inverse operation only after its complete length is retained.
-    pub fn advance(&mut self, source: Option<store::ArtifactPreparedOperationSource<'_>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: Option<store::ArtifactPreparedOperationSource<'_>>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted operation list is closing")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.phase == MountedOperationFramingPhase::Complete { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.phase == MountedOperationFramingPhase::Encoding {
             let operation = self.operation.as_mut().unwrap();
-            if !operation.is_complete() { return operation.advance(source.ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "mounted operation list lost its original prepared codec"))?, grant); }
+            if !operation.is_complete() { return operation.advance(source.ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "mounted operation list lost its original prepared codec"))?, effect); }
             *self.encoded = operation.take(grant);
             self.operation = None;
             (self.integer, self.integer_len) = Self::integer(self.encoded.as_ref().unwrap().len());
@@ -261,12 +267,13 @@ impl MountedPreparedOperationsBytes {
         mounted_nested_retirement_demand(self.output.retirement_demands()?, 1)
     }
     /// 🎞️ Retains the exact operation, candidate, and framed backing until each original extent is funded.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(self.retirement_demands()?,grant){ return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
-        if let Some(operation) = self.operation.as_mut() { let step = operation.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if operation.terminal_is_empty() { self.operation = None; } return Ok(step); }
+        if let Some(operation) = self.operation.as_mut() { let step = operation.close_step(&mut effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }))?; if operation.terminal_is_empty() { self.operation = None; } return Ok(step); }
         if let Some(encoded) = self.encoded.as_ref() {
             let bytes = encoded.capacity();
             if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -345,16 +352,21 @@ impl MountedKernelMutationReceipt {
     pub fn next_release_byte_demand(&self) -> usize { if self.phase==MountedKernelReceiptPhase::ForwardRelease{self.forward.next_close_byte_demand()}else{self.active_bytes().map_or(0, MountedReceiptBytes::next_growth_release_byte_demand)} }
     pub fn is_complete(&self) -> bool { !self.closing && !self.transferred && self.phase == MountedKernelReceiptPhase::Complete }
     /// 🧬️ Copies every original host-visible causal field and all independent dependency owners before staging.
-    pub fn advance(&mut self, source: &MountedKernelMutationReceiptSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: &MountedKernelMutationReceiptSource<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         self.validate(source)?;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.phase == MountedKernelReceiptPhase::Complete { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.phase == MountedKernelReceiptPhase::Author {
             let demand = SharedUtf8::admission_demand();
-            if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_depth < demand.depth || effect.remaining_work_units()? < SHARED_UTF8_ADMISSION_WORK { return Ok(RetainedCloneStep::Progress(Default::default())); }
             let bytes = self.strings[5].take(grant).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "mounted receipt author text is not settled"))?;
-            let (author, progress) = SharedUtf8::admit(unsafe { String::from_utf8_unchecked(bytes) }, grant).result.map_err(|(error, _)| error)?;
-            *self.author = Some(author); self.phase = MountedKernelReceiptPhase::Forward; self.offset=0;
+            let turn = SharedUtf8::admit(unsafe { String::from_utf8_unchecked(bytes) }, grant, effect.actual());
+            let progress = match turn.result {
+                Ok((author, progress)) => { *self.author = Some(author); self.phase = MountedKernelReceiptPhase::Forward; self.offset=0; progress }
+                Err((error, original)) => { self.strings[5] = MountedReceiptBytes::from_original(original.into_bytes()); effect.performed(u64::try_from(turn.work).unwrap_or(u64::MAX))?; return Err(error); }
+            };
+            if !effect.performed(u64::try_from(turn.work).unwrap_or(u64::MAX))? { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "mounted receipt author admission exceeded its original work")); }
             return Ok(RetainedCloneStep::Progress(progress));
         }
         if self.phase == MountedKernelReceiptPhase::DependencyBacking {
@@ -421,28 +433,30 @@ impl MountedKernelMutationReceipt {
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 2, ..Default::default() })
     }
     /// 🛑️ Cancels each original payload, field, dependency string, and vector backing under whole physical grants.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
-        if self.terminal_is_empty() { return RetainedCloneStep::Complete(Default::default()); }
-        if grant.maximum_items == 0 { return RetainedCloneStep::Progress(Default::default()); }
-        if !plugin_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
+        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
-        if !self.forward.terminal_is_empty() { return self.forward.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
-        if !self.forward_payload.terminal_is_empty(){return self.forward_payload.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})}
-        if let Some(payload)=self.inverse.iter_mut().find(|p|!p.terminal_is_empty()){return payload.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})}
-        if let Some(bytes) = self.strings.iter_mut().find(|bytes| !bytes.terminal_is_empty()) { return bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
-        if let Some(bytes) = self.dependency.as_mut() { let step = bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if bytes.terminal_is_empty() { self.dependency = None; } return step; }
+        let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+        if !self.forward.terminal_is_empty() { return Ok(self.forward.close_step(child)); }
+        if !self.forward_payload.terminal_is_empty(){return self.forward_payload.close_step(&mut effect.nested(child))}
+        if let Some(payload)=self.inverse.iter_mut().find(|p|!p.terminal_is_empty()){return payload.close_step(&mut effect.nested(child))}
+        if let Some(bytes) = self.strings.iter_mut().find(|bytes| !bytes.terminal_is_empty()) { return Ok(bytes.close_step(child)); }
+        if let Some(bytes) = self.dependency.as_mut() { let step = bytes.close_step(child); if bytes.terminal_is_empty() { self.dependency = None; } return Ok(step); }
         if let Some(author) = self.author.take() {
-            return match author.close_original_lease(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) {
+            return Ok(match author.close_original_lease(child) {
                 Ok((original, mut progress)) => { progress.released_bytes += original.as_ref().map_or(0, String::capacity); drop(original); RetainedCloneStep::Progress(progress) }
                 Err((_, author)) => { *self.author = Some(author); RetainedCloneStep::Progress(Default::default()) }
-            };
+            });
         }
         for dependencies in &mut self.dependencies {
-            if let Some(id) = dependencies.last_mut() { let bytes = id.0.capacity(); if grant.maximum_release_bytes < bytes { return RetainedCloneStep::Progress(Default::default()); } drop(std::mem::take(&mut id.0)); dependencies.pop(); return RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }); }
+            if let Some(id) = dependencies.last_mut() { let bytes = id.0.capacity(); if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); } drop(std::mem::take(&mut id.0)); dependencies.pop(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() })); }
             let bytes = dependencies.capacity() * size_of::<MutationId>();
-            if bytes > 0 { if grant.maximum_release_bytes < bytes { return RetainedCloneStep::Progress(Default::default()); } drop(std::mem::take(&mut **dependencies)); return RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }); }
+            if bytes > 0 { if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); } drop(std::mem::take(&mut **dependencies)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() })); }
         }
-        RetainedCloneStep::Complete(Default::default())
+        Ok(RetainedCloneStep::Complete(Default::default()))
     }
     pub fn terminal_is_empty(&self) -> bool { self.forward.terminal_is_empty() && self.forward_payload.terminal_is_empty() && self.inverse.iter().all(MountedReceiptPayload::terminal_is_empty) && self.strings.iter().all(MountedReceiptBytes::terminal_is_empty) && self.dependency.is_none() && self.author.is_none() && self.dependencies.iter().all(|dependencies| dependencies.is_empty() && dependencies.capacity() == 0) }
 }

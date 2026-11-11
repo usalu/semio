@@ -1,9 +1,9 @@
 //! 📤️ Resumable publication of bounded WFC state, output, and diagnostic bytes.
 
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
+use semio_framework_job::{JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
 use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload, RetainedPayloadBuilder};
-use semio_framework_value::{RetirementDemand, RetainedWorkOutcome, ValueError, ValueRefusalKind};
+use semio_framework_value::{retirement::record_retirement_work, RetainedAllocationEffect, RetirementDemand, RetainedWorkOutcome, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]
 pub enum Kind {
@@ -11,11 +11,6 @@ pub enum Kind {
     Checkpoint(u64),
     Commit,
     Fault,
-}
-
-/// 🧯️ Maps one child close turn onto the parent job's close vocabulary; a child never completes its parent.
-pub fn close_result(turn: RetainedWorkOutcome) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
-    RetainedWorkOutcome { result: turn.result.map(|step| InteractiveJobCloseStep::Pending { progress: step.progress() }), work: turn.work }
 }
 
 /// 🧳️ One publication owns its source bytes and the original payload headers it lends to the consumer.
@@ -144,46 +139,50 @@ impl Publication {
         Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
-        let mut work=0;
-        let result=(|| {
-            let demand = match self.retirement_demands() {
-                Ok(demand) => demand,
-                Err(error) => return Err(error),
-            };
+    /// ♻️ Advances the next close frontier inside the caller's performed-work effect; a child never completes its parent.
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let grant = effect.grant();
+        let pending = |progress: RetainedCloneProgress| Ok(RetainedCloneStep::Progress(progress));
+        let result = (|| {
+            let demand = self.retirement_demands()?;
             if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+                return pending(RetainedCloneProgress::default());
             }
             self.retiring = true;
+            let nested = grant.maximum_depth.checked_sub(1).map(|maximum_depth| RetainedCloneGrant { maximum_depth, ..grant });
+            let child = |nested: Option<RetainedCloneGrant>| nested.ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "wfc publication child close exceeds admitted depth"));
             if !self.single.terminal_is_empty() {
-                let turn=close_result(self.single.close_step(grant)); work=turn.work; return turn.result;
+                let turn = self.single.close_step(&mut effect.nested(child(nested)?));
+                return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             if !self.state.terminal_is_empty() {
-                let turn=close_result(self.state.close_step_granted(grant)); work=turn.work; return turn.result;
+                let turn = self.state.close_step(&mut effect.nested(child(nested)?));
+                return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             if !self.output.terminal_is_empty() {
-                let turn=close_result(self.output.close_step_granted(grant)); work=turn.work; return turn.result;
+                let turn = self.output.close_step(&mut effect.nested(child(nested)?));
+                return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             if self.primary.capacity() != 0 {
-                work=1;
+                record_retirement_work(effect, 1).map_err(|(error, _)| error)?;
                 let released_bytes = self.primary.capacity();
                 self.primary = Vec::new();
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
+                return pending(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() });
             }
             if self.secondary.capacity() != 0 {
-                work=1;
+                record_retirement_work(effect, 1).map_err(|(error, _)| error)?;
                 let released_bytes = self.secondary.capacity();
                 self.secondary = Vec::new();
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
+                return pending(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() });
             }
             if self.delivered {
-                work=1;
+                record_retirement_work(effect, 1).map_err(|(error, _)| error)?;
                 self.delivered = false;
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+                return pending(RetainedCloneProgress { copied_items: 1, ..Default::default() });
             }
-            Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+            pending(RetainedCloneProgress::default())
         })();
-        RetainedWorkOutcome { result, work }
+        RetainedWorkOutcome { result, work: effect.performed_work() }
     }
 
     pub fn terminal_is_empty(&self) -> bool {

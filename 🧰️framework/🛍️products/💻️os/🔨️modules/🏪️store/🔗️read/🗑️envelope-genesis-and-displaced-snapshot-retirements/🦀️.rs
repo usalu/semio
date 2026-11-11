@@ -284,7 +284,7 @@ impl ArtifactStoreDisplacedRetirements {
                 drop(self.owners.pop_front());
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
             }
-            let step = Exit::resume(owner.close_step(child.maximum_copy_bytes,&mut effect.nested(child)))?;
+            let step = Exit::resume(semio_framework_value::close_owner(owner.as_mut(),child.maximum_copy_bytes,&mut effect.nested(child)))?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original displaced queue child")?;
             if matches!(step, RetainedCloneStep::Complete(_)) && !owner.terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced child reported completion while original ownership remains").into()); }
             Ok(RetainedCloneStep::Progress(step.progress()))

@@ -2,7 +2,7 @@
 use crate::ArtifactApp;
 use crate::tool_contract::ArtifactToolCompletion;
 use crate::tool_contract::ArtifactToolCompletionValue;
-use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::RetainedCloneProgress};
 use std::{mem::ManuallyDrop,sync::{Arc,Mutex,MutexGuard,TryLockResult}};
 struct Cell<A:ArtifactApp>{value:Mutex<Option<ArtifactToolCompletionValue<A>>>,authoring:Mutex<Option<crate::tool_contract::OriginalAuthoringEffect>>}
 #[path="🌱️birth/🦀️.rs"]
@@ -33,7 +33,7 @@ pub struct CompletionRetirement<A:ArtifactApp>{source:ManuallyDrop<Option<Comple
 impl<A:ArtifactApp> CompletionRetirement<A>{
     pub fn new(source:CompletionCell<A>)->Self{Self{source:ManuallyDrop::new(Some(source)),original:ManuallyDrop::new(None),child:ManuallyDrop::new(None)}}
     fn error()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original completion payload has no declared physical retirement authority")}
-    fn child_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let Some(child)=self.child.as_mut()else{return RetirementStep::Complete(0)};if child.terminal_is_empty(){let bytes=size_of_val(&**child);if grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.child.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1);}semio_framework_value::retirement::erased_cursor_turn(child.close_step(body,effect))}
+    fn child_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();let Some(child)=self.child.as_mut()else{return RetirementStep::Complete(0)};if child.terminal_is_empty(){let bytes=size_of_val(&**child);if grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.child.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1);}semio_framework_value::retirement::erased_cursor_turn(semio_framework_value::close_owner(child.as_mut(),body,effect))}
 }
 impl<A:ArtifactApp> CompletionRetirement<A>{
     fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();
@@ -42,7 +42,7 @@ impl<A:ArtifactApp> CompletionRetirement<A>{
             let original=self.source.take().and_then(|cell|cell.return_alias());let released=if let Some(original)=original{*self.original=original.value.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);drop(original.authoring.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()},1);
         }
         if self.child.is_some(){return self.child_step(body,effect);}
-        if self.original.is_some(){let turn=A::admit_completion_retirement(&mut self.original,effect);return match turn.result{Ok(Some((child,progress)))=>{*self.child=Some(child);RetirementStep::Progress(progress,turn.work)},Ok(None)=>RetirementStep::Progress(Default::default(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)};}
+        if self.original.is_some(){let turn=A::admit_completion_retirement(&mut self.original,effect);return match turn.result{Ok(Some((child,progress)))=>{*self.child=Some(child);RetirementStep::Progress(progress,turn.work)},Ok(None)=>RetirementStep::Progress(Default::default(),turn.work),Err(error)=>RetirementStep::Failure(error.into(),turn.work)};}
         RetirementStep::Complete(0)
     }
 }
@@ -61,11 +61,18 @@ impl<A:ArtifactApp> RetirementCursor for CompletionRetirement<A>{
 }
 impl<A:ArtifactApp> Drop for CompletionRetirement<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original completion reached Drop before its exact cell and payload returned");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.child);}}}}
 impl<A:ArtifactApp> RetireOwned for ArtifactToolCompletion<A>{
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self.retirement_cursor())}
+    type RetirementCursor=CompletionRetirement<A>;
+    fn retirement_seed(self)->Self::RetirementCursor{self.retirement_cursor()}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<CompletionRetirement<A>>())}
     fn controlled_retirement_supported()->bool{true}
 }
 
+/// 🔀️ Settles one effect-shaped cursor ladder into the typed cursor frontier: Pending stays pending, a failure keeps the effect's work and an unprogressed turn waits for a wider grant.
+pub(crate) fn cursor_turn(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,result:Result<semio_framework_value::RetainedCloneStep,semio_framework_value::RetirementPollExit>)->RetirementStep{
+    use semio_framework_value::{RetainedCloneStep,RetirementPollExit};
+    let work=effect.performed_work();
+    match result{Err(RetirementPollExit::Pending(work))=>RetirementStep::Pending(work),Err(RetirementPollExit::Failed(failure))=>RetirementStep::Failure(failure,work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))if progress!=RetainedCloneProgress::default()||work!=0=>RetirementStep::Progress(progress,work),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(work),Ok(_)=>RetirementStep::BudgetExhausted}
+}
 /// 📬️ Exact frame of the derived completion cleanup constructor.
 pub fn derived_completion_birth_bytes<A:ArtifactApp>(_value:&ArtifactToolCompletionValue<A>)->Option<usize>{Some(size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletionValue<A>>>())}
 /// 🎟️ Admits the original completion payload through its derived typed retirement, retaining it on every unfunded route.

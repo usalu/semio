@@ -18,7 +18,7 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
         if let Some(alias)=self.alias.as_ref(){return if alias.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{nested(RetirementDemand{copy_bytes:alias.next_copy_byte_demand()?,capacity_bytes:alias.next_capacity_byte_demand(copy)?,release_bytes:alias.next_release_byte_demand()?,depth:alias.next_depth_demand()?})};}
         if self.read.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(active)=self.active_returned.as_ref(){return nested(artifact_retirement_box_demands(active,copy)?);}
-        if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return nested(registry.returned_admission_demands::<T>(|_|RetirementDemand{capacity_bytes:arc_lease_birth_bytes::<T>(),depth:1,..Default::default()}).map_err(SnapshotReadLeaseRefusal::into_value_error)?);}}
+        if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return nested(registry.returned_admission_demands::<T>(|_|arc_lease_admission_demand::<T>()).map_err(SnapshotReadLeaseRefusal::into_value_error)?);}}
         snapshot_registry_alias_demands(&self.registry)
     }
     fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
@@ -116,6 +116,8 @@ pub fn admit_arc_lease<T:RetireOwned+Sync>(root:&mut Option<Arc<T>>,effect:&mut 
 }
 /// 📏️ Quotes the controlled frame of one Arc lease owner.
 pub const fn arc_lease_birth_bytes<T:RetireOwned+Sync>()->usize{size_of::<ControlledRetirement<ArcLease<T>>>()}
+/// 🧮️ Quotes the whole admission of one returned Arc lease exactly as [`admit_arc_lease`] charges it: the moved lease slot, the controlled frame copy, the frame allocation and one admission level.
+pub fn arc_lease_admission_demand<T:RetireOwned+Sync>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<ArcLease<T>>>()+size_of::<ControlledRetirement<ArcLease<T>>>(),capacity_bytes:arc_lease_birth_bytes::<T>(),depth:1,..Default::default()}}
 
 
 #[cfg(test)]

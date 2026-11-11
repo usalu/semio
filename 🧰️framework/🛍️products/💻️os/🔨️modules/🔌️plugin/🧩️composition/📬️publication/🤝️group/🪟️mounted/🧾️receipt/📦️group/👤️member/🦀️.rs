@@ -29,6 +29,7 @@ use crate::mounted_child_group_receipt::MountedPreparedOperationBytes;
 use crate::mounted_child_group_receipt::MountedPreparedOperationsBytes;
 use crate::mounted_child_group_receipt::{MountedReceiptBytes,MountedCausalPayload,payload_demands,payload_close};
 use crate::mounted_child_group_receipt::MountedKernelMutationReceiptSource;
+use semio_framework_value::RetainedAllocationEffect;
 use std::collections::VecDeque;
 
 type MemberMutationTriple = (KernelMutation, MutationId, InverseMutation);
@@ -122,7 +123,8 @@ impl MountedMemberReceipt {
     }
     pub fn progress(birth: usize, release: usize) -> RetainedCloneStep { MountedGroupReceipt::progress(birth, release) }
     /// 🧾️ Prebuilds all original forward, framed inverse, and causal owners before publication acknowledgment.
-    pub fn advance(&mut self, source: &MountedMemberReceiptSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, source: &MountedMemberReceiptSource<'_>, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         self.validate(source)?;
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         match self.phase {
@@ -138,9 +140,9 @@ impl MountedMemberReceipt {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: count * 2, ..Default::default() }));
             } let birth = self.next_capacity_byte_demand(source)?; if grant.maximum_capacity_bytes < birth { return Ok(RetainedCloneStep::Progress(Default::default())); } *self.triples = VecDeque::with_capacity(self.operation_count); self.phase = 1; Ok(Self::progress(birth, 0)) }
             1 => { let text = source.publication.prepared_edit_id().unwrap().as_bytes(); let additional = (text.len() - self.edit_offset).min(64); if additional > 0 { if !self.edit.ready_for(additional) { return self.edit.reserve_step(additional, grant); } let step = self.edit.append_step(&text[self.edit_offset..self.edit_offset + additional], grant)?; self.edit_offset += step.progress().copied_bytes; return Ok(step); } self.phase = 2; Ok(Self::progress(0, 0)) }
-            2 => { let encoder = self.inverse_encoder.as_mut().unwrap(); if !encoder.is_complete() { let original = match encoder.operation_index() { Some(index) => Some(source.publication.prepared_operation_wire_source(true, index).ok_or_else(|| Self::refusal("member receipt requires original inverse codec authority"))?), None => None }; return encoder.advance(original, grant); } *self.inverse = encoder.take(grant).unwrap(); self.inverse_encoder = None; self.phase = if self.operation_count == 0 { 5 } else { self.forward = Some(MountedPreparedOperationBytes::new()); 3 }; Ok(Self::progress(0, 0)) }
-            3 => { if self.operation_schema.is_none() { let (entity, kind) = source.publication.prepared_operation_schema_parts(self.index).ok_or_else(|| Self::refusal("member receipt requires its current original operation schema"))?; self.operation_schema = Some([(entity.as_ptr() as usize, entity.len()), (kind.as_ptr() as usize, kind.len())]); } let forward = self.forward.as_mut().unwrap(); if !forward.is_complete() { let original = source.publication.prepared_operation_wire_source(false, self.index).ok_or_else(|| Self::refusal("member receipt requires original forward codec authority"))?; return forward.advance(original, grant); } let causal = source.kernel(self.index, &self.inverse)?; self.kernel = Some(MountedKernelMutationReceipt::new(&causal, forward.take(grant).unwrap())); self.forward = None; self.phase = 4; Ok(Self::progress(0, 0)) }
-            4 => { let causal = source.kernel(self.index, &self.inverse)?; let kernel = self.kernel.as_mut().unwrap(); if !kernel.is_complete() { return kernel.advance(&causal, grant); } self.triples.push_back(kernel.take(grant).unwrap()); self.kernel = None; self.operation_schema = None; self.index += 1; self.phase = if self.index == self.operation_count { 5 } else { self.forward = Some(MountedPreparedOperationBytes::new()); 3 }; Ok(Self::progress(0, 0)) }
+            2 => { let encoder = self.inverse_encoder.as_mut().unwrap(); if !encoder.is_complete() { let original = match encoder.operation_index() { Some(index) => Some(source.publication.prepared_operation_wire_source(true, index).ok_or_else(|| Self::refusal("member receipt requires original inverse codec authority"))?), None => None }; return encoder.advance(original, effect); } *self.inverse = encoder.take(grant).unwrap(); self.inverse_encoder = None; self.phase = if self.operation_count == 0 { 5 } else { self.forward = Some(MountedPreparedOperationBytes::new()); 3 }; Ok(Self::progress(0, 0)) }
+            3 => { if self.operation_schema.is_none() { let (entity, kind) = source.publication.prepared_operation_schema_parts(self.index).ok_or_else(|| Self::refusal("member receipt requires its current original operation schema"))?; self.operation_schema = Some([(entity.as_ptr() as usize, entity.len()), (kind.as_ptr() as usize, kind.len())]); } let forward = self.forward.as_mut().unwrap(); if !forward.is_complete() { let original = source.publication.prepared_operation_wire_source(false, self.index).ok_or_else(|| Self::refusal("member receipt requires original forward codec authority"))?; return forward.advance(original, effect); } let causal = source.kernel(self.index, &self.inverse)?; self.kernel = Some(MountedKernelMutationReceipt::new(&causal, forward.take(grant).unwrap())); self.forward = None; self.phase = 4; Ok(Self::progress(0, 0)) }
+            4 => { let causal = source.kernel(self.index, &self.inverse)?; let kernel = self.kernel.as_mut().unwrap(); if !kernel.is_complete() { return kernel.advance(&causal, effect); } self.triples.push_back(kernel.take(grant).unwrap()); self.kernel = None; self.operation_schema = None; self.index += 1; self.phase = if self.index == self.operation_count { 5 } else { self.forward = Some(MountedPreparedOperationBytes::new()); 3 }; Ok(Self::progress(0, 0)) }
             5 => { let bytes = self.inverse.capacity(); if grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); } drop(std::mem::take(&mut *self.inverse)); self.phase = 6; Ok(Self::progress(0, bytes)) }
             _ => Ok(RetainedCloneStep::Complete(Default::default())),
         }
@@ -183,20 +185,21 @@ impl MountedMemberReceipt {
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth, ..Default::default() })
     }
     /// 🍂️ Retires one exact original physical owner per turn without fractional release credit.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let bytes = self.next_close_byte_demand()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(self.retirement_demands()?,grant){ return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
-        if let Some(owner) = self.kernel.as_mut() { let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if owner.terminal_is_empty() { self.kernel = None; } return Ok(step); }
-        if let Some(owner) = self.forward.as_mut() { let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if owner.terminal_is_empty() { self.forward = None; } return Ok(step); }
-        if let Some(owner) = self.inverse_encoder.as_mut() { let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if owner.terminal_is_empty() { self.inverse_encoder = None; } return Ok(step); }
+        if let Some(owner) = self.kernel.as_mut() { let step = owner.close_step(&mut effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }))?; if owner.terminal_is_empty() { self.kernel = None; } return Ok(step); }
+        if let Some(owner) = self.forward.as_mut() { let step = owner.close_step(&mut effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }))?; if owner.terminal_is_empty() { self.forward = None; } return Ok(step); }
+        if let Some(owner) = self.inverse_encoder.as_mut() { let step = owner.close_step(&mut effect.nested(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }))?; if owner.terminal_is_empty() { self.inverse_encoder = None; } return Ok(step); }
         if self.inverse.capacity() > 0 { drop(std::mem::take(&mut *self.inverse)); return Ok(Self::progress(0, bytes)); }
         if !self.edit.terminal_is_empty() { return Ok(self.edit.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })); }
         if let Some(triple) = self.triples.back_mut() {
             if self.close_field==9{let step=MountedGroupReceipt::close_shared(&mut triple.0.author.0,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant})?;self.close_field+=1;return Ok(step);}
-            let payload=match self.close_field{0..=9=>MountedGroupReceipt::mutation_payload_mut(&mut triple.0,self.close_field),11..=14=>MountedGroupReceipt::inverse_payload_mut(&mut triple.2,self.close_field-11),_=>None};if let Some(payload)=payload{let step=payload_close(payload,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant})?;if payload.retained_bytes().terminal_is_empty(){self.close_field+=1;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+            let payload=match self.close_field{0..=9=>MountedGroupReceipt::mutation_payload_mut(&mut triple.0,self.close_field),11..=14=>MountedGroupReceipt::inverse_payload_mut(&mut triple.2,self.close_field-11),_=>None};if let Some(payload)=payload{let step=payload_close(payload,&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant}))?;if payload.retained_bytes().terminal_is_empty(){self.close_field+=1;}return Ok(RetainedCloneStep::Progress(step.progress()));}
             let ready = match self.close_field { 0..=9 => MountedGroupReceipt::clear_mutation(&mut triple.0, self.close_field), 10 => { MountedGroupReceipt::clear_text(&mut triple.1.0); true }, 11..=14 => MountedGroupReceipt::clear_inverse(&mut triple.2, self.close_field - 11), _ => { self.triples.pop_back(); self.close_field = 0; return Ok(Self::progress(0, 0)); } };
             if ready { self.close_field += 1; }
         } else { drop(std::mem::take(&mut *self.triples)); }

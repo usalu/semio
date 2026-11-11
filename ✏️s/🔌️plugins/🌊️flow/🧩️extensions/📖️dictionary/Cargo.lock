@@ -5466,6 +5466,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-ordered",
+ "semio-framework-value-source-hold",
  "semio-os-kernel-neural-engine",
  "semio-ui-declaration",
  "serde",
@@ -7826,6 +7827,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-job",
  "semio-framework-kernel-identity",
  "semio-framework-schema-composition",
  "semio-framework-value",
@@ -9919,6 +9921,7 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-os-kernel",
  "semio-os-store-operation-wire",
+ "semio-os-store-replay-operation",
 ]
 
 [[package]]

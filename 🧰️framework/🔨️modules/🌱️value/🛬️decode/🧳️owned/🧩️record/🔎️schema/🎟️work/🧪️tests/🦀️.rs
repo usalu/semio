@@ -85,9 +85,10 @@ fn turn(bank:&mut Bank,native:&mut NativeDecodeControl<'_>,matcher:&mut Matcher,
    if let Err(rest)=authority.into_producer(){std::mem::forget(rest)}if outcome.is_err(){std::mem::forget(frame)}outcome?;
   },
   NativeAdvanceSelection::Nested=>{
-   let grant=RetainedCloneGrant{maximum_items:64,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16};
+   let quote=matcher.demands(input,4096,fuel)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth.max(1)};
+   let before=format!("{:?}",matcher.selection()?);
    let polled=bank.run_with_turn(native,|turn,native|Ok(matcher.advance_nested(input,native,turn.witness(),4096,fuel,grant)))?;
-   if let RetainedWorkPoll::Complete(outcome)=polled{outcome.result.map_err(|_|ValueError::invariant("matcher nested action refused"))?;}
+   if let RetainedWorkPoll::Complete(outcome)=polled{let work=outcome.work;let step=outcome.result.map_err(|_|ValueError::invariant("matcher nested action refused"))?;assert!(before!="KeyAcknowledgement"||work>0||step!=RetainedCloneStep::Progress(Default::default()),"admitted acknowledgement made zero progress and charged zero work");trace.steps.push(format!("nested {before} work={work}"));}
   },
  }
  Ok(())

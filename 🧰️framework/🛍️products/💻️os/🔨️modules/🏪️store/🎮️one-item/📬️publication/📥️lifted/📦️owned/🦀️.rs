@@ -13,6 +13,7 @@ pub trait BatchRetirement: Send {
     fn terminal_is_empty(&self) -> bool;
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError>;
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError>;
+    fn work(&self, maximum_body_bytes: usize) -> Result<u64, ValueError>;
 }
 
 impl<T: RetireOwned> BatchRetirement for ControlledRetirement<T> {
@@ -20,6 +21,7 @@ impl<T: RetireOwned> BatchRetirement for ControlledRetirement<T> {
     fn terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
     fn demands(&self, maximum_body_bytes: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: self.next_copy_byte_demand()?, capacity_bytes: self.next_capacity_byte_demand(maximum_body_bytes)?, release_bytes: self.next_release_byte_demand()?, depth: self.next_depth_demand()? }) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { ControlledRetirement::next_copy_byte_demand(self) }
+    fn work(&self, maximum_body_bytes: usize) -> Result<u64, ValueError> { self.next_computational_work(maximum_body_bytes) }
 }
 
 pub type BatchAdmission = semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn BatchRetirement>, RetainedCloneProgress)>, ValueError>;

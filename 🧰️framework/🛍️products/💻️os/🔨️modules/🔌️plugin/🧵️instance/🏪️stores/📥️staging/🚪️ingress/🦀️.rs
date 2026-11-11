@@ -183,10 +183,10 @@ impl<A: ArtifactApp> InstanceStores<A> {
         use semio_framework_job::close_original_retained_step;
         use semio_framework_value::RetainedCloneStep;
         if pins.is_none()&&publication.is_none()&&retirement.is_empty()&&resident.terminal_is_empty(){return Ok(true)}
-        if !*closing&&(!publish||cx.is_cancelled()||publication.as_ref().is_some_and(|owner|owner.published())){let d=RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{*closing=true;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}))?;return Ok(false)}
+        if !*closing&&(!publish||cx.is_cancelled()||publication.as_ref().is_some_and(|owner|owner.published())){let d=RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{*closing=true;semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}))?;return Ok(false)}
         if !*closing&&resident.constructing(){resident.settle(cx)?;return Ok(false)}
         if !*closing{if let Some(owner)=publication.as_mut(){if owner.prepared(){owner.publish(&mut self.store,cx)?;}else{owner.advance(&mut self.store,cx)?;}}else{semio_os_store_engine_replay::repin::OriginalRepinPublication::admit_current(&self.store,pins,cx,publication,resident)?;}return Ok(false)}
-        cx.with_original_retirement(|cx|{let d=self.checkpoint_composition_pins_close_demands(pins,publication,retirement,resident,*closing,body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}if !retirement.is_empty(){let selection=retirement.select(body)?;close_original_retained_step(cx,d,|g|selection.step(g))?;}else if let Some(owner)=publication.as_mut(){if !owner.terminal_is_empty(){owner.close_step(&mut self.store,body,cx)?;}else{close_original_retained_step(cx,d,|_|{*publication=None;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;}}else if pins.is_none()&&!resident.terminal_is_empty(){resident.close_step(cx)?;}else if pins.is_some(){close_original_retained_step(cx,d,|g|{let o=retirement.begin_granted(pins,g);semio_framework_value::RetainedWorkOutcome{result:o.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:o.work}})?;}Ok(pins.is_none()&&publication.is_none()&&retirement.is_empty()&&resident.terminal_is_empty())})
+        cx.with_original_retirement(|cx|{let d=self.checkpoint_composition_pins_close_demands(pins,publication,retirement,resident,*closing,body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}if !retirement.is_empty(){let selection=retirement.select(body)?;semio_framework_job::close_original_effect_step(cx,d,|effect|selection.step(effect))?;}else if let Some(owner)=publication.as_mut(){if !owner.terminal_is_empty(){owner.close_step(&mut self.store,body,cx)?;}else{close_original_retained_step(cx,d,|_|{*publication=None;semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;}}else if pins.is_none()&&!resident.terminal_is_empty(){resident.close_step(cx)?;}else if pins.is_some(){semio_framework_job::close_original_retained_effect_step(cx,d,|effect|retirement.begin_granted(pins,effect).result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;}Ok(pins.is_none()&&publication.is_none()&&retirement.is_empty()&&resident.terminal_is_empty())})
     }
 }
 
@@ -257,16 +257,22 @@ impl<A: ArtifactApp> LocalInteraction<A> {
     /// registry's one-slot-per-step cleanup cursor is bounded by the registry's fixed capacity
     /// and would otherwise put a whole capacity's worth of probes inside a host continuation
     /// budget before a read could publish its terminal reply.
-    pub fn advance_local_interaction_query_one(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, output_width: usize) -> Result<(), Fault> {
+    pub fn advance_local_interaction_query_one(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, output_width: usize, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
         if self.local_interaction_query_receipt.is_some(){return Ok(())}
         let Some(query)=self.local_interaction_query.as_mut()else{return Ok(())};
-        let result=if query.is_closing(){
-            let before=query.retired_bytes();let result=query.close_step(grant.retained_grant());self.local_interaction_retired_bytes+=(query.retired_bytes()-before)as u128;result.map(|step|step.progress())
+        let (progress,failure)=if query.is_closing(){
+            let before=query.retired_bytes();
+            let turn=cx.with_original_effect(grant.retained_grant(),|_,effect|query.close_step(effect)).map_err(|error|plugin_sdk_fault(format!("{error:?}")))?;
+            let result=match turn{Some((poll,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll)},None=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};
+            self.local_interaction_retired_bytes+=(query.retired_bytes()-before)as u128;
+            match result{Ok(step)=>(step.progress(),None),Err(error)=>(error.retained_progress(),Some(error.to_string()))}
         }else{
-            query.advance(grant,output_width).map(|step|{if let semio_plugin_interaction::live::LocalInteractionLiveStep::Advanced{emitted_bytes,retired_bytes,..}=step{self.local_interaction_emitted_bytes+=emitted_bytes as u128;self.local_interaction_retired_bytes+=retired_bytes as u128;}step.progress()})
+            match query.advance(grant,output_width){
+                Ok(step)=>{if let semio_plugin_interaction::live::LocalInteractionLiveStep::Advanced{emitted_bytes,retired_bytes,..}=step{self.local_interaction_emitted_bytes+=emitted_bytes as u128;self.local_interaction_retired_bytes+=retired_bytes as u128;}(step.progress(),None)},
+                Err(error)=>(error.retained_progress(),Some(error.to_string())),
+            }
         };
-        let progress=match &result{Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
         if progress!=Default::default(){self.local_interaction_query_receipt=Some((grant.retained_grant(),progress));}
-        result.map(|_|()).map_err(|error|plugin_sdk_fault(error.to_string()))
+        failure.map_or(Ok(()),|message|Err(plugin_sdk_fault(message)))
     }
 }

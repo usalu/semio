@@ -28,7 +28,7 @@ semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emi
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-os-kernel" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

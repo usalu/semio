@@ -37,6 +37,7 @@ use semio_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 use semio_framework_value::{SharedUtf8, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::RetainedAllocationEffect;
 use std::mem::ManuallyDrop;
 
 trait MountedGroupPreparedChildEdits {
@@ -217,21 +218,22 @@ impl MountedGroupReceipt {
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth, ..Default::default() })
     }
     /// ♻️ Closes one retained causal field per turn and funds every indivisible allocation before taking it.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
-        if self.terminal_is_empty(){return RetainedCloneStep::Complete(Default::default());}
-        let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}if !plugin_grant_funds(self.retirement_demands().expect("fixed receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }self.closing=true;
-        if self.close_phase==0&&self.close_field==9&&self.mutations.last().is_some(){let step=Self::close_shared(&mut self.mutations.last_mut().unwrap().author.0,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant}).expect("funded original shared author lease");self.close_field+=1;return step;}
-        if self.selected_payload().is_some(){let payload=match self.close_phase{0=>Self::mutation_payload_mut(self.mutations.last_mut().unwrap(),self.close_field).unwrap(),2=>Self::inverse_payload_mut(self.inverses.last_mut().unwrap(),self.close_field).unwrap(),_=>unreachable!()};let step=payload_close(payload,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant}).expect("funded canonical group payload layout");if payload.retained_bytes().terminal_is_empty(){self.close_field+=1;}return RetainedCloneStep::Progress(step.progress());}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+        let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }self.closing=true;
+        if self.close_phase==0&&self.close_field==9&&self.mutations.last().is_some(){let step=Self::close_shared(&mut self.mutations.last_mut().unwrap().author.0,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant})?;self.close_field+=1;return Ok(step);}
+        if self.selected_payload().is_some(){let payload=match self.close_phase{0=>Self::mutation_payload_mut(self.mutations.last_mut().unwrap(),self.close_field).unwrap(),2=>Self::inverse_payload_mut(self.inverses.last_mut().unwrap(),self.close_field).unwrap(),_=>unreachable!()};let step=payload_close(payload,&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant}))?;if payload.retained_bytes().terminal_is_empty(){self.close_field+=1;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         match self.close_phase{
             0=>if let Some(mutation)=self.mutations.last_mut(){if self.close_field==10{self.mutations.pop();self.close_field=0;}else if Self::clear_mutation(mutation,self.close_field){self.close_field+=1;}}else{drop(std::mem::take(&mut *self.mutations));self.close_phase+=1;},
             1=>if let Some(id)=self.undo_ids.last_mut(){Self::clear_text(&mut id.0);self.undo_ids.pop();}else{drop(std::mem::take(&mut *self.undo_ids));self.close_phase+=1;},
             2=>if let Some(inverse)=self.inverses.last_mut(){if self.close_field==4{self.inverses.pop();self.close_field=0;}else if Self::clear_inverse(inverse,self.close_field){self.close_field+=1;}}else{drop(std::mem::take(&mut *self.inverses));self.close_phase+=1;},
             3=>if let Some(edit)=self.member_edits.last_mut(){Self::clear_text(&mut edit.edit_id);self.member_edits.pop();}else{drop(std::mem::take(&mut *self.member_edits));self.close_phase+=1;},
             4=>if let Some(id)=self.command_children.last_mut(){Self::clear_text(id);self.command_children.pop();}else{drop(std::mem::take(&mut *self.command_children));self.close_phase+=1;},
-            5..=8=>{let owner=match self.close_phase{5=>&mut self.invocation,6=>&mut self.parent,7=>&mut self.child,_=>&mut self.edit};let step=owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });if owner.terminal_is_empty(){self.close_phase+=1;}return step;},
+            5..=8=>{let owner=match self.close_phase{5=>&mut self.invocation,6=>&mut self.parent,7=>&mut self.child,_=>&mut self.edit};let step=owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant });if owner.terminal_is_empty(){self.close_phase+=1;}return Ok(step);},
             _=>{}
         }
-        Self::progress(0,bytes)
+        Ok(Self::progress(0,bytes))
     }
     pub fn terminal_is_empty(&self)->bool{self.transferred||(self.close_phase==9&&self.mutations.is_empty()&&self.mutations.capacity()==0&&self.undo_ids.is_empty()&&self.undo_ids.capacity()==0&&self.inverses.is_empty()&&self.inverses.capacity()==0&&self.member_edits.is_empty()&&self.member_edits.capacity()==0&&self.command_children.is_empty()&&self.command_children.capacity()==0&&self.invocation.terminal_is_empty()&&self.parent.terminal_is_empty()&&self.child.terminal_is_empty()&&self.edit.terminal_is_empty())}
 

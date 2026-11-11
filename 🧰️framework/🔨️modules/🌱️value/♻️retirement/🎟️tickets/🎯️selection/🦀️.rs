@@ -27,20 +27,20 @@ impl<T:ErasedSnapshotRetirement+?Sized> RetirementSelection<'_,T>{
  pub fn step(self,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   let grant=match self.admitted(effect){Ok(Some(grant))=>grant,Ok(None)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}),Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
   let mut selected=match effect.reborrow(grant,effect.maximum_work_units()){Ok(effect)=>effect,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
-  match self.owner{Owner::Cursor(owner)=>owner.close_step(self.body,&mut selected),Owner::Ticket(owner)=>close_factory_ticket(owner,self.body,&mut selected)}
+  match self.owner{Owner::Cursor(owner)=>crate::close_owner(owner,self.body,&mut selected),Owner::Ticket(owner)=>close_factory_ticket(owner,self.body,&mut selected)}
  }
  /// 🪪️ Forwards the genuine original recipient and the same physical marker.
  pub fn step_controlled(self,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn OriginalRetirementControl)->OriginalRetirementPoll{
   match self.birth(control){Ok(None)=>{},Ok(Some(_))=>return super::skipped_birth(),Err(error)=>return super::birth_refusal(error)}
   let grant=match self.admitted(effect){Ok(Some(grant))=>grant,Ok(None)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}),Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
   let mut selected=match effect.reborrow(grant,effect.maximum_work_units()){Ok(effect)=>effect,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
-  match self.owner{Owner::Cursor(owner)=>if owner.requires_original_control(){owner.close_step_controlled(self.body,&mut selected,control)}else{owner.close_step(self.body,&mut selected)},Owner::Ticket(owner)=>close_factory_ticket_controlled(owner,self.body,&mut selected,control)}
+  match self.owner{Owner::Cursor(owner)=>crate::close_owner_controlled(owner,self.body,&mut selected,control),Owner::Ticket(owner)=>close_factory_ticket_controlled(owner,self.body,&mut selected,control)}
  }
  /// 🧵️ Forwards this selected action through its exact original decoder loan.
  pub fn step_original(self,effect:&mut crate::RetainedAllocationEffect<'_>,original:&mut crate::OriginalRetirementCloseLoan<'_>)->OriginalRetirementPoll{
   match self.birth(original){Ok(None)=>{},Ok(Some(_))=>return super::skipped_birth(),Err(error)=>return super::birth_refusal(error)}
   let grant=match self.admitted(effect){Ok(Some(grant))=>grant,Ok(None)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}),Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
   let mut selected=match effect.reborrow(grant,effect.maximum_work_units()){Ok(effect)=>effect,Err(error)=>return RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})};
-  match self.owner{Owner::Ticket(owner)=>crate::close_factory_ticket_original(owner,original,self.body,&mut selected),Owner::Cursor(owner)=>if owner.requires_original_control(){owner.close_original_step(original,self.body,&mut selected)}else{owner.close_step(self.body,&mut selected)}}
+  match self.owner{Owner::Ticket(owner)=>crate::close_factory_ticket_original(owner,original,self.body,&mut selected),Owner::Cursor(owner)=>if owner.requires_original_control(){crate::close_owner_original(owner,original,self.body,&mut selected)}else{crate::close_owner(owner,self.body,&mut selected)}}
  }
 }

@@ -941,6 +941,10 @@ impl protocol::ColdDiffAlgebra<Fem3dSnapshotValue> for Fem3dDiff {
 }
 //#endregion 🔖️Apply
 
+protocol::retained_empty_option_patch!(Fem3dMaterialPatch { name, e, g, nu, rho });
+protocol::retained_empty_option_patch!(Fem3dNodePatch { x, y, z });
+protocol::retained_empty_option_patch!(Fem3dSectionPatch { name, area, iy, iz, j });
+protocol::retained_empty_option_patch!(Fem3dSolidPatch { name, outline, holes, base_z, height, layers, axis, material_id, mesh_size });
 protocol::retained_row_patch!(pub retained_material_fields for Fem3dMaterialPatch => FemMaterialValue {name:String,e:f64,g:f64,nu:f64,rho:f64});
 protocol::retained_row_patch!(pub retained_node_fields for Fem3dNodePatch => FemNodeValue {x:f64,y:f64,z:f64});
 protocol::retained_row_patch!(pub retained_section_fields for Fem3dSectionPatch => FemSection {name:String,area:f64,iy:f64,iz:f64,j:f64});

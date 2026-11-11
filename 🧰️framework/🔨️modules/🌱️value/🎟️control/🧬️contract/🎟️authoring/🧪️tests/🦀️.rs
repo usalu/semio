@@ -54,3 +54,14 @@ fn the_shared_corpus_settles_identically_through_the_authoring_wallet(){
   assert!(done.output,"{}",case["name"]);assert_eq!(done.performed,performed,"{}",case["name"]);assert!(done.performed<=u128::from(maximum));assert_eq!(wallet.remaining_work(),100-performed,"{}",case["name"]);
  }
 }
+#[test]
+fn an_overshooting_child_still_pays_the_reply_handoff(){
+ let(grant,maximum)=invocation_extent(stock(),2).unwrap();
+ for spend in [2u64,3,5]{
+  let remaining=100u128;let mut authority=OriginalWorkAuthority::new(AuthoringDriver);let mut spent=0u128;
+  let settled=authority.with_loan(&mut AuthoringContext{remaining:&remaining},|loan|{let mut loan=loan.reborrow();let mut work=OriginalWork::empty();work.recipient=Some(&mut loan);run_original_effect(&mut work,grant,maximum,&mut spent,|effect|invoke_original(effect,Some((stock(),2)),|inner|inner.performed(spend)))});
+  assert!(!authority.has_live_actions());
+  let expected=u128::from(spend)+u128::from(ORIGINAL_INVOCATION_WORK);
+  if spend<=2{assert_eq!(settled.unwrap().unwrap().unwrap().performed,expected)}else{assert!(settled.unwrap().is_err());assert_eq!(spent,expected)}
+ }
+}

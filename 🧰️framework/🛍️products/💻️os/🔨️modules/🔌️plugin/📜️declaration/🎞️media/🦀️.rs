@@ -38,14 +38,32 @@ pub const ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES: usize = 33_554_432;
 
 pub const ARTIFACT_OUTPUT_METADATA_BYTES: usize = 4_096;
 
+/// 🔗️ A gated shared inner retires through its payload; its cloneable handle retires as one Arc lease.
+macro_rules! gated_arc_owner{($handle:ty,$arc:ident,$inner:ty,$gate:ident,$payload:ty)=>{
+    impl semio_framework_value::retirement::RetireOwned for $inner{
+        type RetirementCursor=<$payload as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+        fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.$gate.into_inner())}
+        fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&*self.$gate.try_lock().ok()?)}
+        fn controlled_retirement_supported()->bool{<$payload as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
+    }
+    impl semio_framework_value::retirement::RetireOwned for $handle{
+        type RetirementCursor=semio_framework_value::retirement::arc_custody::ArcLeaseRetirement<$inner>;
+        fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::arc_custody::ArcLeaseRetirement::lease(self.$arc)}
+        fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::arc_custody::ArcLeaseRetirement<$inner>>())}
+        fn controlled_retirement_supported()->bool{<$inner as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
+    }
+}}
+
 const ARTIFACT_SEGMENTED_HANDLE_ENCODING: &str = "semio-segmented-handle-v1";
 
 #[derive(Debug)]
-struct ArtifactOutputChunksState {
+#[doc(hidden)]
+pub struct ArtifactOutputChunksState {
     chunks: ArtifactFixedQueue<Vec<u8>>,
 }
 
-struct ArtifactOutputChunksInner {
+#[doc(hidden)]
+pub struct ArtifactOutputChunksInner {
     state: semio_framework_value::retirement::controlled::RetainedOwnerGate<ArtifactOutputChunksState>,
     bytes: std::sync::atomic::AtomicUsize,
     bytes_remaining: std::sync::atomic::AtomicUsize,
@@ -62,19 +80,13 @@ pub struct ArtifactOutputChunks {
     inner: std::sync::Arc<ArtifactOutputChunksInner>,
 }
 
-impl semio_framework_value::retirement::RetireOwned for ArtifactOutputChunksInner{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{
-        self.state.into_inner().chunks.items.retirement()
-    }
-    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.state.try_lock().ok()?.chunks.items)}
+impl semio_framework_value::retirement::RetireOwned for ArtifactOutputChunksState{
+    type RetirementCursor=<std::collections::VecDeque<Vec<u8>> as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.chunks.items)}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.chunks.items)}
     fn controlled_retirement_supported()->bool{<std::collections::VecDeque<Vec<u8>> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
-
-impl semio_framework_value::retirement::RetireOwned for ArtifactOutputChunks{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.inner))}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactOutputChunksInner>>())}
-    fn controlled_retirement_supported()->bool{<ArtifactOutputChunksInner as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
-}
+gated_arc_owner!(ArtifactOutputChunks,inner,ArtifactOutputChunksInner,state,ArtifactOutputChunksState);
 
 impl std::fmt::Debug for ArtifactOutputChunks {
     fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{formatter.debug_struct("ArtifactOutputChunks").field("bytes",&self.bytes()).field("remaining",&self.chunks_remaining()).field("maximum",&self.inner.maximum).finish_non_exhaustive()}
@@ -304,18 +316,11 @@ pub struct ArtifactMediaExportCompletion {
 }
 
 #[derive(Default,semio_framework_value::RetireOwned)]
-struct ArtifactMediaExportCompletionSlot{value:Option<Result<ArtifactMediaExportResult,MediaError>>}
-struct ArtifactMediaExportCompletionInner{state:semio_framework_value::retirement::controlled::RetainedOwnerGate<ArtifactMediaExportCompletionSlot>}
-impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCompletionInner{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.state.into_inner())}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&*self.state.try_lock().ok()?)}
- fn controlled_retirement_supported()->bool{<ArtifactMediaExportCompletionSlot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
-}
-impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCompletion{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.inner))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactMediaExportCompletionInner>>())}
- fn controlled_retirement_supported()->bool{<ArtifactMediaExportCompletionInner as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
-}
+#[doc(hidden)]
+pub struct ArtifactMediaExportCompletionSlot{value:Option<Result<ArtifactMediaExportResult,MediaError>>}
+#[doc(hidden)]
+pub struct ArtifactMediaExportCompletionInner{state:semio_framework_value::retirement::controlled::RetainedOwnerGate<ArtifactMediaExportCompletionSlot>}
+gated_arc_owner!(ArtifactMediaExportCompletion,inner,ArtifactMediaExportCompletionInner,state,ArtifactMediaExportCompletionSlot);
 
 impl ArtifactMediaExportCompletion {
     pub fn original_birth_admit(receiving:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -345,7 +350,8 @@ impl ArtifactMediaExportCompletion {
 
 }
 
-struct ArtifactMediaExportCreditState {
+#[doc(hidden)]
+pub struct ArtifactMediaExportCreditState {
     writer: semio_framework_value::retirement::controlled::RetainedOwnerGate<()>,
     bytes: std::sync::atomic::AtomicUsize,
     exceeded: std::sync::atomic::AtomicBool,
@@ -359,16 +365,7 @@ pub struct ArtifactMediaExportCredit {
     state: std::sync::Arc<ArtifactMediaExportCreditState>,
 }
 
-impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCreditState{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(())}
- fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&())}
- fn controlled_retirement_supported()->bool{<() as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
-}
-impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportCredit{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.state))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ArtifactMediaExportCreditState>>())}
- fn controlled_retirement_supported()->bool{<ArtifactMediaExportCreditState as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
-}
+gated_arc_owner!(ArtifactMediaExportCredit,state,ArtifactMediaExportCreditState,writer,());
 
 impl ArtifactMediaExportCredit {
     pub fn original_birth_admit(maximum:usize,receiving:&mut Option<Self>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
@@ -448,7 +445,8 @@ impl ArtifactMediaExportHandle {
 }
 
 impl semio_framework_value::retirement::RetireOwned for ArtifactMediaExportHandle {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.parent_document_id)}
+    type RetirementCursor=<String as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::retirement::RetireOwned::retirement_seed(self.parent_document_id)}
     fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.parent_document_id)}
     fn controlled_retirement_supported()->bool{<String as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }

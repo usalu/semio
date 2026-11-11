@@ -10,7 +10,7 @@ use semio_os_mcp_bridge_codec::bridge::{BridgeFlags, BridgeInstanceRef, ShellToG
 use semio_os_mcp_catalog::catalog::Catalog;
 use semio_os_mcp_foundation::base64_codec::encode_base64;
 use semio_os_mcp_foundation::reports::RevisionStamp;
-use semio_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, InferenceCancel, MutationOrigin, PreparedOps};
+use semio_os_mcp_port::channel_port::{exchange_blocking, AppCommand, AppFrame, ArtifactChannel, Fault, InferCommand, InferenceCancel, MutationOrigin, PreparedOps};
 use semio_os_mcp_port::policy::AgentPrincipal;
 
 /// 🧪️ Reads a committed fixture from the package directory at run time instead of embedding it in the test binary.

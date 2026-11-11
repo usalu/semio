@@ -122,7 +122,7 @@ impl<T:RetainedClone> IndexedCollectionCommit<T>{
   if !self.closing{return Err(invalid());}
   if self.advance_route.is_some()||self.copy_reply.is_some(){return Err(ValueError::invariant("indexed collection commit advance must settle before close"))}
   let identity=invocation_identity(effect,recover)?;
-  if recover{let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.2!=body||key.3.is_some(){return Err(ValueError::invariant("indexed collection commit close recovery changed its invocation or body"))}return self.close_invoke(key.1,true,key,body,effect,reply)}
+  if recover{let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.3.is_some(){return Err(ValueError::invariant("indexed collection commit close recovery changed its invocation"))}return self.close_invoke(key.1,true,key,key.2,effect,reply)}
   if self.close_route.is_some(){return Err(ValueError::invariant("indexed collection commit close requires recovery"))}
   if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
   let grant=effect.grant();let demand=self.close_demand(body)?;if !retained_clone_grant_admits(grant,demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}

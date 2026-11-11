@@ -133,19 +133,19 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     fn poll_step(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result}}
     fn close_one_original(&mut self,cx:&mut StepContext<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         let grant=effect.grant();
-        if !self.publication.terminal_is_empty(){return Self::controlled_close_step(semio_plugin_ownership::bounded_ownership::plugin_grant_step(effect,|grant|self.publication.close_step(grant)))}
-        if !self.fault_publication.terminal_is_empty(){return Self::controlled_close_step(semio_plugin_ownership::bounded_ownership::plugin_grant_step(effect,|grant|self.fault_publication.close_step(grant)))}
+        if !self.publication.terminal_is_empty(){return Self::controlled_close_step(self.publication.close_step(effect).result)}
+        if !self.fault_publication.terminal_is_empty(){return Self::controlled_close_step(self.fault_publication.close_step(effect).result)}
         if let Some(cursor)=self.checkpoint_capture.as_mut().filter(|cursor|!cursor.terminal_is_empty()){return Self::controlled_close_step(semio_plugin_ownership::bounded_ownership::plugin_unit_step(effect,|grant|cursor.close_step(grant)))}
         if self.checkpoint_capture.is_some()||self.pending_publication.is_some()||self.publication_delivered{self.checkpoint_capture.take();self.pending_publication=None;self.publication_delivered=false;self.checkpoint_pending=false;return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
         if let Some(fault)=self.fault.take(){match ControlledRetirement::new(fault){Ok(owner)=>self.fault_retirement=Some(owner),Err((error,original))=>{self.fault=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
-        if let Some(owner)=self.fault_retirement.as_mut(){if owner.terminal_is_empty(){self.fault_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(Self::poll_step(owner.step(effect)))}
+        if let Some(owner)=self.fault_retirement.as_mut(){if owner.terminal_is_empty(){self.fault_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(Self::poll_step(owner.step(grant.maximum_copy_bytes,effect)))}
         if self.decode_error.is_some(){return Self::controlled_close_step(semio_plugin_ownership::bounded_ownership::plugin_unit_step(effect,|grant|replication::close_protocol_error_one(&mut self.decode_error,grant)))}
         if self.admission_refusal.take().is_some(){return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
         if let Some(work)=self.work.as_mut().filter(|work|work.retains_original_wire()){return Ok(match work.close_step(cx)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step});}
         if self.raw.capacity()!=0{let bytes=self.raw.capacity();drop(std::mem::take(&mut self.raw));return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
         for input in[&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){if owner.terminal_is_empty(){input.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Ok(match semio_plugin_ownership::bounded_ownership::plugin_unit_step(effect,|grant|owner.close_step(grant))?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}
         if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
-        if let Some(owner)=self.download_retirement.as_mut(){if owner.terminal_is_empty(){self.download_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(Self::poll_step(owner.step(effect)))}
+        if let Some(owner)=self.download_retirement.as_mut(){if owner.terminal_is_empty(){self.download_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(Self::poll_step(owner.step(grant.maximum_copy_bytes,effect)))}
         if let Some(emit)=self.emit.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let outcome=emit.close_child_original(&mut effect.nested(child));return match outcome.map_err(|failure|semio_framework_job::OriginalTurnFailure::from(failure.debit_original(cx)))?{Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress)|semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),Some(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Blocked{..}|semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::AwaitingInput{..})=>Ok(InteractiveJobCloseStep::Blocked),None=>Err(Self::unadmitted_input().into())}}
         if self.ephemeral.is_some(){return Err(Self::unadmitted_input().into())}
         if let Some(work)=self.work.as_mut(){if !work.terminal_is_empty(){return Ok(match work.close_step(cx)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}let bytes=work.terminal_frame_release_bytes().ok_or_else(Self::unadmitted_input)?;self.work.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
@@ -161,7 +161,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             else if self.context.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context,&mut self.input_retirement,effect))}else if self.producer_controller_id.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_controller_id,&mut self.input_retirement,effect))}else if self.producer_tool_id.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_tool_id,&mut self.input_retirement,effect))}else if self.producer_payload_schema_id.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_payload_schema_id,&mut self.input_retirement,effect))}else if self.producer_window_config.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_window_config,&mut self.input_retirement,effect))}else if self.producer_instance_operation_owner.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_instance_operation_owner,&mut self.input_retirement,effect))}else if self.producer_output_chunks.is_some(){Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.producer_output_chunks,&mut self.input_retirement,effect))}else{None};
         if let Some(step)=admitted{return Self::controlled_close_step(step.result)}
         if let Some(completion)=self.completion.take(){match ControlledRetirement::new(completion){Ok(owner)=>self.completion_retirement=Some(owner),Err((error,original))=>{self.completion=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
-        if let Some(owner)=self.completion_retirement.as_mut(){if owner.terminal_is_empty(){self.completion_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(Self::poll_step(owner.step(effect)))}
+        if let Some(owner)=self.completion_retirement.as_mut(){if owner.terminal_is_empty(){self.completion_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(Self::poll_step(owner.step(grant.maximum_copy_bytes,effect)))}
         Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
     }
     pub fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
@@ -313,13 +313,13 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     fn retire_publication(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
         if !self.publication.terminal_is_empty() {
             let grant=cx.retained_grant();
-            let step=self.publication.close_step(grant).result;
+            let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.publication.close_step(effect).result);
             Self::receive_step(cx,step)?;
             return Ok(());
         }
         if !self.fault_publication.terminal_is_empty() {
             let grant=cx.retained_grant();
-            let step=self.fault_publication.close_step(grant).result;
+            let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.fault_publication.close_step(effect).result);
             Self::receive_step(cx,step)?;
             return Ok(());
         }
@@ -606,7 +606,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
             ArtifactRetainedCommandPhase::Publish => {
                 cx.set_stage("retained-command-publish");
                 if let Some(emit) = self.emit.as_mut() {
-                    let outcome=emit.prepare_child_original(cx.retained_grant());cx.consume_fuel(outcome.work);let step=outcome.result.map_err(|failure|semio_framework_job::OriginalTurnFailure::from(failure.debit_original(cx)))?;
+                    let grant=cx.retained_grant();let Some((result,performed))=cx.with_original_effect(grant,|_,effect|emit.prepare_child_original(effect))? else{return Ok(None)};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));let step=result.map_err(|failure|semio_framework_job::OriginalTurnFailure::from(failure.debit_original(cx)))?;
                     let progress=step.progress();
                     cx.consume_retained(progress)?;
                     match step {

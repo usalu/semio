@@ -145,7 +145,7 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
     let canonical=self.canonical.as_mut().ok_or_else(||invalid("original JSON canonical cursor is absent"))?;let wire=&self.wire;let offset=&mut self.offset;let faulted=&mut self.faulted;let phase_slot=&mut self.phase;
     Self::local(&mut self.action,&mut self.local_authority,control,d,g,q,maximum_work_units,8,|_,effect|{
      let mut bytes=[0;64];let step=match canonical.advance(&mut bytes,&mut effect.nested(canonical_child)){Ok(step)=>step,Err(e)=>return Complete(RetainedWorkOutcome{result:Err(e),work:0})};let work=u128::from(canonical.last_turn_work());
-     if step.written_bytes==0&&matches!(&step.ownership,RetainedCloneStep::Progress(p) if *p==RetainedCloneProgress::default()){eprintln!("[DEBUG] mutapply5 zero canonical step cursor={:?} child={canonical_child:?} grant={:?} work={:?}",canonical.next_demand(),effect.grant(),effect.remaining_work_units());return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work})}
+     if step.written_bytes==0&&matches!(&step.ownership,RetainedCloneStep::Progress(p) if *p==RetainedCloneProgress::default()){return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work})}
      let result=(||{let input=wire.as_ref().ok_or_else(||invalid("original JSON wire is absent"))?.borrow()?;let next=offset.checked_add(step.written_bytes).ok_or_else(||invalid("original JSON canonical offset overflow"))?;let equal=input.get().get(*offset..next)==Some(&bytes[..step.written_bytes]);*offset=next;let mut p=step.ownership.progress();p.copied_bytes=p.copied_bytes.checked_add(step.written_bytes+size_of::<usize>()).ok_or_else(||invalid("original JSON canonical receipt overflow"))?;if !equal||canonical.is_complete()&&*offset!=input.get().len(){*faulted=true;p.copied_bytes+=size_of::<Phase>();return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original JSON operation is not canonically encoded").with_retained_progress(p));}if canonical.is_complete(){*phase_slot=Phase::Ready;}Ok(RetainedCloneStep::Progress(p))})();
      Complete(RetainedWorkOutcome{result,work})
     })?
@@ -167,6 +167,16 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   if let Some(source)=self.typed_source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>>())}else{source.next_take_demand(body)}}
   if self.authority.is_some(){return Ok(FactoryOwnedSourceAuthority::<M>::transfer_original_demand())}
   Err(invalid("original JSON owned handoff lost its unique authority"))
+ }
+ /// ⛽️ Quotes the exact work of the next owned handoff turn; the canonical cursor keeps its whole turn ceiling.
+ pub fn take_owned_work_demand(&self,body:usize,ceiling:u64)->Result<u64,ValueError>{
+  self.take_owned_demands(body)?;
+  if !self.taking_owned{return Ok(1)}
+  if let Some(canonical)=self.canonical.as_ref(){return Ok(if canonical.terminal_is_empty(){1}else{ceiling})}
+  if let Some(output)=self.output.as_ref(){return if output.terminal_is_empty(){Ok(1)}else{output.close_work_demand(body)}}
+  if let Some(projection)=self.canonical_projection.as_ref(){return if projection.terminal_is_empty(){Ok(1)}else{projection.close_work_demand(body)}}
+  if let Some(source)=self.typed_source.as_ref(){return if source.terminal_is_empty(){Ok(1)}else{source.next_take_work_demand(body)}}
+  Ok(1)
  }
  pub fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let started=effect.performed_work();let result=self.take_owned_turn(output,control,body,effect);RetainedWorkOutcome{result,work:effect.performed_work().saturating_sub(started)}}
  fn take_owned_turn(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{

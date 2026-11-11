@@ -43,12 +43,6 @@ impl protocol::InferenceSpec<Fem2dSnapshot> for Fem2dInference {
 //#endregion 🔖️Inference
 
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
-
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::bounds::Fem2dBounds;

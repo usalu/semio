@@ -86,6 +86,11 @@ impl OriginalJobFixtureCaller{
         let debit=self.spent.checked_add(receipt).and_then(|total|{self.spent=total;if total.fits(self.stock)&&receipt.fits(grant){Ok(())}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture source close exceeds initiating stock").with_retained_progress(receipt))}});
         match(result,debit){(Ok(step),Ok(()))=>Ok(if self.parent.is_none(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())}),(Err(original),Ok(()))=>Err(original.into()),(Ok(_),Err(original))=>Err(original.into()),(Err(original),Err(refusal))=>{let mut failure=OriginalTurnFailure::from(original);failure.receipt_refusal=Some(refusal);Err(failure)}}
     }
+    /// 🎯️ Closes every root with one grant per step equal to the exact quote of that step's own retirement demand.
+    pub fn retire_exact(mut self)->usize{
+        let mut turns=0;while !self.terminal_is_empty(){let d=self.retirement_demands().expect("original fixture root close quote");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};let step=self.retire_step(grant).expect("original fixture source-root close");assert!(step.progress().fits(grant),"original fixture root close exceeded its exact quote");turns+=1;assert!(turns<=64,"original fixture root closure exhausted its initiating authority");}
+        if self.audit{assert_eq!(self.spent.retained_capacity_bytes,self.spent.released_bytes,"every retained byte is released by its receipted close")}else{assert_eq!(self.roots_released,self.born,"the receipted close releases every born root")};self.roots_released
+    }
     pub fn retire(mut self,source:RetainedCloneGrant)->usize{
         let mut turns=0;while !self.terminal_is_empty(){let step=self.retire_step(source).expect("original fixture source-root close");assert!(step.progress().fits(source));turns+=1;assert!(turns<=64,"original fixture root closure exhausted its initiating authority");}if self.audit{assert_eq!(self.spent.retained_capacity_bytes,self.spent.released_bytes,"every retained byte is released by its receipted close")}else{assert_eq!(self.roots_released,self.born,"the receipted close releases every born root")};self.roots_released
     }

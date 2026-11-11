@@ -57,6 +57,15 @@ impl OriginalConstructionAdmission{
  fn release_authority(&mut self){if let Some(authority)=self.authority.take(){if let Err(authority)=authority.into_producer().map(drop){self.authority=Some(authority)}}}
  pub fn pending_recovery(&mut self)->Option<&mut semio_framework_value_native_owned::native_decoding::NativeReceivingEffect>{self.frame.pending_recovery()}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.authority.is_none()&&self.source.is_none()&&self.child.is_none()&&!self.complete&&!self.failed_taken&&self.frame.phase()==semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty}
+ /// 📏️ Quotes exactly the metadata move the next [`Self::close_step`] performs, branch for branch.
+ pub fn close_demand(&self)->RetirementDemand{
+  let step=|copy_bytes:usize|RetirementDemand{copy_bytes,depth:1,..Default::default()};
+  if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.has_failure()&&!self.failed_taken{return step(0)}
+  if self.source.is_some()||self.child.is_some(){return step(std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child))}
+  if self.authority.is_some(){return step(std::mem::size_of_val(&self.authority))}
+  if self.binding.is_some()||self.complete||self.failed_taken{return step(std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>())}
+  Default::default()
+ }
  /// ♻️ Retires settled control metadata without starting another semantic constructor.
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.has_failure()&&!self.failed_taken{return Ok(false)}if self.source.is_some()||self.child.is_some(){let bytes=std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child);if construction_metadata(cx,bytes,2)?{self.source=None;self.child=None}return Ok(false)}if self.authority.is_some(){if !construction_metadata(cx,std::mem::size_of_val(&self.authority),1)?{return Ok(false)}self.release_authority();if self.authority.is_some(){return Err(ValueError::invariant("constructor authority still owns an action").into())}}if self.binding.is_some()||self.complete||self.failed_taken{if !construction_metadata(cx,std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>(),3)?{return Ok(false)}self.binding=None;self.complete=false;self.failed_taken=false}Ok(true)}
  /// 📤️ Transfers all original causes only to the caller's actual empty destination.
@@ -113,6 +122,32 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
  Ok(if admission.has_failure(){OriginalConstructionStatus::Failed}else{OriginalConstructionStatus::Pending})
 }
 
+/// 🧭️ Drives bind, construct and settle as far as this turn allows over the caller's resident admission and output: `Ok(true)` when settled, `Ok(false)` when the next turn must continue with the same admission and output; a quote above the operation ceiling is a typed refusal. A turn commits only when it funds the exact quote of the constructor plus its settle metadata, so both then finish in the same turn.
+pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admission:&mut OriginalConstructionAdmission,output:&mut Option<O>,demand:OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_, '_>,&mut Option<usize>)->semio_framework_value_retained_clone::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{
+ let mut construct=Some(construct);
+ let(complete,total)=original_construction_reserve::<O>(demand,work)?;
+ let(overhead_items,overhead_copy,overhead_fuel)=original_construction_settle_overhead();let settle=OriginalConstructionDemand{items:complete.items+overhead_items,copy_bytes:complete.copy_bytes+overhead_copy,..complete};let fuel_floor=total+overhead_fuel;
+ let(ceiling,ceiling_fuel)=context.original_turn_ceiling();
+ if !settle.fits(ceiling)||fuel_floor>ceiling_fuel{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction quote exceeds the largest grant any turn can have").into())}
+ let mut committed=false;
+ loop{
+  if output.is_some()&&admission.terminal_is_empty(){return Ok(true)}
+  if output.is_none()&&!admission.terminal_is_empty(){
+   if !committed&&(context.retirement_should_yield()||context.fuel_remaining()<fuel_floor||!settle.fits(context.retained_grant())){return Ok(false)}
+   committed=true;
+  }
+  let fuel=context.fuel_remaining();
+  let status=admit_original_construction(context,output,admission,demand,work,|scope,actual|match construct.take(){
+   Some(construct)=>construct(scope,actual),
+   None=>semio_framework_value_retained_clone::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original constructor ran twice")),work:0},
+  })?;
+  match status{
+   OriginalConstructionStatus::Ready=>{admission.reset_step(context)?;return Ok(true)}
+   OriginalConstructionStatus::Failed=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction failed; its complete causes remain in the admission").into()),
+   OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{return Ok(false)},
+  }
+ }
+}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

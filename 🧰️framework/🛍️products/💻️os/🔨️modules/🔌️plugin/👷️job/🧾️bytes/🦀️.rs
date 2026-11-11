@@ -9,7 +9,8 @@ pub fn demands(raw:&Vec<u8>,operation:&Option<Operation>)->RetirementDemand{
 }
 
 #[doc(hidden)]
-pub fn close(raw:&mut Vec<u8>,operation:&mut Option<Operation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+pub fn close(raw:&mut Vec<u8>,operation:&mut Option<Operation>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let grant=effect.grant();semio_framework_value::RetirementPollExit::settle(effect,close_granted(raw,operation,grant).map_err(Into::into))}
+fn close_granted(raw:&mut Vec<u8>,operation:&mut Option<Operation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
  let empty=RetainedCloneProgress::default();
  let demand=demands(raw,operation);
  if demand==RetirementDemand::default(){return Ok(RetainedCloneStep::Complete(empty))}

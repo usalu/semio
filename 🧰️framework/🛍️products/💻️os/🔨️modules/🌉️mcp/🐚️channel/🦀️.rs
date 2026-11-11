@@ -482,7 +482,7 @@ impl ArtifactChannel for ShellArtifactChannel {
         Ok(resolved)
     }
 
-    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+    async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         if commands.len() != 1 {
             return Err(fault("channel.not-wired", format!("the shell route sends exactly one command per exchange, received {}", commands.len())));
         }

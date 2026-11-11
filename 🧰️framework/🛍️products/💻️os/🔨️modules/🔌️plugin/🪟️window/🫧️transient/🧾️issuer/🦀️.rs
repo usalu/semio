@@ -1,7 +1,7 @@
 //! 🧾️ Captured Window mutations retain the exact registered typed retirement issuer through original publication.
 use super::*;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction};
+use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand};
 use std::any::Any;
 
 trait ErasedWindowMutationIssuer:semio_framework_value::FactoryRetirement{
@@ -38,9 +38,10 @@ impl WindowTransientSnapshot{
         let demand=self.original_mutation_demands::<O>()?;
         if input.is_none()||output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Window mutation requires its retained input and empty destination").into());}
         let factory=self.mutation_issuer.factory::<O::Mutation>()?;
-        admit_original_construction(cx,output,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},|_|{
+        semio_framework::action_bus::admit_original_construction_settled(cx,&mut Default::default(),output,OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},1,|_,actual|{
             let value=WindowTransientMutation::from_issued(self.window_id.clone(),self.window_kind_id,input.take().expect("original Window mutation remains owned"),factory.clone());
             let capacity=value.window_id.capacity()+size_of::<O::Mutation>()+size_of::<FactoryBoxedValue<O::Mutation>>();
+            if capacity!=0&&actual.is_none(){*actual=Some(capacity)}
             semio_framework_value::RetainedWorkOutcome{result:Ok((value,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:capacity,..Default::default()})),work:1}
         })?;
         Ok(output.is_some())

@@ -15,7 +15,7 @@ use semio_os_mcp_foundation::clock::now_ms;
 use semio_os_mcp_foundation::errors::GatewayErrorCode;
 use semio_os_mcp_hub_remote::remote::{AuthorizedDescriptorSnapshot, HubRemoteBinding};
 use semio_os_mcp_plugin_runtime::plugin_binding_and_activation::WorkspaceOrigin;
-use semio_os_mcp_port::channel_port::{AppCommand, AppFrame, ArtifactChannel, ArtifactDocumentBinding, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, InferCommand, InferenceCancel, VIEWER_READ_ONLY_FAULT_CODE};
+use semio_os_mcp_port::channel_port::{exchange_blocking, AppCommand, AppFrame, ArtifactChannel, ArtifactDocumentBinding, Fault, HUB_EDIT_UNBOUND_FAULT_CODE, InferCommand, InferenceCancel, VIEWER_READ_ONLY_FAULT_CODE};
 use semio_os_mcp_port::policy::AgentPrincipal;
 use semio_os_mcp_probe_document::probe_document::{PROBE_PACK_SCHEMA_HASH, PROBE_SCHEMA, PROBE_SURFACE_ID, ProbeDiff, ProbeMutation, ProbeSnapshot, probe_record_spec};
 use semio_os_mcp_routing::hub_relay::{HUB_SESSION_LIVE_LINK_LIMIT, HubInbound, HubInboundPlan, HubLinkClose, HubRelay, SessionDocumentPair, carries_hub_inbound, document_link_terminal_code, hub_link_tick, hub_links_to_close, plan_hub_inbound, route_session_artifact};

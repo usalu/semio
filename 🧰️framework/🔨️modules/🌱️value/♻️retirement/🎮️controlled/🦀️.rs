@@ -112,7 +112,6 @@ pub struct ControlledRetirement<T: RetireOwned> {
     last_work:u128,
     child_reply:ManuallyDrop<Option<Result<RetirementStep,crate::OriginalRetirementFailure>>>,
     close_invocation:Option<semio_framework_value_control_contract::OriginalEffectInvocationIdentity>,
-    close_grant:Option<RetainedCloneGrant>,
     close_body:Option<usize>,
     close_original:Option<(crate::NativeAllocationIdentity,Option<u64>)>,
     child_work:Option<(crate::OriginalWorkActionBoundary,u64)>,
@@ -128,7 +127,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
     }
 
     /// 🫴️ Keeps an unfinished original inline so unsupported retirement can refuse without losing custody.
-    pub fn retain(value:T)->Self {Self{value:ManuallyDrop::new(Some(value)),cursors:ManuallyDrop::new(PagedList::with_page_items(8)),pending_cursor:ManuallyDrop::new(None),step_progress:RetainedCloneProgress::default(),last_work:0,child_reply:ManuallyDrop::new(None),close_invocation:None,close_grant:None,close_body:None,close_original:None,child_work:None,close_selected:None,pending_child_grant:None}}
+    pub fn retain(value:T)->Self {Self{value:ManuallyDrop::new(Some(value)),cursors:ManuallyDrop::new(PagedList::with_page_items(8)),pending_cursor:ManuallyDrop::new(None),step_progress:RetainedCloneProgress::default(),last_work:0,child_reply:ManuallyDrop::new(None),close_invocation:None,close_body:None,close_original:None,child_work:None,close_selected:None,pending_child_grant:None}}
 
     /// 👁️ Borrows the original typed owner before retirement cursor construction.
     pub fn original(&self) -> Option<&T> { self.value.as_ref() }
@@ -156,7 +155,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
     /// 🔂️ Visits only the original active child once and preserves one actual body hint.
     pub fn next_demand(&self, body:usize)->Result<crate::RetirementDemand,ValueError>{
         use crate::RetirementDemand;
-        if self.pending_child_grant.is_some(){if self.close_body!=Some(body){return Err(ValueError::invariant("controlled recovery changed its selected body"))}return self.close_selected.map(|selected|selected.0).ok_or_else(||ValueError::invariant("controlled recovery lost its original quote"))}
+        if self.pending_child_grant.is_some(){return self.close_selected.map(|selected|selected.0).ok_or_else(||ValueError::invariant("controlled recovery lost its original quote"))}
         if self.value.as_ref().is_some_and(|value|!value.retirement_ready()){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original owner requires recovery before retirement"))}
         if self.value.is_some()&&!T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"typed owner has no controlled retirement authority"))}
         if self.terminal_is_empty(){return Ok(Default::default());}
@@ -219,14 +218,15 @@ impl<T: RetireOwned> ControlledRetirement<T> {
 
     fn step_reply<'reply>(&mut self,mut original:Option<&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:semio_framework_value_control_contract::OriginalEffectReply<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>,recover:bool)->Result<semio_framework_value_control_contract::OriginalEffectReplyComplete<'reply,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{
         if let Some(original)=original.as_deref_mut(){if !original.original_work().binding_identity()?.matches_effect(effect){return Err(ValueError::invariant("controlled original loan changed its actual Work action"))}}
+        let body=if recover{self.close_body.ok_or_else(||ValueError::invariant("controlled close recovery lost its selected body"))?}else{body};
         let selected=if recover{None}else{Some((self.next_demand(body)?,self.next_computational_work(body)?))};
         let original_binding=original.as_ref().map(|loan|(loan.ledger_identity(),loan.retirement_recipient_identity()));
         let invocation=effect.invocation().ok_or_else(||ValueError::invariant("controlled close requires its original producer invocation"))?.identity();
-        if recover{if self.close_invocation!=Some(invocation)||self.close_grant!=Some(effect.grant())||self.close_body!=Some(body)||self.close_original!=original_binding{return Err(ValueError::invariant("controlled close recovery changed its original invocation or grant"))}}else{if self.close_invocation.is_some(){return Err(ValueError::invariant("controlled close already retains an invocation"))}self.close_invocation=Some(invocation);self.close_grant=Some(effect.grant());self.close_body=Some(body);self.close_original=original_binding;self.close_selected=selected}
+        if recover{if self.close_invocation!=Some(invocation)||self.close_original!=original_binding{return Err(ValueError::invariant("controlled close recovery changed its original invocation"))}}else{if self.close_invocation.is_some(){return Err(ValueError::invariant("controlled close already retains an invocation"))}self.close_invocation=Some(invocation);self.close_body=Some(body);self.close_original=original_binding;self.close_selected=selected}
         let boundary=effect.performed_boundary();
         let turn=if let Some(grant)=self.pending_child_grant{
             let index=self.cursors.len().checked_sub(1).ok_or_else(||ValueError::invariant("recovering controlled child lost its resident cursor"))?;
-            let (start,maximum)=self.child_work.ok_or_else(||ValueError::invariant("controlled child lost its selected Work boundary"))?;let spent=effect.performed_since_action(start)?;let remaining=u128::from(maximum).checked_sub(spent).ok_or_else(||ValueError::invariant("controlled child exceeded its selected Work"))?;let remaining=u64::try_from(remaining).map_err(|_|ValueError::invariant("controlled child Work does not fit"))?;let mut child=effect.reborrow(grant,remaining)?;
+            let (start,maximum)=self.child_work.ok_or_else(||ValueError::invariant("controlled child lost its selected Work boundary"))?;let spent=effect.performed_since_action(start)?;let remaining=u128::from(maximum).checked_sub(spent).ok_or_else(||ValueError::invariant("controlled child exceeded its selected Work"))?;let remaining=u64::try_from(remaining).map_err(|_|ValueError::invariant("controlled child Work does not fit"))?;let quote=self.close_selected.ok_or_else(||ValueError::invariant("controlled recovery lost its original quote"))?.0;if !crate::retained_clone::retained_clone_grant_admits(effect.grant(),quote)||remaining>effect.remaining_work_units()?{self.last_work=0;return Ok(reply.pending())}let mut child=effect.reborrow(grant.restricted_by(effect.grant()),remaining)?;
             let step=borrowed_child_step(self.cursors.get_mut(index).expect("same resident controlled child").as_mut(),body,&mut child,&mut self.child_reply,original.as_deref_mut(),true)?;
             match step{None=>crate::RetainedWorkPoll::Pending{work:effect.performed_since(boundary)?},Some(step)=>{self.pending_child_grant=None;self.child_work=None;let result=self.process_child_step(index,step,effect.grant(),grant,grant.maximum_capacity_bytes);self.finish_step_result(result)}}
         }else{
@@ -238,7 +238,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
             if let Some(error)=protocol_failure{return Err(error)}turn
         };
         let work=effect.performed_since(boundary)?;self.last_work=work;
-        match turn{crate::RetainedWorkPoll::Pending{..}=>Ok(reply.pending()),crate::RetainedWorkPoll::Complete(turn)=>{self.close_invocation=None;self.close_grant=None;self.close_body=None;self.close_original=None;self.close_selected=None;Ok(reply.complete(turn.result))}}
+        match turn{crate::RetainedWorkPoll::Pending{..}=>Ok(reply.pending()),crate::RetainedWorkPoll::Complete(turn)=>{self.close_invocation=None;self.close_body=None;self.close_original=None;self.close_selected=None;Ok(reply.complete(turn.result))}}
     }
 
     /// ⏲️ Actual work of the most recent invoked turn, including genuine failed actions.
@@ -298,7 +298,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
             RetirementStep::Pending(_) => return Ok(None),
             RetirementStep::Progress(progress,_) => {
                 self.step_progress = progress;
-                if !progress.fits(cursor_grant) || (progress.copied_items!=0 && progress.retained_capacity_bytes!=birth) { DEBUG_RECEIPT.with(|cell|cell.set([progress.copied_items,progress.copied_bytes,progress.retained_capacity_bytes,progress.released_bytes,cursor_grant.maximum_items,cursor_grant.maximum_copy_bytes,cursor_grant.maximum_capacity_bytes,cursor_grant.maximum_release_bytes,cursor_grant.maximum_depth,birth]));return Err(refusal("typed retirement receipt exceeded or changed its declared full grant").into()); }
+                if !progress.fits(cursor_grant) || (progress.copied_items!=0 && progress.retained_capacity_bytes!=birth) { return Err(refusal("typed retirement receipt exceeded or changed its declared full grant").into()); }
                 return Ok(Some(RetainedCloneStep::Progress(progress)));
             }
             RetirementStep::Child(child) => { self.cursors.push_reserved(child).map_err(|_| refusal("retirement child lost its admitted frontier slot"))?; (0, 0, true) }
@@ -364,8 +364,6 @@ impl<T: RetireOwned> ErasedControlledRetirement for ControlledRetirement<T> {
     fn frame_release_bytes(&self) -> usize { size_of::<Self>() }
 }
 
-std::thread_local!{static DEBUG_RECEIPT:std::cell::Cell<[usize;10]>=const{std::cell::Cell::new([0;10])};}
-pub fn debug_receipt()->[usize;10]{DEBUG_RECEIPT.with(std::cell::Cell::get)}
 fn refusal(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, message) }
 
 impl<T: RetireOwned> RetireOwned for ControlledRetirement<T> {

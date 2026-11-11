@@ -13,20 +13,13 @@ use crate::ops_wire_limits::{find_instance, runtime_instance_cell};
 use semio_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 use semio_plugin_runtime_instances::inst_wire_frames::with_instances_mut;
 /// 🎞️ WIT `consume-media` glue — decodes the incoming `media-artifact` (`descriptor-json` + `data`)
-/// and dispatches to `PluginApp::consume_media`. A whole document is admitted as a stepped archive load under `operation`
-/// (the host sequence of the import, `📓️api-stepped-document-load.md` §4) and answers its pending status for the host to
-/// poll; an applied import answers `None`.
-pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, operation: u64, port_id: &str, descriptor: MediaArtifactDescriptor, data: Vec<u8>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<protocol::DocumentArchiveLoadStatus>, Fault> {
+/// and dispatches to `PluginApp::consume_media`. A whole document answers its archive so the caller admits it as a stepped
+/// archive load (`📓️api-stepped-document-load.md` §4) through its resident admission; an applied import answers `Applied`.
+pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, descriptor: MediaArtifactDescriptor, data: Vec<u8>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaConsumption, Fault> {
     let artifact = MediaArtifact { descriptor, data };
     with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        match ::semio_framework_async::poll::resolve_ready(instance.app.consume_media(port_id, artifact, cx)).map_err(semio_plugin_decl_app::media_artifact_fault)? {
-            MediaConsumption::Applied => Ok(None),
-            MediaConsumption::DocumentLoad(archive) => {
-                instance.app.begin_document_archive_load(operation, archive)?;
-                Ok(Some(protocol::DocumentArchiveLoadStatus { operation, state: protocol::DocumentArchiveLoadState::Pending, completed: 0, total: 0, ahead: 0, fault: Vec::new() }))
-            }
-        }
+        ::semio_framework_async::poll::resolve_ready(instance.app.consume_media(port_id, artifact, cx)).map_err(semio_plugin_decl_app::media_artifact_fault)
     })
     .await
 }

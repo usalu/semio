@@ -94,7 +94,7 @@ pub struct ArtifactMutationRouter {
     /// `unregister_plugin` for `plan`'s dispatch. Production today calls `register_roster` directly
     /// (see `🏃️run/🦀️.rs`, outside this packet's owned paths), which never touches this
     /// field — see this packet's report `## lease-requests` for the one-line change that wires it.
-    pub(super) runtimes: Mutex<HashMap<String, Arc<PluginInstanceHandle>>>,
+    pub(super) runtimes: Mutex<HashMap<String, PluginRegistration>>,
 }
 
 impl ArtifactMutationRouter {
@@ -106,9 +106,9 @@ impl ArtifactMutationRouter {
     /// payload), registers every row (see `register_roster` for the gating rules), and keeps
     /// `handle` for `plan`'s later dispatch — mirrors `ArtifactInferenceRouter::register_plugin`'s
     /// exact 4-argument shape (`plugin_id, dependencies, handle, roster_wire_bytes`).
-    pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
+    pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], registration: PluginRegistration, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
         let roster: Vec<HostMutationRosterEntry> = decode_wire_dsl(roster_wire_bytes).await?;
-        self.register_roster_with_runtime(plugin_id, dependencies, handle, roster).await
+        self.register_roster_with_runtime(plugin_id, dependencies, registration, roster).await
     }
 
     /// 🔌️ The PRODUCTION registration entry point: typed roster rows plus the instance handle that
@@ -118,13 +118,13 @@ impl ArtifactMutationRouter {
     ///
     /// 🧪️ Kept SEPARATE from the pure `register_roster` below rather than folded into it: that
     /// function is deliberately wasm-free so 15 routing tests can exercise the contract §4 gating
-    /// rules without constructing a `PluginInstanceHandle`, and requiring a handle would destroy
+    /// rules without constructing a `PluginRegistration`, and requiring a registration would destroy
     /// that. Registering the runtime is therefore a wrapper around the pure core, never a second
     /// call a caller could forget — which is exactly how `runtimes` sat empty in production while
     /// every routing test passed.
-    pub async fn register_roster_with_runtime(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
+    pub async fn register_roster_with_runtime(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], registration: PluginRegistration, roster: Vec<HostMutationRosterEntry>) -> Result<(), PluginHostError> {
         self.register_roster(plugin_id, dependencies, roster).await?;
-        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.insert(plugin_id.to_string(), handle);
+        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.insert(plugin_id.to_string(), registration);
         Ok(())
     }
 
@@ -205,15 +205,15 @@ impl ArtifactMutationRouter {
     /// drives the owning/contributing plugin's own `semio.mutation-plan` cold job to completion.
     /// Mirrors `ArtifactInferenceRouter::infer`'s exact shape: raw wire bytes in, raw wire bytes out
     /// (`request_bytes`/the return are both the DSL wire form `HostArtifactMutationPlanRequest`/
-    /// `Result` already use elsewhere in this region — `PluginInstanceHandle::mutation_plan` passes
+    /// `Result` already use elsewhere in this region — the `semio.mutation-plan` job receives
     /// them straight through, no re-encoding).
-    pub async fn plan(&self, request_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn plan(&self, request_bytes: &[u8], drivers: PluginCallDrivers<'_>) -> Result<Vec<u8>, PluginHostError> {
         let request: HostArtifactMutationPlanRequest = decode_wire_dsl(request_bytes).await?;
         let plugin_id = match self.resolve(&request.artifact_kind, &request.mutation_id).await? {
             MutationOwnership::Contributed { plugin_id } | MutationOwnership::Owner { plugin_id } => plugin_id,
         };
-        let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.get(&plugin_id).cloned().ok_or_else(|| PluginHostError::Plugin(format!("mutation plan owner `{plugin_id}` is not loaded")))?;
-        handle.mutation_plan(request_bytes).await
+        let registration = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("mutation router runtimes"))?.get(&plugin_id).cloned().ok_or_else(|| PluginHostError::Plugin(format!("mutation plan owner `{plugin_id}` is not loaded")))?;
+        call_plugin(&registration, JOB_KIND_MUTATION_PLAN, request_bytes, drivers().map_err(PluginHostError::NativeIo)?).await
     }
 
     /// ✂️ Drops every route reported by `plugin_id` (owner rows keyed under its own id, contributed

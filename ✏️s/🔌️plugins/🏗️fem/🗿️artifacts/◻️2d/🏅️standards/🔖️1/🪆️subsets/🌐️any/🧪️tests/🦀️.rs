@@ -14,13 +14,11 @@ use semio_framework_dsl_record::{FieldValue, RecordValue};
 #[cfg(test)]
 use semio_framework_value::retirement::RetireOwned;
 #[cfg(test)]
-use semio_framework_value::RetireOwned;
-#[cfg(test)]
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
 #[cfg(test)]
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 #[cfg(test)]
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeRetirementRecipient};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 #[cfg(test)]
 use semio_s_fem_material::planar::FemMaterialValue;
 #[cfg(test)]

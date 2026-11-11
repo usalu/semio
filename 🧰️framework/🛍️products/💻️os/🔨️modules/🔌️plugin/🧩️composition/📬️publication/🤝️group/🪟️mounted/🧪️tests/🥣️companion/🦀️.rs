@@ -16,5 +16,9 @@ pub(crate) fn fixture_json(relative: &str) -> serde_json::Value {
     serde_json::from_str(&text).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display()))
 }
 
+#[path = "../⏱️effect/🦀️.rs"]
+mod effect_harness;
+pub(crate) use effect_harness::driven;
+
 #[path = "🧾️receipt/🦀️.rs"]
 mod mounted_child_group_receipt;

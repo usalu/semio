@@ -12,7 +12,7 @@ pub use native::Fem2dReceiving;
 #[path="record.rs"]mod record;
 #[path="receive-record.rs"]mod receive_record;
 #[path="projection.rs"]mod projection;
-#[path="write-pack.rs"]mod write_pack;
+semio_s_fem_receiving::write_pack!(Fem2dSnapshot,Fem2dSnapshotValue,"fem.fem2d");
 #[path="identity-index.rs"]mod identity_index;
 #[cfg(feature = "testkit")]
 #[path="retiring.rs"]mod retiring;

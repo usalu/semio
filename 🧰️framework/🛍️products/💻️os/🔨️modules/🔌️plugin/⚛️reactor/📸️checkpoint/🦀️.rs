@@ -97,7 +97,7 @@ pub const RESTORE_AUTHORITY_BYTES: usize = 1 << 20;
 
 /// 🫴️ Admits the original decoded actor text through the same decoder and caller wallet before its shared frame is born.
 #[doc(hidden)]
-pub fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<protocol::ActorId,semio_framework_value::ValueError>{
+pub fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_os_kernel::io::control::NativeSnapshotDecodeOwner<'_, '_>)->Result<(protocol::ActorId,u128),semio_framework_value::ValueError>{
     use semio_framework_value::{SharedUtf8,ValueError,ValueRefusalKind};
     if source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"restored actor requires its original decoded text"))}
     let demand=SharedUtf8::admission_demand();
@@ -108,16 +108,25 @@ pub fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_os_ke
     original.native().checkpoint()?;
     original.native().charge(demand.capacity_bytes)?;
     let text=source.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"restored actor lost original decoded text"))?;
-    match SharedUtf8::admit(text,grant).result{
-        Ok((text,progress))=>{original.record_progress(progress)?;Ok(protocol::ActorId(text))}
+    let mut actual=None;let turn=SharedUtf8::admit(text,grant,&mut actual);let work=turn.work;match turn.result{
+        Ok((text,progress))=>{original.record_progress(progress)?;Ok((protocol::ActorId(text),work))}
         Err((error,text))=>{*source=Some(text);Err(error)}
     }
 }
 
-/// 📸️ A decoded checkpoint and the instances whose document load it admitted under [`RESTORE_DOCUMENT_LOAD_OPERATION`].
+/// 📸️ One restored instance whose whole-document archive load is admitted by the turn that owns an original context.
+pub struct RestoredDocumentLoad {
+    pub instance: u32,
+    pub archive: Box<store::DocumentArchivePack>,
+    pub admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
+    pub admitted: bool,
+}
+
+/// 📸️ A decoded checkpoint and the instances whose document load it queued under [`RESTORE_DOCUMENT_LOAD_OPERATION`].
 pub struct RestoredCheckpoint {
     pub pack: CheckpointPack,
-    pub document_loads: Vec<u32>,
+    pub document_loads: Vec<RestoredDocumentLoad>,
+    pub work: u128,
 }
 
 /// 📸️ Restores every instance recorded in `state` under its checkpointed id and admits its document pack as a stepped
@@ -129,17 +138,18 @@ pub async fn restore<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_pl
     let mut pack: CheckpointPack = semio_framework_pack_json::from_json_str(state_text, semio_framework_pack_json::JsonMemberPolicy::Reject)
         .map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
     let mut document_loads = Vec::with_capacity(pack.instances.len());
+    let mut work = 0u128;
     for instance in &mut pack.instances {
         let mut source = Some(std::mem::take(&mut instance.actor));
-        let actor = admit_restored_actor(&mut source, original).map_err(semio_framework_value::ValueError::into_fault)?;
+        let (actor, spent) = admit_restored_actor(&mut source, original).map_err(semio_framework_value::ValueError::into_fault)?;
+        work += spent;
         let id = semio_plugin_runtime_instances::inst_opening::plugin_create_app_with_id(runtime, instance.id, &instance.app_id, actor, identity).await?;
         if !instance.document_pack.is_empty() {
             let (parent_pack, parent_spr) =
                 store::os_store::serialization::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
-            semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, id, RESTORE_DOCUMENT_LOAD_OPERATION, store::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).await?;
-            document_loads.push(id);
+            document_loads.push(RestoredDocumentLoad { instance: id, archive: Box::new(store::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }), admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false });
         }
     }
-    Ok(RestoredCheckpoint { pack, document_loads })
+    Ok(RestoredCheckpoint { pack, document_loads, work })
 }
 

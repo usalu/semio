@@ -6,6 +6,9 @@ use semio_framework_value::Number;
 use semio_framework_value::ValueError;
 use semio_framework_value::ValueRefusalKind;
 use store::sqlite_snapshot::SnapshotEncoding;
+use store::sqlite_snapshot::SqliteStageFailure as Stage;
+use store::sqlite_snapshot::artifact::receiving::ReceivingSettlement;
+use store::os_store::serialization::{SnapshotReceivingOutcome,SnapshotReceivingOutput};
 use store::sqlite_snapshot::SqliteDatabase;
 use store::sqlite_snapshot::SqliteSnapshotControl;
 use store::sqlite_snapshot::SqliteSnapshotPhase;
@@ -33,54 +36,59 @@ pub(crate) fn number_value<P:semantic::Port>(text:&str,scanner:&mut Option<semio
 }
 
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for ProbeSnapshot{
- 
- 
- 
- fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<SqliteDatabase,store::NativeSnapshotFailure>{
-  store::native_snapshot_turn(|work|{work.performed();let result=(||->Result<SqliteDatabase,ValueError>{
-  if control.allocation_remaining_bytes()==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe SQL projection has no original backing authority"))}
-  let before=owner.native().owned_bytes();let remaining=control.allocation_remaining_bytes();let maximum=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe semantic allocation ceiling overflow"))?;
-  let result=owner.scoped_native(maximum,&mut |_|true,|owner|owner.receive::<semantic::Projection,SqliteDatabase,store::NativeSnapshotFailure>(|slot,native,body|store::native_snapshot_turn(|work|{work.performed();(||->Result<SqliteDatabase,ValueError>{
-   let mut port=semantic::Decode{control,native,body};semantic::Port::work(&mut port,1,std::mem::size_of::<semantic::Projection>())?;*slot=Some(semantic::Projection::new());let frame=slot.as_mut().unwrap();semantic::project(&self.0,frame,&mut port)?;semantic::Port::work(&mut port,1,std::mem::size_of::<SqliteDatabase>())?;Ok(std::mem::replace(&mut frame.database,SqliteDatabase{tables:Vec::new()}))
-  })().map_err(Into::into)})));
-  let admitted=remaining-control.allocation_remaining_bytes();let actual=owner.native().owned_bytes().checked_sub(before).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe semantic allocation receipt regressed"))?;control.admit_native_allocation_bytes(actual.checked_sub(admitted).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe semantic SQL receipt exceeded native ownership"))?)?;result.result.map_err(store::NativeSnapshotFailure::into_value_error)
-  })();result.map_err(|error|store::NativeSnapshotFailure::from(error.with_retained_progress(owner.progress())))})
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<SnapshotReceivingOutput<Self>>)->SnapshotReceivingOutcome{
+  let admitted=(||->Result<_,ValueError>{
+   if output.is_some(){return Err(invalid("Probe original snapshot output slot is occupied"))}
+   owner.native().checkpoint()?;control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
+   let text=match payload{store::io_schema::IoPayload::Text(text)=>text.as_str(),store::io_schema::IoPayload::Binary(bytes)=>std::str::from_utf8(bytes).map_err(|_|invalid("Probe JSON input is not UTF8"))?};
+   if text.len()>control.limits().max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe input exceeds original file byte ceiling"))}
+   let before=owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||invalid("Probe native allocation ceiling overflow"))?;
+   Ok((text,before,maximum))
+  })();
+  let(text,before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(Stage::NotStarted(error)),work:0}};
+  let settlement=ReceivingSettlement::new(control,before,SqliteSnapshotPhase::DecodeNative);
+  let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive_nested::<Self,SnapshotReceivingOutput<Self>,store::NativeSnapshotFailure>(output,&mut |slot,result,_marker,_unwind,owner|store::native_snapshot_turn(|work|{
+   let status=work.take(<Self as store::ArtifactPackReceiving>::receive_pack(text.as_bytes(),slot,owner));
+   match(status,settlement.finish_body(owner.native().owned_bytes())){
+    (Err(primary),Ok(()))=>return Err(primary),
+    (Ok(()),Err(error))=>return Err(error.into()),
+    (Err(primary),Err(error))=>return Err(primary.with_settlement_refusal(error).expect("probe receiving body has its original settlement slot")),
+    (Ok(()),Ok(()))=>{}
+   }
+   let bytes=std::mem::size_of::<SnapshotReceivingOutput<Self>>();let grant=owner.admit_constructed(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:bytes,maximum_depth:1,..Default::default()})?;work.admit(owner.native())?;
+   let received=slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe receiving lost its retained snapshot"))?;
+   *result=Some(Ok(received));
+   owner.record_constructed_progress(grant,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(())
+  })));
+  semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(owner.native().owned_bytes(),error))),work:turn.work}
  }
- fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
-  store::native_snapshot_turn(|work|{work.performed();let result=(||->Result<Self,ValueError>{
-  if control.allocation_remaining_bytes()==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe SQL reconstruction has no original backing authority"))}
-  let before=owner.native().owned_bytes();let remaining=control.allocation_remaining_bytes();let maximum=before.checked_add(remaining).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe semantic allocation ceiling overflow"))?;
-  let result=owner.scoped_native(maximum,&mut |_|true,|owner|owner.receive::<semantic::Reconstruction,Self,store::NativeSnapshotFailure>(|slot,native,body|store::native_snapshot_turn(|work|{work.performed();(||->Result<Self,ValueError>{
-   let mut port=semantic::Encode{control,native,body};semantic::Port::work(&mut port,1,std::mem::size_of::<semantic::Reconstruction>())?;*slot=Some(semantic::Reconstruction::new());semantic::reconstruct(database,slot.as_mut().unwrap(),&mut port).map(Self)
-  })().map_err(Into::into)})));
-  let admitted=remaining-control.allocation_remaining_bytes();let actual=owner.native().owned_bytes().checked_sub(before).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe semantic allocation receipt regressed"))?;control.admit_native_allocation_bytes(actual.checked_sub(admitted).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe semantic SQL receipt exceeded native ownership"))?)?;result.result.map_err(store::NativeSnapshotFailure::into_value_error)
-  })();result.map_err(|error|store::NativeSnapshotFailure::from(error.with_retained_progress(owner.progress())))})
- }
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
-  let fail=|error:ValueError|semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0};
-  let text=match payload{store::io_schema::IoPayload::Text(text)=>text.as_str(),store::io_schema::IoPayload::Binary(bytes)=>match std::str::from_utf8(bytes){Ok(text)=>text,Err(_)=>return fail(invalid("Probe JSON input is not UTF8"))}};
-  if text.len()>control.limits().max_file_bytes{return fail(ValueError::literal(ValueRefusalKind::OwnershipLimit,"Probe input exceeds original file byte ceiling"))}
-  let before=owner.native().owned_bytes();let Some(maximum)=before.checked_add(control.allocation_remaining_bytes())else{return fail(invalid("Probe native allocation ceiling overflow"))};
-  let mut refused=None;
-  let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|match control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
-  let result=owner.scoped_native(maximum,&mut observer,|owner|<Self as store::ArtifactPackReceiving>::receive_pack(text.as_bytes(),owner));
-  drop(observer);
-  let admitted=owner.native().owned_bytes().checked_sub(before).ok_or_else(||invalid("Probe original allocation receipt regressed")).and_then(|actual|control.admit_native_allocation_bytes(actual));
-  if let Err(error)=admitted{return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:result.work}}
-  if let Some(error)=refused{return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:result.work}}
-  result
- }
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,store::NativeSnapshotFailure>{
-  let limits=control.limits();let before=owner.native().owned_bytes();let Some(maximum)=before.checked_add(control.allocation_remaining_bytes())else{return semio_framework_value::RetainedWorkOutcome{result:Err(invalid("Probe native allocation ceiling overflow").into()),work:0}};
-  let mut refused=None;
-  let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|match control.checkpoint(SqliteSnapshotPhase::EncodeNative,event.completed,event.total){Ok(())=>true,Err(error)=>{refused=Some(error);false}};
-  let written=owner.scoped_native(maximum,&mut observer,|owner|store::native_snapshot_turn(|work|{work.performed();write(&self.0,limits.max_file_bytes,owner).map_err(Into::into)}));
-  let result=semio_framework_value::RetainedWorkOutcome{result:written.result.map(|text|match encoding{SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(text),SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(text.into_bytes())}),work:written.work};
-  drop(observer);
-  let admitted=owner.native().owned_bytes().checked_sub(before).ok_or_else(||invalid("Probe original allocation receipt regressed")).and_then(|actual|control.admit_native_allocation_bytes(actual));
-  if let Err(error)=admitted{return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:result.work}}
-  if let Some(error)=refused{return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:result.work}}
-  result
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>,output:&mut Option<SnapshotReceivingOutput<store::io_schema::IoPayload>>)->SnapshotReceivingOutcome{
+  let limits=control.limits();
+  let admitted=(||->Result<_,ValueError>{
+   if output.is_some(){return Err(invalid("Probe original snapshot output slot is occupied"))}
+   owner.native().checkpoint()?;control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
+   let before=owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||invalid("Probe native allocation ceiling overflow"))?;
+   Ok((before,maximum))
+  })();
+  let(before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(Stage::NotStarted(error)),work:0}};
+  let settlement=ReceivingSettlement::new(control,before,SqliteSnapshotPhase::EncodeNative);
+  let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+  let turn=owner.scoped_native(maximum,&mut observer,|owner|owner.receive_nested::<String,SnapshotReceivingOutput<store::io_schema::IoPayload>,store::NativeSnapshotFailure>(output,&mut |slot,result,_marker,_unwind,owner|store::native_snapshot_turn(|work|{
+   let status=work.take(write(&self.0,limits.max_file_bytes,slot,owner));
+   match(status,settlement.finish_body(owner.native().owned_bytes())){
+    (Err(primary),Ok(()))=>return Err(primary),
+    (Ok(()),Err(error))=>return Err(error.into()),
+    (Err(primary),Err(error))=>return Err(primary.with_settlement_refusal(error).expect("probe encoding body has its original settlement slot")),
+    (Ok(()),Ok(()))=>{}
+   }
+   let bytes=std::mem::size_of::<SnapshotReceivingOutput<store::io_schema::IoPayload>>();
+   work.admit_encode(owner.native())?;
+   let text=slot.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Probe encoding lost its retained text"))?;
+   *result=Some(Ok(match encoding{SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(text),SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(text.into_bytes())}));
+   owner.record_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;Ok(())
+  })));
+  semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|error|Stage::Operation(settlement.refused_failure(owner.native().owned_bytes(),error))),work:turn.work}
  }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{validate_with(&self.0,&mut |_|control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0))}
 }

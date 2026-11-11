@@ -3,7 +3,7 @@
 use super::*;
 
 //#region DockFreeFunctions
-struct DockAxisSlots<'a> {
+pub(super) struct DockAxisSlots<'a> {
     pub(super) children: &'a [(DockNode, f32)],
     pub(super) bounds: Rect,
     horizontal: bool,

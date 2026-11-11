@@ -542,7 +542,7 @@ impl AppActionRegistry {
     pub fn original_birth_demands()->RetirementDemand{let mut d=original_registry::NativeRegistry::birth_demands();d.copy_bytes+=2*std::mem::size_of::<Self>();d}
     pub fn admit_original(source:RegisteredDefinitionSource<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,semio_framework_value::ValueError>{Ok(original_registry::NativeRegistry::admit(source,grant)?.map(|(native,mut p)|{p.copied_bytes+=2*std::mem::size_of::<Self>();(Self{native:Some(native),..Default::default()},p)}))}
     pub fn original_index_demands(&self)->Result<RetirementDemand,semio_framework_value::ValueError>{self.native.as_ref().expect("original registry").demands()}
-    pub fn advance_original_index(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{self.native.as_mut().expect("original registry").advance(grant)}
+    pub fn advance_original_index(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,semio_framework_value::ValueError>{self.native.as_mut().expect("original registry").advance(effect)}
     pub fn original_index_ready(&self)->bool{self.native.as_ref().is_some_and(|native|native.ready)}
     pub fn controller_id(&self)->&str{self.native.as_ref().map_or(self.controller_id.as_str(),|native|native.definition().controller_id.as_str())}
 

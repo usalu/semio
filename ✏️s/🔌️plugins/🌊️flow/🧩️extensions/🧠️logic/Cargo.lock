@@ -3073,9 +3073,11 @@ dependencies = [
 name = "semio-framework-job-recorded-clock"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "semio-framework-value-control-contract",
  "semio-framework-value-receiving",
  "semio-framework-value-retirement",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -5466,6 +5468,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-ordered",
+ "semio-framework-value-source-hold",
  "semio-os-kernel-neural-engine",
  "semio-ui-declaration",
  "serde",
@@ -7826,6 +7829,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-job",
  "semio-framework-kernel-identity",
  "semio-framework-schema-composition",
  "semio-framework-value",

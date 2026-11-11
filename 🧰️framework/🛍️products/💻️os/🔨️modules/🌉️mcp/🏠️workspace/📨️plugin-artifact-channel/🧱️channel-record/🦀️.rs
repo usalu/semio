@@ -8,16 +8,9 @@ use super::*;
 pub struct PluginArtifactChannel {
     pub host_driver_policy:semio_plugin_host::GuestRelayDriverPolicy,
     pub operation_policy:semio_os_mcp_port::channel_port::HostOperationPolicy,
-    pub(super) startup_instance_custody:Option<(semio_plugin_host::GuestInstance,Arc<semio_plugin_host::GuestRelayWakeDriver>)>,
-    pub(super) startup_custody:Option<(semio_plugin_host::GuestActorOpening,Arc<semio_plugin_host::GuestRelayWakeDriver>)>,
     pub(super) startup_failure:Option<semio_plugin_host::GuestRelayAdmissionFailure>,
-    pub(super) operation_refusal:Option<(Arc<semio_plugin_host::GuestRelayWakeDriver>,semio_plugin_host::GuestRelayAdmissionFailure,Option<Fault>)>,
     pub(super) host_driver:Arc<semio_plugin_host::GuestRelayWakeDriver>,
-    /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes`
-    /// enum rather than a bare `WasmtimeRuntime` because the inference lane's
-    /// `PluginInstanceHandle` takes exactly that `Arc` — and it MUST be the same one: a
-    /// `wasmtime::Component` belongs to the `Engine` that compiled it, so a second runtime could not
-    /// instantiate `compiled` at all.
+    /// 🐎️ The process-wide compiled runtime ([`shared_plugin_runtime`]), held as the `GuestRuntimes` enum: the inference lane registers it as a run origin, and it MUST be the same one that compiled `compiled`.
     /// 🧠️ The process-wide firstparty interpreter of the retained compiled component.
     pub runtime: Arc<GuestRuntimes>,
     pub compiled: semio_plugin_host::CompiledHandle,
@@ -46,20 +39,6 @@ pub struct PluginArtifactChannel {
     /// [`Self::ensure_document_backbone`]. Cleared per instance by [`Self::discard_instance`],
     /// because a guest that was thrown away holds no binding.
     pub(super) backbone_bindings: std::collections::BTreeSet<u32>,
-    /// 💡️ Lazily opened on the FIRST `AppCommand::Infer` — a second guest activation of the same
-    /// component, dedicated to the cold `semio.infer` job lane. Deliberately separate from
-    /// `instances` above: `PluginInstanceHandle` takes ownership of its `GuestInstance` and drives
-    /// `start-job`/`step-job` against it from a worker pool, which the retained command-page loop
-    /// `exchange_one_real` runs on the same instance cannot share.
-    pub(super) inference: Option<PluginInferenceRoute>,
 }
 
-/// 💡️ One plugin's real `semio.infer` route — the SAME `ArtifactInferenceRouter` +
-/// `PluginInstanceHandle` pair `🏃️run/🦀️.rs`'s own `load_runtime_recursive` builds, constructed here
-/// from the committed descriptor instead of from a live `run` process. The router owns the handle
-/// (which owns the `Arc<GuestRuntimes>` and the `GuestInstance`), so this struct holds only it.
-#[cfg(not(target_arch = "wasm32"))]
-pub(super) struct PluginInferenceRoute {
-    pub router: semio_plugin_host::ArtifactInferenceRouter,
-}
 //#endregion 🔖️ArtifactChannel

@@ -199,7 +199,7 @@ impl ArtifactActor {
         }
         let batch_id = self.next_batch_id;
         self.next_batch_id = self.next_batch_id.wrapping_add(1);
-        let(wire_envelopes,identity_receipt)=match wire_envelopes_with_original_actor(envelopes,socket_actor,self.actor_identity_grant){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
+        let(wire_envelopes,identity_receipt)=match actor_identity_turn(envelopes.len(),self.actor_identity_grant,|effect|wire_envelopes_with_original_actor(envelopes,socket_actor,effect)){Ok(result)=>result,Err(_)=>{self.queue_outbox(envelopes.iter().cloned());return;}};
         add_actor_identity_progress(&mut self.actor_identity_progress,identity_receipt);
         self.pending_batches.insert(batch_id, envelopes.to_vec());
         self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;

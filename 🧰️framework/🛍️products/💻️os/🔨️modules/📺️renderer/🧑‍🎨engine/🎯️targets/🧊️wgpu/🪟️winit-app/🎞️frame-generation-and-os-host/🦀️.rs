@@ -315,7 +315,7 @@ impl OsHost {
     /// happens in the worker transaction submitted by `build_and_publish_snapshot`.
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn present_snapshot(&mut self, now: f64) -> RedrawOutcome {
-        let snapshot = self.snapshot_sink.acquire();
+        let (cursor, ime) = self.snapshot_sink.with_current(|snapshot| (snapshot.cursor, snapshot.ime)).unwrap_or((CursorRequest::Default, None));
         semio_renderer_wgpu_host_plumbing::deadlines::sync_presented_deadlines(&mut self.scheduler, &mut self.animation_clock, self.runtime.retained_control_deadline(now), now, self.presenter.awaiting_runtime());
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -323,7 +323,7 @@ impl OsHost {
             self.scheduler.request_deadline(now + semio_renderer_wgpu_host_plumbing::deadlines::NATIVE_HOT_SWAP_POLL_SECONDS, InvalidationReason::RESOURCE_READY);
         }
 
-        RedrawOutcome { cursor: snapshot.cursor, ime: snapshot.ime }
+        RedrawOutcome { cursor, ime }
     }
 }
 

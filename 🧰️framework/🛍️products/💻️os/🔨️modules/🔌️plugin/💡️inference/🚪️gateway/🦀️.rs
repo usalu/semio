@@ -89,15 +89,16 @@ impl ArtifactInferenceGateway{
   let view=ArtifactInferenceExecutionRequest{operation:self.operation,generation:self.generation,cancelled:true,policy:&request.policy,budgets:&request.budgets,retained:request.retained,cancellation_id:&request.cancellation_id,previous_state:request.previous_state.as_deref(),requested_cache_mode:request.requested_cache_mode.clone(),canonical_payload:&request.canonical_payload,dependencies:&request.dependencies};
   service.retirement_demands(&view,context,copy)
  }
- fn close_discarded_execution(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.active.is_some(){semio_framework_value::close_factory_ticket(&mut self.active,grant).result}else{admit(&mut self.discarded_execution,&mut self.active,grant)}
+ fn close_discarded_execution(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  if self.active.is_some(){settle_ticket(&mut self.active,effect)}else{admit(&mut self.discarded_execution,&mut self.active,effect)}
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  let grant=effect.grant();
   if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.active.is_some()||self.discarded_execution.is_some(){return self.close_discarded_execution(grant);}
+  if self.active.is_some()||self.discarded_execution.is_some(){return self.close_discarded_execution(effect);}
   if self.child_live{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.active.is_some(){return semio_framework_value::close_factory_ticket(&mut self.active,grant).result;}
-  if self.parser.is_some(){return admit(&mut self.parser,&mut self.active,grant);}if self.root.is_some(){return admit(&mut self.root,&mut self.active,grant);}if self.discarded_execution.is_some(){return admit(&mut self.discarded_execution,&mut self.active,grant);}if self.request.is_some(){return admit(&mut self.request,&mut self.active,grant);}if self.writer.is_some(){return admit(&mut self.writer,&mut self.active,grant);}if self.wire.is_some(){return admit(&mut self.wire,&mut self.active,grant);}
+  if self.active.is_some(){return settle_ticket(&mut self.active,effect);}
+  if self.parser.is_some(){return admit(&mut self.parser,&mut self.active,effect);}if self.root.is_some(){return admit(&mut self.root,&mut self.active,effect);}if self.discarded_execution.is_some(){return admit(&mut self.discarded_execution,&mut self.active,effect);}if self.request.is_some(){return admit(&mut self.request,&mut self.active,effect);}if self.writer.is_some(){return admit(&mut self.writer,&mut self.active,effect);}if self.wire.is_some(){return admit(&mut self.wire,&mut self.active,effect);}
   if self.decoding.is_some()||self.encoding.is_some(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original inference continuation requires depth"));}if self.decoding.is_some(){self.decoding=None;}else{self.encoding=None;}return Ok(RetainedCloneStep::Progress(item()));}Ok(RetainedCloneStep::Complete(Default::default()))
  }
  pub fn bytes(source:&Value,destination:&mut Vec<u8>,position:&mut usize,born:&mut bool,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ValueError>{
@@ -137,15 +138,15 @@ impl ArtifactInferenceGateway{
  pub fn advance(&mut self,source:&[u8],cx:&mut semio_framework_job::StepContext<'_>,context:Option<&dyn std::any::Any>)->Result<(Option<Vec<u8>>,RetainedCloneProgress),ArtifactInferenceGatewayFailure>{
   self.normal_progress=Default::default();let available=cx.retained_grant();let grant=RetainedCloneGrant{maximum_items:available.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)),..available};let cancelled=cx.is_cancelled();
   if cancelled{self.closing=true;}
-  if self.closing&&(self.active.is_some()||self.discarded_execution.is_some()){return self.close_discarded_execution(grant).map(|step|(None,step.progress())).map_err(Into::into);}
-  if self.closing&&!self.child_live{return self.close_step(grant).map(|step|(None,step.progress())).map_err(Into::into);}
+  if self.closing&&(self.active.is_some()||self.discarded_execution.is_some()){return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.close_discarded_execution(effect)).map(|step|(None,step.progress())).map_err(Into::into);}
+  if self.closing&&!self.child_live{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.close_step(effect)).map(|step|(None,step.progress())).map_err(Into::into);}
   if self.stage==0{
    if self.parser.is_none(){let cursor=JsonSourceCursor::<_,Value>::new(source,JsonMemberPolicy::Reject,JsonReadLimits{maximum_bytes:source.len()as u64,maximum_allocation_bytes:grant.maximum_capacity_bytes,maximum_depth:grant.maximum_depth,maximum_items:source.len()as u64})?;self.parser=Some(cursor.into_grammar().1);return Ok((None,item()));}
-   let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();let mut control=match self.decoding.take(){Some(original)=>NativeDecodeControl::resume(original,&mut callback)?,None=>NativeDecodeControl::new_retained(&mut callback)};let mut cursor=JsonSourceCursor::from_grammar(source,self.parser.take().unwrap());let result=cursor.step(1,&mut control,grant);let receipt=cursor.normal_step_progress();self.normal_progress=receipt;self.parser=Some(cursor.into_grammar().1);self.decoding=Some(control.pause()?);match result{Ok(Some(original))=>{self.root=Some(original);self.stage=1;},Ok(None)=>{},Err(error)=>return Err(ArtifactInferenceGatewayFailure::Json(error))}return Ok((None,receipt));
+   let go=!cx.should_yield()&&!cx.is_cancelled();let mut callback=|_|go;let mut control=match self.decoding.take(){Some(original)=>NativeDecodeControl::resume(original,&mut callback).map_err(|(error,original)|{self.decoding=Some(original);error})?,None=>NativeDecodeControl::new_retained(&mut callback)};let mut cursor=JsonSourceCursor::from_grammar(source,self.parser.take().unwrap());let turn=cx.with_original_effect(grant,|_,effect|cursor.step(1,&mut control,effect))?;let result=match turn{Some((result,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));result},None=>Ok(None)};let receipt=cursor.normal_step_progress();self.normal_progress=receipt;self.parser=Some(cursor.into_grammar().1);self.decoding=Some(control.pause().map_err(|(error,_)|error)?);match result{Ok(Some(original))=>{self.root=Some(original);self.stage=1;},Ok(None)=>{},Err(error)=>return Err(ArtifactInferenceGatewayFailure::Json(error))}return Ok((None,receipt));
   }
   if self.stage==1{return self.decode(grant).map(|receipt|(None,receipt)).map_err(Into::into);}
   if self.stage==2{
-   let step=if self.active.is_some(){semio_framework_value::close_factory_ticket(&mut self.active,grant).result?}else if self.parser.is_some(){admit(&mut self.parser,&mut self.active,grant)?}else if self.root.is_some(){admit(&mut self.root,&mut self.active,grant)?}else if self.decoding.is_some(){self.decoding=None;RetainedCloneStep::Progress(item())}else{self.stage=3;RetainedCloneStep::Progress(item())};return Ok((None,step.progress()));
+   let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|->Result<RetainedCloneStep,ValueError>{if self.active.is_some(){settle_ticket(&mut self.active,effect)}else if self.parser.is_some(){admit(&mut self.parser,&mut self.active,effect)}else if self.root.is_some(){admit(&mut self.root,&mut self.active,effect)}else if self.decoding.is_some(){self.decoding=None;Ok(RetainedCloneStep::Progress(item()))}else{self.stage=3;Ok(RetainedCloneStep::Progress(item()))}})?;return Ok((None,step.progress()));
   }
   if self.stage==3{
    let request=self.request.as_ref().unwrap();let service=artifact_inference_service(&request.artifact_kind,&request.inference_schema).map_err(ArtifactInferenceGatewayFailure::Native)?.ok_or(ArtifactInferenceGatewayFailure::Literal("original inference service is not registered"))?;
@@ -178,11 +179,11 @@ impl ArtifactInferenceGateway{
    self.stage=4;return Ok((None,receipt));
   }
   if self.stage==4{
-   let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();let mut control=match self.encoding.take(){Some(original)=>NativeEncodeControl::resume(original,&mut callback)?,None=>NativeEncodeControl::new_retained(&mut callback)};let writer=self.writer.as_mut().unwrap();let result=writer.step(1,&mut control,grant);let receipt=writer.normal_step_progress();self.normal_progress=receipt;self.encoding=Some(control.pause()?);match result{Ok(Some(original))=>{self.wire=Some(original);self.stage=5;},Ok(None)=>{},Err(error)=>return Err(error.into())}return Ok((None,receipt));
+   let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();let mut control=match self.encoding.take(){Some(original)=>NativeEncodeControl::resume(original,&mut callback).map_err(|(error,original)|{self.encoding=Some(original);error})?,None=>NativeEncodeControl::new_retained(&mut callback)};let writer=self.writer.as_mut().unwrap();let result=writer.step(1,&mut control,grant);let receipt=writer.normal_step_progress();self.normal_progress=receipt;self.encoding=Some(control.pause().map_err(|(error,_)|error)?);match result{Ok(Some(original))=>{self.wire=Some(original);self.stage=5;},Ok(None)=>{},Err(error)=>return Err(error.into())}return Ok((None,receipt));
   }
   if self.stage==5{
-   if self.active.is_some(){return semio_framework_value::close_factory_ticket(&mut self.active,grant).result.map(|step|(None,step.progress())).map_err(Into::into);}
-   if self.writer.is_some(){return admit(&mut self.writer,&mut self.active,grant).map(|step|(None,step.progress())).map_err(Into::into);}
+   if self.active.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|settle_ticket(&mut self.active,effect)).map(|step|(None,step.progress())).map_err(Into::into);}
+   if self.writer.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|admit(&mut self.writer,&mut self.active,effect)).map(|step|(None,step.progress())).map_err(Into::into);}
    if self.encoding.is_some(){self.encoding=None;return Ok((None,item()));}self.stage=6;return Ok((self.wire.take().map(String::into_bytes),item()));
   }
   Ok((None,Default::default()))
@@ -199,7 +200,9 @@ pub fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Defa
 #[doc(hidden)]
 pub fn birth<T:RetireOwned>()->RetirementDemand{RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()}}
 #[doc(hidden)]
-pub fn admit<T:RetireOwned>(source:&mut Option<T>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_items==0||grant.maximum_capacity_bytes<birth::<T>().capacity_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original inference handoff requires depth"));}let original=source.take().ok_or_else(invalid)?;match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,receipt))=>{*active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original))=>{*source=Some(original);Err(error)}}}
+pub fn settle_ticket(active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let body=effect.grant().maximum_copy_bytes;semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::close_factory_ticket(active,body,effect))}
+#[doc(hidden)]
+pub fn admit<T:RetireOwned>(source:&mut Option<T>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let grant=effect.grant();if grant.maximum_items==0||grant.maximum_capacity_bytes<birth::<T>().capacity_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original inference handoff requires depth"));}if source.is_none(){return Err(invalid());}match semio_framework_value::retirement::admit_owned_retirement(source,effect).result?{Some((owner,receipt))=>{*active=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},None=>Ok(RetainedCloneStep::Progress(Default::default()))}}
 #[doc(hidden)]
 pub fn intersect(a:RetainedCloneGrant,b:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:a.maximum_items.min(b.maximum_items),maximum_copy_bytes:a.maximum_copy_bytes.min(b.maximum_copy_bytes),maximum_capacity_bytes:a.maximum_capacity_bytes.min(b.maximum_capacity_bytes),maximum_release_bytes:a.maximum_release_bytes.min(b.maximum_release_bytes),maximum_depth:a.maximum_depth.min(b.maximum_depth)}}
 

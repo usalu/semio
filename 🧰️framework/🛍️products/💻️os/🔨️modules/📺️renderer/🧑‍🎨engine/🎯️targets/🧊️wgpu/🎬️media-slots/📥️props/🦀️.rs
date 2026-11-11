@@ -10,7 +10,7 @@ pub struct PresentedParamsFailure{pub cause:JsonError,pub receipt_refusal:Option
 pub enum PresentedParamsStepFailure{Grammar(PresentedParamsFailure),Original(OriginalTurnFailure)}
 impl From<ValueError> for PresentedParamsStepFailure{fn from(source:ValueError)->Self{Self::Original(source.into())}}
 
-pub struct OriginalPresentedParams{source:usize,length:usize,identity:(semio_framework_job::OperationId,semio_framework_job::Generation),clock:fn()->Option<u64>,deadline:u64,ledger:Option<u64>,parser:ControlledRetirement<JsonGrammarCursor<DslValue>>,closing:bool}
+pub struct OriginalPresentedParams{source:usize,length:usize,identity:(semio_framework_job::OperationId,semio_framework_job::Generation),clock:fn()->Option<u64>,deadline:u64,ledger:Option<semio_framework_value_native_owned::NativeAllocationIdentity>,parser:ControlledRetirement<JsonGrammarCursor<DslValue>>,closing:bool}
 impl OriginalPresentedParams{
  pub fn admit(source:&str,limits:JsonReadLimits,cx:&mut StepContext<'_>)->Result<Option<Self>,PresentedParamsStepFailure>{
   let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
@@ -26,11 +26,11 @@ impl OriginalPresentedParams{
   let parser=self.parser.original_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"accepted media params grammar has entered retirement"))?;
   let demand=parser.normal_step_demands(source).map_err(|cause|PresentedParamsStepFailure::Grammar(PresentedParamsFailure{cause,receipt_refusal:None,progress:Default::default()}))?;
   if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(false)}
-  self.ledger=Some(native.ledger_identity());let result=parser.step_source(source,1,native,grant,true);let complete=match result{Ok(value)=>{*output=value;Ok(output.is_some())},Err(cause)=>Err(cause)};let progress=parser.normal_step_progress();let receipt_refusal=cx.consume_retained(progress).err();cx.consume_fuel(1);
+  self.ledger=Some(native.ledger_identity());let Some((result,performed))=cx.with_original_effect(grant,|_,effect|parser.step_source(source,1,native,effect,true))?else{return Ok(false)};let complete=match result{Ok(value)=>{*output=value;Ok(output.is_some())},Err(cause)=>Err(cause)};let progress=parser.normal_step_progress();let receipt_refusal=cx.consume_retained(progress).err();cx.consume_fuel(u64::try_from(performed.max(1)).unwrap_or(u64::MAX));
   match(complete,receipt_refusal){(Ok(ready),None)=>Ok(ready),(Err(cause),receipt_refusal)=>Err(PresentedParamsStepFailure::Grammar(PresentedParamsFailure{cause,receipt_refusal,progress})),(Ok(_),Some(refusal))=>Err(PresentedParamsStepFailure::Original(refusal.into()))}
  }
  fn check_caller(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.identity!=(cx.operation(),cx.generation())||!std::ptr::fn_addr_eq(self.clock,cx.clock_source())||self.deadline!=cx.deadline_us(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"accepted media params require their initiating caller clock and deadline"))}Ok(())}
- pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;self.closing=true;if self.parser.terminal_is_empty(){return Ok(true)}let demand=self.parser.selected_demand(cx.retained_grant().maximum_copy_bytes)?;let _=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.parser.step(grant))?;Ok(self.parser.terminal_is_empty())}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.check_caller(cx)?;self.closing=true;if self.parser.terminal_is_empty(){return Ok(true)}let bytes=cx.retained_grant().maximum_copy_bytes;let demand=self.parser.selected_demand(bytes)?;let _=semio_framework_job::close_original_effect_step(cx,demand,|effect|self.parser.step(bytes,effect))?;Ok(self.parser.terminal_is_empty())}
  pub fn terminal_is_empty(&self)->bool{self.parser.terminal_is_empty()}
 }
 

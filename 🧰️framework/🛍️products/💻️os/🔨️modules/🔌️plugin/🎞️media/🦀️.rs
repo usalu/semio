@@ -124,7 +124,7 @@ impl ActiveMediaExport {
         if let Some(owner)=self.parts_retirement.as_mut(){
             if owner.terminal_is_empty(){drop(self.parts_retirement.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
             let demand=owner.selected_demand(grant.maximum_copy_bytes)?;
-            return semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|Ok((PluginLifecycleStep::Progress(owner.step(grant)?.progress()),false)));
+            return semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|_,effect|Ok((PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::plugin_settle_value(owner.step(grant.maximum_copy_bytes,effect))?.progress()),false)));
         }
         if self.parts.is_some(){
             let demand=RetirementDemand{copy_bytes:size_of::<MediaExportOwnedParts>(),depth:1,..Default::default()};
@@ -135,7 +135,7 @@ impl ActiveMediaExport {
         }
         if let Some(owner)=self.cancellation_retirement.as_ref(){
             let terminal=owner.terminal_is_empty();let demand=if terminal{RetirementDemand{release_bytes:size_of::<semio_plugin_operation::ToolCancellationLeaseRetirement>(),depth:1,..Default::default()}}else{owner.retirement_demands(canonical,grant.maximum_copy_bytes)?};
-            if !terminal{let owner=self.cancellation_retirement.as_mut().expect("quoted original cancellation cursor");let work=owner.retirement_work_demand(grant.maximum_copy_bytes)?;let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|owner.close_step(canonical,grant)))?;return Ok(PluginLifecycleStep::Progress(step.progress()))}
+            if !terminal{let owner=self.cancellation_retirement.as_mut().expect("quoted original cancellation cursor");let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.close_step(canonical,effect)))?;return Ok(PluginLifecycleStep::Progress(step.progress()))}
             return semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|{let progress=semio_plugin_operation::original_lease_cursor_release(&mut self.cancellation_retirement,grant)?;Ok((PluginLifecycleStep::Progress(progress),false))});
         }
         if self.lease.is_some(){
@@ -165,7 +165,7 @@ impl MediaDownloadPreparation{
  pub fn quoted_close_selected(&self)->bool{self.output.is_some()||self.output_close.is_some()||self.handle.is_some()||self.handle_close.is_some()||self.buffers.is_some()||self.buffers_close.is_some()}
  pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
   let body=grant.maximum_copy_bytes;
-  macro_rules! close {($original:expr,$active:expr)=>{{let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&$original,&$active,body)?;let work=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_work_demand(&$original,&$active,body)?;let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut $original,&mut $active,grant)))?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}}}
+  macro_rules! close {($original:expr,$active:expr)=>{{let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&$original,&$active,body)?;let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut $original,&mut $active,effect)))?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}}}
   if self.output.is_some()||self.output_close.is_some(){close!(self.output,self.output_close)}
   if self.handle.is_some()||self.handle_close.is_some(){close!(self.handle,self.handle_close)}
   if self.buffers.is_some()||self.buffers_close.is_some(){close!(self.buffers,self.buffers_close)}Ok(None)
@@ -178,7 +178,7 @@ pub struct MediaDownloadRetirement{pub original:std::mem::ManuallyDrop<Option<se
 impl MediaDownloadRetirement{
  pub fn pending(output:semio_plugin_decl_media::ArtifactDownloadOutput)->Self{Self{original:std::mem::ManuallyDrop::new(Some(output)),active:std::mem::ManuallyDrop::new(None)}}
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.original,&self.active,body)}
- pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let demand=self.retirement_demands(grant.maximum_copy_bytes)?;let work=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_work_demand(&self.original,&self.active,grant.maximum_copy_bytes)?;let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_quoted_retained_step(cx,demand,work,|grant|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.original,&mut self.active,grant)))?;Ok(PluginLifecycleStep::Progress(step.progress()))}
+ pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let demand=self.retirement_demands(grant.maximum_copy_bytes)?;let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.original,&mut self.active,effect)))?;Ok(PluginLifecycleStep::Progress(step.progress()))}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.active.is_none()}
 }
 impl Drop for MediaDownloadRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"segmented output requires its complete paid original physical return")}}

@@ -625,7 +625,7 @@ pub fn drive_retirement(owner: &mut dyn ErasedSnapshotRetirement) -> Result<(), 
         if owner.terminal_is_empty() { return Ok(()); }
         let copy = owner.next_copy_byte_demand()?.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy)?, maximum_release_bytes: owner.next_release_byte_demand()?, maximum_depth: owner.next_depth_demand()?.max(1) };
-        let Some((poll, _)) = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant)?.with_effect(|effect| owner.close_step(copy, effect))? else { continue };
+        let Some((poll, _)) = semio_framework_job::OriginalRetirementPump::new().turn(1 << 16, u64::MAX, || Some(0), grant)?.with_effect(|effect| semio_framework_value::close_owner(&mut *owner, copy, effect))? else { continue };
         let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { continue };
         let step = turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "driven test retirement")?;

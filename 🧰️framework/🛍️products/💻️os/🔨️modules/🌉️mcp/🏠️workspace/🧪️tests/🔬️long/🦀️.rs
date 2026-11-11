@@ -7,7 +7,7 @@ use crate::workspace::workspace_worker_pool;
 use semio_os_mcp_capabilities::core_capabilities::build_catalog;
 use semio_os_mcp_catalog::catalog::{Catalog, CatalogSource, compile};
 use semio_os_mcp_catalog::plugin_paths_and_descriptor::{find_plugin_entry, find_repo_root, load_plugin_registry, resolve_plugin_wasm_path};
-use semio_os_mcp_port::channel_port::{ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, MutationOrigin, PreparedOps};
+use semio_os_mcp_port::channel_port::{exchange_blocking, ACTIVATION_CANCELLED_FAULT_CODE, ActivationPhase, ActivationScope, AppCommand, AppFrame, ArtifactChannel, MutationOrigin, PreparedOps};
 use semio_os_mcp_probe_document::probe_document::{PROBE_SCHEMA, ProbeMutation, ProbeSnapshot, ProbeStore, close_probe_store_to_terminal, probe_store_owners};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_os_mcp_plugin_runtime::plugin_artifact_channel::PluginArtifactChannel;
@@ -213,11 +213,11 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         }
     };
 
-    let pure = channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: "note.editor.noop".to_string(), input: serde_json::json!({}), view_state: None }]);
+    let pure = exchange_blocking(&mut channel, 0, vec![AppCommand::PureCommand {  capability_id: "note.editor.noop".to_string(), input: serde_json::json!({}), view_state: None }]);
     println!("[W3] real PureCommand round trip: {pure:?}");
     assert!(pure.as_ref().err().map(|fault| fault.code.as_str()) != Some("channel.not-wired"), "PureCommand must be a real round trip, not the old host-side short-circuit: {pure:?}");
 
-    let prepare = channel.exchange(
+    let prepare = exchange_blocking(&mut channel, 
         0,
         vec![AppCommand::TransactionPrepare {
             txn_id: "w3-txn-1".to_string(),
@@ -228,22 +228,22 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
     println!("[W3] real TransactionPrepare round trip: {prepare:?}");
     assert!(prepare.as_ref().err().map(|fault| fault.code.as_str()) != Some("channel.not-wired"), "TransactionPrepare must be a real round trip: {prepare:?}");
 
-    let commit = channel.exchange(0, vec![AppCommand::TransactionCommit { txn_id: "w3-unknown-txn".to_string() }]);
+    let commit = exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionCommit { txn_id: "w3-unknown-txn".to_string() }]);
     println!("[W3] real TransactionCommit round trip (unknown txn_id): {commit:?}");
     let commit_error = commit.expect_err("committing an unknown txn_id must be a real, typed rejection, never a fabricated success");
     assert_ne!(commit_error.code, "channel.not-wired", "must be the guest's OWN real rejection: {commit_error:?}");
 
-    let rollback = channel.exchange(0, vec![AppCommand::TransactionRollback { txn_id: "w3-unknown-txn".to_string() }]);
+    let rollback = exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionRollback { txn_id: "w3-unknown-txn".to_string() }]);
     println!("[W3] real TransactionRollback round trip (unknown txn_id): {rollback:?}");
     let rollback_error = rollback.expect_err("rolling back an unknown txn_id must be a real, typed rejection");
     assert_ne!(rollback_error.code, "channel.not-wired");
 
-    let undo = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: "w3-unknown-group".to_string() }]);
+    let undo = exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionUndo { group_id: "w3-unknown-group".to_string() }]);
     println!("[W3] real TransactionUndo round trip (unknown group_id): {undo:?}");
     let undo_error = undo.expect_err("undoing an unknown group_id must be a real, typed rejection");
     assert_ne!(undo_error.code, "channel.not-wired");
 
-    let redo = channel.exchange(0, vec![AppCommand::TransactionRedo { group_id: "w3-unknown-group".to_string() }]);
+    let redo = exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionRedo { group_id: "w3-unknown-group".to_string() }]);
     println!("[W3] real TransactionRedo round trip (unknown group_id): {redo:?}");
     let redo_error = redo.expect_err("redoing an unknown group_id must be a real, typed rejection");
     assert_ne!(redo_error.code, "channel.not-wired");
@@ -283,7 +283,7 @@ fn a_real_app_command_is_answered_over_the_shell_message_lane_not_the_respond_la
     let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:command-response-test".to_string(), Vec::new(), empty_catalog(), serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/host-driver-policy.json")).expect("explicit host test policy"), serde_json::from_str(include_str!("../../../🎚️config/💡️host-operation-policy.json")).expect("explicit host funding policy")).expect("opens");
     let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
 
-    let read = channel.exchange(0, vec![AppCommand::ReadArtifact]);
+    let read = exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact]);
     println!("[WR2] real ReadArtifact round trip: {read:?}");
     let fault = read.as_ref().err();
     assert!(
@@ -356,7 +356,7 @@ fn note_mutation_capability_id() -> Option<String> {
 /// in the `spr` sidecar (AP1 §3: 515/223 → 515/612 across a real mutation), so both lanes are
 /// summed and the content is folded, never just `pack.len()`.
 fn document_witness(channel: &mut PluginArtifactChannel, instance: u32) -> String {
-    match channel.exchange(instance, vec![AppCommand::ReadArtifact]) {
+    match exchange_blocking(&mut channel, instance, vec![AppCommand::ReadArtifact]) {
         Ok(frames) => match frames.first() {
             Some(AppFrame::Artifact { pack, spr }) => {
                 let fold = |bytes: &[u8]| bytes.iter().fold(1469598103934665603u64, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(1099511628211));
@@ -369,7 +369,7 @@ fn document_witness(channel: &mut PluginArtifactChannel, instance: u32) -> Strin
 }
 
 fn history_stamp(channel: &mut PluginArtifactChannel, instance: u32) -> String {
-    match channel.exchange(instance, vec![AppCommand::ReadHistory]) {
+    match exchange_blocking(&mut channel, instance, vec![AppCommand::ReadHistory]) {
         Ok(frames) => match frames.first() {
             Some(AppFrame::HistorySnapshot(stamp)) => format!("{}@{}", stamp.cursor, stamp.head_edit_id),
             other => format!("<unexpected {other:?}>"),
@@ -443,7 +443,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
 
     let baseline = document_witness(&mut channel, 0);
     assert_eq!(history_stamp(&mut channel, 0), "0@", "a freshly opened `note` has no recorded command yet");
-    let prepared = channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input: input.clone(), view_state: None }]);
+    let prepared = exchange_blocking(&mut channel, 0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input: input.clone(), view_state: None }]);
     println!("[WR4] prepare {capability_id}: {prepared:?}");
     let ops = match prepared.expect("the guest previews its own verb").into_iter().next() {
         Some(AppFrame::Emit { ops, .. }) => ops,
@@ -454,8 +454,8 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     assert_eq!(baseline, after_prepare, "PREPARE APPLIED: the head moved during a phase whose whole contract is that it does not ({baseline} → {after_prepare})");
 
     let txn = "wr4-two-phase".to_string();
-    let prepare_frames = channel
-        .exchange(
+    let prepare_frames = exchange_blocking(
+            &mut channel,
             0,
             vec![AppCommand::TransactionPrepare {
                 txn_id: txn.clone(),
@@ -468,17 +468,17 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     let staged = document_witness(&mut channel, 0);
     assert_eq!(baseline, staged, "STAGING APPLIED: TransactionPrepare must stash, never apply ({baseline} → {staged})");
 
-    let committed = channel.exchange(0, vec![AppCommand::TransactionCommit { txn_id: txn.clone() }]).expect("the guest commits the staged ops");
+    let committed = exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionCommit { txn_id: txn.clone() }]).expect("the guest commits the staged ops");
     println!("[WR4] commit: {committed:?}");
     let after_commit = document_witness(&mut channel, 0);
     assert_ne!(baseline, after_commit, "COMMIT APPLIED NOTHING: the one phase that is supposed to mutate left the document at {baseline}");
     assert_eq!(history_stamp(&mut channel, 0), format!("1@transaction:{txn}"), "APPLIED MORE THAN ONCE: exactly one transaction was committed, so exactly one command row may exist");
 
-    let undone = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]).expect("the guest undoes its own transaction group");
+    let undone = exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]).expect("the guest undoes its own transaction group");
     println!("[WR4] undo: {undone:?}");
     let after_undo = document_witness(&mut channel, 0);
     println!("[WR4] after undo: {after_undo} (commit was {after_commit}, baseline {baseline})");
-    let twice = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]);
+    let twice = exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]);
     println!("[WR4] second undo of the same group: {twice:?}");
     let refusal = twice.expect_err("a group with one application left has nothing for a second undo to walk back");
     assert!(
@@ -489,7 +489,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
     );
 
     let settled = document_witness(&mut channel, 0);
-    let abandoned = channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input, view_state: None }]).expect("a second preview answers");
+    let abandoned = exchange_blocking(&mut channel, 0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input, view_state: None }]).expect("a second preview answers");
     println!("[WR4] abandoned prepare: {abandoned:?}");
     let after_abandon = document_witness(&mut channel, 0);
     assert_eq!(settled, after_abandon, "A PREPARED HANDLE THAT IS NEVER INVOKED LEFT AN EFFECT: the document moved from {settled} to {after_abandon}");
@@ -543,17 +543,17 @@ fn a_long_history_document_loads_through_polls_and_a_cancel_restores_the_previou
     let started = std::time::Instant::now();
     for index in 0..LONG_HISTORY_TRANSACTIONS {
         let input = serde_json::json!({ "kind": "text", "x": 40 + index, "y": 40 + index });
-        let ops = match channel.exchange(0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input, view_state: None }]).expect("the guest previews addBlock").into_iter().next() {
+        let ops = match exchange_blocking(&mut channel, 0, vec![AppCommand::PureCommand {  capability_id: capability_id.clone(), input, view_state: None }]).expect("the guest previews addBlock").into_iter().next() {
             Some(AppFrame::Emit { ops, .. }) => ops,
             other => panic!("PureCommand must answer Emit, received {other:?}"),
         };
         let txn = format!("stepped-load-{index}");
         let origin = MutationOrigin::Agent { principal: "agent:stepped-load-law".to_string(), invocation_id: txn.clone() };
-        channel.exchange(0, vec![AppCommand::TransactionPrepare { txn_id: txn.clone(), ops: PreparedOps { document: ops.document, config: Vec::new(), draft: Vec::new(), children: ops.children }, origin }]).expect("the guest stages");
-        channel.exchange(0, vec![AppCommand::TransactionCommit { txn_id: txn }]).expect("the guest commits");
+        exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionPrepare { txn_id: txn.clone(), ops: PreparedOps { document: ops.document, config: Vec::new(), draft: Vec::new(), children: ops.children }, origin }]).expect("the guest stages");
+        exchange_blocking(&mut channel, 0, vec![AppCommand::TransactionCommit { txn_id: txn }]).expect("the guest commits");
     }
     println!("[S3-LOAD] {LONG_HISTORY_TRANSACTIONS} transactions committed in {:?}", started.elapsed());
-    let (pack, spr) = match channel.exchange(0, vec![AppCommand::ReadArtifact]).expect("the long document reads back").into_iter().next() {
+    let (pack, spr) = match exchange_blocking(&mut channel, 0, vec![AppCommand::ReadArtifact]).expect("the long document reads back").into_iter().next() {
         Some(AppFrame::Artifact { pack, spr }) => (pack, spr),
         other => panic!("ReadArtifact must answer Artifact, received {other:?}"),
     };

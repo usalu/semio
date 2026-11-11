@@ -18,7 +18,7 @@ use semio_framework_process_routing_workspace as workspace_identity;
 #[path = "🚨️sync-errors-actor-identity-and-envelope-serde/🦀️.rs"]
 mod sync_errors_actor_identity_and_envelope_serde;
 pub use sync_errors_actor_identity_and_envelope_serde::{
-    actor_identity_admission_admits, add_actor_identity_progress, is_repository_root,
+    actor_identity_admission_admits, actor_identity_turn, add_actor_identity_progress, is_repository_root,
     wire_envelopes_with_original_actor, SyncError,
 };
 use sync_errors_actor_identity_and_envelope_serde::{actor_identity_batch_admits, envelope_serde};
@@ -54,7 +54,7 @@ pub use backbone_retention_bootstrap_and_command_acks::{
 #[path = "🧵️backbone-worker-wire-and-history-envelopes/🦀️.rs"]
 mod backbone_worker_wire_and_history_envelopes;
 pub use backbone_worker_wire_and_history_envelopes::{
-    backbone_worker_wire, envelopes_from_history_edit, hub_ws_url, spr_events,
+    backbone_worker_wire, envelopes_from_history_edit, history_events, history_events_in_turn, history_identity_units, hub_ws_url, spr_history,
 };
 #[cfg(not(target_arch="wasm32"))]
 pub use backbone_worker_wire_and_history_envelopes::{

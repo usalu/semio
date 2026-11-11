@@ -52,15 +52,17 @@ impl<A:ArtifactApp> ArtifactMediaExportRequestRetirement<A>{
   if self.outputs.is_some()||self.outputs_close.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_work_demand(&self.outputs,&self.outputs_close,body)}
   if self.metadata.is_some()||self.metadata_close.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_work_demand(&self.metadata,&self.metadata_close,body)}Ok(0)
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{
-  let mut work=0;let result=(||->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>{
-   let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))}let item=RetainedCloneProgress{copied_items:1,..Default::default()};
-   if let Some(original)=self.original.as_mut(){if original.terminal_is_empty(){self.original.take();work=1;return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}let result=original.step(grant);work=original.last_turn_work();return result}
-   if let Some(snapshot)=self.snapshot.as_ref(){if !self.lease.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained media request lost its paired original snapshot supplier").into())}self.snapshot.take();work=1;return Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item}))}
-   if let Some(lease)=self.lease.as_mut(){if lease.terminal_is_empty(){self.lease.take();work=1;return Ok(semio_framework_value::RetainedCloneStep::Progress(item))}let step=lease.close_step(grant)?;work=1;return Ok(step)}
-   if self.outputs.is_some()||self.outputs_close.is_some(){let turn=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.outputs,&mut self.outputs_close,grant);work=turn.work;return turn.result}
-   if self.metadata.is_some()||self.metadata_close.is_some(){let turn=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.metadata,&mut self.metadata_close,grant);work=turn.work;return turn.result}Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
-  })();semio_framework_value::RetainedWorkOutcome{result,work}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  let result=self.step(effect);semio_framework_value::RetirementPollExit::settle(effect,result)
+ }
+ fn step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+  use semio_framework_value::{RetirementPollExit,RetainedCloneStep};
+  let grant=effect.grant();let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||!semio_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}let item=RetainedCloneProgress{copied_items:1,..Default::default()};
+  if let Some(original)=self.original.as_mut(){if original.terminal_is_empty(){self.original.take();RetirementPollExit::pay(effect,1)?;return Ok(RetainedCloneStep::Progress(item))}return RetirementPollExit::resume(original.step(grant.maximum_copy_bytes,effect))}
+  if let Some(snapshot)=self.snapshot.as_ref(){if !self.lease.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained media request lost its paired original snapshot supplier").into())}self.snapshot.take();RetirementPollExit::pay(effect,1)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item}))}
+  if let Some(lease)=self.lease.as_mut(){if lease.terminal_is_empty(){self.lease.take();RetirementPollExit::pay(effect,1)?;return Ok(RetainedCloneStep::Progress(item))}let step=lease.close_step(grant)?;RetirementPollExit::pay(effect,1)?;return Ok(step)}
+  if self.outputs.is_some()||self.outputs_close.is_some(){return RetirementPollExit::resume(semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.outputs,&mut self.outputs_close,effect))}
+  if self.metadata.is_some()||self.metadata_close.is_some(){return RetirementPollExit::resume(semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.metadata,&mut self.metadata_close,effect))}Ok(RetainedCloneStep::Complete(Default::default()))
  }
 }
 

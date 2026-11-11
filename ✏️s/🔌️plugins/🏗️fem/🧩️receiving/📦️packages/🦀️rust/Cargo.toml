@@ -15,7 +15,14 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = ["dep:semio-framework-value-testing-admission"]
+
 [dependencies]
 semio-framework-dsl-record = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework-value-native-owned = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust", optional = true }

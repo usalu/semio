@@ -2,7 +2,7 @@ extern crate semio_os_kernel as store;
 extern crate semio_os_kernel as protocol;
 use semio_plugin_reactor_core::{ARMED_TIMERS, PRESENCE, ReactorClosePeers, SURFACE_RENDER_FAULT_CODE, admit_package_assets, advance_command_cursor, reconcile_step_opportunities, shell_fault_effect, terminal_command_ingress};
 use semio_framework::kernel::{ActorInstanceLifecycleReceipt, ActorUiPatchReceipt, Effect, Event, MessageEndpoint, TurnStatus, UiPatch};
-use semio_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS, checkpoint};
+use semio_plugin_reactor_surfaces::{COLD_PAIR_DOCUMENT_LOAD, COLD_PAIR_INGRESS, RESTORED_DOCUMENT_LOADS, RESTORED_WORK, checkpoint};
 use std::cell::{Cell, RefCell};
 use semio_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
 use semio_plugin_reactor_tasks::{INSTANCE_METADATA, JOB_RENDER_BINDINGS, REACTOR_EXECUTOR, REGISTRY, TASK_EXECUTOR, TASK_RESUMES};

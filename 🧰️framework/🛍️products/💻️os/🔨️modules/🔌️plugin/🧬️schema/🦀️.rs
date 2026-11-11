@@ -15,6 +15,7 @@ generate!({
         "-import:semio:framework/pure@1.0.0#operation-finish",
     ],
     pub_export_macro: true,
+    generate_unused_types: true,
     default_bindings_module: "$crate::component::wasip2",
     disable_custom_section_link_helpers: true,
 });

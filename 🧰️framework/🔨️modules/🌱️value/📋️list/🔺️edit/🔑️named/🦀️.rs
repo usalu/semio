@@ -130,9 +130,9 @@ impl NamedEditPlan{
  fn close_reply_named<'r>(&mut self,mut original:Option<&mut crate::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:crate::indexed_edit::Reply<'r>,recover:bool)->Result<crate::indexed_edit::Done<'r>,ValueError>{
   use crate::indexed_edit::CloseReply;
   if !self.closing{return Err(invalid())}
-  let identity=crate::indexed_edit::invocation_identity(effect,recover)?;let loan=match original.as_deref_mut(){Some(loan)=>Some(crate::indexed_edit::loan_key(loan,effect)?),None=>None};
+  let identity=crate::indexed_edit::invocation_identity(effect,recover)?;let body=if recover{self.close_route.map_or(body,|key|key.2)}else{body};let loan=match original.as_deref_mut(){Some(loan)=>Some(crate::indexed_edit::loan_key(loan,effect)?),None=>None};
   let grant=effect.grant();let child=Self::child(grant);let child_body=body.saturating_sub(Self::fixed_copy_bytes());
-  let key=if recover{let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.2!=body||key.3!=loan{return Err(ValueError::invariant("named edit close recovery changed its invocation, body or loan"))}key}else{
+  let key=if recover{let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.3!=loan{return Err(ValueError::invariant("named edit close recovery changed its invocation, body or loan"))}key}else{
    if self.close_route.is_some()||self.child_reply.is_some(){return Err(ValueError::invariant("named edit close requires recovery"))}
    if self.terminal_is_empty(){return Ok(reply.complete(Ok(RetainedCloneStep::Complete(Default::default()))))}
    let demand=self.close_demand(body)?;if !retained_clone_grant_admits(grant,demand){return Ok(reply.complete(Ok(RetainedCloneStep::Progress(Default::default()))))}

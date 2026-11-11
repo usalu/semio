@@ -94,7 +94,8 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
     fn input_capacity(&self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: &str) -> Result<usize, ValueError> {
         self.input.next_capacity_byte_demand(parent_id, dialect, self.existing(registry), actor, transaction, Some(group_id))
     }
-    fn advance_input(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: &str, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn advance_input(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &str, transaction: Option<&protocol::TransactionRef>, group_id: &str, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if self.input_ready { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.input.ready() {
             let Some(parts) = self.input.take_ready(grant) else { return Ok(RetainedCloneStep::Progress(Default::default())); };
@@ -103,7 +104,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         }
         let key = self.input.source().map(|source| MemberKeyRef { owner: &source.owner, slot: &source.slot, child_id: &source.child_id }).expect("private input source remains retained");
         let existing = registry.member(key).map(|entry| &entry.reference);
-        self.input.advance(parent_id, dialect, if self.new_member { None } else { existing }, actor, transaction, Some(group_id), M::OPEN_DECLARATIONS, operation, generation, expires_at_us, now_us, grant)
+        self.input.advance(parent_id, dialect, if self.new_member { None } else { existing }, actor, transaction, Some(group_id), M::OPEN_DECLARATIONS, operation, generation, expires_at_us, now_us, effect)
     }
     pub fn open_birth_demand(&self) -> Result<store::RetainedCloneBirthDemand, Fault> {
         self.request.as_ref().or_else(||self.opening_source.as_ref().and_then(|source|source.request())).map_or(Ok(store::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 }), |request| M::open_birth_demand(request).map_err(|_| plugin_sdk_fault("private child factory refused its original request birth")))
@@ -379,14 +380,14 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         self.rows[self.input_cursor].as_ref().map_or(Ok(Self::row_birth_bytes()), |row| row.input_capacity(registry, parent_id, dialect, actor.as_str(), self.transaction(), self.group_id()))
     }
     /// 🧵️ Advances one funded parent field, row frame, or original child input phase.
-    pub fn advance_inputs(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let grant = group_grant(grant);
+    pub fn advance_inputs(&mut self, registry: &ChildMemberRegistry<M>, parent_id: &str, dialect: &ArtifactDialect, actor: &semio_framework_value::SharedUtf8, operation: OperationId, generation: Generation, expires_at_us: u64, now_us: u64, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = group_grant(effect.grant());
         if self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.parent_metadata.is_none() {
             if self.parent_issuer.ready() { self.parent_metadata = self.parent_issuer.take_ready(grant)?; return Ok(group_structural()); }
             let transaction = self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.transaction.as_ref());
             let group_id = self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.group_id.as_deref()).unwrap();
-            return self.parent_issuer.advance(PrivatePublicationMetadataSource { actor, transaction, group_id: Some(group_id) }, grant);
+            return self.parent_issuer.advance(PrivatePublicationMetadataSource { actor, transaction, group_id: Some(group_id) }, effect);
         }
         if self.input_cursor == self.count { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.rows[self.input_cursor].is_none() {
@@ -399,7 +400,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         let transaction = self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.transaction.as_ref());
         let group_id = self.original_metadata.as_ref().and_then(PrivatePublicationMetadata::parts).and_then(|parts| parts.group_id.as_deref()).unwrap();
         let row = self.rows[self.input_cursor].as_mut().unwrap();
-        let step = row.advance_input(registry, parent_id, dialect, actor.as_str(), transaction, group_id, operation, generation, expires_at_us, now_us, grant)?;
+        let step = row.advance_input(registry, parent_id, dialect, actor.as_str(), transaction, group_id, operation, generation, expires_at_us, now_us, effect)?;
         if row.input_ready { self.input_cursor += 1; }
         Ok(step)
     }
@@ -652,7 +653,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
     }
     /// ♻️ Returns private reads before staged abort and preserves each independently granted original owner.
     pub fn close_step(&mut self, parent: &mut impl SpaceMember, registry: &mut ChildMemberRegistry<M>, graph: &mut store::os_store::composition_coordinator::CompositionGraph, live: &ChildContentView,cx:&mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
-        if self.origins.is_some()||!self.origins_retirement.is_empty(){let body=grant.maximum_copy_bytes;let d=self.origins_retirement.next_owner_demands::<Vec<Option<std::collections::VecDeque<protocol::MutationOrigin>>>>(self.origins.is_some(),&None,body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let step=if self.origins_retirement.is_empty(){self.origins_retirement.begin_granted(&mut self.origins,grant).result?.unwrap_or(RetainedCloneStep::Complete(Default::default()))}else{self.origins_retirement.select(body)?.step(grant).result?};return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if self.origins.is_some()||!self.origins_retirement.is_empty(){let body=grant.maximum_copy_bytes;let d=self.origins_retirement.next_owner_demands::<Vec<Option<std::collections::VecDeque<protocol::MutationOrigin>>>>(self.origins.is_some(),&None,body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|if self.origins_retirement.is_empty(){Ok::<_,ValueError>(self.origins_retirement.begin_granted(&mut self.origins,effect).result?.unwrap_or(RetainedCloneStep::Complete(Default::default())))}else{semio_plugin_ownership::bounded_ownership::plugin_settle_value(self.origins_retirement.select(body)?.step(effect))})?;return Ok(RetainedCloneStep::Progress(step.progress()))}
         let grant = group_grant(grant);
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -664,7 +665,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if !self.committed { if let Some(owner) = self.visibility_owner.as_mut() { owner.abort(); } }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let item = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: child.maximum_items, maximum_copy_bytes: child.maximum_copy_bytes, maximum_capacity_bytes: child.maximum_capacity_bytes, maximum_release_bytes: child.maximum_release_bytes, maximum_depth: child.maximum_depth };
-        if self.pending_failure.is_some()||!self.failure_close.is_empty(){let progress=cx.with_native_retirement(|original|{original.charge(demand.capacity_bytes)?;if let Some(step)=self.failure_close.begin_granted(&mut self.pending_failure,grant).result?{return Ok(step)}self.failure_close.step_granted(grant).result})?;return Ok(RetainedCloneStep::Progress(progress.progress()))}
+        if self.pending_failure.is_some()||!self.failure_close.is_empty(){let progress=match cx.with_original_effect(grant,|cx,effect|cx.with_native_retirement(|original|{original.charge(demand.capacity_bytes)?;if let Some(step)=self.failure_close.begin_granted(&mut self.pending_failure,effect).result?{return Ok(step)}semio_plugin_ownership::bounded_ownership::plugin_settle_value(self.failure_close.step_granted(grant.maximum_copy_bytes,effect))}))?{Some((result,performed))=>{cx.consume_work(performed);result?},None=>RetainedCloneStep::Progress(Default::default())};return Ok(RetainedCloneStep::Progress(progress.progress()))}
         if let Some(read) = self.parent_read.take() {
             match parent.return_prepared_snapshot_read_erased(self.parent_lane.as_mut().unwrap().publication_mut().unwrap(), self.visibility.as_ref().unwrap(), read, item) {
                 Ok(step) => return Ok(step),

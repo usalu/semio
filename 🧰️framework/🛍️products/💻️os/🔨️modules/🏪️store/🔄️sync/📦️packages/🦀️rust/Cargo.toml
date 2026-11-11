@@ -32,6 +32,7 @@ semio-os-store-engine = { path = "../../../⚙️engine/📦️packages/🦀️r
 semio-os-store-space-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-os-store-text-io = { path = "../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-job = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-os-directory = { path = "../../../../📇️directory/📦️packages/🦀️rust" }

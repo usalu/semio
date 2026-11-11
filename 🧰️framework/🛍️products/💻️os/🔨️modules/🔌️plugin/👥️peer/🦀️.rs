@@ -30,7 +30,7 @@ use semio_plugin_job::reserved_jobs::ConfigurationDecodeRetirement;
 pub struct PeerPresenceRootRetirement {
     pub root: ManuallyDrop<Option<std::sync::Arc<PeerPresenceRoot>>>,
     pub owned: ManuallyDrop<Option<PeerPresenceRoot>>,
-    pub entry: ManuallyDrop<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<PeerPresenceEntry>>>,
+    pub entry: ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<PeerPresenceEntry>>>>,
     pub cursor: usize,
 }
 
@@ -45,7 +45,7 @@ impl PeerPresenceRootRetirement {
 
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(entry) = self.entry.as_ref() {
-            if entry.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<PeerPresenceEntry>>>(),depth:1,..Default::default()})}
+            if entry.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<PeerPresenceEntry>>>>(),depth:1,..Default::default()})}
             return Ok({let mut demand=entry.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "peer entry retirement depth overflow"))?;demand});
         }
         if self.root.is_some() {
@@ -53,7 +53,7 @@ impl PeerPresenceRootRetirement {
         }
         if let Some(root) = self.owned.as_ref() {
             let copy=if self.cursor<root.len{
-                size_of::<usize>()+2*size_of::<Option<std::sync::Arc<PeerPresenceEntry>>>()+if root.entries[self.cursor].is_some(){2*size_of::<Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<PeerPresenceEntry>>>()}else{0}
+                size_of::<usize>()+2*size_of::<Option<std::sync::Arc<PeerPresenceEntry>>>()+if root.entries[self.cursor].is_some(){2*size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::retirement::arc_custody::ArcLease<PeerPresenceEntry>>>>()}else{0}
             }else{2*size_of::<Option<PeerPresenceRoot>>()};
             return Ok(RetirementDemand{copy_bytes:copy,depth:1,..Default::default()});
         }
@@ -70,7 +70,7 @@ impl PeerPresenceRootRetirement {
         if let Some(entry) = self.entry.as_mut() {
             if entry.terminal_is_empty(){semio_plugin_ownership::bounded_ownership::plugin_pay_unit(effect)?;self.entry.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(entry.step(&mut effect.nested(child)))?;
+            let step = semio_plugin_ownership::bounded_ownership::plugin_settle_value(entry.step(child.maximum_copy_bytes, &mut effect.nested(child)))?;
             let progress = step.progress();
             return Ok(PluginLifecycleStep::Progress(progress));
         }
@@ -93,7 +93,7 @@ impl PeerPresenceRootRetirement {
             let index = self.cursor;
             self.cursor += 1;
             if let Some(entry) = root.entries[index].take() {
-                *self.entry = Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::new(entry));
+                *self.entry = Some(semio_framework_value::retirement::controlled::ControlledRetirement::retain(semio_framework_value::retirement::arc_custody::ArcLease::new(entry)));
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
             }
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, ..empty }));
@@ -526,7 +526,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
 
     /// 🎟️ Advances exactly one stage of the mounted roster under the caller's unchanged grant; the original decode owner
     /// accumulates every actual receipt of the turn, so the answer reports what the store and the decoder really spent.
-    pub fn step(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    pub fn step(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         let empty = RetainedCloneProgress::default();
         if self.faulted { return Ok(PluginLifecycleStep::Blocked { reason: "original peer fault awaits admitted outcome transfer" }); }
         if grant.maximum_items == 0 {
@@ -538,6 +538,11 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
         let demand = self.step_demands().map_err(|error| plugin_sdk_fault(error.to_string()))?;
         if grant.maximum_depth < demand.depth { return Err(plugin_sdk_fault("peer roster step exceeds its admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(PluginLifecycleStep::Progress(empty)); }
+        if self.stage == PeerRosterPublicationStage::DecodeTyped && (self.pending_pack.is_some() || self.rejected.is_some()) {
+            let refused = |error: ValueError| plugin_sdk_fault(error.to_string());
+            let step = semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx, grant, |effect| if self.rejected.is_some() { semio_plugin_ownership::bounded_ownership::plugin_settle_value(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, grant.maximum_copy_bytes, effect)) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, effect).result }).map_err(refused)?;
+            return Ok(PluginLifecycleStep::Progress(step.progress()));
+        }
         let mut admit = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
         let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut admit);
         let mut original = semio_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, grant);
@@ -622,11 +627,6 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
                 Ok(PeerRosterTurn::Spent)
             }
             PeerRosterPublicationStage::DecodeTyped => {
-                if self.pending_pack.is_some() || self.rejected.is_some() {
-                    let step = if self.rejected.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, original.remaining_grant()) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, original.remaining_grant()) }.result.map_err(refused)?;
-                    original.record_progress(step.progress()).map_err(refused)?;
-                    return Ok(PeerRosterTurn::Spent);
-                }
                 if self.packs_len == 0 {
                     self.release_packs_shell();
                     self.stage = PeerRosterPublicationStage::ReleaseCreated;
@@ -784,7 +784,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if let Some(typed) = self.typed.as_mut() {
-            let step = typed.close_step(grant)?;
+            let step = match typed.close_step(effect) { Ok(step) => step, Err(semio_framework_value::RetirementPollExit::Pending(_)) => return Ok(PluginLifecycleStep::Progress(empty)), Err(semio_framework_value::RetirementPollExit::Failed(failure)) => return Err(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure)) };
             if typed.terminal_is_empty() { drop(self.typed.take()); }
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }

@@ -30,6 +30,7 @@ semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", pack
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack-record = { path = "../../../../../../../../🔨️modules/🎒️pack/🌱️value/📦️packages/🦀️rust" }

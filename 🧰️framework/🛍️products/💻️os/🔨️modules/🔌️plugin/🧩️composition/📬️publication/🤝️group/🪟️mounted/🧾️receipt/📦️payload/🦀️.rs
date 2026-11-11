@@ -11,9 +11,9 @@ pub fn payload_demands(bytes: &MountedCausalPayload) -> Result<RetirementDemand,
     }
     Ok(RetirementDemand { release_bytes: owner.next_release_allocation_bytes().map_err(ValueError::from)?, depth: owner.next_release_depth_demand().map_err(ValueError::from)?, ..Default::default() })
 }
-pub fn payload_close(bytes: &mut MountedCausalPayload, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+pub fn payload_close(bytes: &mut MountedCausalPayload, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
     let d = payload_demands(bytes)?;
-    if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(d,grant){
+    if !semio_plugin_ownership::bounded_ownership::plugin_grant_funds(d,effect.grant()){
         return Ok(RetainedCloneStep::Progress(Default::default()));
     }
     if bytes.retained_bytes().terminal_is_empty() {
@@ -26,8 +26,15 @@ pub fn payload_close(bytes: &mut MountedCausalPayload, grant: RetainedCloneGrant
         }
         RetainedCloneProgress { copied_items: 1, copied_bytes: count, ..Default::default() }
     } else {
-        let p = bytes.retained_bytes_mut().release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;
-        RetainedCloneProgress { copied_items: usize::from(p.progressed), released_bytes: p.released_allocation_bytes, ..Default::default() }
+        if effect.remaining_work_units()? == 0 {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
+        }
+        match bytes.retained_bytes_mut().release_empty_page(effect).result {
+            Ok(semio_framework_value::PagedListReleaseOutcome::Ready(p)) => RetainedCloneProgress { copied_items: usize::from(p.progressed), released_bytes: p.released_allocation_bytes, ..Default::default() },
+            Ok(semio_framework_value::PagedListReleaseOutcome::Denied) => return Ok(RetainedCloneStep::Progress(Default::default())),
+            Err(semio_framework_value::PagedListReleaseFailure::Work(error)) => return Err(error),
+            Err(semio_framework_value::PagedListReleaseFailure::Release(error)) => return Err(ValueError::from(error)),
+        }
     };
     Ok(if bytes.retained_bytes().terminal_is_empty() { RetainedCloneStep::Complete(p) } else { RetainedCloneStep::Progress(p) })
 }
@@ -87,17 +94,17 @@ impl MountedReceiptPayload {
     pub fn next_close_byte_demand(&self) -> usize {
         self.retirement_demands().expect("canonical receipt retains valid page layout").release_bytes
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
-        let d = self.retirement_demands().expect("canonical receipt retains valid page layout");
-        if !plugin_grant_funds(d, grant) {
-            return RetainedCloneStep::Progress(Default::default());
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let d = self.retirement_demands()?;
+        if !plugin_grant_funds(d, effect.grant()) {
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         self.closing = true;
-        let step = payload_close(&mut self.bytes, grant).expect("quoted original canonical receipt page remains retained");
+        let step = payload_close(&mut self.bytes, effect)?;
         if self.bytes.retained_bytes().terminal_is_empty() {
             self.closed = true;
         }
-        if step.progress() == Default::default() { RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }) } else { step }
+        Ok(step)
     }
     pub fn terminal_is_empty(&self) -> bool {
         self.closed && self.bytes.retained_bytes().terminal_is_empty()

@@ -104,7 +104,7 @@ impl CommandIngressTurn {
                 match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None }, cursor.item_count, page, now_ms).await {
                     Ok(publication_generation) => {
                         self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
-                        Some(CommandIngressOwner::Presence { cursor, publication_generation,exchange:None,exchange_close:None,terminal:false,terminal_fault:None })
+                        Some(CommandIngressOwner::Presence { cursor, publication_generation,exchange:None,exchange_close:None,construction:Default::default(),terminal:false,terminal_fault:None })
                     }
                     Err((_fault, admission, page)) => {
                         self.status = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
@@ -118,7 +118,7 @@ impl CommandIngressTurn {
             Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page).await {
                 Ok(()) => {
                     self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
-                    Some(CommandIngressOwner::Presence { cursor, publication_generation,exchange:None,exchange_close:None,terminal:false,terminal_fault:None })
+                    Some(CommandIngressOwner::Presence { cursor, publication_generation,exchange:None,exchange_close:None,construction:Default::default(),terminal:false,terminal_fault:None })
                 }
                 Err((_fault, page)) => {
                     self.status = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
@@ -131,10 +131,10 @@ impl CommandIngressTurn {
 
     /// 👥️ Exchanges one presence page of the retained presence owner when the turn has no other status.
     async fn exchange_presence<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,effects:&mut Vec<Effect>,identity:&mut EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-        if !matches!(self.status,CommandIngressStatus::Idle){return Ok(())}let Some(CommandIngressOwner::Presence{cursor,exchange,exchange_close,terminal,terminal_fault,..})=self.loan.state_mut()else{return Ok(())};let cursor=cursor.clone();
+        if !matches!(self.status,CommandIngressStatus::Idle){return Ok(())}let Some(CommandIngressOwner::Presence{cursor,exchange,exchange_close,construction,terminal,terminal_fault,..})=self.loan.state_mut()else{return Ok(())};let cursor=cursor.clone();
         if !close_exchange_owner(exchange,exchange_close,cx)?{return Ok(())}
         if *terminal{let fault=terminal_fault.take();self.status=terminal_command_ingress(cursor,fault);self.loan.put_state(None);return Ok(())}
-        if !semio_framework_job::admit_original_construction(cx,exchange,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:std::mem::size_of_val(exchange),capacity_bytes:0,release_bytes:0,depth:1},|_|semio_framework_value::RetainedWorkOutcome{result:Ok((semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>(),..Default::default()})),work:1})?{return Ok(())}
+        if !semio_framework_job::admit_original_construction_settled(cx,construction,exchange,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:std::mem::size_of_val(exchange),capacity_bytes:0,release_bytes:0,depth:1},1,|_,_|semio_framework_value::RetainedWorkOutcome{result:Ok((semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState>>(),..Default::default()})),work:1})?{return Ok(())}
         let mut output=plugin_exchange_turn(runtime,cursor.instance,&mut None,exchange.as_mut().expect("presence retains its Source output state"),identity,cx).await?;
         if output.presence_terminal==Some(cursor.seq){*terminal=true;*terminal_fault=output.presence_terminal_fault.take();}
         route_exchange_output(cursor.instance,output,effects,cx)
@@ -203,7 +203,7 @@ impl CommandIngressTurn {
                         let now_ms = semio_plugin_actor_host::now_ms().await;
                         match semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_admit_reserved_presence(runtime, cursor.instance, admission, own_color, cursor.item_count, page, now_ms).await {
                             Ok(publication_generation) => {
-                                self.loan.put_state(Some(CommandIngressOwner::Presence { cursor:cursor.clone(),publication_generation,exchange:None,exchange_close:None,terminal:false,terminal_fault:None }));
+                                self.loan.put_state(Some(CommandIngressOwner::Presence { cursor:cursor.clone(),publication_generation,exchange:None,exchange_close:None,construction:Default::default(),terminal:false,terminal_fault:None }));
                                 self.status = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
                             }
                             Err((_fault, admission, page)) => {
@@ -240,7 +240,7 @@ impl CommandIngressTurn {
         if cx.should_yield()||cx.fuel_remaining()==0{self.status=CommandIngressStatus::Backpressure(cursor);return Ok(())}
         let mut pages=None;let turn=CommandPageSet::admit_source_step(&mut pages,cursor.page_count as usize,cx.retained_grant());
         self.loan.put_state(pages.map(|pages|CommandIngressOwner::GenericAssembly{cursor:cursor.clone(),pages}));
-        let progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_fuel(turn.work);cx.consume_retained(progress)?;turn.result?;
+        let progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));cx.consume_retained(progress)?;turn.result?;
         let Some(CommandIngressOwner::GenericAssembly{cursor:active,pages})=self.loan.take_state()else{self.status=CommandIngressStatus::Backpressure(cursor);return Ok(())};
         self.continue_generic_assembly(runtime,incoming,(active,pages),effects,identity,cx).await
     }
@@ -251,7 +251,7 @@ impl CommandIngressTurn {
         let Some(CommandIngressOwner::GenericAssembly{pages,..})=self.loan.state_mut()else{unreachable!()};
         if cursor.page_index as usize!=pages.len(){self.status=CommandIngressStatus::Fault{cursor,fault:b"plugin.command-page-order".to_vec()};return Ok(())}
         if cx.should_yield()||cx.fuel_remaining()==0{self.status=CommandIngressStatus::Backpressure(cursor);return Ok(())}
-        let turn=pages.capture_source_step(incoming,cx.retained_grant());let progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_fuel(turn.work);cx.consume_retained(progress)?;turn.result?;
+        let turn=pages.capture_source_step(incoming,cx.retained_grant());let progress=match &turn.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));cx.consume_retained(progress)?;turn.result?;
         if incoming.is_some(){self.status=CommandIngressStatus::Backpressure(cursor);return Ok(())}
         if let Some(CommandIngressOwner::GenericAssembly{cursor:active,..})=self.loan.state_mut(){active.page_index=cursor.page_index;}
         self.status=CommandIngressStatus::PageAccepted(cursor.clone());

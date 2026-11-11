@@ -1,5 +1,8 @@
 //! 🎟️ Independently authored fixture authority survives original settlement and terminal closure.
-use semio_framework_job::{CancelToken, Generation, OperationId, StepBudget, StepContext, OriginalCallerSourceParent};
+use semio_framework_job::{CancelToken, Generation, OperationId, StepBudget, StepContext, OriginalCallerSourceParent, OriginalCallerSourceAdmission, OriginalRetirementPump};
+use semio_framework_job_testing_caller::bank_step;
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll};
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
 use semio_framework_job_payload::{JobPayloadAuthority};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use std::mem::ManuallyDrop;
@@ -12,14 +15,28 @@ fn fixture_remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->Resu
 
 fn fixture_now_us()->Option<u64>{Some(1000)}
 
+/// 🌱️ Births the Source parent through its staged original admission, each step under one funded effect bank, and returns its summed receipt.
+fn admit_source_parent(authority:JobPayloadAuthority,cancel:CancelToken,remaining:RetainedCloneGrant,fuel:u64)->(OriginalCallerSourceParent,RetainedCloneProgress){
+ let mut bank=EffectBank::new(Wallet::from_profile(&serde_json::json!({"items":remaining.maximum_items,"copyBytes":remaining.maximum_copy_bytes,"capacityBytes":remaining.maximum_capacity_bytes,"releaseBytes":remaining.maximum_release_bytes,"depth":remaining.maximum_depth,"fuel":fuel})));
+ let mut authority=Some(authority);let mut cancel=Some(cancel);let mut admission=OriginalCallerSourceAdmission::new();let mut parent=None;
+ let prepared=bank_step(&mut bank,OriginalCallerSourceAdmission::prepare_demand(),1,|effect|admission.prepare(&mut authority,&mut cancel,effect)).progress();
+ let backed=bank_step(&mut bank,OriginalCallerSourceAdmission::backing_demand().expect("original fixture Source backing quote"),OriginalCallerSourceAdmission::backing_work_demand(),|effect|admission.admit_backing(effect)).progress();
+ let published=bank_step(&mut bank,OriginalCallerSourceAdmission::publish_demand(),1,|effect|admission.publish(&mut parent,effect)).progress();
+ let receipt=prepared.checked_add(backed).and_then(|sum|sum.checked_add(published)).expect("original fixture Source birth receipts fit");
+ (parent.expect("original fixture Source parent published"),receipt)
+}
+
+/// 🪙️ Runs one owner-less close step inside the host retirement pump's effect; `None` means the quote was not admitted.
+fn pumped<R>(fuel:u64,deadline_us:u64,grant:RetainedCloneGrant,close:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Option<(R,u128)>{OriginalRetirementPump::new().turn(fuel,deadline_us,fixture_now_us,grant).and_then(|mut pump|pump.with_effect(close)).expect("original fixture retirement pump")}
+
 /// 🪙️ One original ledger, cancellation root, cursor and cumulative recipient own the fixture's whole financed body.
 pub struct OriginalFixtureCaller{policy:CallerPolicy,budget:Option<StepBudget>,source:ManuallyDrop<Option<OriginalCallerSourceParent>>,sequence:u64,receipt:RetainedCloneProgress,decoder:semio_framework_job::OriginalJobDecodeOwner,clock_binding:u64}
 impl OriginalFixtureCaller{
  /// 🚪️ Creates original authority from closed test input before semantic work begins.
  pub fn admit()->Result<Self,ValueError>{
   let policy:CallerPolicy=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).expect("closed original fixture caller policy");assert_eq!(policy.source_kind,"original-parent");assert_eq!(policy.clock_us,1000);let (cancel,root)=CancelToken::admit_root(policy.grant).result?.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original fixture cancellation birth is not funded"))?;
-  let remaining=fixture_remaining(policy.grant,root)?;let (authority,ledger)=JobPayloadAuthority::admit(OperationId(policy.operation),Generation(policy.generation),remaining).result?.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original fixture ledger birth is not funded"))?;
-  let remaining=fixture_remaining(policy.grant,root.checked_add(ledger)?)?;let(source,parent)=OriginalCallerSourceParent::admit(authority,cancel,remaining).result.unwrap_or_else(|_|panic!("original fixture parent birth is funded by its closed policy"));let receipt=root.checked_add(ledger)?.checked_add(parent)?;assert!(receipt.fits(policy.grant));let fuel=policy.fuel.checked_sub(receipt.copied_items as u64).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original fixture source admissions exceed initiating fuel"))?;let budget=Some(StepBudget::new(fuel,policy.deadline_us,policy.grant));Ok(Self{policy,budget,source:ManuallyDrop::new(Some(source)),sequence:0,receipt,decoder:semio_framework_job::OriginalJobDecodeOwner::empty(),clock_binding:semio_framework_trace::allocate_operation_id().0})
+  let remaining=fixture_remaining(policy.grant,root)?;let mut ledger_actual=None;let (authority,ledger)=JobPayloadAuthority::admit(OperationId(policy.operation),Generation(policy.generation),remaining,&mut ledger_actual).result?.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original fixture ledger birth is not funded"))?;
+  let remaining=fixture_remaining(policy.grant,root.checked_add(ledger)?)?;let(source,parent)=admit_source_parent(authority,cancel,remaining,policy.fuel);let receipt=root.checked_add(ledger)?.checked_add(parent)?;assert!(receipt.fits(policy.grant));let fuel=policy.fuel.checked_sub(receipt.copied_items as u64).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original fixture source admissions exceed initiating fuel"))?;let budget=Some(StepBudget::new(fuel,policy.deadline_us,policy.grant));Ok(Self{policy,budget,source:ManuallyDrop::new(Some(source)),sequence:0,receipt,decoder:semio_framework_job::OriginalJobDecodeOwner::empty(),clock_binding:semio_framework_trace::allocate_operation_id().0})
  }
  /// 🪢️ Lends one original context; another call cannot recreate its original fuel or ceiling.
  pub fn context(&mut self)->StepContext<'_>{let budget=self.budget.take().expect("original fixture context can only be issued once");let mut cx=self.source.as_ref().expect("original fixture parent remains retained while its context is lent").borrow_context(budget,fixture_now_us,&mut self.sequence,&mut self.receipt).unwrap();cx.bind_original_clock_binding(self.clock_binding).expect("original fixture clock binds to its genuine source context");cx.with_original_decoder(&mut self.decoder)}
@@ -30,21 +47,27 @@ impl OriginalFixtureCaller{
  /// 📏️ Bounds caller loops without deriving finance from an owner's descriptive demand.
  pub fn maximum_turns()->usize{serde_json::from_str::<CallerPolicy>(include_str!("🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap().maximum_turns}
  /// 🛬️ Retires the body decoder against the same already-issued caller stock before its three parent roots close.
- pub fn retire_decoder(&mut self,decoder:&mut semio_framework_job::OriginalJobDecodeOwner,fuel:u64)->Result<u64,ValueError>{assert!(self.budget.is_none(),"original decoder retirement follows its single body loan");retire_fixture_decoder(self.policy.grant,self.policy.retirement_loan,self.policy.maximum_turns,&mut self.receipt,decoder,fuel)}
+ pub fn retire_decoder(&mut self,decoder:&mut semio_framework_job::OriginalJobDecodeOwner,fuel:u64)->Result<u64,ValueError>{assert!(self.budget.is_none(),"original decoder retirement follows its single body loan");retire_fixture_decoder(self.source.as_ref(),&mut self.sequence,self.clock_binding,self.policy.deadline_us,self.policy.grant,self.policy.retirement_loan,self.policy.maximum_turns,&mut self.receipt,decoder,fuel)}
  /// 🧹️ Returns the original caller ledger and root with its remaining authored authority after all child payloads close.
  pub fn retire(&mut self,mut fuel:u64)->Result<RetainedCloneProgress,ValueError>{
-  fuel=retire_fixture_decoder(self.policy.grant,self.policy.retirement_loan,self.policy.maximum_turns,&mut self.receipt,&mut self.decoder,fuel)?;
+  fuel=retire_fixture_decoder(self.source.as_ref(),&mut self.sequence,self.clock_binding,self.policy.deadline_us,self.policy.grant,self.policy.retirement_loan,self.policy.maximum_turns,&mut self.receipt,&mut self.decoder,fuel)?;
   for _ in 0..self.policy.maximum_turns{
    if self.source.as_ref().is_none_or(OriginalCallerSourceParent::terminal_is_empty){self.source.take();return Ok(self.receipt)}
    if fuel==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original fixture caller retirement exhausted its original fuel"))}let supplied=self.policy.grant;let posted=self.receipt;let wanted=self.policy.retirement_loan;let grant=RetainedCloneGrant{maximum_items:wanted.maximum_items.min(supplied.maximum_items.saturating_sub(posted.copied_items)),maximum_copy_bytes:wanted.maximum_copy_bytes.min(supplied.maximum_copy_bytes.saturating_sub(posted.copied_bytes)),maximum_capacity_bytes:wanted.maximum_capacity_bytes.min(supplied.maximum_capacity_bytes.saturating_sub(posted.retained_capacity_bytes)),maximum_release_bytes:wanted.maximum_release_bytes.min(supplied.maximum_release_bytes.saturating_sub(posted.released_bytes)),maximum_depth:wanted.maximum_depth.min(supplied.maximum_depth)};
-   let step=self.source.as_mut().expect("original fixture parent remains in custody until funded retirement").close_step(grant).result?;let progress=step.progress();fuel=fuel.saturating_sub(progress.copied_items as u64);self.receipt=self.receipt.checked_add(progress)?;if !self.receipt.fits(self.policy.grant)||!progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture source close exceeds its initiating stock").with_retained_progress(progress))}if progress==Default::default(){std::thread::yield_now()}
+   let parent=self.source.as_mut().expect("original fixture parent remains in custody until funded retirement");let Some((poll,work))=pumped(fuel,self.policy.deadline_us,grant,|effect|parent.close_step(effect))else{std::thread::yield_now();continue};let RetainedWorkPoll::Complete(turn)=poll else{panic!("original fixture Source close stayed pending")};fuel=fuel.saturating_sub(u64::try_from(work).unwrap_or(u64::MAX));let step=turn.result.map_err(|failure|{let failure=semio_framework_job::OriginalTurnFailure::from(failure);ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture source close refused").with_retained_progress(failure.retained_progress())})?;let progress=step.progress();self.receipt=self.receipt.checked_add(progress)?;if !self.receipt.fits(self.policy.grant)||!progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture source close exceeds its initiating stock").with_retained_progress(progress))}if progress==Default::default(){std::thread::yield_now()}
   }
   Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original fixture caller retirement exceeded its supplied turn bound"))
  }
 }
-fn retire_fixture_decoder(supplied:RetainedCloneGrant,wanted:RetainedCloneGrant,maximum_turns:usize,receipt:&mut RetainedCloneProgress,decoder:&mut semio_framework_job::OriginalJobDecodeOwner,mut fuel:u64)->Result<u64,ValueError>{
+fn fixture_delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}}
+fn retire_fixture_decoder(source:Option<&OriginalCallerSourceParent>,sequence:&mut u64,clock_binding:u64,deadline_us:u64,supplied:RetainedCloneGrant,wanted:RetainedCloneGrant,maximum_turns:usize,receipt:&mut RetainedCloneProgress,decoder:&mut semio_framework_job::OriginalJobDecodeOwner,mut fuel:u64)->Result<u64,ValueError>{
  for _ in 0..maximum_turns{if decoder.terminal_is_empty(){return Ok(fuel)}if fuel==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original fixture decoder exhausted its original fuel"))}let posted=*receipt;let grant=RetainedCloneGrant{maximum_items:wanted.maximum_items.min(supplied.maximum_items.saturating_sub(posted.copied_items)).min(usize::try_from(fuel).unwrap_or(usize::MAX)),maximum_copy_bytes:wanted.maximum_copy_bytes.min(supplied.maximum_copy_bytes.saturating_sub(posted.copied_bytes)),maximum_capacity_bytes:wanted.maximum_capacity_bytes.min(supplied.maximum_capacity_bytes.saturating_sub(posted.retained_capacity_bytes)),maximum_release_bytes:wanted.maximum_release_bytes.min(supplied.maximum_release_bytes.saturating_sub(posted.released_bytes)),maximum_depth:wanted.maximum_depth.min(supplied.maximum_depth)};
-   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||decoder.close_step(grant).result);let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));fuel=fuel.saturating_sub(progress.copied_items as u64);*receipt=receipt.checked_add(progress)?;if !progress.fits(grant)||!receipt.fits(supplied){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original decoder close exceeds initiating caller stock").with_retained_progress(progress))}result?;
+   let source=source.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture decoder close requires its Source parent"))?;let issued=fuel;
+   let mut cx=source.borrow_context(StepBudget::new(fuel,deadline_us,supplied),fixture_now_us,sequence,receipt)?;cx.bind_original_clock_binding(clock_binding)?;
+   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})));fuel=cx.original_source_fuel_remaining().min(issued);drop(cx);
+   let progress=fixture_delta(posted,*receipt);assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
+   if !progress.fits(grant)||!receipt.fits(supplied){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original decoder close exceeds initiating caller stock").with_retained_progress(progress))}
+   result.map_err(|error|ValueError::literal(ValueRefusalKind::InvariantViolated,"original fixture decoder close refused").with_retained_progress(error.retained_progress()))?;
   }Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original fixture decoder exceeds its supplied close turn bound"))
 }
 impl Drop for OriginalFixtureCaller{fn drop(&mut self){assert!(std::thread::panicking()||self.source.is_none(),"original fixture caller requires paid terminal retirement")}}
@@ -146,7 +169,7 @@ mod host_lane_authority_law {
 
 #[path="👷️work/🦀️.rs"]
 mod original_work_fixture;
-pub use original_work_fixture::{OriginalWorkFixture,receive_persistent_fixture,receive_view_fixture};
+pub use original_work_fixture::{OriginalReceiveFailure,OriginalWorkFixture,receive_persistent_fixture,receive_view_fixture};
 #[path="⌨️typing-run/🦀️.rs"]
 mod typing_run_model;
 pub use typing_run_model::{typing_run,TypingRun};

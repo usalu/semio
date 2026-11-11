@@ -134,7 +134,7 @@ mod tests{
   let input:syn::DeriveInput=syn::parse_str(&format!("enum Operation {{{roster}}}")).unwrap();
   let output=expand(&input,&syn::parse_str("Projection").unwrap()).unwrap();
   let source=output.to_string();let parsed:syn::File=syn::parse2(output).expect("third-party Rust parser validates generated owner");
-  assert_eq!(parsed.items.len(),5);
+  assert_eq!(parsed.items.len(),5+variants.len(),"state, preparation and three trait owners plus one wrapper per leaf");
   let method=parsed.items.iter().filter_map(|item|match item{syn::Item::Impl(item)=>Some(item),_=>None}).flat_map(|item|item.items.iter()).filter_map(|item|match item{syn::ImplItem::Fn(method)if method.sig.ident=="close_demand"=>Some(method),_=>None}).next().expect("generated close demand");assert_eq!(method.sig.inputs.len(),3,"close demand matches the actual preparation trait");
   assert_eq!(variants.len(),fixture["requiredLeafCount"].as_u64().unwrap()as usize);
   assert!(source.matches("RetainedMutationLeaf <").count()>=variants.len());

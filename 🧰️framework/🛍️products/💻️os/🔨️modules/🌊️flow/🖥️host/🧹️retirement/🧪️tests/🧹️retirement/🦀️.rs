@@ -399,18 +399,27 @@ fn dag_retirement_fixture() -> (DagHostRetirement, usize) {
     (owner, minimum_bytes)
 }
 
+fn dag_bank()->semio_framework_value_testing_effect_bank::EffectBank{use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<40,maximum_copy_bytes:1<<40,maximum_capacity_bytes:1<<40,maximum_release_bytes:1<<40,maximum_depth:1<<20},1<<40))}
+
+fn dag_close_turn(bank:&mut semio_framework_value_testing_effect_bank::EffectBank,owner:&mut DagHostRetirement,copy:usize,grant:RetainedCloneGrant)->(RetainedCloneProgress,(usize,usize)){
+ use semio_framework_value::retained_clone::RetainedWorkPoll;
+ let(poll,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||bank.run(grant,1<<20,|effect|owner.close_step(copy,effect)).0);bank.take_admitted();
+ let progress=match poll{RetainedWorkPoll::Complete(done)=>done.result.unwrap().progress(),RetainedWorkPoll::Pending{..}=>Default::default()};
+ (progress,(heap.requested_bytes,heap.released_bytes))
+}
+
 #[test]
 fn original_dag_host_retirement_preserves_source_and_independent_physical_receipts(){
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
  for copy in [1,3,64]{
-  let(mut owner,minimum_bytes)=dag_retirement_fixture();
+  let(mut owner,minimum_bytes)=dag_retirement_fixture();let mut bank=dag_bank();
   let original=owner.original().unwrap().graph.host_snapshot.schema.as_ptr();
-  let(step,heap)=observe(||owner.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.original().unwrap().graph.host_snapshot.schema.as_ptr(),original);
+  let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,RetainedCloneGrant::default());assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));assert_eq!(owner.original().unwrap().graph.host_snapshot.schema.as_ptr(),original);
   let(mut born,mut freed,mut turns)=(0,0,0);
-  while !owner.terminal_is_empty(){turns+=1;assert!(turns<262144);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_close_release_byte_demand().unwrap(),maximum_depth:owner.next_close_depth_demand().unwrap()};
-   if grant.maximum_capacity_bytes>0{let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-   if grant.maximum_release_bytes>0{let(step,heap)=observe(||owner.close_step(RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
-   let(step,heap)=observe(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;freed+=heap.released_bytes;
+  while !owner.terminal_is_empty(){turns+=1;assert!(turns<262144);let demand=owner.next_close_demand(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+   if grant.maximum_capacity_bytes>0{let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant});assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+   if grant.maximum_release_bytes>0{let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,RetainedCloneGrant{maximum_release_bytes:grant.maximum_release_bytes-1,..grant});assert_eq!(progress,RetainedCloneProgress::default());assert_eq!(heap,(0,0));}
+   let(progress,heap)=dag_close_turn(&mut bank,&mut owner,copy,grant);assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));born+=heap.0;freed+=heap.1;
   }
   assert!(freed>=born+minimum_bytes);let(_,heap)=observe(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }

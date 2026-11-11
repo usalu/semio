@@ -90,22 +90,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         let contract = self.tools.qualified_tool_proof(&*self.stores, action)?.contract();
         let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
+        if CLIPBOARD_ACTION_IDS.contains(&action) {
+            return self.as_dispatch().advance_original_reserved_action(action,args,decoded_items,contract.max_raw_wire_bytes,meta,cx).await;
+        }
         let wire_args = args.cloned();
         let raw = semio_framework_pack_json::to_json_string(&(action, wire_args)).into_bytes();
         let work_items = self.framework_reserved_work_items(action, args).await?;
-        if CLIPBOARD_ACTION_IDS.contains(&action) {
-            let Some(authority)=self.as_dispatch().admit_reserved_emit_producer(action,meta,cx)?else{return Ok(None)};
-            let producer = match self.as_render().build_artifact_reserved_action_job(action, args, raw.clone(), meta, cx).await { Ok(producer) => producer, Err(fault) => { self.tools.finish_reserved_emit_producer(&mut self.pending, authority); return Err(fault.into()); } };
-            let mut app_completion = None;
-            let job = match producer {
-                Some((job, completion)) => {
-                    app_completion = Some(completion);
-                    job
-                }
-                None => { self.tools.finish_reserved_emit_producer(&mut self.pending, authority); return Err(plugin_sdk_fault("clipboard producer has no exact installed reserved builder").into()); },
-            };
-            return self.as_dispatch().dispatch_reserved_original_producer(action,&raw,decoded_items,job,app_completion.expect("installed clipboard producer owns its original completion"),meta,None,authority,cx).await.map(Some).map_err(Into::into);
-        }
         let Some(permit)=self.as_dispatch().admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx).await?else{return Ok(None)};
         let mut job = permit.operation.operation.0;
         self.pending.retire_pending_reserved_latest_wins(action, job);

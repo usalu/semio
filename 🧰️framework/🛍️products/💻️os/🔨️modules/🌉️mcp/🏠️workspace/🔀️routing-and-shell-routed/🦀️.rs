@@ -312,12 +312,7 @@ impl RoutingArtifactChannel {
 
     fn persist_folder_guest(&self, instance: u32, artifact_id: &str, channel: &mut PluginArtifactChannel) -> Result<(), Fault> {
         let Some(folder) = &self.folder else { return Ok(()) };
-        let frames = channel.exchange(instance, vec![AppCommand::ReadArtifact])?;
-        let (pack, spr) = match frames.into_iter().next() {
-            Some(AppFrame::Artifact { pack, spr }) => (pack, spr),
-            Some(AppFrame::Error(fault)) => return Err(fault),
-            _ => return Err(Fault { code: "folder.persistence".into(), message: "owner did not return its canonical pair".into() }),
-        };
+        let (pack, spr) = channel.read_artifact_pair(instance)?;
         let mut bindings = self.plugin_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let binding = bindings.get_mut(artifact_id).ok_or_else(|| Fault { code: "folder.persistence".into(), message: "artifact binding disappeared".into() })?;
         let previous = binding.document.as_ref().ok_or_else(|| Fault { code: "folder.persistence".into(), message: "artifact baseline disappeared".into() })?;
@@ -576,7 +571,7 @@ impl ArtifactChannel for RoutingArtifactChannel {
 
 
     /// 🗿️ Re-read on every exchange, never once at open: `artifact_create` binds the artifact See [design notes](README.md).
-    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+    async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let route = self.resolved_route(self.route_for(instance, &commands)?, &ActivationScope::detached())?;
         let session_artifact_id = self.artifact_for(Some(instance), &route);
         if let Some(refusal) = self.edit_refusal(instance, &route, &commands) {
@@ -597,7 +592,10 @@ impl ArtifactChannel for RoutingArtifactChannel {
             None => Ok(()),
         };
         let mutates = commands.iter().any(|command| matches!(command, AppCommand::TransactionCommit { .. } | AppCommand::TransactionUndo { .. } | AppCommand::TransactionRedo { .. }));
-        let frames = seeded.and_then(|()| channel.exchange(instance, commands));
+        let frames = match seeded {
+            Ok(()) => channel.exchange(instance, commands).await,
+            Err(fault) => Err(fault),
+        };
         let egress = channel.drain_backbone_egress();
         if self.folder.is_some() {
             if let Some(artifact_id) = session_artifact_id.filter(|_| mutates || !egress.is_empty()) {
@@ -721,16 +719,16 @@ impl ArtifactChannel for ShellRoutedArtifactChannel {
 
 
     /// 💡️ An inference is not a shell command and never was: `ShellArtifactChannel` refuses See [design notes](README.md).
-    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+    async fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         if matches!(commands.first(), Some(AppCommand::Infer(_))) {
-            return self.headless.exchange(instance, commands);
+            return self.headless.exchange(instance, commands).await;
         }
         match self.binding.resolve() {
             ChannelKind::Shell => {
                 self.shell.pin_plugin(self.headless.plugin_id_for(instance, &commands).ok());
-                self.shell.exchange(instance, commands)
+                self.shell.exchange(instance, commands).await
             }
-            ChannelKind::Headless => self.headless.exchange(instance, commands),
+            ChannelKind::Headless => self.headless.exchange(instance, commands).await,
         }
     }
 

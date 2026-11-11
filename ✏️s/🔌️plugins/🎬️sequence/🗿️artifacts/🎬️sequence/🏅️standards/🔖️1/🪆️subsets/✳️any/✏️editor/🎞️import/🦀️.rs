@@ -155,8 +155,8 @@ impl SequenceImportJob{
   cx.set_stage("sequence-import-publish");
   if let Some(emit)=self.emit.as_mut(){
    let grant=cx.retained_grant();
-   let turn=emit.prepare_child_original(grant);cx.consume_fuel(turn.work);
-   match turn.result{
+   let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|emit.prepare_child_original(effect))? else{return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+   match turn{
     Ok(semio_plugin::app::ChildEmitPreparationStep::Ready(p))=>{cx.consume_retained(p)?;},
     Ok(semio_plugin::app::ChildEmitPreparationStep::Pending(p))=>{cx.consume_retained(p)?;return JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)},
     Ok(semio_plugin::app::ChildEmitPreparationStep::Refused(fault,p))=>{self.child_fault=Some(fault);cx.consume_retained(p)?;return self.fault(cx,"Sequence child preparation refused")},

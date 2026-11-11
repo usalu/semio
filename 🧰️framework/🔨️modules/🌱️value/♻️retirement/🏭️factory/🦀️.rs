@@ -1,7 +1,7 @@
 //! 🏭️ Admitted factory tickets retain original aliases and publish each ownership currency.
 pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_control_contract as retained_clone;
-pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed,ErasedSnapshotRetirement,OriginalRetirementCloseLoan,OriginalRetirementControl,OriginalRetirementFailure,OriginalRetirementOutcome,OriginalRetirementPoll,RetireOwned,factory_ticket_demands,close_factory_ticket};
+pub use semio_framework_value_retirement::{retirement_fields_type,retirement_fields_seed,ErasedSnapshotRetirement,OriginalRetirementCloseLoan,OriginalRetirementControl,OriginalRetirementFailure,OriginalRetirementOutcome,OriginalRetirementPoll,RetireOwned,factory_ticket_demands,close_factory_ticket,close_owner,close_owner_original,close_owner_controlled};
 pub use semio_framework_value_retirement::retirement;
 /// 🪪️ Shared snapshot aliases originate only from their defining paid storage issuer.
 pub use retirement::arc_custody::original::SharedOriginalStorage;

@@ -56,7 +56,7 @@ fn render_snapshot_loan_obeys_neutral_original_identity_cases() {
         let mut identity=caller.turn(grant(),|cx|OriginalRenderTreeIdentity::capture(cx).map_err(Into::into)).unwrap();
         let source=std::sync::Arc::new(String::from("exact original source"));
         let substitute=std::sync::Arc::new(String::from("exact original source"));
-        let mut work=OriginalRenderWork::retain(std::sync::Arc::clone(&source));
+        let mut work=OriginalRenderWork::retain(semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::clone(&source)));
         if case["cancelled"].as_bool().unwrap(){caller.cancel().cancel_now();}
         let expected=if case["source"]=="original"{source.as_ref()}else{substitute.as_ref()};
         let selected=if case["caller"]=="original"{&mut caller}else{&mut other};

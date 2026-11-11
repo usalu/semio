@@ -7,7 +7,7 @@ use semio_framework_tool_run_entities::ToolRunEntityEditGrant;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement};
 use std::mem::{ManuallyDrop,size_of};
-fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
+fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction_settled(cx,&mut Default::default(),output,demand,1,|_,_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 struct Owned{presentation:Option<ToolRunPresentationSlot>,tick:Option<ToolRunTick>}
@@ -43,7 +43,7 @@ impl OriginalToolRunNativeState{
     if let Some(outcome)=self.outcome.take(){
      cx.settle_receiving_scope()?;let progress=outcome.retained_progress();
      if outcome.source_refusal.is_some()||outcome.call.is_err(){self.stepped=None;return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original tick receiving scope refused").with_retained_progress(progress).into())}
-     let step=self.stepped.take().ok_or_else(||invalid("original tick receiving lost its step result"))?.map_err(|primary|semio_framework_job::OriginalTurnFailure{effects:primary.progress,primary:primary.into(),receipt_refusal:None,context_refusal:None,work_refusal:None})?;
+     let step=self.stepped.take().ok_or_else(||invalid("original tick receiving lost its step result"))?.map_err(|primary|semio_framework_job::OriginalTurnFailure{effects:primary.progress,primary:semio_framework_job::OriginalTurnPrimary::Receiving(primary),receipt_refusal:None,context_refusal:None,work_refusal:None})?;
      cx.consume_fuel(step.progress().copied_items as u64);return Ok(false)
     }
     if self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?.is_complete(){self.phase=2;}
@@ -64,7 +64,7 @@ impl OriginalToolRunNativeState{
     }
    },
    4=>{self.phase=5;},
-   5=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?;if cursor.terminal_is_empty(){let d=cursor_release_demands();let step=retired(cx,d,|_|{drop(self.cursor.take());Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;if step.progress().copied_items!=0{self.phase=0;return Ok(true)}return Ok(false)}let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=cursor.close_step(effect).map_err(Into::into);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()})})?;},
+   5=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?;if cursor.terminal_is_empty(){let d=cursor_release_demands();let step=retired(cx,d,|_|{drop(self.cursor.take());Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;if step.progress().copied_items!=0{self.phase=0;return Ok(true)}return Ok(false)}let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;semio_framework_job::close_original_effect_step(cx,d,|effect|{let result=cursor.close_step(effect).map_err(semio_framework_value::OriginalRetirementFailure::from);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()})})?;},
    _=>return Err(invalid("original tick receiving phase is invalid").into()),
   }Ok(false)
  }
@@ -131,7 +131,8 @@ mod settle_presentation_turn_tests{
 }
 impl Drop for OriginalToolRunNativeState{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original run presentation requires funded terminal close");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owned)}}}}
 impl RetireOwned for OriginalToolRunNativeState{type RetirementCursor=Self;fn retirement_seed(self)->Self{self}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
-impl RetirementCursor for OriginalToolRunNativeState{fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.next_close_demands(body)}fn close_step(&mut self,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->RetirementStep{match self.close_effect_step(effect){Ok(step)=>RetirementStep::Progress(step.progress(),effect.performed_work()),Err(error)=>RetirementStep::Failure(error.into(),effect.performed_work())}}fn terminal_is_empty(&self)->bool{OriginalToolRunNativeState::terminal_is_empty(self)}fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}}
+impl RetirementCursor for OriginalToolRunNativeState{fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.next_close_demands(body)}semio_framework_value::native_retirement_reply!();fn terminal_is_empty(&self)->bool{OriginalToolRunNativeState::terminal_is_empty(self)}fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}}
+impl OriginalToolRunNativeState{fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::retained_clone::RetainedAllocationEffect<'_>)->RetirementStep{match self.close_effect_step(effect){Ok(step)=>RetirementStep::Progress(step.progress(),effect.performed_work()),Err(error)=>RetirementStep::Failure(error.into(),effect.performed_work())}}}
 
 /// 📄️ The descriptor keeps these exact producer pages alive until original receiving and publication finish.
 pub struct OriginalPreviewPages<'a>(pub &'a semio_framework_job_payload::RetainedJobPayload);

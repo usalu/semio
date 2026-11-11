@@ -71,21 +71,21 @@ impl OriginalArtifactDocumentReceiving {
         let cancel = cx.borrowed_original_cancel_token()?;
         let now = cx.clock_source();
         let deadline = cx.deadline_us();
-        let mut output = None;
-        let mut progress = RetainedCloneProgress::default();
-        semio_framework_job::admit_original_construction(cx, &mut output, semio_framework_job::OriginalConstructionDemand { items: 1, copy_bytes: demand.copy_bytes, capacity_bytes: demand.capacity_bytes, release_bytes: 0, depth: demand.depth }, |_| {
+        if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),RetirementDemand{copy_bytes:demand.copy_bytes+size_of::<Option<Vec<u8>>>(),..demand}){return Ok(false)}
+        semio_plugin_ownership::bounded_ownership::plugin_effect_turn(cx, |effect| {
             let cursor = self.cursors[self.phase].as_mut().expect("original document cursor remains resident");
             let mut observe = |_| !cancel.is_cancelled_now() && now().is_some_and(|instant| instant < deadline);
             let mut control = Base64Control { maximum_output_bytes: self.maximum_decoded_bytes, progress: &mut observe };
             let result = cursor.step(selected_work, &mut control);let actual=cursor.last_turn_receipt();
-            progress = RetainedCloneProgress { copied_items: 1, copied_bytes: actual.copied_bytes, retained_capacity_bytes: actual.allocated_capacity_bytes, released_bytes: 0 };
+            let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: actual.copied_bytes, retained_capacity_bytes: actual.allocated_capacity_bytes, released_bytes: 0 };
             match result {
                 Ok(_) if cursor.is_complete() => { self.decoded[self.phase] = cursor.take_output(); self.phase += 1;progress.copied_bytes+=size_of::<Option<Vec<u8>>>(); }
                 Ok(_) => {}
                 Err(error) => self.fault = Some(error),
             }
-            let result=if self.fault.is_some(){Err(self.refusal_value().with_retained_progress(progress))}else{Ok(((),progress))};
-            RetainedWorkOutcome{result,work:actual.work_units as u64}
+            let work=actual.work_units as u64;
+            if work!=0&&!effect.performed(work)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original document decode exceeded its work grant"))}
+            if self.fault.is_some(){Err(self.refusal_value().with_retained_progress(progress))}else{Ok(RetainedCloneStep::Progress(progress))}
         })?;
         Ok(self.phase == 2)
     }
@@ -119,7 +119,7 @@ impl OriginalArtifactDocumentReceiving {
         self.closing = true;
         if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         if let Some(owner) = self.close_owner.as_mut() {
-            let step = close_original_retained_step(cx, owner.next_demand(4096)?, |grant| { let result = owner.step(grant); RetainedWorkOutcome { result, work: owner.last_turn_work() } })?;
+            let step = semio_framework_job::close_original_effect_step(cx, owner.next_demand(4096)?, |effect| owner.step(4096, effect))?;
             if owner.terminal_is_empty() { *self.close_owner = None; }
             return Ok(step);
         }
@@ -134,7 +134,7 @@ impl OriginalArtifactDocumentReceiving {
             } else if let Some(index) = self.decoded.iter().position(Option::is_some) {
                 *self.close_owner = Some(ControlledRetirement::retain(DocumentSourceOwner::Bytes(self.decoded[index].take().expect("original decoded bytes"))));
             }
-            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+            RetainedWorkOutcome::<_,ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
         })
     }
 

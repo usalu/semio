@@ -211,7 +211,7 @@ impl WasmActor {
             return;
         };
         self.socket = Some(dialed);
-        let(original_actor,receipt)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original pre-admitted browser actor invariant: {error}"));
+        let(original_actor,receipt)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),self.actor_identity_grant,&mut None).result.unwrap_or_else(|(error,_)|panic!("original pre-admitted browser actor invariant: {error}"));
         add_actor_identity_progress(&mut self.actor_identity_progress,receipt);
         self.socket_actor = Some(original_actor);
         self.socket_actor_confirmed = false;

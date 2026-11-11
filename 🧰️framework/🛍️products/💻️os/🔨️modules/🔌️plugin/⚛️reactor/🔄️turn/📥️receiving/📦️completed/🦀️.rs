@@ -12,7 +12,7 @@ use semio_framework_value::{DslValue, RetainedCloneGrant};
 use semio_framework_job_native_decode::{OriginalNativeDecodeSource, OriginalNativeDecodePolicy, OriginalNativeDecodeIssued};
 use semio_framework_pack_json::{JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy};
 use pack::intrinsic::RetainedIntrinsicDocument;
-fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
+use semio_plugin_reactor_receiving_source::retired;
 #[doc(hidden)]
 #[path="⚠️fault/🦀️.rs"]
 pub mod fault;
@@ -42,12 +42,12 @@ impl CompletedInput{
   let inputs=self.inputs.as_ref().unwrap();let source=if correlation{inputs.continuation.as_ref().unwrap().request_json.as_bytes()}else{match inputs.event.as_ref().unwrap(){Event::Completed{result:semio_framework::kernel::RequestOutcome::Err(bytes),..}=>bytes.as_slice(),_=>unreachable!()}};
   if self.grammar.is_none(){if !metadata(cx)?{return Ok(None)}let(_,cursor)=JsonSourceCursor::<_,DslValue>::new(source,JsonMemberPolicy::Reject,JsonReadLimits{maximum_bytes:MAXIMUM as u64,maximum_allocation_bytes:MAXIMUM,maximum_depth:128,maximum_items:MAXIMUM as u64})?.into_grammar();*self.grammar=Some(cursor);return Ok(None)}
   let grammar=self.grammar.as_mut().unwrap();let native=&mut*self.native;
-  let Some(outcome)=native.receive_step(cx,|control,grant|{let result=grammar.step_source(&source,1,control,grant,false);let progress=grammar.normal_step_progress();OriginalNativeDecodeIssued::<_,ValueError>{value:Ok(result),grant,progress,work:u64::from(progress.copied_items!=0)}})?else{return Ok(None)};
+  let Some(outcome)=native.receive_effect_step(cx,|control,effect|{let grant=effect.grant();let result=grammar.step_source(&source,1,control,effect,false);let progress=grammar.normal_step_progress();OriginalNativeDecodeIssued::<_,ValueError>{value:Ok(result),grant,progress,work:u64::try_from(effect.performed_work()).unwrap_or(u64::MAX)}})?else{return Ok(None)};
   if let Some(ticket)=outcome.receiving_refusal{return Err(native.take_receiving_refusal(ticket))}
   match outcome.value?{Ok(value)=>Ok(value),Err(error)=>{*self.issue=Some(DecodeFailure::Json(error,outcome.progress));self.phase=250;Ok(None)}}
  }
  fn close_grammar(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if let Some(owner)=self.grammar_close.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.grammar_close.take();return Ok(false)}
+  if let Some(owner)=self.grammar_close.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.grammar_close.take();return Ok(false)}
   if self.grammar.is_some(){if !metadata(cx)?{return Ok(false)}let source=self.grammar.take().unwrap();match ControlledRetirement::new(source){Ok(owner)=>*self.grammar_close=Some(owner),Err((error,source))=>{*self.grammar=Some(source);return Err(error.into())}}return Ok(false)}Ok(true)
  }
  fn outcome_bytes(inputs:&Inputs)->&[u8]{match inputs.event.as_ref().unwrap(){Event::Completed{result:semio_framework::kernel::RequestOutcome::Ok(bytes),..}=>bytes,_=>unreachable!()}}
@@ -71,11 +71,12 @@ impl CompletedInput{
  }
  fn pack_step(&mut self,cx:&mut StepContext<'_>)->Result<Option<CompletedResult>,OriginalTurnFailure>{
   if self.pack.is_none(){
-   if !self.wire_step(cx)?||!metadata(cx)?{return Ok(None)}let inputs=self.inputs.as_mut().unwrap();let bytes=Self::take_wire(inputs);
+   if !self.wire_step(cx)?{return Ok(None)}let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};if cx.should_yield()||grant.maximum_items==0{return Ok(None)}let inputs=self.inputs.as_mut().unwrap();
    let limits=pack::PackLimits{max_file_len:MAXIMUM as u64,max_segment_len:MAXIMUM as u64,max_symbols:MAXIMUM as u32,max_depth:128,max_items:MAXIMUM as u64,max_total_alloc:MAXIMUM as u64};
-   match RetainedIntrinsicDocument::new(RetainedIntrinsicInput::OwnedBytes(bytes),limits,MAXIMUM){Ok(owner)=>*self.pack=Some(owner),Err((error,RetainedIntrinsicInput::OwnedBytes(bytes)))=>{inputs.wire=bytes;*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250},Err(_)=>unreachable!()}return Ok(None)
+   let Some((made,performed))=cx.with_original_effect(grant,|_,effect|{let bytes=Self::take_wire(inputs);RetainedIntrinsicDocument::new(RetainedIntrinsicInput::OwnedBytes(bytes),limits,MAXIMUM,effect)})?else{return Ok(None)};cx.consume_work(performed);
+   match made{Ok(owner)=>*self.pack=Some(owner),Err((error,RetainedIntrinsicInput::OwnedBytes(bytes)))=>{inputs.wire=bytes;*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250},Err(_)=>unreachable!()}return Ok(None)
   }
-  let owner=self.pack.as_mut().unwrap();let demand=match owner.original_step_demands(){Ok(demand)=>demand,Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250;return Ok(None)}};let grant=cx.retained_grant();if !permits(cx,grant,demand){return Ok(None)}let call=owner.advance_original_step(RetainedCloneGrant{maximum_items:1,..grant},false);let progress=call.progress;cx.consume_fuel(u64::from(progress.copied_items!=0));cx.consume_retained(progress)?;match call.result{Ok(step)if step.complete=>{if !metadata(cx)?{return Ok(None)}self.inputs.as_mut().unwrap().output=owner.take_output();self.phase=5},Ok(_)=>{},Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,progress));self.phase=250}}Ok(None)
+  let owner=self.pack.as_mut().unwrap();let demand=match owner.original_step_demands(){Ok(demand)=>demand,Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,Default::default()));self.phase=250;return Ok(None)}};let grant=cx.retained_grant();if !permits(cx,grant,demand){return Ok(None)}let Some(call)=through(cx,false,|effect|owner.advance_original_step(effect,false))?else{return Ok(None)};let progress=call.progress;match call.result{Ok(step)if step.complete=>{if !metadata(cx)?{return Ok(None)}self.inputs.as_mut().unwrap().output=owner.take_output();self.phase=5},Ok(_)=>{},Err(error)=>{*self.issue=Some(DecodeFailure::Pack(error,progress));self.phase=250}}Ok(None)
  }
  fn fields_step(&mut self,cx:&mut StepContext<'_>)->Result<Option<CompletedResult>,OriginalTurnFailure>{
   let inputs=self.inputs.as_mut().unwrap();let count=match inputs.correlation.as_ref(){Some(DslValue::Object(fields))=>fields.len(),_=>0};
@@ -84,17 +85,23 @@ impl CompletedInput{
   let name=if self.field==count{"ok"}else{"output"};let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<name.len()||grant.maximum_capacity_bytes<name.len(){return Ok(None)}let mut key=String::new();cx.consume_fuel(1);key.try_reserve_exact(name.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original response key reserve refused"))?;key.push_str(name);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:name.len(),retained_capacity_bytes:key.capacity(),..Default::default()})?;let value=if self.field==count{DslValue::Bool(inputs.fault.is_none())}else{inputs.output.take().unwrap_or(DslValue::Null)};inputs.fields.push((key,value));self.field+=1;if self.field==count+2{self.phase=6}Ok(None)
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if let Some(owner)=self.pack.as_mut(){if !owner.terminal_is_empty(){let grant=cx.retained_grant();let demand=owner.original_close_demands(grant.maximum_copy_bytes).map_err(|error|ValueError::literal(error.kind(),"original intrinsic close quote refused"))?;if !permits(cx,grant,demand){return Ok(false)}let call=owner.close_original_step(RetainedCloneGrant{maximum_items:1,..grant});cx.consume_fuel(u64::from(call.progress.copied_items!=0));cx.consume_retained(call.progress)?;if let Err(error)=call.result{*self.issue=Some(DecodeFailure::Pack(error,call.progress));return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original intrinsic close retained its refusal").into())}return Ok(false)}if !metadata(cx)?{return Ok(false)}self.pack.take();return Ok(false)}
+  if let Some(owner)=self.pack.as_mut(){if !owner.terminal_is_empty(){let grant=cx.retained_grant();let demand=owner.original_close_demands(grant.maximum_copy_bytes).map_err(|error|ValueError::literal(error.kind(),"original intrinsic close quote refused"))?;if !permits(cx,grant,demand){return Ok(false)}let Some(call)=through(cx,true,|effect|owner.close_original_step(effect))?else{return Ok(false)};if let Err(error)=call.result{*self.issue=Some(DecodeFailure::Pack(error,call.progress));return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original intrinsic close retained its refusal").into())}return Ok(false)}if !metadata(cx)?{return Ok(false)}self.pack.take();return Ok(false)}
   if !self.close_grammar(cx)?{return Ok(false)}
   if let Some(binding)=self.binding.as_mut(){if !binding.close_step(cx)?{return Ok(false)}if !metadata(cx)?{return Ok(false)}self.binding.take();return Ok(false)}
-  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.closing.take();return Ok(false)}
+  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.closing.take();return Ok(false)}
   if self.inputs.is_some(){if !metadata(cx)?{return Ok(false)}let inputs=self.inputs.take().unwrap();match ControlledRetirement::new(inputs){Ok(owner)=>*self.closing=Some(owner),Err((error,inputs))=>{*self.inputs=Some(inputs);return Err(error.into())}}return Ok(false)}
   if self.issue_place.is_some(){if let Some(failure)=self.admit_issue(cx)?{return Err(failure)}return Ok(false)}
-  if let Some(owner)=self.issue_close.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.issue_close.take();return Ok(false)}
+  if let Some(owner)=self.issue_close.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.issue_close.take();return Ok(false)}
   if self.issue.is_some(){if !metadata(cx)?{return Ok(false)}let issue=self.issue.take().unwrap();match ControlledRetirement::new(issue){Ok(owner)=>*self.issue_close=Some(owner),Err((error,issue))=>{*self.issue=Some(issue);return Err(error.into())}}return Ok(false)}
   if !self.native.terminal_is_empty(){self.native.close_step(cx)?;return Ok(false)}
   if !metadata(cx)?{return Ok(false)}self.closed=true;Ok(true)
  }
+}
+fn through<R>(cx:&mut StepContext<'_>,retiring:bool,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->pack::intrinsic::RetainedIntrinsicOriginalCall<R>)->Result<Option<pack::intrinsic::RetainedIntrinsicOriginalCall<R>>,OriginalTurnFailure>{
+ if retiring&&cx.retirement_should_yield()||!retiring&&cx.should_yield()||cx.retained_grant().maximum_items==0{return Ok(None)}
+ let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};
+ let Some((call,performed))=cx.with_original_effect(grant,|_,effect|run(effect))?else{return Ok(None)};
+ cx.consume_retained(call.progress)?;cx.consume_work(performed);Ok(Some(call))
 }
 #[doc(hidden)]
 pub fn permits(cx:&StepContext<'_>,grant:RetainedCloneGrant,demand:semio_framework_value::RetirementDemand)->bool{!cx.should_yield()&&grant.maximum_items!=0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}

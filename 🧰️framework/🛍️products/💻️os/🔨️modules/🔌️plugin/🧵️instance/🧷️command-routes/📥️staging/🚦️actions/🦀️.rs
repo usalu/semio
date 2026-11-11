@@ -539,7 +539,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let operation = semio_framework_job::Operation::new(operation_id, roots.base_revision, roots.generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
         let completion = ArtifactToolCompletion::<A>::new();
         let presence_local = self.stores.presence_store.local_read().map_err(Fault::from)?;
-        let (context, _context_birth) = ArtifactOwnedContextHandle::admit(
+        let mut original = Some(
             ArtifactOwnedToolJobContext::new(
                 meta.instance_id,
                 meta.view_state.clone(),
@@ -557,9 +557,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             .with_source_issuers(&self.stores.draft_store, &self.stores.transient_store)
             .with_presence(presence_local, std::sync::Arc::clone(&roots.presence_peers), self.stores.presence_store.peer_retirement_factory())
             .with_original_tool_run(self.tool_runs.capture_original_view_for(meta.view_state.as_deref().and_then(|view|view.window_id.as_deref()),cx)?)
-            .with_provisional(self.tool_machines.provisional_values(), self.tool_machines.provisional_generation()),
-            artifact_owned_tool_birth_grant(),
-        );
+            .with_provisional(self.tool_machines.provisional_values(), self.tool_machines.provisional_generation()));
+        let Some(((context, birth), performed)) = cx.with_original_effect(artifact_owned_tool_birth_grant(), |_, effect| ArtifactOwnedContextHandle::admit(original.take().expect("original context awaits its admission"), effect))? else { return Err(plugin_sdk_fault("original context admission awaits a funded turn").into()) };
+        cx.consume_retained(birth)?;
+        cx.consume_work(performed);
         let key = admission.proof.key();
         let contract = admission.proof.contract();
         let request = ArtifactOwnedToolJobRequest {

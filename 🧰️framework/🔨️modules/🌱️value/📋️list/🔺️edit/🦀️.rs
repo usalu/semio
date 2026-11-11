@@ -133,9 +133,9 @@ impl IndexedEditPlan{
  pub fn recover_close_original_into<'r>(&mut self,original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{if self.close_route.is_some_and(|(_,_,_,loan)|loan.is_none()){return self.close_reply_plan(None,body,effect,reply,true)}self.close_reply_plan(Some(original),body,effect,reply,true)}
  fn close_reply_plan<'r>(&mut self,mut original:Option<&mut crate::OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,reply:OriginalEffectReply<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,recover:bool)->Result<OriginalEffectReplyComplete<'r,RetainedCloneStep,crate::OriginalRetirementFailure>,ValueError>{
   if !self.closing{return Err(invalid())}
-  let identity=invocation_identity(effect,recover)?;let loan=match original.as_deref_mut(){Some(loan)=>Some(loan_key(loan,effect)?),None=>None};
+  let identity=invocation_identity(effect,recover)?;let body=if recover{self.close_route.map_or(body,|key|key.2)}else{body};let loan=match original.as_deref_mut(){Some(loan)=>Some(loan_key(loan,effect)?),None=>None};
   if recover{
-   let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.2!=body||key.3!=loan{return Err(ValueError::invariant("indexed edit close recovery changed its invocation, body or loan"))}
+   let key=self.close_route.ok_or_else(invalid)?;if key.0!=identity||key.3!=loan{return Err(ValueError::invariant("indexed edit close recovery changed its invocation, body or loan"))}
    let mut scope=reply.progress().scope(&mut self.close_route,key)?;let inner=scope.borrow()?;
    let done=self.retirement.close_reply(original,body,effect,inner,true)?;drop(done);return Ok(scope.forwarded());
   }

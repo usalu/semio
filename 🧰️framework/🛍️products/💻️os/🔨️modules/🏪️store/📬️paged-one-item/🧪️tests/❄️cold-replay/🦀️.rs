@@ -29,9 +29,10 @@ fn replay_outcome_with(factory: paged::ColdMutationApplyFactory<PlainDocument, D
     let mut original = Some(mutation);
     let (mut source, _) = ArtifactMutationSource::admit(&mut original, &mutations, retained(ArtifactMutationSource::<DocumentMutation>::constructor_demand())).unwrap().unwrap();
     let mut input = None;
+    let mut feeder = Receiver::new(retained(ArtifactMutationSource::<DocumentMutation>::constructor_demand()));
     for _ in 0..64 {
         if source.ready() { source.take(&mut input, retained(source.demands(4096).unwrap())).unwrap(); break; }
-        {let grant=retained(source.demands(4096).unwrap());effect::with_effect(grant,effect::CPU,|e|source.advance(e)).0.unwrap();}
+        {let grant=retained(source.demands(4096).unwrap());feeder.run(grant,|control|source.advance_chained(control,grant)).unwrap();}
     }
     let registry = SnapshotReadRegistryHandle::new();
     let lease = registry.try_issue(Arc::clone(&base)).unwrap_or_else(|_| panic!("replay registry admission"));

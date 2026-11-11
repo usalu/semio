@@ -5,6 +5,8 @@ pub use semio_framework_job_payload::{RetainedPayloadBuilder,payload_pages_and_l
 pub use semio_framework_job_context::testkit::original_return_source::{claim_original_return,receive_original_return_witness,OriginalReturnPhase};
 use semio_framework_job_context::testkit;
 use semio_framework_value_testing_allocator as _;
+/// 🧮️ Sizes a quantum-one turn so it still pays the Source's per-turn return-origin refresh quote.
+pub fn quantum(caller:&mut OriginalJobFixtureCaller,stock:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedCloneGrant{let refresh=caller.turn(stock,|cx|Ok(original_return_refresh_quote(cx)?)).expect("return refresh quote");semio_framework_value::RetainedCloneGrant{maximum_items:1+refresh.copied_items,..stock}}
 #[path="../../⚠️failure/🧪️tests/🧰️support/🦀️.rs"]
 mod original_failure_test_support;
 #[path="../../📬️outcome/⏸️continuation/🧪️tests/📦️capsule/🦀️.rs"]

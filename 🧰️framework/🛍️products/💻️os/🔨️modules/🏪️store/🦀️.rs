@@ -297,7 +297,7 @@ use codec_registry::{COMPONENT_DOCUMENT_CODEC_REGISTRY, DIALECT_MIGRATION_REGIST
 use semio_os_store_engine_owners::BoundedArtifactRetirementFactory;
 
 use semio_os_store_codec_registry::native_snapshot;
-pub use semio_os_io::control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotBodyWallet, NativeSnapshotFailure, NativeSnapshotCause, NativeSnapshotWork, native_snapshot_turn};
+pub use semio_os_io::control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotBodyWallet, NativeSnapshotEffectProgress, NativeSnapshotFailure, NativeSnapshotCause, NativeSnapshotWork, native_snapshot_turn};
 pub use native_snapshot::{ArtifactPackReceiving,OriginalArtifactPackReceiving,OriginalArtifactSnapshotReceiving,OriginalSnapshotRecordReceiving,OriginalPackWriting,decode_native_snapshot_record,encode_native_snapshot_record};
 pub use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotEncoding,NativeSnapshotInput};
 

@@ -159,10 +159,10 @@ impl ExtensionBundle {
             if matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"extension resource owner reported Complete without terminal emptiness").into())}
             return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
         }
-        semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,loan|{let step=self.close_source_step(same,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
+        semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx,grant,demand,|same,effect|{let loan=effect.grant();let step=self.close_source_step(same,effect,loan,demand)?;Ok((step,self.terminal_is_empty()))}).map_err(Into::into)
     }
 
-    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    fn close_source_step(&mut self,_cx:&mut semio_framework_job::StepContext<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(PluginLifecycleStep::Complete(idle));
@@ -185,7 +185,7 @@ impl ExtensionBundle {
         if let Some(gateway)=self.inference_gateway.get_mut().expect("exclusive inference gateway").as_mut(){
             gateway.child_closed();
             if gateway.terminal_is_empty(){*self.inference_gateway.get_mut().expect("exclusive inference gateway")=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
-            return gateway.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);
+            return gateway.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);
         }
         if !self.metadata_retirement.is_empty() {
             return match self.metadata_retirement.step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })? {

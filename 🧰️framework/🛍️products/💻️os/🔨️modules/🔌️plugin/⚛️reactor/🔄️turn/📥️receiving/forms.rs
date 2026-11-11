@@ -2,7 +2,7 @@
 use super::{ReceivingSource,staged::StagedRequestInput,auxiliary::{StagedAuxiliaryInput,StagedAuxiliaryProgress}};
 use semio_framework::kernel::Event;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
-use semio_framework_plugin_reactor_app::PluginApp;
+use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_reactor_lifecycle::{instance_lifetime::NativeCloseKey,life_instance_registry::PluginRuntime};
 use semio_plugin_reactor_patches::PATCHES;
 use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
@@ -46,8 +46,8 @@ impl StagedEvent {
     async fn close<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if let Some(owner)=self.auxiliary.as_mut(){if !owner.terminal_is_empty(){owner.close_step(runtime,cx).await?;return Ok(false);}if metadata(cx,true)?{self.auxiliary.take();}return Ok(false);}
         if let Some(owner)=self.input.as_mut(){if !owner.terminal_is_empty(){owner.close_step(cx)?;return Ok(false);}if metadata(cx,true)?{self.input.take();}return Ok(false);}
-        if !self.retirement.is_empty()||self.wire.is_some(){let demand=self.retirement.next_owner_demands::<Vec<u8>>(self.wire.is_some(),&None,4096)?;super::retired(cx,demand,|grant|if self.retirement.is_empty(){self.retirement.begin_granted(&mut self.wire,grant).result?.ok_or_else(invalid)}else{self.retirement.step_granted(grant).result})?;return Ok(false);}
-        if self.event.is_some(){let demand=self.retirement.next_owner_demands::<Event>(true,&None,4096)?;super::retired(cx,demand,|grant|self.retirement.begin_granted(&mut self.event,grant).result?.ok_or_else(invalid))?;return Ok(false);}
+        if !self.retirement.is_empty()||self.wire.is_some(){let demand=self.retirement.next_owner_demands::<Vec<u8>>(self.wire.is_some(),&None,4096)?;super::retired(cx,demand,|effect|super::begin(&mut self.retirement,&mut self.wire,effect))?;return Ok(false);}
+        if self.event.is_some(){let demand=self.retirement.next_owner_demands::<Event>(true,&None,4096)?;super::retired(cx,demand,|effect|super::begin(&mut self.retirement,&mut self.event,effect))?;return Ok(false);}
         self.witness.close(cx)
     }
     async fn step<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{

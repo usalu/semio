@@ -41,3 +41,4 @@ G="$C/🗑️generated/1105b"
 - Never game the source budget (no formatting collapse); split crates or move tests to `[[test]]` targets.
 - Test binaries: hang guard ≤100 s; add fail-fast stall asserts instead of rerunning spinning suites.
 - Turn-less test fixtures get producer invocations from the shared driven harness (value-testing-admission); AuthoringWallet must not be used in tests or production.
+- (11-10) Never restore a whole file from git HEAD or rewrite a file from an earlier read: peers' edits are lost (declviews 03:14 and proctransient edits were reverted this way). Edit with exact anchors only; if a file looks corrupted, ask the coordinator via the claims log.

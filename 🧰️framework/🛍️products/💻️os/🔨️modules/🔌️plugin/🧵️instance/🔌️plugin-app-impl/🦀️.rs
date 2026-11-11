@@ -287,7 +287,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         if self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()) {
             self.interaction.local_interaction_query_turn = !self.interaction.local_interaction_query_turn;
             if self.interaction.local_interaction_query_turn {
-                self.interaction.advance_local_interaction_query_one(store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(retained), semio_plugin_interaction::query::LOCAL_INTERACTION_QUERY_PAGE_BYTES)?;
+                self.interaction.advance_local_interaction_query_one(store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(retained), semio_plugin_interaction::query::LOCAL_INTERACTION_QUERY_PAGE_BYTES,cx)?;
                 return Ok(());
             }
         }
@@ -338,7 +338,7 @@ let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
             let (id, operation) = self.tools.tool_operations.entry(index)?;
             Some(format!("op {id} '{}' {:?} s={} rej={}/{} cancel={} term={} sem={} out={} res={} fc={} prod={} ref={}", operation.verb, operation.stage, operation.session.is_some(), operation.session_rejected.is_some(), operation.session_rejected.as_ref().is_some_and(|rejected| rejected.admission_pending()), operation.user_cancel_requested, operation.terminal_seen, operation.worker_semantic_pending, operation.worker_outcome_pending, operation.worker_resume_pending, operation.worker_fault_capture.is_some(), operation.producer_request.is_some(), operation.retained_structural_refusal().unwrap_or_else(|| "none".into())))
         }).collect::<Vec<_>>().join("; ");
-        let lw=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|i|self.tools.latest_wins_commands.entry(i)).map(|(id,p)|format!(" lw{id}:ctx/receipt/lookup/accepted/closing/key={:?}",(p.context_phase,p.receipt.is_some(),p.lookup_started,p.accepted,p.closing,p.key_copy.as_ref().map(|k|(k.part,k.prefix,k.offset))))).unwrap_or_default();
+        let lw=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|i|self.tools.latest_wins_commands.entry(i)).map(|(id,p)|format!(" lw{id}:ctx/lookup/accepted/closing/key={:?}",(p.context_phase,p.lookup_started,p.accepted,p.closing,p.key_copy.as_ref().map(|k|(k.part,k.prefix,k.offset))))).unwrap_or_default();
         format!("{operations}{lw} | lw={} ob={}/{}/{}/{} pr={} fa={} q={}", self.tools.latest_wins_commands.len(), self.tools.typed_effect_outbox.len(), self.tools.typed_event_outbox.len(), self.tools.typed_ui_outbox.len(), self.tools.typed_completion_outbox.len(), self.tools.operation_progress_retired, self.child_composition.derivable_follow_awaits_retirement(&self.stores), self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()))
     }
 
@@ -831,6 +831,12 @@ let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
     async fn produce_media(&mut self, port: &str, owner: &mut semio_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,semio_plugin_decl_app::MediaArtifactOperationFailure> { self.produce_media(port, owner, cx).await }
 
     fn accepts_original_structured_media(&self,port:&str,schema:&str,media_type:&semio_framework::MediaType)->bool{A::accepts_original_structured_media(port,schema,media_type)}
+    fn original_natural_file_media_type(&self,port:&str,format_kind:&str)->Option<semio_framework::MediaType>{
+        if port!=semio_framework::NATURAL_FILE_PORT_ID{return None}
+        let codec=::semio_framework_async::poll::resolve_ready(A::natural_file_codec())?;
+        if codec.format_kind!=format_kind{return None}
+        Some(::semio_framework_async::poll::resolve_ready(A::io()).map_or(semio_framework::MediaType{class:semio_framework::MediaClass::Data,form:semio_framework::MediaForm::Value},|io|io.artifact_media_type))
+    }
     async fn prepare_media_import(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
         if let Some((_,original))=self.media.pending_reserved_producer_permit.as_ref(){
@@ -899,12 +905,6 @@ let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
     async fn take_media_export_chunk(&mut self,handle:semio_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.media.take_media_export_chunk(handle, receiver, terminal, cx).await }
 
     async fn take_segmented_download_chunk(&mut self, operation_id: u64) -> Result<Option<Vec<u8>>, Fault> { self.media.take_segmented_download_chunk(operation_id).await }
-
-    async fn import_media(&mut self, port: &str, media: Media, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        let log_generation_before = self.history.log_generation;
-        let result = self.dispatch_ctx().dispatch_import_media(port, media, meta, cx).await?;
-        Ok(self.render_ctx().finish_recorded(log_generation_before, &format!("import-media:{port}"), result).await)
-    }
 
     async fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
         self.render_ctx().refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;

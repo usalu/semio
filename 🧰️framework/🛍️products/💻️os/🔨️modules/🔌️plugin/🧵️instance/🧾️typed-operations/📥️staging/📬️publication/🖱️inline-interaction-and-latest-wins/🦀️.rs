@@ -47,7 +47,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if retained.maximum_items==0||retained.maximum_depth==0{return Ok(());}
         let Some(operation_id) = self.tools.latest_wins_order.items.front().copied() else { return Ok(()) };
         let mut pending = self.tools.latest_wins_commands.remove(operation_id).expect("exact pending keyed command");
-        if pending.receipt.is_some(){self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Ok(());}
         if pending.closing&&!pending.context_metadata_is_empty(){let result=pending.close_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
         if pending.context_phase>0&&pending.context_phase<3{let result=pending.prepare_context_metadata(cx);self.tools.latest_wins_commands.insert_admitted(operation_id,pending);result?;return Ok(())}
         if !pending.closing&&pending.lease.is_none(){
@@ -64,12 +63,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 Err(error)=>{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Err(error.into());},
             }
         }
-        let ready = match self.tools.advance_latest_wins_admission_unit(&mut *self.stores, &mut pending, retained) {
+        let ready = match self.tools.advance_latest_wins_admission_unit(&mut *self.stores, &mut pending, cx) {
             Ok(ready) => ready,
             Err(fault) => {
-                let result=if pending.receipt.is_some(){Ok(())}else{pending.record_original_receipt(retained,fault.retained_progress())};
-                *pending.fault=Some(fault);
-                if let Err(error)=result{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Err(error.into());}
+                *pending.fault=Some(fault.into());
                 pending.closing = true;
                 if let Some(lease) = pending.lease.as_ref() {
                     lease.cancel();

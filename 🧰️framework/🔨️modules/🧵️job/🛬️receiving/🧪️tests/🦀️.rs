@@ -29,7 +29,7 @@ fn effect_step<E:NativeReceivingEffectError>(control:&mut NativeDecodeControl<'_
 fn retirement_effect_step<E:NativeReceivingEffectError>(control:&mut NativeRetirementDecodeControl<'_,'_>,demand:RetirementDemand,work:u64,frame:&mut NativeReceivingEffect<E>,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,E>)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{
  match control.receive_effect(demand,work,frame,|_,effect|run(effect)){Ok(NativeReceivingEffectPoll::Pending{work})=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},Ok(NativeReceivingEffectPoll::Complete(turn))=>RetainedWorkOutcome{result:turn.result.map_err(|failure|failure.receiving),work:turn.work},Err(error)=>RetainedWorkOutcome{result:Err(error.into()),work:0}}
 }
-const WARM_TURNS:usize=6;
+const WARM_TURNS:usize=4;
 fn warm(caller:&mut OriginalJobFixtureCaller,owner:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant){for turns in 1..=64{let mut outcome=None;if caller.turn_with_decoder(grant,owner,|cx|cx.with_native_receiving(&mut outcome,|_,_|Ok(()))).unwrap(){assert_eq!(turns,WARM_TURNS,"decoder Source, return table and receiving scope admit in exactly this many turns");return}}panic!("original receiving never became ready")}
 fn close_decoder(caller:&mut OriginalJobFixtureCaller,owner:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant){for _ in 0..10000{if owner.terminal_is_empty(){return}caller.turn(grant,|cx|{owner.close_on_source(cx)?;Ok(())}).unwrap();}panic!("original decoder exceeded its existing close bound")}
 fn copy_native_text(caller:&mut OriginalJobFixtureCaller,owner:&mut OriginalJobDecodeOwner,grant:RetainedCloneGrant,text:&str)->String{
@@ -105,7 +105,7 @@ fn original_context_retirement_after_cancel_keeps_ledger_deadline_fuel_and_exact
    if close.terminal_is_empty()&&!frame.has_pending_recovery(){break}
    let admitted=owner.owned_bytes();let mut actual=Default::default();caller.turn_with_decoder(grant,&mut owner,|cx|cx.with_original_retirement(|cx|{
     let before=cx.retained_progress();let mut outcome=None;let mut child=None;
-    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_native_retirement_receiving(&mut outcome,|control,body_grant|{assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);child=Some(retire_original_text(&mut close,&mut frame,control,body_grant));Ok(())}));assert!(result?);source_received(outcome);let p=child.expect("funded original retirement ran").result.unwrap().progress();actual=delta(cx.retained_progress(),before);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert!(actual.fits(grant));Ok(())
+    let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_native_retirement_receiving(&mut outcome,(cx.retained_grant(),cx.fuel_remaining()),|control,body_grant|{assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);child=Some(retire_original_text(&mut close,&mut frame,control,body_grant));Ok(())}));assert!(result?);source_received(outcome);let p=child.expect("funded original retirement ran").result.unwrap().progress();actual=delta(cx.retained_progress(),before);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert!(actual.fits(grant));Ok(())
    })).unwrap();assert_eq!(owner.owned_bytes()-admitted,actual.retained_capacity_bytes);
   }
   assert!(close.terminal_is_empty()&&!frame.has_pending_recovery());assert_eq!(owner.receiving_identity(),identity);close_decoder(&mut caller,&mut owner,grant);caller.retire(stock);
@@ -159,7 +159,7 @@ fn cancelled_source_recovers_actual_pending_child_with_same_construction_issuer(
  let mut outcome=None;
  caller.turn_with_decoder(stock,&mut owner,|cx|cx.with_original_retirement(|cx|{
   let before=cx.retained_progress();let work=cx.original_work_units_spent();
-  assert!(cx.with_native_retirement_receiving(&mut outcome,|control,body_grant|{
+  assert!(cx.with_native_retirement_receiving(&mut outcome,(cx.retained_grant(),cx.fuel_remaining()),|control,body_grant|{
    assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);
    control.resolve_unallocated_receiving_child(&mut frame,reply.take().unwrap()).unwrap();
    let turn=control.finish_receiving(&mut frame);assert_eq!(turn.work,1);assert_eq!(turn.result.unwrap().copied_items,1);Ok(())
@@ -176,7 +176,7 @@ fn cancelled_source_recovers_actual_pending_child_with_same_construction_issuer(
  })).unwrap();assert!(!typed_visited&&typed.is_none());
  for _ in 0..stock.maximum_items{if typed.is_some(){break}caller.turn_with_decoder(stock,&mut owner,|cx|cx.with_original_retirement(|cx|{
   let before=cx.retained_progress();
-  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_native_retirement_receiving_value(&mut typed,|control,_grant|{
+  let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_native_retirement_receiving_value(&mut typed,(cx.retained_grant(),cx.fuel_remaining()),|control,_grant|{
    typed_visited=true;assert_eq!(Some((control.ledger_identity(),control.retirement_recipient_identity().unwrap())),identity);Ok(expected)
   }));
   let _=result?;let used=delta(cx.retained_progress(),before);assert_eq!((heap.requested_bytes,heap.released_bytes),(used.retained_capacity_bytes,used.released_bytes));Ok(())

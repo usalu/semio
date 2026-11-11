@@ -80,6 +80,8 @@ fn quote_construction(loan:&mut OriginalConstructionLoan<'_>,work:&semio_framewo
 }
 impl NativeDecodeControl<'_>{
  /// 🔭️ Reads actual original construction submissions without issuing another grant.
+ /// 🪪️ Reports whether this decoder already runs under its original construction recipient, which a nested owner must reuse instead of substituting.
+ pub fn has_construction_recipient(&self)->bool{self.construction.is_some()}
  pub fn construction_submitted(&self)->Result<RetainedCloneProgress,ValueError>{self.construction.as_deref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native construction requires its original recipient"))?.submitted()}
  /// 🛬️ One original physical recipient funds and records a bounded typed construction transition.
  pub fn receive_construction_step(&mut self,demand:RetirementDemand,operation:impl FnOnce(&mut Self,RetainedCloneGrant)->crate::RetainedWorkOutcome)->crate::RetainedWorkOutcome<crate::retained_clone::RetainedCloneStep,NativeConstructionStepFailure<ValueError>>{

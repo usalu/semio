@@ -77,7 +77,7 @@ impl RetirementQueue {
     }
     /// 🧾️ Borrows the original queue turn receipt, including genuine failed-child effects.
     pub fn step_progress(&self)->RetainedCloneProgress{self.step_progress}
-    pub fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.step_with(body,effect,|owner,effect|owner.close_step(body,effect))}
+    pub fn step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.step_with(body,effect,|owner,effect|semio_framework_value_retirement::close_owner(owner,body,effect))}
     fn requires_original_control(&self)->bool{self.selected().is_some_and(|owner|!owner.terminal_is_empty()&&owner.requires_original_control())}
     fn step_with(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,invoke:impl FnOnce(&mut dyn ErasedSnapshotRetirement,&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->OriginalRetirementPoll {let mut work=0;self.step_progress=empty_progress();
         let result=match self.step_original(body,effect,invoke,&mut work){Ok(step)=>{self.step_progress=step.progress();Ok(step)},Err(RetirementPollExit::Failed(error))=>{if error.retained_progress()!=empty_progress(){self.step_progress=error.retained_progress();}Err(RetirementPollExit::Failed(error.with_retained_progress(self.step_progress)))},Err(pending)=>Err(pending)};
@@ -127,8 +127,8 @@ impl RetirementCursor for RetirementQueue {
  fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{RetirementQueue::next_computational_work(self,body)}
 
  fn requires_original_control(&self)->bool{RetirementQueue::requires_original_control(self)}
- fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();if !self.requires_original_control(){return RetirementStep::Failure(refusal(ValueRefusalKind::UnsupportedOwner,"retirement queue has no selected original child").into(),0)}cursor_turn(self.step_with(body,effect,|owner,effect|owner.close_step_controlled(body,effect,control)))}
- fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if !self.requires_original_control(){return RetirementStep::Failure(refusal(ValueRefusalKind::UnsupportedOwner,"retirement queue has no selected original child").into(),0)}cursor_turn(self.step_with(body,effect,|owner,effect|owner.close_original_step(original,body,effect)))}
+ fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();if !self.requires_original_control(){return RetirementStep::Failure(refusal(ValueRefusalKind::UnsupportedOwner,"retirement queue has no selected original child").into(),0)}cursor_turn(self.step_with(body,effect,|owner,effect|semio_framework_value_retirement::close_owner_controlled(owner,body,effect,control)))}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();if !self.requires_original_control(){return RetirementStep::Failure(refusal(ValueRefusalKind::UnsupportedOwner,"retirement queue has no selected original child").into(),0)}cursor_turn(self.step_with(body,effect,|owner,effect|semio_framework_value_retirement::close_owner_original(owner,original,body,effect)))}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{RetirementQueue::next_demand(self,body)}
     
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}

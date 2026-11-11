@@ -206,15 +206,12 @@ impl<P:OriginalHostClockProducer+semio_framework_value_retirement::retirement::R
 }
 /// 🎟️ Admits the actual host owner into a paid retirement frame before erasing its type.
 pub fn admit_original_host_clock<P:OriginalHostClockProducer+semio_framework_value_retirement::retirement::RetireOwned+Send+'static>(original:&mut Option<OriginalClockAuthority<OriginalHostClock<P>>>,output:&mut Option<Box<dyn OriginalErasedHostClock>>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>)->semio_framework_value_control_contract::RetainedWorkOutcome<Option<semio_framework_value_control_contract::RetainedCloneProgress>,ValueError>{if output.is_some(){return semio_framework_value_control_contract::RetainedWorkOutcome{result:Err(invalid()),work:0}}let turn=semio_framework_value_retirement::retirement::controlled::admit_typed_controlled_retirement(original,effect);semio_framework_value_control_contract::RetainedWorkOutcome{result:turn.result.map(|owner|owner.map(|(owner,progress)|{*output=Some(owner as Box<dyn OriginalErasedHostClock>);progress})),work:turn.work}}
-/// 🕰️ One native monotonic clock owns its real origin for the entire Source lifetime.
-#[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
-pub struct OriginalSystemClock{issuer:semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity,origin:Option<std::time::Instant>}
-#[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
+/// 🕰️ One target monotonic clock owns its real origin for the entire Source lifetime.
+pub struct OriginalSystemClock{issuer:semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity,origin:Option<<monotonic::SelectedMonotonic as monotonic::MonotonicPort>::Mark>}
 impl OriginalSystemClock{
  /// 🏁️ Binds the actual Source issuer without sampling the clock.
  pub fn new(issuer:&semio_framework_value_control_contract::OriginalSourceTurnIssuer)->Self{Self{issuer:issuer.identity(),origin:None}}
 }
-#[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 impl OriginalClockProducer for OriginalSystemClock{
  type Context<'turn,'source>=OriginalSystemClockContext<'turn> where 'source:'turn;
  fn validate_context<'turn,'source>(&self,c:&Self::Context<'turn,'source>)->Result<(),ValueError> where 'source:'turn{if c.issuer.identity()!=self.issuer{return Err(invalid())}c.issuer.validate(c.turn)?;Ok(())}
@@ -223,22 +220,22 @@ impl OriginalClockProducer for OriginalSystemClock{
  fn read<'reply,'turn,'source>(&mut self,c:&mut Self::Context<'turn,'source>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{OriginalHostClockProducer::read(self,c,effect,reply)}
  fn recover<'reply,'turn,'source>(&mut self,_:&mut Self::Context<'turn,'source>,_:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError> where 'source:'turn{Ok(reply.pending())}
 }
-#[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 impl OriginalHostClockProducer for OriginalSystemClock{
  fn demand(&self,c:&OriginalSystemClockContext<'_>)->Result<OriginalClockDemand,ValueError>{self.validate_context(c)?;Ok(OriginalClockDemand{physical:Default::default(),work:1,next_work:1})}
- fn read<'reply>(&mut self,c:&OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>{self.validate_context(c)?;if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original clock exceeded its Work grant"))}let reading=match self.origin{Some(origin)=>std::time::Instant::now().checked_duration_since(origin).map(|elapsed|elapsed.as_micros()),None=>{self.origin=Some(std::time::Instant::now());Some(0)}};Ok(reply.complete(Ok(reading)))}
+ fn read<'reply>(&mut self,c:&OriginalSystemClockContext<'_>,effect:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>{self.validate_context(c)?;if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original clock exceeded its Work grant"))}let now=<monotonic::SelectedMonotonic as monotonic::MonotonicPort>::mark()?;let reading=match self.origin{Some(origin)=><monotonic::SelectedMonotonic as monotonic::MonotonicPort>::elapsed_micros(origin,now),None=>{self.origin=Some(now);Some(0)}};Ok(reply.complete(Ok(reading)))}
  fn recover<'reply>(&mut self,_:&OriginalSystemClockContext<'_>,_:&mut semio_framework_value_control_contract::RetainedAllocationEffect<'_>,reply:OriginalClockReply<'reply>)->Result<OriginalClockReplyComplete<'reply>,ValueError>{Ok(reply.pending())}
 }
-#[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 impl semio_framework_value_retirement::retirement::RetireOwned for OriginalSystemClock{
- type RetirementCursor=semio_framework_value_retirement::retirement::Leaf<(semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity,Option<std::time::Instant>)>;
+ type RetirementCursor=semio_framework_value_retirement::retirement::Leaf<(semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity,Option<<monotonic::SelectedMonotonic as monotonic::MonotonicPort>::Mark>)>;
  fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value_retirement::retirement::leaf((self.issuer,self.origin))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value_retirement::retirement::leaf_birth_bytes::<(semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity,Option<std::time::Instant>)>())}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value_retirement::retirement::leaf_birth_bytes::<(semio_framework_value_control_contract::OriginalSourceTurnIssuerIdentity,Option<<monotonic::SelectedMonotonic as monotonic::MonotonicPort>::Mark>)>())}
  fn controlled_retirement_supported()->bool{true}
 }
 
 #[path="📦️source/🦀️.rs"]
 mod source;
+#[path="🧭️monotonic/🦀️.rs"]
+mod monotonic;
 pub use source::OriginalSourceClock;
 
 #[cfg(test)]

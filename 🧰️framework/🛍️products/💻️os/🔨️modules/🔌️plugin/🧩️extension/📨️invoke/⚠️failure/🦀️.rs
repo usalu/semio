@@ -8,13 +8,8 @@ use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 
 #[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum ExtensionInvocationCause{Fault(Fault),Value(ValueError),Turn(OriginalTurnFailure),Inference(crate::artifact_inference::ArtifactInferenceGatewayRefusal)}
-impl RetireOwned for ExtensionInvocationCause{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{match self{Self::Fault(value)=>value.retirement(),Self::Value(value)=>value.retirement(),Self::Turn(value)=>value.retirement(),Self::Inference(value)=>value.retirement()}}
- fn retirement_birth_bytes(&self)->Option<usize>{match self{Self::Fault(value)=>value.retirement_birth_bytes(),Self::Value(value)=>value.retirement_birth_bytes(),Self::Turn(value)=>value.retirement_birth_bytes(),Self::Inference(value)=>value.retirement_birth_bytes()}}
- fn controlled_retirement_supported()->bool{true}
-}
-
 /// 🫴️ An immutable view preserves the defining full cause projection without moving its original owner.
 #[derive(Clone,Copy)]
 pub(crate) enum OriginalCauseLoan<'a>{Fault(&'a Fault),Value(&'a ValueError),Turn(&'a OriginalTurnFailure),Inference(&'a crate::artifact_inference::ArtifactInferenceGatewayRefusal)}
@@ -90,6 +85,17 @@ impl RetainedExtensionFaultReply{
  /// 🛑️ The registered terminal cancellation reply keeps its already canceled original caller.
  pub fn new_terminal_cancellation(cause:ExtensionInvocationCause)->Self{let mut reply=Self::new(cause);reply.terminal_cancellation=true;reply}
  pub fn debit(cx:&mut StepContext<'_>,progress:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(())}
+ fn close_owner<T:RetireOwned>(owner:&mut ControlledRetirement<T>,grant:semio_framework_value::RetainedCloneGrant,cx:&mut StepContext<'_>)->Result<semio_framework_value::RetainedCloneStep,OriginalTurnFailure>{
+  let body=grant.maximum_copy_bytes;
+  let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|owner.step(body,effect))?else{return Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};
+  cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+  match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(|failure|{cx.consume_fuel(1);OriginalTurnFailure::debit_original(failure,cx)})}
+ }
+ fn pack_turn<R>(cx:&mut StepContext<'_>,grant:semio_framework_value::RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<R,BorrowedProjectedPackFailure>)->Result<Option<R>,OriginalTurnFailure>{
+  let Some((result,performed))=cx.with_original_effect(grant,|_,effect|run(effect))?else{return Ok(None)};
+  cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+  result.map(Some).map_err(|error|Self::pack_failure(error,cx))
+ }
  fn pack_failure(error:BorrowedProjectedPackFailure,cx:&mut StepContext<'_>)->OriginalTurnFailure{cx.consume_fuel(1);OriginalTurnFailure::debit_original(error.reason,cx)}
  /// 📏️ Quotes only the next actual symbol, output allocation or typed original cause close.
  pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{Ok(match self.phase{9=>self.cursor.retirement_demands()?,13=>if let Some(closing)=&self.output_close{closing.selected_demand(copy)?}else{RetirementDemand{depth:1,..Default::default()}},0|3=>RetirementDemand{copy_bytes:if self.phase==3&&self.pending_offset<self.pending_length{1}else{self.cursor.next_minimum_copy_bytes()},capacity_bytes:self.cursor.next_capacity_byte_demand()?,depth:self.cursor.next_advance_depth_demand()?,..Default::default()},1|4=>self.cursor.retirement_demands()?,2=>RetirementDemand{capacity_bytes:self.measured,depth:1,..Default::default()},6=>if let Some(closing)=&self.closing{closing.selected_demand(copy)?}else{RetirementDemand{depth:1,..Default::default()}},8=>Default::default(),_=>RetirementDemand{depth:1,..Default::default()}})}
@@ -102,16 +108,16 @@ impl RetainedExtensionFaultReply{
    0|3=>{
     if self.phase==3&&self.pending_offset<self.pending_length{let count=(self.pending_length-self.pending_offset).min(grant.maximum_copy_bytes);if count==0{return Ok(None)}if self.bytes.capacity()-self.bytes.len()<count{return Err(invalid().into())}self.bytes.extend_from_slice(&self.scratch[self.pending_offset..self.pending_offset+count]);self.pending_offset+=count;Self::debit(cx,RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;return Ok(None)}
     if self.cursor.is_complete(){Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=if self.phase==0{1}else{4};return Ok(None)}
-    let source=self.cause.as_ref().ok_or_else(invalid)?;let step=self.cursor.advance_intrinsic(source,1,&mut self.scratch,grant).map_err(|error|Self::pack_failure(error,cx))?;Self::debit(cx,step.progress)?;
+    let source=self.cause.as_ref().ok_or_else(invalid)?;let Some(step)=Self::pack_turn(cx,grant,|effect|self.cursor.advance_intrinsic(source,1,&mut self.scratch,effect))?else{return Ok(None)};Self::debit(cx,step.progress)?;
     if self.phase==0{self.measured=self.measured.checked_add(step.written_bytes).ok_or_else(invalid)?}else{self.pending_length=step.written_bytes;self.pending_offset=0}Ok(None)
    },
-   1|4=>{let step=self.cursor.close(grant).map_err(|error|Self::pack_failure(error,cx))?;Self::debit(cx,step.progress)?;if step.complete{self.phase=if self.phase==1{2}else{5}}Ok(None)},
+   1|4=>{let Some(step)=Self::pack_turn(cx,grant,|effect|self.cursor.close(effect))?else{return Ok(None)};Self::debit(cx,step.progress)?;if step.complete{self.phase=if self.phase==1{2}else{5}}Ok(None)},
    2=>{if grant.maximum_capacity_bytes<self.measured{return Ok(None)}let before=self.bytes.capacity();self.bytes.try_reserve_exact(self.measured).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original invocation diagnostic output allocation refused"))?;let capacity=self.bytes.capacity()-before;self.cursor=Default::default();self.phase=3;Self::debit(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;Ok(None)},
    5=>{let source=self.cause.take().ok_or_else(invalid)?;self.closing=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!("original invocation cause declares typed retirement")));Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=6;Ok(None)},
-   6=>{let closing=self.closing.as_mut().ok_or_else(invalid)?;if closing.terminal_is_empty(){self.closing=None;Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=if self.cancelled{12}else{7};return Ok(None)}let step=closing.step(grant).map_err(|error|{cx.consume_fuel(1);OriginalTurnFailure::debit_original(error,cx)})?;Self::debit(cx,step.progress())?;Ok(None)},
-   9=>{if self.cursor.terminal_is_empty(){Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=if self.cause.is_some(){5}else{12};return Ok(None)}let step=self.cursor.close(grant).map_err(|error|Self::pack_failure(error,cx))?;Self::debit(cx,step.progress)?;Ok(None)},
+   6=>{let closing=self.closing.as_mut().ok_or_else(invalid)?;if closing.terminal_is_empty(){self.closing=None;Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=if self.cancelled{12}else{7};return Ok(None)}let step=Self::close_owner(closing,grant,cx)?;Self::debit(cx,step.progress())?;Ok(None)},
+   9=>{if self.cursor.terminal_is_empty(){Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=if self.cause.is_some(){5}else{12};return Ok(None)}let Some(step)=Self::pack_turn(cx,grant,|effect|self.cursor.close(effect))?else{return Ok(None)};Self::debit(cx,step.progress)?;Ok(None)},
    12=>{let bytes=std::mem::take(&mut self.bytes);self.output_close=Some(ControlledRetirement::new(bytes).unwrap_or_else(|_|unreachable!("original diagnostic bytes declare typed retirement")));Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=13;Ok(None)},
-   13=>{let closing=self.output_close.as_mut().ok_or_else(invalid)?;if closing.terminal_is_empty(){self.output_close=None;Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.pending_length=0;self.pending_offset=0;self.phase=8;return Ok(None)}let step=closing.step(grant).map_err(|error|{cx.consume_fuel(1);OriginalTurnFailure::debit_original(error,cx)})?;Self::debit(cx,step.progress())?;Ok(None)},
+   13=>{let closing=self.output_close.as_mut().ok_or_else(invalid)?;if closing.terminal_is_empty(){self.output_close=None;Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.pending_length=0;self.pending_offset=0;self.phase=8;return Ok(None)}let step=Self::close_owner(closing,grant,cx)?;Self::debit(cx,step.progress())?;Ok(None)},
    7=>{if self.bytes.len()!=self.measured{return Err(invalid().into())}Self::debit(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;self.phase=8;Ok(Some(std::mem::take(&mut self.bytes)))},_=>Ok(None)
   }
  }

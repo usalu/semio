@@ -158,7 +158,7 @@ impl ArtifactActor {
                 let _ = stream.close(None).await;
                 return Err(DocumentConnectFailure::Short);
             }
-            let(socket_actor,identity_progress)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),actor_identity_grant).result.unwrap_or_else(|(error,_)|panic!("original pre-admitted socket actor invariant: {error}"));
+            let(socket_actor,identity_progress)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),actor_identity_grant,&mut None).result.unwrap_or_else(|(error,_)|panic!("original pre-admitted socket actor invariant: {error}"));
             Ok(ConnectedDocumentSocket { stream, socket_actor, authority,identity_progress })
         }));
     }
@@ -327,7 +327,8 @@ impl ArtifactActor {
         if let Some(folder) = self.folder.as_ref() {
             folder.write_archive(&archive_bytes).await.map_err(|error| format!("artifact bootstrap persistence failed: {error}"))?;
         }
-        let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+        let log = spr_history(&pair.spr).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
+        let events = history_events_in_turn(&log, &self.document_id, &self.schema, self.actor_identity_grant).map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
         let pushed = match self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await {
             Ok(()) if !events.is_empty() => self.remote.push(BackboneMessage::from_envelopes(&events)).await,
             result => result,

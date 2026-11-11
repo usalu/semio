@@ -18,7 +18,7 @@ use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant, RetainedClo
 #[cfg(test)]
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 #[cfg(test)]
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeRetirementRecipient};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 #[cfg(test)]
 use semio_s_fem_material::volumetric::FemMaterialValue;
 #[cfg(test)]
@@ -42,3 +42,9 @@ mod examples_tests;
 #[cfg(test)]
 #[path = "diff-tests.rs"]
 mod diff_tests;
+#[cfg(test)]
+#[path = "cold-tests.rs"]
+mod cold_tests;
+#[cfg(test)]
+#[path = "roundtrip-tests.rs"]
+mod roundtrip_tests;

@@ -55,7 +55,7 @@ impl OriginalChildMemberLookup{
 
 impl Drop for OriginalChildMemberLookup{fn drop(&mut self){assert!(self.terminal_is_empty(),"original member lookup requires terminal closure")}}
 
-struct LookupRetirement{cursor:Option<OriginalChildMemberLookup>}
+#[doc(hidden)]pub struct LookupRetirement{cursor:Option<OriginalChildMemberLookup>}
 impl semio_framework_value::retirement::RetireOwned for OriginalChildMemberLookup{type RetirementCursor=LookupRetirement;fn retirement_seed(self)->LookupRetirement{LookupRetirement{cursor:Some(self)}}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<LookupRetirement>())}fn controlled_retirement_supported()->bool{true}}
 impl semio_framework_value::retirement::RetirementCursor for LookupRetirement{
  semio_framework_value::native_retirement_reply!();

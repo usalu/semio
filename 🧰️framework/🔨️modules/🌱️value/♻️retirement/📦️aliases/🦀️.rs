@@ -51,7 +51,7 @@ impl<P> OriginalAliasBatch<P>{
         if let Some(owner)=self.active.as_mut(){
             if !owner.terminal_is_empty(){
                 let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-                let turn=RetirementPollExit::settled(owner.close_step(grant.maximum_copy_bytes,&mut effect.nested(child)))?;*work=turn.work;let step=turn.result?;
+                let turn=RetirementPollExit::settled(semio_framework_value_retirement::close_owner(owner.as_mut(),grant.maximum_copy_bytes,&mut effect.nested(child)))?;*work=turn.work;let step=turn.result?;
                 if !step.progress().fits(child)||matches!(step,RetainedCloneStep::Complete(_))&&!owner.terminal_is_empty(){return Err(refusal("original alias child violated its admitted receipt").into());}
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }

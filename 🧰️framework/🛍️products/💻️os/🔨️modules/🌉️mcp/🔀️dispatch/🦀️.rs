@@ -11,7 +11,7 @@ use semio_os_mcp_foundation::errors::{GatewayError, GatewayErrorCode};
 use semio_os_mcp_foundation::handles::{Attachment, HandleKind, HandleTable, IdempotencyStore, SessionHandle, mint_id};
 use semio_os_mcp_foundation::reports::{InvocationReport, InvocationStatus, PreparedActionReport, RevisionStamp};
 use semio_os_mcp_inference_hub::hub_wire::is_hub_inference_route;
-use semio_os_mcp_port::channel_port::{ActivationScope, AppCommand, AppFrame, ArtifactChannel, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, InferCommand, InferenceOutcome, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedActionRecord, PreparedOps, SagaMember, SagaMemberResult, SagaRecord, SagaReport, UndoMember, UndoRecord, UndoRedoReport, declared_effective_input, map_fault, omitted_revision_arguments, revision_guard_required, unacknowledged_relay_error};
+use semio_os_mcp_port::channel_port::{exchange_blocking, ActivationScope, AppCommand, AppFrame, ArtifactChannel, HistoryUndoPort, HubInferenceApprovalUndoMemberV1, InferCommand, InferenceOutcome, InvokeRequest, MutationOrigin, NO_CHANGE_WARNING, PreparedActionRecord, PreparedOps, SagaMember, SagaMemberResult, SagaRecord, SagaReport, UndoMember, UndoRecord, UndoRedoReport, declared_effective_input, map_fault, omitted_revision_arguments, revision_guard_required, unacknowledged_relay_error};
 use semio_os_mcp_port::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
 use semio_os_mcp_routing::routing_and_shell_routed::ArtifactChannels;
 use semio_os_mcp_schema::schema::{compile_validator, untrusted_capability_output, validate};
@@ -77,7 +77,7 @@ impl ActionAdapter {
     pub fn run_inference(&self, instance: u32, command: InferCommand) -> Result<InferenceOutcome, GatewayError> {
         let requested_schema = command.inference_schema.clone();
         let mut channel = self.channel.lock().expect("artifact channel lock poisoned");
-        let frames = channel.exchange(instance, vec![AppCommand::Infer(command)]).map_err(|fault| map_fault(&fault))?;
+        let frames = exchange_blocking(&mut **channel, instance, vec![AppCommand::Infer(command)]).map_err(|fault| map_fault(&fault))?;
         drop(channel);
         match frames.into_iter().next() {
             Some(AppFrame::Inferred { inference_schema, complete, payload }) => Ok(InferenceOutcome { inference_schema, complete, payload }),
@@ -144,7 +144,7 @@ impl ActionAdapter {
     }
 
     fn exchange_one(&self, instance: u32, command: AppCommand) -> Result<AppFrame, GatewayError> {
-        let result = self.channel.lock().expect("artifact channel lock poisoned").exchange(instance, vec![command]);
+        let result = exchange_blocking(&mut **self.channel.lock().expect("artifact channel lock poisoned"), instance, vec![command]);
         match result {
             Ok(mut frames) => match frames.pop() {
                 Some(AppFrame::Error(fault)) => Err(map_fault(&fault)),

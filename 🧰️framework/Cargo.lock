@@ -6434,10 +6434,12 @@ dependencies = [
 name = "semio-framework-job-recorded-clock"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "semio-framework-value-control-contract",
  "semio-framework-value-receiving",
  "semio-framework-value-retirement",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

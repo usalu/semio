@@ -272,7 +272,8 @@ impl ArtifactActor {
         let new_ids: HashSet<String> = file_ids.difference(&self.known_op_ids).cloned().collect();
 
         if lost.is_empty() && !new_ids.is_empty() {
-            let Ok(events) = spr_events(&spr, &self.document_id, &self.schema,self.actor_identity_grant).await else { return };
+            let Ok(log) = spr_history(&spr).await else { return };
+            let Ok(events) = history_events_in_turn(&log, &self.document_id, &self.schema, self.actor_identity_grant) else { return };
             let mut appended: Vec<MutationEnvelope> = events.into_iter().filter(|event| new_ids.contains(&event.mutation_id.0)).collect();
             for envelope in &mut appended {
                 if envelope.timestamp == semio_os_spr::HybridLogicalTimestamp::new(0, 0) {

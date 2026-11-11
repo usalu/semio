@@ -115,7 +115,7 @@ pub(super) struct InferenceRouteResult {
 
 pub struct ArtifactInferenceRouter {
     pub(super) routes: Mutex<BTreeMap<(String, String), (String, GuestArtifactInferenceMetadata)>>,
-    pub(super) runtimes: Mutex<HashMap<String, Arc<PluginInstanceHandle>>>,
+    pub(super) runtimes: Mutex<HashMap<String, PluginRegistration>>,
     pub(super) live_commits: Mutex<BTreeMap<String, (u64, u64)>>,
 }
 
@@ -134,8 +134,8 @@ impl ArtifactInferenceRouter {
     /// function) rather than `list_artifact_inferences()`, `contributor.list-artifact-inferences`
     /// not being a `world actor` export any more than the old `plugin` interface's own list-* exports
     /// were (`describe.wit`'s doc comment) — the caller decodes `describe()`'s `PackageDescriptor`
-    /// and passes the roster in; `handle` is kept only for later `infer()` dispatch.
-    pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], handle: Arc<PluginInstanceHandle>, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
+    /// and passes the roster in; `registration` is kept only for later `infer()` dispatch.
+    pub async fn register_plugin(&self, plugin_id: &str, dependencies: &[semio_framework::PluginDependency], registration: PluginRegistration, roster_wire_bytes: &[u8]) -> Result<(), PluginHostError> {
         let roster_text = std::str::from_utf8(roster_wire_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let metadata: Vec<GuestArtifactInferenceMetadata> = semio_framework_pack_json::from_json_str(roster_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         for item in &metadata {
@@ -166,7 +166,7 @@ impl ArtifactInferenceRouter {
         validate_inference_dependency_graph(&candidate)?;
         *routes = candidate;
         drop(routes);
-        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.insert(plugin_id.to_string(), handle);
+        self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.insert(plugin_id.to_string(), registration);
         Ok(())
     }
 
@@ -182,11 +182,11 @@ impl ArtifactInferenceRouter {
         }
     }
 
-    pub async fn infer(&self, request: &[u8], cancel: &semio_framework_async::CancelToken, funding: &crate::GuestRelayWakeAuthority) -> Result<Vec<u8>, PluginHostError> {
+    pub async fn infer(&self, request: &[u8], drivers: PluginCallDrivers<'_>) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let identity: InferenceRouteRequest = semio_framework_pack_json::from_json_str(request_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         self.admit_live_identity(&identity.cancellation_id,identity.revision,identity.generation)?;
-        let result = self.infer_with_visited(request, &mut Vec::new(), cancel, funding).await;
+        let result = self.infer_with_visited(request, &mut Vec::new(), drivers).await;
         let live = self
             .live_commits
             .lock()
@@ -227,9 +227,9 @@ impl ArtifactInferenceRouter {
     /// redundant.
     ///
     /// 🚫️async: R10 residue shape 3 — genuinely self-recursive (this fn really does
-    /// await real plugin-runtime I/O via `handle.infer` below, so R9 does not apply);
+    /// await real plugin-runtime I/O via `call_plugin` below, so R9 does not apply);
     /// `Box::pin` breaks the otherwise-infinite future size, per rustc's own E0733 hint.
-    async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>, cancel: &semio_framework_async::CancelToken, funding: &crate::GuestRelayWakeAuthority) -> Result<Vec<u8>, PluginHostError> {
+    async fn infer_with_visited(&self, request: &[u8], visited: &mut Vec<String>, drivers: PluginCallDrivers<'_>) -> Result<Vec<u8>, PluginHostError> {
         let request_text = std::str::from_utf8(request).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let mut route: InferenceRouteRequest = semio_framework_pack_json::from_json_str(request_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         if visited.contains(&route.inference_schema) {
@@ -256,7 +256,7 @@ impl ArtifactInferenceRouter {
                 };
                 let dependency_request = build_dependency_inference_request(&route, &dependency_metadata).await;
                 let dependency_request_bytes = semio_framework_pack_json::to_json_string(&dependency_request).into_bytes();
-                let dependency_result_bytes = Box::pin(self.infer_with_visited(&dependency_request_bytes, visited, cancel, funding)).await?;
+                let dependency_result_bytes = Box::pin(self.infer_with_visited(&dependency_request_bytes, visited, drivers)).await?;
                 dependencies.push((dependency_schema.clone(), dependency_result_bytes));
             }
             visited.pop();
@@ -264,8 +264,8 @@ impl ArtifactInferenceRouter {
         }
 
         let request = semio_framework_pack_json::to_json_string(&route).into_bytes();
-        let handle = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
-        let result = handle.infer(&request, cancel, funding).await?;
+        let registration = self.runtimes.lock().map_err(|_| PluginHostError::LockPoisoned("artifact inference runtimes"))?.get(&owner).cloned().ok_or_else(|| PluginHostError::Plugin(format!("inference owner `{owner}` is not loaded")))?;
+        let result = call_plugin(&registration, JOB_KIND_INFER, &request, drivers().map_err(PluginHostError::NativeIo)?).await?;
         let result_text = std::str::from_utf8(&result).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let echoed: InferenceRouteResult = semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         validate_inference_echo(&route, &echoed).await?;

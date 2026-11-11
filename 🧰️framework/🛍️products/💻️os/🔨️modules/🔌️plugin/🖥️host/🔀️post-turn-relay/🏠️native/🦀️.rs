@@ -5,6 +5,8 @@ pub use projection::{with_bootstrap_history_parts,attest_bootstrap_header_return
 use super::*;
 use semio_framework_job::{OriginalNativeRetirement,OriginalTurnFailure,StepContext};
 use semio_plugin_host_guest_runtime::CompiledHandle;
+#[path="🗂️origin-registry.rs"]
+pub mod origin_registry;
 pub type GuestRelayNativeResolver=fn(u64,[u8;32],&mut dyn FnMut(&GuestRuntimes,&CompiledHandle)->Result<(),OriginalTurnFailure>)->Result<bool,OriginalTurnFailure>;
 pub type GuestRelayNativeCustody=fn(u64,[u8;32],&mut bool,&mut StepContext<'_>)->Result<(),OriginalTurnFailure>;
 /// 🪪️ The selected immutable cache admits a borrowed lookup for its exact content identity.

@@ -98,13 +98,13 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             if A::uses_render_work(body_key){
                 let identity=self.pending.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render source has no original identity"))?;
                 if let Some(retained)=self.pending.pending_render_source.as_mut(){
-                    let retained=retained.original(identity,cx)?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render source alias is unavailable"))?;
+                    let retained=retained.original(identity,cx)?.and_then(|lease|lease.0.as_ref()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render source alias is unavailable"))?;
                     if !std::sync::Arc::ptr_eq(retained,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render query cannot replace its original snapshot source").into())}
                 }else{
                     let grant=cx.retained_grant();
                     let bytes=std::mem::size_of::<std::sync::Arc<A::Snapshot>>();
                     if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
-                    *self.pending.pending_render_source=Some(semio_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(std::sync::Arc::clone(source)));
+                    *self.pending.pending_render_source=Some(semio_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::clone(source))));
                     cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
                     cx.consume_fuel(1);
                     return Ok(None);

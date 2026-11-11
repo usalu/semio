@@ -31,6 +31,7 @@ semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emi
 semio-plugin-app-builder = { path = "../../../🧩️app/📦️packages/🦀️rust" }
 semio-plugin-decl-surface = { path = "../../../../📜️declaration/🪟️surface/📦️packages/🦀️rust" }
 semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
+semio-plugin-job-receiving = { path = "../../../../👷️job/🛬️receiving/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-decl-registry = { path = "../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }

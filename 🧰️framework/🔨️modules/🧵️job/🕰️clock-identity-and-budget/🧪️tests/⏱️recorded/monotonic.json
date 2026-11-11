@@ -1,0 +1,8 @@
+[
+  {"origin": 0, "now": 0, "elapsedMicros": 0},
+  {"origin": 1000, "now": 1001, "elapsedMicros": 1},
+  {"origin": 5, "now": 2500005, "elapsedMicros": 2500000},
+  {"origin": 10, "now": 9, "elapsedMicros": null},
+  {"origin": 18446744073709551615, "now": 0, "elapsedMicros": null},
+  {"origin": 0, "now": 18446744073709551615, "elapsedMicros": 18446744073709551615}
+]

@@ -57,9 +57,9 @@ impl StagedRequestInput {
                 let receiver=self.receiver.as_mut().unwrap();if receiver.is_ready(){self.phase=2;return Ok(None);}
                 let wire=&self.inputs.as_ref().unwrap().wire;let demand=receiver.demands(wire)?;
                 if !funded(cx,demand,false){return Ok(None);}
-                let Some(outcome)=self.native.receive_step(cx,|control,grant|{
-                    let result=receiver.step(wire,control,grant);let progress=match &result.result {Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
-                    OriginalNativeDecodeIssued{value:result.result.map(|_|()),grant,progress,work:u64::from(progress.copied_items!=0)}
+                let Some(outcome)=self.native.receive_effect_step(cx,|control,effect|{
+                    let grant=effect.grant();let result=receiver.step(wire,control,effect);let progress=match &result.result {Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
+                    OriginalNativeDecodeIssued{value:result.result.map(|_|()),grant,progress,work:u64::try_from(result.work).unwrap_or(u64::MAX)}
                 })?else{return Ok(None)};
                 if let Some(ticket)=outcome.receiving_refusal{let failure=self.native.take_receiving_refusal(ticket);if let Err(error)=outcome.value{self.inputs.as_mut().ok_or_else(invalid)?.issue=Some(fold(error));}return Err(failure);}outcome.value.map_err(fold)?;Ok(None)
             },
@@ -94,11 +94,11 @@ impl StagedRequestInput {
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.witness.validate(cx)?;self.closing=true;
         if let Some(receiver)=self.receiver.as_mut(){
-            if !receiver.terminal_is_empty(){let demand=receiver.close_demands(cx.retained_grant().maximum_copy_bytes)?;retired(cx,demand,|grant|receiver.close_step(grant).result)?;return Ok(false);}
+            if !receiver.terminal_is_empty(){let demand=receiver.close_demands(cx.retained_grant().maximum_copy_bytes)?;retired(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;receiver.close_step(body,effect)})?;return Ok(false);}
             if !close_metadata(cx)?{return Ok(false);}self.receiver.take();return Ok(false);
         }
         if let Some(owner)=self.retiring.as_mut(){
-            if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false);}
+            if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false);}
             if !close_metadata(cx)?{return Ok(false);}self.retiring.take();return Ok(false);
         }
         if self.inputs.is_some(){

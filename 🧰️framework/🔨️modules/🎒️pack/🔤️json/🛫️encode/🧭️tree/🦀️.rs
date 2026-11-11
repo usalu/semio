@@ -490,7 +490,7 @@ impl ArtifactCanonicalJsonTreeCursor {
         if self.terminal_is_empty() { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Complete(Default::default()), written_bytes: 0 }); }
         if grant.maximum_items == 0||grant.maximum_depth==0 { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
         let demand = self.next_demand()?;
-        if !Self::admitted(demand, grant) { eprintln!("[DEBUG] mutapply5 not admitted demand={demand:?} grant={grant:?}"); return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
+        if !Self::admitted(demand, grant) { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         let mut written_bytes = 0;
         if self.pending.is_some() {
@@ -571,7 +571,7 @@ impl ArtifactCanonicalJsonTreeCursor {
             }
         } else {
             let turn=self.frames.release_empty_page(effect);self.last_turn_work=work_u64(turn.work)?;
-            match turn.result{Ok(PagedListReleaseOutcome::Denied)=>{progress=Default::default();eprintln!("[DEBUG] mutapply5 release denied len={} cap={} alloc={} grant={:?} work_max={} remaining={:?} copy={:?} depth={:?} rel={:?}",self.frames.len(),self.frames.capacity(),self.frames.allocated_bytes(),grant,effect.maximum_work_units(),effect.remaining_work_units(),self.frames.next_release_copy_byte_demand(),self.frames.next_release_depth_demand(),self.frames.next_release_allocation_bytes());},Ok(PagedListReleaseOutcome::Ready(step))=>progress.released_bytes=step.released_allocation_bytes,Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(ValueError::from(error))}
+            match turn.result{Ok(PagedListReleaseOutcome::Denied)=>progress=Default::default(),Ok(PagedListReleaseOutcome::Ready(step))=>progress.released_bytes=step.released_allocation_bytes,Err(PagedListReleaseFailure::Work(error))=>return Err(error),Err(PagedListReleaseFailure::Release(error))=>return Err(ValueError::from(error))}
         }
         let done=effect.performed_work().saturating_sub(started);
         if done==0&&progress!=RetainedCloneProgress::default() { if !effect.performed(1)? { return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"canonical traversal unit exceeded its original work")) } self.last_turn_work=1; } else { self.last_turn_work=work_u64(done)?; }

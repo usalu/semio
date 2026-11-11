@@ -3,7 +3,7 @@
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_media::{ArtifactDownloadOutput, ArtifactMediaExportHandle, ArtifactMediaExportPoll};
 use semio_framework_value::{RetainedCloneProgress, ValueError};
-use std::mem::size_of;
+use std::mem::{size_of, ManuallyDrop};
 use crate::docs_components::MediaTransfers;
 
 impl<A: ArtifactApp> MediaTransfers<A> {

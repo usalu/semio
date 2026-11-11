@@ -89,32 +89,7 @@ pub fn admit_original_tool_construction_scoped<O>(context:&mut StepContext<'_>,a
     })
 }
 
-/// 🧭️ Drives bind, construct and settle as far as this turn allows over the caller's resident admission and output: `Ok(true)` when settled, `Ok(false)` when the next turn must continue with the same admission and output; a quote above the operation ceiling is a typed refusal. A turn commits only when it funds the exact quote of the constructor plus its settle metadata, so both then finish in the same turn.
-pub fn admit_original_construction_settled<O>(context:&mut StepContext<'_>,admission:&mut semio_framework_job::OriginalConstructionAdmission,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>,&mut Option<usize>)->semio_framework_value::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<bool,OriginalTurnFailure>{
-    let mut construct=Some(construct);
-    let(complete,total)=semio_framework_job::original_construction_reserve::<O>(demand,work)?;
-    let(overhead_items,overhead_copy,overhead_fuel)=semio_framework_job::original_construction_settle_overhead();let settle=semio_framework_job::OriginalConstructionDemand{items:complete.items+overhead_items,copy_bytes:complete.copy_bytes+overhead_copy,..complete};let fuel_floor=total+overhead_fuel;
-    let(ceiling,ceiling_fuel)=context.original_turn_ceiling();
-    if !settle.fits(ceiling)||fuel_floor>ceiling_fuel{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original construction quote exceeds the largest grant any turn can have").into())}
-    let mut committed=false;
-    loop{
-        if output.is_some()&&admission.terminal_is_empty(){return Ok(true)}
-        if output.is_none()&&!admission.terminal_is_empty(){
-            if !committed&&(context.retirement_should_yield()||context.fuel_remaining()<fuel_floor||!settle.fits(context.retained_grant())){return Ok(false)}
-            committed=true;
-        }
-        let fuel=context.fuel_remaining();
-        let status=semio_framework_job::admit_original_construction(context,output,admission,demand,work,|scope,actual|match construct.take(){
-            Some(construct)=>construct(scope,actual),
-            None=>semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original constructor ran twice")),work:0},
-        })?;
-        match status{
-            semio_framework_job::OriginalConstructionStatus::Ready=>{admission.reset_step(context)?;return Ok(true)}
-            semio_framework_job::OriginalConstructionStatus::Failed=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original construction failed; its complete causes remain in the admission").into()),
-            semio_framework_job::OriginalConstructionStatus::Pending=>if context.fuel_remaining()==fuel{return Ok(false)},
-        }
-    }
-}
+pub use semio_framework_job::admit_original_construction_settled;
 
 /// 🏛️ A tool job keeps its construction admission and candidate resident, so a turn that cannot commit yet continues next turn over the same bind and scope.
 pub struct ResidentConstruction<O>{admission:semio_framework_job::OriginalConstructionAdmission,output:Option<O>}

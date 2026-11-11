@@ -58,7 +58,6 @@ use semio_ui_contract::*;
 use semio_framework_value_original_aliases::OriginalAliasBatch as ToolOriginalAliasBatch;
 use semio_framework_tool_machine::{GestureHostEvent, GestureLedger, ScrubLedger, ScrubPhase, ToolAbortReason, ToolStep, TypingLedger};
 use std::sync::Arc;
-#[doc(hidden)]
 #[path="🖐️gesture/🎟️issuer/🦀️.rs"]
 pub mod gesture_issuer;
 use crate::gesture_issuer::GestureOperation;

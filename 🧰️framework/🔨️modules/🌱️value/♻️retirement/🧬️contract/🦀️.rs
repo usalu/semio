@@ -145,6 +145,8 @@ pub trait ErasedSnapshotRetirement: Send + std::any::Any {
     /// 🧷️ Native owners override this port to preserve the caller's actual decoder ledger and recipient.
     fn close_original_step(&mut self,_original:&mut crate::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll{self.close_step(body,effect)}
     fn requires_original_control(&self) -> bool { false }
+    /// 📮️ A reply-only owner lends the resident stash that keeps its unanswered turn between drivers.
+    fn resident_reply(&mut self)->Option<&mut crate::ReplyStash<crate::OriginalRetirementFailure>>{None}
     fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->OriginalRetirementPoll;
     /// 🧵️ Composite owners forward actual caller decoding custody to decoder-bound children.
     fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>, _control: &mut dyn OriginalRetirementControl)->OriginalRetirementPoll {let grant=effect.grant(); self.close_step(body,effect) }
@@ -165,6 +167,9 @@ pub trait ErasedSnapshotRetirement: Send + std::any::Any {
 mod poll_tests;
 
 pub use semio_framework_value_control_contract as retained_clone;
+#[path="../../📬️reply-stash/🦀️.rs"]
+mod reply_stash;
+pub use reply_stash::ReplyStash;
 #[path="../🎟️tickets/🦀️.rs"]
 pub mod tickets;
 pub use tickets::*;

@@ -97,7 +97,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         *owner.snapshot_read=Some(self.stores.store.snapshot_read_original()?);
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;cx.consume_fuel(1);
         let read=owner.snapshot_read.as_ref().unwrap();let snapshot=&owner.cache_roots.as_ref().unwrap().0;
-        if !semio_plugin_decl_app::media_contract::media_original_read_matches(read,snapshot,self.stores.store.generation(),revision){return Err(semio_framework_value::ValueError::invariant("reserved read differs from its cached snapshot authority").into())}
+        if !semio_plugin_decl_app::media_contract::media_original_read_matches(read,snapshot.0.as_ref().unwrap(),self.stores.store.generation(),revision){return Err(semio_framework_value::ValueError::invariant("reserved read differs from its cached snapshot authority").into())}
         Ok(true)
     }
     /// 🖱️ Donates the returned original arguments with the actual interaction read authority.
@@ -121,7 +121,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if !owner.wire_construction.terminal_is_empty(){owner.wire_construction.reset_step(cx)?;return Ok(false)}
             let Some(cursor)=owner.wire_cursor.as_mut()else{return Ok(true)};
             if !cursor.terminal_is_empty(){cx.with_original_retirement(|cx|cursor.close_step(&*self.tools.tool_jobs,cx))?;return Ok(false)}
-            let bytes=std::mem::size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{owner.wire_cursor.take();semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(false)
+            let bytes=std::mem::size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{owner.wire_cursor.take();semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(false)
         }
         if owner.wire_cursor.is_some(){let advanced=owner.wire_cursor.as_mut().unwrap().advance(&*self.tools.tool_jobs,cx,&mut owner.wire_construction,&mut owner.admission)?;if advanced&&owner.admission.is_none(){owner.wire_construction.reset_step(cx)?;}return Ok(false)}
         if owner.wire_key.is_none()&&owner.wire_schema.is_none(){
@@ -172,68 +172,23 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
         let headers=owner.headers.as_mut().unwrap();let controller_id=std::mem::take(&mut headers[0]);let media_tool=std::mem::take(&mut headers[1]);let payload_schema_id=std::mem::take(&mut headers[2]);let parent_document_id=std::mem::take(&mut headers[3]);
         let tool_id=if media{media_tool}else{owner.action_returned.take().unwrap().0};
-        let (snapshot,config,history)=owner.cache_roots.take().unwrap();
+        let (mut snapshot,mut config,mut history)=owner.cache_roots.take().unwrap();let(snapshot,config,history)=(snapshot.0.take().unwrap(),config.0.take().unwrap(),history.0.take().unwrap());
         *owner.request=Some(ArtifactReservedToolJobRequest{source_binding:owner.source,retained:grant,controller_id,tool_id,payload_schema_id,contract,app_instance_id:meta.instance_id,ui_axes:meta.view_state.as_deref().map(|view|(view.locale,view.terminology)),parent_document_id,canonical_base_revision:owner.revision,authoring_seed:owner.seed_output.take().unwrap(),snapshot,snapshot_read:owner.snapshot_read.take().unwrap(),config,history,children:ChildContentView::clone(&self.child_composition.child_content_root),raw_wire:owner.raw_wire.take().unwrap(),input:owner.input.take(),completion:owner.completion.as_ref().unwrap().clone()});
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
-    pub async fn build_artifact_reserved_action_job(&mut self, action: &str, args: Option<&DslValue>, raw_wire: Vec<u8>, meta: &ActionMeta, source_binding:semio_framework::action_bus::OriginalToolSourceBinding) -> Result<Option<(ArtifactReservedToolJob, ArtifactToolCompletion<A>)>, Fault> {
-        self.refresh_cache().await?;
-        let (snapshot, config, history) = self.history.command_cache_inputs();
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let canonical_base_revision = self.stores.store.content_revision();
-        let completion = ArtifactToolCompletion::<A>::new();
-        let request = ArtifactReservedToolJobRequest {
-            source_binding,
-                retained:self.mounted_policy.maintenance,
-            controller_id: self.tools.tool_controller_id().to_string(),
-            tool_id: action.to_string(),
-            payload_schema_id: self.tools.qualified_tool_proof(&*self.stores, action)?.schema_id(),
-            contract: self.tools.qualified_tool_proof(&*self.stores, action)?.contract(),
-            app_instance_id: meta.instance_id,
-            ui_axes: meta.view_state.as_deref().map(|view| (view.locale, view.terminology)),
-            parent_document_id,
-            canonical_base_revision,
-            authoring_seed: self.stores.authoring_seed(&meta.actor),
-            snapshot,
-            snapshot_read: self.stores.store.snapshot_read().map_err(FaultFrom::into_fault)?,
-            config,
-            history,
-            children: ChildContentView::clone(&self.child_composition.child_content_root),
-            raw_wire,
-            input: Some(ArtifactReservedToolInput::Action { args: args.cloned(), interaction: self.stores.interaction_store.snapshot_read().map_err(FaultFrom::into_fault)? }),
-            completion: completion.clone(),
-        };
-        Ok(A::build_reserved_tool_job(request)?.map(|job| (job, completion)))
+    /// 📋️ Advances one reserved action (clipboard, history) from its borrowed arguments to a built producer without leaving the original source.
+    pub fn advance_reserved_action(&mut self,action:&str,args:&mut Option<DslValue>,meta:&ActionMeta,maximum:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if let Some(owner)=self.pending.reserved_preparation.as_mut(){owner.validate(self.stores.store.content_revision(),cx)?;if owner.job.is_some(){return Ok(true)}if owner.request.is_some()||owner.body.is_some(){return owner.advance_builder(cx)}}
+        if !self.prepare_reserved_action_wire(action,args,meta,maximum,cx)?{return Ok(false)}
+        if !self.prepare_reserved_action_input(cx)?{return Ok(false)}
+        if !self.prepare_reserved_snapshot_read(cx)?{return Ok(false)}
+        if !self.prepare_reserved_wire_admission(cx)?{return Ok(false)}
+        let mut no_external_admission=None;if !self.assemble_reserved_request(action,meta,&mut no_external_admission,1,cx)?{return Ok(false)}
+        Ok(false)
     }
-
-    pub async fn build_artifact_reserved_media_job(&mut self, port: &str, media: Media, meta: &ActionMeta, source_binding:semio_framework::action_bus::OriginalToolSourceBinding) -> Result<(ArtifactReservedToolJob, ArtifactToolCompletion<A>), Fault> {
-        let action = "import-media";
-        self.refresh_cache().await?;
-        let (snapshot, config, history) = self.history.command_cache_inputs();
-        let completion = ArtifactToolCompletion::<A>::new();
-        let request = ArtifactReservedToolJobRequest {
-            source_binding,
-                retained:self.mounted_policy.maintenance,
-            controller_id: self.tools.tool_controller_id().to_string(),
-            tool_id: action.to_string(),
-            payload_schema_id: self.tools.qualified_tool_proof(&*self.stores, action)?.schema_id(),
-            contract: self.tools.qualified_tool_proof(&*self.stores, action)?.contract(),
-            app_instance_id: meta.instance_id,
-            ui_axes: meta.view_state.as_deref().map(|view| (view.locale, view.terminology)),
-            parent_document_id: self.stores.store.envelope().id.clone(),
-            canonical_base_revision: self.stores.store.content_revision(),
-            authoring_seed: self.stores.authoring_seed(&meta.actor),
-            snapshot,
-            snapshot_read: self.stores.store.snapshot_read().map_err(FaultFrom::into_fault)?,
-            config,
-            history,
-            children: ChildContentView::clone(&self.child_composition.child_content_root),
-            raw_wire: Vec::new(),
-            input: Some(ArtifactReservedToolInput::Media { port: port.to_string(), media }),
-            completion: completion.clone(),
-        };
-        let job = A::build_reserved_tool_job(request)?
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-reserved-builder"), format!("media port '{port}' is registered but has no concrete resumable importer")))?;
-        Ok((job, completion))
+    /// 🤝️ Moves the built producer, its completion and its wire admission out of the preparation in one paid step.
+    pub fn handoff_reserved_producer(&mut self,output:&mut Option<(ArtifactReservedToolJob,ArtifactToolCompletion<A>,semio_framework::ToolWireAdmission)>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved handoff requires its preparation"))?;
+        owner.handoff(output,cx)
     }
 }

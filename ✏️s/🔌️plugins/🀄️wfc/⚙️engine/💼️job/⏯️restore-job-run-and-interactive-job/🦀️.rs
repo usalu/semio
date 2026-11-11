@@ -141,7 +141,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcRestore<T> {
             let one = RetainedCloneProgress { copied_items: 1, ..Default::default() };
             if self.publication.is_some() { return close_publication_step(&mut self.publication,cx); }
             if self.restored.as_ref().is_some_and(InteractiveJob::terminal_is_empty) {
-                return semio_framework_job::close_original_granted_step(cx,|_|{self.restored=None;semio_framework_value::RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}});
+                return semio_framework_job::close_original_granted_step::<semio_framework_value::ValueError>(cx,|_|{self.restored=None;semio_framework_value::RetainedWorkOutcome {result:Ok(InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress {copied_items:1,..Default::default()}}),work:1}});
             }
             if let Some(restored) = self.restored.as_mut() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };

@@ -53,6 +53,11 @@ impl<Mutation> ArtifactStoreEditRetirement<Mutation> {
 }
 
 impl<Mutation:Send+'static> ErasedSnapshotRetirement for ArtifactStoreEditRetirement<Mutation>{
+    fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> {
+        if let Some(state) = self.state.as_ref() { return if state.terminal_is_empty() { Ok(0) } else { state.next_computational_work(body) }; }
+        if self.forwards.is_some() { return Ok(0); }
+        Ok(self.inverse.as_ref().map_or(0, |inverse| u64::from(!inverse.terminal_is_empty())))
+    }
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
     fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::RetirementPollExit> { let grant = effect.grant();
         let zero=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(zero));}let demand=self.demands(grant.maximum_copy_bytes)?;

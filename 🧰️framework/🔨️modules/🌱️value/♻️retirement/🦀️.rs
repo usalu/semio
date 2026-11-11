@@ -761,8 +761,8 @@ pub fn erased_cursor_turn(poll:crate::OriginalRetirementPoll)->RetirementStep{ma
 pub struct ErasedCursor(Box<dyn ErasedSnapshotRetirement>);
 impl RetirementCursor for ErasedCursor {
     fn requires_original_control(&self)->bool{self.0.requires_original_control()}
-    fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();erased_cursor_turn(self.0.close_step_controlled(body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"),control))}
-    fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(self.0.close_original_step(original,body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
+    fn close_step_controlled(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>,control:&mut dyn crate::OriginalRetirementControl)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner_controlled(self.0.as_mut(),body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect"),control))}
+    fn close_original_step(&mut self,original:&mut semio_framework_value_retirement_contract::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner_original(self.0.as_mut(),original,body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
     fn next_computational_work(&self,body:usize)->Result<u64,crate::ValueError>{self.0.next_computational_work(body)}
     fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.0.next_demand(body)}
 
@@ -776,7 +776,7 @@ impl RetirementCursor for ErasedCursor {
     fn terminal_release_bytes(&self)->Option<usize> {self.0.terminal_is_empty().then_some(size_of::<Self>()+size_of_val(self.0.as_ref()))}
 }
 impl ErasedCursor {
- fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(self.0.close_step(body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
+ fn close_step(&mut self,body:usize,effect:&mut crate::RetainedAllocationEffect<'_>)->RetirementStep{let grant=effect.grant();erased_cursor_turn(crate::close_owner(self.0.as_mut(),body,&mut effect.reborrow(grant,effect.maximum_work_units()).expect("retirement child exceeds original effect")))}
 }
 
 

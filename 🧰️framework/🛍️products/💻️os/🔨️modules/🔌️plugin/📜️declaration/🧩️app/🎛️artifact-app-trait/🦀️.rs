@@ -335,7 +335,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🧲️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
     type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     /// 🏪️ Draft-lane operations applied to {@link store::DraftStore}.
-    type DraftMutation: Clone + ::protocol::ColdMutation<Self::Draft> + ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type DraftMutation: Clone + ::protocol::ColdMutation<Self::Draft> + ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + ::replication::OpBinaryReceiving + 'static;
     /// 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
     type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
     /// 🔤️ Presence-lane operations applied to the app's typed presence snapshot.

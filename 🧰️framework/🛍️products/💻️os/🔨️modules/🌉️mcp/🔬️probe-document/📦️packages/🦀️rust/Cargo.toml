@@ -22,12 +22,17 @@ workspace = true
 path = "../../🦀️.rs"
 doctest = false
 
+[[test]]
+name = "json_round_trip"
+path = "../../🧪️tests/json_round_trip.rs"
+
 [dependencies]
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-os-kernel", features = ["sync", "ureq"] }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 serde = { workspace = true }

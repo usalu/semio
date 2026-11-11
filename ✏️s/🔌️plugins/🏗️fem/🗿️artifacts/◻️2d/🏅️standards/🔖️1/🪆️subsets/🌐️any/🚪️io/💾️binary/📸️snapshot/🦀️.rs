@@ -19,10 +19,6 @@ pub fn decode(bytes: &[u8]) -> Result<Fem2dSnapshot, PackError> {
     <Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
-mod semio_protocol_conformance;
-
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;

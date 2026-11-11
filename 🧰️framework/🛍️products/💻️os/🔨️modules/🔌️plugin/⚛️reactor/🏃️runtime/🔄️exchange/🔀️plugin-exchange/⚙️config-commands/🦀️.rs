@@ -13,7 +13,7 @@ pub(super) async fn arm_load_config<PA: PluginApp>(
     let seq=*seq;
     let applied = with_instances_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        ::semio_framework_async::poll::resolve_ready(instance.app.load_config_pack(&store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }))
+        ::semio_framework_async::poll::resolve_ready(instance.app.load_config_pack(&store::os_store::serialization::ArtifactPackFiles { pack: std::mem::take(pack), spr: std::mem::take(spr), ops: String::new() }))
     });
     match applied.await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),

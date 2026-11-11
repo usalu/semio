@@ -41,7 +41,7 @@ impl OriginalWindowPreviewEpoch{
  /// 📏️ The common publication only changes the visibility epoch and retained decision bit.
  pub fn publication_demands(&self)->RetirementDemand{header::<(u64,bool)>()}
  /// 📣️ An enclosing original event publishes this epoch together with document and configuration aliases.
- pub fn publish_granted(&mut self,registry:&mut WindowConfigOwnerRegistry,g:RetainedCloneGrant,native:&mut NativeDecodeControl<'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
+ pub fn publish_granted(&mut self,registry:&mut WindowConfigOwnerRegistry,g:RetainedCloneGrant,native:&mut semio_framework_value::native_decoding::construction::NativeConstructionScope<'_,'_>)->Result<Option<RetainedCloneProgress>,ValueError>{
   if !self.ready()||self.published||registry.lifetime!=self.lifetime||registry.preview_active_epoch!=Some(self.epoch)||registry.preview_visible_epoch!=self.previous||(native.ledger_identity(),native.retirement_recipient_identity().ok_or_else(||invalid("original Window publication requires its actual decoder"))?)!=self.decoder{return Err(invalid("original Window publication changed its prepared source"))}let d=self.publication_demands();if !registry::fits(g,d){return Ok(None)}registry.preview_visible_epoch=self.epoch;self.published=true;Ok(Some(progress(d)))
  }
  /// 📏️ Closure either adopts the published original reads or discards private candidates.

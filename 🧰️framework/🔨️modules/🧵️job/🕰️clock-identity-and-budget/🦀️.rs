@@ -2,7 +2,6 @@
 
 pub use semio_framework_job_recorded_clock::{OriginalClockAction,OriginalClockDemand,OriginalClockObservation,OriginalClockDeadline,OriginalClockDecisionFrame,OriginalClockDecisionStatus,OriginalClockAuthority,OriginalClockProducer,OriginalClockReply,OriginalClockReplyComplete};
 pub use semio_framework_job_recorded_clock::{admit_original_host_clock,OriginalErasedHostClock,OriginalHostClock,OriginalHostClockProducer,OriginalSourceClock,OriginalSystemClockContext};
-#[cfg(any(not(target_arch="wasm32"),target_env="p2"))]
 pub use semio_framework_job_recorded_clock::OriginalSystemClock;
 
 #[path="🪜️stride/🦀️.rs"]

@@ -1,7 +1,7 @@
 //! 🧪️ Testkit borrows actual ready host output and returns every original owner under the same finite caller.
 use super::*;
 pub use semio_framework_trace::HeapWitness;
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation};
+use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,Generation,close_original_retained_step};
 use semio_framework_value::RetainedCloneGrant;
 fn clock()->Option<u64>{Some(1)}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096}}
@@ -20,7 +20,7 @@ pub fn with_original_host_configuration<M:RetireOwned+Send+'static>(declaration:
     for index in 0..1000000{
         if source.is_none(){break}
         turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|{
-            if source.as_ref().unwrap().terminal_is_empty(){let d=OriginalHostConfiguration::<M>::release_demands();close_original_retained_step(cx,d,|_|{drop(source.take());semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:0}})?;}else{source.as_mut().unwrap().close_step(cx)?;}Ok(())
+            if source.as_ref().unwrap().terminal_is_empty(){let d=OriginalHostConfiguration::<M>::release_demands();close_original_retained_step(cx,d,|_|{drop(source.take());semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:0}})?;}else{source.as_mut().unwrap().close_step(cx)?;}Ok(())
         }));assert!(index<999999,"original host source retirement remained pending");
     }
     while !decoder.terminal_is_empty(){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;decoder.close_on_source(cx)?;Ok(())})));let progress=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));result.unwrap();}

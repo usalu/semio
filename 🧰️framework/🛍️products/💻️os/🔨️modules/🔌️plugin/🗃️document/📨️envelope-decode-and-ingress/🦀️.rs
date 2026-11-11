@@ -57,7 +57,7 @@ pub fn original_rejection_lifecycle(cx:&mut semio_framework_job::StepContext<'_>
 }
 
 #[doc(hidden)]
-pub struct ActiveArtifactEnvelopeDecode<P: Send + 'static, Mutation: Send + 'static> {
+pub struct ActiveArtifactEnvelopeDecode<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> {
     pub operation: semio_framework_job::OperationId,
     pub generation: semio_framework_job::Generation,
     pub cancel: semio_framework_job::CancelToken,
@@ -74,8 +74,8 @@ pub struct ActiveArtifactEnvelopeDecode<P: Send + 'static, Mutation: Send + 'sta
 
 impl<P, Mutation> ActiveArtifactEnvelopeDecode<P, Mutation>
 where
-    P: Send + 'static,
-    Mutation: Send + 'static,
+    P: Send + Sync + 'static,
+    Mutation: Send + Sync + 'static,
 {
     pub fn admitted(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, decode: store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority<P, Mutation>, completion: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion>, source_identity:(semio_framework_job::OperationId,semio_framework_job::Generation)) -> Self {
         let cancel = semio_framework_job::CancelToken::root_now();
@@ -184,7 +184,7 @@ where
             if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
             if rejected.terminal_is_empty(){drop(self.rejected.take());self.state=ActiveArtifactEnvelopeDecodeState::Complete;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            let step=rejected.close_step(child).result?;
+            let step=semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,child,|effect|semio_plugin_ownership::bounded_ownership::plugin_settle_value(rejected.close_step(grant.maximum_copy_bytes,effect)))?;
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,rejected.terminal_is_empty(),"envelope original rejected frame")?;
             return Ok(PluginLifecycleStep::retained(step,false));
         }
@@ -275,7 +275,7 @@ where
     }
 }
 
-impl<P: Send + 'static, Mutation: Send + 'static> Drop for ActiveArtifactEnvelopeDecode<P, Mutation> {
+impl<P: Send + Sync + 'static, Mutation: Send + Sync + 'static> Drop for ActiveArtifactEnvelopeDecode<P, Mutation> {
     fn drop(&mut self) {
         assert!(
             std::thread::panicking() || self.session.is_none() && self.session_rejected.is_none() && !self.outcome_pending && self.rejected.is_none() && self.state == ActiveArtifactEnvelopeDecodeState::Complete,

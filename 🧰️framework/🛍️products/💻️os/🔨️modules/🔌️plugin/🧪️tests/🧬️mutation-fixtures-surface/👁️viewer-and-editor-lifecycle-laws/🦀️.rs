@@ -80,7 +80,17 @@ async fn registered_editor_consumes_intrinsic_natural_bytes_through_the_real_med
         data,
     };
     let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    app.consume_media(crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
+    let semio_framework::MediaWireFormat::Binary { format_kind } = artifact.descriptor.wire else { unreachable!("natural-file fixture is binary") };
+    let media_type = PluginApp::original_natural_file_media_type(&app, crate::app_contract::NATURAL_FILE_PORT, &format_kind).expect("registered editor declares its natural-file media type");
+    let mut media = Some(semio_framework::Media { media_type, payload: semio_framework::MediaPayload::Intrinsic { schema: format_kind, value: semio_framework_value::DslValue::Bytes(artifact.data) } });
+    let mut completed = false;
+    let import_meta = meta("local");
+    for turn in 0..4096 {
+        assert!(turn < 4095, "[stall] original natural-file import never completed");
+        if !PluginApp::prepare_media_import(&mut app, cx).await.expect("original natural-file import admits its permit") { continue; }
+        PluginApp::advance_original_media_import(&mut app, crate::app_contract::NATURAL_FILE_PORT, &mut media, &import_meta, &mut completed, cx).await.expect("original natural-file import advances");
+        if completed { break; }
+    }
     let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("natural-file import settles");
     let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
     assert_eq!(loads.len(), 1, "natural-file Open publishes exactly one document load, no mutation");

@@ -526,7 +526,7 @@ impl<R: RetireOwned + Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
         }
         if let Some(active)=state.active_root_retirement.as_mut(){
             if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.active_root_retirement=None;return local(effect,RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty})}
-            let poll=active.close_step(body,effect);let terminal=active.terminal_is_empty();
+            let poll=semio_framework_value::close_owner(active.as_mut(),body,effect);let terminal=active.terminal_is_empty();
             return accounted(&mut state.stalled_steps,grant,poll,terminal,"selected Flow root retirement",true)
         }
         if state.source.is_some(){

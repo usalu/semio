@@ -2382,6 +2382,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-graph-manifest",
+ "semio-framework-job",
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
@@ -3072,9 +3073,11 @@ dependencies = [
 name = "semio-framework-job-recorded-clock"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "semio-framework-value-control-contract",
  "semio-framework-value-receiving",
  "semio-framework-value-retirement",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -5465,6 +5468,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-ordered",
+ "semio-framework-value-source-hold",
  "semio-os-kernel-neural-engine",
  "semio-ui-declaration",
  "serde",
@@ -7447,6 +7451,7 @@ dependencies = [
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-projection",
  "semio-framework-value-snapshot-read",
+ "semio-framework-value-source-hold",
  "semio-os-pack",
  "semio-os-spr",
  "semio-os-store-command",
@@ -7824,6 +7829,7 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-job",
  "semio-framework-kernel-identity",
  "semio-framework-schema-composition",
  "semio-framework-value",
@@ -9917,6 +9923,7 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-os-kernel",
  "semio-os-store-operation-wire",
+ "semio-os-store-replay-operation",
 ]
 
 [[package]]
@@ -10348,6 +10355,7 @@ dependencies = [
 name = "semio-ui-locale"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",

@@ -1,9 +1,22 @@
 //! 👷️ Pure Work laws retain one authentic physical source for every close turn and root retirement.
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalTurnFailure,StepContext,InteractiveJobCloseStep,OperationId,Generation};
+use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
+use semio_framework_job::{OriginalTurnFailure,StepContext,InteractiveJobCloseStep,OperationId,Generation};
 use semio_framework_value::RetainedCloneGrant;
-use semio_framework_value::{RetainedCloneStep,RetainedWorkOutcome};
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind};
 use semio_framework_value_native_owned::{NativeReceive,OriginalReceivingPrimary};
 use semio_framework_value_native_receiving_original::NativeReceivingOriginal;
+fn fixed<T>()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<T>(),depth:1,..Default::default()}}
+fn settle(effect:&mut RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,ValueError>)->OriginalRetirementPoll{RetirementPollExit::settle(effect,result.map_err(Into::into))}
+/// 🚦️ A receiving refusal keeps either its original turn failure or the complete native receiving failure owner with every retained cause; the caller retires it through [`OriginalWorkFixture::retire_owned`].
+#[derive(Debug,semio_framework_value::RetireOwned)]
+pub enum OriginalReceiveFailure{Turn(OriginalTurnFailure),Native(semio_framework_value_native_owned::native_decoding::NativeReceivingFailure)}
+impl From<OriginalTurnFailure> for OriginalReceiveFailure{fn from(failure:OriginalTurnFailure)->Self{Self::Turn(failure)}}
+impl OriginalReceiveFailure{
+ /// 📏️ The actual retained progress of whichever failure owner was kept.
+ pub fn retained_progress(&self)->semio_framework_value::RetainedCloneProgress{match self{Self::Turn(failure)=>failure.retained_progress(),Self::Native(failure)=>failure.retained_progress()}}
+ /// 🛬️ Borrows the complete original receiving causes, when the failure selected that domain.
+ pub fn receiving(&self)->Option<&OriginalReceivingPrimary>{match self{Self::Turn(failure)=>failure.primary_receiving(),Self::Native(failure)=>Some(failure.primary())}}
+}
 /// 🎟️ One finite original fixture stock is held from initial work through terminal close.
 pub struct OriginalWorkFixture{caller:OriginalJobFixtureCaller,decoder:semio_framework_job::OriginalJobDecodeOwner,source_stock:RetainedCloneGrant}
 impl OriginalWorkFixture{
@@ -26,25 +39,32 @@ impl OriginalWorkFixture{
  /// ♻️ Retires an original fixture root through this caller's funded physical source.
  pub fn retire_owned<T:semio_framework_value::retirement::RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant){
   let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::retain(value);
-  for _ in 0..self.source_stock.maximum_items {if owner.terminal_is_empty(){break}self.turn(grant,|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|issued|{let result=owner.step(issued);RetainedWorkOutcome {result,work:owner.last_turn_work()}})?;Ok(())}).expect("original fixture root retirement");}
+  for _ in 0..self.source_stock.maximum_items {if owner.terminal_is_empty(){break}self.turn(grant,|cx|{let body=cx.retained_grant().maximum_copy_bytes;let demand=owner.selected_demand(body)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.step(body,effect))?;Ok(())}).expect("original fixture root retirement");}
   assert!(owner.terminal_is_empty(),"finite original fixture source must fund root retirement");
  }
  /// 🛬️ Receives the caller's genuine original input with the same decoder, grants and funded cleanup.
  pub fn receive_native<I,T>(&mut self,input:I,grant:RetainedCloneGrant)->T where I:semio_framework_value::retirement::RetireOwned+Sync,T:NativeReceive<I>{
-  self.try_receive_native(input,grant).expect("original native fixture receiving")
+  self.try_receive_native(input,grant).unwrap_or_else(|failure|panic!("original native fixture receiving: {failure:?}"))
  }
  /// 🚦️ Returns the complete original receiving refusal after funding every partially constructed owner.
- pub fn try_receive_native<I,T>(&mut self,input:I,grant:RetainedCloneGrant)->Result<T,OriginalTurnFailure> where I:semio_framework_value::retirement::RetireOwned+Sync,T:NativeReceive<I>{
+ pub fn try_receive_native<I,T>(&mut self,input:I,grant:RetainedCloneGrant)->Result<T,OriginalReceiveFailure> where I:semio_framework_value::retirement::RetireOwned+Sync,T:NativeReceive<I>{
   let mut admission=semio_framework_value::retained_clone::RetainedCloneSource::<I>::admission_owned(input,());let mut source=None;
-  for _ in 0..self.source_stock.maximum_items{if source.is_some(){break}self.turn(grant,|cx|{let turn=if admission.phase()=="ready"{admission.take_output(&mut source,cx.retained_grant())}else{admission.advance(cx.retained_grant())};semio_framework_job::receive_original_retained_work(cx,turn)?;Ok(())}).expect("original native fixture source admission");}
+  for _ in 0..self.source_stock.maximum_items{if source.is_some(){break}self.turn(grant,|cx|{
+   let ready=admission.phase()=="ready";let demand=if ready{fixed::<Option<NativeReceivingOriginal<I,T>>>()}else{admission.next_demand()?};
+   semio_framework_job::close_original_effect_step(cx,demand,|effect|{if ready{let mut taken=None;let turn=admission.take_output(&mut taken,effect);let result=turn.result.map(|step|{if taken.is_some(){source=taken;}step});settle(effect,result)}else{let turn=admission.advance(effect);settle(effect,turn.result)}})?;Ok(())
+  }).expect("original native fixture source admission");}
   assert!(admission.terminal_is_empty());let mut owner=NativeReceivingOriginal::<I,T>::new(source.expect("original fixture source is admitted"));
-  let mut failure=None;for _ in 0..self.source_stock.maximum_items{if owner.output_ready(){break}if let Err(error)=self.turn(grant,|cx|{
-   let issued=cx.retained_grant();let mut work=0;let result=cx.with_native_receiving::<_,OriginalReceivingPrimary>(|control|{let turn=owner.advance(control,issued.maximum_copy_bytes,issued);work=turn.work;turn.result});
-   let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let receipt=cx.consume_receiving_retained(issued,progress);cx.consume_fuel(work);
-   match result{Ok(_)=>{receipt?;Ok(())},Err(primary)=>Err(OriginalTurnFailure {effects:primary.retained_progress(),primary:semio_framework_job::OriginalTurnPrimary::Receiving(primary),receipt_refusal:receipt.err(),context_refusal:None,work_refusal:None})}
-  }){failure=Some(error);break}}
-  let mut output=None;if failure.is_none(){assert!(owner.output_ready());if let Err(error)=self.turn(grant,|cx|{let turn=owner.take(cx.retained_grant());let result=turn.result.map(|value|{let(value,progress)=value.expect("ready fixture output has its quoted grant");output=Some(value);RetainedCloneStep::Progress(progress)});semio_framework_job::receive_original_retained_work(cx,RetainedWorkOutcome {result,work:turn.work})?;Ok(())}){failure=Some(error);}}
-  owner.begin_close();for _ in 0..self.source_stock.maximum_items{if owner.terminal_is_empty(){break}self.turn(grant,|cx|{owner.close_on_source(cx)?;Ok(())}).expect("original native fixture cleanup");}assert!(owner.terminal_is_empty());
+  let mut failure:Option<OriginalReceiveFailure>=None;let mut outcome=None;let mut pending=None;let mut native_failure=None;for _ in 0..self.source_stock.maximum_items{if owner.output_ready(){break}if let Err(error)=self.turn(grant,|cx|{
+   let body=cx.retained_grant().maximum_copy_bytes;let ceiling=pending.unwrap_or_else(||cx.fuel_remaining());let demand=owner.demands(body,ceiling)?;let work=owner.advance_work_demand(body,ceiling)?;
+   let quote=(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},work);
+   let ran=cx.with_native_receiving_quoted(&mut outcome,quote,|native,grant|{let witness=native.source_witness()?;if let RetainedWorkPoll::Complete(turn)=owner.advance(native,witness,body,ceiling,grant){if let Err(error)=turn.result{native_failure=Some(error);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native fixture receiver failed; its causes remain retained"))}}Ok(())})?;
+   if !ran||native_failure.is_some(){return Ok(())}
+   if outcome.as_ref().is_some_and(|outcome|outcome.call.is_err()||outcome.source_refusal.is_some()){return Err(OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::NativeSource(outcome.take().expect("held native receiving outcome"))))}
+   outcome=None;pending=owner.advance_pending().then_some(ceiling);Ok(())
+  }){failure=Some(error.into());break}
+   if let Some(error)=native_failure.take(){failure=Some(OriginalReceiveFailure::Native(error));break}}
+  let mut output=None;if failure.is_none(){assert!(owner.output_ready());if let Err(error)=self.turn(grant,|cx|{let demand=owner.take_demand()?;semio_framework_job::close_original_effect_step(cx,demand,|effect|match owner.take(&mut output,effect){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(semio_framework_job::OriginalTurnPrimary::Receiving),work:turn.work})})?;Ok(())}){failure=Some(error.into());}}
+  self.retire_owned(owner,grant);
   if let Some(error)=failure{if let Some(value)=output{self.retire_owned(value,grant);}Err(error)}else{Ok(output.expect("original fixture output transferred"))}
  }
  /// 🧳️ The real typed instance closes under this caller's existing source, preserving both borrowed and original failure owners.

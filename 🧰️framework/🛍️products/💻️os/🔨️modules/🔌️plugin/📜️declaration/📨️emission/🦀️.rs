@@ -500,21 +500,23 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(progress)),work:1}
     }
     /// 🎭️ Prepares the wire form of the front preparation: an applying typed source becomes the incremental encoder's source first, so its operations leave in the same order and the owned batch is never built.
-    pub fn prepare_child_preview_one(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.prepare_child_preview_original(grant).result}
+    pub fn prepare_child_preview_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.prepare_child_preview_original(effect)}
     /// 📐️ Quotes the actual front vector conversion before its normal wire preparation.
     pub fn child_preview_preparation_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(mut demand)=self.child_preparations.front().and_then(ChildEmitPreparation::preview_demands){demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original preview header depth overflow"))?;return Ok(demand)}
         self.child_preparation_demands(body)
     }
     /// 🎬️ Converts at most the genuine front source inside its original header grant.
-    pub fn prepare_child_preview_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    pub fn prepare_child_preview_original(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        let grant=effect.grant();
         if self.child_preparations.front().and_then(ChildEmitPreparation::preview_demands).is_some(){
-            let demand=match self.child_preview_preparation_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
-            if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return semio_framework_value::RetainedWorkOutcome{result:Ok(ChildEmitPreparationStep::Pending(Default::default())),work:0}}
+            let demand=self.child_preview_preparation_demands(grant.maximum_copy_bytes)?;
+            if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(ChildEmitPreparationStep::Pending(Default::default()))}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let outcome=self.child_preparations.front_mut().unwrap().begin_preview_original(child);
-            return semio_framework_value::RetainedWorkOutcome{work:outcome.work,result:outcome.result.map(|(_,progress)|ChildEmitPreparationStep::Pending(progress)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)}
+            pay_delegate_work(effect,outcome.work)?;
+            return outcome.result.map(|(_,progress)|ChildEmitPreparationStep::Pending(progress)).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)
         }
-        self.prepare_child_original(grant)
+        self.prepare_child_original(effect)
     }
     /// 📏️ Quotes the next original preparation effect without creating its caller authority.
     pub fn child_preparation_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -528,9 +530,9 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         let mut demand=preparation.step_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original child preparation depth overflow"))?;let _=body;Ok(demand)
     }
     /// 📨️ Advances exactly one original preparation, directory or source transfer effect.
-    pub fn prepare_child_one(&mut self,grant:RetainedCloneGrant)->Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.prepare_child_original(grant).result}
+    pub fn prepare_child_one(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.prepare_child_original(effect)}
     /// 🧮️ Preserves each original child delegate work receipt on success and refusal.
-    pub fn prepare_child_original(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let mut work=0;let result=(||{
+    pub fn prepare_child_original(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let grant=effect.grant();let mut work:u64=0;let result:Result<ChildEmitPreparationStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>=(||{
         let idle=RetainedCloneProgress::default();
         if self.child_preparations.is_empty()&&self.child_preparations.capacity()==0{return Ok(ChildEmitPreparationStep::Ready(idle));}
         let demand=self.child_preparation_demands(grant.maximum_copy_bytes).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
@@ -547,7 +549,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
             return Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes,released_bytes:demand.release_bytes}));
         }
         if !preparation.preparation_is_ready(){
-            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let result=preparation.step(child);work=preparation.last_turn_work();let step=result?;
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};work=0;let step=preparation.step(&mut effect.nested(child))?;
             if !step.progress().fits(child){return Err(plugin_sdk_fault("original child preparation exceeded its caller grant").into());}
             return Ok(match step{ChildEmitPreparationStep::Ready(progress)=>ChildEmitPreparationStep::Pending(progress),step=>step});
         }
@@ -558,7 +560,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
         }
         let child=preparation.take_ready().ok_or_else(||plugin_sdk_fault("child-emission-ready-without-complete-owned-prefix"))?;self.child_emits.push(child);
         Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,..idle}))
-    })();semio_framework_value::RetainedWorkOutcome{result,work}}
+    })();let paid=pay_delegate_work(effect,u128::from(work));let step=result?;paid?;Ok(step)}
 
     /// 📏️ Borrows the next child close frontier without deriving caller authority from it.
     pub fn child_close_demands(&self, body: usize) -> Result<Option<RetirementDemand>, ValueError> {
@@ -603,9 +605,7 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
                 return Ok(Some(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })));
             }
             preparation.begin_close();
-            let result=preparation.close_step(child_grant);let work=preparation.last_turn_work();
-            let paid=effect.performed(work).map_err(PluginLifecycleFailure::from).and_then(|admitted|if admitted{Ok(())}else{Err(PluginLifecycleFailure::from(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original child preparation close exceeds its work grant")))});
-            let step=result?;paid?;
+            let step=preparation.close_step(&mut effect.nested(child_grant))?;
             if let Some(progress) = step.progress() { if !progress.fits(child_grant) { return Err(plugin_sdk_fault("original child preparation exceeded its supplied grant").into()); } }
             if matches!(step, PluginLifecycleStep::Complete(_)) && !preparation.terminal_is_empty() { return Err(plugin_sdk_fault("original child preparation completed with retained owners").into()); }
             return Ok(Some(match step { PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), step => step }));
@@ -759,21 +759,13 @@ impl ViewLease {
 }
 impl std::ops::Deref for ViewLease { type Target = ViewModel; fn deref(&self) -> &ViewModel { &self.0 } }
 impl semio_framework_value::retirement::RetireOwned for ViewLease {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.into_arc())) }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<ViewModel>>()) }
-    fn controlled_retirement_supported() -> bool { <std::sync::Arc<ViewModel> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() }
+    type RetirementCursor = semio_framework_value::retirement::arc_custody::ArcLeaseRetirement<ViewModel>;
+    fn retirement_seed(self) -> Self::RetirementCursor { semio_framework_value::retirement::arc_custody::ArcLeaseRetirement::lease(self.into_arc()) }
+    fn controlled_retirement_supported() -> bool { <ViewModel as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() }
 }
 impl semio_framework_value::retirement::RetireOwned for ActionMeta {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let Self { actor, instance_id: _, view_state, expected_document_revision: _ } = self;
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(actor), semio_framework_value::retirement::deferred(view_state.map(ViewLease::new))])
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        let lease = self.view_state.clone().map(ViewLease::new);
-        let bytes = semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.actor), semio_framework_value::retirement::deferred_birth_bytes_for(&lease)]);
-        drop(lease.map(ViewLease::into_arc));
-        bytes
-    }
+    type RetirementCursor = <(semio_framework_value::SharedUtf8, Option<ViewLease>) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor { semio_framework_value::retirement::RetireOwned::retirement_seed((self.actor, self.view_state.map(ViewLease::new))) }
     fn controlled_retirement_supported() -> bool { true }
 }
 impl ActionMeta {
@@ -788,6 +780,11 @@ impl ActionMeta {
 }
 #[path="🛂️metadata/🔗️view/🦀️.rs"]
 pub mod original_view;
+/// ⏱️ Records the work a still grant-shaped delegate reports onto the caller's effect; an unfunded unit is a typed work-limit failure.
+fn pay_delegate_work(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,work:u128)->Result<(),semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+    let admitted=u64::try_from(work).is_ok_and(|work|work==0||effect.performed(work).unwrap_or(false));
+    if admitted{Ok(())}else{Err(plugin_sdk_fault("original child preparation delegate exceeds its work grant").into())}
+}
 
 
 /// 🔤️ Parses the raw action id crossing the WASM ABI (`ArtifactApp::handle_action`'s `action: &str`)

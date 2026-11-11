@@ -108,8 +108,9 @@ pub trait PluginApp: Send + 'static {
     fn advance_instance_birth(&mut self,birth:&mut InstanceBirth,instance_id:u32,actor:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if !birth.identity_bound{
             if !self.bind_original_opening(instance_id,actor,cx)?{return Ok(false)}
-            let bytes=std::mem::size_of::<bool>();let mut done=None;
-            semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{birth.identity_bound=true;semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;
+            let paid=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()};
+            if cx.retirement_should_yield()||cx.fuel_remaining()<1||cx.retained_grant().maximum_depth==0||!paid.fits(cx.retained_grant()){return Ok(false)}
+            cx.consume_retained(paid)?;cx.consume_fuel(1);birth.identity_bound=true;
             return Ok(false)
         }
         if !birth.issuer_ready{if !self.admit_cancellation_issuer(cx)?{return Ok(false)}birth.issuer_ready=true;return Ok(false)}
@@ -548,6 +549,8 @@ pub trait PluginApp: Send + 'static {
     async fn prepare_media_import(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(plugin_sdk_fault(MediaError::NotImplemented.to_string()).into())}
     /// 🧷️ Borrows the app's exact declared text-wire binding without coercing a document port.
     fn accepts_original_structured_media(&self,_port:&str,_schema:&str,_media_type:&semio_framework::MediaType)->bool{false}
+    /// 📄️ Borrows the media type under which the app's mounted natural-file codec imports bytes of this format; `None` when the codec is absent or foreign.
+    fn original_natural_file_media_type(&self,_port:&str,_format_kind:&str)->Option<semio_framework::MediaType>{None}
     /// 🎞️ Advances one original intrinsic media input until its actual producer is mounted.
     async fn advance_original_media_import(&mut self,_port:&str,_media:&mut Option<Media>,_meta:&ActionMeta,_completed:&mut bool,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original media import is not implemented").into())}
     async fn import_media(&mut self, _port: &str, _media: Media, _meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {

@@ -35,12 +35,12 @@ semio-framework-value = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-framework-job = { workspace = true }
 semio-s-fem-model = { workspace = true }
 semio-s-fem-sqlite = { workspace = true }
 semio-s-fem-receiving = { path = "../../../../../../../../../🧩️receiving/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-s-fem-receiving = { path = "../../../../../../../../../🧩️receiving/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
@@ -58,3 +58,11 @@ path = "../../📸️snapshot/cold-tests.rs"
 [[test]]
 name = "original_fem_receiving"
 path = "../../📸️snapshot/original-receiving-tests.rs"
+
+[[test]]
+name = "dialect_conformance"
+path = "../../../🚪️io/🧪️tests/🔬️dialect-conformance/🦀️.rs"
+
+[[test]]
+name = "inference_default_laws"
+path = "../../💡️inferences/🧪️tests/🔬️default-laws/🦀️.rs"

@@ -61,16 +61,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                 MediaWireFormat::Document { schema } if schema == schema_now => whole_document_archive(&artifact.data).await.map(MediaConsumption::DocumentLoad),
                 MediaWireFormat::Document { schema } => Err(MediaArtifactError::SchemaMismatch { expected: schema_now, found: schema }),
                 MediaWireFormat::Binary { format_kind } => Err(MediaArtifactError::NoImporter(format_kind)),
-                MediaWireFormat::Intrinsic { .. } => {
-                    let media = {
-                        let mut accept = |_| true;
-                        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES, &mut accept);
-                        artifact.decode_intrinsic(&mut control)?
-                    };
-                    let instance_id = self.tools.live_runtime_instance_id.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "intrinsic media import requires a bound live app instance"))?;
-                    let actor = self.stores.store.local_actor_id().0.clone();
-                    self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { expected_document_revision:None, actor, instance_id, view_state: None }, cx).await.map(|_| MediaConsumption::Applied).map_err(MediaArtifactError::Import)
-                }
+                MediaWireFormat::Intrinsic { .. } => Err(MediaArtifactError::Payload("intrinsic media import is driven by the original media import owner, never by a one-shot consume".into())),
             };
         }
         let codec = A::natural_file_codec().await.ok_or_else(|| MediaArtifactError::NoImporter(port.to_string()))?;
@@ -80,13 +71,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         if format_kind != codec.format_kind {
             return Err(MediaArtifactError::NoImporter(format_kind));
         }
-        let instance_id = self.tools.live_runtime_instance_id.ok_or_else(|| MediaArtifactError::Payload("natural file import requires a bound live app instance".into()))?;
-        let actor = self.stores.store.local_actor_id().0.clone();
-        let media_type = A::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-        let media = natural_file_input_media(codec, media_type, artifact.data);
-        self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { expected_document_revision:None, actor, instance_id, view_state: None }, cx)
-            .await
-            .map(|_| MediaConsumption::Applied)
-            .map_err(|fault| MediaArtifactError::Payload(fault.message))
+        Err(MediaArtifactError::Payload("natural file import is driven by the original media import owner, never by a one-shot consume".into()))
     }
 }

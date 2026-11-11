@@ -70,7 +70,7 @@ fn en1990_public_factory_pays_nested_projection_and_semantics(){
   let snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<En1990Snapshot>>=Arc::new(semio_framework_value::OwnedValueRetirementFactory::<En1990Snapshot>::default());
   let mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<En1990Mutation>>=Arc::new(semio_framework_value::OwnedValueRetirementFactory::<En1990Mutation>::default());
   let d=ArtifactMutationSource::<En1990Mutation>::constructor_demand();let(mut source,_)=probe.run(retained(d),|_|ArtifactMutationSource::admit(&mut original,&mutations,retained(d))).unwrap();let mut input=None;
-  for _ in 0..maximum{let g=retained(source.demands(body).unwrap());if source.ready(){probe.run(g,|_|source.take(&mut input,g));break;}probe.run(g,|_|source.advance(g));}
+  for _ in 0..maximum{let g=retained(source.demands(body).unwrap());if source.ready(){probe.run(g,|_|source.take(&mut input,g));break;}probe.run(g,|control|source.advance_chained(control,g));}
   let registry=SnapshotReadRegistryHandle::new();let lease=registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_|panic!("original EN 1990 read lease"));
   let context=ArtifactReplayPreparationContext{mode:ArtifactReplayPreparationMode::Prefix,operation_index:index.as_u64().unwrap()as u32,generation:1,base_revision:[7;32]};
   let request=ArtifactReplayPreparationRequest{base:SnapshotRead::new(Arc::clone(&root),lease),input:input.take().unwrap(),context,snapshots:Arc::clone(&snapshots),mutations:Arc::clone(&mutations)};

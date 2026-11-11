@@ -2,7 +2,7 @@
 
 use super::*;
 
-/// 🎙️ Imports a media port payload.
+/// 🎙️ Imports a media port payload; a whole document becomes the archive load of its own command so a denied admission retries intact.
 pub(super) async fn arm_media_in<PA: PluginApp>(
     runtime: &PluginRuntime<PA>,
     instance_id: u32,
@@ -10,20 +10,26 @@ pub(super) async fn arm_media_in<PA: PluginApp>(
     frames: &mut Vec<protocol::AppFrame>,
     flags: &mut ExchangeFlags,
     command: &mut protocol::AppCommand,
-    media_descriptor: semio_plugin_decl_app::MediaArtifactDescriptor,
-) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+    admission:&mut semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
+    media_descriptor: &mut semio_plugin_decl_app::MediaArtifactDescriptor,
+) -> Result<bool, semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::MediaIn { seq, port, descriptor, data } = command else { unreachable!("arm_media_in is dispatched only for its own command") };
     let seq=*seq;
     assert!(descriptor.is_empty(),"original descriptor bytes must be donated before media dispatch");
-    match plugin_consume_media(runtime, instance_id, seq, &port, media_descriptor, data, cx).await {
-        Ok(None) => {
+    match plugin_consume_media(runtime, instance_id, &port, media_descriptor.clone(), std::mem::take(data), cx).await {
+        Ok(semio_plugin_decl_app::MediaConsumption::Applied) => {
             flags.mutated = true;
             frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+            Ok(true)
         }
-        Ok(Some(status)) => frames.push(protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status }),
-        Err(fault) => push_app_fault(frames, Some(seq), fault).await,
+        Ok(semio_plugin_decl_app::MediaConsumption::DocumentLoad(archive)) => {
+            *command=protocol::AppCommand::LoadDocumentArchive{seq,archive};
+            let admitted=arm_load_document_archive(runtime,instance_id,frames,command,admission,cx).await?;
+            if admitted{frames.pop();frames.push(protocol::AppFrame::DocumentArchiveLoad{in_reply_to:seq,status:protocol::DocumentArchiveLoadStatus{operation:seq,state:protocol::DocumentArchiveLoadState::Pending,completed:0,total:0,ahead:0,fault:Vec::new()}});}
+            Ok(admitted)
+        }
+        Err(fault) => {push_app_fault(frames, Some(seq), fault).await;Ok(true)}
     }
-    Ok(())
 }
 
 /// 📤️ Answers a submitted media export handle.
@@ -47,7 +53,7 @@ pub(super) async fn arm_poll_media_export(
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::PollMediaExport { seq, handle } = command else { unreachable!("arm_poll_media_export is dispatched only for its own command") };
     let seq=*seq;
-    let handle = media_export_handle_from_wire(handle);
+    let handle = media_export_handle_from_wire(handle.clone());
     if let Some(status)=owner.take_media_status(){
         let descriptor=semio_plugin_decl_app::MediaArtifactDescriptor{edge_id:None,port_id:Some(status.port),kind_id:None,media_type:Some(status.media_type),wire:semio_framework::MediaWireFormat::Binary{format_kind:status.schema},blob_hash:None};
         frames.push(protocol::AppFrame::MediaExportStatus{in_reply_to:seq,handle:media_export_handle_into_wire(handle),state:protocol::MediaExportStateWire::Complete,applied_progress:status.total_bytes,checkpoint_available:false,mime_type:status.mime_type,total_bytes:status.total_bytes,detail:String::new(),descriptor:encode_wire_serialized(&descriptor)});
@@ -101,7 +107,7 @@ pub(super) async fn arm_cancel_media_export<PA: PluginApp>(
 ) -> Result<(), semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::CancelMediaExport { seq, handle } = command else { unreachable!("arm_cancel_media_export is dispatched only for its own command") };
     let seq=*seq;
-    let handle = media_export_handle_from_wire(handle);
+    let handle = media_export_handle_from_wire(handle.clone());
     match plugin_cancel_media_export(runtime, instance_id, &handle).await {
         Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
         Err(error) => push_app_fault(frames, Some(seq), plugin_internal_fault(error.to_string())).await,
@@ -125,7 +131,7 @@ pub(super) async fn arm_media_fingerprint<PA: PluginApp>(
     match fingerprint.await {
         Ok(fingerprint) => {
             let value = DslValue::String(fingerprint.0);
-            frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: encode_wire_serialized(&value) });
+            frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port: std::mem::take(port), fingerprint: encode_wire_serialized(&value) });
         }
         Err(fault) => push_app_fault(frames, Some(seq), fault).await,
     }

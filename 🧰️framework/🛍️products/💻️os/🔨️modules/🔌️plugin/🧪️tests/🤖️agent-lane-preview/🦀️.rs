@@ -91,11 +91,10 @@ mod agent_lane_preview_tests {
             if !self.closing||cx.should_yield() {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
             }
-            let grant=cx.retained_grant();
             self.pending = None;
             if !self.outcomes.terminal_is_empty() {
-                let step=self.outcomes.close_step(grant).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
-                cx.consume_retained(step.progress()).map_err(semio_framework_job::OriginalTurnFailure::from)?;if step.progress()!=Default::default(){cx.consume_fuel(1);}
+                let demand=self.outcomes.close_demands().map_err(semio_framework_job::OriginalTurnFailure::from)?;
+                let step=semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|self.outcomes.close_step(effect))?;
                 return Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{semio_framework_job::InteractiveJobCloseStep::Pending{progress:step.progress()}});
             }
             self.released = true;

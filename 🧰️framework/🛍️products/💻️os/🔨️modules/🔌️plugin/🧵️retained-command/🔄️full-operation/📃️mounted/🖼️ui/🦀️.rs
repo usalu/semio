@@ -48,13 +48,19 @@ impl MountedUiCopy{
   if let Some(owner)=self.close.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<UiDirtyScope>>>(),depth:1,..Default::default()})}else{owner.next_demand(body)}}
   Ok(RetirementDemand{copy_bytes:2*size_of::<Option<UiDirtyScope>>()+size_of::<Option<ControlledRetirement<UiDirtyScope>>>()+Self::metadata(),depth:1,..Default::default()})
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep>{
-  if self.terminal_is_empty(){return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Complete(Default::default()))}}
-  let d=match self.close_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{work:0,result:Err(error)}};
-  if !plugin_grant_funds(d,grant)||grant.maximum_items==0{return RetainedWorkOutcome{work:0,result:Ok(RetainedCloneStep::Progress(Default::default()))}}
-  if let Some(owner)=self.close.as_mut(){if !owner.terminal_is_empty(){let result=owner.step(grant);return RetainedWorkOutcome{work:owner.last_turn_work(),result}}self.close=None;}
-  else{self.phase=0;self.index=0;if let Some(output)=self.output.take(){self.close=Some(ControlledRetirement::retain(output));}}
-  RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  use semio_framework_value::RetirementPollExit as Exit;
+  let result=(||->Result<RetainedCloneStep,Exit>{
+   let grant=effect.grant();
+   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+   let d=self.close_demands(grant.maximum_copy_bytes)?;
+   if !plugin_grant_funds(d,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if let Some(owner)=self.close.as_mut(){if !owner.terminal_is_empty(){return Exit::resume(owner.step(grant.maximum_copy_bytes,effect))}self.close=None;}
+   else{self.phase=0;self.index=0;if let Some(output)=self.output.take(){self.close=Some(ControlledRetirement::retain(output));}}
+   Exit::pay(effect,1)?;
+   Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+  })();
+  Exit::settle(effect,result)
  }
 }
 impl Drop for MountedUiCopy{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"scope copy requires original paid handoff or close")}}

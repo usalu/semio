@@ -31,19 +31,22 @@ pub fn invocation_extent(grant:RetainedCloneGrant,maximum_work:u64)->Result<(Ret
  let widened=RetainedCloneGrant{maximum_items:grant.maximum_items.max(1),maximum_copy_bytes:grant.maximum_copy_bytes.saturating_add(handoff.copy_bytes),maximum_depth:grant.maximum_depth.max(handoff.depth),..grant};
  Ok((widened,maximum_work.saturating_add(ORIGINAL_INVOCATION_WORK)))
 }
-/// 🧵️ Runs the operation as the receive callback of one real original producer invocation on an effect opened with [`invocation_extent`], then transfers and clears its recorded reply, so `effect.invocation()` is present for every nested reply-shaped owner. With `narrow` the operation sees exactly that grant and work; without it the whole widened extent, which also funds the metadata nested owners forward under the invocation.
+/// 🧵️ Runs the operation as the receive callback of one real original producer invocation on an effect opened with [`invocation_extent`], then transfers and clears its recorded reply, so `effect.invocation()` is present for every nested reply-shaped owner. With `narrow` the operation sees exactly that grant and work; without it the whole widened extent, which also funds the metadata nested owners forward under the invocation. A child that spent past its extent leaves the handoff unfunded; the handoff unit is still recorded on the receipt, so the Work commit reports the whole overshoot and no work goes unpaid.
 pub fn invoke_original<R>(effect:&mut RetainedAllocationEffect<'_>,narrow:Option<(RetainedCloneGrant,u64)>,operation:impl FnOnce(&mut RetainedAllocationEffect<'_>)->R)->Result<R,ValueError>{
  let mut operation=Some(operation);let mut output=None;let mut failure=None;
  let mut call=|effect:&mut RetainedAllocationEffect<'_>|{if let Some(operation)=operation.take(){match narrow{None=>output=Some(operation(effect)),Some((grant,maximum_work))=>match effect.reborrow(grant,maximum_work){Ok(mut inner)=>output=Some(operation(&mut inner)),Err(error)=>failure=Some(error)}}}};
  let mut authority=OriginalEffectAuthority::new(CallProducer);let mut frame=CallFrame{call:&mut call,source:effect.work_source_turn()};let(mut action,mut reply)=(None,None);
  if !authority.drive(&mut frame,effect,&mut action)?{return Err(ValueError::invariant("synchronous original call stayed pending"))}
+ let mut refusal=None;
  match authority.transfer_reply_into(&mut frame,&mut action,&mut reply,effect).result{
   Ok(Some(_))=>{},
-  Ok(None)=>{action.as_mut().ok_or_else(||ValueError::invariant("synchronous original action absent"))?.transfer_reply(&mut reply)?;authority.finish(&mut action)?;},
-  Err(error)=>{if let Some(open)=action.as_mut(){let _=open.transfer_reply(&mut reply);}let _=authority.finish(&mut action);return Err(error)},
+  Ok(None)=>{let charged=effect.performed(ORIGINAL_INVOCATION_WORK).map(drop);let taken=action.as_mut().ok_or_else(||ValueError::invariant("synchronous original action absent")).and_then(|open|open.transfer_reply(&mut reply).map(drop));let cleared=authority.finish(&mut action);refusal=charged.err().or(taken.err()).or(cleared.err());},
+  Err(error)=>{let _=effect.performed(ORIGINAL_INVOCATION_WORK);if let Some(open)=action.as_mut(){let _=open.transfer_reply(&mut reply);}let _=authority.finish(&mut action);refusal=Some(error);},
  }
+ let released=authority.into_producer().map(drop);
+ if let Some(error)=refusal{return Err(error)}
  reply.take().ok_or_else(||ValueError::invariant("synchronous original reply absent"))??;
- authority.into_producer().map(drop).map_err(|_|ValueError::invariant("synchronous original producer remains active"))?;
+ released.map_err(|_|ValueError::invariant("synchronous original producer remains active"))?;
  if let Some(error)=failure{return Err(error)}
  output.ok_or_else(||ValueError::invariant("synchronous original call never ran"))
 }

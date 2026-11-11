@@ -31,18 +31,26 @@ fn cold_builder_crosses_page_boundaries_and_retires_its_roots(){
 }
 
 
-fn exact(d:semio_framework_value::RetirementDemand)->semio_framework_value::RetainedCloneGrant{semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+use semio_framework_value::{RetirementDemand,shared_issuance::{SealedShared,SharedIssuer}};
+use semio_framework_value_persistent::list::persistent::PersistentListBuilder;
+use semio_s_fem_receiving::{reply::step,testkit::{exact,granted}};
+fn row_demand()->RetirementDemand{SealedShared::<u64>::source_admission_demand().expect("sealed row admission quote")}
+fn sealed(value:u64)->SealedShared<u64>{let(mut input,mut output)=(Some(value),None);granted(exact(row_demand()),|effect|SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect)).result.unwrap();output.take().unwrap()}
+fn adopted(row:SealedShared<u64>)->PersistentListBuilder<u64>{let mut row=Some(row);let mut builder=PersistentListBuilder::new(1);granted(exact(builder.adopt_demand().unwrap()),|effect|step(effect,|effect,reply|builder.adopt_into(&mut row,effect,reply))).unwrap();builder}
 #[test]
 fn exclusive_cold_cleanup_refuses_aliases_and_allocates_nothing(){
- use semio_framework_value::{RetirementDemand,shared_issuance::{SealedShared,SharedIssuer}};
- use semio_framework_value_persistent::list::persistent::PersistentListBuilder;
- let d=RetirementDemand{capacity_bytes:SealedShared::<u64>::birth_bytes(),depth:1,..Default::default()};
- let (row,_)=SealedShared::admit(7u64,SharedIssuer::owned(),exact(d)).result.unwrap();let alias=row.clone();let mut row=Some(row);let mut builder=PersistentListBuilder::new(1);let d=builder.adopt_demand().unwrap();builder.adopt(&mut row,exact(d)).result.unwrap().unwrap();
- let (failure,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||SealedShared::admit(8u64,SharedIssuer::owned(),exact(RetirementDemand{capacity_bytes:SealedShared::<u64>::birth_bytes(),depth:1,..Default::default()})));assert_eq!(attempts,1);let (error,unadmitted)=failure.result.err().unwrap();assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::AllocationFailed);assert_eq!(unadmitted,8);
- let (accepted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||builder.cold_dismantle());assert!(!accepted);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));drop(alias);
- let (accepted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||builder.cold_dismantle());assert!(accepted);assert_eq!(heap.requested_bytes,0);assert!(builder.terminal_is_empty());
- let d=RetirementDemand{capacity_bytes:SealedShared::<u64>::birth_bytes(),depth:1,..Default::default()};let (row,_)=SealedShared::admit(9u64,SharedIssuer::owned(),exact(d)).result.unwrap();let mut row=Some(row);let mut builder=PersistentListBuilder::new(1);let d=builder.adopt_demand().unwrap();builder.adopt(&mut row,exact(d)).result.unwrap().unwrap();let d=builder.finish_demand().unwrap();builder.finish(exact(d)).result.unwrap().unwrap();while !builder.output_ready(){let d=builder.demand().unwrap();builder.advance(exact(d)).result.unwrap();}let d=builder.take_demand().unwrap();let (mut list,_)=builder.take(exact(d)).result.unwrap().unwrap();assert!(builder.cold_dismantle());let alias=list.clone();
- let (accepted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||list.cold_dismantle());assert!(!accepted);assert_eq!(list.len(),1);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));drop(alias);let ((accepted,heap),attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||semio_framework_trace::observe_heap_allocations_on_this_thread(||list.cold_dismantle()));assert!(accepted);assert_eq!(heap.requested_bytes,0);assert_eq!(attempts,0);assert!(list.is_empty());
+ let row=sealed(7);let alias=row.clone();let mut builder=adopted(row);
+ let(mut input,mut output)=(Some(8u64),None);
+ let(turn,attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||granted(exact(row_demand()),|effect|SealedShared::admit_from(&mut input,SharedIssuer::owned(),&mut output,effect)));
+ assert_eq!(attempts,1);assert_eq!(turn.result.err().unwrap().kind,semio_framework_value::ValueRefusalKind::AllocationFailed);assert_eq!(input,Some(8));assert!(output.is_none());
+ let(accepted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||builder.cold_dismantle());assert!(!accepted);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));drop(alias);
+ let(accepted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||builder.cold_dismantle());assert!(accepted);assert_eq!(heap.requested_bytes,0);assert!(builder.terminal_is_empty());
+ let mut builder=adopted(sealed(9));
+ granted(exact(builder.finish_demand().unwrap()),|effect|step(effect,|effect,reply|builder.finish_into(effect,reply))).unwrap();
+ while !builder.output_ready(){granted(exact(builder.demand().unwrap()),|effect|step(effect,|effect,reply|builder.advance_into(effect,reply))).unwrap();}
+ let mut list=None;granted(exact(builder.take_demand().unwrap()),|effect|step(effect,|effect,reply|builder.take_into(&mut list,effect,reply))).unwrap();let mut list=list.take().unwrap();
+ assert!(builder.cold_dismantle());
+ let((accepted,heap),attempts)=semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(||semio_framework_trace::observe_heap_allocations_on_this_thread(||list.cold_dismantle()));assert!(accepted);assert_eq!(heap.requested_bytes,0);assert_eq!(attempts,0);assert!(list.is_empty());
 }
 
 #[test]

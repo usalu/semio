@@ -1,5 +1,5 @@
 //! 🪟️ Original admitted bytes and the real window lease drive one private auxiliary controller render.
-use super::{ReceivingSource,retired,staged::StagedRequestInput};
+use super::{ReceivingSource,begin,retired,staged::StagedRequestInput};
 use semio_framework::action_staging::StagedFormRequest;
 use semio_framework_job::{OriginalTurnFailure,StepContext};
 use semio_plugin_reactor_app::PluginApp;
@@ -49,7 +49,7 @@ impl StagedAuxiliaryInput{
     pub async fn close_step<PA:PluginApp>(&mut self,runtime:&PluginRuntime<PA>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         self.witness.validate(cx)?;self.closing=true;
         if self.controller_started&&!self.controller_closed{if staged_context::close_work(runtime,self.lease.as_mut().ok_or_else(invalid)?,cx).await?==Some(true){if metadata(cx,true)?{self.controller_closed=true;}}return Ok(false);}
-        if !self.retirement.is_empty()||self.request.is_some(){let demand=self.retirement.next_owner_demands::<StagedFormRequest>(self.request.is_some(),&None,4096)?;retired(cx,demand,|grant|if self.retirement.is_empty(){self.retirement.begin_granted(&mut self.request,grant).result?.ok_or_else(invalid)}else{self.retirement.step_granted(grant).result})?;return Ok(false);}
+        if !self.retirement.is_empty()||self.request.is_some(){let demand=self.retirement.next_owner_demands::<StagedFormRequest>(self.request.is_some(),&None,4096)?;retired(cx,demand,|effect|begin(&mut self.retirement,&mut self.request,effect))?;return Ok(false);}
         if let Some(input)=self.input.as_mut(){if !input.terminal_is_empty(){input.close_step(cx)?;return Ok(false);}if metadata(cx,true)?{self.input.take();}return Ok(false);}
         if !metadata(cx,true)?{return Ok(false);}self.lease=None;self.capture=Default::default();self.closed=true;Ok(true)
     }

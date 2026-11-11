@@ -5,71 +5,19 @@ use super::*;
 //#region 🔖️ArtifactChannel
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
-    /// 🏭️ Opens the actual compiled actor through synchronous slices of its retained lifetime source.
-    pub(super) fn open_original_instance(&mut self,actor:semio_framework_actor::ActorId,driver:&Arc<semio_plugin_host::GuestRelayWakeDriver>,scope:&ActivationScope)->Result<semio_plugin_host::GuestInstance,Fault>{
+    /// 🔁️ Lends the headless host root one admission turn at a time to `step` until it reports settled; Pending keeps the caller's state and an unchanged outcome over 65536 consecutive turns is a typed refusal; every Pending turn yields to the caller's executor.
+    async fn drive_origin(&mut self,what:&str,mut step:impl FnMut(&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>)->Result<(),Fault>{
         use semio_plugin_host::GuestRelayAdmissionCall;
-        if self.startup_custody.is_some()||self.startup_instance_custody.is_some()||self.startup_failure.is_some(){return Err(Self::not_wired("original startup","an earlier opening still owns its refused source"))}
-        scope.enter(ActivationPhase::OpeningGuest)?;
-        let runtime=Arc::clone(&self.runtime);
-        let compiled=self.compiled.clone();
-        let mut opening=None;
-        let begin=driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:runtime.begin_original_actor_step(&compiled,actor,cx).map(|owner|{opening=owner;}),execution:None});
-        match begin{Ok(true) if opening.is_some()=>{},Ok(_)=>return Err(Self::budget_fault("original startup admission")),Err(error)=>{let fault=Self::not_wired("original startup admission",format!("{error:?}"));self.startup_failure=Some(error);if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}return Err(fault)}}
-        loop{
-            if let Err(mut fault)=scope.checkpoint(){
-                loop{
-                    let mut closed=false;
-                    let step=driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:runtime.close_original_actor_step(&mut opening,&compiled,cx).map(|value|{closed=value;}),execution:None});
-                    match step{Ok(true) if closed=>return Err(fault),Ok(true)=>continue,Err(error)=>{fault.message=format!("{}; original startup cleanup refused: {error:?}",fault.message);self.startup_failure=Some(error);},Ok(false)=>{}}
-                    if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}
-                    return Err(fault)
-                }
-            }
-            if opening.as_ref().is_some_and(|owner|owner.ready()){
-                let mut instance=None;
-                let take=driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:(||{let input=semio_framework_actor::RetainedTurnInput::borrow_original(cx)?;runtime.take_original_actor_step(&mut opening,&compiled,input,cx).map(|value|{instance=value;})})(),execution:None});
-                match take{Ok(true) if instance.is_some()=>return Ok(instance.take().expect("funded instance transfer")),Err(error)=>{let fault=Self::not_wired("original startup transfer",format!("{error:?}"));self.startup_failure=Some(error);if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}if let Some(instance)=instance.take(){self.startup_instance_custody=Some((instance,Arc::clone(driver)))}return Err(fault)},Ok(_)=>{}}
-            }else{
-                let execution=opening.as_ref().is_some_and(|owner|owner.requires_execution());
-                let advance=driver.dispatch_admission_step(execution,|execution,cx|match runtime.advance_original_actor_step(opening.as_mut().expect("retained startup"),&compiled,execution,cx){Ok(call)=>GuestRelayAdmissionCall{result:call.result.map(|_|()),execution:call.execution},Err(error)=>GuestRelayAdmissionCall{result:Err(error),execution:None}});
-                match advance{Ok(true)=>continue,Err(error)=>{let fault=Self::not_wired("original startup step",format!("{error:?}"));self.startup_failure=Some(error);if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}return Err(fault)},Ok(false)=>{}}
-            }
-            if let Some(owner)=opening.take(){self.startup_custody=Some((owner,Arc::clone(driver)))}
-            return Err(Self::budget_fault("original startup"))
+        for _ in 0..65536u32{
+            let mut settled=false;
+            let turn=self.host_driver.dispatch_admission_step(false,|_,cx|GuestRelayAdmissionCall{result:step(cx).map(|done|{settled=done;}),execution:None});
+            match turn{Ok(_) if settled=>return Ok(()),Ok(_)=>semio_framework_async::yield_once().await,Err(error)=>{let fault=Self::not_wired(what,format!("{error:?}"));self.startup_failure=Some(error);return Err(fault)}}
         }
-    }
-
-    /// 💡️ Registers the committed inference roster over a separate actual actor on this compiled runtime.
-    fn ensure_inference_route(&mut self,cancel:&semio_framework_async::CancelToken,funding:&semio_plugin_host::GuestRelayWakeAuthority) -> Result<&PluginInferenceRoute, Fault> {
-        if self.inference.is_none() {
-            let roster: Vec<_> = self
-                .descriptor
-                .contributions
-                .inference_services
-                .iter()
-                .chain(self.descriptor.contributions.artifact_contributions.iter().flat_map(|contribution| contribution.inferences.iter()))
-                .cloned()
-                .collect();
-            if roster.is_empty() {
-                return Err(Fault { code: "capability.not-found".to_string(), message: format!("plugin `{}` declares no inference service in its committed descriptor", self.plugin_id) });
-            }
-            let roster_bytes = semio_framework_pack_json::to_json_string(&roster).into_bytes();
-            let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
-            let runtimes = Arc::clone(&self.runtime);
-            let driver=Arc::clone(&funding.receiver);
-            let instance=self.open_original_instance(actor,&driver,&ActivationScope::new(cancel.clone(),|_,_|{}))?;
-            let handle = Arc::new(semio_framework_async::block_on(semio_plugin_host::PluginInstanceHandle::new(actor, Arc::clone(&runtimes), self.compiled.clone(), instance,funding.clone())));
-            let router = semio_plugin_host::ArtifactInferenceRouter::new();
-            semio_framework_async::block_on(router.register_plugin(&self.plugin_id, &self.descriptor.manifest.dependencies, handle, &roster_bytes)).map_err(|error| Self::not_wired("inference route registration", error))?;
-            self.inference = Some(PluginInferenceRoute { router });
-        }
-        Ok(self.inference.as_ref().expect("inference route was just opened"))
+        Err(Self::budget_fault(what))
     }
 
     /// 🧠️ Runs the declared router with caller freshness data and a fresh finite native operation source.
-    pub(crate) fn infer_real(&mut self, command: &InferCommand) -> Result<ArtifactInferenceResultV1, Fault> {
-        if self.inference.is_some(){return Err(Self::not_wired("inference route","the previous request still owns its guest route until funded retirement"))}
-        if self.operation_refusal.is_some(){return Err(Self::not_wired("inference operation","an earlier call retains its refused original cleanup source"))}
+    pub(crate) async fn infer_real(&mut self, command: &InferCommand) -> Result<ArtifactInferenceResultV1, Fault> {
         let declared = self
             .descriptor
             .contributions
@@ -107,34 +55,39 @@ impl PluginArtifactChannel {
                 None => Vec::new(),
             },
         };
+        let roster: Vec<_> = self
+            .descriptor
+            .contributions
+            .inference_services
+            .iter()
+            .chain(self.descriptor.contributions.artifact_contributions.iter().flat_map(|contribution| contribution.inferences.iter()))
+            .cloned()
+            .collect();
+        let roster_bytes = semio_framework_pack_json::to_json_string(&roster).into_bytes();
         let policy=self.operation_policy;
         let reserve=policy.cleanup;
         let caps=self.host_driver_policy.operation_caps(semio_plugin_host::GuestRelayOperationReserve{retained:reserve.retained,work_fuel:reserve.work_fuel,execution_fuel:reserve.execution_fuel,maximum_microseconds:reserve.maximum_microseconds},semio_plugin_host::GuestRelayOperationTransit{retained:policy.transit.retained,work_fuel:policy.transit.work_fuel},semio_plugin_host::GuestRelayOperationInfrastructure{retained:policy.infrastructure.retained,work_fuel:policy.infrastructure.work_fuel,maximum_cleanup_microseconds:policy.infrastructure.maximum_cleanup_microseconds});
         let requested=semio_plugin_host::GuestRelayOperationRequest{work_units:command.work_units,maximum_elapsed_microseconds:command.maximum_elapsed_milliseconds.saturating_mul(1000),retained:command.retained_policy};
         let request_bytes=semio_framework_pack_json::to_json_string(&request).into_bytes();
         let cancel=command.cancel.0.clone();
-        let driver=Arc::new(caps.issue(requested,semio_framework_job::default_now_us,Box::new(move||cancel.is_cancelled_now())).map_err(|error|Self::not_wired("inference operation admission",error))?);
-        let policy=match driver.policy(){Ok(policy)=>policy,Err(error)=>return self.settle_inference_operation(driver,Err(Self::not_wired("inference operation policy",error))).and_then(|_|unreachable!())};
-        let funding=semio_plugin_host::GuestRelayWakeAuthority{drive_policy:policy.drive,policy:policy.wake,issuer:semio_framework_job_worker::admit_original_thread_worker_wake,receiver:Arc::clone(&driver)};
-        if let Err(error)=self.ensure_inference_route(&command.cancel.0,&funding){drop(funding);return self.settle_inference_operation(driver,Err(error)).and_then(|_|unreachable!())}
-        let route=self.inference.as_ref().expect("inference route was activated");
-        let result=semio_framework_async::block_on(route.router.infer(&request_bytes, &command.cancel.0, &funding)).map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")});
-        drop(funding);
-        let result_bytes=self.settle_inference_operation(driver,result)?;
+        let drivers=move||caps.issue(requested,semio_framework_job::default_now_us,{let cancel=cancel.clone();Box::new(move||cancel.is_cancelled_now())});
+        let actor = ::semio_framework_async::poll::resolve_ready(semio_framework_actor::ActorId::new(INFERENCE_ACTOR_ORDINAL, 0, 1, 0));
+        let identity=semio_plugin_host::origin_registry::next_identity();
+        let mut origin=None;
+        let (runtime,compiled)=(Arc::clone(&self.runtime),self.compiled.clone());
+        self.drive_origin("inference origin registration",|cx|semio_plugin_host::origin_registry::register_step(identity,&runtime,&compiled,&mut origin,cx)).await?;
+        let origin=origin.ok_or_else(||Self::not_wired("inference origin registration","settled without an origin"))?;
+        let router=semio_plugin_host::ArtifactInferenceRouter::new();
+        let registered=router.register_plugin(&self.plugin_id,&self.descriptor.manifest.dependencies,semio_plugin_host::PluginRegistration{actor,origin},&roster_bytes).await.map_err(|error|Self::not_wired("inference route registration",error));
+        let result=match registered{
+            Ok(())=>router.infer(&request_bytes,&drivers).await.map_err(|error|Fault{code:"app.command.rejected".into(),message:format!("inference refused: {error}")}),
+            Err(fault)=>Err(fault),
+        };
+        drop(router);
+        let closed=self.drive_origin("inference origin retirement",|cx|semio_plugin_host::origin_registry::close_step(identity,&runtime,&compiled,cx)).await;
+        let result_bytes=match(result,closed){(Ok(bytes),Ok(()))=>bytes,(Err(fault),Ok(()))=>return Err(fault),(Ok(_),Err(fault))=>return Err(fault),(Err(mut fault),Err(close))=>{fault.message=format!("{}; {}",fault.message,close.message);return Err(fault)}};
         let result_text = std::str::from_utf8(&result_bytes).map_err(|error| Self::not_wired("decoding the inference result", error))?;
         semio_framework_pack_json::from_json_str(result_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Self::not_wired("decoding the inference result", error))
-    }
-
-    /// 🪢️ A failed close retains the exact source and both body and cleanup failures.
-    fn settle_inference_operation(&mut self,driver:Arc<semio_plugin_host::GuestRelayWakeDriver>,result:Result<Vec<u8>,Fault>)->Result<Vec<u8>,Fault>{
-        match semio_framework_async::block_on(driver.close_operation()){
-            Ok(())=>result,
-            Err(error)=>{
-                let message=format!("inference cleanup refused: {error:?}; body: {:?}",result.as_ref().err());
-                self.operation_refusal=Some((driver,error,result.err()));
-                Err(Self::not_wired("inference operation retirement",message))
-            }
-        }
     }
 
     /// 🎯️ Resolves an action from its declared owner; PureCommandRequest binds the actual caller surface.

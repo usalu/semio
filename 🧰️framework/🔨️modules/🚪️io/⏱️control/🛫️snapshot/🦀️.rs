@@ -40,6 +40,9 @@ impl<'owner,'control> NativeSnapshotEncodeOwner<'owner,'control>{
 impl Drop for NativeSnapshotEncodeOwner<'_, '_>{fn drop(&mut self){if let Some(wallet)=self.wallet.as_deref_mut(){*wallet=self.progress;}}}
 
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneStep,RetainedCloneProgress},RetainedWorkOutcome};
+use semio_framework_value_native_owned::native_decoding::owned::native_reply_poll;
+type SnapshotReply<'r>=semio_framework_value::retained_clone::OriginalEffectReply<'r,RetainedCloneStep,OriginalRetirementFailure>;
+type SnapshotReplyComplete<'r>=semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r,RetainedCloneStep,OriginalRetirementFailure>;
 pub(crate) struct NativeSnapshotReceiving<T:RetireOwned,O:RetireOwned>{pending:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,intermediate:ControlledRetirement<Option<T>>,action_marker:super::NativeSnapshotEffectProgress,action_failure:Option<NativeSnapshotFailure>,unwind_failure:Option<ControlledRetirement<NativeSnapshotFailure>>,output:ControlledRetirement<Option<O>>}
 fn settled(result:Result<RetainedCloneStep,OriginalRetirementFailure>)->OriginalRetirementPoll{RetainedWorkPoll::Complete(RetainedWorkOutcome{result,work:0})}
 fn absorb(poll:OriginalRetirementPoll,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit>{let turn=RetirementPollExit::settled(poll)?;*work+=turn.work;turn.result.map_err(RetirementPollExit::from)}
@@ -98,6 +101,11 @@ impl<T:RetireOwned,O:RetireOwned> ErasedSnapshotRetirement for NativeSnapshotRec
   })();
   RetirementPollExit::finish(result,work)
  }
+ fn close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:SnapshotReply<'r>)->Result<SnapshotReplyComplete<'r>,ValueError>{Ok(native_reply_poll(Self::close_step(self,body,effect),reply))}
+ fn recover_close_into<'r>(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:SnapshotReply<'r>)->Result<SnapshotReplyComplete<'r>,ValueError>{self.close_into(body,effect,reply)}
+ fn close_original_into<'r>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:SnapshotReply<'r>)->Result<SnapshotReplyComplete<'r>,ValueError>{Ok(native_reply_poll(Self::close_original_step(self,original,body,effect),reply))}
+ fn recover_close_original_into<'r>(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:SnapshotReply<'r>)->Result<SnapshotReplyComplete<'r>,ValueError>{self.close_original_into(original,body,effect,reply)}
+ fn native_header_release(&self)->Option<semio_framework_value::RetirementHeaderRelease>{self.terminal_is_empty().then(||unsafe{semio_framework_value::RetirementHeaderRelease::native(self,0,0)})}
  fn terminal_is_empty(&self)->bool{self.pending.is_none()&&self.intermediate.terminal_is_empty()&&self.action_failure.is_none()&&self.unwind_failure.as_ref().is_none_or(|failure|failure.terminal_is_empty())&&self.output.terminal_is_empty()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.action_pending(){return Ok(0)}if let Some(pending)=self.pending.as_ref(){return Ok(semio_framework_value::factory_ticket_demands(pending,0)?.copy_bytes)}self.active().next_copy_byte_demand()}
  fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if self.action_pending(){return Ok(0)}if let Some(pending)=self.pending.as_ref(){return Ok(semio_framework_value::factory_ticket_demands(pending,copy)?.capacity_bytes)}self.active().next_capacity_byte_demand(copy)}
@@ -241,12 +249,18 @@ fn fold_receiving_effect(failure:semio_framework_value_native_owned::native_deco
  if let Some(error)=failure.producer_refusal{out=out.with_settlement_refusal(error).unwrap_or_else(|(failure,_)|failure)}
  out
 }
+/// 🪝️ Runs one retirement turn as an original producer action so every close owner finds its invocation.
+fn invoked(effect:&mut RetainedAllocationEffect<'_>,operation:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->(OriginalRetirementPoll,usize))->(OriginalRetirementPoll,usize){
+ let mut out=None;
+ let driven=semio_framework_value_control_contract::with_original_invocation(None,effect,&mut |effect|{out=Some(operation(effect))});
+ match(out,driven){(Some(out),_)=>out,(None,Err(error))=>(settled(Err(error.into())),0),(None,Ok(()))=>(settled(Err(ValueError::invariant("snapshot retirement call absent").into())),0)}
+}
 fn pending_retirement()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"snapshot retirement awaits an unfinished original reply")}
 fn retire_encode(native:&mut NativeEncodeControl<'_>,driver:&mut NativeSnapshotBodyWallet,performed:&mut RetainedCloneProgress,demand:RetirementDemand,_maximum_work:u64,operation:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->(OriginalRetirementPoll,usize))->(RetainedWorkOutcome<RetainedCloneStep,NativeSnapshotFailure>,RetainedCloneProgress){
  let remaining=driver.remaining_grant();let selected=RetainedCloneGrant{maximum_items:remaining.maximum_items,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
  let mut state=NativeEncodeEffectState::default();let mut failure=None;let mut child:Option<semio_framework_value::OriginalRetirementOutcome>=None;let mut posted=RetainedCloneProgress::default();
  let mut run=|physical:&mut RetainedCloneProgress,effect:&mut RetainedAllocationEffect<'_>|->Result<(),ValueError>{
-  let(poll,extra)=operation(effect);
+  let(poll,extra)=invoked(effect,&mut *operation);
   match RetirementPollExit::settled(poll){
    Ok(turn)=>{let step=turn.result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());*physical=RetainedCloneProgress{copied_bytes:step.copied_bytes.checked_add(extra).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"snapshot retirement header copy overflow"))?,..step};posted=*physical;child=Some(turn);Ok(())},
    Err(_)=>Err(pending_retirement()),
@@ -264,7 +278,7 @@ fn retire_encode(native:&mut NativeEncodeControl<'_>,driver:&mut NativeSnapshotB
 fn retire_decode(native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,driver:&mut NativeSnapshotBodyWallet,performed:&mut RetainedCloneProgress,demand:RetirementDemand,maximum_work:u64,operation:&mut dyn FnMut(&mut RetainedAllocationEffect<'_>)->(OriginalRetirementPoll,usize))->(RetainedWorkOutcome<RetainedCloneStep,NativeSnapshotFailure>,RetainedCloneProgress){
  use semio_framework_value_native_owned::native_decoding::{NativeReceivingEffect,NativeReceivingEffectPoll};
  let mut frame=NativeReceivingEffect::<OriginalRetirementFailure>::default();let mut extra=0usize;
- let poll=native.receive_effect(demand,maximum_work,&mut frame,|_,effect|{let(poll,copied)=operation(effect);extra=copied;match RetirementPollExit::settled(poll){Ok(turn)=>turn,Err(_)=>RetainedWorkOutcome{result:Err(OriginalRetirementFailure::from(pending_retirement())),work:0}}});
+ let poll=native.receive_effect(demand,maximum_work,&mut frame,|_,effect|{let(poll,copied)=invoked(effect,&mut *operation);extra=copied;match RetirementPollExit::settled(poll){Ok(turn)=>turn,Err(_)=>RetainedWorkOutcome{result:Err(OriginalRetirementFailure::from(pending_retirement())),work:0}}});
  match poll{
   Err(error)=>(RetainedWorkOutcome{work:0,result:Err(error.into())},RetainedCloneProgress::default()),
   Ok(NativeReceivingEffectPoll::Pending{work})=>{let progress=RetainedCloneProgress{copied_bytes:extra,..Default::default()};let result=post(Err(pending_retirement().into()),driver,performed,progress).and_then(|()|Err(pending_retirement().into()));(RetainedWorkOutcome{work,result},progress)},

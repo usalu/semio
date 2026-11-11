@@ -169,27 +169,27 @@ impl PendingDocumentArchiveMember {
     }
 
     /// 🧹️ Pays inline payload work and releases each original physical allocation separately.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
-        let mut work=0;
-        let result=(||{
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        use semio_framework_value::RetirementPollExit as Exit;
+        let result=(||->Result<RetainedCloneStep,Exit>{
+        let grant=effect.grant();
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         if let Some(pages)=self.pages.as_mut() {
-            if let Some(page)=pages.close_take_page(){work=1;let bytes=page.len();drop(page);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..empty}));}
-            if !pages.terminal_is_empty(){let result=pages.close_backing_step(grant);work=pages.last_backing_close_work();return result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-            work=1;drop(self.pages.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
+            if let Some(page)=pages.close_take_page(){Exit::pay(effect,1)?;let bytes=page.len();drop(page);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..empty}));}
+            if !pages.terminal_is_empty(){let step=pages.close_backing_step(grant)?;Exit::pay(effect,u128::from(pages.last_backing_close_work()))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+            Exit::pay(effect,1)?;drop(self.pages.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
         }
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if self.entry_retirement.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.entry_retirement,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-        let original=self.entry.take().expect("quoted original archive member");
-        let turn=semio_framework_value::retirement::admit_owned_retirement(original,child);work=turn.work;match turn.result {
-            Ok((owner,progress))=>{self.entry_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive member birth")?;Ok(RetainedCloneStep::Progress(progress))}
-            Err((error,original))=>{self.entry=Some(original);Err(error)}
+        if self.entry_retirement.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.entry_retirement,grant.maximum_copy_bytes,&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        match semio_framework_value::retirement::admit_owned_retirement(&mut self.entry,&mut effect.nested(child)).result? {
+            Some((owner,progress))=>{self.entry_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive member birth")?;Ok(RetainedCloneStep::Progress(progress))}
+            None=>Ok(RetainedCloneStep::Progress(empty))
         }
-    })();
-        semio_framework_value::RetainedWorkOutcome{result,work}
+        })();
+        Exit::settle(effect,result)
     }
     pub fn terminal_is_empty(&self) -> bool {
         self.entry.is_none() && self.entry_retirement.is_none() && self.pages.is_none()
@@ -256,7 +256,7 @@ where
     pub phase: ActiveDocumentArchiveLoadPhase,
     pub terminal_target: Option<ActiveDocumentArchiveLoadState>,
     close_identity_field: u8,
-    last_native_work:u64,
+    last_native_work:u128,
     pub state: ActiveDocumentArchiveLoadState,
     pub completed: u64,
     pub total: u64,
@@ -372,57 +372,62 @@ where
     }
 
     /// 🎟️ Retains all original history and physical archive backing until full admission succeeds.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant,work_turn:&dyn ArchiveWorkTurn) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure> {
-        self.last_native_work=0;let mut work=0;let result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>=(||{
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,work_turn:&dyn ArchiveWorkTurn) -> semio_framework_value::OriginalRetirementPoll {
+        use semio_framework_value::RetirementPollExit as Exit;
+        self.last_native_work=0;
+        let result=(||->Result<RetainedCloneStep,Exit>{
+        let grant=effect.grant();
+        let body=grant.maximum_copy_bytes;
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
-        let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        let demand=self.retirement_demands(body)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if self.retained.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
-        if self.archive_retirement.is_some(){let turn=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())).map_err(Into::into);}
+        if self.retained.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,body,&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.archive_retirement.is_some(){let step=Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,body,&mut effect.nested(child)))?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(hydration)=self.hydration.as_mut(){
-            if store::ErasedSnapshotRetirement::terminal_is_empty(hydration){work=1;drop(self.hydration.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let turn=store::ErasedSnapshotRetirement::close_step(hydration,child);work=turn.work;let step=turn.result?;
+            if store::ErasedSnapshotRetirement::terminal_is_empty(hydration){Exit::pay(effect,1)?;drop(self.hydration.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            let step=Exit::resume(store::ErasedSnapshotRetirement::close_step(hydration,body,&mut effect.nested(child)))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,store::ErasedSnapshotRetirement::terminal_is_empty(hydration),"original archive hydration")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(ingress)=self.rejected_ingress.as_mut(){
-            if ingress.terminal_is_empty(){work=1;drop(self.rejected_ingress.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let result=ingress.close_step(child);work=ingress.last_turn_work();let step=result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,ingress.terminal_is_empty(),"original archive ingress")?;
+            if ingress.terminal_is_empty(){Exit::pay(effect,1)?;drop(self.rejected_ingress.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            let result=ingress.close_step(child);Exit::pay(effect,u128::from(ingress.last_turn_work()))?;let step=result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,ingress.terminal_is_empty(),"original archive ingress")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(member)=self.member.as_mut(){
-            if member.terminal_is_empty(){work=1;drop(self.member.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let turn=member.close_step(child);work=turn.work;let step=turn.result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,member.terminal_is_empty(),"original archive pending member")?;
+            if member.terminal_is_empty(){Exit::pay(effect,1)?;drop(self.member.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            let step=Exit::resume(member.close_step(&mut effect.nested(child)))?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,member.terminal_is_empty(),"original archive pending member")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(history)=self.history.as_mut(){
-            if history.terminal_is_empty(){work=1;drop(self.history.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+            if history.terminal_is_empty(){Exit::pay(effect,1)?;drop(self.history.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
             let source=&self.archive.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive history decoder lost its original source"))?.parent_spr;
-            let turn=match self.work.with_loan(&mut (work_turn as &dyn ArchiveWorkTurn),|loan|history.close_step(source,&protocol::RetainedHistoryUninterrupted,child,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};work=turn.work;self.last_native_work=history.last_turn_native_work();let step=turn.result?;
+            let turn=match self.work.with_loan(&mut (work_turn as &dyn ArchiveWorkTurn),|loan|history.close_step(source,&protocol::RetainedHistoryUninterrupted,child,loan)){Ok(turn)=>turn,Err(error)=>semio_framework_value::RetainedWorkOutcome{work:0,result:Err(semio_framework_value::OriginalRetirementFailure::from_work_refusal(error))}};Exit::pay(effect,turn.work)?;self.last_native_work=history.last_turn_native_work();let step=turn.result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,history.terminal_is_empty(),"original archive history decoder")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.history_custody.is_none(){self.history_custody=self.decoded_history.take();}
-        if let Some(original)=self.history_custody.take(){
-            let turn=semio_framework_value::retirement::admit_owned_retirement(original,child);work=turn.work;match turn.result {
-                Ok((owner,progress))=>{self.retained=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive history birth")?;return Ok(RetainedCloneStep::Progress(progress));}
-                Err((error,original))=>{self.history_custody=Some(original);return Err(error.into());}
-            }
+        if self.history_custody.is_some(){
+            return match semio_framework_value::retirement::admit_owned_retirement(&mut self.history_custody,&mut effect.nested(child)).result? {
+                Some((owner,progress))=>{self.retained=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive history birth")?;Ok(RetainedCloneStep::Progress(progress))}
+                None=>Ok(RetainedCloneStep::Progress(empty))
+            };
         }
-        if let Some(original)=self.archive.take(){
-            let turn=semio_framework_value::retirement::admit_owned_retirement(original,child);work=turn.work;return match turn.result {
-                Ok((owner,progress))=>{self.archive_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original physical archive birth")?;Ok(RetainedCloneStep::Progress(progress))}
-                Err((error,original))=>{self.archive=Some(original);Err(error.into())}
+        if self.archive.is_some(){
+            return match semio_framework_value::retirement::admit_owned_retirement(&mut self.archive,&mut effect.nested(child)).result? {
+                Some((owner,progress))=>{self.archive_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original physical archive birth")?;Ok(RetainedCloneStep::Progress(progress))}
+                None=>Ok(RetainedCloneStep::Progress(empty))
             };
         }
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"archive close lost its quoted original frontier").into())
-    })();semio_framework_value::RetainedWorkOutcome{result,work}
+        })();
+        Exit::settle(effect,result)
     }
 
     /// 🧮️ Borrows actual native decoder work independently of delegated reported work.
-    pub fn last_turn_native_work(&self)->u64{self.last_native_work}
+    pub fn last_turn_native_work(&self)->u128{self.last_native_work}
 
 }
 
@@ -452,7 +457,7 @@ where
 
 /// 🧭️ Retains the exact borrowed archive and its bounded validation frontier before registry transfer.
 #[derive(Clone,Copy,Default,semio_framework_value::RetireOwned)]
-pub struct OriginalDocumentArchiveAdmission{source:Option<(u64,u64,u64)>,donor:usize,operation:u64,members:usize,phase:u8,row:usize,search:usize,field:usize,offset:usize,payload:usize,ready:bool}
+pub struct OriginalDocumentArchiveAdmission{source:Option<(u64,u64,usize)>,donor:usize,operation:u64,members:usize,phase:u8,row:usize,search:usize,field:usize,offset:usize,payload:usize,ready:bool}
 impl OriginalDocumentArchiveAdmission{
  pub const fn empty()->Self{Self{source:None,donor:0,operation:0,members:0,phase:0,row:0,search:0,field:0,offset:0,payload:0,ready:false}}
  pub fn completed(&self)->bool{self.phase==6}

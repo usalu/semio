@@ -12,6 +12,7 @@ pub trait ArtifactOriginalOperationReceiving<M>:Send{
  fn owned_handoff_pending(&self)->bool;
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>> where M:Sync;
  fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+ fn take_owned_work_demand(&self,body:usize,ceiling:u64)->Result<u64,ValueError>;
  fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome;
  fn begin_close(&mut self);
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
@@ -29,6 +30,7 @@ impl<M:NativeReceive<DslValue>+ArtifactCanonicalJsonTree+Send+Sync+'static> Arti
  fn owned_handoff_pending(&self)->bool{self.owned_handoff_pending()}
  fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>>{self.take(grant)}
  fn take_owned_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.take_owned_demands(body)}
+ fn take_owned_work_demand(&self,body:usize,ceiling:u64)->Result<u64,ValueError>{self.take_owned_work_demand(body,ceiling)}
  fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{self.take_owned_into(output,control,body,effect)}
  fn begin_close(&mut self){self.begin_close()}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}

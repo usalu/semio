@@ -90,7 +90,8 @@ pub async fn poll<PA: semio_plugin_reactor_app::PluginApp + 'static>(
     }
     let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, retained_policy:wit_retained_grant_to_kernel(budget.retained_policy)?,work_fuel:budget.work_fuel, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
     let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
-    turn::poll_kernel_output(runtime, &mut kernel_event, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.as_deref(), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
+    let mut command = staged.command.map(|(cursor, page)| (cursor, *page));
+    turn::poll_kernel_output(runtime, &mut kernel_event, &mut command, staged.cold_pair.as_deref(), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
 }
 
 /// 🩺️ Bulk bytes a turn's events carry across the component boundary — every `pack`/`list<u8>`
@@ -109,6 +110,7 @@ fn wit_events_payload_bytes(events: &[semio_plugin_abi::wasip2::exports::semio::
             wit::Event::QuotaChanged(changed) => changed.quotas.len(),
             wit::Event::UiIntent(intent) => intent.intent.len(),
             wit::Event::SurfaceVisible(visible) => visible.body_key.len() + visible.view_state.len(),
+            wit::Event::StagedFormRequested(requested) => requested.surface.len() + requested.body_key.len() + requested.request.len(),
             wit::Event::PatchRejected(rejected) => rejected.reason.len(),
             wit::Event::Completed(completed) => completion_bytes(&completed.outcome),
             wit::Event::HttpChunk(chunk) => chunk.params.bytes.len(),
@@ -322,6 +324,7 @@ fn wit_event_to_kernel(event: semio_plugin_abi::wasip2::exports::semio::framewor
         W::CapabilityChanged(payload) => Event::CapabilityChanged { change: wit_capability_change_to_kernel(payload.change) },
         W::QuotaChanged(payload) => Event::QuotaChanged { quotas: decode_wire_quotas(&payload.quotas) },
         W::UiIntent(payload) => Event::UiIntent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), intent: payload.intent },
+        W::StagedFormRequested(payload) => Event::StagedFormRequested { instance: payload.instance, surface: payload.surface, body_key: payload.body_key, request: payload.request },
         W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), body_key: payload.body_key, view_state: payload.view_state },
         W::StagedFormRequested(payload) => Event::StagedFormRequested { instance: payload.instance, surface: payload.surface, body_key: payload.body_key, request: payload.request },
         W::SurfaceHidden(payload) => Event::SurfaceHidden { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },

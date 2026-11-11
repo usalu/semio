@@ -4,7 +4,7 @@ use crate::{renderer_worker_pool,RENDERER_IO_WAKE};
 use crate::native_caller::NativeFrameCaller;
 use semio_framework_actor::retained_context::{OriginalActorCall,OriginalActorContextError};
 use semio_plugin_guest_contract::original_actor_context::OriginalActorEntryFailure;
-use semio_framework_job::{OriginalJobPageReturnRegistry,OriginalSuppliedJobPage,OriginalContiguousJobBytes,OriginalJobBytesReturnRegistry,OriginalJobBytesReservation,OriginalSuppliedJobBytes,OriginalTurnFailure,OriginalConstructionDemand,StepContext,JobOutcomeView,admit_original_construction};
+use semio_framework_job::{OriginalJobPageReturnRegistry,OriginalSuppliedJobPage,OriginalContiguousJobBytes,OriginalJobBytesReturnRegistry,OriginalJobBytesReservation,OriginalSuppliedJobBytes,OriginalTurnFailure,OriginalConstructionDemand,StepContext,JobOutcomeView,admit_original_construction_settled};
 use semio_os_services_native_io::{NativeIoJob, NativeIoRequest, NativeIoResultStatus, NativeIoStreamRefusal, OriginalNativePathReturnRegistry, OriginalNativePathReservation, OriginalSuppliedNativePath};
 use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
 use std::sync::{Mutex,MutexGuard};
@@ -118,9 +118,9 @@ impl RendererSourceIoNode{
  fn accept<T>(&mut self,result:Result<OriginalActorCall<T,OriginalActorEntryFailure>,ValueError>)->Option<T>{match result{Ok(call)=>match call.result{Ok(value)=>Some(value),Err(OriginalActorEntryFailure::Semantic)=>{self.failure.get_or_insert(RendererSourceIoFailureKind::Source);None},Err(OriginalActorEntryFailure::Authority(error))=>{self.retain(error);None}},Err(error)=>{self.retain(error);None}}}
  fn prepare(&mut self,path:RendererIoPath<'_>){
   if self.request.is_some()||!self.room()||self.failure.is_some()||!self.caller.ready(){return}
-  if matches!(self.mode,RendererSourceIoMode::Resident){let request=&mut self.request;let call=self.caller.dispatch_step(|cx|admit_original_construction(cx,request,OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:0,release_bytes:0,depth:1},|_|semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok((NativeIoRequest::ProcessResidentBytes,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}));if self.accept(call)==Some(true){self.request_committed=true;}return}
+  if matches!(self.mode,RendererSourceIoMode::Resident){let request=&mut self.request;let call=self.caller.dispatch_step(|cx|admit_original_construction_settled(cx,&mut Default::default(),request,OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:0,release_bytes:0,depth:1},1,|_,_|semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok((NativeIoRequest::ProcessResidentBytes,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}));if self.accept(call)==Some(true){self.request_committed=true;}return}
   let length=match path.extent(){Ok(length)=>length,Err(error)=>{self.retain(error);return}};
-  let mode=self.mode;let request=&mut self.request;let call=self.caller.dispatch_step(|cx|admit_original_construction(cx,request,OriginalConstructionDemand{items:1,copy_bytes:length,capacity_bytes:length,release_bytes:0,depth:1},|_|semio_framework_value::RetainedWorkOutcome{result:path.receive(length,mode),work:1}));
+  let mode=self.mode;let request=&mut self.request;let call=self.caller.dispatch_step(|cx|admit_original_construction_settled(cx,&mut Default::default(),request,OriginalConstructionDemand{items:1,copy_bytes:length,capacity_bytes:length,release_bytes:0,depth:1},1,|_,actual|{let result=path.receive(length,mode);if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&actual.is_none(){*actual=Some(progress.retained_capacity_bytes)}}semio_framework_value::RetainedWorkOutcome{work:u128::from(result.is_ok()),result}}));
   if self.accept(call)==Some(true){self.request_committed=true;}
  }
  fn needs_work(&self)->bool{!self.closed&&self.root_failure.is_none()&&(self.closing||self.failure.is_none()&&(!self.caller.ready()||self.request_committed&&!self.ready||self.page_requested&&!self.page_committed))}
@@ -130,7 +130,7 @@ impl RendererSourceIoNode{
   let before=(self.caller.retained_spent(),self.caller.fuel_remaining(),self.frontier());
   if self.closing{self.close_one();}
   else if self.failure.is_some(){return false}
-  else if !self.caller.ready(){match self.caller.admit_step(){Ok(call)=>if let Err(error)=call.result{self.retain(error)},Err(error)=>self.retain(error)}}
+  else if !self.caller.ready(){match self.caller.admit_step(){Ok(call)=>if let Err(failure)=call.result{self.retain(match failure.primary{semio_framework_job::OriginalTurnPrimary::Value(error)=>error,_=>failure.receipt_refusal.or(failure.context_refusal).or(failure.work_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native admission was refused by its context"))})},Err(error)=>self.retain(error)}}
   else if self.request_committed&&!self.invocation_committed{
    let request=&mut self.request;let invocation=&mut self.invocation;let call=self.caller.dispatch_step(|cx|invocation.admit(request,cx));if self.accept(call)==Some(true){self.invocation_committed=true;}
   }else if self.invocation_committed&&!self.ready&&matches!(self.mode,RendererSourceIoMode::Contiguous{..}){self.pump_contiguous();
@@ -287,7 +287,7 @@ pub fn pump_renderer_source_io_sessions(maximum:usize)->usize{
  if maximum==0||!WORK_PENDING.load(Ordering::Acquire)||WORKER_SCHEDULED.compare_exchange(false,true,Ordering::AcqRel,Ordering::Acquire).is_err(){return 0}
  WORK_PENDING.swap(false,Ordering::AcqRel);
  let callback:Box<dyn FnOnce()+Send+'static>=Box::new(renderer_source_io_worker);
- match renderer_worker_pool().try_submit(semio_framework_async::Lane::Io,callback){Ok(())=>1,Err(error)=>{WORK_PENDING.store(true,Ordering::Release);let kind=error.kind;drop(error.job);WORKER_SCHEDULED.store(false,Ordering::Release);if matches!(kind,semio_framework_async::WorkerSubmitErrorKind::Shutdown|semio_framework_async::WorkerSubmitErrorKind::Poisoned){for(index,slot)in SLOTS.iter().enumerate(){let generation=slot.generation.load(Ordering::Acquire);if let Some(Some(waker))=with_node(index,generation,|node|{node.failure.get_or_insert(RendererSourceIoFailureKind::WorkerShutdown);node.waker.take()}){waker.wake();}}}0}}
+ match renderer_worker_pool().try_submit(semio_framework_async::Lane::Io,callback){Ok(())=>1,Err(error)=>{WORK_PENDING.store(true,Ordering::Release);let kind=error.kind();drop(error.into_job());WORKER_SCHEDULED.store(false,Ordering::Release);if matches!(kind,semio_framework_async::WorkerSubmitErrorKind::Shutdown|semio_framework_async::WorkerSubmitErrorKind::Poisoned){for(index,slot)in SLOTS.iter().enumerate(){let generation=slot.generation.load(Ordering::Acquire);if let Some(Some(waker))=with_node(index,generation,|node|{node.failure.get_or_insert(RendererSourceIoFailureKind::WorkerShutdown);node.waker.take()}){waker.wake();}}}0}}
 }
 fn renderer_source_io_worker(){
  let start=WORK_CURSOR.fetch_add(1,Ordering::Relaxed);let mut again=false;

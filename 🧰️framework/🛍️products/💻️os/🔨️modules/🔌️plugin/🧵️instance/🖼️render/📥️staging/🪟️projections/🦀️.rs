@@ -10,10 +10,11 @@ use semio_framework::kernel::Effect;
 use semio_framework::{Fault, FaultFrom, ViewModel};
 use semio_ui_contract::*;
 use semio_ui_layout::layout::{ContextMenuItemSpec, ContextMenuRequest, WindowEngagement, WindowMeasure};
+use semio_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, ReferenceSpaceMember};
 use crate::render_bundle::RenderCtx;
 
-impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X> RenderCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
     /// 🕹️ Snapshots read-only interaction state before borrowing the mutable render components.
     pub async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         if self.refresh_cache().await.is_err() {

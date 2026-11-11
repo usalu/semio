@@ -168,7 +168,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             settings_generation,
             provisional: Vec::new(),
             entity_marks: Vec::new(),
-            entities: Arc::new(BTreeSet::new()),
+            entities: semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(BTreeSet::new()),
             refold: None,
             trace: ToolRunTraceStore::new(identity),
             recent_trace: std::collections::VecDeque::with_capacity(TOOL_RUN_PANEL_TRACE_ROWS),

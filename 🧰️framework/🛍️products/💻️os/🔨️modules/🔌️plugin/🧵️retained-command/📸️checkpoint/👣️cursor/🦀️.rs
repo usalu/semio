@@ -30,5 +30,3 @@ impl ArtifactCommandCheckpointCursor{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}self.original=None;self.written=0;self.complete=false;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
 }
 impl Drop for ArtifactCommandCheckpointCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"checkpoint capture reached Drop before its original metadata removal")}}
-
-#[doc(hidden)]

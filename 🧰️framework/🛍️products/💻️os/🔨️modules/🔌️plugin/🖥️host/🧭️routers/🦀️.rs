@@ -7,8 +7,11 @@ use std::sync::{Arc, Mutex};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_plugin_guest_contract::{IoEntryRouteConflict, IoRouteConflict, PluginHostError};
-use semio_plugin_host_post_turn_relay::{GuestRelayWakeAuthority, PluginInstanceHandle};
 use semio_framework::PluginManifest;
+
+#[path = "📮️plugin-call/🦀️.rs"]
+mod plugin_call;
+pub use plugin_call::{call_plugin, PluginCallDrivers, PluginRegistration, JOB_KIND_COMPOSE, JOB_KIND_INFER, JOB_KIND_IO_RUN, JOB_KIND_IO_SNIFF, JOB_KIND_MUTATION_PLAN};
 
 #[path = "🚪️io-router/🦀️.rs"]
 mod io_router;

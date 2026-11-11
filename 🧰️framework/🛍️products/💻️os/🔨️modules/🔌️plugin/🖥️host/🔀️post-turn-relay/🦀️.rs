@@ -1,8 +1,8 @@
 //! 🔀️ Source-owned guest operations and their original result recipients.
 pub use semio_plugin_host_source_json::{SourceJsonEncoder,OriginalJobBudgetJson};
-use semio_framework_actor::ActorId as RuntimeActorId;
+pub use semio_framework_actor::ActorId as RuntimeActorId;
 use semio_plugin_host_guest_runtime::{GuestInstance,GuestRuntimes};
-use semio_plugin_host_wake::GuestRelayWakeDriver;
+pub use semio_plugin_host_wake::{GuestRelayWakeDriver,GuestRelayAdmissionFailure};
 #[path="📤️output/🦀️.rs"]
 mod original_output;
 #[path="📤️output/🧯️actor-failure.rs"]
@@ -17,6 +17,7 @@ mod native_home;
 pub use native_home::{with_bootstrap_history_parts,attest_bootstrap_header_return,with_frozen_history_parts,attest_header_return,attest_actor_failure_if_needed,FrozenReceiptFrontier,GuestRelayNativeHome,GuestRelayNativeOrigin,GuestRelayNativeResolver,GuestRelayNativeCustody,GuestRelayNativeState,NativeInstanceHome,NativeInstanceRetirement};
 #[path="🌱️native-admission/🦀️.rs"]
 mod native_admission;
+pub use native_home::origin_registry;
 pub use native_admission::PluginInstanceHandleAdmission;
 #[path="🌱️native-admission/🏠️generic.rs"]
 mod native_home_admission;

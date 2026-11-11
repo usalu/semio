@@ -29,4 +29,4 @@ for i in $(seq 1 90); do
   fi
   sleep 5
 done
-echo "no listener after 450 s; see $LOG (vite dep-optimizer race: stop, empty the vite cacheDir from viteCacheDirectory in 🏗️builder/🌐️vite/🟦️.ts, start once more)" >&2; exit 7
+echo "no listener after 450 s; see $LOG (vite dep-optimizer race: stop, empty the vite cacheDir from viteCacheDirectory (defined in 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/🟦️.ts), start once more)" >&2; exit 7

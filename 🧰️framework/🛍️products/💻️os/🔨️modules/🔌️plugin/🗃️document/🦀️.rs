@@ -1,8 +1,8 @@
 //! 🗃️ Document ingress: envelope decode and ingress, store replacement, composition pins and document archive loads.
-extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as protocol;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_os_kernel as pack;
+extern crate semio_os_kernel as store;
+extern crate semio_os_kernel as protocol;
+extern crate semio_os_kernel as vcs;
+extern crate semio_os_kernel as pack;
 use protocol::{OpBinary, OpText};
 use semio_framework::kernel::ActorId;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
@@ -22,8 +22,8 @@ use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::ManuallyDrop;
-use semio_framework_plugin_composition_emission::root::advance_original_child_root_retirement;
-use semio_framework_plugin_composition_emission::root::original_child_root_retirement_demands;
+use semio_plugin_composition_emission::root::advance_original_child_root_retirement;
+use semio_plugin_composition_emission::root::original_child_root_retirement_demands;
 use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_decl_app::DOCUMENT_LOAD_FAILED_CODE;
 use semio_plugin_decl_app::document_load_fault;
@@ -53,7 +53,7 @@ use semio_plugin_ownership::store_lifecycle::ArtifactStoreInitializationJob;
 
 #[path = "📨️envelope-decode-and-ingress/🦀️.rs"]
 mod envelope_decode_and_ingress;
-pub use envelope_decode_and_ingress::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, original_rejection_lifecycle};
+pub use envelope_decode_and_ingress::{ActiveArtifactEnvelopeDecode, ActiveArtifactEnvelopeDecodeState, ActiveArtifactEnvelopeIngress, ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, envelope_decode_replacement, original_rejection_lifecycle};
 use envelope_decode_and_ingress::original_worker_lifecycle;
 
 #[path = "🏷️candidate-publication-and-composition-pins/🦀️.rs"]

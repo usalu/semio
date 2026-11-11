@@ -222,16 +222,20 @@ struct OriginalInferenceJob {
 }
 impl OriginalInferenceJob {
     pub fn new(input:Vec<u8>,restored:Option<Vec<u8>>,operation:u64,generation:u64)->Self{let gateway=semio_plugin_extension::inference_gateway::ArtifactInferenceGateway::new(operation,generation,&input);Self{input:Some(input),restored,gateway:Some(gateway),output:None,failure:None,closing_failure:None,reply:None,secondary:None,active:None,cancelled:false}}
-    pub fn close_field<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,active:&mut Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,semio_framework_value::ValueError>{
-        use semio_framework_value::{retirement::admit_owned_retirement,close_factory_ticket,factory_ticket_demands};
-        if active.is_some(){let demand=factory_ticket_demands(active.as_ref().unwrap(),grant.maximum_copy_bytes)?;if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default())}return close_factory_ticket(active,grant).result.map(|step|step.progress());}
+    pub fn close_field<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,active:&mut Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneProgress,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{retirement::admit_owned_retirement,close_factory_ticket,factory_ticket_demands,RetainedWorkPoll};
+        let grant=cx.retained_grant();
+        if active.is_some(){let demand=factory_ticket_demands(active.as_ref().unwrap(),grant.maximum_copy_bytes)?;if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default())}
+            let body=grant.maximum_copy_bytes;let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|close_factory_ticket(active,body,effect))?else{return Ok(Default::default())};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+            return match poll{RetainedWorkPoll::Pending{..}=>Ok(Default::default()),RetainedWorkPoll::Complete(turn)=>turn.result.map(|step|step.progress()).map_err(|failure|{cx.consume_fuel(1);semio_framework_job::OriginalTurnFailure::debit_original(failure,cx)})};}
         let Some(original)=source.as_ref()else{return Ok(Default::default())};let capacity=original.retirement_birth_bytes().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original inference source has no declared close birth"))?;
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity{return Ok(Default::default())}
-        match admit_owned_retirement(source.take().unwrap(),grant).result{Ok((owner,progress))=>{*active=Some(owner);Ok(progress)},Err((error,original))=>{*source=Some(original);Err(error)}}
+        let Some((outcome,performed))=cx.with_original_effect(grant,|_,effect|admit_owned_retirement(source,effect))?else{return Ok(Default::default())};cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+        match outcome.result{Ok(Some((owner,progress)))=>{*active=Some(owner);Ok(progress)},Ok(None)=>Ok(Default::default()),Err(error)=>Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}
     }
     fn close_sources(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let grant=cx.retained_grant();let result=if self.closing_failure.is_some(){Self::close_field(&mut self.closing_failure,&mut self.active,grant)}else if self.secondary.is_some(){Self::close_field(&mut self.secondary,&mut self.active,grant)}else if self.input.is_some()||self.active.is_some(){Self::close_field(&mut self.input,&mut self.active,grant)}else if self.restored.is_some(){Self::close_field(&mut self.restored,&mut self.active,grant)}else{return Ok(true)};
-        let progress=match result{Ok(progress)=>progress,Err(error)=>{return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}};cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(false)
+        let progress=if self.closing_failure.is_some(){Self::close_field(&mut self.closing_failure,&mut self.active,cx)?}else if self.secondary.is_some(){Self::close_field(&mut self.secondary,&mut self.active,cx)?}else if self.input.is_some()||self.active.is_some(){Self::close_field(&mut self.input,&mut self.active,cx)?}else if self.restored.is_some(){Self::close_field(&mut self.restored,&mut self.active,cx)?}else{return Ok(true)};
+        cx.consume_retained(progress)?;Ok(false)
     }
 }
 impl OriginalInferenceJob {
@@ -239,8 +243,8 @@ impl OriginalInferenceJob {
         if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return JobStep::Running(None)}
         if let Some(gateway)=&mut self.gateway{
             if self.cancelled||self.failure.is_some(){gateway.begin_close();}
-            if self.closing_failure.is_some(){match Self::close_field(&mut self.closing_failure,&mut self.active,cx.retained_grant()){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}cx.consume_fuel(1);},Err(error)=>self.secondary=Some(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}return JobStep::Running(None)}
-            if self.secondary.is_some()||self.active.is_some(){match Self::close_field(&mut self.secondary,&mut self.active,cx.retained_grant()){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}cx.consume_fuel(1);},Err(error)=>self.secondary=Some(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}return JobStep::Running(None)}
+            if self.closing_failure.is_some(){match Self::close_field(&mut self.closing_failure,&mut self.active,cx){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}},Err(error)=>self.secondary=Some(error)}return JobStep::Running(None)}
+            if self.secondary.is_some()||self.active.is_some(){match Self::close_field(&mut self.secondary,&mut self.active,cx){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}},Err(error)=>self.secondary=Some(error)}return JobStep::Running(None)}
             let answer=semio_plugin_extension::inference_gateway::wire_artifact_infer(gateway,self.input.as_ref().unwrap(),cx);
             if let Some(cause)=answer.refusal{if self.failure.is_none(){self.failure=Some(cause);}else{assert!(self.closing_failure.is_none());self.closing_failure=Some(cause);}gateway.begin_close();}
             if let Some(payload)=answer.payload{assert!(self.output.is_none());self.output=Some(payload);}
@@ -249,7 +253,7 @@ impl OriginalInferenceJob {
         }
         match self.close_sources(cx){Ok(false)=>return JobStep::Running(None),Err(error)=>{assert!(self.secondary.is_none());self.secondary=Some(error.into());return JobStep::Running(None)},Ok(true)=>{}}
         if self.failure.is_some()&&self.reply.is_none(){self.reply=Some(semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Inference(self.failure.take().unwrap())));if let Err(error)=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}){self.secondary=Some(error.into());}return JobStep::Running(None)}
-        if self.cancelled&&self.output.is_some(){match Self::close_field(&mut self.output,&mut self.active,cx.retained_grant()){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}},Err(error)=>self.secondary=Some(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}return JobStep::Running(None)}
+        if self.cancelled&&self.output.is_some(){match Self::close_field(&mut self.output,&mut self.active,cx){Ok(progress)=>{if let Err(error)=cx.consume_retained(progress){self.secondary=Some(error.into());}},Err(error)=>self.secondary=Some(error)}return JobStep::Running(None)}
         if self.cancelled&&self.reply.is_none(){self.reply=Some(semio_plugin_extension::extension_invocation_failure::RetainedExtensionFaultReply::new(semio_plugin_extension::extension_invocation_failure::ExtensionInvocationCause::Value(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original inference cancelled"))));return JobStep::Running(None)}
         if let Some(reply)=&mut self.reply{match reply.advance(cx){Ok(Some(bytes))=>{assert!(reply.terminal_is_empty());self.reply=None;return JobStep::Failed(bytes)},Ok(None)=>return JobStep::Running(None),Err(error)=>{self.secondary=Some(error.into());return JobStep::Running(None)}}}
         if self.output.is_some(){if let Err(error)=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}){self.secondary=Some(error.into());return JobStep::Running(None)}return JobStep::Done(self.output.take().unwrap())}
@@ -263,8 +267,8 @@ impl BoundedJob for OriginalInferenceJob {
         if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}
         self.cancelled=true;
         if self.active.is_some()||self.closing_failure.is_some()||self.secondary.is_some(){
-            let result=if self.active.is_some(){Self::close_field(&mut self.input,&mut self.active,cx.retained_grant())}else if self.closing_failure.is_some(){Self::close_field(&mut self.closing_failure,&mut self.active,cx.retained_grant())}else{Self::close_field(&mut self.secondary,&mut self.active,cx.retained_grant())};
-            match result{Ok(progress)=>cx.consume_retained(progress)?,Err(error)=>{return Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}}cx.consume_fuel(1);return Ok(false)
+            let result=if self.active.is_some(){Self::close_field(&mut self.input,&mut self.active,cx)}else if self.closing_failure.is_some(){Self::close_field(&mut self.closing_failure,&mut self.active,cx)}else{Self::close_field(&mut self.secondary,&mut self.active,cx)};
+            match result{Ok(progress)=>cx.consume_retained(progress)?,Err(error)=>{return Err(error)}}return Ok(false)
         }
         if let Some(gateway)=&mut self.gateway{
             gateway.begin_close();
@@ -275,8 +279,8 @@ impl BoundedJob for OriginalInferenceJob {
             return Ok(false)
         }
         if let Some(reply)=&mut self.reply{reply.begin_close();if reply.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.reply=None;return Ok(false)}assert!(reply.advance(cx)?.is_none());return Ok(false)}
-        let grant=cx.retained_grant();let result=if self.active.is_some(){Self::close_field(&mut self.input,&mut self.active,grant)}else if self.closing_failure.is_some(){Self::close_field(&mut self.closing_failure,&mut self.active,grant)}else if self.secondary.is_some(){Self::close_field(&mut self.secondary,&mut self.active,grant)}else if self.failure.is_some(){Self::close_field(&mut self.failure,&mut self.active,grant)}else if self.output.is_some(){Self::close_field(&mut self.output,&mut self.active,grant)}else if self.input.is_some(){Self::close_field(&mut self.input,&mut self.active,grant)}else if self.restored.is_some(){Self::close_field(&mut self.restored,&mut self.active,grant)}else{return Ok(true)};
-        match result{Ok(progress)=>{cx.consume_retained(progress)?;cx.consume_fuel(1);Ok(false)},Err(error)=>{Err(semio_framework_job::OriginalTurnFailure::debit_original(error,cx))}}
+        let result=if self.active.is_some(){Self::close_field(&mut self.input,&mut self.active,cx)}else if self.closing_failure.is_some(){Self::close_field(&mut self.closing_failure,&mut self.active,cx)}else if self.secondary.is_some(){Self::close_field(&mut self.secondary,&mut self.active,cx)}else if self.failure.is_some(){Self::close_field(&mut self.failure,&mut self.active,cx)}else if self.output.is_some(){Self::close_field(&mut self.output,&mut self.active,cx)}else if self.input.is_some(){Self::close_field(&mut self.input,&mut self.active,cx)}else if self.restored.is_some(){Self::close_field(&mut self.restored,&mut self.active,cx)}else{return Ok(true)};
+        match result{Ok(progress)=>{cx.consume_retained(progress)?;Ok(false)},Err(error)=>Err(error)}
     }
     fn retirement_demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         use semio_framework_value::{RetirementDemand,retirement::RetireOwned};

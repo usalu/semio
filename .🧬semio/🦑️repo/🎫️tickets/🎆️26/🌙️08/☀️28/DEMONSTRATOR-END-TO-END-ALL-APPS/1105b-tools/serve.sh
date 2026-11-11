@@ -30,4 +30,4 @@ for i in $(seq 1 60); do
   fi
   sleep 5
 done
-echo "not ready after 300 s; see $LOG (vite dep-optimizer race: stop, empty the vite cacheDir from viteCacheDirectory in 🏗️builder/🌐️vite/🟦️.ts, start once more)" >&2; exit 7
+echo "not ready after 300 s; see $LOG (vite dep-optimizer race: stop, empty the vite cacheDir from viteCacheDirectory (cacheDir at ♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts:55), start once more)" >&2; exit 7

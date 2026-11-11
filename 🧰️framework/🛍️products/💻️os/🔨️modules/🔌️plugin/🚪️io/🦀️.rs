@@ -527,6 +527,8 @@ pub mod operation_authority;
 pub mod sqlite_wire;
 #[path = "../🧬️schema/🎟️actor-input/🦀️.rs"]
 pub mod actor_input_wire;
+#[path = "../🧬️schema/💼️job-kinds/🦀️.rs"]
+pub mod job_kinds;
 #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 #[path = "../🧬️schema/🦀️.rs"]
 pub mod wasip2;

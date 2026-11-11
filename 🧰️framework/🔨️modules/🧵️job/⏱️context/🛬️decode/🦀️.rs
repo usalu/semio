@@ -157,6 +157,15 @@ impl OriginalNativeDecodeSource{
   if u128::from(issued.work)<performed{return Err(refusal("original producer close performed more work than it settled").into())}
   Ok(Some(self.hold(Self::receive_observed_work(cx,grant,fuel,issued,observed),cx)))
  }
+ /// 🛬️ A receiver steps under the calling turn's own original effect and its authentic decoder; an unaffordable effect keeps every state.
+ pub fn receive_effect_step<T,E>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->OriginalNativeDecodeIssued<T,E>)->Result<Option<OriginalNativeDecodeOutcome<T,E>>,OriginalTurnFailure>{
+  if !self.admit_step(cx)?||cx.should_yield()||cx.is_cancelled(){return Ok(None)}
+  let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();
+  let Some((answer,performed))=cx.with_original_effect(grant,|cx,effect|self.with_control(cx,false,|control|run(control,effect)))?else{return Ok(None)};
+  let (issued,observed)=answer?;
+  if u128::from(issued.work)<performed{return Err(refusal("original receiver performed more work than it settled").into())}
+  Ok(Some(self.hold(Self::receive_observed_work(cx,grant,fuel,issued,observed),cx)))
+ }
  fn receive_issued<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,issued:OriginalNativeDecodeIssued<T,E>)->OriginalNativeDecodeOutcome<T,E,OriginalTurnFailure>{
   Self::receive_observed_work(cx,grant,fuel,issued,0)
  }

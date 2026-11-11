@@ -1,7 +1,7 @@
 //! 📂️ Native filesystem and process-observation jobs for interactive OS hosts.
 
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, InteractiveJobStep, OriginalJobReturnClaim, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, StepContext, OriginalTurnFailure};
-use semio_framework_value_retained_clone::{RetirementDemand, RetainedWorkOutcome, RetainedCloneStep, ValueError, ValueRefusalKind};
+use semio_framework_value_retained_clone::{RetainedAllocationEffect, RetainedWorkPoll, RetirementDemand, RetainedWorkOutcome, RetainedCloneStep, ValueError, ValueRefusalKind};
 use std::fs::{File, ReadDir};
 use std::io::{Read, Seek};
 use std::path::PathBuf;
@@ -65,6 +65,7 @@ pub struct NativeIoStreamRefusal{pub length:u64,pub maximum_bytes:u64}
 /// 📋️ A result observation borrows only scalar shape while its producer keeps every physical owner.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum NativeIoResultStatus{Bytes{length:usize,pages:usize},Page{length:usize,pages:usize,eof:bool},Paths{count:usize},Modified{count:usize},ResidentBytes(Option<u64>),StreamRefused(NativeIoStreamRefusal),Fault}
+fn progress_poll(turn:RetainedWorkOutcome<InteractiveJobCloseStep>)->RetainedWorkPoll<RetainedCloneStep,ValueError>{RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})}
 fn validate_original_stream_extent(length:u64,cx:&StepContext<'_>)->Result<(),NativeIoStreamRefusal>{let stock=cx.original_total_retained_grant();let page=semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;let capacity=stock.maximum_capacity_bytes.min(stock.maximum_release_bytes).min(semio_framework_job_payload::JOB_PAYLOAD_OPERATION_BYTES);let maximum_bytes=((capacity/page)*page)as u64;if length>maximum_bytes{Err(NativeIoStreamRefusal{length,maximum_bytes})}else{Ok(())}}
 
 impl NativeIoValue {
@@ -77,13 +78,13 @@ impl NativeIoValue {
         }
     }
 
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<InteractiveJobCloseStep>{
-        let mut work=0;let result=(||{
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<InteractiveJobCloseStep>{
+        let grant=effect.grant();let mut work=0;let result=(||{
          if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
          let demand=self.retirement_demands()?;
          if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
          let progress=match self{
-          Self::Bytes(bytes)|Self::Page{bytes,..}=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=bytes.close_step(child);work=turn.work;let step=turn.result?;semio_framework_value_retained_clone::retained_clone::admit_retained_clone_close(child,step,bytes.terminal_is_empty(),"original native I/O result payload").map_err(|error|error.with_retained_progress(step.progress()))?;step.progress()},
+          Self::Bytes(bytes)|Self::Page{bytes,..}=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=bytes.close_step(effect);work=turn.work;let step=turn.result?;semio_framework_value_retained_clone::retained_clone::admit_retained_clone_close(child,step,bytes.terminal_is_empty(),"original native I/O result payload").map_err(|error|error.with_retained_progress(step.progress()))?;step.progress()},
           Self::Paths(paths)=>{let turn=paths.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});work=turn.work;turn.result?.progress()},
           Self::Modified(entries)=>{let turn=entries.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});work=turn.work;turn.result?.progress()},
           Self::ResidentBytes(_)|Self::StreamRefused(_)=>Default::default(),
@@ -227,11 +228,11 @@ impl NativeIoJob {
     pub fn close_result_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let Some(result)=self.result.as_mut()else{return Ok(true)};
         match result{
-         Ok(value)if !value.terminal_is_empty()=>{let demand=value.retirement_demands()?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let turn=value.close_step(grant);RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}})?;return Ok(false)},
-         Err(error)if error.capacity()!=0=>{let demand=RetirementDemand{release_bytes:error.capacity(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(std::mem::take(error));RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})?;return Ok(false)},
+         Ok(value)if !value.terminal_is_empty()=>{let demand=value.retirement_demands()?;semio_framework_job::close_original_effect_step(cx,demand,|effect|progress_poll(value.close_step(effect)))?;return Ok(false)},
+         Err(error)if error.capacity()!=0=>{let demand=RetirementDemand{release_bytes:error.capacity(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(std::mem::take(error));RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})?;return Ok(false)},
          _=>{}
         }
-        semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.result=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;Ok(self.result.is_none())
+        semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.result=None;RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;Ok(self.result.is_none())
     }
 
     /// 🔁️ A fully acknowledged and retired page reuses its exact path under the same incoming caller.
@@ -332,19 +333,19 @@ impl NativeIoJob {
     fn step_owned<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if let Some(path) = self.retired_path.as_ref() {
             let demand = RetirementDemand { release_bytes: path.capacity(), depth: 1, ..Default::default() };
-            semio_framework_job::close_original_retained_step(cx, demand, |_| { drop(self.retired_path.take()); RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })),work:1} })?;
+            semio_framework_job::close_original_retained_step(cx, demand, |_| { drop(self.retired_path.take()); RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })),work:1} })?;
             return Ok(None);
         }
-        if self.retired_file.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_file.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
-        if self.retired_directory.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_directory.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
+        if self.retired_file.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_file.take());RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
+        if self.retired_directory.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_directory.take());RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
         if matches!(&self.state, NativeIoState::ClosingWriterFault { .. } | NativeIoState::ClosingScanFault { .. } | NativeIoState::ClosingModifiedFault { .. }) {
             let (target, demand) = self.close_target()?;
             if matches!(target, NativeIoCloseTarget::RequestPath | NativeIoCloseTarget::RequestExtension | NativeIoCloseTarget::RetiredPath | NativeIoCloseTarget::ScannedPath | NativeIoCloseTarget::ModifiedPath | NativeIoCloseTarget::ModifiedEntry | NativeIoCloseTarget::RetiredDirectory | NativeIoCloseTarget::ReadBuffer | NativeIoCloseTarget::RetiredFile | NativeIoCloseTarget::PendingPayload | NativeIoCloseTarget::ClearPendingPayload | NativeIoCloseTarget::Writer | NativeIoCloseTarget::Paths | NativeIoCloseTarget::Modified | NativeIoCloseTarget::Extension | NativeIoCloseTarget::RejectedPath | NativeIoCloseTarget::RejectedModified) {
                 let was_closing = self.closing;
-                let result = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                    let turn = self.close_granted(grant);
+                let result = semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+                    let turn = self.close_granted(effect);
                     self.closing = was_closing;
-                    RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
+                    progress_poll(turn)
                 });
                 result?;
                 return Ok(None);
@@ -362,8 +363,8 @@ impl NativeIoJob {
 }
 
 impl NativeIoJob{
-    fn close_granted(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
-        let mut work=0;let result=(||{
+    fn close_granted(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
+        let grant=effect.grant();let mut work=0;let result=(||{
         let (target,demand)=self.close_target()?;
         let release = demand.release_bytes;
         if matches!(target, NativeIoCloseTarget::Complete) {
@@ -381,9 +382,9 @@ impl NativeIoJob{
             NativeIoCloseTarget::ModifiedPath=>drop(self.modified_path.take()),
             NativeIoCloseTarget::ModifiedEntry=>drop(self.modified_entry.take()),
             NativeIoCloseTarget::RetiredDirectory=>drop(self.retired_directory.take()),
-            NativeIoCloseTarget::FaultWriter=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=self.fault_writer.as_mut().unwrap().close_step(child);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));},
-            NativeIoCloseTarget::FaultDetail=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=self.fault_detail.as_mut().unwrap().close_step(child);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));},
-            NativeIoCloseTarget::PendingPayload=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=self.pending_payload.as_mut().unwrap().close_step(child);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));},
+            NativeIoCloseTarget::FaultWriter=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=self.fault_writer.as_mut().unwrap().close_step(effect);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));},
+            NativeIoCloseTarget::FaultDetail=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=self.fault_detail.as_mut().unwrap().close_step(effect);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));},
+            NativeIoCloseTarget::PendingPayload=>{let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let turn=self.pending_payload.as_mut().unwrap().close_step(effect);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));},
             NativeIoCloseTarget::ReadBuffer=>{let turn=native_read_buffer::NativeReadBuffer::release(&mut self.read_buffer,grant);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));},
             NativeIoCloseTarget::RetiredFile=>drop(self.retired_file.take()),
             NativeIoCloseTarget::ClearPendingPayload=>self.pending_payload=None,
@@ -395,7 +396,7 @@ impl NativeIoJob{
                     _ => return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O close target changed custody")),
                 };
                 let child = RetainedCloneGrant { maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant };
-                let turn=writer.close_step(child);work=turn.work;return turn.result.and_then(|step|{semio_framework_value_retained_clone::retained_clone::admit_retained_clone_close(child,step,writer.terminal_is_empty(),"original native I/O payload builder").map_err(|error|error.with_retained_progress(step.progress()))?;InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false)});
+                let turn=writer.close_step(effect);work=turn.work;return turn.result.and_then(|step|{semio_framework_value_retained_clone::retained_clone::admit_retained_clone_close(child,step,writer.terminal_is_empty(),"original native I/O payload builder").map_err(|error|error.with_retained_progress(step.progress()))?;InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false)});
 
             }
             NativeIoCloseTarget::Paths => match &mut self.state {
@@ -423,7 +424,7 @@ impl NativeIoJob{
             NativeIoCloseTarget::FinishState => self.state = NativeIoState::Finished,
             NativeIoCloseTarget::ResultValue => {
                 let Some(Ok(value)) = self.result.as_mut() else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original native I/O close target changed custody")) };
-                let turn=value.close_step(RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant});work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));
+                let turn=value.close_step(effect);work=turn.work;return turn.result.and_then(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}.admit(grant,false));
 
             }
             NativeIoCloseTarget::ResultError => if let Some(Err(error)) = self.result.as_mut() { drop(std::mem::take(error)); },
@@ -461,7 +462,7 @@ impl InteractiveJob for NativeIoJob {
         if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.close_target().map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.1;
         let mut blocked=false;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let turn=self.close_granted(grant);RetainedWorkOutcome{result:turn.result.map(|step|match step{InteractiveJobCloseStep::Pending{progress}=>RetainedCloneStep::Progress(progress),InteractiveJobCloseStep::Complete{progress}=>RetainedCloneStep::Complete(progress),InteractiveJobCloseStep::Blocked=>{blocked=true;RetainedCloneStep::Progress(Default::default())}}),work:turn.work}})?;
+        let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let turn=self.close_granted(effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map(|step|match step{InteractiveJobCloseStep::Pending{progress}=>RetainedCloneStep::Progress(progress),InteractiveJobCloseStep::Complete{progress}=>RetainedCloneStep::Complete(progress),InteractiveJobCloseStep::Blocked=>{blocked=true;RetainedCloneStep::Progress(Default::default())}}),work:turn.work})})?;
         if blocked{Ok(InteractiveJobCloseStep::Blocked)}else if self.terminal_is_empty(){Ok(InteractiveJobCloseStep::Complete{progress:step.progress()})}else{Ok(step)}
     }
 

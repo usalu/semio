@@ -345,6 +345,8 @@ macro_rules! retained_set_record{
   impl $crate::retained::set_field::RetainedSetField<$snapshot,$patch,$mutation> for $leaf{
    type Authored=$authored;
    type Displaced=$snapshot;
+   fn authored_birth_work()->Result<u64,$crate::value::ValueError>{$crate::retained::set_field::field_birth_work::<$authored>()}
+   fn displaced_birth_work()->Result<u64,$crate::value::ValueError>{$crate::retained::set_field::field_birth_work::<$snapshot>()}
    fn source_projection_work()->Result<u64,$crate::value::ValueError>{Ok($source_work)}
    fn original_projection_work()->Result<u64,$crate::value::ValueError>{Ok(1)}
    fn source_accessor(payload:&Self)->$crate::value::RetainedWorkOutcome<&$authored>{$crate::value::RetainedWorkOutcome{result:Ok(($source)(payload)),work:$source_work}}
@@ -369,6 +371,8 @@ macro_rules! retained_root_record{
   impl $crate::retained::set_field::RetainedSetField<$state,$diff,$mutation> for $mutation{
    type Authored=$state;
    type Displaced=$state;
+   fn authored_birth_work()->Result<u64,$crate::value::ValueError>{$crate::retained::set_field::field_birth_work::<$state>()}
+   fn displaced_birth_work()->Result<u64,$crate::value::ValueError>{$crate::retained::set_field::field_birth_work::<$state>()}
    fn source_projection_work()->Result<u64,$crate::value::ValueError>{Ok(1)}
    fn original_projection_work()->Result<u64,$crate::value::ValueError>{Ok(1)}
    fn source_accessor(mutation:&Self)->$crate::value::RetainedWorkOutcome<&$state>{$crate::value::RetainedWorkOutcome{result:Ok(match mutation{Self::Snapshot{transient}=>transient}),work:1}}

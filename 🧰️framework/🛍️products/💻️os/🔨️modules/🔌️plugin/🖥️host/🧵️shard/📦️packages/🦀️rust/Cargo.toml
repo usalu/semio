@@ -46,6 +46,7 @@ semio-framework-actor = { workspace = true }
 # the same shape `ComputePool`/`TokioHostRuntime` bridges use, per `semio-framework-async`'s own
 # `block_on` gate doc.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-job = { workspace = true }
 semio-os-services = { workspace = true }
 # 🐕️ P1c (one-pool-worker-runtime): `ShardLoop::execute_turn_for`/its job-step counterpart wrap each
 # guest call in a `semio_framework_trace::Watchdog` so an over-8ms turn is recorded as a contract
@@ -59,3 +60,4 @@ semio-os-kernel = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-plugin-host-operation = { path = "../../../🚪️io/🎛️operation/📦️packages/🦀️rust", features = ["testkit"] }

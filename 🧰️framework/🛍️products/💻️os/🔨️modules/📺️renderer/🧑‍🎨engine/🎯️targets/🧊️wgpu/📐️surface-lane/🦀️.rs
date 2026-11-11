@@ -1,8 +1,8 @@
 //! 📐️ Generation-qualified, fixed-capacity resize preparation for primary presentation surfaces.
 
 use semio_plugin_ownership::reserved_job_session::RefusedWorkerSource;
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OriginalTurnFailure, StepContext};
-use semio_framework_value::{RetainedCloneStep, RetainedCloneProgress, RetirementDemand, ValueError};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, InteractiveJobStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OriginalJobReturnClaim, OriginalTurnFailure, StepContext};
+use semio_framework_value::{RetainedCloneStep, RetainedCloneProgress, RetainedWorkOutcome, RetirementDemand, ValueError};
 use semio_framework_job_worker::MountedWorkerJobSession;
 use semio_framework_job_worker_authority::{BatchDriveConfig, WorkerJobCloseStep};
 use semio_framework_trace::{InteractiveStage, OperationId};
@@ -93,8 +93,8 @@ impl SurfaceResizeJob {
     }
 }
 
-impl InteractiveJob for SurfaceResizeJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+impl SurfaceResizeJob {
+    fn step_turn<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if self.phase == ResizePhase::Closing || cx.is_cancelled() { self.begin_close(); return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from); }
         if cx.should_yield() { return Ok(None); }
         let Some(request) = self.request else {
@@ -136,8 +136,11 @@ impl InteractiveJob for SurfaceResizeJob {
         } else {
             JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)
         }
-
     }
+}
+
+impl InteractiveJob for SurfaceResizeJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> { InteractiveJobStep::from_callback(self.step_turn(cx)) }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
             JobOutcomeKind::Yield => descriptor.yielded(),
@@ -153,7 +156,7 @@ impl InteractiveJob for SurfaceResizeJob {
         let demand = RetirementDemand { copy_bytes: self.next_close_copy_byte_demand()?, depth: 1, ..Default::default() };
         semio_framework_job::close_original_retained_step(cx, demand, |_| {
             if self.candidate.is_some() { self.candidate = None; } else { self.request = None; }
-            Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+            RetainedWorkOutcome::<_, ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
         })
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.candidate.is_some() { size_of::<Option<PreparedSurfaceResize>>() } else if self.request.is_some() { size_of::<Option<SurfaceResizeRequest>>() } else { 0 }) }
@@ -389,7 +392,7 @@ impl SurfaceResizeAuthority {
             Self::Mounted(lane) => lane.close_step(cx),
             Self::Rejected(rejected) => {
                 if rejected.terminal_is_empty() { return Ok(true); }
-                semio_framework_job::close_original_retained_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |_| { rejected.close_step(); Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })) })?;
+                semio_framework_job::close_original_retained_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |_| { rejected.close_step(); RetainedWorkOutcome::<_, ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 } })?;
                 Ok(rejected.terminal_is_empty())
             }
         }
