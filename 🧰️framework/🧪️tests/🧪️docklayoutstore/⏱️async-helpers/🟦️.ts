@@ -55,6 +55,37 @@ export async function registerAsyncHelperTests(vitest: NonNullable<ImportMeta["v
       }
     });
 
+    it("throws the last failure once maxAttempts attempts failed, waiting between them and not after the last", async () => {
+      vi.useFakeTimers();
+      try {
+        const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+        let calls = 0;
+        const fn = vi.fn(async () => {
+          calls += 1;
+          throw new Error(`failure ${calls}`);
+        });
+        const promise = retryWithJitteredBackoff(fn, { minMs: 10, maxMs: 100, maxAttempts: 3 });
+        const assertion = expect(promise).rejects.toThrow("failure 3");
+        await vi.advanceTimersByTimeAsync(1000);
+        await assertion;
+        expect(calls).toBe(3);
+        expect(setTimeoutSpy.mock.calls).toHaveLength(2);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("succeeds within maxAttempts and never counts the successful attempt as a failure", async () => {
+      let calls = 0;
+      const fn = vi.fn(async () => {
+        calls += 1;
+        if (calls < 3) throw new Error("retry me");
+        return "ok";
+      });
+      await expect(retryWithJitteredBackoff(fn, { minMs: 1, maxMs: 2, maxAttempts: 3 })).resolves.toBe("ok");
+      expect(calls).toBe(3);
+    });
+
     it("throws immediately for an already-aborted signal without calling fn", async () => {
       const controller = new AbortController();
       controller.abort(new Error("pre-aborted"));
@@ -147,25 +178,84 @@ export async function registerAsyncHelperTests(vitest: NonNullable<ImportMeta["v
       }
     });
 
-    it("clears the timer and removes the abort listener on the success path", async () => {
+    it("returns the very response and clears the timer and the abort listener once its body has been read", async () => {
       vi.useFakeTimers();
       try {
         const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
         const controller = new AbortController();
         const removeEventListenerSpy = vi.spyOn(controller.signal, "removeEventListener");
-        const response: FetchTimeoutResponse = { ok: true, status: 200, statusText: "OK", headers: { get: () => null }, json: async () => ({}), text: async () => "" };
+        const response: FetchTimeoutResponse = { ok: true, status: 200, statusText: "OK", headers: { get: () => null }, json: async () => ({}), text: async () => "body" };
         vi.stubGlobal(
           "fetch",
           vi.fn(async () => response),
         );
         const result = await fetchWithTimeout("https://example.test", undefined, { timeoutMs: 1000, signal: controller.signal });
         expect(result).toBe(response);
+        expect(vi.getTimerCount()).toBe(1);
+        await expect(result.text()).resolves.toBe("body");
+        expect(vi.getTimerCount()).toBe(0);
         expect(clearTimeoutSpy).toHaveBeenCalled();
         expect(removeEventListenerSpy).toHaveBeenCalledWith("abort", expect.any(Function));
-        await vi.advanceTimersByTimeAsync(5000);
       } finally {
         vi.unstubAllGlobals();
         vi.useRealTimers();
+      }
+    });
+
+    it("ends a body that stalls after the headers with the timeout error instead of hanging", async () => {
+      vi.useFakeTimers();
+      try {
+        const response = { ok: true, status: 200, statusText: "OK", headers: { get: () => null }, json: () => new Promise<unknown>(() => undefined), text: () => new Promise<string>(() => undefined) };
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(async () => response),
+        );
+        const result = await fetchWithTimeout("https://example.test", undefined, { timeoutMs: 50 });
+        const text = expect(result.text()).rejects.toThrow("timed out after 50ms");
+        await vi.advanceTimersByTimeAsync(50);
+        await text;
+        await expect(result.json()).rejects.toThrow("timed out after 50ms");
+      } finally {
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+      }
+    });
+
+    it("ends a body that stalls after the headers when the external signal aborts, and aborts the request signal", async () => {
+      const controller = new AbortController();
+      let requestSignal: AbortSignal | undefined;
+      const response = { ok: true, status: 200, statusText: "OK", headers: { get: () => null }, json: () => new Promise<unknown>(() => undefined), text: () => new Promise<string>(() => undefined) };
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (_url: string, init?: RequestInit) => {
+          requestSignal = init?.signal ?? undefined;
+          return response;
+        }),
+      );
+      try {
+        const result = await fetchWithTimeout("https://example.test", undefined, { timeoutMs: 10_000, signal: controller.signal });
+        const text = expect(result.text()).rejects.toThrow("caller cancelled");
+        controller.abort(new Error("caller cancelled"));
+        await text;
+        expect(requestSignal?.aborted).toBe(true);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    });
+
+    it("keeps every other member of the response, binary readers included, and reads a real Response through the deadline", async () => {
+      const real = new Response(new Uint8Array([1, 2, 3]), { status: 201, headers: { "x-kind": "bytes" } });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => real),
+      );
+      try {
+        const result = await fetchWithTimeout("https://example.test", undefined, { timeoutMs: 1000 });
+        expect(result.status).toBe(201);
+        expect(result.headers.get("x-kind")).toBe("bytes");
+        expect(new Uint8Array(await (result as unknown as Response).arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
+      } finally {
+        vi.unstubAllGlobals();
       }
     });
   });

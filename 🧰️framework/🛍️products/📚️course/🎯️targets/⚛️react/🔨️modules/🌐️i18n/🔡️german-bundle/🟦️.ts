@@ -16,6 +16,8 @@ export const COURSE_BUNDLE_DE: typeof COURSE_BUNDLE_EN = {
       busy: phrase("Der Kursserver ist gerade ausgelastet – neuer Versuch in Kürze."),
       failed: phrase("Der Kursserver konnte diese Anfrage nicht beantworten."),
       outdated: phrase("Diese Seite ist älter als der Kursserver – lade sie neu, dann geht alles, was auf diesem Gerät liegt, an den Server."),
+      updated: phrase("Eine neue Version des Kurses ist verfügbar – lade die Seite neu, um fortzufahren. Alles, was auf diesem Gerät liegt, bleibt erhalten."),
+      languageUnavailable: phrase("{{language}} konnte nicht geladen werden – der Kurs bleibt auf {{current}}."),
       crashed: phrase("Beim Anzeigen dieser Ansicht ist etwas schiefgegangen. Alles, was du getan hast, bleibt erhalten."),
       retry: phrase("Jetzt erneut versuchen"),
       reload: phrase("Seite neu laden"),

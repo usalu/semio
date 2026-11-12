@@ -302,7 +302,7 @@ Each `repo run <project>:<target>` below is the dashboard command `<project>:<ta
 | `repo run @teaching/proctor:build` | Compiles the proctor through the issued Cargo launcher (`--store=shared`) in the original mode and leaves it as a cached product: `dist/build/<mode>/<sha256>/proctor` beside `dist/build/<mode>/receipt.json`, which names that path, the SHA-256 and every source Cargo read. `dev`, `check`, `test-e2e`, `docker-image-build`, `deploy-check` and the operator verbs depend on it and resolve the receipt; a missing or stale product is one English and German error, never a silent rebuild. Use `repo run @teaching/proctor:build --configuration=release` for a release. |
 | `repo run @teaching/proctor:capacity --configuration=release [-- --learners 300 --compression 5 --report <file> --executable <proctor> --hall-only]` | The capacity gate (dashboard command `@teaching/proctor:capacity`): builds the release binary (or takes `--executable`), serves it in production mode on a throw-away port and data directory with the default cap of learners, plays the lecture hall alone and beside the abusive script (`--hall-only` skips the script and is not the gate), stops it and counts its roster (`prune --dry-run`), prints p50/p95/p99 per operation, how late the load generator itself ran, the script's answers by status, the roster and the proctor's memory, and exits non-zero on any violation. Run it on a quiet machine: it takes about five minutes with the build. |
 
-**Tools, prerequisites and cache.** The commands run through the tool-neutral entry; `repo --tool=bazel run @teaching/proctor:test` executes the same target under Bazel (see the [build chapter](../../🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run)). They need the pinned build tools (`repo tools setup nx`, or `all` for Bazel too) and the installed dependencies (`repo dependencies sync --all`); the Rust toolchain comes from `rust-toolchain.toml` through `repo cargo --store=shared`, never from raw `cargo`, and a first build takes minutes. Only `build` and `test` are cached (`cache: true`; `build` declares its store receipt `.🧾️store/build.json` and leaves the binary in the compiler store, `test` reads the course fixtures it includes); `dev` is continuous (port `8791`, `PROCTOR_PORT`) and `check`, `rebuild`, `health`, `backup`, `restore`, `erase`, `prune` and `capacity` always run, because they act on the development data directory or measure time. Not yet verified: on 2026-10-19 the proctor did not compile on the working tree (the framework value crates were being refactored), so none of these targets has a recorded run for this documentation; a German version of this table follows in the last chapter. The receipt repair path (run `build` twice, delete the compiler `published/<hash>` slot, run it again, expect one `[store-receipt] re-executing` line, under Nx and under Bazel) is the first proof recipe of the build chapter and has not been run.
+**Tools, prerequisites and cache.** The commands run through the tool-neutral entry; `repo --tool=bazel run @teaching/proctor:test` executes the same target under Bazel (see the [build chapter](../../🧰️framework/🛍️products/🦑️repo/README.md#-build-and-run)). They need the pinned build tools (`repo tools setup nx`, or `all` for Bazel too) and the installed dependencies (`repo dependencies sync --all`); the Rust toolchain comes from `rust-toolchain.toml` through `repo cargo --store=shared`, never from raw `cargo`, and a first build takes minutes. Only `build`, `test` and `check` are cached (`cache: true`; `build` takes `cargoSources` as inputs and declares `dist/build/prototype` and `dist/build/release` of the project as outputs, `test` takes `cargoTests` and reads the course fixtures it includes, `check` takes the course files, the receipt of `build`, the test level, the budgets and `PROCTOR_COURSE`); `dev` is continuous (port `8791`, `PROCTOR_PORT`) and `test-launcher`, `rebuild`, `health`, `backup`, `restore`, `erase`, `prune`, `capacity` and `serve-release` always run, because they act on the development data directory, exercise the host or measure time. Not yet verified: on 2026-10-19 the proctor did not compile on the working tree (the framework value crates were being refactored), so none of these targets has a recorded run for this documentation; a German version of this table follows in the last chapter. The receipt repair path (run `build` twice, delete the compiler `published/<hash>` slot, run it again, expect one `[store-receipt] re-executing` line, under Nx and under Bazel) is the first proof recipe of the build chapter and has not been run.
 
 The binary itself takes `proctor serve`, `proctor check <course>`, `proctor rebuild`, `proctor health`,
 `proctor backup <directory/|file|->`, `proctor restore <file|->`,
@@ -314,8 +314,8 @@ Every build target but `build`, `test` and `capacity` builds the binary with its
 digest copy inside the bounded repository compiler store. The launcher retains that store and the executable reader
 until all child processes have stopped, then removes its runtime generation. A running dev proctor therefore never
 holds Cargo's mutable executable, which Windows would otherwise refuse to replace. The original invocation owns the
-profile: a release caller remains `release`, while development normally uses `prototype`. The capacity gate requires the original release configuration. Explicit mode mismatches are refused before compiler storage opens. The native artifact store owns build caching; Nx does not cache a source-tree
-`dist/build` directory.
+profile: a release caller remains `release`, while development normally uses `prototype`. The capacity gate requires the original release configuration. Explicit mode mismatches are refused before compiler storage opens. The manifest of `build` declares `cache: true` with the inputs `cargoSources` and the outputs `dist/build/prototype` and
+`dist/build/release` of the project, so Nx caches and restores those two directories (the product and its `receipt.json`).
 
 The build reports a progress line every ten seconds and stops when the launcher is interrupted. A listening proctor
 answers `GET /instance` with `200` and its instance id `teaching-proctor`; the launcher (`🏗️bootstrap/🟦️.ts`:
@@ -365,7 +365,7 @@ root:
 
 - `POST /commands` takes a `CommandEnvelope`:
   - Its `kind` is `course.<type>` and its `version` is the wire version of the quiz contract (`WIRE_VERSION`,
-    `$defs/WireVersion` of the quiz schema; 4 since the hint verdicts and short labels). An envelope of any other version is
+    `$defs/WireVersion` of the quiz schema; currently 10, raised with every change of the contract beyond its prose). An envelope of any other version is
     `envelope-mismatch: …` (a query of another version is `400`). `GET /instance` declares every command and query kind
     at that version; the quiz client sends nothing to a proctor that does not declare its own (it keeps everything on
     the device instead), so a proctor and a site of different contracts never take each other's commands or views.
@@ -475,7 +475,7 @@ Clients open `GET /scopes/<scope>/presence/ws?surface=<surface>` as a WebSocket 
 | Scope | State shared there | Who joins |
 |---|---|---|
 | `<course>` | `PresenceState`: public tag, identity, place, whether the tab is visible | every learner past the identity screen |
-| `<course>/introduction`, `<course>/home`, `<course>/leaderboard`, `<course>/badges` | `CursorState`: public tag, cursor relative to an anchor, keyboard focus; no drag | learners on that page |
+| `<course>/introduction`, `<course>/home`, `<course>/leaderboard`, `<course>/badges`, `<course>/learner`, `<course>/preferences` | `CursorState`: public tag, cursor relative to an anchor, keyboard focus; no drag | learners on that page |
 | `<course>/quiz/<quiz>` | `CursorState`, anchors may be items (`item:<id>`) and categories (`category:<id>`), `drag` names an item of the quiz | learners on the quiz page, in a run or on the results of that quiz |
 | `<course>/quiz/<quiz>/thinking` | `ThinkingState`: public tag and the draft answers per task — classification and sorting by item and category ids, matching as the values assigned per dimension | learners in a run of that quiz |
 
@@ -485,7 +485,7 @@ The protocol:
    the room's roster, led by the new session. A roster larger than one frame (`PROCTOR_LIMIT_PRESENCE_FRAME_BYTES`,
    262144 bytes) begins in the `welcome` and continues in the `batch` frames that follow it at once.
 2. The client sends `{"type":"state","state":…}` whenever its state changes. The server keeps only the latest state of
-   each session. A state may be at most 2 KiB, and at most 30 per second are taken; the excess is dropped. A message
+   each session. A state may be at most 128 KiB (131072 bytes), and at most 30 per second are taken; the excess is dropped. A message
    of more than 262144 bytes is never read: the socket closes.
 3. At most once per tick (`PROCTOR_PRESENCE_TICK_MS`, 100 ms by default), a socket is sent one `batch` with the
    sessions that changed since its last frame — their newest state only — and the sessions that left, so traffic grows
@@ -553,7 +553,7 @@ one line that names it. `proctor serve` itself never does either, in any mode: i
 ## Operate: health, backup, restore, erase, prune
 
 Five verbs of the same binary, made for an image without a shell (distroless, read-only root, uid 65532, only
-`PROCTOR_DATA` writable). Each reads `PROCTOR_DATA` (and `health` `PROCTOR_BIND`/`PROCTOR_PORT`) from the environment
+`PROCTOR_DATA` writable). Each reads `PROCTOR_DATA` (`health` instead `PROCTOR_BIND`/`PROCTOR_PORT`) from the environment
 the container already has. Log lines go to stderr; what a verb answers goes to stdout.
 
 | Verb | While serving? | What it does | Exit |
@@ -566,8 +566,11 @@ the container already has. Log lines go to stderr; what a verb answers goes to s
 
 ### Health
 
-`HEALTHCHECK CMD ["/usr/local/bin/proctor", "health"]` (exec form, no arguments, no shell). Healthy means: the course
-was valid, the log was readable, the projections are caught up and the listener answers.
+`HEALTHCHECK CMD ["/usr/local/bin/proctor", "health"]` (exec form, no arguments, no shell). Healthy means: the listener
+of this environment (`PROCTOR_BIND`, loopback when every interface is bound, and `PROCTOR_PORT`) accepts a connection
+within 3 s and answers the request line `GET /instance` with status `200` within 3 s. The verb reads neither the course,
+the log nor the projections: it is exactly the probe of the TLS-terminating proxy and fails with `1` (and a line on
+stderr) on a refused connection, a timeout or any other status.
 
 ### Backup
 
@@ -742,4 +745,4 @@ Jedes `repo run <Projekt>:<Target>` unten ist zugleich der Dashboard-Befehl `<Pr
 | `repo run @teaching/proctor:build` | Kompiliert den Proctor über den ausgestellten Cargo-Starter (`--store=shared`) im ursprünglichen Modus und hinterlässt ihn als gecachtes Produkt: `dist/build/<Modus>/<sha256>/proctor` neben `dist/build/<Modus>/receipt.json`, der Pfad, SHA-256 und jede von Cargo gelesene Quelle nennt. `dev`, `check`, `test-e2e`, `docker-image-build`, `deploy-check` und die Betriebsbefehle hängen davon ab und lesen den Beleg; ein fehlendes oder veraltetes Produkt ist ein einziger englisch-deutscher Fehler, nie ein stilles Neubauen; `--configuration=release` für ein Release. |
 | `repo run @teaching/proctor:capacity --configuration=release` | Das Kapazitätstor: baut die Release-Binärdatei (oder nimmt `--executable`), spielt den Hörsaal allein und neben dem missbräuchlichen Skript und endet mit Exit-Code ungleich null bei jeder Verletzung; auf einem ruhigen Rechner ausführen (etwa fünf Minuten mit dem Build). |
 
-**Werkzeuge, Voraussetzungen und Cache.** Gebraucht werden die gepinnten Build-Werkzeuge (`repo tools setup nx`, oder `all` zusätzlich für Bazel) und die installierten Abhängigkeiten (`repo dependencies sync --all`); die Rust-Toolchain kommt aus `rust-toolchain.toml` über `repo cargo --store=shared`, nie aus rohem `cargo`, und der erste Build dauert Minuten. Nur `build` und `test` sind gecacht (`cache: true`; `build` deklariert seine Store-Quittung `.🧾️store/build.json` und lässt die Binärdatei im Compiler-Store, `test` liest die eingebundenen Kurs-Fixtures). `dev` läuft dauerhaft (Port `8791`, `PROCTOR_PORT`); `check`, `rebuild`, `health`, `backup`, `restore`, `erase`, `prune` und `capacity` laufen immer, weil sie auf dem Dev-Datenverzeichnis arbeiten oder Zeit messen. Nicht verifiziert: Am 2026-10-19 ließ sich der Proctor auf dem Arbeitsstand nicht kompilieren (die Value-Crates des Frameworks wurden umgebaut); für keines dieser Targets ist deshalb ein Lauf für diese Dokumentation aufgezeichnet. Der Reparaturpfad des Belegs (`build` zweimal ausführen, den Slot `published/<hash>` des Compiler-Stores löschen, erneut ausführen, genau eine Zeile `[store-receipt] re-executing` erwarten, unter Nx und unter Bazel) ist das erste Nachweisrezept des Build-Kapitels und wurde nicht ausgeführt.
+**Werkzeuge, Voraussetzungen und Cache.** Gebraucht werden die gepinnten Build-Werkzeuge (`repo tools setup nx`, oder `all` zusätzlich für Bazel) und die installierten Abhängigkeiten (`repo dependencies sync --all`); die Rust-Toolchain kommt aus `rust-toolchain.toml` über `repo cargo --store=shared`, nie aus rohem `cargo`, und der erste Build dauert Minuten. Nur `build`, `test` und `check` sind gecacht (`cache: true`; `build` nimmt `cargoSources` als Eingaben und deklariert `dist/build/prototype` und `dist/build/release` des Projekts als Ausgaben, `test` nimmt `cargoTests` und liest die eingebundenen Kurs-Fixtures, `check` nimmt die Kursdateien, den Beleg von `build`, Teststufe, Budgets und `PROCTOR_COURSE`). `dev` läuft dauerhaft (Port `8791`, `PROCTOR_PORT`); `test-launcher`, `rebuild`, `health`, `backup`, `restore`, `erase`, `prune`, `capacity` und `serve-release` laufen immer, weil sie auf dem Dev-Datenverzeichnis arbeiten, den Host prüfen oder Zeit messen. Nicht verifiziert: Am 2026-10-19 ließ sich der Proctor auf dem Arbeitsstand nicht kompilieren (die Value-Crates des Frameworks wurden umgebaut); für keines dieser Targets ist deshalb ein Lauf für diese Dokumentation aufgezeichnet. Der Reparaturpfad des Belegs (`build` zweimal ausführen, den Slot `published/<hash>` des Compiler-Stores löschen, erneut ausführen, genau eine Zeile `[store-receipt] re-executing` erwarten, unter Nx und unter Bazel) ist das erste Nachweisrezept des Build-Kapitels und wurde nicht ausgeführt.

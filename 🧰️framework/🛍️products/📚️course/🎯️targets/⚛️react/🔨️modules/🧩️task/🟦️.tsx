@@ -78,16 +78,29 @@ export function elementId(scope: string, ...parts: readonly string[]): string {
 }
 
 /** 🤏️ The pointer grip of a draggable element; hidden from assistive technology, which uses the keyboard path. A
- * `locked` grip starts no drag. */
+ * `locked` grip starts no drag, and a drag under way is abandoned when the grip locks or leaves the page. */
 export function DragGrip(props: { readonly title: string; readonly onDrop: (zone: string) => void; readonly locked?: boolean }): ReactElement {
   const { title, onDrop, locked = false } = props;
+  const abandon = useRef<(() => void) | undefined>(undefined);
+  useEffect(() => {
+    if (locked) abandon.current?.();
+  }, [locked]);
+  useEffect(
+    () => () => {
+      abandon.current?.();
+    },
+    [],
+  );
   return (
     <span
       data-course-grip=""
       className={`course-target inline-grid min-w-[1.75em] touch-none select-none place-items-center text-muted-foreground ${locked ? "cursor-not-allowed opacity-50" : "cursor-grab"}`}
       aria-hidden="true"
       title={title}
-      onPointerDown={locked ? undefined : (event: PointerEvent<HTMLSpanElement>) => startPointerDrag(event, onDrop)}
+      onPointerDown={locked ? undefined : (event: PointerEvent<HTMLSpanElement>) => {
+        abandon.current?.();
+        abandon.current = startPointerDrag(event, onDrop);
+      }}
     >
       ⠿
     </span>

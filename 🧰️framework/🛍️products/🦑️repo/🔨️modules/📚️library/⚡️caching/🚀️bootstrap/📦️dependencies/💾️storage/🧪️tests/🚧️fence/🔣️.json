@@ -22,6 +22,7 @@
           "remove",
           "replace-with-directory",
           "touch-link",
+          "rename-link",
           "replace-directory",
           "add-sibling",
           "swap-for-link",
@@ -76,6 +77,13 @@
       "target": "e0",
       "endpoint": false,
       "full": false
+    },
+    {
+      "id": "fenced-endpoint-renamed",
+      "effect": "rename-link",
+      "target": "e0",
+      "endpoint": true,
+      "full": true
     },
     {
       "id": "fenced-endpoint-touched",

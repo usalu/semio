@@ -57,7 +57,9 @@
   ],
   "producers": [
     "@teaching/architecture-course:build-parametrization-en",
-    "@teaching/architecture-course:build-parametrization-de"
+    "@teaching/architecture-course:build-parametrization-de",
+    "@teaching/architecture-course:build-typology-en",
+    "@teaching/architecture-course:build-typology-de"
   ],
   "requiredTargets": [
     "dev",

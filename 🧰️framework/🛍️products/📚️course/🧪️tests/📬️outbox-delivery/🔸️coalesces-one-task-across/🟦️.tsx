@@ -70,6 +70,45 @@ export function registerCoalescesOneTaskAcrossTests(): void {
     outbox.stop();
     broken.stop();
   });
+  it("keeps delivering the rest of the queue when the settled observer or a status listener throws, and never leaves a rejection unhandled", async () => {
+    const unhandled: unknown[] = [];
+    const record = (reason: unknown): void => {
+      unhandled.push(reason);
+    };
+    process.on("unhandledRejection", record);
+    try {
+      const sent: string[] = [];
+      const settled: string[] = [];
+      const outbox = outboxOver(
+        async (command) => {
+          sent.push(command.id);
+          return { kind: "accepted", events: [] };
+        },
+        (command) => {
+          settled.push(command.id);
+          throw new Error("observer fault");
+        },
+      );
+      outbox.subscribe(() => {
+        throw new Error("listener fault");
+      });
+      const first = answer("t1", ["a", "b"]);
+      const second = answer("t2", ["b", "a"]);
+      outbox.start();
+      outbox.enqueue(first);
+      outbox.enqueue(second);
+      await outbox.settled(RUN);
+      await tick();
+      expect(sent).toEqual([first.id, second.id]);
+      expect(settled).toEqual([first.id, second.id]);
+      expect(outbox.queued()).toEqual([]);
+      expect(outbox.status().activity).toBe("idle");
+      expect(unhandled).toEqual([]);
+      outbox.stop();
+    } finally {
+      process.off("unhandledRejection", record);
+    }
+  });
   it("drops a closed run's answers, retiring the one in flight so it is neither retried nor restored", async () => {
     const area = memoryStorageOrigin().tab();
     const store = localStore(area, "test");

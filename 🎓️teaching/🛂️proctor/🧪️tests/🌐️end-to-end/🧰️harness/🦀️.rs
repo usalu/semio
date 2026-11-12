@@ -1,7 +1,7 @@
 //! 🧰️ The harness of the proctor end to end suite: a scratch directory per test, the server booted on an ephemeral port, the wire with the §9a encoding, the websocket client of the presence rooms, and the builders of answers and runs.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
+//! @see ../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;

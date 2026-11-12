@@ -45,8 +45,8 @@
     },
     "assignmentFiles": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "minItems": 4,
+      "maxItems": 4,
       "uniqueItems": true,
       "items": {
         "type": "string",

@@ -15,6 +15,8 @@ export const COURSE_BUNDLE_EN = {
       busy: phrase("The course server is busy right now – trying again shortly."),
       failed: phrase("The course server could not answer this request."),
       outdated: phrase("This page is older than the course server – reload it, and everything kept on this device goes to the server."),
+      updated: phrase("A new version of the course is available – reload the page to continue. Everything kept on this device stays."),
+      languageUnavailable: phrase("{{language}} could not be loaded – the course stays in {{current}}."),
       crashed: phrase("Something went wrong while showing this screen. Everything you did is kept."),
       retry: phrase("Try again now"),
       reload: phrase("Reload page"),

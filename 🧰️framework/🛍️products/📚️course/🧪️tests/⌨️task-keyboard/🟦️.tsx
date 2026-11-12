@@ -242,6 +242,46 @@ describe("⌨️ classification by keyboard", () => {
     expect(answers).toEqual([{ kind: "classification", assignments: { fjord: "cold-wet" } }]);
   });
 
+  it("abandons a drag under way when its item leaves the page or the task locks, dropping nothing", () => {
+    const answers: ClassificationAnswer[] = [];
+    const target = document.createElement("div");
+    target.dataset.courseDrop = "cold-wet";
+    Object.defineProperty(document, "elementFromPoint", { configurable: true, value: vi.fn(() => target) });
+    const removed = vi.spyOn(window, "removeEventListener");
+    try {
+      const { unmount } = render(<Harness View={ClassificationTaskView} task={CLIMATES} answers={answers} />);
+      const grip = screen.getByRole("combobox", { name: "Category for Fjord" }).closest("li")!.querySelector("[data-course-grip]")!;
+      act(() => {
+        fireEvent.pointerDown(grip, { button: 0, clientX: 10, clientY: 90 });
+        fireEvent.pointerMove(window, { clientX: 10, clientY: 50 });
+      });
+      expect(document.querySelector(".course-drag-ghost")).not.toBeNull();
+      unmount();
+      expect(document.querySelector(".course-drag-ghost")).toBeNull();
+      expect(removed.mock.calls.map(([type]) => type)).toEqual(expect.arrayContaining(["keydown", "pointercancel", "pointermove", "pointerup", "touchmove"]));
+      act(() => {
+        fireEvent.pointerUp(window, { clientX: 10, clientY: 10 });
+      });
+      expect(answers).toEqual([]);
+      const locked = render(<ClassificationTaskView task={CLIMATES} answer={undefined} onAnswer={(next) => answers.push(next)} text={courseText("en")} locale="en" />);
+      const lockedGrip = locked.container.querySelector("[data-course-grip]")!;
+      act(() => {
+        fireEvent.pointerDown(lockedGrip, { button: 0, clientX: 10, clientY: 90 });
+        fireEvent.pointerMove(window, { clientX: 10, clientY: 50 });
+      });
+      expect(document.querySelector(".course-drag-ghost")).not.toBeNull();
+      locked.rerender(<ClassificationTaskView task={CLIMATES} answer={undefined} locked onAnswer={(next) => answers.push(next)} text={courseText("en")} locale="en" />);
+      expect(document.querySelector(".course-drag-ghost")).toBeNull();
+      act(() => {
+        fireEvent.pointerUp(window, { clientX: 10, clientY: 10 });
+      });
+      expect(answers).toEqual([]);
+    } finally {
+      removed.mockRestore();
+      Reflect.deleteProperty(document, "elementFromPoint");
+    }
+  });
+
   it("shows every profiled category as a named spider diagram", () => {
     render(<Harness View={ClassificationTaskView} task={CLIMATES} answers={[]} />);
     const diagram = screen.getByRole("img", { name: "Spider diagram of Hot and dry" });

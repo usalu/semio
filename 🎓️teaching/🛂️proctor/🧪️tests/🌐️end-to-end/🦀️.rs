@@ -4,8 +4,7 @@
 //! SQLite file and asked again. Its presence rooms are joined by an independent websocket client
 //! (`tungstenite`) speaking `semio.presence.v1`.
 //!
-//! @see ../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/QUIZ-PRODUCT-AND-TEACHING-PROCTOR/📓️design.md — §8, §9, §9a, §15
-//! @see ../../🧫️fixtures/📚️catalog/🔣️.json — the course played
+//! @see ../🧫️fixtures/📚️catalog/🔣️.json — the course played
 //!
 //! The suite is split into the child folders next to this file: `🧰️harness` (scratch, the booted server, the wire, presence and answers), `🎮️learner-journey`,
 //! `🏆️challenge-sheets`, `🛠️operator` and `🛡️edge` (the tests); this file mounts them and is the crate root of the `end_to_end` test.

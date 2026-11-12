@@ -1,7 +1,7 @@
 //! 🎮️ The proctor end to end, the learner journey: a learner plays through the real API and the facts survive a restart, the API serves the CDN site across origins, learners share presence and cursors, a production proctor opens presence to the site origin only and learners see what the others think live.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
+//! @see ../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 

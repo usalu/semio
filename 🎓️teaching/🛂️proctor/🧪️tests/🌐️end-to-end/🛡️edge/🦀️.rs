@@ -1,7 +1,7 @@
 //! 🛡️ The proctor end to end, the edge: the gate of a proctor behind its terminating proxy — enrollment keys, refused ids, body limits, per-address allowances, sign-up counting, its own routes only, socket limits and trickling bodies.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
+//! @see ../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 use semio_framework_test_fixtures::fixture_path;

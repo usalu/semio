@@ -339,21 +339,21 @@ export function formatCountdown(milliseconds: number): string {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
 
+const DURATION_UNITS: { readonly [L in CourseLocale]: { readonly minute: readonly [string, string]; readonly second: readonly [string, string] } } = {
+  en: { minute: ["minute", "minutes"], second: ["second", "seconds"] },
+  de: { minute: ["Minute", "Minuten"], second: ["Sekunde", "Sekunden"] },
+};
+
 /** 🗣️ A remaining time in milliseconds in words of `locale`, in whole seconds rounded up — "2 minutes, 5 seconds",
- * "48 seconds", "1 minute" — with the plural forms of the locale's own unit names; never negative. */
+ * "48 seconds", "1 minute"; German "2 Minuten, 5 Sekunden" — never negative. The unit names, their singular and plural
+ * and the comma between the parts are the course's own, so every learner hears the same words whatever the engine's
+ * `Intl` data says: its list patterns differ between engines and versions ("2 Minuten und 5 Sekunden").
+ *
+ * @see https://tc39.es/proposal-intl-duration-format/ — the long style the unit names are checked against */
 export function formatDuration(milliseconds: number, locale: CourseLocale): string {
   const seconds = Math.max(0, Math.ceil(milliseconds / 1000));
-  const unit = (amount: number, name: "minute" | "second"): string => formatter(locale, { style: "unit", unit: name, unitDisplay: "long" }).format(amount);
-  const parts = [...(seconds >= 60 ? [unit(Math.floor(seconds / 60), "minute")] : []), ...(seconds % 60 > 0 || seconds < 60 ? [unit(seconds % 60, "second")] : [])];
-  return listFormatter(locale).format(parts);
-}
-
-const listFormatters = new Map<CourseLocale, Intl.ListFormat>();
-
-function listFormatter(locale: CourseLocale): Intl.ListFormat {
-  const cached = listFormatters.get(locale) ?? new Intl.ListFormat(locale, { style: "long", type: "unit" });
-  listFormatters.set(locale, cached);
-  return cached;
+  const unit = (amount: number, name: "minute" | "second"): string => `${formatter(locale, {}).format(amount)} ${DURATION_UNITS[locale][name][amount === 1 ? 0 : 1]}`;
+  return [...(seconds >= 60 ? [unit(Math.floor(seconds / 60), "minute")] : []), ...(seconds % 60 > 0 || seconds < 60 ? [unit(seconds % 60, "second")] : [])].join(", ");
 }
 
 /** 🎯️ `value` to one decimal, but only a whole value shows as whole: 99.96 becomes 99.9 (never 100) and 0.04 becomes

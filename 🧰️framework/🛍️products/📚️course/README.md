@@ -37,14 +37,9 @@ Everything runs through each package's `📜️script.ts`; `📋️project.json`
 targets.
 
 ```bash
-repo run @semio-tech/course:test -- quick
-repo run @semio-tech/course-rs:test
-repo run @semio-tech/course-react:test
-```
-
-repo run @semio-tech/course:test           # the same through the build CLI
-repo run @semio-tech/course-rs:test        # the Rust core
-repo run @semio-tech/course-react:test     # the renderer
+repo run @semio-tech/course:test -- quick   # the TypeScript core through the build CLI
+repo run @semio-tech/course-rs:test         # the Rust core
+repo run @semio-tech/course-react:test      # the renderer
 ```
 
 ## Domain model
@@ -616,8 +611,8 @@ card or `#intro` page.
   cells of the same grid, all live.
 - **Between the cards** the mouse pans the strip under the glass: the top-left corner shows the first page, the
   bottom-right the last.
-- **On a card** (hover or keyboard focus) the strip glides to its page and the glass clears over it; leaving the card
-  restores the glass. The card's heading, its action or the page's hash opens the page.
+- **On a card** (hover or keyboard focus on its explore control) the strip glides to its page; pressing the explore
+  control clears the glass over it, and releasing it or leaving the card restores the glass. The card's heading, its action or the page's hash opens the page.
 - **One active level** handles pointer, keyboard, and swipe input. Ancestor grids and previews remain live behind
   their glass without handling input. Escape and Up open the containing grid; Overview returns to the root.
 - **Whatever the device says about motion**: the pan and the glide are how the overview is read, and every browser in
@@ -904,6 +899,13 @@ core's own deciders on the device.
 - **A screen that fails.** Every screen renders inside a boundary: a screen that throws shows what happened, with a
   way to show it again and a reload, and the rest of the client goes on — everything the learner did lives in the
   session, not in the screen.
+- **Code, texts or material that never arrive.** A lazy chunk is fetched with jittered backoff and given up on after
+  `LOAD_ATTEMPTS` (4) failures, since a redeploy replaces the hashed chunks of the old page for good: a screen that
+  stays missing says a new version is available and offers the reload; the texts of a language that stay missing leave a
+  fallback that speaks every offered language (it needs no bundle) with a way to try again and a reload, instead of a
+  blank page; a material source that fails is asked again the same way before the client goes on without a deputy.
+  A language the learner switches to after the first render whose texts stay missing is never persisted as chosen: the client
+  stays in the language shown and says so in it, as a notice (an alert) with a retry and a dismiss.
 
 The solutions travel with the site, as chunks of their own the client fetches while it already shows. The proctor still
 scores every run itself, so a leaderboard never trusts what a device computed.

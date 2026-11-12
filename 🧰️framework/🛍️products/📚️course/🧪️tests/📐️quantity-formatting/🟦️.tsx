@@ -2,7 +2,7 @@
  * `Intl.NumberFormat`'s own engineering notation as the third-party oracle, and typed guesses read back from what
  * `Intl.NumberFormat` writes (numbers, and lengths in its unit style with centi, milli and kilo); case-folded unit
  * spellings (`mw`, `gw`) against `mathjs`; the unit dropdown a guess offers; the time left on a clock against
- * `Intl.DurationFormat`'s digital style and in words against its long style; the factor a bound names checked by its
+ * `Intl.DurationFormat`'s digital style and in words against `Intl.NumberFormat`'s long unit names, joined by the course's own commas because engines disagree on list patterns; the factor a bound names checked by its
  * bounds — never above the factor, less than one step of its last digit below it, two digits at most; and the counts a
  * hint names in words, their scale words against `Intl.NumberFormat`'s long compact notation.
  *
@@ -190,14 +190,16 @@ describe("📐️ quantity formatting", () => {
     expect(formatCountdown(-5_000)).toBe("0:00");
   });
 
-  it("speaks the time left in words with the locale's plural forms, like Intl.DurationFormat's long style", () => {
-    const long = (locale: CourseLocale) => new (Intl as unknown as { readonly DurationFormat: new (locale: string, options: object) => { format(duration: object): string } }).DurationFormat(locale, { style: "long" });
+  it("speaks the time left in words with the locale's unit names and plural forms, parts joined by commas the same on every engine", () => {
+    const unit = (locale: CourseLocale, name: "minute" | "second", amount: number) => new Intl.NumberFormat(locale, { style: "unit", unit: name, unitDisplay: "long" }).format(amount).replace(/\s/gu, " ");
     for (const locale of COURSE_LOCALES)
-      for (const left of [1, 999, 1000, 1001, 5_000, 48_000, 59_999, 60_000, 61_000, 120_000, 125_000, 754_000]) {
+      for (const left of [0, 1, 999, 1000, 1001, 5_000, 48_000, 59_999, 60_000, 61_000, 120_000, 121_000, 125_000, 754_000, 3_601_000]) {
         const seconds = Math.ceil(left / 1000);
-        expect(formatDuration(left, locale), `${left} ms in ${locale}`).toBe(long(locale).format({ minutes: Math.floor(seconds / 60), seconds: seconds % 60 }));
+        const parts = [...(seconds >= 60 ? [unit(locale, "minute", Math.floor(seconds / 60))] : []), ...(seconds % 60 > 0 || seconds < 60 ? [unit(locale, "second", seconds % 60)] : [])];
+        expect(formatDuration(left, locale), `${left} ms in ${locale}`).toBe(parts.join(", "));
       }
-    expect([formatDuration(0, "en"), formatDuration(-5_000, "de"), formatDuration(125_000, "de")]).toEqual(["0 seconds", "0 Sekunden", "2 Minuten, 5 Sekunden"]);
+    expect([0, 1_000, 48_000, 60_000, 61_000, 125_000, 754_000, -5_000].map((left) => formatDuration(left, "en"))).toEqual(["0 seconds", "1 second", "48 seconds", "1 minute", "1 minute, 1 second", "2 minutes, 5 seconds", "12 minutes, 34 seconds", "0 seconds"]);
+    expect([0, 1_000, 48_000, 60_000, 61_000, 125_000, 754_000, -5_000].map((left) => formatDuration(left, "de"))).toEqual(["0 Sekunden", "1 Sekunde", "48 Sekunden", "1 Minute", "1 Minute, 1 Sekunde", "2 Minuten, 5 Sekunden", "12 Minuten, 34 Sekunden", "0 Sekunden"]);
   });
 
   it("names a factor bound cut down, never up, to two significant digits in the locale's digits", () => {

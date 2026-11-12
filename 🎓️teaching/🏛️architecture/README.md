@@ -21,11 +21,11 @@ The course site for architecture and technology students: it trains energy liter
 
 | Quiz | Tasks (kind, items, drawn per run) | What it trains |
 |---|---|---|
-| 🧲 `physics` — Physical Understanding / Physikalisches Verständnis | power or energy? (classification, 16, 12); powers from tea light to Sun (sorting, 14, 10, W); energies from phone charge to world energy use (sorting, 12, 9, Wh) | telling rates from amounts; orders of magnitude over 25 decades |
+| 🧲 `physics` — Physical Understanding / Physikalisches Verständnis | power or energy? (classification, 64, 12); powers from tea light to Sun (sorting, 54, 10, W); energies from phone charge to world energy use (sorting, 48, 9, Wh) | telling rates from amounts; orders of magnitude over 25 decades |
 | 🌬️ `ventilation` — Ventilation / Lüften | true or false ventilation claims (classification, 30, 6); air change rates by use (sorting, 55, 10, 1/h); ventilation types and spider profiles (classification, 25 examples, 5) | air quality, moisture transport, heating and summer operation; natural and mechanical ventilation |
-| 🔥 `heating` — Heating / Heizen | U-values of building components (matching, 17, 10, W/(m²·K)); heating load and heating demand of buildings (matching with two dimensions, 11, 8, W/m² and kWh/(m²·a)) | envelope quality from single glazing to the passive-house roof; building age and standard |
+| 🔥 `heating` — Heating / Heizen | U-values of building components (matching, 57, 10, W/(m²·K)); heating load and heating demand of buildings (matching with two dimensions, 43, 8, W/m² and kWh/(m²·a)) | envelope quality from single glazing to the passive-house roof; building age and standard |
 | ❄️ `cooling` — Cooling / Kühlen | cooling load and cooling demand (matching with two dimensions, 37, 7, W/m² and kWh/(m²·a)) | internal and solar loads, full-load hours |
-| 📊 `demand` — Energy Demand / Energiebedarf | energy standards and their spider-diagram profiles (classification, 6 standards onto 6 profiles); final energy demand of buildings with their supply systems (matching, 9, 7, kWh/(m²·a)) | how envelope, airtightness, heat recovery and supply system add up |
+| 📊 `demand` — Energy Demand / Energiebedarf | energy standards and their spider-diagram profiles (classification, 30, 6); final energy demand of buildings with their supply systems (matching, 37, 7, kWh/(m²·a)) | how envelope, airtightness, heat recovery and supply system add up |
 | 📐 `parametric-design` — Parametrics / Parametrik | five classification tasks; 65 examples | parameter domains, consistent dependencies, complexity, four-axis profiles and automation |
 | 🦗 `grasshopper-data` — Grasshopper | four classification tasks; 85 examples with canvas mockups | terminology, casting, data trees and list matching |
 | 📊 `excel-workbook` — Excel | three classification tasks; 110 examples with workbook mockups | terminology, command outputs and copied references |
@@ -41,14 +41,19 @@ lot (design §6 of the ticket `QUIZ-PRODUCT-AND-TEACHING-PROCTOR`).
 
 | Badge | Label (en / de) | Rule |
 |---|---|---|
-| 🧲 `physics-expert` | Physics Expert / Physik-Profi | a run of `physics` scored 100 % |
+| 🧲 `physics-expert` | Physics Expert / Physik-Profi | a run of `physics` scored 100 % on medium or harder |
 | 🌬️ `ventilation-expert` | Ventilation Expert / Lüftungs-Profi | a run of `ventilation` scored 100 % on medium or harder |
-| 🔥 `heating-expert` | Heating Expert / Heiz-Profi | a run of `heating` scored 100 % |
-| ❄️ `cooling-expert` | Cooling Expert / Kühl-Profi | a run of `cooling` scored 100 % |
-| 📊 `demand-expert` | Energy Demand Expert / Energiebedarfs-Profi | a run of `demand` scored 100 % |
-| 🧮 `numerical-brain` | Numerical Brain / Zahlenhirn | every sorting task of the course scored 100 % in some run |
-| 🔍 `pattern-seer` | Pattern Seer / Musterblick | every classification task of the course scored 100 % in some run |
+| 🔥 `heating-expert` | Heating Expert / Heiz-Profi | a run of `heating` scored 100 % on medium or harder |
+| ❄️ `cooling-expert` | Cooling Expert / Kühl-Profi | a run of `cooling` scored 100 % on medium or harder |
+| 📊 `demand-expert` | Energy Demand Expert / Energiebedarfs-Profi | a run of `demand` scored 100 % on medium or harder |
+| 🧮 `numerical-brain` | Numerical Brain / Zahlenhirn | every sorting task of the course scored 100 % in some run on medium or harder |
+| 🔍 `pattern-seer` | Pattern Seer / Musterblick | every classification task of the course scored 100 % in some run on medium or harder |
 | 🏁 `completionist` | Completionist / Rundum dabei | every quiz has a submitted run |
+| 📐 `parametric-design-expert` | Parametrics Expert / Parametrik-Profi | a run of `parametric-design` scored 100 % on medium or harder |
+| 🦗 `grasshopper-data-expert` | Grasshopper Expert / Grasshopper-Profi | a run of `grasshopper-data` scored 100 % on medium or harder |
+| 📊 `excel-workbook-expert` | Excel Expert / Excel-Profi | a run of `excel-workbook` scored 100 % on medium or harder |
+| 🏗️ `bim-concepts-expert` | BIM Expert / BIM-Profi | a run of `bim-concepts` scored 100 % on medium or harder |
+| 🎯 `optimization-decisions-expert` | Optimization Expert / Optimierungs-Profi | a run of `optimization-decisions` scored 100 % on medium or harder |
 
 ## Sources
 

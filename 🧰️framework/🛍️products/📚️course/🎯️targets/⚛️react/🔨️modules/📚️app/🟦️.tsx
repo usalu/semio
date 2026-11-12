@@ -4,7 +4,6 @@ import { bindIntrinsicScrollport } from "../🪟️chrome/📏️scrollport/🟦
 import { Component, StrictMode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { presenceProfile, type PresencePreferences, type PresencePresentation } from "@semio-tech/course";
-import { retryWithJitteredBackoff } from "@semio-tech/framework/async";
 import {
   DEFAULT_UI_DRIVER,
   Navbar,
@@ -22,12 +21,12 @@ import {
 } from "@semio-tech/ui-react/chrome";
 import { COURSE_LOCALES, applyLocale, courseLocaleLoaded, loadCourseLocales, localized, preferredLocale, courseText, titled, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "../💾️persistence/🟦️.ts";
-import { ProctorClient, RETRY_TIMING, proctorTransport, type ProctorConnect, type RetryTiming } from "../🛂️proctor/🟦️.ts";
+import { ProctorClient, proctorTransport, type ProctorConnect, type RetryTiming } from "../🛂️proctor/🟦️.ts";
 import { Deputy, type CourseMaterial, type CourseMaterialSource } from "../🫡️deputy/🟦️.ts";
 import { CourseSession } from "../🧭️session/🟦️.ts";
 import { overallLeaderboard, runAwards, shownLeaderboard, type CourseNotice, type CourseState, type CourseStep } from "../🧭️session/🧮️state/🟦️.ts";
 import { type CourseConnection } from "../🧭️session/📋️session-model/🟦️.ts";
-import { LanguageChoice, LanguageSwitch, effectiveIconMotion, everyLanguage, readPreferences, textScale, withPets, writePreferences, type CoursePreferences } from "../🎛️preferences/🟦️.tsx";
+import { LOCALE_NAMES, LanguageChoice, LanguageSwitch, effectiveIconMotion, everyLanguage, readPreferences, textScale, withPets, writePreferences, type CoursePreferences } from "../🎛️preferences/🟦️.tsx";
 import { COURSE_LANGUAGE_ANCHOR, CourseIntroduction } from "../👋️introduction/🟦️.tsx";
 import { IdentityScreen, learnerName, noticeProblem } from "../🪪️identity/🟦️.tsx";
 import type { HomeScreen } from "../🏠️home/🟦️.tsx";
@@ -43,6 +42,8 @@ import { presenceSelf, presenceView } from "../👥️presence/👁️view/🟦�
 import { type PresenceConnect } from "../👥️presence/🔌️socket/🟦️.ts";
 import { FollowProvider, followedPreferences, followedCourseState, observerSession, publicPresenceRun, useFollow, usePresenceCapture, usePresenceViewport } from "../👀️follow/🟦️.tsx";
 import { PetsSwitch, CoursePets, CoursePetsProvider, effectivePetMode, switchedPets, type CoursePetsSource } from "../🐾️pets/🟦️.tsx";
+import { loadBounded, useBoundedLoad } from "./📥️bounded-load/🟦️.ts";
+import { LoadFallback } from "./🛟️load-fallback/🟦️.tsx";
 import "../../🎨️.css";
 
 //#region 📚️App
@@ -108,8 +109,10 @@ export function connectionMessage(connection: CourseConnection, text: CourseText
 
 /** ⏳️ What a screen whose data has not arrived yet says: connecting, unreachable (with a retry), out of date (with a
  * reload), busy (the client retries by itself and offers no button to ask a busy proctor even more often), refused, or
- * loading. */
-export function waitingMessage(connection: CourseConnection, notice: CourseNotice | undefined, text: CourseText): { readonly message: string; readonly retry: boolean; readonly reload?: true } {
+ * loading. A screen whose code could not be fetched after several tries — a redeploy replaced it — says a new version is
+ * available and offers the reload, whatever the connection says. */
+export function waitingMessage(connection: CourseConnection, notice: CourseNotice | undefined, text: CourseText, screenFailed = false): { readonly message: string; readonly retry: boolean; readonly reload?: true } {
+  if (screenFailed) return { message: text("course.app.updated"), retry: false, reload: true };
   if (!connection.online) return { message: text("course.connection.offline"), retry: true };
   if (connection.reachability === "incompatible" && connection.contract === "newer") return { message: text("course.app.outdated"), retry: false, reload: true };
   if (away(connection)) return { message: text("course.app.unreachable"), retry: true };
@@ -119,9 +122,9 @@ export function waitingMessage(connection: CourseConnection, notice: CourseNotic
   return { message: text("course.app.fetching"), retry: false };
 }
 
-function Waiting(props: { readonly connection: CourseConnection; readonly notice: CourseNotice | undefined; readonly text: CourseText; readonly onRetry: () => void }): ReactElement {
-  const { connection, notice, text, onRetry } = props;
-  const waiting = waitingMessage(connection, notice, text);
+function Waiting(props: { readonly connection: CourseConnection; readonly notice: CourseNotice | undefined; readonly text: CourseText; readonly screenFailed: boolean; readonly onRetry: () => void }): ReactElement {
+  const { connection, notice, text, screenFailed, onRetry } = props;
+  const waiting = waitingMessage(connection, notice, text, screenFailed);
   return (
     <div aria-busy="true" className="min-w-0">
       <CourseCard id="course-waiting" card="waiting" headingLevel={1} focusableHeading icon={<CardIcon icon="info" />} title={text("course.app.loading")}>
@@ -219,19 +222,12 @@ function loadCourseScreen(screen: keyof CourseScreens): Promise<CourseScreens> {
   }
 }
 
-/** 📥️ Loads the current screen with cancellation and retry during brief connection shortages. */
-function useCourseScreens(screen: keyof CourseScreens): CourseScreens {
+/** 📥️ Loads the current screen with cancellation and retry during brief connection shortages; a chunk that stays missing
+ * (a redeploy replaced it) is given up on, and `failed` says so. */
+function useCourseScreens(screen: keyof CourseScreens, timing: RetryTiming | undefined): { readonly screens: CourseScreens; readonly failed: boolean } {
   const [screens, setScreens] = useState<CourseScreens>({});
-  const missing = screens[screen] === undefined;
-  useEffect(() => {
-    if (!missing) return;
-    const abort = new AbortController();
-    retryWithJitteredBackoff(() => loadCourseScreen(screen), { ...RETRY_TIMING, signal: abort.signal }).then(loaded => {
-      if (!abort.signal.aborted) setScreens(current => ({ ...current, ...loaded }));
-    }, () => undefined);
-    return () => abort.abort();
-  }, [screen, missing]);
-  return screens;
+  const { failed } = useBoundedLoad(screens[screen] === undefined, screen, () => loadCourseScreen(screen), (loaded) => setScreens((current) => ({ ...current, ...loaded })), timing);
+  return { screens, failed };
 }
 
 function Screen(props: {
@@ -243,15 +239,16 @@ function Screen(props: {
   readonly preferences: CoursePreferences;
   readonly onPreferences: (preferences: CoursePreferences) => void;
   readonly readOnly?: boolean;
+  readonly timing?: RetryTiming;
 }): ReactElement {
   const { session, state, connection, text, locale, preferences, onPreferences } = props;
   const step = state.step;
   const at = useReleaseClock(state.course);
-  const screens = useCourseScreens(courseScreen(step.screen));
+  const { screens, failed: screenFailed } = useCourseScreens(courseScreen(step.screen), props.timing);
   const [introductionPage, setIntroductionPage] = useState<string | undefined>(undefined);
   const waiting = (
     <Page>
-      <Waiting connection={connection} notice={state.notice} text={text} onRetry={() => session.reconnect()} />
+      <Waiting connection={connection} notice={state.notice} text={text} screenFailed={screenFailed} onRetry={() => session.reconnect()} />
     </Page>
   );
   if (step.screen === "home" || step.screen === "identity" || step.screen === "introduction") {
@@ -332,6 +329,9 @@ interface ClientProps {
   readonly locale: CourseLocale;
   readonly preferences: CoursePreferences;
   readonly onPreferences: (preferences: CoursePreferences) => void;
+  readonly unavailable: CourseLocale | undefined;
+  readonly onRetryLocale: () => void;
+  readonly onDismissLocale: () => void;
   readonly onObservedPreferences: (preferences: PresencePreferences | undefined) => void;
   readonly onObservedScene: (scene: ObservedScene | undefined) => void;
 }
@@ -340,7 +340,7 @@ interface ClientProps {
  * forward, up), what the quizzes are about with the site's logo in its middle, the connection, who is online and the
  * language on its right — the screen of the step, the footer, the others' cursors and the pets. */
 function Client(props: ClientProps): ReactElement {
-  const { options, session, presence, state, connection, locale, preferences, onPreferences, onObservedPreferences, onObservedScene } = props;
+  const { options, session, presence, state, connection, locale, preferences, onPreferences, unavailable, onRetryLocale, onDismissLocale, onObservedPreferences, onObservedScene } = props;
   const text = useMemo(() => courseText(locale), [locale]);
   const [task, setTask] = useState<string | undefined>(undefined);
   const [camera, setCamera] = useState<PresencePresentation["camera"]>();
@@ -366,7 +366,7 @@ function Client(props: ClientProps): ReactElement {
   const observedRef = useRef(observed);
   observedRef.current = observed;
   const observer = useMemo(() => observerSession(session, () => observedRef.current ?? state), [session]);
-  const remoteLocale = useLoadedLocale(remote?.view?.locale ?? locale, locale);
+  const remoteLocale = useLoadedLocale(remote?.view?.locale ?? locale, locale, options.timing);
   const remoteText = useMemo(() => courseText(remoteLocale), [remoteLocale]);
   const remotePreferences = { ...followedPreferences(preferences, remote?.view?.preferences), locale: remoteLocale };
   const observedScene = useMemo(() => observed === undefined ? undefined : { state: observed, locale: remoteLocale }, [observed, remoteLocale]);
@@ -455,6 +455,12 @@ function Client(props: ClientProps): ReactElement {
               <BodyButton onClick={reloadPage}>{text("course.app.reload")}</BodyButton>
             </ProblemNote>
           ) : null}
+          {unavailable === undefined ? null : (
+            <ProblemNote problem={{ message: text("course.app.languageUnavailable", { language: text(LOCALE_NAMES[unavailable]), current: text(LOCALE_NAMES[locale]) }) }} text={text} className="m-double mb-0" id="course-language-unavailable">
+              <BodyButton onClick={onRetryLocale}>{text("course.app.retry")}</BodyButton>
+              <BodyButton onClick={onDismissLocale}>{text("course.app.dismiss")}</BodyButton>
+            </ProblemNote>
+          )}
           {state.notice === undefined ? null : (
             <ProblemNote problem={noticeProblem(state.notice, text)} text={text} className="m-double mb-0">
               <BodyButton onClick={() => session.dismissNotice()}>{text("course.app.dismiss")}</BodyButton>
@@ -463,7 +469,7 @@ function Client(props: ClientProps): ReactElement {
           <div inert={remote !== undefined} hidden={remote !== undefined} className={remote === undefined ? "contents" : "hidden"}>
             <FollowProvider onCamera={captureCamera} onRevealed={captureReveal} onPressed={capturePressed} onSubmission={setSubmission} onSort={setSort} onTaskPage={setTaskPage} onSwipe={captureSwipe} onLayout={captureLayout}>
               <ScreenBoundary key={key} text={text}>
-                <Screen session={session} state={state} connection={connection} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} />
+                <Screen session={session} state={state} connection={connection} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} timing={options.timing} />
               </ScreenBoundary>
             </FollowProvider>
           </div>
@@ -472,7 +478,7 @@ function Client(props: ClientProps): ReactElement {
               <FollowProvider following={remote.tag} presentation={remote.view} task={remote.place.task} onCamera={() => undefined} onRevealed={() => undefined} onSubmission={() => undefined} onSort={() => undefined} onTaskPage={() => undefined}>
                 <PresenceProvider view={view} showCursors={remotePreferences.showCursors} setTask={() => undefined}>
                   <ScreenBoundary key={`${remote.tag}:${remote.place.screen}`} text={remoteText}>
-                    <Screen session={observer} state={observed} connection={connection} text={remoteText} locale={remoteLocale} preferences={remotePreferences} onPreferences={() => undefined} readOnly />
+                    <Screen session={observer} state={observed} connection={connection} text={remoteText} locale={remoteLocale} preferences={remotePreferences} onPreferences={() => undefined} readOnly timing={options.timing} />
                   </ScreenBoundary>
                 </PresenceProvider>
               </FollowProvider>
@@ -497,44 +503,30 @@ function useSetup(options: CourseOptions): { readonly store: LocalStore; readonl
     const presence = new CoursePresence({ proctor: options.proctor, connect: options.presence, timing: options.timing });
     const { material } = options;
     const deputy = material === undefined || typeof material === "function" ? undefined : new Deputy(material);
-    const arriving = typeof material === "function" ? material().catch(() => undefined) : undefined;
+    const arriving = typeof material === "function" ? loadBounded(material, undefined, options.timing).catch(() => undefined) : undefined;
     return { store, presence, arriving, session: new CourseSession({ proctor, store, deputy, timing: options.timing }) };
   });
   return setup;
 }
 
 /** 🌐️ The language the client shows in, once its texts have arrived: `wanted` — every offered language while none is
- * chosen — is fetched as chunks of its own; until they are here the language shown stays the one before, and at the very start
- * nothing is ready. */
-function useCourseLocale(wanted: CourseLocale | undefined): { readonly ready: boolean; readonly locale: CourseLocale | undefined } {
+ * chosen — is fetched as chunks of its own, retried a few times; until they are here the language shown stays the one before,
+ * and at the very start nothing is ready. Texts that never arrive are `failed`, which `retry` tries again; once a language is shown, a switch whose texts fail leaves it shown and the client raises the notice. */
+function useCourseLocale(wanted: CourseLocale | undefined, timing: RetryTiming | undefined): { readonly ready: boolean; readonly locale: CourseLocale | undefined; readonly failed: boolean; readonly retry: () => void } {
   const needed = wanted === undefined ? COURSE_LOCALES : [wanted];
   const arrived = needed.every(courseLocaleLoaded);
   const [, rerender] = useState(0);
   const shown = useRef<{ readonly locale: CourseLocale | undefined } | undefined>(undefined);
   if (arrived) shown.current = { locale: wanted };
-  useEffect(() => {
-    if (arrived) return;
-    let live = true;
-    void loadCourseLocales(needed).then(() => live && rerender((count) => count + 1));
-    return () => {
-      live = false;
-    };
-  }, [arrived, wanted]);
-  return shown.current === undefined ? { ready: false, locale: undefined } : { ready: true, locale: shown.current.locale };
+  const { failed, retry } = useBoundedLoad(!arrived, needed.join(), () => loadCourseLocales(needed), () => rerender((count) => count + 1), timing);
+  return shown.current === undefined ? { ready: false, locale: undefined, failed, retry } : { ready: true, locale: shown.current.locale, failed, retry };
 }
 
 /** 📖️ The language of another learner's screen, once its texts have arrived; the client's own language until then. */
-function useLoadedLocale(wanted: CourseLocale, fallback: CourseLocale): CourseLocale {
+function useLoadedLocale(wanted: CourseLocale, fallback: CourseLocale, timing: RetryTiming | undefined): CourseLocale {
   const arrived = courseLocaleLoaded(wanted);
   const [, rerender] = useState(0);
-  useEffect(() => {
-    if (arrived) return;
-    let live = true;
-    void loadCourseLocales([wanted]).then(() => live && rerender((count) => count + 1));
-    return () => {
-      live = false;
-    };
-  }, [arrived, wanted]);
+  useBoundedLoad(!arrived, wanted, () => loadCourseLocales([wanted]), () => rerender((count) => count + 1), timing);
   return arrived ? wanted : fallback;
 }
 
@@ -561,8 +553,10 @@ export function CourseApp(options: CourseOptions): ReactElement {
   const [observedPreferences, setObservedPreferences] = useState<PresencePreferences | undefined>();
   const [observedScene, setObservedScene] = useState<ObservedScene | undefined>();
   const shownPreferences = followedPreferences(preferences, observedPreferences);
-  const wanted = preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
-  const { ready, locale } = useCourseLocale(wanted);
+  const [requested, setRequested] = useState<CourseLocale | undefined>();
+  const [unavailable, setUnavailable] = useState<CourseLocale | undefined>();
+  const wanted = requested ?? preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+  const { ready, locale, failed: localeFailed, retry: retryLocale } = useCourseLocale(wanted, options.timing);
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
   useElementsSurfaceChrome({ appearance: shownPreferences.theme, device: elementsSurfaceDeviceForLayout(elementsSurfaceDeviceForMatches({ mobile, tablet }), shownPreferences.device), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
@@ -576,15 +570,36 @@ export function CourseApp(options: CourseOptions): ReactElement {
   }, [ready, locale, title]);
   useEffect(() => store.watch((change) => (change.kind === "cleared" || (change.kind === "slice" && change.slice === "preferences")) && setPreferences(readPreferences(store))), [store]);
 
-  const change = (next: CoursePreferences): void => {
+  const keep = (next: CoursePreferences): void => {
     setPreferences(next);
     writePreferences(store, next);
   };
-  if (!ready) return <></>;
+  const change = (next: CoursePreferences): void => {
+    if (next.locale === preferences.locale) return keep(next);
+    setUnavailable(undefined);
+    const switching = ready && locale !== undefined && next.locale !== undefined && !courseLocaleLoaded(next.locale);
+    setRequested(switching ? next.locale : undefined);
+    keep(switching ? { ...next, locale: preferences.locale } : next);
+  };
+  useEffect(() => {
+    if (requested === undefined || locale !== requested) return;
+    setRequested(undefined);
+    keep({ ...preferences, locale: requested });
+  }, [requested, locale]);
+  useEffect(() => {
+    if (!ready || !localeFailed || locale === undefined) return;
+    setUnavailable((wanted === undefined ? COURSE_LOCALES : [wanted]).find((candidate) => !courseLocaleLoaded(candidate)));
+    setRequested(undefined);
+    if (preferences.locale !== undefined && preferences.locale !== locale) keep({ ...preferences, locale });
+  }, [ready, localeFailed, locale, wanted]);
+  const retryLanguage = (): void => {
+    if (unavailable !== undefined) change({ ...preferences, locale: unavailable });
+  };
+  if (!ready) return <LoadFallback failed={localeFailed} onRetry={retryLocale} onReload={reloadPage} />;
   if (locale !== undefined)
     return (
       <CoursePetsProvider source={options.pets} choice={shownPreferences.pets} chosen={shownPreferences.petsChosen} play={shownPreferences.petsPlay} mischief={shownPreferences.petsMischief} state={observedScene?.state ?? state} locale={observedScene?.locale ?? locale}>
-        <Client options={options} session={session} presence={presence} state={state} connection={connection} locale={locale} preferences={preferences} onPreferences={change} onObservedPreferences={setObservedPreferences} onObservedScene={setObservedScene} />
+        <Client options={options} session={session} presence={presence} state={state} connection={connection} locale={locale} preferences={preferences} onPreferences={change} unavailable={unavailable} onRetryLocale={retryLanguage} onDismissLocale={() => setUnavailable(undefined)} onObservedPreferences={setObservedPreferences} onObservedScene={setObservedScene} />
       </CoursePetsProvider>
     );
   return (

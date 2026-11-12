@@ -67,6 +67,8 @@ export default defineConfig(async () => ({
       "../../../../🧪️tests/⏱️challenge-clock-views/🟦️.tsx",
       "../../../../🧪️tests/🎨️stylesheet-tree/🟦️.tsx",
       "../../../../🧪️tests/🖥️mockups/🟦️.tsx",
+      "../../../../🧪️tests/📥️bounded-load/🟦️.tsx",
+      "../../../../🧪️tests/📥️load-failures/🟦️.tsx",
     ],
     coverage: { include: ["../../🟦️.tsx", "../../🔨️modules/**/🟦️.ts", "../../🔨️modules/**/🟦️.tsx"] },
     passWithNoTests: false,

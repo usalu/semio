@@ -309,6 +309,15 @@ export class Outbox {
     this.stored.delete(id);
   }
 
+  private settle(command: Command, verdict: CommandVerdict): void {
+    try {
+      this.options.onSettled?.(command, verdict);
+    } catch {
+      return;
+    }
+  }
+
+  /** 🚰️ Delivers the queue head first until nothing is left; it never rejects — what an observer or the store throws ends this pass, and the next trigger starts another — so every caller may fire and forget it. */
   private async pump(): Promise<void> {
     if (this.running || this.stopped) return;
     this.running = true;
@@ -323,8 +332,10 @@ export class Outbox {
         this.release(delivery.command.id);
         this.failures = 0;
         this.notify();
-        if (delivery.verdict !== undefined) this.options.onSettled?.(delivery.command, delivery.verdict);
+        if (delivery.verdict !== undefined) this.settle(delivery.command, delivery.verdict);
       }
+    } catch {
+      return;
     } finally {
       this.running = false;
       this.cycle = undefined;
@@ -362,7 +373,13 @@ export class Outbox {
 
   private notify(): void {
     this.snapshot = this.freeze();
-    for (const listener of [...this.listeners]) listener();
+    for (const listener of [...this.listeners]) {
+      try {
+        listener();
+      } catch {
+        continue;
+      }
+    }
   }
 
   private freeze(): OutboxStatus {

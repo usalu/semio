@@ -78,16 +78,18 @@
     },
     "producers": {
       "type": "array",
-      "minItems": 2,
+      "minItems": 4,
       "uniqueItems": true,
       "items": {
         "type": "string",
         "enum": [
           "@teaching/architecture-course:build-parametrization-en",
-          "@teaching/architecture-course:build-parametrization-de"
+          "@teaching/architecture-course:build-parametrization-de",
+          "@teaching/architecture-course:build-typology-en",
+          "@teaching/architecture-course:build-typology-de"
         ]
       },
-      "maxItems": 2
+      "maxItems": 4
     },
     "requiredTargets": {
       "type": "array",

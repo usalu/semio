@@ -76,9 +76,10 @@ function releasePointer(target: Element, id: number | undefined): void {
 
 /** 🖱️ Starts a pointer drag of the element around `event.currentTarget` (its nearest `[data-course-drag]` ancestor);
  * `onDrop` receives the zone the pointer is released over. A touch that starts here cannot scroll the page: the grip
- * refuses panning, and every touch move until the drag ends is cancelled. */
-export function startPointerDrag(event: { readonly button: number; readonly clientX: number; readonly clientY: number; readonly pointerId?: number; readonly currentTarget: Element; preventDefault(): void }, onDrop: (zone: string) => void): void {
-  if (event.button !== 0) return;
+ * refuses panning, and every touch move until the drag ends is cancelled. Returns the function that abandons the drag
+ * — its listeners, ghost and highlight go, `onDrop` is never called — for whoever must end it before the pointer does. */
+export function startPointerDrag(event: { readonly button: number; readonly clientX: number; readonly clientY: number; readonly pointerId?: number; readonly currentTarget: Element; preventDefault(): void }, onDrop: (zone: string) => void): () => void {
+  if (event.button !== 0) return () => undefined;
   event.preventDefault();
   const source = event.currentTarget.closest<HTMLElement>("[data-course-drag]") ?? (event.currentTarget as HTMLElement);
   const grip = event.currentTarget;
@@ -133,4 +134,5 @@ export function startPointerDrag(event: { readonly button: number; readonly clie
   window.addEventListener("pointercancel", finish);
   window.addEventListener("keydown", escape);
   window.addEventListener("touchmove", blockScroll, { passive: false, capture: true });
+  return finish;
 }

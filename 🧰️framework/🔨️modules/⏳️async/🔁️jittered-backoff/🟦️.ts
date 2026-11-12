@@ -3,6 +3,7 @@
 export interface JitteredBackoffOptions {
   readonly minMs: number;
   readonly maxMs: number;
+  readonly maxAttempts?: number;
   readonly signal?: AbortSignal;
 }
 
@@ -51,12 +52,13 @@ function abortableDelay(ms: number, signal: AbortSignal | undefined): Promise<vo
  * aborts, or `signal` is already aborted. Never returns while looping silently: an abort always
  * settles the returned promise, surfacing the abort's reason rather than hanging forever. For short
  * connection shortages only — the app must not freeze while this retries, and must not hammer the
- * remote end.
+ * remote end. With `maxAttempts` the last failure is thrown once that many attempts failed, so a caller whose remedy
+ * is not retrying (a chunk that no longer exists after a redeploy) can say so instead of waiting for ever.
  * Wiederholt `fn` mit „full jitter“-Backoff, bis es erfüllt wird oder `signal` abbricht; ein Abbruch
  * löst die zurückgegebene Promise immer auf, statt endlos zu warten.
  */
 export async function retryWithJitteredBackoff<T>(fn: () => Promise<T>, options: JitteredBackoffOptions): Promise<T> {
-  const { minMs, maxMs, signal } = options;
+  const { minMs, maxMs, maxAttempts, signal } = options;
   let attempt = 0;
   for (;;) {
     if (signal?.aborted) throw abortReason(signal);
@@ -65,6 +67,7 @@ export async function retryWithJitteredBackoff<T>(fn: () => Promise<T>, options:
     } catch (error) {
       if (signal?.aborted) throw abortReason(signal);
       attempt += 1;
+      if (maxAttempts !== undefined && attempt >= maxAttempts) throw error;
       const cap = Math.min(maxMs, minMs * 2 ** attempt);
       const waitMs = cap <= minMs ? minMs : minMs + Math.random() * (cap - minMs);
       try {

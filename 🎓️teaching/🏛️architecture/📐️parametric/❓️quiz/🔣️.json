@@ -2,7 +2,7 @@
   "$schema": "../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
   "schema": "semio.quiz/v1",
   "id": "parametric-design",
-  "emoji": "📐️",
+  "emoji": "📐",
   "title": {
     "en": "Parametric Design",
     "de": "Parametrisches Entwerfen"

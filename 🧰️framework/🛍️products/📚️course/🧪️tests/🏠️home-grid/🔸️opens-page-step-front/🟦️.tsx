@@ -117,7 +117,7 @@ export function registerOpensPageStepFrontTests(): void {
     expect(homeTrackTemplate([1, 1.5, 1], 3)).toBe("minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr)");
     expect(homeTrackTemplate(undefined, 2)).toBe("minmax(0, 1fr) minmax(0, 1fr)");
   });
-  it("pans the pages under the glass while the mouse is between the cards, glides to the page of a hovered explore control and shows it clear, as on play", () => {
+  it("pans the pages under the glass while the mouse is between the cards, glides to the page of a hovered explore control and clears it only while the control is pressed, as on play", () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "requestAnimationFrame", "cancelAnimationFrame", "performance", "Date"] });
     const session = stubSession();
     render(<Home session={session} />);
@@ -131,11 +131,14 @@ export function registerOpensPageStepFrontTests(): void {
     expect(veil.dataset.veil).toBe("whole");
     expect(cards().map((card) => card.outerHTML)).toEqual(resting);
     const card = screen.getByRole("region", { name: "Leaderboard" });
-    fireEvent.pointerOver(card.querySelector("[data-layered-zoom]")!, { pointerType: "mouse" });
+    const zoom = card.querySelector("[data-layered-zoom]")!;
+    fireEvent.pointerOver(zoom, { pointerType: "mouse" });
     expect(veil.dataset.veil).toBe("whole");
     for (let spent = 0; spent < 600; spent += 10) act(() => void vi.advanceTimersByTime(10));
     expect(strip.style.transform).toBe("translate3d(-66.6667%, 0%, 0)");
-    expect([veil.dataset.veil, veil.style.visibility]).toEqual(["clear", "hidden"]);
+    expect([veil.dataset.veil, veil.style.visibility], "hovering only centers the page").toEqual(["whole", "visible"]);
+    fireEvent.pointerDown(zoom, { pointerType: "mouse", button: 0 });
+    expect([veil.dataset.veil, veil.style.visibility], "pressing clears it").toEqual(["clear", "hidden"]);
     moveMouseOver(1, 1);
     expect(strip.style.transform).toBe("translate3d(-66.6667%, 0%, 0)");
     fireEvent.pointerOut(card, { pointerType: "mouse", relatedTarget: document.body });

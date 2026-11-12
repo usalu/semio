@@ -9,13 +9,13 @@ import {withBuildTestInvocationV1} from "../../../../../../../../../../🔨️mo
 import * as issued from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {javascriptInstallSchemaV1 as installSchema} from "../../🧱️schemas/🟦️.ts";
-import {publishJavascriptDependencyPreservingSourceDescriptorV1,readJavascriptDependencyPreservationSourceV1,requireJavascriptDependencyEndpointFenceV1,requireJavascriptDependencyPreservationSourceUnchangedV1,javascriptDependencyPreservationSourceMismatchV1} from "../../🟦️.ts";
+import {publishJavascriptDependencyPreservingSourceDescriptorV1,readJavascriptDependencyPreservationSourceV1,requireJavascriptDependencyEndpointFenceV1,javascriptDependencyStampV1,requireJavascriptDependencyPreservationSourceUnchangedV1,javascriptDependencyPreservationSourceMismatchV1} from "../../🟦️.ts";
 import corpus from "./🔣️.json";
 
 type Row={sourceDirectory:string;kind:string;stamp:string|null;target:string|null};
 type Observation={rows:Row[];parents:{path:string;identity:string}[];ancestors:{path:string;identity:string}[]};
 
-const stamp=(row:BigIntStats)=>JSON.stringify([row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeNs,row.ctimeNs].map(String));
+const stamp=javascriptDependencyStampV1;
 const anchor=(row:BigIntStats)=>JSON.stringify([row.dev,row.ino,row.mode].map(String));
 
 const layout=(root:string)=>{
@@ -47,6 +47,7 @@ test("dependency endpoint fence is local while the full comparison stays complet
     case"remove":unlinkSync(target);break;
     case"replace-with-directory":unlinkSync(target);mkdirSync(target);break;
     case"touch-link":lutimesSync(target,future,future);break;
+    case"rename-link":renameSync(target,target+".r");renameSync(target+".r",target);break;
     case"replace-directory":{const endpoint=join(target,"node_modules"),destination=readlinkSync(endpoint);renameSync(target,target+".moved");mkdirSync(target);symlinkSync(destination,endpoint);break;}
     case"add-sibling":writeFileSync(join(target,"sibling"),"x");break;
     case"swap-for-link":renameSync(target,target+".moved");symlinkSync(target+".moved",target);break;
@@ -65,7 +66,7 @@ test("dependency endpoint fence is local while the full comparison stays complet
 test("dependency endpoint fence stamps agree with an independent Python lstat",()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original dependency fence artifact root required");const root=mkdtempSync(join(artifacts,"ep-"));
  try{
-  const fixture=layout(root),observation=observe(root,fixture.endpoints),script="import os,sys,json\nout=[]\nfor p in json.loads(sys.argv[1]):\n s=os.lstat(p)\n out.append([json.dumps([str(getattr(s,f)) for f in ['st_dev','st_ino','st_mode','st_nlink','st_size','st_mtime_ns','st_ctime_ns']],separators=(',',':')),os.readlink(p) if os.path.islink(p) else None])\nprint(json.dumps(out))",child=spawnSync(testPythonV1()??"python3",["-c",script,JSON.stringify(fixture.endpoints)],{encoding:"utf8"});
+  const fixture=layout(root),observation=observe(root,fixture.endpoints),script="import os,sys,json\nimport stat\nout=[]\nfor p in json.loads(sys.argv[1]):\n s=os.lstat(p)\n f=['st_dev','st_ino','st_mode','st_nlink','st_size','st_mtime_ns','st_ctime_ns']\n out.append([json.dumps(['0' if k=='st_ctime_ns' and stat.S_ISLNK(s.st_mode) else str(getattr(s,k)) for k in f],separators=(',',':')),os.readlink(p) if os.path.islink(p) else None])\nprint(json.dumps(out))",child=spawnSync(testPythonV1()??"python3",["-c",script,JSON.stringify(fixture.endpoints)],{encoding:"utf8"});
   expect(child.status).toBe(0);const oracle=JSON.parse(child.stdout)as [string,string|null][];
   expect(observation.rows.map(row=>[row.stamp,row.target])).toEqual(oracle);
   const before=maps(observation);for(const endpoint of fixture.endpoints)requireJavascriptDependencyEndpointFenceV1(endpoint,before.expected,before.parents,before.ancestors);
@@ -172,4 +173,13 @@ test("dependency Source fence mismatch gives bounded neutral DATA and preserves 
   expect(()=>run(original,expected,parents,ancestors)).not.toThrow();
   const parentTime=structuredClone(original),s=JSON.parse(parentTime.parents[0]!.identity);s[5]="99";parentTime.parents[0]!.identity=JSON.stringify(s);expect(()=>run(parentTime,expected,parents,ancestors)).not.toThrow();
  }}finally{db.close();}
+});
+
+/** 🪪️ Proves a symbolic link stamp ignores ctime, which the operating system may change after the fact, while every other entry kind keeps it. */
+test("dependency stamp ignores ctime only for symbolic links",()=>{
+ const base={dev:1n,ino:2n,nlink:1n,size:3n,mtimeNs:4n},link={...base,mode:0o120755n},file={...base,mode:0o100644n};
+ expect(javascriptDependencyStampV1({...link,ctimeNs:5n})).toBe(javascriptDependencyStampV1({...link,ctimeNs:6n}));
+ expect(javascriptDependencyStampV1({...link,ctimeNs:5n})).toBe(JSON.stringify(["1","2",String(0o120755),"1","3","4","0"]));
+ expect(javascriptDependencyStampV1({...file,ctimeNs:5n})).not.toBe(javascriptDependencyStampV1({...file,ctimeNs:6n}));
+ expect(javascriptDependencyStampV1({...link,mtimeNs:9n,ctimeNs:5n})).not.toBe(javascriptDependencyStampV1({...link,ctimeNs:5n}));
 });

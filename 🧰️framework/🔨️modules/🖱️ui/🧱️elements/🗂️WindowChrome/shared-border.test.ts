@@ -96,6 +96,7 @@ describe("root border compositor", () => {
     const button = root.querySelector<HTMLButtonElement>("button")!;
     button.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect;
     const compositor = new BorderCompositor(root);
+    compositor.schedule();
     try {
       for (const fixture of cases.disabled) {
         button.removeAttribute("disabled"); button.removeAttribute("aria-disabled");
@@ -117,6 +118,7 @@ describe("root border compositor", () => {
     const button = root.querySelector<HTMLButtonElement>("button")!;
     button.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect;
     const compositor = new BorderCompositor(root);
+    compositor.schedule();
     try {
       button.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true }));
       expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe("hover");
@@ -126,6 +128,49 @@ describe("root border compositor", () => {
       button.disabled = false;
       await Promise.resolve();
       expect(button.querySelector("path")?.getAttribute("data-shared-border-state")).toBe("hover");
+    } finally {
+      compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
+    }
+  });
+  test("observed mutations schedule a repaint unless they touch nothing but the compositor's own overlays, and transitions of other properties are ignored", async () => {
+    const dom = new JSDOM('<div class="semio-scope"><div data-shared-border-frame></div></div>', { pretendToBeVisual: true });
+    const previous = { Element: globalThis.Element, MutationObserver: globalThis.MutationObserver };
+    Object.assign(globalThis, { Element: dom.window.Element, MutationObserver: dom.window.MutationObserver });
+    const root = dom.window.document.querySelector<HTMLElement>(".semio-scope")!;
+    const queue = new Map<number, FrameRequestCallback>();
+    let next = 0;
+    dom.window.requestAnimationFrame = callback => { queue.set(++next, callback); return next; };
+    dom.window.cancelAnimationFrame = id => { queue.delete(id); };
+    const flush = () => { const callbacks = [...queue.values()]; queue.clear(); callbacks.forEach(callback => callback(0)); };
+    const pending = () => root.hasAttribute("data-shared-border-pending");
+    const errors: unknown[] = [];
+    dom.window.addEventListener("error", event => errors.push(event.error));
+    const compositor = new BorderCompositor(root);
+    try {
+      flush();
+      expect(pending()).toBe(false);
+      const overlay = dom.window.document.createElement("span");
+      overlay.setAttribute("data-shared-border-overlay", "");
+      root.append(overlay);
+      await Promise.resolve();
+      expect(pending()).toBe(false);
+      overlay.setAttribute("class", "painted");
+      await Promise.resolve();
+      expect(pending()).toBe(false);
+      root.append(dom.window.document.createTextNode("text"));
+      await Promise.resolve();
+      expect(pending()).toBe(true);
+      flush();
+      expect(pending()).toBe(false);
+      root.setAttribute("class", "changed");
+      await Promise.resolve();
+      expect(pending()).toBe(true);
+      flush();
+      root.dispatchEvent(new dom.window.Event("transitionrun"));
+      expect(pending()).toBe(false);
+      root.dispatchEvent(Object.assign(new dom.window.Event("transitionrun", { bubbles: true }), { propertyName: "width" }));
+      expect(pending()).toBe(true);
+      expect(errors).toEqual([]);
     } finally {
       compositor.dispose(); Object.assign(globalThis, previous); dom.window.close();
     }

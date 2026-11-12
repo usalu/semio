@@ -1,7 +1,7 @@
 //! 🛠️ The proctor end to end, the operator: the built binary probes, backs up while serving and restores elsewhere, erases one learner on request and prunes the registrations nobody played under.
 //!
 //! @see ../🦀️.rs — the end to end suite that mounts this module
-//! @see ../../../🧫️fixtures/📚️catalog/🔣️.json — the course played
+//! @see ../../🧫️fixtures/📚️catalog/🔣️.json — the course played
 
 use super::*;
 

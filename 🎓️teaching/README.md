@@ -10,7 +10,7 @@ the proctor, and one site per subject; each site offers a course of quizzes whos
 | `🛂️proctor/` | The proctor: a Rust `ServerInstance` of the framework server product (crate `teaching-proctor`, binary `proctor`, project `@teaching/proctor`). Identity without passwords, randomized runs, whole-run scoring, badges and the leaderboard as CQRS with event sourcing over one SQLite file; an API only, deployed on Docker behind Caddy at `https://semio.iek.uni-hannover.de`. |
 | `🏛️architecture/` | The site `https://architektur-und-technologie.de` (see [its README](🏛️architecture/README.md)). |
 | `🏛️architecture/📚️course/` | The site's course `🔣️.json`, its web package `@teaching/architecture-course` (a static build published to a CDN) and its deployment files. |
-| `🏛️architecture/<domain>/<topic>/📚️course/🔣️.json` | One quiz per topic leaf. |
+| `🏛️architecture/<topic>/❓️quiz/🔣️.json`, `🏛️architecture/⚡️energy/<topic>/❓️quiz/🔣️.json` | One quiz per topic leaf. |
 
 ## Topic tree
 
@@ -26,6 +26,7 @@ the proctor, and one site per subject; each site offers a course of quizzes whos
     🎯️optimization/❓️quiz/🔣️.json   Optimization / Optimierung
     ⚡️energy/                         domain
       🧲️physics/   ❓️quiz  🎬️clip    Physical Understanding / Physikalisches Verständnis
+      🌬️ventilation/ ❓️quiz  🎬️clip  Ventilation / Lüften
       🔥️heating/   ❓️quiz  🎬️clip    Heating / Heizen
       ❄️cooling/   ❓️quiz  🎬️clip    Cooling / Kühlen
       📊️demand/    ❓️quiz  🎬️clip    Energy Demand / Energiebedarf
@@ -49,7 +50,8 @@ structure, materials) slot in beside `⚡️energy` without touching existing pa
 
 ## Adding a quiz
 
-1. Pick the topic leaf `🏛️architecture/<domain>/<topic>/📚️course/🔣️.json`; every identifying emoji in a path segment is
+1. Pick the topic leaf `🏛️architecture/<topic>/❓️quiz/🔣️.json` (inside a domain such as `⚡️energy`:
+   `🏛️architecture/⚡️energy/<topic>/❓️quiz/🔣️.json`); every identifying emoji in a path segment is
    followed by U+FE0F, and every new directory is registered in the repository taxonomy.
 2. Write a `semio.quiz/v1` document whose `$schema` points relatively to
    `🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz`. Ids are English kebab-case slugs; every

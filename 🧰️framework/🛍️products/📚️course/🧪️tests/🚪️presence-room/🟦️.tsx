@@ -172,6 +172,44 @@ describe("👥️ presence room", () => {
     expect(proctor.sockets).toHaveLength(3);
   });
 
+  it("leaves no abort listener behind on its lifetime for any socket that ended", async () => {
+    const proctor = new FakeProctorSockets();
+    const signal = Object.getPrototypeOf(new AbortController().signal) as AbortSignal;
+    let held = 0;
+    const addOriginal = signal.addEventListener;
+    const removeOriginal = signal.removeEventListener;
+    const add = vi.spyOn(signal, "addEventListener").mockImplementation(function (this: AbortSignal, ...args: Parameters<AbortSignal["addEventListener"]>) {
+      if (args[0] === "abort") held += 1;
+      return addOriginal.apply(this, args);
+    });
+    const remove = vi.spyOn(signal, "removeEventListener").mockImplementation(function (this: AbortSignal, ...args: Parameters<AbortSignal["removeEventListener"]>) {
+      if (args[0] === "abort") held -= 1;
+      return removeOriginal.apply(this, args);
+    });
+    try {
+      const room = new PresenceRoom<CursorState>({ url: "ws://proctor.test/x", connect: proctor.connect, parse: (state) => (cursorProblem(state) === undefined ? (state as CursorState) : undefined), timing: TIMING, random: () => 0.5 });
+      room.start();
+      proctor.sockets[0]!.welcome("r-1", 0);
+      proctor.sockets[0]!.drop();
+      await vi.advanceTimersByTimeAsync(TIMING.maxMs * 2);
+      proctor.sockets[1]!.welcome("r-2", 0);
+      await vi.advanceTimersByTimeAsync(0);
+      const settled = held;
+      expect(settled).toBeGreaterThan(0);
+      for (let round = 1; round <= 4; round += 1) {
+        proctor.sockets[round]!.drop();
+        await vi.advanceTimersByTimeAsync(TIMING.maxMs * 2 ** round);
+        proctor.sockets[round + 1]!.welcome(`r-${round + 2}`, 0);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(held).toBe(settled);
+      }
+      room.stop();
+    } finally {
+      add.mockRestore();
+      remove.mockRestore();
+    }
+  });
+
   it("watches rooms once joined, replaces a room by its snapshot, applies changes, forgets unwatched rooms and watches again after a rejoin", async () => {
     const proctor = new FakeProctorSockets();
     const cursor = (state: unknown): CursorState | undefined => (cursorProblem(state) === undefined ? (state as CursorState) : undefined);

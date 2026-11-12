@@ -202,7 +202,9 @@ export class PresenceRoom<S, W = never> {
       const socket = this.options.connect(this.options.url, PRESENCE_PROTOCOL);
       let end: () => void = () => undefined;
       const ended = new Promise<void>((done) => (end = done));
-      signal.addEventListener("abort", () => (reject(signal.reason), end()), { once: true });
+      const aborted = (): void => (reject(signal.reason), end());
+      signal.addEventListener("abort", aborted, { once: true });
+      void ended.then(() => signal.removeEventListener("abort", aborted));
       this.socket = socket;
       socket.onmessage = (event) => {
         if (this.receive(socket, event.data) === "welcome") resolve({ ended });
