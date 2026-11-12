@@ -35,6 +35,7 @@ pub enum TxtMutation {
     SetLine(SetLineMutation),
     SpliceText(SpliceTextMutation),
 }
+dsl::original_pack_value_operation_receiving!(TxtMutation);
 //#endregion 🔖️Aggregate
 
 

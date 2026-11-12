@@ -13,7 +13,9 @@ pub(super) fn receive_fem_uncontrolled(value:&Fem3dSnapshotValue)->Result<Fem3dS
     let mut native=semio_framework_value::NativeDecodeControl::new(128*1024*1024,&mut callback);native.install_retirement_recipient(&mut recipient).map_err(|e|error("test.receiving",e.to_string()))?;
     let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:128*1024*1024,maximum_capacity_bytes:128*1024*1024,maximum_release_bytes:128*1024*1024,maximum_depth:128};
     let mut owner=semio_os_kernel::NativeSnapshotDecodeOwner::new(&mut native,grant);
-    Fem3dSnapshot::receive_authoring(&mut input,&mut owner).map_err(|e|error("test.receiving",e.to_string()))
+    let mut output=None;
+    Fem3dSnapshot::receive_authoring(&mut input,&mut output,&mut owner).result.map_err(|e|error("test.receiving",e.message().to_string()))?;
+    output.ok_or_else(||error("test.receiving","no snapshot"))
 }
 #[cfg(test)]
 pub(super) fn retire_fem_fixture(value:Fem3dSnapshot){
@@ -103,10 +105,12 @@ impl Serializer<IfcSnapshot> for IfcIntoFem {
     const INTO:Dialect=FEM_DIALECT;
     const FIDELITY:IoFidelity=IoFidelity::Lossy;
     async fn serialize(input:&IfcSnapshot,_:&ArchiveChildren,control:&mut IoRunControl<'_,'_>)->IoResult<IoPayload>{
-        let value=control.receive_nested::<Fem3dSnapshot,IoPayload>(|slot,original|{
-            *slot=Some(super::fem_owned::receive(input,&mut original.snapshot_decode()?)?);
-            slot.as_ref().unwrap().encode_exchange_pack(&mut original.snapshot_encode()?)
-        }).map_err(IoError::from_value_error)?;
+        let value=nested::<Fem3dSnapshot,IoPayload>(control,|slot,original,work|{
+            *slot=Some(super::fem_owned::receive(input,&mut original.snapshot_decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?);
+            let mut payload=None;
+            work.take(slot.as_ref().unwrap().encode_exchange_pack(&mut payload,&mut original.snapshot_encode().map_err(IoError::from_value_error)?)).map_err(super::refused)?;
+            payload.ok_or_else(||IoError::from_value_error(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"FEM exchange pack published no payload")))
+        })?;
         Ok(IoOutcome{value,diagnostics:vec![loss("Native analytical projection retains nodes, bars and zero roll frames, shared canonical materials and sections, boolean supports and supported direct global nodal load cases with explicit component presence. Distributed or area loads, nonunit factors, nonzero self-weight, combinations, solids, releases, local placements, non-SI units and nonzero roll refuse atomically. Canonical case and component identities derive from actual IFC IDs; other source identities, unreferenced definitions and solver/display settings are omitted.")]})
     }
 }
@@ -116,10 +120,10 @@ impl Deserializer<IfcSnapshot> for FemIntoIfc {
     const FIDELITY:IoFidelity=IoFidelity::Lossy;
     async fn deserialize(input:&IoPayload,control:&mut IoRunControl<'_,'_>)->IoResult<IfcSnapshot>{
         let IoPayload::Binary(bytes)=input else{return Err(IoError::from_value_error(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"FEM native snapshot pack required")));};
-        let value=control.receive_nested::<Fem3dSnapshot,IfcSnapshot>(|slot,original|{
-            *slot=Some(<Fem3dSnapshot as semio_os_kernel::ArtifactPackReceiving>::receive_pack(bytes,&mut original.snapshot_decode()?)?);
-            super::fem_build::receive(slot.as_ref().unwrap(),&mut original.snapshot_decode()?)
-        }).map_err(IoError::from_value_error)?;
+        let value=nested::<Fem3dSnapshot,IfcSnapshot>(control,|slot,original,work|{
+            work.take(<Fem3dSnapshot as semio_os_kernel::ArtifactPackReceiving>::receive_pack(bytes,slot,&mut original.snapshot_decode().map_err(IoError::from_value_error)?)).map_err(super::refused)?;
+            super::fem_build::receive(slot.as_ref().unwrap(),&mut original.snapshot_decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)
+        })?;
         Ok(IoOutcome{value,diagnostics:vec![loss("Native analytical export retains nodes, bars and zero roll frames, canonical material and section engineering values, boolean supports and explicit global nodal load components including signed zero. Self-weight, distributed or area loads, combinations, solids, isolated nodes and nonzero frame roll refuse atomically. New IFC identities and reference axes are authored; solver/display settings are omitted.")]})
     }
 }

@@ -289,7 +289,7 @@ pub fn fem2d_hit_test(doc: &Fem2dSnapshot, camera: &Viewport2d, x: f64, y: f64, 
         }
     };
 
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         let score = distance(pointer, at((node.x, node.y)));
         if score <= FEM2D_NODE_PICK_RADIUS_PX {
             keep(score, (FEM2D_GRANULARITY_NODE, fem2d_entity_target_id(FEM2D_GRANULARITY_NODE, &node.id)?), &mut best);

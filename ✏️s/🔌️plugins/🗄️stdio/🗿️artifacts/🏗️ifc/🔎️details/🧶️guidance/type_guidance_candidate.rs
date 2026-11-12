@@ -1,10 +1,12 @@
 //! 🪪️ Guided readiness prepares the actual original-owned central type candidate without publishing it.
 use super::*;
-use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
+use super::{RetainedWorkOutcome,idle_step,owned_step,settled,charged,retire_self};
+use super::source_loan::closed_cursor;
 use super::{candidate_rules::IfcTypeCandidate,constituent_roster::ConstituentRoster,domain_work::DomainWork,pointer::PathAdmission,type_guidance_request::RequestCopy,wire::SnapshotSource};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use semio_plugin::action_staging::StagedFormRequest;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value::RetainedAllocationEffect;
 use std::mem::{ManuallyDrop,size_of};
 type PartsCursor=<Vec<IfcComplexType> as RetainedClone>::Cursor;
 type ValueCursor=<IfcValue as RetainedClone>::Cursor;
@@ -12,9 +14,9 @@ type ValueCursor=<IfcValue as RetainedClone>::Cursor;
 struct Binding{original:OriginalSourceBinding,source:usize,lease:usize,revision:[u8;32]}
 pub(super) struct GuidedCandidate<C:IfcDetailsProfile>{
     request:RequestCopy,args:ManuallyDrop<Option<DslValue>>,event:ManuallyDrop<Option<editing::SnapshotEditEvent>>,pending:ManuallyDrop<Option<Vec<IfcMutation>>>,parts:ManuallyDrop<Option<Vec<IfcComplexType>>>,value:ManuallyDrop<Option<IfcValue>>,
-    address:PathAdmission,roster:ConstituentRoster,domain:DomainWork,rules:C::CandidateRules,parts_cursor:PartsCursor,value_cursor:ValueCursor,retirement:RetainedCloneClose,binding:Option<Binding>,phase:u8,closing:bool,valid:bool,
+    address:PathAdmission,roster:ConstituentRoster,domain:DomainWork,rules:C::CandidateRules,parts_cursor:PartsCursor,value_cursor:ValueCursor,retirement:RetainedCloneClose,binding:Option<Binding>,phase:u8,closing:bool,valid:bool,recover:bool,
 }
-impl<C:IfcDetailsProfile> Default for GuidedCandidate<C>{fn default()->Self{Self{request:Default::default(),args:ManuallyDrop::new(None),event:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),value:ManuallyDrop::new(None),address:Default::default(),roster:Default::default(),domain:Default::default(),rules:Default::default(),parts_cursor:Default::default(),value_cursor:Default::default(),retirement:Default::default(),binding:None,phase:0,closing:false,valid:false}}}
+impl<C:IfcDetailsProfile> Default for GuidedCandidate<C>{fn default()->Self{Self{request:Default::default(),args:ManuallyDrop::new(None),event:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),parts:ManuallyDrop::new(None),value:ManuallyDrop::new(None),address:Default::default(),roster:Default::default(),domain:Default::default(),rules:Default::default(),parts_cursor:Default::default(),value_cursor:Default::default(),retirement:Default::default(),binding:None,phase:0,closing:false,valid:false,recover:false}}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"staging.original-type-candidate")}
 impl<C:IfcDetailsProfile> GuidedCandidate<C>{
     fn metadata()->usize{2*size_of::<Option<Binding>>()+4*size_of::<u8>()+4*size_of::<bool>()+2*size_of::<editing::SnapshotEditEvent>()+2*size_of::<DslValue>()}
@@ -35,7 +37,7 @@ impl<C:IfcDetailsProfile> GuidedCandidate<C>{
     }
     pub(super) fn advance(&mut self,donor:&mut Option<StagedFormRequest>,source:&SnapshotSource,snapshot:&IfcSnapshot,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let pointer=snapshot as *const _ as usize;let lease=source as *const _ as usize;
-        if self.closing||!std::ptr::eq(source.try_authority()?.as_ref(),snapshot)||self.binding.is_some_and(|binding|!binding.original.matches(cx)||binding.source!=pointer||binding.lease!=lease||binding.revision!=revision){return Err(invalid().into());}
+        if self.closing||!std::ptr::eq(source.try_authority()?.get()?,snapshot)||self.binding.is_some_and(|binding|!binding.original.matches(cx)||binding.source!=pointer||binding.lease!=lease||binding.revision!=revision){return Err(invalid().into());}
         if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"staging candidate cancelled").into());}
         if self.phase==9{return Ok(true);}
         let grant=cx.retained_grant();let body=grant.maximum_copy_bytes.min(4096);let demand=self.demands(source,snapshot,body)?;
@@ -75,45 +77,33 @@ impl<C:IfcDetailsProfile> GuidedCandidate<C>{
         if next!=self.phase{self.phase=next;let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:Self::metadata(),..Default::default()})?;if !delegated{cx.consume_fuel(1);}}
         Ok(self.phase==9)
     }
-    fn begin_close(&mut self){self.closing=true;self.request.begin_close();self.rules.begin_close();self.address.begin_close();self.roster.begin_close();self.domain.begin_close();self.parts_cursor.begin_close();self.value_cursor.begin_close();}
+    fn begin_close(&mut self){self.closing=true;self.request.begin_close();self.rules.begin_close();self.address.begin_close();self.roster.begin_close();self.domain.begin_close();}
     fn empty(&self)->bool{self.request.empty()&&self.rules.terminal_is_empty()&&self.address.terminal_is_empty()&&self.roster.terminal_is_empty()&&self.domain.terminal_is_empty()&&self.parts_cursor.terminal_is_empty()&&self.value_cursor.terminal_is_empty()&&self.args.is_none()&&self.event.is_none()&&self.pending.is_none()&&self.parts.is_none()&&self.value.is_none()&&self.retirement.is_empty()}
-    fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+    fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if !self.rules.terminal_is_empty(){return self.rules.close_demands(body);}
         if !self.domain.terminal_is_empty(){return Ok(self.domain.close_demands());}
         if !self.roster.terminal_is_empty(){return self.roster.close_demands(body);}
         if !self.address.terminal_is_empty(){return Ok(self.address.close_demands());}
         if !self.parts_cursor.terminal_is_empty(){return self.parts_cursor.close_demands(body);}
         if !self.value_cursor.terminal_is_empty(){return self.value_cursor.close_demands(body);}
-        if !self.request.empty(){return self.request.close_demand(body);}
+        if !self.request.empty(){return self.request.close_demands(body);}
         if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
         macro_rules! owner{($value:expr,$kind:ty)=>{if ($value).is_some(){return self.retirement.next_owner_demands::<$kind>(true,&None,body);}};}
         owner!(&self.value,IfcValue);owner!(&self.parts,Vec<IfcComplexType>);owner!(&self.pending,Vec<IfcMutation>);owner!(&self.event,editing::SnapshotEditEvent);owner!(&self.args,DslValue);
         Ok(Default::default())
     }
-    fn close_owned(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-        if !self.rules.terminal_is_empty(){return self.rules.close_step(grant);}
-        if !self.domain.terminal_is_empty(){return self.domain.close_step(grant);}
-        if !self.roster.terminal_is_empty(){return self.roster.close_step(grant);}
-        if !self.address.terminal_is_empty(){return self.address.close_step(grant);}
-        if !self.parts_cursor.terminal_is_empty(){return self.parts_cursor.close_step(grant);}
-        if !self.value_cursor.terminal_is_empty(){return self.value_cursor.close_step(grant);}
-        if !self.request.empty(){return self.request.close_owned(grant);}
-        if !self.retirement.is_empty(){return self.retirement.step_granted(grant);}
-        macro_rules! owner{($value:expr)=>{if ($value).is_some(){return owned_step(self.retirement.begin_granted($value,grant),"guided owner omitted its retirement");}};}
+    fn close_owned(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+        if !self.rules.terminal_is_empty(){return self.rules.close_step(effect);}
+        if !self.domain.terminal_is_empty(){return charged(effect,self.domain.close_step(effect.grant()));}
+        if !self.roster.terminal_is_empty(){return self.roster.close_step(effect);}
+        if !self.address.terminal_is_empty(){return charged(effect,self.address.close_step(effect.grant()));}
+        if !self.parts_cursor.terminal_is_empty(){return closed_cursor(effect,&mut self.parts_cursor,body,&mut self.recover);}
+        if !self.value_cursor.terminal_is_empty(){return closed_cursor(effect,&mut self.value_cursor,body,&mut self.recover);}
+        if !self.request.empty(){return self.request.close_owned(body,effect);}
+        if !self.retirement.is_empty(){return settled(self.retirement.step_granted(body,effect));}
+        macro_rules! owner{($value:expr)=>{if ($value).is_some(){return owned_step(self.retirement.begin_granted($value,effect),"guided owner omitted its retirement");}};}
         owner!(&mut self.value);owner!(&mut self.parts);owner!(&mut self.pending);owner!(&mut self.event);owner!(&mut self.args);idle_step(RetainedCloneStep::Complete(Default::default()))
     }
 }
-impl<C:IfcDetailsProfile+'static> RetireOwned for GuidedCandidate<C>{fn retirement(mut self)->Box<dyn RetirementCursor>{self.begin_close();Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
-impl<C:IfcDetailsProfile+'static> RetirementCursor for GuidedCandidate<C>{
-    fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if !self.closing{return RetirementStep::BudgetExhausted;}{let turn=self.close_owned(grant);let empty=self.empty();cursor_step(turn,empty)}}
-    fn terminal_is_empty(&self)->bool{self.empty()}
-    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.copy_bytes)}
-    fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demand(body)?.copy_bytes)}
-    fn allows_admitted_narrow_work(&self)->bool{!self.empty()}
-    fn next_birth_bytes(&self,body:usize)->Option<usize>{self.close_demand(body).ok().map(|demand|demand.capacity_bytes)}
-    fn next_close_byte_demand(&self)->Option<usize>{self.close_demand(4096).ok().map(|demand|demand.release_bytes)}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(4096)?.depth)}
-    fn terminal_release_bytes(&self)->Option<usize>{self.empty().then_some(size_of::<Self>())}
-}
+retire_self!([C:IfcDetailsProfile+'static] GuidedCandidate<C>);
 impl<C:IfcDetailsProfile> Drop for GuidedCandidate<C>{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"guided candidate requires original paid retirement");if self.empty(){unsafe{ManuallyDrop::drop(&mut self.args);ManuallyDrop::drop(&mut self.event);ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.parts);ManuallyDrop::drop(&mut self.value);}}}}

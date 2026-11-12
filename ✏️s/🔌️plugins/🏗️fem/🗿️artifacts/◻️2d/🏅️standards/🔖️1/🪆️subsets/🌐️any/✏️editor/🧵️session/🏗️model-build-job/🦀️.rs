@@ -185,7 +185,7 @@ impl MountedModelBuild {
                 self.stage = if self.region_cursor == 0 { ModelBuildStage::Nodes } else { ModelBuildStage::RegionNodeCoordinate };
             }
             ModelBuildStage::Nodes => {
-                if let Some(node) = snapshot.nodes.get(self.node_cursor) {
+                if let Some(node) = (*snapshot.nodes).get(self.node_cursor) {
                     self.pending_node_id = Some(node.id.to_string());
                     self.stage = ModelBuildStage::NodeCommit;
                 } else {
@@ -193,7 +193,7 @@ impl MountedModelBuild {
                 }
             }
             ModelBuildStage::NodeCommit => {
-                let node = snapshot.nodes.get(self.node_cursor).ok_or_else(|| b"fem2d.model-node-owner-missing".to_vec())?;
+                let node = (*snapshot.nodes).get(self.node_cursor).ok_or_else(|| b"fem2d.model-node-owner-missing".to_vec())?;
                 bounded_derived_string(self.pending_node_id.as_ref().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?)?;
                 let id = self.pending_node_id.take().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?;
                 self.model.push_node(semio_s_fem_model::Node { id, pos: [node.x, node.y, 0.0] }).map_err(|_| b"fem2d.model-node-capacity".to_vec())?;
@@ -375,7 +375,7 @@ impl MountedModelBuild {
         let start = match element {
             FemElement::Bar { start, .. } | FemElement::Beam { start, .. } => start,
         };
-        if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
+        if let Some(node) = (*snapshot.nodes).get(self.lookup_cursor) {
             if node.id.as_str() == start.as_str() {
                 self.lookup_cursor = 0;
                 self.stage = ModelBuildStage::ElementEnd;
@@ -394,7 +394,7 @@ impl MountedModelBuild {
         let end = match element {
             FemElement::Bar { end, .. } | FemElement::Beam { end, .. } => end,
         };
-        if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
+        if let Some(node) = (*snapshot.nodes).get(self.lookup_cursor) {
             if node.id.as_str() == end.as_str() {
                 self.lookup_cursor = 0;
                 self.stage = ModelBuildStage::ElementMaterial;
@@ -412,7 +412,7 @@ impl MountedModelBuild {
         let material_id = match &snapshot.elements[self.element_cursor] {
             FemElement::Bar { material_id, .. } | FemElement::Beam { material_id, .. } => material_id,
         };
-        if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
+        if let Some(material) = (*snapshot.materials).get(self.lookup_cursor) {
             if material.id.as_str() == material_id.as_str() {
                 self.resolved_material = self.lookup_cursor;
                 self.lookup_cursor = 0;
@@ -449,7 +449,7 @@ impl MountedModelBuild {
     fn model_element_commit(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
         bounded_derived_string(self.pending_element_end.as_ref().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?)?;
         let element = &snapshot.elements[self.element_cursor];
-        let material = snapshot.materials.get(self.resolved_material).ok_or_else(|| b"fem2d.model-material-missing".to_vec())?;
+        let material = (*snapshot.materials).get(self.resolved_material).ok_or_else(|| b"fem2d.model-material-missing".to_vec())?;
         let section = &snapshot.sections[self.resolved_section];
         let resolved = match element {
             FemElement::Bar { .. } => semio_s_fem_elements2d::Bar2 {
@@ -511,7 +511,7 @@ impl MountedModelBuild {
         };
         if self.mesh.as_ref().and_then(|mesh| mesh.tris.get(self.region_triangle_cursor)).is_none() {
             self.stage = ModelBuildStage::Complete;
-        } else if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
+        } else if let Some(material) = (*snapshot.materials).get(self.lookup_cursor) {
             if material.id.as_str() == region.material_id.as_str() {
                 self.resolved_material = self.lookup_cursor;
                 self.lookup_cursor = 0;
@@ -531,7 +531,7 @@ impl MountedModelBuild {
             bounded_derived_string(owner.as_ref().ok_or_else(|| b"fem2d.model-region-element-node-owner-missing".to_vec())?)?;
         }
         let region = snapshot.regions.get(self.region_cursor).expect("region element retains region");
-        let material = snapshot.materials.get(self.resolved_material).ok_or_else(|| b"fem2d.model-material-missing".to_vec())?;
+        let material = (*snapshot.materials).get(self.resolved_material).ok_or_else(|| b"fem2d.model-material-missing".to_vec())?;
         let nodes = std::array::from_fn(|index| self.pending_region_element_nodes[index].take().expect("region element node owner retained"));
         self.model.push_element(
             semio_s_fem_elements2d::Tri3Cst {

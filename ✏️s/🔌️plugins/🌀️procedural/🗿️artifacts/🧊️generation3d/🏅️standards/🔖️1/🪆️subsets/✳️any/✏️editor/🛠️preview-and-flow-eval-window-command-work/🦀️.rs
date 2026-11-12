@@ -75,7 +75,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=(
+        let body=cx.retained_grant().maximum_copy_bytes;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let grant=effect.grant();let result=(
             ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
@@ -101,7 +101,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
             };
         }
         if let Some(retirement) = self.emit_retirement.as_mut() {
-            let step = retirement.step(grant);
+            let step = match retirement.step(body, effect) { semio_framework_value::RetainedWorkPoll::Pending{..} => Ok(RetainedCloneStep::Progress(Default::default())), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_value_error()) };
             if retirement.terminal_is_empty() {
                 self.emit_retirement = None;
             }
@@ -111,7 +111,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dPreview
             };
         }
         Ok(InteractiveJobCloseStep::Complete { progress: idle })
-    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetirementPollExit::settle(effect,result.map_err(semio_framework_value::RetirementPollExit::from))})?;
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
@@ -226,6 +226,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
             if self.evaluation.is_folded(){if let Some(ui_scope)=self.evaluation.publish_scope(cx)?{self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(Emit{ui_scope,..Default::default()}))}}else{self.instance_owner.with_mut::<Generation3dInstanceOperationOwner,_>(|owner|owner.with_session_waking(|session|self.evaluation.step(payload,session,cx)))??;}
             return Ok(ArtifactCommandWorkStep::Progress{stage:"previewReceive",preview:br#"{"en":"Receiving evaluation output","de":"Auswertungsergebnis wird empfangen"}"#})
         }
+        let mut turn_failure = None;
         let original: Result<_, Fault> = (|| {
         if self.complete || self.closing { return Err(Fault::from("generation3d-flow-eval-window-work-terminal")); }
         let turn_started_us = semio_framework_job::default_now_us();
@@ -241,12 +242,13 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
             .or_else(|| window.get::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>().map(|state| state.preview_eval_text.as_deref()))
             .ok_or_else(|| Fault::from("generation3d-flow-eval-window-owner-required"))?;
         let cfg = ConfigView { snapshot: input.config, window: context.window_config.as_ref() };
-        let (emit, publication) = self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
+        let grant = cx.retained_grant();
+        let funded = cx.with_original_effect(grant, |_, effect| self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
             let overlay = generation3d_provisional_snapshot(input.snapshot, context.provisional(), &owner.gumball);
             let evaluated = {
                 let doc = ArtifactView::with_operation(overlay.as_ref().unwrap_or(input.snapshot), input.history, input.operation.clone());
                 owner.with_session_waking(|session| match input.command {
-                    Generation3dCommand::FlowEvalTick(_) => flow_eval_tick::evaluate(window.window_id(), window.window_kind_id(), &doc, &cfg, session, retained_eval, None),
+                    Generation3dCommand::FlowEvalTick(_) => flow_eval_tick::evaluate(window.window_id(), window.window_kind_id(), &doc, &cfg, session, retained_eval, None, effect),
                     Generation3dCommand::FlowEvalResolve(_) => unreachable!(),
                     Generation3dCommand::FlowTessellateResolve(_) => unreachable!(),
                     _ => Err(Fault::from("generation3d-flow-eval-window-command-mismatch")),
@@ -256,7 +258,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
                 overlay.retire_cold();
             }
             evaluated?
-        })?;
+        }));
+        let (evaluated, performed) = match funded {
+            Ok(Some(funded)) => funded,
+            Ok(None) => return Ok(ArtifactCommandWorkStep::Progress{stage:"previewEvaluate",preview:br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"#}),
+            Err(refused) => { turn_failure = Some(refused); return Err(Fault::from("generation3d-flow-eval-window-turn-refused")) }
+        };
+        cx.consume_work(performed);
+        let (emit, publication) = evaluated?;
         self.complete = true;
         let window_transient = match publication {
             semio_os_flow::FlowEvalPublication::Retained => Vec::new(),
@@ -268,6 +277,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dFlowEva
         })
     
         })();
+        if let Some(refused) = turn_failure { return Err(refused.into()) }
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
@@ -327,4 +337,3 @@ pub fn generation3d_gumball_preview(committed: &Generation3dSnapshot, marks: &Pr
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️Generation3dPlayApp
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dPreviewCommandWork, Generation3dFlowEvalWindowWork);

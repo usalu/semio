@@ -131,6 +131,7 @@ impl PaintNativeRegionWork {
 }
 
 impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn extent(&self, command: &PngEditCommand, snapshot: &PngSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PngEditor>>>) -> Option<usize> {
@@ -178,29 +179,22 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            use semio_framework_value::{ValueRefusalKind, retained_clone::RetainedCloneProgress};
-            let mut work = 0u64;
-            let result = (|| {
-            if !self.closing {return Ok(InteractiveJobCloseStep::Blocked);}
-            let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return Err(error) };
-            if demand == semio_framework_value::RetirementDemand::default() {return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });}
-            if grant.maximum_depth < demand.depth {return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "interactive job close exceeds its admitted depth"));}
-            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });}
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
+        if !self.closing {return Ok(InteractiveJobCloseStep::Blocked);}
+        let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        if demand == semio_framework_value::RetirementDemand::default() {return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });}
+        semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+            use semio_framework_value::RetainedCloneStep;
+            let grant = effect.grant();
             let progress = if self.retirement.is_some() {
-                { let turn = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant); work += turn.work; match turn.result { Ok(step) => step.progress(), Err(error) => return Err(error) } }
-            } else {
-                let Some(reader) = self.reader.take() else {return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });};
-                let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-                let turn = semio_framework_value::retirement::arc_custody::admit_shared_retirement(reader, child, true); work += turn.work;
-                match turn.result {
-                    Ok((owner, progress)) => { self.retirement = Some(owner); progress }
-                    Err((error, reader)) => { self.reader = Some(reader); return Err(error); }
+                match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect) {
+                    semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result?.progress(),
+                    semio_framework_value::RetainedWorkPoll::Pending { .. } => RetainedCloneProgress::default(),
                 }
+            } else {
+                store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.reader, &mut self.retirement, effect).result?.progress()
             };
-            Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } })
-            })();
-            semio_framework_value::RetainedWorkOutcome { result, work }
+            Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
         })
     }
 
@@ -215,9 +209,8 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
 impl PaintNativeRegionWork {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(owner) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body); }
-        if self.reader.is_some() { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<PngSnapshot>(), depth: 2, ..Default::default() }); }
+        if self.reader.is_some() { return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.reader); }
         Ok(Default::default())
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(PaintNativeRegionWork);

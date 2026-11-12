@@ -207,6 +207,10 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
         self.tool_id
     }
 
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
     fn extent(&self, command: &Process3dCommand, snapshot: &Process3dSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>) -> Option<usize> {
         let _ = (command, snapshot, interaction);
         Some(self.extent)
@@ -263,7 +267,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|_grant|{
-            semio_framework_value::RetainedWorkOutcome {
+            semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> {
                 result: Ok(if self.closing {
                     InteractiveJobCloseStep::Complete { progress: semio_framework_value::retained_clone::RetainedCloneProgress::default() }
                 } else {
@@ -403,5 +407,3 @@ impl ArtifactOwnedToolJobFactory for Process3dResumableCommandJobFactory {
     ];
 }
 //#endregion 🧵️RetainedCommands
-
-semio_plugin::retained_command::terminal_frame_bound!(Process3dResumableCommandWork);

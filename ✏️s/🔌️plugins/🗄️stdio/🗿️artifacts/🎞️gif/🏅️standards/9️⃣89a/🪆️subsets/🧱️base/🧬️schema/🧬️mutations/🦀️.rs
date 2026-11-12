@@ -90,6 +90,7 @@ pub enum GifMutation {
     AddAppExtension(add_app_extension::AddAppExtension),
     RemoveAppExtension(remove_app_extension::RemoveAppExtension),
 }
+dsl::original_pack_value_operation_receiving!(GifMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

@@ -4,14 +4,14 @@ use crate::standards::v1::subsets::any::schema::play_snapshot::Puzzle5dPlaySnaps
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::editor::puzzle5d::commands::register_brush_mesh;
 use crate::editor::puzzle5d::config::Puzzle5dConfig;
-use semio_framework_plugin::kernel::UiDirtyScope;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractionTarget;
-use semio_framework_plugin::InteractionWrite;
+use semio_plugin::kernel::UiDirtyScope;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractionTarget;
+use semio_plugin::InteractionWrite;
 use semio_ui_locale::Label;
-use semio_framework_plugin::MergeMode;
+use semio_plugin::MergeMode;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_pack_json::Value;
@@ -149,7 +149,7 @@ impl Puzzle5dSetActiveExampleWork {
     }
 }
 
-impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dSetActiveExampleWork {
+impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dSetActiveExampleWork {
     fn tool_id(&self) -> &'static str {
         "setActiveExample"
     }
@@ -159,20 +159,20 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
     /// it exceeds `PUZZLE_COMMAND_WORK_ITEMS` (4,096) on its own, and a bare `None` here would surface as
     /// the framework's opaque "exceeds fixed semantic work capacity" fault instead of a sentence the user
     /// can read. The refusal path therefore declares one unit, and `step` completes with the notice.
-    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let units = Self::units(command, snapshot)?;
         Some(if units <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS { units } else { 1 })
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_deref());
         if self.before.is_none() {
             let projection = puzzle5d_editor_projection(snapshot);
@@ -193,13 +193,13 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
             self.admitted = true;
             if Self::target(command).is_none() || Self::units(command, snapshot).is_none_or(|units| units > crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS) {
                 self.stage = Puzzle5dSetActiveExampleStage::Complete;
-                return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.example_too_large.as_str())));
+                return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.example_too_large.as_str())));
             }
         }
         let before = self.before.clone().unwrap_or_default();
         let Some(target) = Self::target(command) else {
             self.stage = Puzzle5dSetActiveExampleStage::Complete;
-            return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.example_too_large.as_str())));
+            return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.example_too_large.as_str())));
         };
         match self.stage {
             Puzzle5dSetActiveExampleStage::ClearFasteners => {
@@ -315,7 +315,7 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                     .map(|selection| selection.ids.iter().map(|id| InteractionTarget { granularity: selection.granularity.clone(), id: id.clone() }).collect())
                     .unwrap_or_default();
                 let interaction_writes = if targets.is_empty() { Vec::new() } else { vec![InteractionWrite { domain: PUZZLE5D_INTERACTION_DOMAIN.into(), targets, merge: MergeMode::Subtractive }] };
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit {
                     artifact_mutations: std::mem::take(&mut self.mutations),
                     config_mutations: config.mutations_to(&Puzzle5dConfig::default()),
                     interaction_writes,
@@ -428,25 +428,25 @@ impl Puzzle5dRegisterBrushMeshWork {
     }
 }
 
-impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dRegisterBrushMeshWork {
+impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<EditorApp<A>> for Puzzle5dRegisterBrushMeshWork {
     fn tool_id(&self) -> &'static str {
         "registerBrushMesh"
     }
 
-    fn extent(&self, command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
+    fn extent(&self, command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<A>>>) -> Option<usize> {
         let items = Self::pages(command, "positions").checked_add(Self::pages(command, "indices"))?.checked_add(3)?;
         (items <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS).then_some(items)
     }
 
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn work_demands(&self, _input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         crate::retained_command::step_demands::<EditorApp<A>>(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
-        let original = (|| -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &semio_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<A>>, _cx: &mut StepContext<'_>) -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
+        let original = (|| -> Result<semio_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<A>>, semio_framework_job::OriginalTurnFailure> {
 
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
+        let semio_plugin::retained_command::ArtifactCommandInputs { command, snapshot: _snapshot, config: _config, interaction: _interaction, hover: _hover, context, .. } = *input;
         let view_state = context.and_then(|context| context.view_state.as_deref());
         match self.stage {
             Puzzle5dRegisterBrushMeshStage::Positions => {
@@ -475,9 +475,9 @@ impl<A: Puzzle5dEditor> semio_framework_plugin::retained_command::ArtifactComman
                 let positions = std::mem::take(&mut self.positions);
                 let indices = std::mem::take(&mut self.indices);
                 if !register_brush_mesh::puzzle5d_install_brush_mesh(&url, &positions, &indices) {
-                    return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.brush_reason_pose_unavailable.as_str())));
+                    return Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(puzzle5d_notice_emit(view_state, |labels| labels.brush_reason_pose_unavailable.as_str())));
                 }
-                Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }))
+                Ok(semio_plugin::retained_command::ArtifactCommandWorkStep::Complete(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }))
             }
             Puzzle5dRegisterBrushMeshStage::Complete => Err(Fault::from("puzzle5d-register-brush-mesh-complete-repolled")),
             Puzzle5dRegisterBrushMeshStage::Closing => Err(Fault::from("puzzle5d-register-brush-mesh-closing")),

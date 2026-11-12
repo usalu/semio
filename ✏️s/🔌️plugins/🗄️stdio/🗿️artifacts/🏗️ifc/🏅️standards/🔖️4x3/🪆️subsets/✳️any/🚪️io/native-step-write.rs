@@ -80,7 +80,10 @@ fn reference(ids: &[u64], id: u64, port: &mut Port<'_, '_, '_>) -> Result<(), Va
 
 /// 🫴️ The caller's original encoder retains all partial source indexes and output until final publication.
 pub(super) fn encode(source: &IfcSnapshot, owner: &mut NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
-    owner.receive::<Receiving, Vec<u8>>(|slot, native, body| native.scoped_stage(|native| {
+    let mut output = None;
+    let turn = owner.receive::<Receiving, Vec<u8>, semio_os_kernel::NativeSnapshotFailure>(&mut output, &mut |slot, published, _marker, _unwind, native, body| semio_os_kernel::native_snapshot_turn(|work| {
+        work.performed();
+        let value = native.scoped_stage(|native| {
         native.begin_stage(0)?;
         body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Receiving>(), maximum_depth: 2, ..Default::default() })?;
         *slot = Some(Receiving::new());
@@ -111,5 +114,10 @@ pub(super) fn encode(source: &IfcSnapshot, owner: &mut NativeSnapshotEncodeOwner
         port.body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Vec<u8>>(), maximum_depth: 2, ..Default::default() })?;
         port.body.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Vec<u8>>(), ..Default::default() })?;
         Ok(std::mem::take(&mut state.output))
-    }))
+    })?;
+        *published = Some(value);
+        Ok(())
+    }));
+    turn.result.map_err(|failure| ValueError::new(failure.kind(), failure.message().to_string()))?;
+    output.ok_or_else(|| invalid("STEP encode published no wire"))
 }

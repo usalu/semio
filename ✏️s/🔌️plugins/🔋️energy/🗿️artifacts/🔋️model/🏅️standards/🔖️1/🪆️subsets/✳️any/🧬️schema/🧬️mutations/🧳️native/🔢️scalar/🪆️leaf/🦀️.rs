@@ -2,6 +2,8 @@
 use super::*;
 use crate::leaf::{RowFieldPreparation,RowLeafSpec,RowLeafPreparation};
 use protocol::RetainedDiagnosticSpec;
+use crate::retained::{Done,Reply};
+use semio_framework_value::RetainedAllocationEffect;
 /// 🏷️ Each authored schema field supplies its native address and typed inverse, without an erased payload map.
 pub trait ScalarLeafSpec<L,M>:ScalarRowPath{
  const INVALID_REFERENCE:protocol::RetainedDiagnosticSpec=Self::INVALID;
@@ -23,18 +25,13 @@ impl<S:ScalarRowPath> RowFieldPreparation for ScalarRowPreparation<S>{
  type Input=S::Scalar;type Inverse=S::Scalar;
  fn new()->Self{Self::new()}
  fn check(&self,v:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>)->Result<(),ValueError>{Self::check(self,v,k.ok_or_else(invalid)?,o)}
- fn demand(&self,v:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize)->Result<RetirementDemand,ValueError>{Self::demand(self,v,k.ok_or_else(invalid)?,o,b)}
- fn advance(&mut self,v:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::advance(self,v,k.ok_or_else(invalid)?,o,b,g)}
+ fn quote(&self,v:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize,m:u64)->Result<Quote,ValueError>{Self::quote(self,v,k.ok_or_else(invalid)?,o,b,m)}
+ fn advance_reply<'r>(&mut self,v:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize,m:u64,e:&mut RetainedAllocationEffect<'_>,r:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{Self::advance_reply(self,v,k.ok_or_else(invalid)?,o,b,m,e,r,recover)}
  fn ready(&self)->bool{Self::ready(self)}fn outcome(&self)->Option<ScalarOutcome>{Self::outcome(self)}
- fn take_demand(&self)->Result<RetirementDemand,ValueError>{Self::take_demand(self)}
- fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{Self::take(self,g)}
- fn inverse_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Self::inverse_demand(self).map(|_|scalar(1))}
- fn prepare_inverse(&mut self,_:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=scalar(1);Ok(if retained_mutation_demand_fits(d,g){RetainedCloneStep::Complete(receipt(d))}else{RetainedCloneStep::Progress(Default::default())})}
+ fn take_quote(&self)->Result<Quote,ValueError>{Self::take_quote(self)}
+ fn take(&mut self,e:&mut RetainedAllocationEffect<'_>)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{Self::take(self,e)}
+ fn inverse_quote(&self,_:usize,_:u64)->Result<Quote,ValueError>{Self::inverse_quote(self).map(|_|(scalar(1),1))}
  fn inverse_ready(&self)->bool{!self.closing&&self.phase==100&&self.inverse.is_some()&&!self.inverse_taken}
- fn take_inverse_demand(&self)->Result<RetirementDemand,ValueError>{Self::inverse_demand(self)}
- fn take_inverse(&mut self,g:RetainedCloneGrant)->Result<Option<(Self::Inverse,RetainedCloneProgress)>,ValueError>{Self::take_inverse(self,g)}
- fn begin_close(&mut self){Self::begin_close(self)}
- fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{Self::close_demand(self,b)}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,g)}
- fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
+ fn take_inverse_quote(&self)->Result<Quote,ValueError>{Self::inverse_quote(self)}
+ fn take_inverse(&mut self,e:&mut RetainedAllocationEffect<'_>)->Result<Option<(Self::Inverse,RetainedCloneProgress)>,ValueError>{Self::take_inverse(self,e)}
 }

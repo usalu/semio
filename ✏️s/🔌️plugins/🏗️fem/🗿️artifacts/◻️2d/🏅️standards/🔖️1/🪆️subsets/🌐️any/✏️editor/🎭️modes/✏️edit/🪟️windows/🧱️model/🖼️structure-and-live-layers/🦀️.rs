@@ -75,7 +75,7 @@ pub fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
         max[0] = max[0].max(x);
         max[1] = max[1].max(y);
     };
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         expand(node.x, node.y);
     }
     for region in &doc.regions {
@@ -94,7 +94,7 @@ pub fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
 /// window's faint undeformed backdrop (a single muted color for every layer kind).
 pub fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         let (sx, sy) = screen_2d(node.x, node.y);
         layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("node-{}", node.id.as_str()), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
     }

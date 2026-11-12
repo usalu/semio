@@ -59,6 +59,7 @@ pub enum StlMutation {
     SetTriangleNormal(set_triangle_normal::SetTriangleNormal),
     SetTriangleVertices(set_triangle_vertices::SetTriangleVertices),
 }
+dsl::original_pack_value_operation_receiving!(StlMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

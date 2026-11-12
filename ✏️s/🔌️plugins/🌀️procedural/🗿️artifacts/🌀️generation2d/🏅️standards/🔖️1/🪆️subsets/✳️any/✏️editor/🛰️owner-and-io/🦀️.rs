@@ -13,7 +13,7 @@ pub fn close_flow_session(session: &mut FlowEvalSession) {
             maximum_release_bytes: session.next_close_release_byte_demand().expect("cold session release demand"),
             maximum_depth: session.next_close_depth_demand().expect("cold session depth demand").max(1),
         };
-        if let Err(error) = session.close_step(grant) {
+        if let Err(error) = session.close_step_cold(grant) {
             panic!("cold session close refused: {:?}", error.kind);
         }
     }
@@ -104,7 +104,7 @@ impl semio_plugin::ArtifactInstanceOperationOwner for Generation2dInstanceOperat
     /// zero-progress credit every idle turn (26/09/09/PROCEDURAL-3D-END-TO-END, close-ladder lane).
     fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin::PluginLifecycleStep, semio_plugin::PluginLifecycleFailure> {
         use semio_plugin::PluginLifecycleStep;
-        use semio_framework_value::retained_clone::RetainedCloneProgress;
+        use semio_framework_value::{retained_clone::RetainedCloneProgress, RetirementDemand};
         if !self.closing{return retained_catalogue_lifecycle::step(&mut self.operator_catalogue,false,cx,grant)}
         if !self.operator_catalogue.terminal_is_empty(){return retained_catalogue_lifecycle::step(&mut self.operator_catalogue,true,cx,grant)}
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
@@ -115,11 +115,27 @@ impl semio_plugin::ArtifactInstanceOperationOwner for Generation2dInstanceOperat
         let (progress, finished) = if session.terminal_is_empty() {
             (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
         } else {
-            match session.close_step(grant)? {
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
-                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
-                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation2d evaluation session awaits its exact close grant" }),
+            use semio_framework_job::InteractiveJobCloseStep;
+            use semio_framework_value::retained_clone::RetainedCloneStep;
+            let demand = RetirementDemand { copy_bytes: session.next_close_copy_byte_demand()?, capacity_bytes: session.next_close_capacity_byte_demand(grant.maximum_copy_bytes)?, release_bytes: session.next_close_release_byte_demand()?, depth: session.next_close_depth_demand()? };
+            let (mut blocked, mut complete) = (false, false);
+            let step = semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| {
+                Ok::<_, semio_framework_value::ValueError>(match session.close_step(effect)? {
+                    InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
+                    InteractiveJobCloseStep::Complete { progress } => {
+                        complete = true;
+                        RetainedCloneStep::Progress(progress)
+                    }
+                    InteractiveJobCloseStep::Blocked => {
+                        blocked = true;
+                        RetainedCloneStep::Progress(Default::default())
+                    }
+                })
+            })?;
+            if blocked {
+                return Ok(PluginLifecycleStep::Blocked { reason: "Generation2d evaluation session awaits its exact close grant" });
             }
+            (step.progress(), complete)
         };
         if finished && session.terminal_is_empty() {
             *slot = None;

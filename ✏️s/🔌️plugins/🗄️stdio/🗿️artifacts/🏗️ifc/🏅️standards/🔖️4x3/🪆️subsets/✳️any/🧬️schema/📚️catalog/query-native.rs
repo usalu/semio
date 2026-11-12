@@ -19,7 +19,8 @@ pub fn with_ifc4x3_native_attribute<O:RetireOwned+'static>(
  visit:impl for<'value> FnOnce(IfcAttributeQueryResult<'value,IfcValue,metadata::StaticAttribute,metadata::StaticTypeExpression>,&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<O,ValueError>
 )->Result<O,ValueError>{
  let demand=IfcAttributeQueryWork::core_demands();admit(owner,demand)?;
- owner.scoped_stage(|original|{original.native().begin_stage(0)?;original.receive_nested::<IfcAttributeQueryWork,O>(|slot,original|{
+ let mut output=None;let mut visit=Some(visit);
+ let turn=owner.scoped_stage(|original|{if let Err(error)=original.native().begin_stage(0){return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}}original.receive_nested::<IfcAttributeQueryWork,O,semio_os_kernel::NativeSnapshotFailure>(&mut output,&mut |slot,published,_marker,_unwind,original|semio_os_kernel::native_snapshot_turn(|work|{work.performed();
   admit(original,demand)?;*slot=Some(IfcAttributeQueryWork::default());performed(original,demand)?;original.native().step()?;
   loop{
    let work=slot.as_mut().unwrap();work.check_core::<Ifc4x3AttributeMetadata,_>(source,row,name,qualified,epoch)?;let demand=work.demands();admit(original,demand)?;
@@ -28,7 +29,8 @@ pub fn with_ifc4x3_native_attribute<O:RetireOwned+'static>(
   let work=slot.as_ref().unwrap();let demand=work.demands();admit(original,demand)?;
   let result=work.completed_core::<Ifc4x3AttributeMetadata,_>(source,row,name,qualified,epoch);performed(original,demand)?;
   let found=result?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native query completed without its borrowed result"))?;
-  original.native().step()?;visit(found,original)
- })})
+  original.native().step()?;*published=Some(visit.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native query visitor was already consumed"))?(found,original)?);Ok(())
+ }))});turn.result.map_err(|failure|ValueError::new(failure.kind(),failure.message().to_string()))?;
+ output.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native query published no result"))
 }
 

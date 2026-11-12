@@ -97,11 +97,13 @@ fn digit(byte: u8) -> Result<u8, ValueError> { match byte { b'0'..=b'9' => Ok(by
 struct Frame { name: String, attrs: Vec<XmlAttr>, children: XmlNodeList, remaining: usize, ordinal: usize }
 enum Start { Node(XmlNode), Element(Frame) }
 
-pub(crate) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>,_native_control:&mut NativeDecodeControl<'_>) -> Result<XmlSnapshot, ValueError> {
-    let limits = control.limits(); let length = match payload { IoPayload::Text(text) => text.len(), IoPayload::Binary(bytes) => bytes.len() }; if length > limits.max_file_bytes { return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"XML native file exceeds caller ceiling")); } control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, length)?;
-    let mut callback = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| control.checkpoint(SqliteSnapshotPhase::DecodeNative, event.completed, event.total).is_ok(); let mut native = NativeDecodeControl::new(limits.max_value_bytes, &mut callback);
-    let (bytes, binary) = match payload { IoPayload::Binary(bytes) => (store::semio_format::unwrap_binary_controlled(bytes, "stdio.xml", store::semio_format::Component::Pack, 1, &mut native)?, true), IoPayload::Text(text) => (store::semio_format::split_text_preamble_controlled(text, "stdio.xml", store::semio_format::Component::Dsl, 1, &mut native).map_err(|error|match error{store::semio_format::SemioError::DecodingControl(error)=>error,error=>ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())})?.as_bytes(), false) };
-    native.begin_stage(bytes.len())?; Reader { bytes, position: 0, binary, rows: 0, limits, control: &mut native }.snapshot()
+pub(crate) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>, output: &mut Option<semio_os_kernel::os_store::serialization::SnapshotReceivingOutput<XmlSnapshot>>) -> semio_os_kernel::os_store::serialization::SnapshotReceivingOutcome {
+    let limits = control.limits(); let length = match payload { IoPayload::Text(text) => text.len(), IoPayload::Binary(bytes) => bytes.len() };
+    if length > limits.max_file_bytes { return semio_framework_value::RetainedWorkOutcome { result: Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(ValueError::new(ValueRefusalKind::OwnershipLimit,"XML native file exceeds caller ceiling"))), work: 0 }; }
+    store::space_history::io::sqlite::snapshot::settlement::decode_typed(control, native_owner, output, |native| {
+        let (bytes, binary) = match payload { IoPayload::Binary(bytes) => (store::semio_format::unwrap_binary_controlled(bytes, "stdio.xml", store::semio_format::Component::Pack, 1, native)?, true), IoPayload::Text(text) => (store::semio_format::split_text_preamble_controlled(text, "stdio.xml", store::semio_format::Component::Dsl, 1, native).map_err(|error|match error{store::semio_format::SemioError::DecodingControl(error)=>error,error=>ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())})?.as_bytes(), false) };
+        native.begin_stage(bytes.len())?; Reader { bytes, position: 0, binary, rows: 0, limits, control: native }.snapshot()
+    })
 }
 
 /// 🧩️ One enclosing owner's borrowed native cursor and cumulative ownership control.

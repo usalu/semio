@@ -27,6 +27,7 @@ pub enum SvgMutation {
     SetViewBox(SetViewBoxPayload),
     SetTransform(SetTransformPayload),
 }
+dsl::original_pack_value_operation_receiving!(SvgMutation);
 
 #[cfg(test)]
 pub fn apply_svg_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgMutation) -> protocol::MutationOutcome<SvgDiff> {

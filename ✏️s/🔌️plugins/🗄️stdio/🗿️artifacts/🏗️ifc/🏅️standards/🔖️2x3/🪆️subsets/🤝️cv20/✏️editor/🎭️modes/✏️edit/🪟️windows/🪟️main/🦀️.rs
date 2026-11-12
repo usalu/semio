@@ -1,7 +1,7 @@
 //! 🏗️ IFC2x3 source representation geometry shared by editor and viewer.
 use crate::standards::v2x3::subsets::cv20::schema::snapshot::Ifc2x3Snapshot;
 use crate::standards::v2x3::subsets::cv20::schema::geometry;
-#[cfg(test)]use semio_plugin::{MeshWindowKit,WindowKit};
+use semio_plugin::{MeshWindowKit,WindowKit};
 #[path="../../../../../../../🚪️io/📐️geometry/🦀️.rs"]
 mod representation_surface;
 pub use representation_surface::{render,render_in_context,render_with,render_selected_in_context};

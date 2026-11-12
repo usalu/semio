@@ -34,6 +34,7 @@ use serde::{Deserialize, Serialize};
 pub enum PlaybookMutation {
     ChangeTitle(ChangeTitle),
 }
+dsl::original_pack_value_operation_receiving!(PlaybookMutation);
 //#endregion 🔖️Mutations
 
 pub use super::change_title::{change_title_operation, ChangeTitle};

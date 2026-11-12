@@ -1,6 +1,7 @@
 //! 🎯️ Original gesture selections classify and group through bounded borrowed byte frontiers.
-use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext,OriginalConstructionDemand,admit_original_construction};
-use semio_framework_value::{RetireOwned,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+use crate::source_birth::{Birth,begun,closed,construction,fixed,resumed};
+use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
+use semio_framework_value::{RetainedAllocationEffect,RetireOwned,RetirementDemand,RetirementPollExit,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use semio_s_artifact_procedural_3d_editor_selection::{ComponentTarget,AnalyticComponent};
 use std::mem::{ManuallyDrop,size_of};
@@ -26,10 +27,9 @@ struct Entry{component:u32,ordinal:usize,label_start:usize,label_end:usize}
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Scan,Validate,Index,Component,Label,Handle,Revision,Classify,Capacity,Compare,Search,LabelCompare,Insert,Shift,Next,Ready}
 pub struct GumballSelectionWork{
- entries:ManuallyDrop<Option<Vec<Entry>>>,retirement:RetainedCloneClose,original:OriginalSourceBinding,source:Option<(usize,usize)>,current:Option<(usize,usize)>,first_identity:Option<(usize,usize)>,parsed:Parsed,first:Option<Parsed>,ordinal:usize,byte:usize,lane:usize,position:usize,shift:usize,phase:Phase,outcome:Option<Result<SelectionKind,SelectionRefusal>>,closing:bool,progress:RetainedCloneProgress,work:u64
+ entries:ManuallyDrop<Option<Vec<Entry>>>,retirement:RetainedCloneClose,birth:Birth,original:OriginalSourceBinding,source:Option<(usize,usize)>,current:Option<(usize,usize)>,first_identity:Option<(usize,usize)>,parsed:Parsed,first:Option<Parsed>,ordinal:usize,byte:usize,lane:usize,position:usize,shift:usize,phase:Phase,outcome:Option<Result<SelectionKind,SelectionRefusal>>,closing:bool,progress:RetainedCloneProgress
 }
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"gumball selection changed its actual borrowed gesture, caller or owner phase")}
-fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn identity(ids:&[String])->(usize,usize){(ids.as_ptr()as usize,ids.len())}
 fn text_identity(value:&str)->(usize,usize){(value.as_ptr()as usize,value.len())}
 fn number(text:&str,maximum:u64,zero:bool)->Option<u64>{
@@ -39,7 +39,7 @@ fn number(text:&str,maximum:u64,zero:bool)->Option<u64>{
 fn same(a:&str,b:&str,offset:usize,count:usize)->bool{a.as_bytes()[offset..offset+count].iter().zip(&b.as_bytes()[offset..offset+count]).fold(true,|equal,(a,b)|equal&(*a==*b))}
 impl GumballSelectionWork{
  pub fn new(cx:&StepContext<'_>)->Self{Self::new_original(OriginalSourceBinding::borrow(cx))}
- pub fn new_original(original:OriginalSourceBinding)->Self{Self{entries:ManuallyDrop::new(None),retirement:Default::default(),original,source:None,current:None,first_identity:None,parsed:Default::default(),first:None,ordinal:0,byte:0,lane:0,position:0,shift:0,phase:Phase::Scan,outcome:None,closing:false,progress:Default::default(),work:0}}
+ pub fn new_original(original:OriginalSourceBinding)->Self{Self{entries:ManuallyDrop::new(None),retirement:Default::default(),birth:Default::default(),original,source:None,current:None,first_identity:None,parsed:Default::default(),first:None,ordinal:0,byte:0,lane:0,position:0,shift:0,phase:Phase::Scan,outcome:None,closing:false,progress:Default::default()}}
  fn validate(&self,ids:&[String])->Result<(),ValueError>{
   if self.closing||self.source.is_some_and(|source|source!=identity(ids))||self.current.is_some_and(|current|ids.get(self.ordinal).is_none_or(|id|current!=text_identity(id)))||self.first_identity.is_some_and(|first|ids.first().is_none_or(|id|first!=text_identity(id))){return Err(invalid())}Ok(())
  }
@@ -72,17 +72,16 @@ impl GumballSelectionWork{
   })
  }
  pub fn step(&mut self,ids:&[String],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(ids)?;if !self.original.matches(cx){return Err(invalid().into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.ready(){return Ok(true)}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
-  let d=self.next_demands(ids,cx.retained_grant().maximum_copy_bytes)?;let mut accepted=None;
-  let grant=cx.retained_grant();
-  admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|_|{let g=grant;let turn=self.advance(ids,g);RetainedWorkOutcome{result:turn.result.map(|_|((),self.progress)),work:turn.work}})?;Ok(self.ready())
+  self.validate(ids)?;if !self.original.matches(cx){return Err(invalid().into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.ready()&&!self.birth.settling(){return Ok(true)}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
+  let d=self.next_demands(ids,cx.retained_grant().maximum_copy_bytes)?;let grant=cx.retained_grant();
+  let mut birth=std::mem::take(&mut self.birth);let settled=birth.run(cx,construction(d),||self.advance(ids,grant));self.birth=birth;Ok(settled?&&self.ready())
  }
- fn advance(&mut self,ids:&[String],g:RetainedCloneGrant)->RetainedWorkOutcome<bool>{
-  self.progress=Default::default();self.work=0;let result=self.advance_inner(ids,g).map_err(|error|error.with_retained_progress(self.progress));RetainedWorkOutcome{result,work:self.work}
+ fn advance(&mut self,ids:&[String],g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  self.progress=Default::default();self.advance_inner(ids,g).map(|_|self.progress).map_err(|error|error.with_retained_progress(self.progress))
  }
  fn advance_inner(&mut self,ids:&[String],g:RetainedCloneGrant)->Result<bool,ValueError>{
   let d=self.next_demands(ids,g.maximum_copy_bytes)?;if self.ready(){return Ok(true)}if !retained_clone_grant_admits(g,d){return Ok(false)}
-  self.source=Some(identity(ids));self.work=1;self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()};
+  self.source=Some(identity(ids));self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()};
   match self.phase{
    Phase::Scan=>{
     let Some(id)=ids.get(self.ordinal)else{self.finish(Ok(if self.first.is_some(){SelectionKind::Components}else{SelectionKind::Basic}));return Ok(true)};
@@ -127,18 +126,20 @@ impl GumballSelectionWork{
  }
  pub fn begin_close(&mut self){self.closing=true}
  pub fn next_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-  if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.entries.is_some(){return self.retirement.next_owner_demands::<Vec<Entry>>(true,&None,copy)}Ok(if self.source.is_some()||self.first_identity.is_some()||self.current.is_some()||self.first.is_some()||self.outcome.is_some(){fixed(size_of::<Parsed>()+8*size_of::<usize>())}else{Default::default()})
+  if !self.birth.terminal_is_empty(){return self.birth.close_demand(copy)}if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.entries.is_some(){return self.retirement.next_owner_demands::<Vec<Entry>>(true,&None,copy)}Ok(if self.source.is_some()||self.first_identity.is_some()||self.current.is_some()||self.first.is_some()||self.outcome.is_some(){fixed(size_of::<Parsed>()+8*size_of::<usize>())}else{Default::default()})
  }
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
-  self.work=0;self.progress=Default::default();if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
-  let turn=if !self.retirement.is_empty(){self.retirement.step_granted(g)}else if self.entries.is_some(){let turn=self.retirement.begin_granted(&mut self.entries,g);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}
-  else if self.terminal_is_empty(){RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-  else{match self.next_close_demands(g.maximum_copy_bytes){Err(error)=>RetainedWorkOutcome{result:Err(error),work:0},Ok(d)if !retained_clone_grant_admits(g,d)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Ok(d)=>{self.source=None;self.current=None;self.first_identity=None;self.first=None;self.outcome=None;self.parsed=Default::default();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}}};
-  self.work=turn.work;self.progress=turn.result.as_ref().map_or_else(|error|error.retained_progress(),|step|step.progress());turn
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.terminal_is_empty(){return Ok(true)}if !self.closing{return Err(invalid().into())}if !self.birth.close_step(cx)?{return Ok(false)}
+  let body=cx.retained_grant().maximum_copy_bytes;let d=self.next_close_demands(body)?;closed(cx,d,|effect|self.close_original(body,d,effect))?;Ok(self.terminal_is_empty())
  }
- pub fn terminal_is_empty(&self)->bool{self.closing&&self.entries.is_none()&&self.retirement.is_empty()&&self.source.is_none()&&self.current.is_none()&&self.first_identity.is_none()&&self.first.is_none()&&self.outcome.is_none()}
+ fn close_original(&mut self,body:usize,d:RetirementDemand,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  if !self.retirement.is_empty(){return resumed(&mut self.retirement,body,effect)}if self.entries.is_some(){return begun(&mut self.retirement,&mut self.entries,effect)}
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !retained_clone_grant_admits(effect.grant(),d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  self.source=None;self.current=None;self.first_identity=None;self.first=None;self.outcome=None;self.parsed=Default::default();Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+ }
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.entries.is_none()&&self.retirement.is_empty()&&self.birth.terminal_is_empty()&&self.source.is_none()&&self.current.is_none()&&self.first_identity.is_none()&&self.first.is_none()&&self.outcome.is_none()}
 }
-impl Drop for GumballSelectionWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"gumball selection retains its original spans or component frontier");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.entries)}}}}
+impl Drop for GumballSelectionWork{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"gumball selection retains its original spans or component frontier");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.entries)}}}}
 
 #[cfg(test)]
 #[path="🧪️.rs"]

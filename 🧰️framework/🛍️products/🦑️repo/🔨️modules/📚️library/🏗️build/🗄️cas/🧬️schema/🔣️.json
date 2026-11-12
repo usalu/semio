@@ -6,7 +6,7 @@
     "Policy": {
       "const": {
         "version": 1,
-        "capBytes": 128849018880,
+        "capBytes": 34359738368,
         "highWatermark": 0.9,
         "lowWatermark": 0.75,
         "minAgeMs": 600000,

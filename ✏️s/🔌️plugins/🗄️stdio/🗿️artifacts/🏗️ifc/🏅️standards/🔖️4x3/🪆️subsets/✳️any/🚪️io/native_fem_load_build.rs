@@ -24,7 +24,7 @@ pub(super) fn extent(source: &Fem3dSnapshot, owner: &mut Owner<'_, '_>) -> Resul
     Ok(count)
 }
 pub(super) fn receive(source: &Fem3dSnapshot, identity: &FemIdentityIndex, nodes: &[(u64, u64)], graph: &mut IfcSnapshot, owner: &mut Owner<'_, '_>) -> Result<Vec<IfcValue>, ValueError> {
-    owner.receive_nested::<Loads, Vec<IfcValue>>(|slot, original| {
+    decoded_nested::<Loads, Vec<IfcValue>>(owner, |slot, original| {
         work(original, size_of::<Loads>())?;
         *slot = Some(Loads::default());
         let frame = slot.as_mut().unwrap();

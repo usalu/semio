@@ -119,6 +119,7 @@ struct SemioBrepSetVertexWork {
 }
 
 impl ArtifactCommandWork<EditorApp<SemioBrepEditor>> for SemioBrepSetVertexWork {
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn tool_id(&self) -> &'static str {
         "set-vertex"
     }
@@ -347,4 +348,3 @@ fn example_picker_declares_only_the_host_load_lane(){
     assert_eq!(contract.lanes,&[semio_plugin::ArtifactToolPublicationLane::HostOnly]);
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(SemioBrepSetVertexWork);

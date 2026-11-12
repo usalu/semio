@@ -94,6 +94,7 @@ pub enum XlsxMutation {
     /// 🧺 Removes one `[Content_Types].xml` entry.
     RemoveContentType(remove_content_type::RemoveContentType),
 }
+dsl::original_pack_value_operation_receiving!(XlsxMutation);
 
 /// 🧾️ Kebab-case spelling of every `XlsxMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `xlsx-ecma-376-base` (`../../🔣️oracle.json`) is measured against

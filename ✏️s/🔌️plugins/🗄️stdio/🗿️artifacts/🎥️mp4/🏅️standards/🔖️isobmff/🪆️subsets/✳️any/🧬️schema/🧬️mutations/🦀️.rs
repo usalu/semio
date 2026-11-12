@@ -49,6 +49,7 @@ pub enum Mp4Mutation {
     RemoveSample(remove_sample::RemoveSample),
     SetSampleSync(set_sample_sync::SetSampleSync),
 }
+dsl::original_pack_value_operation_receiving!(Mp4Mutation);
 
 /// 📇️ Kebab-case spelling of every `Mp4Mutation` variant, in declaration order — the ground truth
 /// `../../🔣️oracle.json`'s own `kinds` list is checked against (the framework never

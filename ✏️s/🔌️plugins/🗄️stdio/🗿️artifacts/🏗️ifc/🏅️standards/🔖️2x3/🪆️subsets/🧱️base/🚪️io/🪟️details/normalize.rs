@@ -1,6 +1,6 @@
 //! 🧭️ Canonical selected and reference paths move original input owners while declaration cursors validate the prepared graph.
 use super::*;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::size_of;
 #[derive(Default)]pub(super)struct Normalize{stage:usize,row:usize,found:Option<usize>,retired:[Option<DslValue>;4],retirement:RetainedCloneClose,closing:bool}
@@ -17,5 +17,5 @@ impl Normalize{
  pub(super)fn begin_close(&mut self){self.closing=true;}
  pub(super)fn terminal_is_empty(&self)->bool{self.retired.iter().all(Option::is_none)&&self.retirement.is_empty()}
  pub(super)fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.retirement.next_owner_demands::<DslValue>(self.retired.iter().any(Option::is_some),&None,body)}
- pub(super)fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(error());}if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result;}for owner in &mut self.retired{if owner.is_some(){return self.retirement.begin_granted(owner,grant).result?.ok_or_else(error);}}Ok(RetainedCloneStep::Complete(Default::default()))}
+ pub(super)fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(error());}if !self.retirement.is_empty(){return settled(self.retirement.step_granted(4096,effect));}for owner in &mut self.retired{if owner.is_some(){return self.retirement.begin_granted(owner,effect).result?.ok_or_else(error);}}Ok(RetainedCloneStep::Complete(Default::default()))}
 }

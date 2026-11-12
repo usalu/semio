@@ -21,7 +21,11 @@ pub fn evaluation_retire_cold<T:RetireOwned>(value:T){
     let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("cold evaluation original declaration refused: {error}"));
     while !owner.terminal_is_empty(){
         let copy=owner.next_copy_byte_demand().expect("cold evaluation copy demand");let demand=evaluation_controlled_demands(&owner,copy).expect("cold evaluation physical demand");
-        owner.step(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}).expect("cold evaluation physical closure");
+        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+        match neural_engine::retirement::cold_effect(grant,|effect|owner.step(copy,effect)).expect("cold evaluation work quote"){
+            semio_framework_value::RetainedWorkPoll::Pending{..}=>panic!("cold evaluation physical closure cannot suspend"),
+            semio_framework_value::RetainedWorkPoll::Complete(turn)=>{turn.result.expect("cold evaluation physical closure");},
+        }
     }
 }
 
@@ -30,7 +34,7 @@ pub fn evaluation_dependency_identity(request: &EvaluateRequest) -> String {
     let canonical=|text:&str| {
         let value=match semio_framework_pack_json::parse(text,semio_framework_pack_json::JsonMemberPolicy::Reject) {Ok(value)=>value,Err(_)=>return text.to_string()};
         let mut projection=semio_framework_pack_json::JsonValueProjection::new_ordered(value);
-        let mut accepted=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut accepted);let value=loop {if let Some(value)=projection.step(4096,usize::MAX,&mut decode,COLD_EVALUATION_IDENTITY_POLICY).expect("canonical identity projection"){break value;}};
+        let mut accepted=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(usize::MAX,&mut accepted);let value=loop {if let Some(value)=neural_engine::retirement::cold_effect(COLD_EVALUATION_IDENTITY_POLICY,|effect|projection.step(4096,usize::MAX,&mut decode,effect)).expect("canonical identity effect").expect("canonical identity projection"){break value;}};
         let mut writer=semio_framework_pack_json::JsonWriteCursor::new(value);let mut admitted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(usize::MAX,&mut admitted);
         let text=loop {if let Some(text)=writer.step(4096,&mut control,COLD_EVALUATION_IDENTITY_POLICY).expect("canonical identity writer"){break text;}};
         evaluation_retire_cold(projection);evaluation_retire_cold(writer);text
@@ -74,34 +78,38 @@ pub fn evaluation_retirement_demands(owner:&neural_engine::SharedRegistry,copy:u
 }
 
 /// 🧹️ Advances the same map under every independently supplied physical credit.
-pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegistry,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,EvaluationFailure>{
-    let empty=RetainedCloneProgress::default();
-    let mut registry=evaluation_jobs().lock().map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"evaluation registry close is contended"))?;
-    let identity=owner.owner_identity();let demand=evaluation_registry_demands(&registry,identity,grant.maximum_copy_bytes)?;
-    if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-    if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation registry close exceeds supplied depth").into());}
-    if registry.closing_owner==Some(identity){
-        if let Some(key)=&mut registry.retiring_key{
-            let step=key.step(grant);*work+=key.last_turn_work();let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step?,key.terminal_is_empty(),"original evaluation map key")?;if key.terminal_is_empty(){registry.retiring_key=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
+pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegistry,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+    let grant=effect.grant();
+    let result=(||->Result<RetainedCloneStep,RetirementPollExit>{
+        let empty=RetainedCloneProgress::default();
+        let mut registry=evaluation_jobs().lock().map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"evaluation registry close is contended"))?;
+        let identity=owner.owner_identity();let demand=evaluation_registry_demands(&registry,identity,grant.maximum_copy_bytes)?;
+        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
+        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation registry close exceeds supplied depth").into());}
+        if registry.closing_owner==Some(identity){
+            if let Some(key)=&mut registry.retiring_key{
+                let step=RetirementPollExit::resume(key.step(body,effect))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,key.terminal_is_empty(),"original evaluation map key")?;if key.terminal_is_empty(){registry.retiring_key=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
+            if let Some(backing)=&mut registry.retiring_backing{
+                let step=RetirementPollExit::resume(backing.step(body,effect))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,backing.terminal_is_empty(),"original evaluation map arena")?;if backing.terminal_is_empty(){registry.retiring_backing=None;registry.closing_owner=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
+            registry.closing_owner=None;
         }
-        if let Some(backing)=&mut registry.retiring_backing{
-            let step=backing.step(grant);*work+=backing.last_turn_work();let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step?,backing.terminal_is_empty(),"original evaluation map arena")?;if backing.terminal_is_empty(){registry.retiring_backing=None;registry.closing_owner=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
+        if registry.closing_owner.is_some(){return Ok(RetainedCloneStep::Progress(empty));}
+        if let Some(retained)=registry.jobs.slot_values_mut().find(|retained|retained.owner_identity==identity&&retained.cancelled&&!retained.close_fields_terminal(false,false)){
+            let step=retained.close_step(body,effect,false,false)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,retained.close_fields_terminal(false,false),"original cancelled evaluation")?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        registry.closing_owner=None;
-    }
-    if registry.closing_owner.is_some(){return Ok(RetainedCloneStep::Progress(empty));}
-    if let Some(retained)=registry.jobs.slot_values_mut().find(|retained|retained.owner_identity==identity&&retained.cancelled&&!retained.close_fields_terminal(false,false)){
-        let step=retained.close_step(grant,false,false);*work+=retained.take_work();let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step?,retained.close_fields_terminal(false,false),"original cancelled evaluation")?;return Ok(RetainedCloneStep::Progress(step.progress()));
-    }
-    if registry.admission_owner==Some(identity)&&registry.jobs.is_empty()&&!registry.jobs.terminal_is_empty(){registry.lookup_epoch=registry.lookup_epoch.checked_add(1).expect("original registry backing epoch");registry.admission_owner=None;registry.closing_owner=Some(identity);registry.retiring_backing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut registry.jobs)).unwrap_or_else(|(error,_)|panic!("original admitted evaluation backing refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-    for slot in 0..registry.jobs.slot_count(){
-        if let Some((key,retained))=registry.jobs.extract_slot_if(slot,|_,retained|!(retained.owner_identity==identity&&retained.cancelled&&retained.close_fields_terminal(false,false))){
-            registry.lookup_epoch=registry.lookup_epoch.checked_add(1).expect("original registry removed key epoch");drop(retained);registry.retiring_key=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(key).unwrap_or_else(|(error,_)|panic!("original evaluation key declaration refused: {error}")));registry.closing_owner=Some(identity);
-            if registry.jobs.is_empty()&&!registry.jobs.terminal_is_empty(){registry.retiring_backing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut registry.jobs)).unwrap_or_else(|(error,_)|panic!("original evaluation arena declaration refused: {error}")));}
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
+        if registry.admission_owner==Some(identity)&&registry.jobs.is_empty()&&!registry.jobs.terminal_is_empty(){registry.lookup_epoch=registry.lookup_epoch.checked_add(1).expect("original registry backing epoch");registry.admission_owner=None;registry.closing_owner=Some(identity);registry.retiring_backing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut registry.jobs)).unwrap_or_else(|(error,_)|panic!("original admitted evaluation backing refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
+        for slot in 0..registry.jobs.slot_count(){
+            if let Some((key,retained))=registry.jobs.extract_slot_if(slot,|_,retained|!(retained.owner_identity==identity&&retained.cancelled&&retained.close_fields_terminal(false,false))){
+                registry.lookup_epoch=registry.lookup_epoch.checked_add(1).expect("original registry removed key epoch");drop(retained);registry.retiring_key=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(key).unwrap_or_else(|(error,_)|panic!("original evaluation key declaration refused: {error}")));registry.closing_owner=Some(identity);
+                if registry.jobs.is_empty()&&!registry.jobs.terminal_is_empty(){registry.retiring_backing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut registry.jobs)).unwrap_or_else(|(error,_)|panic!("original evaluation arena declaration refused: {error}")));}
+                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
+            }
         }
-    }
-    Ok(RetainedCloneStep::Complete(empty))
+        Ok(RetainedCloneStep::Complete(empty))
+    })();
+    RetirementPollExit::settle(effect,result)
 }
 
 /// 🧹️ Includes original removed keys and empty-but-allocated arena custody.

@@ -49,7 +49,7 @@ impl FlowHostRetirement {
         if let Some(port)=self.state.geometry.as_mut(){
             if port.terminal_is_empty(){self.state.geometry=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            let step=port.close_step(child)?;
+            let step=port.close_step(effect)?;
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,port.terminal_is_empty(),"original host geometry retirement")?;
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }

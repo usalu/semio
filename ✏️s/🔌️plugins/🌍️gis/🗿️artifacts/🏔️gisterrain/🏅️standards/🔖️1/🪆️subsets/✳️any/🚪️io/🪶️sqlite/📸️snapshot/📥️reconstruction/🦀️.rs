@@ -119,7 +119,7 @@ pub fn reconstruct(database: &SqliteDatabase, control: &mut SqliteSnapshotContro
  let maximum = control.reconstruction_remaining_bytes()?; let mut semantic = 0usize;
  let result = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, progress,allocation|{
   let mut callback = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-  let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+  let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,allocation);
   let result = native.begin_stage(0).and_then(|()| { let mut owner = Owner { native: &mut native, bytes: 0, maximum }; let result = snapshot(database, &mut owner); semantic = owner.bytes; result });
   (result, native.owned_bytes())
  });

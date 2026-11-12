@@ -1,5 +1,6 @@
 //! ✏️ remodeling editor: the command enum, action bridge, play app and manifest.
 
+extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as store;
 

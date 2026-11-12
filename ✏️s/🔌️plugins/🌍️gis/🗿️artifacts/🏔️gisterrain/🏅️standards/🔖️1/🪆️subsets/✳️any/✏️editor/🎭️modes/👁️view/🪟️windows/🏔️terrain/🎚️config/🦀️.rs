@@ -153,6 +153,7 @@ impl protocol::OpBinary for GisTerrainWindowConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+dsl::original_ordinal_operation_receiving!(GisTerrainWindowConfigMutation);
 
 //#endregion 🔖️OpCodec
 

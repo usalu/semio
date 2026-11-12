@@ -46,7 +46,7 @@ pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::com
                     None => rows.push(RemodelingRow::Insert { entity: RemodelingAssetEntry { key: id.to_string(), child } }),
                 }
             }
-            None if base.assets.contains_key(id) => rows.push(RemodelingRow::Remove { key: id.to_string() }),
+            None if base.assets.get(id).is_some() => rows.push(RemodelingRow::Remove { key: id.to_string() }),
             None => {}
         }
     }

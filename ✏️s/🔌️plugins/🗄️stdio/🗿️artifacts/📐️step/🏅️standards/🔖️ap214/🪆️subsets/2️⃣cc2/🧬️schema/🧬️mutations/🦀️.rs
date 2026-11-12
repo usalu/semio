@@ -77,6 +77,7 @@ pub enum StepCc2Mutation {
     DemoteShapeRepresentation(demote_shape_representation::DemoteShapeRepresentation),
     RestoreEntities(restore_entities::RestoreEntities),
 }
+dsl::original_pack_value_operation_receiving!(StepCc2Mutation);
 
 /// 📇️ Kebab-case spelling of every `StepCc2Mutation` variant, in declaration order — the
 /// `step-ap214-cc2` catalog in `../../🔣️oracle.json` must match verbatim.

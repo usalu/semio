@@ -199,8 +199,5 @@ pub use crate::standards::v_jfif_1_01::subsets::baseline::io::{JpgBaselineBuilde
 pub use crate::standards::v_jfif_1_01::subsets::document::io::facets::{JpgBuilderConstruction, JpgParts, JpgAnalyzerAnalysis, JpgBuilderFacets, JpgBuilder, JpgAnalyzer, JpgComposer};
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
-mod hoisted_receiving_0;
-#[cfg(test)]
 #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod hoisted_snapshot_1;

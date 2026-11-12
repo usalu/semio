@@ -833,14 +833,14 @@ impl RetainedMachine {
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.retirement.next_owner_demands::<Store>(self.store.is_some(), &None, body)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing {
             return Err(refusal("express.runtime-not-closing"));
         }
         if self.store.is_some() {
-            self.retirement.begin_granted(&mut self.store, grant).result?.ok_or_else(|| refusal("express.runtime-close-owner"))
+            self.retirement.begin_granted(&mut self.store, effect).result?.ok_or_else(|| refusal("express.runtime-close-owner"))
         } else if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant).result
+            settled(self.retirement.step_granted(4096, effect))
         } else {
             Ok(RetainedCloneStep::Complete(Default::default()))
         }

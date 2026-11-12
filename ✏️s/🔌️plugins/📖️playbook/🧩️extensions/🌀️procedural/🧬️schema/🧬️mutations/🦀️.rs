@@ -14,6 +14,7 @@ pub enum ModulePayloadMutation {
     #[dsl(key = "set-payload")]
     SetPayload(SetPayload),
 }
+dsl::original_pack_value_operation_receiving!(ModulePayloadMutation);
 
 //#region 🔖️OpCodec
 

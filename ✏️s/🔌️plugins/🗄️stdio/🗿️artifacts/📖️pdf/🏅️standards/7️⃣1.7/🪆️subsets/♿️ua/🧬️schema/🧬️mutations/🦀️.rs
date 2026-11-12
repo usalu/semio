@@ -48,6 +48,7 @@ pub enum PdfUaMutation {
     EmbedFontFile(EmbedFontFile),
     RemoveFontFile(RemoveFontFile),
 }
+dsl::original_pack_value_operation_receiving!(PdfUaMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs

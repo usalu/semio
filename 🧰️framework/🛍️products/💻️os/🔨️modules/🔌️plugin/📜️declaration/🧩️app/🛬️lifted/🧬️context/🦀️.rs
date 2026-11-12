@@ -24,6 +24,8 @@ impl<A:ArtifactApp> ArtifactOwnedContextHandle<A>{
   let(source,progress)=match(output,outcome){(Some(source),outcome)=>(Source::Admitted(source),outcome.unwrap_or_default()),(None,outcome)=>(Source::Refused{original:input.take().expect("refused context admission retains its original"),fault:outcome.err().unwrap_or_else(unadmitted)},Default::default())};
   (Self{source:ManuallyDrop::new(Some(source))},progress)
  }
+ /// 🚫️ A refused admission surrenders its untouched original and returns the refusal, so the handle never drops holding a payload and the denied turn charges nothing.
+ pub fn admitted(mut self)->Result<Self,ValueError>{match self.source.as_ref(){Some(Source::Refused{..})=>match self.source.take(){Some(Source::Refused{fault,..})=>Err(fault),_=>unreachable!()},_=>Ok(self)}}
  pub fn get(&self)->&ArtifactOwnedToolJobContext<A>{match self.source.as_ref().expect("original context already transferred"){Source::Admitted(source)=>source.get(),Source::Refused{original,..}=>original}}
  pub fn admission_fault(&self)->Option<&ValueError>{match self.source.as_ref()?{Source::Admitted(_)=>None,Source::Refused{fault,..}=>Some(fault)}}
  pub fn source_issuers_ready(&self)->bool{self.admission_fault().is_none()&&self.get().source_issuers_ready()}

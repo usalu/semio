@@ -7,9 +7,9 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 /// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.
-pub fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>)->Result<SemioBrepSnapshot,ValueError>{
- crate::io::sqlite::snapshot::admit_layout(control.limits())?;
- native::with_body(payload,STDIO_SEMIOBREP_DOCUMENT_SCHEMA,control,native_control,|body,decoder,limits|workspace::decode(decoder,empty,|output,decoder|match body{native::Body::Binary(body)=>binary_into(output,body,decoder,limits),native::Body::Text(body)=>document_into(output,body,decoder,limits)}))
+pub fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<native::Output<SemioBrepSnapshot>>)->native::Outcome{
+ if let Err(error)=crate::io::sqlite::snapshot::admit_layout(control.limits()){return native::refused(error)}
+ native::decode_receiving(payload,STDIO_SEMIOBREP_DOCUMENT_SCHEMA,control,native_owner,output,empty,|body,output,decoder,limits|match body{native::Body::Binary(body)=>binary_into(output,body,decoder,limits),native::Body::Text(body)=>document_into(output,body,decoder,limits)})
 }
 fn f64(reader:&mut store::ByteReader<'_>)->Result<f64,ValueError>{reader.read_f64_le().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))}
 fn point2(reader:&mut store::ByteReader<'_>)->Result<SemioPoint2,ValueError>{Ok(SemioPoint2{x:f64(reader)?,y:f64(reader)?})}

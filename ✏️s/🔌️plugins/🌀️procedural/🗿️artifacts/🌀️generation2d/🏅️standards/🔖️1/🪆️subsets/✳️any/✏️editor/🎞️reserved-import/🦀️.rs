@@ -25,7 +25,6 @@ pub(super) struct Generation2dImportJob {
     pub(super) source: Vec<u8>,
     delivered: bool,
     active: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-    last_close_work: u64,
 }
 
 impl Default for Generation2dImportJob {
@@ -42,7 +41,6 @@ impl Default for Generation2dImportJob {
             source: Vec::new(),
             delivered: false,
             active: None,
-            last_close_work: 0,
         }
     }
 }
@@ -129,52 +127,61 @@ impl Generation2dImportJob {
         Ok(Default::default())
     }
 
-    fn close_turn(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::ValueError> {
-        use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, ValueError, ValueRefusalKind};
-        self.last_close_work = 0;
+    fn close_poll(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        let result = self.close_ladder(effect);
+        semio_framework_value::RetirementPollExit::settle(effect, result)
+    }
+
+    fn charged(effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, before: u128, reported: u128) -> Result<(), semio_framework_value::RetirementPollExit> {
+        semio_framework_value::RetirementPollExit::pay(effect, reported.saturating_sub(effect.performed_work() - before))
+    }
+
+    fn close_ladder(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::RetirementPollExit> {
+        use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, RetirementPollExit, ValueError, ValueRefusalKind};
+        let grant = effect.grant();
         let demand = self.close_demands(grant.maximum_copy_bytes)?;
         if demand == Default::default() {
-            return Ok(Default::default());
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         if grant.maximum_depth < demand.depth {
-            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "generation2d import close exceeds its admitted depth"));
+            return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "generation2d import close exceeds its admitted depth").into());
         }
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
-            return Ok(Default::default());
+            return Ok(RetainedCloneStep::Progress(Default::default()));
         }
+        let before = effect.performed_work();
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if !self.publication.terminal_is_empty() {
-            let turn = self.publication.close_step(child);
-            self.last_close_work = turn.work;
-            return turn.result.map(|step| step.progress());
+            let turn = self.publication.close_step(&mut effect.nested(child));
+            Self::charged(effect, before, turn.work)?;
+            return Ok(RetainedCloneStep::Progress(turn.result?.progress()));
         }
         if self.delivered {
             self.delivered = false;
-            self.last_close_work = 1;
-            return Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() });
+            RetirementPollExit::pay(effect, 1)?;
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
         if self.active.is_some() {
-            let turn = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant);
-            self.last_close_work = turn.work;
-            return turn.result.map(|step| step.progress());
+            let step = RetirementPollExit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant.maximum_copy_bytes, effect))?;
+            return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.pending_completion_rejection.is_some() {
-            let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant);
-            self.last_close_work = turn.work;
-            return turn.result.map(|step| step.progress());
+            let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, effect);
+            Self::charged(effect, before, turn.work)?;
+            return Ok(RetainedCloneStep::Progress(turn.result?.progress()));
         }
         if self.mutations.is_some() {
-            let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant);
-            self.last_close_work = turn.work;
-            return turn.result.map(|step| step.progress());
+            let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, effect);
+            Self::charged(effect, before, turn.work)?;
+            return Ok(RetainedCloneStep::Progress(turn.result?.progress()));
         }
-        self.last_close_work = 1;
+        RetirementPollExit::pay(effect, 1)?;
         if self.source.capacity() != 0 {
             drop(std::mem::take(&mut self.source));
-            return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }));
         }
         self.media_position = 0;
-        Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })
+        Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 }
 
@@ -182,10 +189,22 @@ impl Generation2dImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
     fn step_value<'a>(&'a mut self, request: &ArtifactReservedToolJobRequest<EditorApp<Generation2dPlayApp>>, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
-            let turn = self.publication.close_step(cx.retained_grant());
-            cx.consume_fuel(turn.work);
-            let step = turn.result?;
-            cx.consume_retained(step.progress())?;
+            let grant = cx.retained_grant();
+            let Some((turn, _)) = cx.with_original_effect(grant, |_, effect| {
+                let before = effect.performed_work();
+                let mut turn = self.publication.close_step(effect);
+                if let Err(exit) = Self::charged(effect, before, turn.work) {
+                    turn.result = Err(match exit {
+                        semio_framework_value::RetirementPollExit::Failed(failure) => failure.into_value_error(),
+                        semio_framework_value::RetirementPollExit::Pending(_) => unreachable!("paying work never suspends"),
+                    });
+                }
+                semio_framework_value::RetainedWorkOutcome { result: turn.result, work: effect.performed_work() }
+            })?
+            else {
+                return Ok(None);
+            };
+            let step = semio_framework_job::receive_original_retained_work(cx, turn)?;
             if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
                 self.delivered = false;
             }
@@ -263,12 +282,11 @@ impl semio_plugin::plugin_app_close_prelude::ArtifactReservedWork<EditorApp<Gene
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            use semio_framework_job::InteractiveJobCloseStep;
-            self.closing = true;
-            let result = self.close_turn(grant).map(|progress| if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } });
-            semio_framework_value::RetainedWorkOutcome { result, work: self.last_close_work }
-        })
+        use semio_framework_job::InteractiveJobCloseStep;
+        self.closing = true;
+        let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| self.close_poll(effect))?;
+        Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }
 
     fn terminal_is_empty(&self) -> bool {

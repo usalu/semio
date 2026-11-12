@@ -1,0 +1,25 @@
+# 1112 ifcdetails (11/12)
+## Step 1 ifc-details-wire GREEN (W-ifcdetails-3 hub wasm rc 0, baseline 82 errors)
+- source_loan.rs rewritten: `SnapshotLease` (derive RetireOwned over ArcLease<IfcSnapshot>, OriginalSourceProjection<IfcSnapshot>), `funded_turn`, `SourceLoan` = derive(RetireOwned) over StagedSourceAdmission + SnapshotSource + Binding (bespoke cursor/closing ladder removed; close = framework derive). API change: `empty/begin_close/close_demand/close_owned` gone, `source()` only when admission is finished.
+- SnapshotSource = RetainedCloneSource<IfcSnapshot, SnapshotLease>; users call `try_authority()?.get()?`.
+- wire.rs: codec advance/close under `effected` (profile helper); `close_codec(effect)`. receive.rs: `retire_step/close_step(effect)`, `settled`.
+- Profile crate (ifc-details-profile) retained.rs gained `settled`, `paid`, `effected`, `begun_in` (shared by the other details crates).
+- Debts: wire cfg(test) code not checked; source_loan_tests.rs uses old close API.
+
+## Step 2 (11/12) ifc-2x3-base-details GREEN: W-ifcdetails-5 (hub wasm rc 0, baseline 119)
+- New local `🪟️details/effect.rs` (SnapshotLease, funded_turn, effected, quoted, receive, receiver_close, receiving_fault, settled, replied); work/wire/field_edit/normalize/template/type_change ported: closes are `close_step(effect)->Result<Step,ValueError>`, driven by `close_original_retained_effect_step`; instance clone cursor driven reply-shaped (advance_into/take/close_into with a `recover` flag); native receiving of DslValue via `receive`/`receiver_close`.
+## Step 3 ifc4x3-population + ifc-details-type GREEN: W-ifcdetails-8
+- population: overlay/receive/admission `close_step(effect)` (+`settled` in validation/retained.rs).
+- details-type: constituent_roster/type_input effect-shaped; wire `source_loan` gained `replied/advance_cursor/close_cursor/take_cursor` (generic clone-cursor drivers with recover flag).
+## Step 4 downstream reds found by `-p semio-hub-stdio-component` (W-ifcdetails-9/12)
+- ifc4x3-machine + ifc-details-edit GREEN (W-ifcdetails-10): machine close_step(effect); profile trait `IfcCandidateRules::close_step(effect)` (+ validation/local.rs); details-edit contextual_edit/value_edit effect-shaped; profile gained `charged`.
+- ifc-2x3-base GREEN (W-ifcdetails-11): io component imports (text/binary/mutations/inferences), Part21Preamble impl moved to ifc-2x3-base-model snapshot (orphan rule), `interaction_topology` moved into `impl ArtifactEditor`, `check_publication_limits` re-exported from stdio-contract editing, WindowKit import un-cfg(test)ed in 8 window mains, inspector `iter_mut`, geometry SurfaceKind path. Cargo: ifc-2x3-base gained dep semio-s-artifact-stdio-ifc-2x3-base-inferences (LOCK NEEDED logged).
+- ifc-2x3-sav/cv20/cobie GREEN (W-ifcdetails-14): same interaction_topology move; removed `dsl::original_pack_value_operation_receiving!` line (types have no OpBinary; stdio7 precedent).
+## Open (W-ifcdetails-12, hub wasm -p semio-hub-stdio-component)
+- semio-s-artifact-stdio-ifc-details-guidance: 150 errors, UNSTARTED, FREE. Files: 🧶️guidance/type-guidance.rs (~143 KB, 70+), type_guidance_candidate.rs, type_guidance_request.rs, type_input_choices.rs, type_input_{list,set,typed}_copy.rs, type_input_set_controls.rs. Cause: hand-written `RetireOwned::retirement(self)->Box<dyn RetirementCursor>` + `RetirementCursor::close_step(grant)` for each work/copy struct (old protocol: need `type RetirementCursor`/`retirement_seed` or `#[derive(RetireOwned)]` like ifc4x3-mvd's work struct), `SourceLoan` API (empty/begin_close/close_owned removed; derive RetireOwned now), `source.try_authority()?.as_ref()` -> `.get()?`, `RetainedCloneSource<_, Arc<_>>` -> `SnapshotLease`, `advance_demands(.., work)` 4th arg, clone-cursor `advance/take/begin_close` -> `source_loan::advance_cursor/take_cursor/close_cursor`, 6-arg domain copy fn. Reuse: details-wire `source_loan` helpers, profile `settled/charged/effected/begun_in`.
+- semio-s-artifact-bim-model-snapshot: 1368 errors, not mine.
+- Everything above `ifc-details-guidance` in the dependency order is green; crates downstream of guidance (ifc-details, ifc4x3 editors, ...) are not yet reached by cargo and may show further reds.
+- Not run: any --tests / behaviour test; native (non-wasm) check. cfg(test) code of all touched crates still on old API (source_loan_tests.rs, wire tests, work_tests, etc.).
+- Debts: shared SnapshotLease exists three times (ifc-details-wire, ifc-2x3-base-details effect.rs, ifc4x3-mvd lease.rs) because each crate has a different snapshot type/dependency edge; a generic `Lease<T>` hoisted into ifc-4-model/the framework would remove them.
+Rerun: "$C/1105b-tools/chk.sh" W-ifcdetails-<n> "🌎️hub/Cargo.toml" wasm -p semio-hub-stdio-component
+STATUS: BLOCKED semio-hub-stdio-component still red on ifc-details-guidance (150 errors, unstarted) and semio-s-artifact-bim-model-snapshot (1368, other lane); ifc-details-wire, ifc-2x3-base-details, ifc4x3-population, ifc-details-type, ifc4x3-machine, ifc-details-edit, ifc-2x3-base, ifc-2x3-sav/cv20/cobie FIXED-verified

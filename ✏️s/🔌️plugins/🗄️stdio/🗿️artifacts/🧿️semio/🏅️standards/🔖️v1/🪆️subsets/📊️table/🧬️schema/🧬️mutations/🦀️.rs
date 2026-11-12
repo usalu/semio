@@ -51,6 +51,7 @@ pub enum SemioTableMutation {
     ReorderRows(reorder_rows::ReorderRows),
     EditCell(edit_cell::EditCell),
 }
+dsl::original_pack_value_operation_receiving!(SemioTableMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioTableMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-table` mutation catalog (`../../🔣️oracle.json`) declares and

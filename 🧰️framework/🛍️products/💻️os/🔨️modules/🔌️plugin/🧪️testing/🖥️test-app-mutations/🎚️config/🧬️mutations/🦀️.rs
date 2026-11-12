@@ -11,11 +11,12 @@ pub enum TestConfigMutation {
     ChangeTestConfigSelection(ChangeTestConfigSelection),
 }
 impl semio_framework_value::retirement::RetireOwned for TestConfigMutation {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        match self { Self::ChangeTestConfigSelection(value) => value.retirement() }
+    type RetirementCursor = <ChangeTestConfigSelection as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+    fn retirement_ready(&self) -> bool {
+        match self { Self::ChangeTestConfigSelection(value) => value.retirement_ready() }
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        match self { Self::ChangeTestConfigSelection(value) => value.retirement_birth_bytes() }
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        match self { Self::ChangeTestConfigSelection(value) => value.retirement_seed() }
     }
     fn controlled_retirement_supported() -> bool { true }
 }

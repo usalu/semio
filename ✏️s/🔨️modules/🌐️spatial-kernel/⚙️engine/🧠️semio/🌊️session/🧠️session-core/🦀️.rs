@@ -72,45 +72,45 @@ impl SessionCapture {
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {match self.orphan.as_ref() {Some(state) if !state.terminal_is_empty()=>state.next_release_byte_demand(),_=>Ok(self.shell_byte_requirement())}}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError> {match self.orphan.as_ref() {Some(state) if !state.terminal_is_empty()=>state.next_depth_demand(),_=>Ok(usize::from(!self.terminal_is_empty()))}}
     /// ⚓️ Pins the actual allocation while the final original state transfers inline without rebirth.
-    pub fn close_original_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome {
-        let mut work=0;let result=(||->Result<RetainedCloneStep,ValueError>{
+    pub fn close_original_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+        let grant=effect.grant();let result=(||->Result<RetainedCloneStep,ValueError>{
         if self.terminal_is_empty() {return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(ownership_progress());}
         let state=self.session.as_ref().map(|session|&*session.state).or_else(||self.orphan.as_ref());
         if state.is_some_and(|state|state.retirement.try_lock().map(|owner|owner.paused).unwrap_or(true)) {return Ok(ownership_progress());}
         if let Some(session)=self.session.as_ref() {
-            let allocation=Arc::downgrade(&session.state);
+            spend_event(effect)?;let allocation=Arc::downgrade(&session.state);
             self.allocation_bytes=shell_bytes(&session.state);
             *self.allocation=Some(allocation);
             let Session {state}=self.session.take().unwrap();
             *self.orphan=Arc::into_inner(state);
-            work=1;return Ok(ownership_advance());
+            return Ok(ownership_advance());
         }
         if let Some(state)=self.orphan.as_ref() {
-            if !state.terminal_is_empty() {let turn=state.close_original_step(grant);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+            if !state.terminal_is_empty() {return settled_step(state.close_original_step(effect)).map(|step|RetainedCloneStep::Progress(step.progress()));}
             if grant.maximum_release_bytes<self.shell_byte_requirement() {return Ok(ownership_progress());}
-            let receipt=std::sync::atomic::AtomicUsize::new(0);
+            spend_event(effect)?;let receipt=std::sync::atomic::AtomicUsize::new(0);
             record_shell(&state.kernel,&receipt);record_shell(&state.mesh_cache,&receipt);record_shell(&state.claims,&receipt);record_shell(&state.next_authority,&receipt);record_shell(&state.retirement,&receipt);
-            work=1;drop(self.orphan.take());
+            drop(self.orphan.take());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:receipt.load(std::sync::atomic::Ordering::Relaxed),..Default::default()}));
         }
         if grant.maximum_release_bytes<self.allocation_bytes {return Ok(ownership_progress());}
-        let receipt=std::sync::atomic::AtomicUsize::new(0);
+        spend_event(effect)?;let receipt=std::sync::atomic::AtomicUsize::new(0);
         let allocation=self.allocation.take().unwrap();
         Weak::allocator(&allocation).receipt.store(std::ptr::from_ref(&receipt).cast_mut(),std::sync::atomic::Ordering::Relaxed);
-        work=1;drop(allocation);
+        drop(allocation);
         self.allocation_bytes=0;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,released_bytes:receipt.load(std::sync::atomic::Ordering::Relaxed),..Default::default()}))
-    })();semio_framework_value::RetainedWorkOutcome{result,work}
+    })();settled_poll(effect,result)
     }
     /// 🧾️ Borrows the same close result when only physical retirement is requested.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_original_step(grant).result}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{settled_step(self.close_original_step(effect))}
     /// 🧊️ Grants each current original currency exactly at an explicit cold boundary.
     pub fn retire_cold(&mut self) {
         while !self.terminal_is_empty() {
             let copy=self.next_close_copy_byte_demand().expect("cold capture copy demand");
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(copy).expect("cold capture capacity demand"),maximum_release_bytes:self.next_close_release_byte_demand().expect("cold capture release demand"),maximum_depth:self.next_close_depth_demand().expect("cold capture depth demand")};
-            let step=self.close_step(grant).expect("cold geometry capture retirement");
+            let step=neural_engine::retirement::cold_effect(grant,|effect|self.close_step(effect)).expect("cold geometry capture effect").expect("cold geometry capture retirement");
             assert!(step.progress()!=RetainedCloneProgress::default() || self.terminal_is_empty(),"cold geometry capture waits on an original owner");
         }
     }
@@ -150,6 +150,12 @@ pub fn mesh_payload_bytes(mesh:&semio_framework::MeshData)->usize {
 pub(super) fn ownership_busy()->ValueError {ValueError::literal(ValueRefusalKind::WorkLimit,"geometry owner is busy")}
 pub(super) fn ownership_progress()->RetainedCloneStep {RetainedCloneStep::Progress(RetainedCloneProgress::default())}
 pub(super) fn ownership_advance()->RetainedCloneStep {RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}
+/// 🔁️ Reads one settled retirement poll as its step; a suspended effect keeps its state and retries next turn.
+pub(super) fn settled_step(poll:OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError> {match poll {RetainedWorkPoll::Pending{..}=>Ok(ownership_progress()),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(OriginalRetirementFailure::into_value_error)}}
+/// 🪙️ Settles a native close result as the complete poll of the effect that funded it.
+pub(super) fn settled_poll(effect:&RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,ValueError>)->OriginalRetirementPoll {RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(Into::into),work:effect.performed_work()})}
+/// ⛽️ Records one unit of original work for a native event that runs no nested producer.
+pub(super) fn spend_event(effect:&mut RetainedAllocationEffect<'_>)->Result<(),ValueError> {if effect.performed(1)? {Ok(())} else {Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original geometry close exceeds its work ceiling"))}}
 pub(super) fn controlled<T:semio_framework_value::retirement::RetireOwned>(value:T)->ControlledRetirement<T> {ControlledRetirement::new(value).unwrap_or_else(|_|panic!("original geometry owner has no retirement authority"))}
 impl SessionState {
     pub(super) fn begin_close(&self){self.try_begin_close().expect("geometry original close admission");}
@@ -163,31 +169,31 @@ impl SessionState {
         let Ok(retirement)=self.retirement.try_lock() else {return false};
         self.closed.load(std::sync::atomic::Ordering::Acquire) && jobs.terminal_is_empty() && (retirement.active!=0 || Arc::strong_count(&self.retirement)>1 || retirement.family.as_ref().is_some_and(ControlledRetirement::terminal_is_empty))
     }
-    pub(super) fn close_original_step(&self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome {
-        let mut work=0;let result=(||->Result<RetainedCloneStep,ValueError>{
+    pub(super) fn close_original_step(&self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll {
+        let grant=effect.grant();let result=(||->Result<RetainedCloneStep,ValueError>{
         if self.terminal_is_empty() {return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(ownership_progress());}
         if self.retirement.try_lock().map_err(|_|ownership_busy())?.paused {return Ok(ownership_progress());}
-        if !self.closed.load(std::sync::atomic::Ordering::Acquire){self.try_begin_close()?;work=1;return Ok(ownership_advance())}
+        if !self.closed.load(std::sync::atomic::Ordering::Acquire){spend_event(effect)?;self.try_begin_close()?;return Ok(ownership_advance())}
         let mut jobs=self.jobs.try_lock().map_err(|_|ownership_busy())?;
-        if !jobs.terminal_is_empty() {let result=jobs.step(grant);work=jobs.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if !jobs.terminal_is_empty() {return settled_step(jobs.step(grant.maximum_copy_bytes,effect)).map(|step|RetainedCloneStep::Progress(step.progress()));}
         drop(jobs);
         let mut retirement=self.retirement.try_lock().map_err(|_|ownership_busy())?;
         if retirement.active!=0 || Arc::strong_count(&self.retirement)>1 {return Ok(RetainedCloneStep::Complete(Default::default()));}
         if retirement.family.is_none() {
-            let mut kernel=self.kernel.try_lock().map_err(|_|ownership_busy())?;
+            spend_event(effect)?;let mut kernel=self.kernel.try_lock().map_err(|_|ownership_busy())?;
             let mut cache=self.mesh_cache.try_lock().map_err(|_|ownership_busy())?;
             let mut claims=self.claims.try_lock().map_err(|_|ownership_busy())?;
             let original=(std::mem::replace(&mut **kernel,Brep::new()),std::mem::take(&mut **cache),std::mem::take(&mut **claims));
-            retirement.family=Some(controlled(original));work=1;
+            retirement.family=Some(controlled(original));
             return Ok(ownership_advance());
         }
         let family=retirement.family.as_mut().unwrap();
         if family.terminal_is_empty() {return Ok(RetainedCloneStep::Complete(Default::default()));}
-        let result=family.step(grant);work=family.last_turn_work();result.map(|step|RetainedCloneStep::Progress(step.progress()))
-    })();semio_framework_value::RetainedWorkOutcome{result,work}
+        settled_step(family.step(grant.maximum_copy_bytes,effect)).map(|step|RetainedCloneStep::Progress(step.progress()))
+    })();settled_poll(effect,result)
     }
-    pub(super) fn close_step(&self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_original_step(grant).result}
+    pub(super) fn close_step(&self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{settled_step(self.close_original_step(effect))}
     pub(super) fn demand<R>(&self,query:impl FnOnce(&dyn semio_framework_value::ErasedSnapshotRetirement)->Result<R,ValueError>,transition:R)->Result<R,ValueError> {
         let jobs=self.jobs.try_lock().map_err(|_|ownership_busy())?;
         if !jobs.terminal_is_empty() {return query(&*jobs);}
@@ -225,7 +231,7 @@ impl Session {
     pub fn cancel_close(&self) {self.state.retirement.try_lock().expect("geometry retirement").paused=true;}
     pub fn resume_close(&self) {self.state.retirement.try_lock().expect("geometry retirement").paused=false;}
     /// 🎟️ Forwards all independent currencies to the actual retained authority.
-    pub fn close_step(&self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {self.state.close_step(grant)}
+    pub fn close_step(&self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {self.state.close_step(effect)}
     pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {self.state.next_copy_byte_demand()}
     pub fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.state.next_capacity_byte_demand(copy)}
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {self.state.next_release_byte_demand()}
@@ -237,7 +243,7 @@ impl Session {
         while !self.terminal_is_empty() {
             let copy=self.next_close_copy_byte_demand().expect("cold geometry copy demand");
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_close_capacity_byte_demand(copy).expect("cold geometry capacity demand"),maximum_release_bytes:self.next_close_release_byte_demand().expect("cold geometry release demand"),maximum_depth:self.next_close_depth_demand().expect("cold geometry depth demand")};
-            let progress=self.close_step(grant).expect("cold geometry retirement").progress();
+            let progress=neural_engine::retirement::cold_effect(grant,|effect|self.close_step(effect)).expect("cold geometry effect").expect("cold geometry retirement").progress();
             if progress==RetainedCloneProgress::default() {return;}
         }
     }
@@ -284,10 +290,10 @@ pub fn step_mesh_import(&self,cursor:&mut semio_framework_3d_brep_engine::MeshIm
     if let Some(handle)=&result {claims.entry(self.state.authority).or_default().insert(handle.as_str().to_string());self.claims_changed();}Ok(result)
 }
 /// 🧾️ Keeps the actual import cleanup work on lock refusal and producer failure.
-pub fn close_mesh_import_original(&self,cursor:&mut semio_framework_3d_brep_engine::MeshImportCursor,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
- let mut guard=match self.kernel().try_lock(){Ok(guard)=>guard,Err(_)=>return semio_framework_value::RetainedWorkOutcome{result:Err(ownership_busy()),work:0}};guard.close_mesh_import_original(cursor,grant)
+pub fn close_mesh_import_original(&self,cursor:&mut semio_framework_3d_brep_engine::MeshImportCursor,effect:&mut RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome{
+ let mut guard=match self.kernel().try_lock(){Ok(guard)=>guard,Err(_)=>return semio_framework_value::RetainedWorkOutcome{result:Err(ownership_busy()),work:0}};guard.close_mesh_import_original(cursor,effect)
 }
-pub fn close_mesh_import(&self,cursor:&mut semio_framework_3d_brep_engine::MeshImportCursor,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_mesh_import_original(cursor,grant).result}
+pub fn close_mesh_import(&self,cursor:&mut semio_framework_3d_brep_engine::MeshImportCursor,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.close_mesh_import_original(cursor,effect).result}
 pub fn next_mesh_import_copy_byte_demand(&self,cursor:&semio_framework_3d_brep_engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_copy_byte_demand(guard.tessellation_body())}
 pub fn next_mesh_import_capacity_byte_demand(&self,cursor:&semio_framework_3d_brep_engine::MeshImportCursor,copy:usize)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_capacity_byte_demand(guard.tessellation_body(),copy)}
 pub fn next_mesh_import_release_byte_demand(&self,cursor:&semio_framework_3d_brep_engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_release_byte_demand(guard.tessellation_body())}
@@ -345,13 +351,14 @@ pub fn next_cancel_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueErr
 pub fn next_cancel_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.cancellation_demands(0)?.release_bytes)}
 pub fn next_cancel_depth_demand(&self)->Result<usize,ValueError>{Ok(self.cancellation_demands(0)?.depth)}
 /// 🎟️ Cancels and transfers one original registry row, then closes its exact typed payload before another row.
-pub fn cancel_step(&self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<RetainedCloneStep,ValueError>{
-    *receipt=Default::default();let result=self.cancel_step_retained(grant,receipt);if let Ok(step)=&result{*receipt=step.progress();}result
+pub fn cancel_step(&self,effect:&mut RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress)->Result<RetainedCloneStep,ValueError>{
+    *receipt=Default::default();let result=self.cancel_step_retained(effect,receipt);if let Ok(step)=&result{*receipt=step.progress();}result
 }
-fn cancel_step_retained(&self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->Result<RetainedCloneStep,ValueError>{
+fn cancel_step_retained(&self,effect:&mut RetainedAllocationEffect<'_>,receipt:&mut RetainedCloneProgress)->Result<RetainedCloneStep,ValueError>{
+    let grant=effect.grant();
     let mut owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original_mut().ok_or_else(ownership_busy)?;
-    if let Some(closing)=&mut registry.admission_closing{let result=closing.step(grant);*receipt=closing.step_progress();let step=result?;if closing.terminal_is_empty(){registry.admission_closing=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-    if let Some(closing)=&mut registry.closing{let result=closing.step(grant);*receipt=closing.step_progress();let step=result?;if closing.terminal_is_empty(){registry.closing=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+    if let Some(closing)=&mut registry.admission_closing{let result=settled_step(closing.step(grant.maximum_copy_bytes,effect));*receipt=closing.step_progress();let step=result?;if closing.terminal_is_empty(){registry.admission_closing=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+    if let Some(closing)=&mut registry.closing{let result=settled_step(closing.step(grant.maximum_copy_bytes,effect));*receipt=closing.step_progress();let step=result?;if closing.terminal_is_empty(){registry.closing=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
     let demand=Self::cancellation_registry_demands(registry,grant.maximum_copy_bytes)?;
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(ownership_progress());}
     let Some(cancellation)=&mut registry.cancellation else{return Ok(RetainedCloneStep::Complete(Default::default()));};
@@ -369,13 +376,14 @@ fn retire_jobs_for_handle(&self,handle:&str) {
     registry.retire_slot=0;
 }
 /// 🎟️ Transfers one original cancelled row inline, then pays its exact typed retirement demands.
-pub fn close_retired_tessellation_step(&self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+pub fn close_retired_tessellation_step(&self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
+    let grant=effect.grant();
     let mut owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;
     let Some(registry)=owner.original_mut() else {return Err(ownership_busy())};
     if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(ownership_progress());}
     if let Some(closing)=registry.closing.as_mut() {
         if closing.terminal_is_empty() {registry.closing=None;return Ok(ownership_advance());}
-        return closing.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));
+        return settled_step(closing.step(grant.maximum_copy_bytes,effect)).map(|step|RetainedCloneStep::Progress(step.progress()));
     }
     if registry.retire_slot>=registry.jobs.slot_count() {return Ok(RetainedCloneStep::Complete(Default::default()));}
     let slot=registry.retire_slot;registry.retire_slot+=1;
@@ -395,7 +403,7 @@ fn retire_tessellations_cold(&self)->Result<(),String> {
     loop {
         let copy=self.next_retired_tessellation_copy_byte_demand().map_err(|error|error.to_string())?;
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_retired_tessellation_capacity_byte_demand(copy).map_err(|error|error.to_string())?,maximum_release_bytes:self.next_retired_tessellation_release_byte_demand().map_err(|error|error.to_string())?,maximum_depth:self.next_retired_tessellation_depth_demand().map_err(|error|error.to_string())?};
-        if matches!(self.close_retired_tessellation_step(grant).map_err(|error|error.to_string())?,RetainedCloneStep::Complete(_)) {return Ok(());}
+        if matches!(neural_engine::retirement::cold_effect(grant,|effect|self.close_retired_tessellation_step(effect)).map_err(|error|error.to_string())?.map_err(|error|error.to_string())?,RetainedCloneStep::Complete(_)) {return Ok(());}
     }
 }
 pub fn tessellation_progress(&self,handle:&str,tolerance:f64)->Option<(usize,usize,&'static str)> {
@@ -758,7 +766,7 @@ impl semio_os_flow::geometry::GeometryPort for SessionPort {
     fn next_retain_release_byte_demand(&self)->Result<usize,ValueError>{self.retained_demand(0).map(|demand|demand.release_bytes)}
     fn next_retain_depth_demand(&self)->Result<usize,ValueError>{self.retained_demand(0).map(|demand|demand.depth)}
     fn retain_step_progress(&self)->RetainedCloneProgress{self.retain_receipt}
-    fn retain_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.retain_receipt=Default::default();let Some(owner)=self.retaining.get_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(self.authority.session.as_ref().ok_or_else(ownership_busy)?,grant);self.retain_receipt=owner.normal_step_progress();let step=result?;if owner.terminal_is_empty(){*self.retaining.get_mut()=None;Ok(RetainedCloneStep::Complete(step.progress()))}else{Ok(RetainedCloneStep::Progress(step.progress()))}}
+    fn retain_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.retain_receipt=Default::default();let Some(owner)=self.retaining.get_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};let result=owner.step(self.authority.session.as_ref().ok_or_else(ownership_busy)?,effect);self.retain_receipt=owner.normal_step_progress();let step=result?;if owner.terminal_is_empty(){*self.retaining.get_mut()=None;Ok(RetainedCloneStep::Complete(step.progress()))}else{Ok(RetainedCloneStep::Progress(step.progress()))}}
     fn tessellation_demands(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.tessellation_demands(identity,handle,tolerance,copy)}
     fn tessellate_step(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(semio_os_flow::geometry::GeometryStep,semio_os_flow::geometry::GeometryWorkProgress),semio_os_flow::geometry::GeometryWorkFailure>{self.authority.session.as_ref().ok_or_else(ownership_busy).map_err(|primary|semio_os_flow::geometry::GeometryWorkFailure::new(primary,0))?.tessellate_step(identity,handle,tolerance,cx)}
     fn cancel_tessellation_demands(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.authority.session.as_ref().ok_or_else(ownership_busy)?.cancel_tessellation_demands(identity,handle,tolerance,copy)}
@@ -771,17 +779,17 @@ impl semio_os_flow::geometry::GeometryPort for SessionPort {
     fn next_cancel_release_byte_demand(&self)->Result<usize,ValueError>{if !self.retain_terminal_is_empty(){return self.next_retain_release_byte_demand();}self.authority.session.as_ref().map_or(Ok(0),Session::next_cancel_release_byte_demand)}
     fn next_cancel_depth_demand(&self)->Result<usize,ValueError>{if !self.retain_terminal_is_empty(){return self.next_retain_depth_demand();}self.authority.session.as_ref().map_or(Ok(0),Session::next_cancel_depth_demand)}
     fn cancel_step_progress(&self)->RetainedCloneProgress{self.cancel_receipt}
-    fn cancel_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.cancel_receipt=Default::default();if !self.retain_terminal_is_empty(){let result=self.retain_step(grant);self.cancel_receipt=self.retain_receipt;return result.map(|step|RetainedCloneStep::Progress(step.progress()));}let result=self.authority.session.as_ref().map_or(Ok(RetainedCloneStep::Complete(Default::default())),|session|session.cancel_step(grant,&mut self.cancel_receipt));if let Ok(step)=&result{self.cancel_receipt=step.progress();}result}
+    fn cancel_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.cancel_receipt=Default::default();if !self.retain_terminal_is_empty(){let result=self.retain_step(effect);self.cancel_receipt=self.retain_receipt;return result.map(|step|RetainedCloneStep::Progress(step.progress()));}let result=self.authority.session.as_ref().map_or(Ok(RetainedCloneStep::Complete(Default::default())),|session|session.cancel_step(effect,&mut self.cancel_receipt));if let Ok(step)=&result{self.cancel_receipt=step.progress();}result}
     fn begin_close(&self) {if let Ok(mut retaining)=self.retaining.try_lock(){if let Some(owner)=retaining.as_mut(){owner.cancel();}}if let Some(authority)=self.authority.session.as_ref() {authority.begin_close();}}
     fn terminal_is_empty(&self)->bool {self.retain_terminal_is_empty()&&self.authority.terminal_is_empty() && self.anchor.terminal_is_empty()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if !self.retain_terminal_is_empty(){return self.next_retain_copy_byte_demand();}if self.authority.terminal_is_empty() {self.anchor.next_close_copy_byte_demand()}else {self.authority.next_close_copy_byte_demand()}}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if !self.retain_terminal_is_empty(){return self.next_retain_capacity_byte_demand(copy);}if self.authority.terminal_is_empty() {self.anchor.next_close_capacity_byte_demand(copy)}else {self.authority.next_close_capacity_byte_demand(copy)}}
     fn next_release_byte_demand(&self)->Result<usize,ValueError> {if !self.retain_terminal_is_empty(){return self.next_retain_release_byte_demand();}if self.authority.terminal_is_empty() {self.anchor.next_close_release_byte_demand()}else {self.authority.next_close_release_byte_demand()}}
     fn next_depth_demand(&self)->Result<usize,ValueError> {if !self.retain_terminal_is_empty(){return self.next_retain_depth_demand();}if self.authority.terminal_is_empty() {self.anchor.next_close_depth_demand()}else {self.authority.next_close_depth_demand()}}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
         if self.terminal_is_empty() {return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if !self.retain_terminal_is_empty(){return self.retain_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if !self.authority.terminal_is_empty() {return self.authority.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        self.anchor.close_step(grant)
+        if !self.retain_terminal_is_empty(){return self.retain_step(effect).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if !self.authority.terminal_is_empty() {return self.authority.close_step(effect).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        self.anchor.close_step(effect)
     }
 }

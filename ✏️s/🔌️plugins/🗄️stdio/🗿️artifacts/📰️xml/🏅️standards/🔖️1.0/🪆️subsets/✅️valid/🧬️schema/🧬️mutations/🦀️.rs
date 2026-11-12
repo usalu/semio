@@ -116,6 +116,7 @@ pub enum XmlValidMutation {
     /// ✍️ Replaces the literal character data of the `Text` node at `path`.
     SetText(set_text::SetText),
 }
+dsl::original_pack_value_operation_receiving!(XmlValidMutation);
 
 /// 📇️ Kebab-case spelling of every `XmlValidMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔮️oracles/🔣️.json`'s `mutationCatalogs` entry declares. The framework

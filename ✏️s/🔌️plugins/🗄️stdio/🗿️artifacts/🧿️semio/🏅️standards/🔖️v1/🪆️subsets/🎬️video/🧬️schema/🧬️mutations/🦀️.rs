@@ -87,6 +87,7 @@ pub enum SemioVideoMutation {
     /// 🏳️ Sets one sample's `pts`/`key` flags.
     SetSampleFlags(set_sample_flags::SetSampleFlags),
 }
+dsl::original_pack_value_operation_receiving!(SemioVideoMutation);
 
 /// 🏷️ The declared kebab-case mutation vocabulary of `s.stdio.semio.video`, in enum declaration
 /// order — what the `🎥️mutate-semio-video` case's completeness gate counts against and what

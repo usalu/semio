@@ -10,12 +10,12 @@ mod list_copy;
 #[path="type_input_set_controls.rs"]mod set_controls;
 use choice_rows::Choices;
 const CARDINALITY:[&str;16]=["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15"];
-use semio_framework_job::{OriginalConstructionDemand, OriginalSourceBinding, OriginalTurnFailure, StepContext, admit_original_construction};
+use semio_framework_job::{OriginalConstructionAdmission, OriginalConstructionDemand, OriginalSourceBinding, OriginalTurnFailure, StepContext, admit_original_construction_settled};
 use semio_plugin::action_staging::*;
 use semio_plugin_decl_staged_form::*;
 use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits};
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::{RetainedAllocationEffect, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{ManuallyDrop, size_of, size_of_val};
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvalidValue, "staging.type-input")
@@ -154,7 +154,7 @@ struct Navigation {
     field: usize,
 }
 #[derive(semio_framework_value::RetireOwned)]
-struct Page {
+pub struct Page {
     request: Option<StagedFormRequest>,
     status: StagedFormStatus,
     fields: Vec<Field>,
@@ -276,8 +276,9 @@ impl Drop for IfcPreparedTypeInputSource {
     }
 }
 impl RetireOwned for IfcPreparedTypeInputSource {
-    fn retirement(mut self) -> Box<dyn RetirementCursor> {
-        self.page.take().expect("completed type page owns its carrier").retirement()
+    type RetirementCursor = <Page as RetireOwned>::RetirementCursor;
+    fn retirement_seed(mut self) -> Self::RetirementCursor {
+        self.page.take().expect("completed type page owns its carrier").retirement_seed()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
         self.page.as_ref()?.retirement_birth_bytes()
@@ -385,6 +386,7 @@ pub struct IfcTypeInputSourceWork<C: IfcDetailsProfile + 'static> {
     plan: super::type_remap::Plan,
     domain: DomainCursor,
     retirement: RetainedCloneClose,
+    construction: Option<OriginalConstructionAdmission>,
     binding: Option<(OriginalSourceBinding, usize, [u8; 32])>,
     state: State,
     profile: std::marker::PhantomData<fn() -> C>,
@@ -419,11 +421,15 @@ impl<C: IfcDetailsProfile + 'static> Default for IfcTypeInputSourceWork<C> {
             plan: Default::default(),
             domain: Default::default(),
             retirement: Default::default(),
+            construction: None,
             binding: None,
             state: State { ready: true, ..Default::default() },
             profile: std::marker::PhantomData,
         }
     }
+}
+fn admission(slot: &mut Option<OriginalConstructionAdmission>) -> &mut OriginalConstructionAdmission {
+    slot.get_or_insert_with(Default::default)
 }
 fn metadata(cx: &mut StepContext<'_>, bytes: usize, change: impl FnOnce()) -> Result<bool, OriginalTurnFailure> {
     if cx.is_cancelled() {
@@ -437,23 +443,23 @@ fn metadata(cx: &mut StepContext<'_>, bytes: usize, change: impl FnOnce()) -> Re
     cx.consume_fuel(1);
     Ok(true)
 }
-fn copy_text(target: &mut String, text: &str, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
-    copy_text_extra(target, text, 0, cx)
+fn copy_text(adm: &mut OriginalConstructionAdmission, target: &mut String, text: &str, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+    copy_text_extra(adm, target, text, 0, cx)
 }
-fn copy_text_extra(target: &mut String, text: &str, extra: usize, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+fn copy_text_extra(adm: &mut OriginalConstructionAdmission, target: &mut String, text: &str, extra: usize, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
     if !target.is_empty() || text.len() > 512 {
         return Err(invalid().into());
     }
     let mut output = None;
     let physical = OriginalConstructionDemand { items: 1, copy_bytes: text.len() + size_of::<String>() + size_of::<State>() + extra, capacity_bytes: text.len(), release_bytes: 0, depth: 1 };
-    admit_original_construction(cx, &mut output, physical, |_| costed((|| -> Result<_, ValueError> {
+    admit_original_construction_settled(cx, adm, &mut output, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
         target.try_reserve_exact(text.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type guide text"))?;
         target.push_str(text);
         Ok(((), RetainedCloneProgress { copied_items: 1, copied_bytes: physical.copy_bytes, retained_capacity_bytes: target.capacity(), ..Default::default() }))
     })()))
 }
-fn construct_row_string(output: &mut Option<String>, reserve: usize, text: &str, physical: OriginalConstructionDemand, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
-    admit_original_construction(cx, output, physical, |_| costed((|| -> Result<_, ValueError> {
+fn construct_row_string(adm: &mut OriginalConstructionAdmission, output: &mut Option<String>, reserve: usize, text: &str, physical: OriginalConstructionDemand, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+    admit_original_construction_settled(cx, adm, output, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
         let mut value = String::new();
         value.try_reserve_exact(reserve).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type guide row text"))?;
         value.push_str(text);
@@ -464,11 +470,14 @@ fn construct_row_string(output: &mut Option<String>, reserve: usize, text: &str,
 impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
     fn source_demands(&self)->Result<RetirementDemand,ValueError>{match self.source_loan.as_ref(){Some(loan)=>loan.demands(),None=>Ok(RetirementDemand{copy_bytes:size_of::<super::source_loan::SourceLoan>()+size_of_val(&self.source_loan),depth:1,..Default::default()})}}
     pub fn demands(&self) -> Result<RetirementDemand, ValueError> {
+        settled_construction(self.step_demands()?)
+    }
+    fn step_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.source_loan.as_ref().and_then(|loan|loan.source()).is_none(){return self.source_demands();}
-        if matches!(self.state.phase,96|97|98){let own=4*size_of::<State>();let child=if self.state.phase==98{self.commit_copy.close_demand(4096)?}else{self.commit_copy.demands(4096)?};return Ok(RetirementDemand{copy_bytes:own.checked_add(child.copy_bytes).ok_or_else(invalid)?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1)});}
+        if matches!(self.state.phase,96|97|98){let own=4*size_of::<State>();let child=if self.state.phase==98{self.commit_copy.close_demands(4096)?}else{self.commit_copy.demands(4096)?};return Ok(RetirementDemand{copy_bytes:own.checked_add(child.copy_bytes).ok_or_else(invalid)?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1)});}
         if self.state.phase==80{
             let base=4*size_of::<State>()+2*size_of::<bool>();
-            let child=if let Some(candidate)=self.candidate.as_ref(){let source=self.source_loan.as_ref().and_then(|loan|loan.source()).ok_or_else(stale)?;candidate.demands(source,source.try_authority()?.as_ref(),4096)?}else{RetirementDemand{copy_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>()+size_of::<Box<super::type_guidance_candidate::GuidedCandidate<C>>>(),capacity_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>(),depth:1,..Default::default()}};
+            let child=if let Some(candidate)=self.candidate.as_ref(){let source=self.source_loan.as_ref().and_then(|loan|loan.source()).ok_or_else(stale)?;candidate.demands(source,source.try_authority()?.get()?,4096)?}else{RetirementDemand{copy_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>()+size_of::<Box<super::type_guidance_candidate::GuidedCandidate<C>>>(),capacity_bytes:size_of::<super::type_guidance_candidate::GuidedCandidate<C>>(),depth:1,..Default::default()}};
             return Ok(RetirementDemand{copy_bytes:base.checked_add(child.copy_bytes).ok_or_else(invalid)?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1)});
         }
         if matches!(self.state.phase,92|94|95){let own=4*size_of::<State>()+2*size_of::<typed_copy::TypedCopy>();let child=if self.state.phase==95{if self.typed_copy.empty(){RetirementDemand::default()}else{self.typed_copy.close_demands(4096)?}}else{let choice=if self.state.phase==94{Some((self.choice_word()?,self.state.choice_kind))}else{None};let input=Self::typed_spec(self.page.as_ref().ok_or_else(stale)?,&self.state,&self.domains,choice)?;self.typed_copy.demands(&input)?};return Ok(RetirementDemand{copy_bytes:own.checked_add(child.copy_bytes).ok_or_else(invalid)?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1)});}
@@ -696,7 +705,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         let own=4*size_of::<State>()+2*size_of::<typed_copy::TypedCopy>();
         if self.state.phase==95&&self.typed_copy.empty(){metadata(cx,own,||{self.typed_copy=Default::default();self.state.phase=self.state.typed_resume;})?;return Ok(());}
         let grant=cx.retained_grant();let loan=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(own),..grant};let before=cx.retained_progress();
-        let complete=if self.state.phase==95{let demand=self.typed_copy.close_demands(loan.maximum_copy_bytes)?;cx.with_retained_loan(loan,|cx|{semio_framework_job::close_original_retained_step(cx,demand,|grant|self.typed_copy.close_owned(grant))?;Ok::<_,OriginalTurnFailure>(())})?;false}else{let choice=if self.state.phase==94{Some((self.choice_word()?,self.state.choice_kind))}else{None};let input=Self::typed_spec(self.page.as_ref().ok_or_else(stale)?,&self.state,&self.domains,choice)?;let output=if self.state.phase==92{&mut self.row_parts.as_mut().ok_or_else(invalid)?.structured}else{&mut self.choice_parts.as_mut().ok_or_else(invalid)?.structured};let copy=&mut self.typed_copy;cx.with_retained_loan(loan,|cx|{if !copy.advance(&input,cx)?{return Ok(false);}copy.take(output,cx)})?};
+        let complete=if self.state.phase==95{let demand=self.typed_copy.close_demands(loan.maximum_copy_bytes)?;cx.with_retained_loan(loan,|cx|{closed_in(cx,demand,|effect|self.typed_copy.close_owned(loan.maximum_copy_bytes,effect))?;Ok::<_,OriginalTurnFailure>(())})?;false}else{let choice=if self.state.phase==94{Some((self.choice_word()?,self.state.choice_kind))}else{None};let input=Self::typed_spec(self.page.as_ref().ok_or_else(stale)?,&self.state,&self.domains,choice)?;let output=if self.state.phase==92{&mut self.row_parts.as_mut().ok_or_else(invalid)?.structured}else{&mut self.choice_parts.as_mut().ok_or_else(invalid)?.structured};let copy=&mut self.typed_copy;let construction=admission(&mut self.construction);cx.with_retained_loan(loan,|cx|{if !copy.advance(&input,construction,cx)?{return Ok(false);}copy.take(output,cx)})?};
         if complete{self.state.typed_resume=if self.state.phase==92{29}else{40};self.state.phase=95;self.typed_copy.begin_close();let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}}Ok(())
     }
     fn copying_row(&self) -> Result<(usize, InputKind, &str), ValueError> {
@@ -726,7 +735,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         let own=4*size_of::<State>()+2*size_of::<list_copy::ListCopy>();
         if self.state.phase==89&&self.list_copy.empty(){metadata(cx,own,||{self.list_copy=Default::default();self.state.phase=self.state.list_resume;})?;return Ok(());}
         let grant=cx.retained_grant();let loan=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(own),..grant};let before=cx.retained_progress();
-        let complete=if self.state.phase==89{let demand=self.list_copy.close_demands(loan.maximum_copy_bytes)?;cx.with_retained_loan(loan,|cx|{semio_framework_job::close_original_retained_step(cx,demand,|grant|self.list_copy.close_owned(grant))?;Ok::<_,OriginalTurnFailure>(())})?;false}else{let phase=self.state.phase;let count=if phase==85{Some(self.choice_word()?.parse().map_err(|_|invalid())?)}else{None};let members=Self::copy_members(self.page.as_ref().ok_or_else(stale)?,&self.state)?;let count=count.unwrap_or(members.len());let output=if phase==84{&mut self.row_parts.as_mut().ok_or_else(invalid)?.structured}else{&mut self.choice_parts.as_mut().ok_or_else(invalid)?.structured};let copy=&mut self.list_copy;cx.with_retained_loan(loan,|cx|{if !copy.advance(members,count,list_copy::Mode::Real,cx)?{return Ok(false);}copy.take(output,cx)})?};
+        let complete=if self.state.phase==89{let demand=self.list_copy.close_demands(loan.maximum_copy_bytes)?;cx.with_retained_loan(loan,|cx|{closed_in(cx,demand,|effect|self.list_copy.close_owned(loan.maximum_copy_bytes,effect))?;Ok::<_,OriginalTurnFailure>(())})?;false}else{let phase=self.state.phase;let count=if phase==85{Some(self.choice_word()?.parse().map_err(|_|invalid())?)}else{None};let members=Self::copy_members(self.page.as_ref().ok_or_else(stale)?,&self.state)?;let count=count.unwrap_or(members.len());let output=if phase==84{&mut self.row_parts.as_mut().ok_or_else(invalid)?.structured}else{&mut self.choice_parts.as_mut().ok_or_else(invalid)?.structured};let copy=&mut self.list_copy;let construction=admission(&mut self.construction);cx.with_retained_loan(loan,|cx|{if !copy.advance(members,count,list_copy::Mode::Real,construction,cx)?{return Ok(false);}copy.take(output,cx)})?};
         if complete{self.state.list_resume=if self.state.phase==84{29}else{40};self.state.phase=89;self.list_copy.begin_close();let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}}Ok(())
     }
     fn receive_source(&mut self,owner:&std::sync::Arc<IfcSnapshot>,source:&IfcSnapshot,revision:[u8;32],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -828,7 +837,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             }
             23 => {
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base, capacity_bytes: self.state.target * size_of::<super::type_input::Input>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.placeholders, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.placeholders, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let mut values = Vec::new();
                     values.try_reserve_exact(self.state.target).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type required roster"))?;
                     let capacity = values.capacity() * size_of::<super::type_input::Input>();
@@ -839,7 +848,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             }
             25 => {
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base, capacity_bytes: STAGED_FORM_BODY_LIMITS.content * size_of::<Field>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.fields, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.fields, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let mut values = Vec::new();
                     values.try_reserve_exact(STAGED_FORM_BODY_LIMITS.content).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type required fields"))?;
                     let capacity = values.capacity() * size_of::<Field>();
@@ -1054,7 +1063,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             62 => {
                 let count = self.state.navigation.iter().flatten().count();
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base, capacity_bytes: count * size_of::<Navigation>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.navigation, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.navigation, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let mut rows = Vec::new();
                     rows.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type choice pages"))?;
                     let capacity = rows.capacity() * size_of::<Navigation>();
@@ -1083,7 +1092,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             }
             64 => {
                 let token = &self.request.as_ref().ok_or_else(stale)?.token;
-                if copy_text(token_part_mut(&mut self.nav_item.as_mut().ok_or_else(invalid)?.binding.token, self.state.part), token_part(token, self.state.part), cx)? {
+                if copy_text(admission(&mut self.construction), token_part_mut(&mut self.nav_item.as_mut().ok_or_else(invalid)?.binding.token, self.state.part), token_part(token, self.state.part), cx)? {
                     self.state.part += 1;
                     if self.state.part == 4 {
                         self.state.phase = 65;
@@ -1093,14 +1102,14 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             65 | 66 => {
                 let page = &mut self.nav_item.as_mut().ok_or_else(invalid)?.binding.page;
                 let target = if self.state.phase == 65 { &mut page.diagnostic_offset } else { &mut page.field_offset };
-                if copy_text(target, "0", cx)? {
+                if copy_text(admission(&mut self.construction), target, "0", cx)? {
                     self.state.phase += 1;
                 }
             }
             67 => {
                 let mut buffer = [0; 20];
                 let text = decimal(self.nav_spec().ok_or_else(invalid)?.1, &mut buffer);
-                if copy_text_extra(&mut self.nav_item.as_mut().ok_or_else(invalid)?.binding.page.choice.as_mut().ok_or_else(invalid)?.offset, text, 40, cx)? {
+                if copy_text_extra(admission(&mut self.construction), &mut self.nav_item.as_mut().ok_or_else(invalid)?.binding.page.choice.as_mut().ok_or_else(invalid)?.offset, text, 40, cx)? {
                     self.state.phase = 68;
                 }
             }
@@ -1108,7 +1117,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let path = &mut self.nav_item.as_mut().ok_or_else(invalid)?.binding.page.choice.as_mut().ok_or_else(invalid)?.path;
                 let mut output = None;
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base, capacity_bytes: 4 * size_of::<String>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut output, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut output, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     path.try_reserve_exact(4).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type page address"))?;
                     Ok(((), RetainedCloneProgress { copied_items: 1, copied_bytes: base, retained_capacity_bytes: path.capacity() * size_of::<String>(), ..Default::default() }))
                 })()))? {
@@ -1124,7 +1133,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 } else {
                     let mut buffer = [0; 20];
                     let text = self.page_path_text(self.state.part, self.nav_spec().ok_or_else(invalid)?.0, &mut buffer)?;
-                    if copy_text_extra(&mut self.nav_item.as_mut().unwrap().binding.page.choice.as_mut().unwrap().path[self.state.part], text, 40, cx)? {
+                    if copy_text_extra(admission(&mut self.construction), &mut self.nav_item.as_mut().unwrap().binding.page.choice.as_mut().unwrap().path[self.state.part], text, 40, cx)? {
                         self.state.part += 1;
                     }
                 }
@@ -1146,34 +1155,34 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             }
             86=>{
                 let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let count=list_members(self.request.as_ref().ok_or_else(stale)?,row)?.len();let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<Vec<IfcValue>>(),capacity_bytes:count*size_of::<IfcValue>(),release_bytes:0,depth:1};
-                if admit_original_construction(cx,&mut self.list_values,physical,|_| costed((|| -> Result<_, ValueError> {let mut values=Vec::new();values.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"LIST candidate members"))?;let capacity=values.capacity()*size_of::<IfcValue>();Ok((values,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=87;}
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.list_values, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {let mut values=Vec::new();values.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"LIST candidate members"))?;let capacity=values.capacity()*size_of::<IfcValue>();Ok((values,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=87;}
             }
             87=>{
                 let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let request=self.request.as_ref().ok_or_else(stale)?;let member=self.list_values.as_ref().ok_or_else(invalid)?.len();let count=list_members(request,row)?.len();
                 if member==count{metadata(cx,base+2*size_of::<Vec<IfcValue>>()+size_of::<IfcValue>(),||{self.placeholders.as_mut().unwrap()[self.state.part-1].value=Some(IfcValue::Aggregate(self.list_values.take().unwrap()));self.state.phase=4;})?;}else{let value=canonical_decimal(list_word(request,row,member)?,false).filter(|bits|(bits>>52)&2047!=2047).map(|bits|IfcValue::Real(f64::from_bits(bits)));metadata(cx,base+2*size_of::<Vec<IfcValue>>()+size_of::<IfcValue>(),||{self.state.ready&=value.is_some();self.list_values.as_mut().unwrap().push(value.unwrap_or(IfcValue::Unset));})?;}
             }
             96=>{
-                let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let count=set_members(self.request.as_ref().ok_or_else(stale)?,row)?.len();let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<Vec<IfcValue>>(),capacity_bytes:count.checked_mul(size_of::<IfcValue>()).ok_or_else(invalid)?,release_bytes:0,depth:1};if admit_original_construction(cx,&mut self.list_values,physical,|_| costed((|| -> Result<_, ValueError> {let mut values=Vec::new();values.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"SET candidate members"))?;let capacity=values.capacity()*size_of::<IfcValue>();Ok((values,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=97;}
+                let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let count=set_members(self.request.as_ref().ok_or_else(stale)?,row)?.len();let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<Vec<IfcValue>>(),capacity_bytes:count.checked_mul(size_of::<IfcValue>()).ok_or_else(invalid)?,release_bytes:0,depth:1};if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.list_values, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {let mut values=Vec::new();values.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"SET candidate members"))?;let capacity=values.capacity()*size_of::<IfcValue>();Ok((values,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=97;}
             }
             97=>{
                 let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let request=self.request.as_ref().ok_or_else(stale)?;let member=self.list_values.as_ref().ok_or_else(invalid)?.len();if member==set_members(request,row)?.len(){metadata(cx,base+2*size_of::<Vec<IfcValue>>()+2*size_of::<IfcValue>()+2*size_of::<String>(),||self.state.phase=98)?;}else{let array=self.state.leaves[self.state.part-1]==InputKind::Array;let integer=self.state.leaves[self.state.part-1]==InputKind::List;let value=if integer{signed_decimal(collection_word(request,row,member,InputKind::Integer)?).map(IfcValue::Integer)}else if array{canonical_decimal(collection_word(request,row,member,InputKind::Real)?,false).filter(|bits|(bits>>52)&2047!=2047).map(|bits|IfcValue::Real(f64::from_bits(bits)))}else{canonical_decimal(set_word(request,row,member)?,true).map(IfcValue::Reference)};metadata(cx,base+2*size_of::<Vec<IfcValue>>()+2*size_of::<IfcValue>()+2*size_of::<String>(),||{self.state.ready&=value.is_some();self.list_values.as_mut().unwrap().push(value.unwrap_or(IfcValue::Unset));})?;}
             }
             98=>{
-                let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let name=super::type_input::typed_constructor(constructor(self.request.as_ref().ok_or_else(stale)?,row)?).ok_or_else(invalid)?.0;let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<String>(),capacity_bytes:name.len(),release_bytes:0,depth:1};if construct_row_string(&mut self.scalar,name.len(),"",physical,cx)?{self.state.offset=0;self.state.phase=99;}
+                let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let name=super::type_input::typed_constructor(constructor(self.request.as_ref().ok_or_else(stale)?,row)?).ok_or_else(invalid)?.0;let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<String>(),capacity_bytes:name.len(),release_bytes:0,depth:1};if construct_row_string(admission(&mut self.construction), &mut self.scalar,name.len(),"",physical,cx)?{self.state.offset=0;self.state.phase=99;}
             }
             99=>{
                 let row=self.fields.as_ref().and_then(|fields|fields.last()).ok_or_else(invalid)?.row;let name=super::type_input::typed_constructor(constructor(self.request.as_ref().ok_or_else(stale)?,row)?).ok_or_else(invalid)?.0;let end=(self.state.offset+64).min(name.len());let mut buffer=[0u8;64];let chunk=&name.as_bytes()[self.state.offset..end];buffer[..chunk.len()].copy_from_slice(chunk);let length=chunk.len();let complete=end==name.len();metadata(cx,base+192+size_of::<String>(),||{self.scalar.as_mut().unwrap().push_str(std::str::from_utf8(&buffer[..length]).expect("admitted static SELECT member"));self.state.offset=end;if complete{self.state.phase=100;}})?;
             }
             100=>{metadata(cx,base+2*size_of::<Vec<IfcValue>>()+2*size_of::<IfcValue>()+2*size_of::<String>(),||{self.placeholders.as_mut().unwrap()[self.state.part-1].value=Some(IfcValue::TypedValue(IfcTypedValue{name:self.scalar.take().unwrap(),items:Vec::new()}));self.state.phase=101;})?;}
             101=>{
-                let Some(IfcValue::TypedValue(value))=self.placeholders.as_mut().and_then(|values|values.get_mut(self.state.part-1)).and_then(|value|value.value.as_mut())else{return Err(invalid().into())};let physical=OriginalConstructionDemand{items:1,copy_bytes:base,capacity_bytes:size_of::<IfcValue>(),release_bytes:0,depth:1};let mut output=None;if admit_original_construction(cx,&mut output,physical,|_| costed((|| -> Result<_, ValueError> {value.items.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"SET constructor item"))?;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:base,retained_capacity_bytes:value.items.capacity()*size_of::<IfcValue>(),..Default::default()}))})()))?{self.state.phase=102;}
+                let Some(IfcValue::TypedValue(value))=self.placeholders.as_mut().and_then(|values|values.get_mut(self.state.part-1)).and_then(|value|value.value.as_mut())else{return Err(invalid().into())};let physical=OriginalConstructionDemand{items:1,copy_bytes:base,capacity_bytes:size_of::<IfcValue>(),release_bytes:0,depth:1};let mut output=None;if admit_original_construction_settled(cx, admission(&mut self.construction), &mut output, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {value.items.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"SET constructor item"))?;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:base,retained_capacity_bytes:value.items.capacity()*size_of::<IfcValue>(),..Default::default()}))})()))?{self.state.phase=102;}
             }
             102=>{metadata(cx,base+2*size_of::<Vec<IfcValue>>()+2*size_of::<IfcValue>()+2*size_of::<String>(),||{let Some(IfcValue::TypedValue(value))=self.placeholders.as_mut().unwrap()[self.state.part-1].value.as_mut()else{unreachable!("original SET constructor")};value.items.push(IfcValue::Aggregate(self.list_values.take().unwrap()));self.state.phase=4;})?;}
             30 => {
                 let row = self.fields.as_ref().and_then(|fields| fields.last()).ok_or_else(invalid)?.row;
                 let reserve = row_data(self.request.as_ref().ok_or_else(stale)?, row)?.2.len();
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + size_of::<String>(), capacity_bytes: reserve, release_bytes: 0, depth: 1 };
-                if construct_row_string(&mut self.scalar, reserve, "", physical, cx)? {
+                if construct_row_string(admission(&mut self.construction), &mut self.scalar, reserve, "", physical, cx)? {
                     self.state.offset = 0;
                     self.state.phase = 31;
                 }
@@ -1270,7 +1279,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let own=4*size_of::<State>()+2*size_of::<bool>();
                 if self.candidate.is_none(){
                     let bytes=size_of::<super::type_guidance_candidate::GuidedCandidate<C>>();let physical=OriginalConstructionDemand{items:1,copy_bytes:own+bytes+size_of::<Box<super::type_guidance_candidate::GuidedCandidate<C>>>(),capacity_bytes:bytes,release_bytes:0,depth:1};
-                    admit_original_construction(cx,&mut self.candidate,physical,|_|costed(Ok::<_,ValueError>((Box::new(Default::default()),RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:bytes,..Default::default()}))))?;
+                    admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.candidate, physical, 1, |_, _| costed(Ok::<_,ValueError>((Box::new(Default::default()),RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:bytes,..Default::default()}))))?;
                 }else{
                     let lease=self.source_loan.as_ref().and_then(|loan|loan.source()).ok_or_else(stale)?;let grant=cx.retained_grant();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(own),..grant};let before=cx.retained_progress();
                     if cx.with_retained_loan(child,|cx|self.candidate.as_mut().ok_or_else(stale)?.advance(&mut self.request,lease,source,revision,cx))?{
@@ -1283,7 +1292,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let ready=match self.state.phase{
                     96=>cx.with_retained_loan(child,|cx|self.commit_copy.advance(&mut self.request,cx))?,
                     97=>cx.with_retained_loan(child,|cx|self.commit_copy.take_args(&mut self.commit_args,cx))?,
-                    _=>{if self.commit_copy.empty(){true}else{let demand=self.commit_copy.close_demand(4096)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|self.commit_copy.close_owned(grant))?;false}},
+                    _=>{if self.commit_copy.empty(){true}else{let demand=self.commit_copy.close_demands(4096)?;closed_in(cx,demand,|effect|self.commit_copy.close_owned(4096,effect))?;false}},
                 };
                 if ready{let next=match self.state.phase{96=>97,97=>98,_=>6};if next==98{self.commit_copy.begin_close();}self.state.phase=next;let delegated=cx.retained_progress()!=before;cx.consume_retained(RetainedCloneProgress{copied_items:usize::from(!delegated),copied_bytes:own,..Default::default()})?;if !delegated{cx.consume_fuel(1);}}
             },
@@ -1349,7 +1358,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                     metadata(cx, base, || self.state.phase = 5)?;
                 } else {
                     let demand = self.retirement.next_owner_demands::<String>(self.error.is_some(), &None, 4096)?;
-                    semio_framework_job::close_original_retained_step(cx, demand, |grant| if self.retirement.is_empty() { owned_step(self.retirement.begin_granted(&mut self.error, grant), "IFC type input error owner omitted") } else { self.retirement.step_granted(grant) })?;
+                    closed_in(cx, demand, |effect| if self.retirement.is_empty() { owned_step(self.retirement.begin_granted(&mut self.error, effect), "IFC type input error owner omitted") } else { settled(self.retirement.step_granted(4096, effect)) })?;
                 }
             }
             6 => {
@@ -1373,7 +1382,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 }
                 let token = &page.request.as_ref().ok_or_else(stale)?.token;
                 let target = if self.state.phase == 8 { token_part_mut(&mut page.status.token, self.state.part) } else { token_part_mut(&mut page.fields[self.state.field].binding.token, self.state.part) };
-                if copy_text(target, token_part(token, self.state.part), cx)? {
+                if copy_text(admission(&mut self.construction), target, token_part(token, self.state.part), cx)? {
                     self.state.part += 1;
                     if self.state.part == 4 {
                         self.state.part = 0;
@@ -1384,7 +1393,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             9 | 10 => {
                 let page = self.page.as_mut().ok_or_else(stale)?;
                 let target = if self.state.phase == 9 { &mut page.status.diagnostic_offset } else { &mut page.status.diagnostic_total };
-                if copy_text(target, "0", cx)? {
+                if copy_text(admission(&mut self.construction), target, "0", cx)? {
                     self.state.phase = if self.state.phase == 9 { 10 } else { 24 };
                 }
             }
@@ -1395,7 +1404,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let name = super::domain_cursor::canonical_name(name, &mut bytes).ok_or_else(invalid)?;
                 let field = &mut page.fields[self.state.field];
                 let attribute = C::normalization_attribute(name, field.index, true).map_err(|_| invalid())?.ok_or_else(invalid)?;
-                let mut buffer=[0u8;256];let word=attribute_text(attribute.name,field.member,&mut buffer)?;let extra=if field.member.is_some(){256+word.len()+40}else{0};if copy_text_extra(&mut field.attribute,word,extra,cx)? {
+                let mut buffer=[0u8;256];let word=attribute_text(attribute.name,field.member,&mut buffer)?;let extra=if field.member.is_some(){256+word.len()+40}else{0};if copy_text_extra(admission(&mut self.construction), &mut field.attribute,word,extra,cx)? {
                     self.state.phase = 12;
                 }
             }
@@ -1406,7 +1415,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let count = if needs_row { 2 } else { 1 };
                 let mut output = None;
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base, capacity_bytes: count * size_of::<StagedFormBindingEdit>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut output, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut output, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     field.binding.edits.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type guide bindings"))?;
                     Ok(((), RetainedCloneProgress { copied_items: 1, copied_bytes: base, retained_capacity_bytes: field.binding.edits.capacity() * size_of::<StagedFormBindingEdit>(), ..Default::default() }))
                 })()))? {
@@ -1416,7 +1425,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             13 => {
                 let count = self.copy_row_count()?;
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base, capacity_bytes: count * size_of::<DslValue>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.copied_rows, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.copied_rows, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let mut rows = Vec::new();
                     rows.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type guide sorted rows"))?;
                     let capacity = rows.capacity() * size_of::<DslValue>();
@@ -1445,7 +1454,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                     literal[..bytes].copy_from_slice(text.as_bytes());
                 }
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + size_of::<String>() + 20 + 2 * bytes, capacity_bytes: reserve, release_bytes: 0, depth: 1 };
-                if construct_row_string(&mut self.row_parts.as_mut().unwrap().strings[part], reserve, std::str::from_utf8(&literal[..bytes]).expect("ASCII reference metadata"), physical, cx)? {
+                if construct_row_string(admission(&mut self.construction), &mut self.row_parts.as_mut().unwrap().strings[part], reserve, std::str::from_utf8(&literal[..bytes]).expect("ASCII reference metadata"), physical, cx)? {
                     self.state.row_part += 1;
                 }
             }
@@ -1454,7 +1463,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + size_of::<Vec<(String, DslValue)>>(), capacity_bytes: count * size_of::<(String, DslValue)>(), release_bytes: 0, depth: 1 };
                 let parts = self.row_parts.as_mut().ok_or_else(invalid)?;
                 let target=if self.state.row_part==limit{&mut parts.outer}else if self.state.row_part==limit+1{&mut parts.inner}else{&mut parts.bits};
-                if admit_original_construction(cx, target, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), target, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let mut values = Vec::new();
                     values.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type guide row fields"))?;
                     let capacity = values.capacity() * size_of::<(String, DslValue)>();
@@ -1512,7 +1521,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             26 => {
                 let capacity = 2 * size_of::<String>() + 15;
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + capacity + size_of::<StagedFormBindingEdit>() + size_of::<Vec<DslValue>>(), capacity_bytes: capacity, release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.edit, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.edit, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     Ok((
                         StagedFormBindingEdit::Fixed { edit: StagedFormEdit::Set { path: vec!["value".into(), "$ifcInputs".into()], value: DslValue::Array(self.copied_rows.take().unwrap()) } },
                         RetainedCloneProgress { copied_items: 1, copied_bytes: physical.copy_bytes, retained_capacity_bytes: capacity, ..Default::default() },
@@ -1548,7 +1557,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let path_count=self.choice_path_len()?;
                 let StagedFormBindingEdit::Choice { path, options, .. } = self.edit.as_mut().ok_or_else(invalid)? else { return Err(invalid().into()) };
                 let mut output = None;
-                if admit_original_construction(cx, &mut output, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut output, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let capacity = if self.state.phase == 34 {
                         path.try_reserve_exact(path_count).map_err(|_| invalid())?;
                         path.capacity() * size_of::<String>()
@@ -1565,7 +1574,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let (_, length, pin) = self.choice_shape()?;
                 let count = length + usize::from(pin.is_some());
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + size_of::<Choices>(), capacity_bytes: count * size_of::<StagedScalarChoice>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.page.as_mut().ok_or_else(invalid)?.fields[self.state.field].choices, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.page.as_mut().ok_or_else(invalid)?.fields[self.state.field].choices, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let mut rows = Vec::new();
                     rows.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type declared choices"))?;
                     let capacity = rows.capacity() * size_of::<StagedScalarChoice>();
@@ -1588,7 +1597,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                     if path.len() == self.state.choice_part {
                         metadata(cx, base + size_of::<String>(), || path.push(String::new()))?;
                     } else {
-                        if copy_text_extra(&mut path[self.state.choice_part], text, 40, cx)? {
+                        if copy_text_extra(admission(&mut self.construction), &mut path[self.state.choice_part], text, 40, cx)? {
                             self.state.choice_part += 1;
                         }
                     }
@@ -1598,7 +1607,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let text=self.choice_text()?;let length=text.len();let raw=self.choice_raw()?;let mut literal=[0u8;128];
                 if !raw{if length>literal.len(){return Err(invalid().into());}literal[..length].copy_from_slice(text.as_bytes());}
                 let bytes=if raw{0}else{length};let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<String>()+2*bytes,capacity_bytes:length,release_bytes:0,depth:1};
-                if construct_row_string(&mut self.choice_parts.as_mut().unwrap().strings[self.state.choice_part],length,std::str::from_utf8(&literal[..bytes]).expect("declaration choice text"),physical,cx)?{
+                if construct_row_string(admission(&mut self.construction), &mut self.choice_parts.as_mut().unwrap().strings[self.state.choice_part],length,std::str::from_utf8(&literal[..bytes]).expect("declaration choice text"),physical,cx)?{
                     if raw{self.state.offset=0;self.state.phase=82;}else{self.state.choice_part+=1;}
                 }
             }
@@ -1612,7 +1621,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             }
             39 => {
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + size_of::<Vec<(String, DslValue)>>(), capacity_bytes: 2 * size_of::<(String, DslValue)>(), release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.choice_parts.as_mut().ok_or_else(invalid)?.payload, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.choice_parts.as_mut().ok_or_else(invalid)?.payload, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     let mut fields = Vec::new();
                     fields.try_reserve_exact(2).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type enum payload"))?;
                     let capacity = fields.capacity() * size_of::<(String, DslValue)>();
@@ -1627,7 +1636,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             }
             83=>{
                 let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<Vec<(String,DslValue)>>(),capacity_bytes:size_of::<(String,DslValue)>(),release_bytes:0,depth:1};
-                if admit_original_construction(cx,&mut self.choice_parts.as_mut().ok_or_else(invalid)?.bits,physical,|_| costed((|| -> Result<_, ValueError> {let mut fields=Vec::new();fields.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"numeric bit carrier"))?;let capacity=fields.capacity()*size_of::<(String,DslValue)>();Ok((fields,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=40;}
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.choice_parts.as_mut().ok_or_else(invalid)?.bits, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {let mut fields=Vec::new();fields.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"numeric bit carrier"))?;let capacity=fields.capacity()*size_of::<(String,DslValue)>();Ok((fields,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=40;}
             }
             40 => {
                 let word = self.choice_word()?;
@@ -1651,7 +1660,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                     self.state.phase = if self.state.option == length + usize::from(pin.is_some()) { 16 } else if select{93}else{38};
                 })?;
             }
-            15 if self.current_field()?.operation.is_some()=>{let page=self.page.as_ref().ok_or_else(stale)?;if set_controls::advance(&page.fields[self.state.field],page.request.as_ref().ok_or_else(stale)?,&mut self.edit,base,cx)?{self.state.phase=16;}},
+            15 if self.current_field()?.operation.is_some()=>{let page=self.page.as_ref().ok_or_else(stale)?;if set_controls::advance(&page.fields[self.state.field],page.request.as_ref().ok_or_else(stale)?,&mut self.edit,base,admission(&mut self.construction),cx)?{self.state.phase=16;}},
             15 if matches!(self.current_field()?.kind,InputKind::Enum|InputKind::Number|InputKind::List|InputKind::Select) => {
                 metadata(cx, base, || {
                     self.state.option = 0;
@@ -1668,7 +1677,7 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
                 let selection=self.current_field()?.selection;
                 let indexed=self.current_field()?.member.is_some();let mut member=[0;20];let member=decimal(self.current_field()?.member.unwrap_or(0),&mut member);let capacity=text_path_capacity(self.current_field()?,row,member);
                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + capacity + size_of::<StagedFormBindingEdit>(), capacity_bytes: capacity, release_bytes: 0, depth: 1 };
-                if admit_original_construction(cx, &mut self.edit, physical, |_| costed((|| -> Result<_, ValueError> {
+                if admit_original_construction_settled(cx, admission(&mut self.construction), &mut self.edit, physical, 1, |_, _| costed((|| -> Result<_, ValueError> {
                     Ok((
                         StagedFormBindingEdit::Text { path: if selection&&indexed{set_controls::text_path(row,member,real)}else if selection{let mut path=vec!["value".into(),"$ifcInputs".into(),row.into(),"value".into(),"value".into(),"items".into(),"0".into(),"value".into()];if real{path.push("bits".into());}path}else if indexed{vec!["value".into(),"$ifcInputs".into(),row.into(),"value".into(),"value".into(),member.into(),"value".into(),"bits".into()]}else if real{vec!["value".into(), "$ifcInputs".into(), row.into(), "value".into(), "value".into(),"bits".into()]}else{vec!["value".into(), "$ifcInputs".into(), row.into(), "value".into(), "value".into()]} },
                         RetainedCloneProgress { copied_items: 1, copied_bytes: physical.copy_bytes, retained_capacity_bytes: capacity, ..Default::default() },
@@ -1690,13 +1699,13 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             17 => {
                 if self.plan.map.is_some() || self.placeholders.is_some() || !self.retirement.is_empty() {
                     let demand = self.demands()?;
-                    semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+                    closed_in(cx, demand, |effect| {
                         if !self.retirement.is_empty() {
-                            self.retirement.step_granted(grant)
+                            settled(self.retirement.step_granted(4096, effect))
                         } else if self.plan.map.is_some() {
-                            owned_step(self.retirement.begin_granted(&mut self.plan.map, grant), "IFC type input plan owner omitted")
+                            owned_step(self.retirement.begin_granted(&mut self.plan.map, effect), "IFC type input plan owner omitted")
                         } else {
-                            owned_step(self.retirement.begin_granted(&mut self.placeholders, grant), "IFC type input placeholder owner omitted")
+                            owned_step(self.retirement.begin_granted(&mut self.placeholders, effect), "IFC type input placeholder owner omitted")
                         }
                     })?;
                 } else {
@@ -1727,21 +1736,32 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         self.commit_copy.begin_close();
     }
     pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<semio_framework_job::InteractiveJobCloseStep, OriginalTurnFailure> {
+        use semio_framework_job::InteractiveJobCloseStep as Step;
         if self.binding.is_some_and(|(binding, _, _)| !binding.matches(cx)) {
             return Err(stale().into());
         }
         if !self.state.closing {
-            return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+            return Ok(Step::Blocked);
         }
         if self.terminal_is_empty() {
-            return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() });
+            return Ok(Step::Complete { progress: Default::default() });
         }
-        let demand = self.close_demand(4096)?;
-        let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| self.close_owned(grant))?;
+        if self.construction.as_ref().is_some_and(|construction| !construction.terminal_is_empty()) {
+            let step = self.construction.as_mut().ok_or_else(stale)?.retire_step(cx)?;
+            return Ok(match step {
+                Step::Complete { progress } => Step::Pending { progress },
+                other => other,
+            });
+        }
+        let demand = self.close_demands(4096)?;
+        let step = closed_in(cx, demand, |effect| self.close_owned(4096, effect))?;
         Ok(match step {
-            semio_framework_job::InteractiveJobCloseStep::Complete { progress } if !self.terminal_is_empty() => semio_framework_job::InteractiveJobCloseStep::Pending { progress },
+            Step::Complete { progress } if !self.terminal_is_empty() => Step::Pending { progress },
             other => other,
         })
+    }
+    fn empty(&self) -> bool {
+        self.terminal_is_empty()
     }
     pub fn terminal_is_empty(&self) -> bool {
         self.request.is_none()
@@ -1766,9 +1786,10 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
             && self.nav_item.is_none()
             && self.plan.map.is_none()
             && self.retirement.is_empty()
+            && self.construction.as_ref().is_none_or(OriginalConstructionAdmission::terminal_is_empty)
     }
-    fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        if !self.commit_copy.empty(){return self.commit_copy.close_demand(body);}
+    fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+        if !self.commit_copy.empty(){return self.commit_copy.close_demands(body);}
         if !self.typed_copy.empty(){return self.typed_copy.close_demands(body);}
         if !self.list_copy.empty(){return self.list_copy.close_demands(body);}
         if !self.retirement.is_empty() {
@@ -1799,29 +1820,31 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         owner!(&self.placeholders, Vec<super::type_input::Input>);
         owner!(&self.plan.map, Vec<usize>);
         owner!(&self.source_loan, super::source_loan::SourceLoan);
+        owner!(&self.construction, OriginalConstructionAdmission);
         Ok(Default::default())
     }
-    fn close_owned(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    fn close_owned(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if self.terminal_is_empty() {
             return idle_step(RetainedCloneStep::Complete(Default::default()));
         }
-        let demand = match self.close_demand(grant.maximum_copy_bytes) {
+        let grant = effect.grant();
+        let demand = match self.close_demands(body) {
             Ok(demand) => demand,
             Err(error) => return refused(error),
         };
         if !retained_clone_grant_admits(grant, demand) {
             return idle_step(RetainedCloneStep::Progress(Default::default()));
         }
-        if !self.commit_copy.empty(){return self.commit_copy.close_owned(grant);}
-        if !self.typed_copy.empty(){return self.typed_copy.close_owned(grant);}
-        if !self.list_copy.empty(){return self.list_copy.close_owned(grant);}
+        if !self.commit_copy.empty(){return self.commit_copy.close_owned(body,effect);}
+        if !self.typed_copy.empty(){return self.typed_copy.close_owned(body,effect);}
+        if !self.list_copy.empty(){return self.list_copy.close_owned(body,effect);}
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return settled(self.retirement.step_granted(body,effect));
         }
         macro_rules! owner {
             ($value:expr) => {
                 if ($value).is_some() {
-                    return owned_step(self.retirement.begin_granted($value, grant), "IFC type input owner omitted");
+                    return owned_step(self.retirement.begin_granted($value, effect), "IFC type input owner omitted");
                 }
             };
         }
@@ -1843,52 +1866,11 @@ impl<C: IfcDetailsProfile + 'static> IfcTypeInputSourceWork<C> {
         owner!(&mut self.placeholders);
         owner!(&mut self.plan.map);
         owner!(&mut self.source_loan);
+        owner!(&mut self.construction);
         refused(invalid())
     }
 }
-impl<C: IfcDetailsProfile + 'static> RetireOwned for IfcTypeInputSourceWork<C> {
-    fn retirement(mut self) -> Box<dyn RetirementCursor> {
-        self.begin_close();
-        Box::new(self)
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        Some(size_of::<Self>())
-    }
-    fn controlled_retirement_supported() -> bool {
-        true
-    }
-}
-impl<C: IfcDetailsProfile + 'static> RetirementCursor for IfcTypeInputSourceWork<C> {
-    fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        self.close_demand(body)
-    }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
-        if self.terminal_is_empty() {
-            return semio_framework_value::retirement::RetirementStep::Complete(0);
-        }
-        let turn = self.close_owned(grant);
-        let empty = IfcTypeInputSourceWork::terminal_is_empty(self);
-        cursor_step(turn, empty)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        IfcTypeInputSourceWork::terminal_is_empty(self)
-    }
-    fn next_close_byte_demand(&self) -> Option<usize> {
-        Some(0)
-    }
-    fn next_birth_bytes(&self, _: usize) -> Option<usize> {
-        Some(0)
-    }
-    fn terminal_release_bytes(&self) -> Option<usize> {
-        Some(size_of::<Self>())
-    }
-    fn next_work_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.close_demand(usize::MAX)?.copy_bytes)
-    }
-    fn next_selected_work_byte_demand(&self, body: usize) -> Result<usize, ValueError> {
-        Ok(self.close_demand(body)?.copy_bytes)
-    }
-}
+retire_self!([C: IfcDetailsProfile + 'static] IfcTypeInputSourceWork<C>);
 impl<C: IfcDetailsProfile + 'static> Drop for IfcTypeInputSourceWork<C> {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "type input guidance requires original paid retirement");

@@ -128,6 +128,7 @@ pub enum CadMutation {
     CreateBrep(create_brep::CreateBrep),
     DeleteBrep(delete_brep::DeleteBrep),
 }
+dsl::original_pack_value_operation_receiving!(CadMutation);
 
 /// 🏷️ The kebab-case spelling of every [`CadMutation`] variant, in declaration order — the exact
 /// vocabulary the `cad-1-any` mutation catalog (`../../🔣️oracle.json`) declares and the

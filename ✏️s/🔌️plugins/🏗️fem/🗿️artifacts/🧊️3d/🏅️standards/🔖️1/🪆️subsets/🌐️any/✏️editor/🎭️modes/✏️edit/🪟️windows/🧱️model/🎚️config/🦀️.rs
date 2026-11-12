@@ -55,7 +55,7 @@ impl ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Fem3d
 impl store::ConfigRecord for Fem3dModelWindowConfig {}
 
 /// 📬️ The one field-set payload of the window-config mutation: the patch of exactly the fields it sets.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "update")]
@@ -64,7 +64,7 @@ pub struct Fem3dModelWindowConfigUpdate {
     pub patch: Box<Fem3dModelWindowConfigPatch>,
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Fem3dModelWindowConfigMutation {
     #[dsl(key = "update")]
@@ -88,6 +88,7 @@ impl protocol::OpBinary for Fem3dModelWindowConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+semio_os_kernel::original_ordinal_operation_receiving!(Fem3dModelWindowConfigMutation);
 
 impl protocol::Mutation<Fem3dModelWindowConfig> for Fem3dModelWindowConfigMutation  {
 

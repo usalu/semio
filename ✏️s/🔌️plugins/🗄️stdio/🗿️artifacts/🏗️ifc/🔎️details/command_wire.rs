@@ -28,11 +28,17 @@ impl CommandWire{
   if cx.is_cancelled(){return Err(ValueError::literal(ValueRefusalKind::Canceled,"IFC original command receiving cancelled").into());}
   if self.closing{return Err(invalid("IFC original command receiver closing").into());}
   let identity=(wire.as_ptr()as usize,wire.len());if self.source.is_some_and(|original|original!=identity){return Err(invalid("IFC original command wire owner changed").into());}
-  let demand=self.demands(wire)?;let grant=cx.retained_grant();if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(false);}
+  let demand=self.demands(wire)?;if cx.should_yield()||!semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),demand){return Ok(false);}
   if self.phase==Phase::Parse{
-   let parser=self.parser.as_mut().unwrap();let mut progress=RetainedCloneProgress::default();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parser_metadata(),maximum_depth:grant.maximum_depth-1,..grant};
-   let result=cx.with_native_receiving::<_,ValueError>(|control|{let result=parser.step_source(wire,1,control,child,false);progress=parser.normal_step_progress();progress.copied_bytes+=parser_metadata();match result{Ok(Some(value))=>{self.root=Some(value);self.phase=Phase::Outer;Ok(())},Ok(None)=>Ok(()),Err(error)=>{let kind=error.kind();self.error=Some(error);Err(ValueError::literal(kind,"IFC original command JSON refused"))}}});
-   cx.consume_receiving_retained(grant,progress)?;cx.consume_fuel(progress.copied_items.max(1)as u64);result?;return Ok(false);
+   let parser=self.parser.as_mut().unwrap();let mut stepped=None;
+   receive_effect(cx,demand,|control,effect|{stepped=Some(parser.step_source(wire,1,control,effect,false));RetainedWorkOutcome{result:Ok::<_,ValueError>(RetainedCloneStep::Progress(parser.normal_step_progress())),work:effect.performed_work()}})?;
+   match stepped{
+    Some(Ok(Some(value)))=>{self.root=Some(value);self.phase=Phase::Outer;},
+    Some(Ok(None))|None=>{},
+    Some(Err(JsonError::Native(error)))=>return Err(error.into()),
+    Some(Err(error))=>{let kind=error.kind();self.error=Some(error);return Err(ValueError::literal(kind,"IFC original command JSON refused").into());},
+   }
+   return Ok(false);
   }
   match self.phase{
    Phase::Init=>{if wire.len()>editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES{return Err(invalid("IFC original command exceeds its raw extent").into());}self.source=Some(identity);self.parser=Some(JsonGrammarCursor::new(JsonMemberPolicy::Reject));self.phase=Phase::Parse;},
@@ -55,17 +61,18 @@ impl CommandWire{
   if self.error.is_some(){return self.retirement.next_owner_demands::<JsonError>(true,&None,4096);}
   Ok(RetirementDemand{copy_bytes:size_of::<Option<(usize,usize)>>(),depth:1,..Default::default()})
  }
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   if !self.closing{return refused(invalid("IFC original command close not started"));}
   let demand=match self.close_demands(){Ok(demand)=>demand,Err(error)=>return refused(error)};
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,demand){return idle_step(RetainedCloneStep::Progress(Default::default()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g);}
-  if let Some(turn)=begun(self.retirement.begin_granted(&mut self.output,g)){return turn;}
-  for value in &mut self.fields{if let Some(turn)=begun(self.retirement.begin_granted(value,g)){return turn;}}
-  for value in [&mut self.body,&mut self.inner,&mut self.root]{if let Some(turn)=begun(self.retirement.begin_granted(value,g)){return turn;}}
-  if let Some(turn)=begun(self.retirement.begin_granted(&mut self.parser,g)){return turn;}
-  if let Some(turn)=begun(self.retirement.begin_granted(&mut self.error,g)){return turn;}
-  self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<(usize,usize)>>(),..Default::default()})),work:1}
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),demand){return idle_step(RetainedCloneStep::Progress(Default::default()));}
+  if !self.retirement.is_empty(){return settled(self.retirement.step_granted(4096,effect));}
+  if let Some(turn)=begun_in(&mut self.retirement,&mut self.output,effect){return turn;}
+  for value in &mut self.fields{if let Some(turn)=begun_in(&mut self.retirement,value,effect){return turn;}}
+  for value in [&mut self.body,&mut self.inner,&mut self.root]{if let Some(turn)=begun_in(&mut self.retirement,value,effect){return turn;}}
+  if let Some(turn)=begun_in(&mut self.retirement,&mut self.parser,effect){return turn;}
+  if let Some(turn)=begun_in(&mut self.retirement,&mut self.error,effect){return turn;}
+  match paid(effect){Ok(true)=>{},Ok(false)=>return idle_step(RetainedCloneStep::Progress(Default::default())),Err(error)=>return refused(error)}
+  self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<(usize,usize)>>(),..Default::default()})),work:effect.performed_work()}
  }
 }
 #[cfg(test)]#[path="command_tests.rs"]mod tests;

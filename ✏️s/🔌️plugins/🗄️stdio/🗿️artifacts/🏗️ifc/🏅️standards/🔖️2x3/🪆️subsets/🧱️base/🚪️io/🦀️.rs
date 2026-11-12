@@ -12,7 +12,11 @@
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3EdmPreamble;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
-use semio_s_artifact_stdio_contract::part21::{parse_part21_with_comments, write_part21_with, Part21Preamble, Part21WriteOptions};
+use semio_s_artifact_stdio_contract::part21::{parse_part21_with_comments, write_part21_with, Part21WriteOptions};
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::io::{binary,text};
+use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::io::{binary::mutations as mutation_binary,text::mutations as mutation_text};
+use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations;
+use semio_s_artifact_stdio_ifc_2x3_base_inferences::standards::v2x3::subsets::base::schema::inferences;
 use std::fmt::Write as _;
 #[path="⚖️boundary/🦀️.rs"]
 mod exchange_boundary;
@@ -54,34 +58,6 @@ fn parse_edm_preamble(text:&str)->Result<Option<Ifc2x3EdmPreamble>,String>{
     Ok(Some(Ifc2x3EdmPreamble{producer:values[0].take().unwrap(),module:values[1].take().unwrap(),creation_date:values[2].take().unwrap(),host:values[3].take().unwrap(),database:values[4].take().unwrap(),database_version:values[5].take().unwrap(),database_creation_date:values[6].take().unwrap(),schema:values[7].take().unwrap(),model:values[8].take().unwrap(),model_creation_date:values[9].take().unwrap(),header_model:values[10].take().unwrap(),header_model_creation_date:values[11].take().unwrap(),user:values[12].take().unwrap(),group:values[13].take().unwrap(),license:values[14].take().unwrap(),options:values[15].take().unwrap()}))
 }
 
-impl Part21Preamble for Ifc2x3EdmPreamble {
-    fn write_preamble(&self, out: &mut String, line_ending: &str) {
-        out.push_str("/******************************************************************************************");
-        out.push_str(line_ending);
-        for (label, value) in [
-            ("STEP Physical File produced by:", self.producer.as_str()),
-            ("Module:", self.module.as_str()),
-            ("Creation date:", self.creation_date.as_str()),
-            ("Host:", self.host.as_str()),
-            ("Database:", self.database.as_str()),
-            ("Database version:", self.database_version.as_str()),
-            ("Database creation date:", self.database_creation_date.as_str()),
-            ("Schema:", self.schema.as_str()),
-            ("Model:", self.model.as_str()),
-            ("Model creation date:", self.model_creation_date.as_str()),
-            ("Header model:", self.header_model.as_str()),
-            ("Header model creation date:", self.header_model_creation_date.as_str()),
-            ("EDMuser:", self.user.as_str()),
-            ("EDMgroup:", self.group.as_str()),
-            ("License ID and type:", self.license.as_str()),
-            ("EDMstepFileFactory options:", self.options.as_str()),
-        ] {
-            write!(out, "* {label:<31} {value}{line_ending}").expect("String write");
-        }
-        out.push_str("******************************************************************************************/");
-        out.push_str(line_ending);
-    }
-}
 //#endregion 🏭️EdmPreamble
 
 //#region 🎹️DerivedComposition
@@ -348,7 +324,6 @@ pub fn register_artifact_inferences() {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_pilot_languages() {
     #[cfg(test)] use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::{diff, snapshot};
-#[cfg(test)] use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations;
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
         id: "stdio.ifc.2x3",
         extension: Some("ifc"),
@@ -363,10 +338,10 @@ pub fn register_pilot_languages() {
         id: "stdio.ifc.2x3.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(mutation_text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(mutation_text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(mutation_binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(mutation_binary::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -395,8 +370,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(mutation_binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(mutation_binary::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.2x3.spr"),
     });
 }

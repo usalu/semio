@@ -1,6 +1,8 @@
 //! 📨️ The original decimal application is consumed into the native command under retained grants.
 use super::*;
-use crate::details::{IfcValueReceiveMode, IfcValueReceiver};
+use crate::details::{closed_in, owned_step, settled, IfcValueReceiveMode, IfcValueReceiver};
+use semio_framework_value::RetainedAllocationEffect;
+use semio_framework_value::RetainedWorkOutcome;
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{DslValue, RetirementDemand, ValueError, ValueRefusalKind};
@@ -256,7 +258,7 @@ impl ApplicationReceiver {
             }
             Phase::ReceiveLeaf => return if self.input.is_some() { Ok(fixed(size_of::<DslValue>())) } else { self.receiver.demands() },
             Phase::TakeLeaf => return Ok(fixed(size_of::<IfcValue>())),
-            Phase::CloseLeaf => return if self.receiver.terminal_is_empty() { Ok(fixed(size_of::<IfcValueReceiver>() + size_of::<Phase>())) } else { self.receiver.close_demands(4096) },
+            Phase::CloseLeaf => return if self.receiver.terminal_is_empty() { Ok(fixed(size_of::<IfcValueReceiver>() + size_of::<Phase>())) } else { self.receiver.close_demands() },
             Phase::Finish => return if self.source.is_none() && self.retirement.is_empty() { Ok(fixed(size_of::<Phase>())) } else { self.close_source_demand(4096) },
             _ => {}
         }
@@ -440,7 +442,7 @@ impl ApplicationReceiver {
                     self.receiver = IfcValueReceiver::new(IfcValueReceiveMode::Decimal);
                     self.phase = Phase::Leaf;
                 } else {
-                    semio_framework_job::close_original_retained_step(cx, demand, |grant| self.receiver.close_step(grant))?;
+                    closed_in(cx, demand, |effect| self.receiver.close_step(effect))?;
                     return Ok(false);
                 }
             }
@@ -455,7 +457,7 @@ impl ApplicationReceiver {
                     cx.consume_retained(receipt(demand))?;
                     cx.consume_fuel(1);
                 } else {
-                    semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { result: self.close_source(grant), work: 1 })?;
+                    closed_in(cx, demand, |effect| self.close_source(effect))?;
                 }
                 return Ok(matches!(self.phase, Phase::Ready));
             }
@@ -483,11 +485,11 @@ impl ApplicationReceiver {
     fn close_source_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.retirement.next_owner_demands::<DslValue>(self.source.is_some(), &None, body)
     }
-    fn close_source(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_source(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant).result
+            settled(self.retirement.step_granted(4096, effect))
         } else {
-            self.retirement.begin_granted(&mut self.source, grant).result?.ok_or_else(|| invalid("Template source close omitted its owner"))
+            owned_step(self.retirement.begin_granted(&mut self.source, effect), "Template source close omitted its owner")
         }
     }
     pub fn begin_close(&mut self) {
@@ -496,7 +498,7 @@ impl ApplicationReceiver {
     }
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if !self.receiver.terminal_is_empty() {
-            return self.receiver.close_demands(body);
+            return self.receiver.close_demands();
         }
         if !self.retirement.is_empty() {
             return self.retirement.next_owner_demands::<DslValue>(false, &None, body);
@@ -515,26 +517,26 @@ impl ApplicationReceiver {
         }
         self.close_source_demand(body)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if !self.receiver.terminal_is_empty() {
-            return self.receiver.close_step(grant);
+            return self.receiver.close_step(effect);
         }
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant).result;
+            return settled(self.retirement.step_granted(4096, effect));
         }
         if self.input.is_some() {
-            return self.retirement.begin_granted(&mut self.input, grant).result?.ok_or_else(|| invalid("Template input close omitted its owner"));
+            return owned_step(self.retirement.begin_granted(&mut self.input, effect), "Template input close omitted its owner");
         }
         if self.value.is_some() {
-            return self.retirement.begin_granted(&mut self.value, grant).result?.ok_or_else(|| invalid("Template value close omitted its owner"));
+            return owned_step(self.retirement.begin_granted(&mut self.value, effect), "Template value close omitted its owner");
         }
         if self.pending.is_some() {
-            return self.retirement.begin_granted(&mut self.pending, grant).result?.ok_or_else(|| invalid("Template entry close omitted its owner"));
+            return owned_step(self.retirement.begin_granted(&mut self.pending, effect), "Template entry close omitted its owner");
         }
         if self.output.is_some() {
-            return self.retirement.begin_granted(&mut self.output, grant).result?.ok_or_else(|| invalid("Template output close omitted its owner"));
+            return owned_step(self.retirement.begin_granted(&mut self.output, effect), "Template output close omitted its owner");
         }
-        self.close_source(grant)
+        self.close_source(effect)
     }
     pub fn terminal_is_empty(&self) -> bool {
         self.source.is_none() && self.output.is_none() && self.pending.is_none() && self.input.is_none() && self.value.is_none() && self.retirement.is_empty() && self.receiver.terminal_is_empty()

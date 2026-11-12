@@ -8,7 +8,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 use std::sync::Arc;
 
 //#region 🧩️Composition
@@ -64,9 +63,9 @@ pub struct RemodelingDurableArtifact {
     pub chunks: Vec<ByteBuffer>,
 }
 
-pub type RemodelingDurableArtifactStore = BTreeMap<String, RemodelingDurableArtifact>;
-pub type RemodelingOrderedAssetStore = semio_framework_value_ordered::OrderedMap<RemodelingAssetChild>;
-pub type RemodelingOrderedDurableArtifactStore = semio_framework_value_ordered::OrderedMap<RemodelingDurableArtifact>;
+pub type RemodelingDurableArtifactStore = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, RemodelingDurableArtifact>;
+
+pub type RemodelingAssetStore = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, RemodelingAssetChild>;
 
 pub const REMODELING_DURABLE_CHUNK_RAW_BYTES: usize = 4_096;
 

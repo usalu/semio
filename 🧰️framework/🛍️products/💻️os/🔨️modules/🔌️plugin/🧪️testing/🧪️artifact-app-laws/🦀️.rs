@@ -27,10 +27,14 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
         assert!(heap.requested_bytes>=64,"fixture heap witness missing: link semio-plugin-testing-caller into this test binary");
     }
 
-    /// 🪙️ A fixture without a job turn funds one page presentation from an explicit finite wallet of exactly its grant.
+    /// 🪙️ Runs one closure inside one owner-less host-pump effect turn funded by exactly `grant`; `None` means the work quote was not admitted.
+    pub fn fixture_pump_turn<R>(grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->R)->Option<R>{
+        semio_framework_job::OriginalRetirementPump::new().turn(1<<16,u64::MAX,||Some(0),grant).expect("pump issues a fixture turn").with_effect(run).expect("pump settles a fixture turn").map(|(output,_)|output)
+    }
+
+    /// 🪙️ A fixture without a job turn presents one page through the host retirement pump funded by exactly its grant.
     pub fn take_fixture_result_turn<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Option<semio_plugin_job::TypedOperationResultPage>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework::Fault>{
-        let mut wallet=semio_framework_value::AuthoringWallet::new(grant,1<<16);
-        match wallet.run(grant,1<<16,|effect|app.take_typed_operation_result_page(receiver,effect)).expect("fixture wallet admits its finite page stock"){Some(authored)=>authored.output,None=>Ok((None,Default::default()))}
+        match fixture_pump_turn(grant,|effect|app.take_typed_operation_result_page(receiver,effect)){Some(output)=>output,None=>Ok((None,Default::default()))}
     }
 
     /// 📃️ Observes each production page presentation with the exact original fixture grant.
@@ -45,7 +49,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 
     pub fn close_fixture_result_page(page:&mut semio_plugin_job::TypedOperationResultPage,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_plugin_job::TypedOperationResultToken{
 
-        let token=page.token;for _ in 0..100000{if page.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||page.close_step(grant).expect("original fixture receiver page closure"));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default(),"original fixture close grant must fund its unchanged page authority");}panic!("original fixture receiver page did not close");
+        let token=page.token;for _ in 0..100000{if page.terminal_is_empty(){return token;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||fixture_pump_turn(grant,|effect|page.close_step(effect)).expect("original fixture receiver page quote admitted").expect("original fixture receiver page closure"));assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert_ne!(step.progress(),Default::default(),"original fixture close grant must fund its unchanged page authority");}panic!("original fixture receiver page did not close");
 
     }
 
@@ -53,9 +57,9 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
     pub fn retire_fixture_owned<T:semio_framework_value::retirement::RetireOwned+'static>(pending:&mut Option<T>,active:&mut Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         for _ in 0..OriginalFixtureCaller::maximum_turns(){
             if pending.is_none()&&active.is_none(){return Ok(true)}
-            let demand=if let Some(owner)=active.as_ref(){store::os_store::snapshot_read::artifact_retirement_box_demands(owner.as_ref(),grant.maximum_copy_bytes)}else{store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(pending)}?;
-            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|same|semio_framework_job::close_original_retained_step(same,demand,|issued|{
-                if active.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(active,issued)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(pending,active,issued)}
+            let demand=if let Some(owner)=active.as_ref(){store::os_store::snapshot_read::artifact_retirement_box_demands(owner,grant.maximum_copy_bytes)}else{store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(pending)}?;
+            let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cx.with_retained_loan(grant,|same|semio_framework_job::close_original_effect_step(same,demand,|effect|{
+                if active.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(active,grant.maximum_copy_bytes,effect)}else{{let admitted=store::os_store::snapshot_read::artifact_retirement_admit_owned(pending,active,effect);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:admitted.result.map_err(semio_framework_value::OriginalRetirementFailure::from),work:admitted.work})}}
             })));
             let progress=match &result{Ok(step)=>step.progress(),Err(failure)=>failure.effects};
             assert!(progress.fits(grant));

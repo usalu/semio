@@ -15,4 +15,6 @@ impl protocol::OpBinary for GisMapViewerWindowConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+dsl::original_ordinal_operation_receiving!(GisMapViewerWindowConfigMutation);
 }

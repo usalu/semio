@@ -398,7 +398,7 @@ impl Fem2dVisualJob {
     /// ⚙️ Runs the `build mesh element` stage of `step_one`.
     fn visual_build_mesh_element(&mut self, doc: &Fem2dSnapshot) -> Result<bool, Vec<u8>> {
         if self.item_phase == 0 {
-            if let Some(node) = doc.nodes.get(self.cursor) {
+            if let Some(node) = (*doc.nodes).get(self.cursor) {
                 self.layer_prefix()?;
                 let (x, y) = screen_2d(node.x, node.y);
                 write!(self.output, "{{\"kind\":\"circle\",\"id\":\"mesh-node-{}\",\"x\":{},\"y\":{},\"width\":8,\"height\":8,\"color\":\"#38bdf8\"}}", node.id.as_str(), x - 4.0, y - 4.0).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
@@ -416,7 +416,7 @@ impl Fem2dVisualJob {
         let element = &doc.elements[index];
         let (start, end) = fem2d_element_endpoints(element);
         if self.item_phase == 1 {
-            let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem2d.visual-element-start".to_vec()) };
+            let Some(node) = (*doc.nodes).get(self.lookup_cursor) else { return Err(b"fem2d.visual-element-start".to_vec()) };
             if node.id.as_str() == start {
                 self.endpoint_a = [node.x, node.y];
                 self.lookup_cursor = 0;
@@ -427,7 +427,7 @@ impl Fem2dVisualJob {
             return Ok(false);
         }
         if self.item_phase == 2 {
-            let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem2d.visual-element-end".to_vec()) };
+            let Some(node) = (*doc.nodes).get(self.lookup_cursor) else { return Err(b"fem2d.visual-element-end".to_vec()) };
             if node.id.as_str() == end {
                 self.endpoint_b = [node.x, node.y];
                 self.lookup_cursor = 0;

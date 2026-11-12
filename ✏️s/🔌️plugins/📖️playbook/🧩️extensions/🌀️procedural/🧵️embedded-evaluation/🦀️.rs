@@ -209,10 +209,10 @@ impl ArtifactCommandWork<ModuleApp> for EmbeddedFlowWork {
         } else if self.host.is_some() {
             self.close.retain(&mut self.host, grant)?
         } else if !self.close.terminal_is_empty() {
-            self.close.close_step(grant)?.progress()
+            funded(cx, grant, |effect| self.close.close_step(effect).map(|step| step.progress()))?
         } else {
             let source = if self.cache.is_some() { &mut self.cache } else { &mut self.retiring_cache };
-            close_preview_cache(source, &mut self.cache_close, grant)?
+            funded(cx, grant, |effect| close_preview_cache(source, &mut self.cache_close, effect))?
         };
         if progress != RetainedCloneProgress::default() { cx.consume_fuel(1); }
         cx.consume_retained(progress)?;
@@ -349,7 +349,16 @@ pub(super) fn preview_close_demands(original: bool, closing: &Option<semio_frame
     Ok(if original { RetirementDemand { copy_bytes: std::mem::size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<PreviewCache>>(), depth: 1, ..Default::default() } } else { RetirementDemand::default() })
 }
 
-pub(super) fn close_preview_cache(original: &mut Option<PreviewCache>, closing: &mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<PreviewCache>>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+/// 🪙️ Runs one close leaf inside the turn's own original effect; an unadmitted quote is zero progress that retries next turn.
+pub(super) fn funded(cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant, run: impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError>) -> Result<RetainedCloneProgress, OriginalTurnFailure> {
+    match cx.with_original_effect(grant, |_, effect| run(effect))? {
+        Some((result, performed)) => { cx.consume_work(performed); Ok(result?) }
+        None => Ok(Default::default()),
+    }
+}
+
+pub(super) fn close_preview_cache(original: &mut Option<PreviewCache>, closing: &mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<PreviewCache>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneProgress, ValueError> {
+    let grant = effect.grant();
     let demand = preview_close_demands(original.is_some(), closing, grant.maximum_copy_bytes)?;
     if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(Default::default()); }
     if let Some(cursor) = closing {
@@ -358,7 +367,10 @@ pub(super) fn close_preview_cache(original: &mut Option<PreviewCache>, closing: 
             return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() });
         }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = cursor.step(child)?;
+        let step = match cursor.step(grant.maximum_copy_bytes, effect) {
+            semio_framework_value::RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(Default::default()),
+            semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?,
+        };
         return Ok(semio_framework_value::retained_clone::admit_retained_clone_close(child, step, cursor.terminal_is_empty(), "embedded preview cache")?.progress());
     }
     if let Some(cache) = original.take() {
@@ -394,4 +406,3 @@ mod tests {
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(EmbeddedFlowWork);

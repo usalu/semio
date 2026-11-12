@@ -465,7 +465,7 @@ impl Fem3dPageVisualJob {
             }
             Fem3dVisualJobStage::BuildMeshElement => {
                 if self.item_phase == 0 {
-                    if let Some(node) = doc.nodes.get(self.cursor) {
+                    if let Some(node) = (*doc.nodes).get(self.cursor) {
                         let identity = semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_entity_target("node", &node.id).map_err(|_| b"fem3d.visual-identity".to_vec())?;
                         self.push_item(2 + self.cursor / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY, [Some(&identity), None, None, None], Fem3dVisualItemPayload { numbers: Self::instance_numbers([node.x, node.y, node.z], [0.05; 3]), number_len: 14, indexes: [0; 8], index_len: 0, flags: 2 })?;
                         self.cursor += 1;
@@ -482,7 +482,7 @@ impl Fem3dPageVisualJob {
                 let element = &doc.elements[index];
                 let (start, end) = Self::element_endpoints(element);
                 if self.item_phase == 1 {
-                    let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.visual-element-start".to_vec()) };
+                    let Some(node) = (*doc.nodes).get(self.lookup_cursor) else { return Err(b"fem3d.visual-element-start".to_vec()) };
                     if node.id.as_str() == start {
                         self.endpoint_a = [node.x, node.y, node.z];
                         self.lookup_cursor = 0;
@@ -493,7 +493,7 @@ impl Fem3dPageVisualJob {
                     return Ok(false);
                 }
                 if self.item_phase == 2 {
-                    let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.visual-element-end".to_vec()) };
+                    let Some(node) = (*doc.nodes).get(self.lookup_cursor) else { return Err(b"fem3d.visual-element-end".to_vec()) };
                     if node.id.as_str() == end {
                         self.endpoint_b = [node.x, node.y, node.z];
                         self.lookup_cursor = 0;
@@ -546,7 +546,7 @@ impl Fem3dPageVisualJob {
                 self.cursor += 1;
             }
             Fem3dVisualJobStage::BuildDisplacementEntry | Fem3dVisualJobStage::BuildResidualEntry | Fem3dVisualJobStage::BuildReactionEntry | Fem3dVisualJobStage::BuildContourEntry | Fem3dVisualJobStage::BuildModeEntry => {
-                let Some(node) = doc.nodes.get(self.cursor) else {
+                let Some(node) = (*doc.nodes).get(self.cursor) else {
                     let next = match self.stage {
                         Fem3dVisualJobStage::BuildDisplacementEntry => Fem3dVisualJobStage::BuildResidualEntry,
                         Fem3dVisualJobStage::BuildResidualEntry => Fem3dVisualJobStage::BuildReactionEntry,

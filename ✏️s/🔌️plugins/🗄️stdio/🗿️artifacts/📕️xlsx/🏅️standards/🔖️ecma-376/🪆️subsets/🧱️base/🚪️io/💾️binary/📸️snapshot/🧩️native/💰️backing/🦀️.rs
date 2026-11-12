@@ -1,5 +1,6 @@
 //! 💰️ XLSX complete literal native fields settle one persistent backing stage.
 use super::*;
+use semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase;
 use semio_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost;
 use semio_framework_value::{DecodedValue, NativeEncodeControl, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -16,9 +17,9 @@ fn measured(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, limits: SqliteD
 }
 pub(super) fn preflight(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
     let limits = control.limits();
-    control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
+    control.allocation_stage(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint, allocation| {
         let mut callback = |event: semio_framework_value::native_encoding::NativeEncodeProgress| checkpoint(event.completed, event.total);
-        let mut native = NativeEncodeControl::new(remaining, &mut callback);
+        let mut native = NativeEncodeControl::new_forwarded(remaining, &mut callback, allocation);
         let result = (|| {
             let count = measured(snapshot, encoding, limits, &mut native)?;
             if count > remaining.saturating_sub(native.owned_bytes()) {
@@ -29,55 +30,33 @@ pub(super) fn preflight(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, con
         (result, native.owned_bytes())
     })?
 }
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn encode(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_control: &mut NativeEncodeControl<'_>) -> Result<IoPayload, ValueError> {
-    let limits = control.limits();
-    control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative, |remaining, checkpoint| {
-        let native_before=native_control.owned_bytes();
-    let result=native_control.scoped_maximum(match native_before.checked_add(remaining) {Some(maximum) => maximum, None => return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native snapshot allowance overflow")), 0)}, |native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
-
-        let result = (|| {
-            let total = measured(snapshot, encoding, limits, native)?;
-            let mut bytes = native.allocate_vec::<u8>(total)?;
-            native.begin_stage(total)?;
-            let mut writer = OpcNativeWriter { control: native, output: Some(&mut bytes), count: 0, rows: 0, limits, encoding };
-            write(snapshot, &mut writer)?;
-            if writer.count != total || bytes.len() != total {
-                return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "XLSX measured native fields differ from emitted fields"));
-            }
-            native.checkpoint()?;
-            match encoding {
-                SnapshotEncoding::Binary => Ok(IoPayload::Binary(bytes)),
-                SnapshotEncoding::Text => String::from_utf8(bytes).map(IoPayload::Text).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "XLSX native output is not UTF8")),
-            }
-        })();
-        result
-    })});
-    (result,native_control.owned_bytes().saturating_sub(native_before))
-    })?
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn encode(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, native: &mut NativeEncodeControl<'_>) -> Result<IoPayload, ValueError> {
+    let total = measured(snapshot, encoding, limits, native)?;
+    let mut bytes = native.allocate_vec::<u8>(total)?;
+    native.begin_stage(total)?;
+    let mut writer = OpcNativeWriter { control: native, output: Some(&mut bytes), count: 0, rows: 0, limits, encoding };
+    write(snapshot, &mut writer)?;
+    if writer.count != total || bytes.len() != total {
+        return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "XLSX measured native fields differ from emitted fields"));
+    }
+    native.checkpoint()?;
+    match encoding {
+        SnapshotEncoding::Binary => Ok(IoPayload::Binary(bytes)),
+        SnapshotEncoding::Text => String::from_utf8(bytes).map(IoPayload::Text).map_err(|_| ValueError::new(ValueRefusalKind::InvariantViolated, "XLSX native output is not UTF8")),
+    }
 }
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn input(bytes: &[u8], binary: bool, control: &mut SqliteSnapshotControl<'_>, native_control: &mut NativeDecodeControl<'_>) -> Result<XlsxSnapshot, ValueError> {
-    let limits = control.limits();
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn input(bytes: &[u8], binary: bool, limits: SqliteDatabaseLimits, native: &mut NativeDecodeControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     if bytes.len() > limits.max_file_bytes {
         return Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "XLSX native input exceeds caller file ceiling"));
     }
-    control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative, |remaining, checkpoint| {
-        let native_before = native_control.owned_bytes();
-        let result = native_control.scoped_maximum(match native_before.checked_add(remaining) { Some(maximum) => maximum, None => return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "native snapshot allowance overflow")), 0) }, |native| {
-            native.scoped_observer(&mut |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| checkpoint(event.completed, event.total), |native| {
-                (|| {
-                    let body = if binary {
-                        store::semio_format::unwrap_binary_controlled(bytes, "stdio.xlsx", store::semio_format::Component::Pack, 1, native)?
-                    } else {
-                        let text = native.borrow_text(bytes)?;
-                        store::semio_format::split_text_preamble_controlled(text, "stdio.xlsx", store::semio_format::Component::Dsl, 1, native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()
-                    };
-                    native.begin_stage(body.len())?;
-                    let snapshot = DecodedValue::new(read(&mut OpcNativeReader { bytes: body, position: 0, rows: 0, limits, binary, control: native })?, retire);
-                    native.checkpoint()?;
-                    Ok(snapshot.take())
-                })()
-            })
-        });
-        (result, native_control.owned_bytes().saturating_sub(native_before))
-    })?
+    let body = if binary {
+        store::semio_format::unwrap_binary_controlled(bytes, "stdio.xlsx", store::semio_format::Component::Pack, 1, native)?
+    } else {
+        let text = native.borrow_text(bytes)?;
+        store::semio_format::split_text_preamble_controlled(text, "stdio.xlsx", store::semio_format::Component::Dsl, 1, native).map_err(store::semio_format::SemioError::into_value_error)?.as_bytes()
+    };
+    native.begin_stage(body.len())?;
+    let snapshot = DecodedValue::new(read(&mut OpcNativeReader { bytes: body, position: 0, rows: 0, limits, binary, control: native })?, retire);
+    native.checkpoint()?;
+    Ok(snapshot.take())
 }

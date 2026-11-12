@@ -116,7 +116,7 @@ fn widget_fields(host_snapshot: &FlowHostSnapshot, selected_id: &str, widget: &W
             .try_push(tree_item(&format!("{prefix}.neuron-kind"), semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name(labels, neuron_kind, neuron_kind))?)
             .map_err(|_| semio_plugin::PluginAssemblyError::new("ui.inspection.fields", "fixed UI inspector admission failed"))?;
         let infos = semio_os_flow::flow_neuron_kind_info_map();
-        if let Some(info) = infos.get(neuron_kind) {
+        if let Some(info) = infos.get().get(neuron_kind) {
             for port in &info.inputs {
                 let key = format!("{prefix}.input.{}", port.name);
                 let label = semio_s_artifact_procedural_3d_terminology::generation3d_input_name(labels, &port.name, port.label.as_deref().unwrap_or(&port.name));
@@ -245,7 +245,7 @@ fn analysis_actions(key:&str,label:&str,widget:&str,port:&semio_os_flow::neural:
     let error=||semio_plugin::PluginAssemblyError::new("ui.inspection.analysis","fixed UI analysis admission failed");
     let infos=semio_os_flow::flow_neuron_kind_info_map();let mut count=0;let mut row=semio_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(&format!("{}: {label}",labels.input_analyze.as_str()))?).try_id(format!("{key}.analysis")).map_err(|_|error())?;
     for operation in ["brep.measure.volume","brep.measure.area","brep.measure.length","brep.measure.centerOfMass","brep.measure.boundingBox","brep.measure.validate","brep.mesh.analyze"]{
-        let Some(target)=infos.get(operation).and_then(|info|info.inputs.iter().find(|input|input.value_types.iter().any(|kind|kind==schema)))else{continue};
+        let Some(target)=infos.get().get(operation).and_then(|info|info.inputs.iter().find(|input|input.value_types.iter().any(|kind|kind==schema)))else{continue};
         let name=semio_s_artifact_procedural_3d_terminology::generation3d_catalogue_name(labels,operation,operation);let args=semio_s_procedural_core_semantic_ui::ui_value_map([("kind",semio_s_procedural_core_semantic_ui::ui_value_text("neuron")?),("neuronKind",semio_s_procedural_core_semantic_ui::ui_value_text(operation)?),("sourceWidget",semio_s_procedural_core_semantic_ui::ui_value_text(widget)?),("sourcePort",semio_s_procedural_core_semantic_ui::ui_value_text(&port.name)?),("targetPort",semio_s_procedural_core_semantic_ui::ui_value_text(&target.name)?),("sourceRevision",semio_s_procedural_core_semantic_ui::ui_value_text(revision)?)])?;
         let(action,args)=ActionFactory::new(GENERATION_3D_PLAY_APP_ID).action("addWidget",Some(args))?;let button=semio_ui_contract::button(semio_s_procedural_core_semantic_ui::ui_label(&format!("{}: {name}",labels.input_analyze.as_str()))?).try_id(format!("{key}.analysis.{operation}")).map_err(|_|error())?;let button=match args{Some(args)=>button.try_on_with(Trigger::Activate,action,args),None=>button.try_on(Trigger::Activate,action)}.map_err(|_|error())?.try_build().map_err(|_|error())?;row=row.try_child(button).map_err(|_|error())?;count+=1;
     }

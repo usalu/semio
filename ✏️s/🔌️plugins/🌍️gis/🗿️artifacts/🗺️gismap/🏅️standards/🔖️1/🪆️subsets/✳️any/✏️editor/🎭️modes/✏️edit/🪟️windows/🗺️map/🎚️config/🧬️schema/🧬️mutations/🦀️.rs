@@ -25,7 +25,7 @@ pub use set_vector_style::SetVectorStyle;
 //#endregion 🧬️Leaves
 
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = MapWindowConfig, diff = MapWindowConfigDiff, schema = "gis.mapwindowcfg", reference = MapWindowConfig, reference_diff = MapWindowConfigDiff)]
@@ -42,8 +42,8 @@ impl store::snapshot_clone_preparation::ConfigApplyMutation<MapWindowConfig> for
         Ok(match self {
             Self::SetLayerVisibility(SetLayerVisibility { layer_id, visible }) => {
                 let displaced = match visible {
-                    Some(value) => post.layer_visibility.insert(layer_id.clone(), value),
-                    None => post.layer_visibility.remove(&layer_id),
+                    Some(value) => post.layer_visibility.cold_insert(layer_id.clone(), value),
+                    None => post.layer_visibility.cold_remove(&layer_id),
                 };
                 Self::SetLayerVisibility(SetLayerVisibility { layer_id, visible: displaced })
             }
@@ -53,8 +53,8 @@ impl store::snapshot_clone_preparation::ConfigApplyMutation<MapWindowConfig> for
             Self::SetLodMode(SetLodMode { value }) => Self::SetLodMode(SetLodMode { value: std::mem::replace(&mut post.lod_mode, value) }),
             Self::SetLayerStrokeScale(SetLayerStrokeScale { layer_id, value }) => {
                 let displaced = match value {
-                    Some(scale) => post.layer_stroke_scale.insert(layer_id.clone(), scale),
-                    None => post.layer_stroke_scale.remove(&layer_id),
+                    Some(scale) => post.layer_stroke_scale.cold_insert(layer_id.clone(), scale),
+                    None => post.layer_stroke_scale.cold_remove(&layer_id),
                 };
                 Self::SetLayerStrokeScale(SetLayerStrokeScale { layer_id, value: displaced })
             }

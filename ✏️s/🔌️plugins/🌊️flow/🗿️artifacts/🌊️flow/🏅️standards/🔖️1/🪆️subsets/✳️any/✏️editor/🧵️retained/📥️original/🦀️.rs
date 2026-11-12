@@ -1,8 +1,9 @@
 //! 📥️ Graph factories donate their actual command and receive the captured snapshot through its real issuer.
 use super::super::{FlowCommand,FlowSnapshot,FlowApp,FlowInstanceOperationOwner};
-use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,receive_original_retained_work};
+use super::{effected,replied,poll_outcome,begin_close_owner};
+use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding};
 use semio_plugin::{ArtifactInstanceOperationOwnerHandle,EditorApp,retained_command::ArtifactCommandInputs};
-use semio_framework_value::{RetireOwned,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneRef,RetainedCloneClose,retained_clone_grant_admits}};
+use semio_framework_value::{RetireOwned,RetirementDemand,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneRef,RetainedCloneClose,retained_clone_grant_admits}};
 use store::os_store::snapshot_read::SnapshotRead;
 use std::mem::{ManuallyDrop,size_of};
 type Parent=RetainedCloneSource<FlowSnapshot,SnapshotRead<FlowSnapshot>>;
@@ -19,9 +20,9 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 fn fixed(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
 fn unit(bytes:usize)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}}
 /// 🎟️ Consumers close their qualified bindings before returning these exact original source owners.
-pub struct FlowOriginalIntake{fields:ManuallyDrop<Option<Fields>>,command_admission:Option<CommandAdmission>,parent_admission:Option<ParentAdmission>,retirement:RetainedCloneClose,origin:Option<Origin>,parent_origin:Option<ParentOrigin>,tool:&'static str,closing:bool}
+pub struct FlowOriginalIntake{fields:ManuallyDrop<Option<Fields>>,command_admission:Option<CommandAdmission>,parent_admission:Option<ParentAdmission>,retirement:RetainedCloneClose,origin:Option<Origin>,parent_origin:Option<ParentOrigin>,tool:&'static str,closing:bool,recover:bool}
 impl FlowOriginalIntake{
- pub fn new(tool:&'static str)->Self{Self{fields:ManuallyDrop::new(Some(Fields{owned_command:None,command:None,parent:None,read:None,command_return:None,parent_return:None,registry:None,infos:None})),command_admission:None,parent_admission:None,retirement:Default::default(),origin:None,parent_origin:None,tool,closing:false}}
+ pub fn new(tool:&'static str)->Self{Self{fields:ManuallyDrop::new(Some(Fields{owned_command:None,command:None,parent:None,read:None,command_return:None,parent_return:None,registry:None,infos:None})),command_admission:None,parent_admission:None,retirement:Default::default(),origin:None,parent_origin:None,tool,closing:false,recover:false}}
  fn validate(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.closing||self.origin.is_some_and(|origin|!origin.source.matches(cx)||origin.operation!=cx.operation().0||origin.generation!=cx.generation().0){return Err(invalid())}Ok(())}
  fn paid(cx:&mut StepContext<'_>,d:RetirementDemand)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(d){return Ok(false)}cx.consume_fuel(1);cx.consume_retained(unit(d.copy_bytes))?;Ok(true)}
  pub fn receive_command(&mut self,command:&mut FlowCommand,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -31,7 +32,7 @@ impl FlowOriginalIntake{
    let original=std::mem::replace(command,placeholder);self.command_admission=Some(RetainedCloneSource::<FlowCommand>::admission_owned(original,()));self.origin=Some(Origin{source:OriginalSourceBinding::borrow(cx),operation:cx.operation().0,generation:cx.generation().0,command:address});cx.consume_fuel(1);cx.consume_retained(unit(d.copy_bytes))?;return Ok(false)
   }
   if self.fields.as_ref().ok_or_else(invalid)?.command.is_some(){return Ok(true)}let admission=self.command_admission.as_mut().ok_or_else(invalid)?;let d=if admission.phase()=="ready"{fixed(0)}else{admission.next_demand()?};if !cx.retained_work_can_enter(d){return Ok(false)}
-  let turn=if admission.phase()=="ready"{admission.take_output(&mut self.fields.as_mut().unwrap().command,cx.retained_grant())}else{admission.advance(cx.retained_grant())};if admission.terminal_is_empty(){self.command_admission=None}receive_original_retained_work(cx,turn)?;Ok(self.fields.as_ref().unwrap().command.is_some())
+  let fields=self.fields.as_mut().unwrap();effected(cx,d,|effect|(if admission.phase()=="ready"{admission.take_output(&mut fields.command,effect)}else{admission.advance(effect)}).result)?;if admission.terminal_is_empty(){self.command_admission=None}Ok(fields.command.is_some())
  }
  pub fn receive_catalogue(&mut self,owner:&ArtifactInstanceOperationOwnerHandle,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.origin.is_none(){return Err(invalid().into())}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let fields=self.fields.as_mut().ok_or_else(invalid)?;if fields.infos.is_some(){return Ok(true)}
@@ -45,7 +46,7 @@ impl FlowOriginalIntake{
   if self.parent_admission.is_none(){let fields=self.fields.as_mut().ok_or_else(invalid)?;if fields.read.is_none(){fields.read=input.snapshot_read.take_current(input.operation.generation,input.operation.canonical_base_revision,cx)?;return Ok(false)}
    if !Self::paid(cx,fixed(size_of::<ParentAdmission>()+size_of::<Option<SnapshotRead<FlowSnapshot>>>()))?{return Ok(false)}let read=fields.read.take().ok_or_else(invalid)?;match read.source_admission(){Ok(admission)=>self.parent_admission=Some(admission),Err((error,read))=>{fields.read=Some(read);return Err(error.into())}}return Ok(false)
   }
-  let admission=self.parent_admission.as_mut().ok_or_else(invalid)?;let d=if admission.phase()=="ready"{fixed(0)}else{admission.next_demand()?};if !cx.retained_work_can_enter(d){return Ok(false)}let turn=if admission.phase()=="ready"{admission.take_output(&mut self.fields.as_mut().unwrap().parent,cx.retained_grant())}else{admission.advance(cx.retained_grant())};if admission.terminal_is_empty(){self.parent_admission=None}receive_original_retained_work(cx,turn)?;if let Some(parent)=self.fields.as_ref().unwrap().parent.as_ref(){if parent.try_borrow()?.get()as*const _ as usize!=origin.snapshot{return Err(invalid().into())}Ok(true)}else{Ok(false)}
+  let admission=self.parent_admission.as_mut().ok_or_else(invalid)?;let d=if admission.phase()=="ready"{fixed(0)}else{admission.next_demand()?};if !cx.retained_work_can_enter(d){return Ok(false)}let fields=self.fields.as_mut().unwrap();effected(cx,d,|effect|(if admission.phase()=="ready"{admission.take_output(&mut fields.parent,effect)}else{admission.advance(effect)}).result)?;if admission.terminal_is_empty(){self.parent_admission=None}if let Some(parent)=self.fields.as_ref().unwrap().parent.as_ref(){if parent.try_borrow()?.get()as*const _ as usize!=origin.snapshot{return Err(invalid().into())}Ok(true)}else{Ok(false)}
  }
  /// 🌱️ The preborn catalogue and registry are aliased only after the original Work header is admitted.
  pub fn receive_evaluation_work(&self,session:&flow::FlowEvalSession,output:&mut Option<flow::FlowEvaluationWork>,revision:u64,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -55,7 +56,8 @@ impl FlowOriginalIntake{
  }
  pub fn take_command(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let fields=self.fields.as_mut().ok_or_else(invalid)?;if fields.owned_command.is_some(){return Ok(true)}let source=fields.command.as_mut().ok_or_else(invalid)?;let capture=2*size_of::<Option<FlowCommand>>()+size_of::<Option<RetainedCloneSource<FlowCommand>>>();let mut d=source.next_take_demand(cx.retained_grant().maximum_copy_bytes)?;d.copy_bytes=d.copy_bytes.checked_add(capture).ok_or_else(invalid)?;if !cx.retained_work_can_enter(d){return Ok(false)}
-  let turn=source.take_authority(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-capture,..cx.retained_grant()});let result=turn.result.map(|step|match step{semio_framework_value::retained_clone::RetainedCloneSourceTake::Pending(p)=>RetainedCloneStep::Progress(p),semio_framework_value::retained_clone::RetainedCloneSourceTake::Ready(command,mut p)=>{fields.owned_command=Some(command);fields.command=None;p.copied_bytes+=capture;RetainedCloneStep::Complete(p)}});receive_original_retained_work(cx,RetainedWorkOutcome{result,work:turn.work})?;Ok(fields.owned_command.is_some())
+  let body=cx.retained_grant().maximum_copy_bytes-capture;let again=self.recover;let mut next=again;
+  effected(cx,d,|effect|match replied(effect,|effect,reply|if again{source.recover_take_authority_into(&mut fields.owned_command,body,effect,reply)}else{source.take_authority_into(&mut fields.owned_command,body,effect,reply)})?{Some(Ok(step))=>{next=false;let mut p=step.progress();Ok(if fields.owned_command.is_some(){p.copied_bytes+=capture;RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})},Some(Err(failure))=>Err(failure.into_value_error()),None=>{next=true;Ok(RetainedCloneStep::Progress(Default::default()))}})?;self.recover=next;if fields.owned_command.is_some(){if !source.terminal_is_empty(){return Err(invalid().into())}fields.command=None}Ok(fields.owned_command.is_some())
  }
  pub fn owned_command(&self)->Result<&FlowCommand,ValueError>{if self.closing{return Err(invalid())}self.fields.as_ref().ok_or_else(invalid)?.owned_command.as_ref().ok_or_else(invalid)}
  pub fn take_native_reply_output(&mut self,output:&mut Option<semio_framework_value::DslValue>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
@@ -69,11 +71,11 @@ impl FlowOriginalIntake{
  pub fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(admission)=self.command_admission.as_ref(){return if admission.phase()=="ready"{Ok(fixed(0))}else{admission.next_return_demand()}}if let Some(admission)=self.parent_admission.as_ref(){return if admission.phase()=="ready"{Ok(fixed(0))}else{admission.next_return_demand()}}if !self.retirement.is_empty(){return self.retirement.demands(copy)}if self.fields.is_some(){return self.retirement.next_owner_demands::<Fields>(true,&None,copy)}Ok(if self.origin.is_some()||self.parent_origin.is_some(){fixed(size_of::<Option<Origin>>()+size_of::<Option<ParentOrigin>>())}else{Default::default()})
  }
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
+ pub fn close_step(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
-  if let Some(admission)=self.command_admission.as_mut(){let fields=self.fields.as_mut().unwrap();let turn=if admission.phase()=="ready"{admission.take_output(&mut fields.command,g)}else{admission.return_inputs(&mut fields.command_return,g)};if admission.terminal_is_empty(){self.command_admission=None}return turn}
-  if let Some(admission)=self.parent_admission.as_mut(){let fields=self.fields.as_mut().unwrap();let turn=if admission.phase()=="ready"{admission.take_output(&mut fields.parent,g)}else{admission.return_inputs(&mut fields.parent_return,g)};if admission.terminal_is_empty(){self.parent_admission=None}return turn}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g)}if self.fields.is_some(){let turn=self.retirement.begin_granted(&mut self.fields,g);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}
+  if let Some(admission)=self.command_admission.as_mut(){let fields=self.fields.as_mut().unwrap();let turn=if admission.phase()=="ready"{admission.take_output(&mut fields.command,effect)}else{admission.return_inputs(&mut fields.command_return,effect)};if admission.terminal_is_empty(){self.command_admission=None}return turn}
+  if let Some(admission)=self.parent_admission.as_mut(){let fields=self.fields.as_mut().unwrap();let turn=if admission.phase()=="ready"{admission.take_output(&mut fields.parent,effect)}else{admission.return_inputs(&mut fields.parent_return,effect)};if admission.terminal_is_empty(){self.parent_admission=None}return turn}
+  if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}if self.fields.is_some(){return begin_close_owner(&mut self.retirement,&mut self.fields,effect)}
   if self.origin.is_none()&&self.parent_origin.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=fixed(size_of::<Option<Origin>>()+size_of::<Option<ParentOrigin>>());if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.origin=None;self.parent_origin=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(unit(d.copy_bytes))),work:1}
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.command_admission.is_none()&&self.parent_admission.is_none()&&self.fields.is_none()&&self.retirement.is_empty()&&self.origin.is_none()&&self.parent_origin.is_none()}

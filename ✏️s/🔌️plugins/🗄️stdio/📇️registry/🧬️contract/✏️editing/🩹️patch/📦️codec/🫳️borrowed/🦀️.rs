@@ -58,6 +58,8 @@ impl semio_plugin::plugin_app_close_prelude::store::ArtifactCanonicalJson for Sn
             JsonWriteNode::Number(Number::Float(value)) => N::F64(value),
             JsonWriteNode::String(value) => N::String(value),
             JsonWriteNode::NativeString(_) => return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "authored SnapshotPatch str/DslValue source cannot yield native UTF8 text")),
+            JsonWriteNode::Float32(value) => N::F32(value),
+            JsonWriteNode::QuotedUnsigned(value) => N::U64Text(u64::try_from(value).map_err(|_| ValueError::literal(ValueRefusalKind::InvalidValue, "canonical JSON has no quoted unsigned node beyond 64 bits"))?),
             JsonWriteNode::Array(length) => N::Array(length),
             JsonWriteNode::Object(length) => N::Object(length),
         })

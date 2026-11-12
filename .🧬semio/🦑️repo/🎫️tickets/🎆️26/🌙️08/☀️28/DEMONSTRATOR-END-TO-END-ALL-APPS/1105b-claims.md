@@ -3559,3 +3559,319 @@ LOCK NEEDED 🧰️framework/🔨️modules/🌱️value/🗺️ordered-map/✏�
 08:35 (11/11) mcpprobe2 W-mcpprobe2-t6: json_round_trip PASS again; receiving test now reaches the owner close (parse/take/domain-failure steps pass with STEP_WORK=3), close loop stalled because the test funded close turns with the fixture's work=2 instead of the slot's close_work_demand quote; fixed in test, running W-mcpprobe2-t7
 08:51 (11/11) paneA NOTE to coordinator: all 10 slots held; W-matcherack-14 (since 02:30), W-closeshared-t9 (02:32), W-mcpprobe2-c1 (06:36), W-matcherack-15 (06:40) look stale; my W-paneA-11 (koordinator), -13/-14 (ladders + tests-12 --tests) wait with empty output since 05:5x/07:5x. Not touching others' slots; please free them. Edits ahead: instance-ladders + window document-replacement tests done, unverified.
 09:20 (11/11) mcpprobe2 W-mcpprobe2-c1 (W-mcp-2 set) rc101: probe-document, port, shell-channel, capabilities, consent, bridge, hub-* check clean; dispatch/routing/plugin-runtime/workspace not reached: blocked by unclaimed-by-me upstream reds instance-ladders (paneA), reactor-surfaces + runtime-exchange (missing crate semio_framework_plugin_runtime_ops), instance-commands (staging/actions:561,608; ActionMeta.expected_document_revision)
+04:41 (11/12) coordinator: new wave 1112. Fleet agents died 11/11 on usage limit; queue empty, Radix gone. Hub map W-main-183 running. All old claims by paneA-D/gen3dfinal2/custody2/matcher/mcpprobe2/closeshared are void — re-claim.
+04:42 (11/12) ladders CLAIMED semio-plugin-instance-ladders (maintenance-ladder:547 etc) + tests-12 callers
+04:42 (11/12) reactor CLAIMED semio-plugin-reactor-surfaces + semio-plugin-reactor-context (upstream reds)
+04:43 (11/12) custody3 CLAIMED semio-plugin-job-receiving tests + job construction settling
+04:45 (11/12) commands CLAIMED semio-plugin-instance-commands, semio-plugin-runtime-exchange, semio-plugin-instance-typed-ops, semio-plugin-instance-docs, semio-plugin-tool-run-turns
+04:46 (11/12) ladders CLAIMED instance-initialization (ephemeral, stores, registration, windows; 37 errs W-ladders-1) + instance-commands staging/actions:561,608
+04:49 (11/12) reactor EDITED reactor checkpoint+cold-pair ident semio_framework_plugin_runtime_ops -> semio_plugin_runtime_ops; runtime-exchange exchange-finish:6 has same stale ident (commands lane owns) ; compiling W-reactor-2
+04:50 (11/12) reactor FIXED-verified W-reactor-3 (surfaces native clean); reactor-context blocked by commands-owned runtime-exchange exchange-finish lines 6,139 (stale semio_framework_plugin_runtime_ops)
+04:53 (11/12) projection CLAIMED projection family (📽️projection, ✨️derive/📽️projection) close_demands/close_work_demand E0599 in 6 crates
+04:53 (11/12) ladders RELEASED instance-commands staging/actions (commands lane owns it); ladders FIXED instance-initialization+genesis (lease_actor/take_actor/restore_actor added) EDITED-unverified-by-test, native compile of crate clean in W-ladders-3; CLAIMED semio-plugin-instance-app (17 errs: plugin-app-impl, media-transfer, close-terminal, close-ladder, ...)
+04:53 (11/12) projection EDITED ✨️derive/📽️projection drive_close: import SnapshotProjectionCursor as _ for close_demands/close_work_demand; compiling W-projection-1
+04:53 (11/12) init found instance-initialization already ported by ladders (W-ladders-3 native init clean); verifying only, no edits: W-init-1
+05:01 (11/12) reactor CLAIMED semio-plugin-reactor-turn (turn/📥️receiving: 10 errs W-reactor-4, upstream of reactor-context)
+05:02 (11/12) reactor EDITED reactor/turn/receiving (admit 4/5 args, retired_poll for poll-shaped close steps, new retired_poll in receiving/source); compiling W-reactor-5
+05:06 (11/12) commands CLAIMED decl-app lifted/context (admitted()) + typed-command/staging callers; W-commands-3 wasm rc0
+05:06 (11/12) init FIXED-verified W-init-1 (wasm) W-init-2 (native); no edits by init
+05:06 (11/12) custody3 CLAIMED+EDITED value retained-clone close step_granted: admission quote uses body (was grant copy bytes) so quote==check; compiling W-custody3-t4
+05:07 (11/12) reactor FIXED-verified native W-reactor-5 rc0 (surfaces+context); running wasm W-reactor-6
+05:10 (11/12) projection FIXED-verified W-projection-2 (wasm W-projection-1)
+05:12 (11/12) reactor FIXED-verified W-reactor-6 wasm rc0; RELEASED
+05:13 (11/12) reactor CLAIMED reactor/turn/receiving cleanup (delete retired, BirthFrame.failure+retirement removal); W-reactor-7
+05:13 (11/12) ladders EDITED instance (app) plugin-app-impl: media-transfer, close-terminal, render pending_effects Option contract, reserved-registry cx; close-ladder arms; native W-ladders-8 rc0 (ladders+instance-app); compiling wasm
+05:15 (11/12) commands FIXED-verified W-commands-5 (native W-commands-4)
+05:18 (11/12) custody3 EDITED job testing-caller retire(): 4096-turn fail-fast assert (spin was in caller.retire from pack finished())
+05:20 (11/12) reactor FIXED-verified W-reactor-10 native + W-reactor-11 wasm rc0 (cleanup done); RELEASED
+05:20 (11/12) ladders CLAIMED tests-lane upstream reds for --tests ladders+tests-12: plugin/cancellation issuer tests (EDITED), guest-contract reactor/context/call output tests (EDITED), semio-plugin-testing-fixtures test-app-mutations (set-label/mutations/preparation), semio-os-store-testing-prelude:178
+05:23 (11/12) custody3 EDITED job testing-caller retire/retire_exact: final retirement cancels the caller token so the resident return birth closes (was never closed unless cancelled -> spin)
+05:25 (11/12) custody3 CLAIMED job receiving 🧾️scope (temporary [DEBUG] in settle mismatch; will remove)
+05:30 (11/12) custody3 RELEASED job-receiving: fixes testing-caller retire (cancel + fail-fast), retained-clone close step_granted body; 6/9 pass W-custody3-t11; 3 typed-receiver failures traced to native-owned original advance (see 1112-result-custody3.md)
+05:30 (11/12) custody3 CLAIMED value native-owned 🧳️original/🦀️.rs (NativeReceivingOriginal::advance receipt) per coordinator
+05:38 (11/12) ladders FIXED-verified W-ladders-14 native + W-ladders-15 wasm rc0 (ladders+instance-app). --tests W-ladders-13 rc101: testing-doubles 108 errs + testing-laws 22 errs remain (unclaimed, not edited). RELEASED all ladders claims except those two.
+05:39 (11/12) doubles CLAIMED semio-os-store-testing-doubles (all files), semio-plugin-testing-laws, app-typed-command-full-operation child-operations laws:364
+05:39 (11/12) debugstrip CLAIMED [DEBUG] removal in 3d-brep-boolean differential tests, value-retirement arc-custody test, value-native-decoding retained-outcome test, os-flow-host publication work test, time-travel ref-reads, plugin-operation cancellation, plugin-instance-initialization tests, decl-registry birth test, store-initialization-replay supersession tests, mcp process-arena + probe-document, repo nx graph TS + cargo custody TS (skips testing-laws)
+05:41 (11/12) custody3 CLAIMED native-owned 🧩️record/🔎️schema/🎛️drive.rs (temporary [DEBUG] ack work probe; matcher lane's acknowledgement quote now reached by job-receiving)
+05:47 (11/12) doubles CLAIMED store space-member 📥️lifted/🏭️operation/🦀️.rs (relax UnsupportedMember*Open bounds Send+Sync -> 'static; blocks non-Sync test store member factories)
+05:55 (11/12) doubles FIXED-verified W-doubles-3 native --tests -p semio-os-store-testing-doubles rc0; now CLAIMED plugin testing 🧪️artifact-app-laws (all files)
+06:01 (11/12) custody3 EDITED testing-caller retire_step: close resident birth unconditionally like production OriginalActorContext (removed cancel_now masking)
+06:01 (11/12) debugstrip FIXED-verified W-debugstrip-3 (probe-document --tests rc0; W-debugstrip-2 reds are pre-existing). RELEASED; skipped testing-laws artifact-app-laws:303 and native-owned drive.rs:47
+06:15 (11/12) doubles FIXED-verified W-doubles-7 wasm hub semio-plugin-testing-laws lib rc0
+06:17 (11/12) custody3 RELEASED native-owned original/🦀️.rs cover_progress (verified native-owned W-custody3-t24 rc0); remaining: matcher drive.rs acknowledgement quote (work 0 vs quote 1) blocks 3 job-receiving tests
+06:18 (11/12) custody3 CLAIMED record/schema 🎛️drive.rs + NativeRecordMatcher struct (acknowledgement charged-state), native-owned original advance receipt exactness
+06:28 (11/12) doubles LOCK NEEDED Cargo.toml (fixtures dev-dep semio-framework-value-testing-admission for config-selection unit test pump)
+06:32 (11/12) coordinator: lock-157 + sync-157 running (doubles dev-dep value-testing-admission)
+06:32 (11/12) facade CLAIMED 🔌️plugin 🪝️mounts/📜️wp2-declaration/🦀️.rs + 🎞️media/📤️snapshot/🦀️.rs
+06:32 (11/12) acceptance CLAIMED plugin tests history-edit-acceptance policy-pump-and-drive, reload-and-child-history-scenarios, node-drag-history
+06:41 (11/12) facade CLAIMED build_media_export_job signature (+_construction admission param like build_reserved_tool_job): decl artifact-app-trait/artifact-editor-trait/artifact-viewer-trait/editor-app/viewer-app, instance render + instance-root MediaExportPreparation.construction, and 11 ✏️s implementors (remodel, raster, stdio editing macro, mp4/avi/mp3/epw, layout) - signature-only except snapshot-pack users
+06:51 (11/12) acceptance LOCK NEEDED 🧪️history-edit-acceptance Cargo.toml (new dep semio-plugin-document-media)
+06:51 (11/12) doubles FIXED-verified W-doubles-11 native --tests fixtures+doubles+laws rc0
+06:54 (11/12) factorysweep CLAIMED 8 viewer/presence files with NoPresenceRetirementFactory under plugins puzzle/block/flow
+06:54 (11/12) facade W-facade-1 rc101: semio-plugin facade lib now compiles; remaining reds are in semio-os-flow-extensions (117 errs, RetireOwned/RetirementCursor api, flow ext) - not facade; RELEASED facade files (unverified hub/native)
+06:55 (11/12) facade CLAIMED mp4/avi/mp3/raster/layout media jobs admit_original, epw native-export test, MediaExportPreparation construction_failure slot (render/instance-root)
+06:55 (11/12) coordinator: stopped ext round 1120 (every component fails in semio-os-flow-extensions, lane flowext); rerun after flowext green
+06:55 (11/12) flowext CLAIMED 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm
+06:58 (11/12) doubles CLAIMED plugin testing 🖥️test-app-mutations/🧬️document/🧬️mutations (TestMutation + 3 leaves: NativeReceive/DslReceiving + original_ordinal_operation_receiving!)
+06:59 (11/12) doubles RELEASED; instance-ladders+tests-12 --tests W-doubles-13 rc101: TestMutation OpBinaryReceiving fixed (397->175); remaining 172 errors are in plugin test crates tests-01 (34), tests-02 (29), tests-05 (109): old grant/Outcome test API (unclaimed, not edited)
+07:03 (11/12) acceptance FIXED-verified W-acceptance-3 wasm hub rc0 (no lock error); native W-acceptance-4 running
+07:08 (11/12) coordinator: host CAS cap lowered 120->32 GiB (cas schema + test), cas gc freed 37 GB; 77 GB free
+07:08 (11/12) custody3 RELEASED drive.rs (unchanged from HEAD) + native-owned original advance; see 1112-result-custody3.md Round 3
+07:09 (11/12) ackquote CLAIMED native-owned record/schema/drive.rs, frame/rs, original/rs (ack phases + cover clamp)
+07:13 (11/12) factorysweep RELEASED 8 files ported, W-factorysweep-3 rc101 (no errors from my change; upstream reds remain)
+07:13 (11/12) factorysweep CLAIMED puzzle-3d (viewer, editor snapshot/window/precompute-geometry, mutations) and block-2d/5d-model OpBinaryReceiving/RetireOwned
+07:14 (11/12) acceptance FIXED-verified W-acceptance-3 wasm hub + W-acceptance-6 native --tests --features artifact-app-testing rc0; EDITED also fixtures-cases-and-change-buckets:14; running hub W-acceptance-hub-1
+07:18 (11/12) facade: semio_plugin root now exports MediaConstruction; stdio editing contract semio_framework_plugin->semio_plugin (dependency is semio-plugin)
+07:21 (11/12) identsweep CLAIMED all .rs files with semio_framework_plugin idents (excl. factorysweep/flowext/facade areas)
+07:23 (11/12) acceptance CLAIMED fem 2d editor transient (✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/.../✏️editor/🫧️transient)
+07:23 (11/12) coordinator: lock-158 + sync-158 running (acceptance dep semio-plugin-document-media)
+07:30 (11/12) hubrest CLAIMED stdio-contract-editing-patch, process3d-presence, hub-inference-binding
+07:25 (11/12) identsweep LOCK NEEDED 🌎️hub/🧩️compositions/🖨️raster/📦️packages/🦀️rust/Cargo.toml (dep rename semio-framework-plugin alias -> semio-plugin)
+07:26 (11/12) acceptance EDITED fem2d transient: gestures BTreeMap -> Vec<FemGumballWindowGesture> (BTreeMap no longer RetainedClone by design), schema+fixture+3d/2d gumball tests ported; verifying
+07:45 (11/12) hubrest CLAIMED also process3d editor-impl (2 factory lines)
+07:35 (11/12) acceptance CLAIMED replication retained set-field macro retained_root_record (struct literal via path metavar) - fem2d transient only user
+07:37 (11/12) facade RELEASED all claimed files; verified semio-plugin hub wasm+native (W-facade-4/5); crates beyond blocked by upstream sqlite snapshot reds (W-facade-8)
+07:37 (11/12) identsweep RELEASED (sweep done; verification stops at upstream snapshot/flow-host reds)
+07:37 (11/12) oshost CLAIMED semio-os host crate (workflow-store) + sqlite snapshot ports (stdio/draw/layout-model)
+07:38 (11/12) flowhost CLAIMED semio-os-flow-host-core sources (flow/host/flow-host-model host-authoring included files)
+07:40 (11/12) oshost CLAIMED workflow artifact mutations (DslReceiving + original_ordinal_operation_receiving on WorkflowMutation and leaves)
+07:42 (11/12) stdiosnap CLAIMED stdio binary-snapshot, semio-base(✉️base), step-snapshot, mp4-inferences, avi-snapshot, dwg: their 🚪️io/🪶️sqlite/📸️snapshot dirs + crate roots (sqlite snapshot receiving port)
+07:43 (11/12) ackquote CLAIMED 🧵️job/🛬️receiving budget+state (construction recipient carries Source: root cause of ack failure; recipient source_turn None vs Work Source)
+07:48 (11/12) flowext FIXED-verified native W-flowext-3 + wasm semio-os-flow-extensions compiles (W-flowext-4 passes it); CLAIMED semio-os-flow-host-read (flow/host/evaluation-source/read, 98 errs, next red behind flow-extensions; flowhost: tell me if you hold it)
+07:52 (11/12) stdiosnap FIXED-verified W-stdiosnap-1 binary-snapshot; next semio-base, step, dwg, then hub stdio component
+07:52 (11/12) flowhost FIXED-verified W-flowhost-2 (hub wasm flow-host-core rc 0)
+07:52 (11/12) coordinator: lock-159 + sync-159 running (identsweep raster composition dep rename), then cas gc
+07:53 (11/12) oshost EDITED workflow schema io/binary mutations: WorkflowMutation OpBinary now pack-value + original_pack_value_operation_receiving (DslReceiving attempt reverted: hand-crafted media records); drop draw/layout per coordinator
+07:54 (11/12) ackquote root cause: job construction recipient had no Source (fixed in 🧵️job/🛬️receiving budget+state); job-receiving 9/9 W-ackquote-t6 rc0
+08:30 (11/12) hubrest CLAIMED stdio epw-snapshot html-snapshot tsv-snapshot wav-inferences mp4-inferences avi-snapshot mp3-schema + patch tests/QuotedUnsigned
+07:56 (11/12) flowhost CLAIMED semio-os-flow-host-read (flow/host/evaluation-source/read + related)
+08:00 (11/12) puzzlefill CLAIMED crate semio-s-artifact-puzzle-3d-precompute-fill
+07:57 (11/12) acceptance CLAIMED fem 2d editor-model-window + fem hub component reds
+07:59 (11/12) flowhost HOLDS semio-os-flow-host-read per coordinator; flowext please do not edit it (reply here if you already have uncommitted work in it)
+08:50 (11/12) hubrest CLAIMED+EDITED store space-history settlement: added decode_typed/encode_typed helpers (append only) for epw/html/tsv native; wav/mp4/avi ported to record_native output-slot shape
+08:02 (11/12) flowhost RELEASED semio-os-flow-host-read (coordinator ruling: flowext keeps it; I made no edits there)
+08:06 (11/12) stdiosnap CLAIMED also semio subsets (18 crates io/sqlite/snapshot native+host, text receiving removed), binary/dwg mutations OpBinaryReceiving; mp4/avi/epw/html/tsv/wav left to hubrest
+08:40 (11/12) puzzlefill EDITED fill crate: Arc roots -> ArcLease in closing bundles (builder-state, revalidation), outbox close via close_original_effect_step, RetainedWorkOutcome E annotated; verifying W-puzzlefill-2
+08:12 (11/12) oshost EDITED store owners close_unscheduled_retirement (new pub fn, pump-driven) + host backbone-document close_backbone_envelope uses it
+08:17 (11/12) stdiosnap EDITED 🔌️plugin/🦀️.rs plugin_app_close_prelude += semio_plugin_document_media (dyn_enum_close in stdio binary app needs it)
+08:21 (11/12) oshost FIXED-verified W-oshost-6 (semio-os hub wasm rc 0); RELEASED. draw/layout sqlite callers left as debt per coordinator
+08:55 (11/12) puzzlefill FIXED-verified W-puzzlefill-2 (precompute-fill hub wasm rc0); checking semio-hub-puzzle
+08:24 (11/12) flowext FIXED-verified native W-flowext-6 semio-os-flow-host-read rc0; running bim wasm W-flowext-7
+08:29 (11/12) flowext RELEASED; FIXED-verified native W-flowext-3 (flow-extensions), W-flowext-6 (flow-host-read); wasm W-flowext-7 passes both, next red semio-os-flow-host-session (40 errs, FlowEvalSession type missing: flowhost lane)
+08:29 (11/12) flowhost CLAIMED semio-os-flow-host-session + semio-os-flow-host (flow/host/session, flow/host/flow-host)
+08:30 (11/12) factorysweep CLAIMED puzzle terminal_frame_bound! removal (macro no longer exists); raster/remodel still use it (not mine)
+09:10 (11/12) puzzlefill RELEASED precompute-fill; hub-puzzle W-puzzlefill-3 has 0 puzzle errors, only stdio txt/deflate/semio snapshots + flow-host-session upstream
+09:20 (11/12) stdio3 CLAIMED stdio txt schema, deflate examples, 🧿️semio v1 snapshot crates brep/drawing/mesh/model/value
+08:35 (11/12) factorysweep RELEASED puzzle: W-factorysweep-10 hub-puzzle rc101, no puzzle crate in failures (remaining: flow-host-session [flowext], stdio-* [facade]); block-2d/5d-model skipped (out of scope)
+09:15 (11/12) puzzlefill CLAIMED remodel plugin terminal_frame_bound! removal
+09:20 (11/12) puzzlefill EDITED remodel retained-commands: terminal_frame_release_bytes impl + macro invocation removed
+09:40 (11/12) stdio3 EDITED deflate publication 🚪️io/📤️publication (close_step now effect-shaped, returns RetainedCloneStep) + zlib callers (tuned-encode, publication-and-job-steps)
+08:38 (11/12) ackquote probes removed; cover clamp + drive.rs min(1) restored (removing both fails: effects 0/0); running verification
+09:35 (11/12) puzzlefill RELEASED remodel retained-commands; W-puzzlefill-4 remodel component: 0 remodel errors, stdio reds only
+08:40 (11/12) stdio4 CLAIMED stdio las-snapshot jpg-inferences gif-inferences bmp-snapshot deflate-zlib (sqlite snapshot receiving port)
+09:55 (11/12) stdio3 EDITED semio value sqlite projection tree (reserve_one -> reserve_one_cold); txt sqlite snapshot+encoding+binary snapshot ported to output-slot shape; removed txt 🫴️receiving code+tests
+10:05 (11/12) stdio3 EDITED semio-base semio_snapshot_retirement! macro body -> delegates to SharedValueRetirementFactory (stdiosnap: please do not overwrite; other semio subsets now share it); NOTE stdio4 claims deflate-zlib: I edited zlib 🎚️tuned-encode + 🚚️publication-and-job-steps close_step (effect-shaped Publication::close_step)
+08:44 (11/12) stdiosnap EDITED semio-base (decode_receiving/encode out-slot, Workspace close_step, snapshot_retirement macro on SharedOriginalStorage), 18 semio subset natives+hosts, step-snapshot, binary/dwg mutations; UNASSIGNED red in W-stdiosnap-4: txt, jpg, las, deflate, bmp, gif, ifc (old receive_pack/binary-pack native shape; same pattern as binary-snapshot) - who owns them?
+08:53 (11/12) acceptance FIXED-verified W-acceptance-8 wasm fem2d editor-transient rc0 + W-acceptance-15 wasm fem2d model-window rc0; fem hub component W-acceptance-16 has no fem reds (remaining: stdio-* crates). Native fem2d --tests blocked upstream by stdio crates (W-acceptance-11). RELEASED
+09:40 (11/12) hubrest FIXED-verified W-hubrest-10 (wasm hub: epw/html/tsv snapshot, wav/mp4 inferences, avi snapshot, mp3 schema, editing-patch rc0) + W-hubrest-11 (stdio ws native --tests editing-patch rc0). RELEASED
+08:53 (11/12) stdio4 FIXED-verified W-stdio4-2 (wasm hub rc0): bmp-snapshot gif-inferences las-snapshot jpg-inferences deflate-zlib; next: hub remodel rerun
+08:54 (11/12) flowhost FIXED-verified W-flowhost-8 (hub wasm flow-host-session + flow-host rc 0); next bim component W-flowhost-9
+10:30 (11/12) stdio3 FIXED-verified W-stdio3-4 (txt-schema, semio brep/drawing/mesh/model/value snapshots) + W-stdio3-1 (deflate-examples); RELEASED after hub-puzzle rerun
+08:55 (11/12) ackquote CLAIMED fem receiving reply OriginalStepRecipient + fem 2d/3d snapshot native.rs (Source for construction recipient)
+08:57 (11/12) flowhost FIXED-verified W-flowhost-9 (bim component wasm rc 0); RELEASED session/host/core
+08:58 (11/12) coordinator: bim component green (W-flowhost-9); ext round 1121 + hub map W-main-187 running
+08:59 (11/12) stdiosnap FIXED-verified W-stdiosnap-7 (semio-base, step-snapshot, dwg, binary-mutations, binary-snapshot); RELEASED
+09:00 (11/12) ackquote RELEASED fem files unchanged (Source on fem recipient did not clear the Pending)
+09:00 (11/12) stdio4 CLAIMED original_pack_value_operation_receiving on LasMutation JpgMutation BmpMutation Semio*Mutation(anim/video/model/document/audio/value/text/mesh/drawing/image/brep) TxtMutation, gif989a snapshot, deflate-snapshot, ifc snapshot, semio-image-editor natural_file dup; stdio3 tell me if you hold any
+09:01 (11/12) ackquote RELEASED job-receiving budget/state fixed W-ackquote-t15 9/9
+10:50 (11/12) stdio3 RELEASED; FIXED-verified W-stdio3-4 + W-stdio3-1; hub-puzzle W-stdio3-5 remaining: deflate-snapshot, xml-snapshot, json-schema, dxf-snapshot, stl/obj-inferences, semio-mesh-editor+brep-io (terminal_frame_bound! removed: factorysweep pattern), playbook-playbook
+09:05 (11/12) femreceive CLAIMED native-owned frame/🦀️.rs advance_resident_success + fem 3d original receive path + record/schema/🎛️drive.rs advance_metadata + 🧳️original/🦀️.rs cover_progress
+10:55 (11/12) stdio5 CLAIMED stdio-json-schema xml-snapshot dxf-snapshot semio-mesh-editor semio-brep-io + terminal_frame_bound! in stdio
+11:00 (11/12) stdio6 CLAIMED stdio-deflate-snapshot stdio-stl-inferences stdio-obj-inferences playbook-playbook
+09:08 (11/12) stdio4 EDITED OpBinaryReceiving macro on all stdio *Mutation enums lacking it (~65 files), gif989a snapshot, deflate-snapshot host+native (decode_typed/encode_typed; stdio6: I did deflate-snapshot host/native already, please skip); CLAIMED csv-snapshot md-snapshot ply-inferences wav-io-registry ifc-4/geometry gif-schema-2 semio-flow-snapshot semio-image-editor (stdio5: json/xml/dxf/mesh-editor/brep-io are yours)
+11:10 (11/12) stdio5 EDITED json base snapshot (receiving removed, out-slot), xml native decode/encode + retained reserve_one_cold, dxf header decode, terminal_frame_bound! removed in 12 stdio editor files (wav/bmp/jpg/tiff/png/gif/docx/semio mesh+brep) -> compiling
+09:15 (11/12) stdio6 EDITED stl+obj inferences sqlite snapshot (receiving overrides+module removed), playbook generation root (ArcLeaseRetirement); deflate-snapshot left to stdio4 (already ported); verifying W-stdio6-1
+09:13 (11/12) femreceive CLAIMED fem 2d+3d snapshot/native.rs (retry on Pending)
+09:14 (11/12) spatial CLAIMED semio-s-spatial-kernel-semio-session
+11:20 (11/12) stdio5 CLAIMED stdio-semio-flow-snapshot (image-editor natural_file dup stays with stdio4); stdio-semio-brep-viewer left to spatial
+09:15 (11/12) stdio4 NOTE: before seeing stdio5's claim I EDITED semio flow 🚪️io/💾️binary/📸️snapshot SemioFlowSnapshotDecode::close_step (effect-shaped, ErasedSnapshotRetirement) - stdio5 please keep it; I also did csv-snapshot, md-snapshot (owned_pack), ply-inferences decode, wav edit-audio close_step, gif989a, deflate-snapshot; claiming jpg-io-registry. image-editor natural_file dup untouched (stdio5)
+09:15 (11/12) energysnap CLAIMED ✏️s/🔌️plugins/🔋️energy/ model snapshot crate (state diff, original, fields, apply)
+09:16 (11/12) femreceive CLAIMED effect frame driver/🦀️.rs (temporary [DEBUG] probe)
+12:10 (11/12) stdio5 FIXED-verified wasm hub W-stdio5-1 rc0 (json-schema, xml-snapshot, dxf-snapshot); W-stdio5-2 (semio mesh-editor, brep-io, flow-snapshot) queued on cargo capacity, not finished; RELEASED json/xml/dxf
+12:40 (11/12) stdio5 FIXED-verified W-stdio5-2 wasm hub rc0 (semio mesh-editor, brep-io, flow-snapshot); RELEASED
+09:24 (11/12) spatial CLAIMED flow geometry port trait (flow/🌐️geometry: retain_step/cancel_step/close_step -> effect) + its 4 flow-host callers (host-close, eval-session close-and-retirement, preview-cancellation, extension-generation retain) + spatial session crate + brep ext operator-core callers
+09:26 (11/12) femreceive CLAIMED native-owned record/source (answer_schema_key helper), fem engine node+material NativeValueSource
+11:40 (11/12) stdio6 FIXED-verified W-stdio6-1 (stl+obj inferences rc0), W-stdio6-2 (playbook-playbook rc0); RELEASED. W-stdio6-3 hub-playbook-component rc101: only semio-image-editor natural_file dup (stdio4 claim)
+09:37 (11/12) spatial CLAIMED semio-s-plugin-flow-brep-mesh (coordinator)
+09:40 (11/12) stdio4 EDITED zip-inferences base snapshot native/host, pdf 1.4 snapshot decode, svg-snapshot native+host (decode_typed/encode_typed), paint-region close (jpg/gif/bmp); CLAIMED gltf-model-snapshot extras receiving, ifc-4/geometry; running W-stdio4-6
+11:45 (11/12) stdio6 CLAIMED stdio gltf-model-snapshot zip-inferences pdf-mutations pdf-mutations-2
+12:50 (11/12) stdio5 CLAIMED procedural core-generation-sqlite + sqlite-native
+09:42 (11/12) spatial FIXED-verified W-spatial-2 (hub wasm semio-s-spatial-kernel-semio-session rc0); GeometryPort trait now effect-shaped (flow-host callers edited); checking flow-host W-spatial-3; next flow-brep-mesh
+11:50 (11/12) stdio6 NOTE: stdio4 already edited zip-inferences and claimed gltf-model-snapshot; stdio6 keeps pdf-mutations/-2 only, re-verifies zip/gltf and edits only if still red after stdio4 RELEASED
+12:00 (11/12) stdio6 EDITED pdf a/x mutations: removed original_pack_value_operation_receiving (no OpBinary impl exists for PdfA1/X1Mutation); verifying W-stdio6-5
+10:00 (11/12) spatial EDITED brep ext crate (booleans-and-transforms, tessellate, inferences/geometry) + mesh crate (operator-core, operator-io, lib macro); W-spatial-3 flow-host rc0
+13:20 (11/12) stdio5 FIXED-verified W-stdio5-10 wasm hub rc0 (procedural core-generation-sqlite + native; insert via control.with_effect, quote-bounded)
+10:06 (11/12) procsource CLAIMED procedural/foundation/retained-source (flow-source, generation flow-overlay, fold)
+10:06 (11/12) cadmodel CLAIMED semio-s-artifact-cad-cad-model (cad schema geometry/references/snapshot)
+10:07 (11/12) gen3d CLAIMED procedural generation3d inferences-geometry value + set-contributions command; generation2d mutations apply + preview-eval tool-run
+10:08 (11/12) femreceive FIXED-verified W-femreceive-12 (fem3d 4/4), -9 job-receiving 9/9, -13 native-owned 18 ok, -11 wasm; RELEASED all
+10:08 (11/12) smallfix CLAIMED fem material+node (verify only; answer_schema_key now exists), process3d-model schema snapshot, svg 1.1 base schema snapshot native
+13:40 (11/12) stdio6 EDITED gltf-model-snapshot extras receiving (MappedReceiving<Json,GltfJsonMap>, old incremental receiver+tests removed); stdio4 claim stale (gltf still 23 red); FIXED-verified W-stdio6-6 pdf-mutations, pdf-mutations-2, zip-inferences rc0
+10:09 (11/12) stdio4 RELEASED gltf-model-snapshot (stdio6 has it); removed OpBinaryReceiving macro from ZipIso21320Mutation + PdfAMutation (not OpBinary); svg-snapshot native edited (stdio4); still claiming ifc-4/ifc-geometry, running W-stdio4-7
+10:09 (11/12) energysnap CLAIMED 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/🦀️.rs (one-token re-export of retained_routed next to retained_row_patch)
+10:11 (11/12) spatial EDITED playbook procedural (mutations OpBinaryReceiving, terminal_frame_bound removal x2, embedded-evaluation, learning-program-and-geometry); mesh+brep ext crates compile in W-spatial-7
+10:14 (11/12) cadmodel CLAIMED framework mesh-engine 🦀️.rs MeshData derive RetireOwned (one-line derive add); arc-custody ArcLease derive PartialEq
+10:15 (11/12) stdio4 EDITED zip-opc (reserve_one_cold + forwarded loan); W-stdio4-7: stdio component remaining ifc-4-model 12, ifc-geometry 6 (stdio4 UNPORTED), zip-opc (fixing), gltf 1 + image-editor 3 (stdio6/5), semio-cad-export (missing step_snapshot dep, Cargo)
+10:20 (11/12) procsource LOCK NEEDED ✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧵️retained-source/📦️packages/🦀️rust/Cargo.toml (new path deps semio-framework-value-ordered, -original-vector, -native-receiving-original for the effect-shaped port)
+10:21 (11/12) spatial NOTE to cadmodel: W-spatial-8 fails E0119 conflicting RetireOwned for MeshData in mesh-engine/🦀️.rs (new derive at line 200 + pack::value::artifact_retire_struct!(MeshData ...) at line 238); remove one. Waiting, will rerun.
+13:55 (11/12) stdio6 gltf-model-snapshot: Json made pub (E0446 fixed); W-stdio6-8 now stops upstream in framework mesh-engine E0119 (MeshData: derive RetireOwned line 200 + artifact_retire_struct! line 238; cadmodel claim). Rerun W-stdio6-9 after cadmodel fixes it.
+10:25 (11/12) gen3d CLAIMED generation2d editor commands flow-eval-tick + set-eval-outputs + retained-commands hop (set_eval_json effect port), preview-eval settle_empty_tick
+10:25 (11/12) smallfix EDITED process3d-model mounted snapshot owner (self-funded grant + retirement field removed; close drops candidate); W-smallfix-2 rc101 blocked upstream: mesh-engine E0119 MeshData (cadmodel claim, flagged by spatial and stdio6). Waiting on cadmodel; will rerun.
+10:25 (11/12) cadmodel EDITED mesh-engine: removed my duplicate RetireOwned derive on MeshData (artifact_retire_struct! is the impl); verifying W-cadmodel-3
+10:27 (11/12) stdio4 FIXED-verified W-stdio4-9 (wasm rc0): zip-opc svg-snapshot csv-snapshot md-snapshot ply-inferences gif-snapshot zip-inferences; W-stdio4-7 stdio component residue ifc-4-model/ifc-geometry (UNPORTED, free), cad-export (Cargo dep step_snapshot), gltf/image-editor (stdio6/stdio5); W-stdio4-8 blocked by peer mesh-engine RetireOwned double impl. RELEASED all but ifc
+10:28 (11/12) stdio7 CLAIMED stdio-semio-image-editor natural_file dups, stdio-ifc-4-model, stdio-ifc-geometry, stdio-semio-cad-export Cargo dep
+10:29 (11/12) energysnap FIXED-verified W-energysnap-7 (semio-s-artifact-energy-model-snapshot wasm rc0); next: semio-hub-energy-component map
+10:30 (11/12) cadmodel FIXED-verified W-cadmodel-3 (hub wasm mesh-engine + cad-cad-model rc0; E0119 duplicate removed)
+10:34 (11/12) spatial FIXED-verified W-spatial-11 (playbook procedural component wasm rc0); next brep ext component W-spatial-12
+10:34 (11/12) stdio7 CLAIMED also png-snapshot, docx/pptx/xlsx base-model, bcf-inferences (unclaimed reds in W-stdio7-1); gltf stays stdio6
+10:34 (11/12) stdio7 LOCK NEEDED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml (step_snapshot dep); image-editor duplicate natural_file removed
+10:35 (11/12) spatial FIXED-verified W-spatial-12 (brep ext component wasm rc0); RELEASED
+10:36 (11/12) energysnap CLAIMED energy diff crate (🧬️schema/🔺️diff/🧬️original) EnergyDocumentApply port; then energy-model-session + inferences
+10:36 (11/12) gen3d EDITED store config-record-macros field_set_mutations (RetireOwned via derive); gen2d window config binary mutations OpBinaryReceiving; gen3d inputs constructor
+10:38 (11/12) cadmodel CLAIMED+EDITED cad editor presence retirement (factory struct removed -> semio_plugin::bounded_presence_root_retirement_factory in editor-and-interaction-scope; stale factory unit test removed) ; aec-building FIXED-verified W-cadmodel-4 rc0
+10:39 (11/12) energysnap CLAIMED 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs (kernel facade: one added pub use of Retained{Done,Flight,Reply}, retained_settle, RetainedPatchEmpty, retained_routed for hand RetainedDiffApply impls)
+10:42 (11/12) cadmodel FIXED-verified W-cadmodel-3/-4; RELEASED. hub-cad-component W-cadmodel-6 has zero cad reds; remaining png/gltf stdio
+10:43 (11/12) energysnap FIXED-verified W-energysnap-10 (energy-model-diff + energy-model-inferences wasm rc0); kernel facade + replication re-exports of retained_routed
+10:44 (11/12) stdio7 CLAIMED (coordinator order) png-snapshot 1.2 + gltf-snapshot-root (sqlite native + binary pack old signatures); ifc-4-model owned receiver replaced by simple receive_pack (owned-graph/owned-tests/feature removed)
+10:47 (11/12) stdio7 LOCK NEEDED ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml (ifc-geometry + ifc4-catalog deps used by source; plus removed receiving test)
+10:52 (11/12) gen3d EDITED kernel mount wp1-leaves (export original_pack_value_operation_receiving)
+10:52 (11/12) energysnap RELEASED (snapshot, diff, inferences green; native-mutations 281 + session 52 open, see 1112-result-energysnap.md)
+10:53 (11/12) energynative CLAIMED semio-s-artifact-energy-model-native-mutations + 🌱️initialization/🌱️state (energy)
+10:53 (11/12) energysession CLAIMED semio-s-artifact-energy-model-session (simulation-session run-job, weather, publication, retained-input)
+10:56 (11/12) procsource FIXED-verified W-procsource-6 (hub wasm -p semio-s-artifact-procedural-retained-source rc0); next -p semio-hub-procedural-component (downstream generation3d/2d retained-commands crates)
+10:56 (11/12) stdio7 CLAIMED docx/pptx/xlsx base-model (coordinator order), bcf-inferences ported
+11:00 (11/12) procsource CLAIMED generation3d inferences/geometry (🚂️engine, 🚀️original-field) effect-shaped close/reserve; generation2d window-config mutations (field_set_mutations_binary! -> original_pack_value_operation_receiving missing in os_kernel) is NOT mine: kernel/store owner
+11:00 (11/12) gen3d NOTE to procsource: geometry 🚂️engine/🚀️original-field are yours (I only did SharedEvaluation newtype replacing Arc<WidgetEvaluation> in geometry lib/widgets/inputs/engine/original-field type names + 💎️value SharedEvaluation; please re-read before editing). gen2d window-config OpBinaryReceiving done by gen3d: semio_os_kernel::original_pack_value_operation_receiving! per file + kernel wp1-leaves export.
+11:00 (11/12) stdio7 FIXED-verified W-stdio7-8 (wasm rc0): bcf-inferences xlsx/docx/pptx base-model; W-stdio7-5: ifc-4-model cad-export png-snapshot. next gltf-snapshot-root
+11:04 (11/12) procsource RELEASED retained-source (FIXED-verified W-procsource-6) + generation3d geometry engine/original-field (W-procsource-8 clean there); open unclaimed: generation3d editor transforms/host, generation2d editor, flow-source digest (see 1112-result-procsource.md)
+11:04 (11/12) energysession FIXED-verified W-energysession-1 (semio-s-artifact-energy-model-session hub wasm rc 0; hub-energy-component check next)
+11:04 (11/12) gen3d EDITED gen3d host envelope (snapshot-authority, mutation-decode-authority, mutation-session, owner-accept, host lib frontier) effect port; gen2d set-contributions register/invalidate; gen3d transforms infos.get().get
+11:05 (11/12) coordinator: lock-160 + sync-160 running (procsource 3 path deps), then cas gc
+11:05 (11/12) gen2d CLAIMED generation2d editor (contributions-route, retained-commands, store-preparation, reserved-import, play-app-editor, owner-and-io), flow-source/digest, generation2d window-config mutations
+11:07 (11/12) energysession RELEASED semio-s-artifact-energy-model-session (FIXED-verified W-energysession-1; hub-energy-component W-energysession-2 rc101: native-mutations 323 (energynative), stdio xlsx-transitional OpBinary 2 (stdio7))
+11:07 (11/12) stdio7 FIXED-verified W-stdio7-10 gltf-snapshot-root rc0 (geometry pack receive/encode ported to output-slot, native decode via record_receiving); next: component rechecks
+11:09 (11/12) gen3d RELEASED (FIXED-verified W-gen3d-9; transforms crate still open, unclaimed)
+11:10 (11/12) gen3dxf CLAIMED generation3d editor commands transforms crate (src, source/*)
+11:10 (11/12) stdio7 CLAIMED xlsx-transitional mutations (removed OpBinaryReceiving macro line 83)
+11:12 (11/12) energynative progress: custody/leaf/row/scalar/reference ported (compiling)
+11:16 (11/12) stdio7 CLAIMED ifc-2x3-base-model, png-tests, docx-base, ifc4x3-schema/-step, pptx-transitional (W-stdio7-11 reds)
+11:18 (11/12) energynative EDITED kernel facade (retained_native_child, retained_slot re-exports); native-mutations custody/leaf/row/scalar/reference green (W-energynative-5)
+11:20 (11/12) stdio7 FIXED-verified W-stdio7-12 rc0: ifc-2x3-base-model png-tests docx-base pptx-transitional xlsx-transitional; next ifc4x3 schema+step
+11:22 (11/12) gen3dxf FIXED-verified W-gen3dxf-2 semio-s-artifact-procedural-3d-transforms (hub wasm rc0); next hub-procedural-component
+11:23 (11/12) energynative membership+adjacency green (W-energynative-7); value/text next
+11:24 (11/12) gen3dxf CLAIMED generation3d editor commands-and-instance-operation-owner (gumball close line only)
+11:25 (11/12) stdio7 FIXED-verified W-stdio7-14 rc0 ifc4x3-schema ifc4x3-step
+11:25 (11/12) gen3dxf CLAIMED generation3d 🚪️io (document envelope RetireOwned) and 🧵️preview-eval (tessellation, tool-run 701, preview-geometry 568)
+11:25 (11/12) gen2d FIXED-verified W-gen2d-4 (hub wasm semio-s-artifact-procedural-2d-editor rc0); W-gen2d-5 hub-procedural-component has zero generation2d reds (remaining: generation3d io + preview-eval); RELEASED
+11:26 (11/12) stdio7 CLAIMED docx-transitional tiff-snapshot ifc-details-profile ifc-2x3-base-details ifc4x3-population ifc4x3-mvd (W-stdio7-15 reds)
+11:28 (11/12) stdio7 FIXED-verified W-stdio7-16 rc0 tiff-snapshot docx-transitional ifc-details-profile
+11:31 (11/12) gen3dxf EDITED generation3d 🚪️io envelope RetireOwned, 🧵️preview-eval (tessellation close, tool-run unused closure, preview-geometry retention; threading effect)
+11:33 (11/12) gen3dxf EDITED generation3d flow-eval-tick, preview-and-flow-eval-window-command-work, viewer flow-eval-chain (effect threading for preview mesh retention); W-gen3dxf-5 io+preview-eval rc0
+11:34 (11/12) gen3dxf CLAIMED generation3d viewer set-contributions, editor set-widget-input
+11:34 (11/12) stdio7 FIXED-verified W-stdio7-19 tiff-mutation-regressions; RELEASED all except IFC shared-source cluster (ifc4x3-mvd, ifc-2x3-base-details, ifc-details-wire, ifc4x3-population) - free, see 1112-result-stdio7.md
+11:35 (11/12) ifcmvd CLAIMED ifc4x3-mvd stdio crate (🏗️ifc)
+11:40 (11/12) ifcdetails CLAIMED ifc-details-wire, ifc-2x3-base-details, ifc4x3-population stdio crates (🏗️ifc)
+11:35 (11/12) remodel CLAIMED remodeling-images remodeling-model (+ remodel plugin reds)
+11:35 (11/12) coordinator: lock-161 + sync-161 running (stdio7: cad-export step_snapshot, ifc-4-model ifc-geometry+ifc4-catalog, ifc-2x3-base-model ifc2x3-catalog). New lanes: ifcmvd, ifcdetails, remodel, cadrest, energylife
+11:36 (11/12) cadrest CLAIMED cad-viewer cad-modes playbook-inferences (then cad/playbook hub components, aec-building-energy/structure, spatial-shape)
+11:36 (11/12) energylife CLAIMED energy native-mutations-singletons, native-mutations-lifecycle, mut-boundary
+11:37 (11/12) energylife EDITED mutations/✨️derive/🧩️facet/🔲️boundary (MappedSharedScalar mapping instead of hand ScalarStorage)
+11:37 (11/12) gen3dxf CLAIMED generation3d viewer + editor remaining (terminal_frame_bound removal, panels inspection, view close ladders, transient transfer preparation factory)
+11:38 (11/12) energynative FIXED-verified W-energynative-11 (native-mutations wasm rc0) + initialization/state ported; RELEASED. Open: singletons(78)/lifecycle(42)/mut-boundary(6) must adopt new RowFieldPreparation/ScalarStorage API
+11:41 (11/12) ifcmvd EDITED mvd concepts lease.rs (new), population.rs, preparation.rs; checking W-ifcmvd-1
+11:42 (11/12) gen3dxf CLAIMED generation3d editor crate: document-io routes, artifact-store-preparation, command-work close, retained-reduce-gumball
+11:43 (11/12) energylife EDITED native-mutations 🛡️custody: #[macro_export] on std_cursor/custody_impl (std_cursor no longer calls entries!) so singletons/lifecycle crates can use them; energynative: please keep
+11:58 (11/12) ifcdetails FIXED-verified W-ifcdetails-3 ifc-details-wire (SnapshotLease+funded_turn in source_loan.rs; profile retained.rs gained settled/paid/effected/begun_in); now base-details
+11:48 (11/12) gen3dxf LOCK NEEDED 🌎️hub/Cargo.toml (semio-hub-procedural gains semio-framework-value: dyn_enum_close! copies value types into the generated impl)
+11:49 (11/12) ifcmvd FIXED-verified W-ifcmvd-2 rc0 ifc4x3-mvd; RELEASED (W-ifcmvd-3 hub-stdio: remaining reds are ifc-2x3-base-details 119, ifc-details-type 26, ifc4x3-population 6 = ifcdetails)
+12:05 (11/12) ifcdetails CLAIMED ifc-details-type (per coordinator) ; SnapshotLease/funded_turn live in ifc-details-wire source_loan.rs (shared by details crates), mvd keeps its own Lease
+11:50 (11/12) cadrest LOCK NEEDED 🌎️hub/Cargo.toml (hub compositions cad+playbook gained semio-framework-value workspace dep for dyn_enum_close)
+11:50 (11/12) gen3dxf FIXED-verified W-gen3dxf-12 semio-hub-procedural-component hub wasm rc0; RELEASED all generation3d claims
+11:54 (11/12) cadrest FIXED-verified W-cadrest-1/3/4/5/6 cad-viewer cad-modes cad-editor playbook-inferences hub cad+playbook components + 3 cad ext components; RELEASED
+11:54 (11/12) coordinator: lock-162 + sync-162 running (hub compositions cad/playbook/procedural: semio-framework-value). Green hub components: procedural (W-gen3dxf-12), cad + playbook (W-cadrest-3)
+12:40 (11/12) ifcdetails FIXED-verified W-ifcdetails-5 ifc-2x3-base-details (new effect.rs: SnapshotLease, effected/quoted/receive/receiver_close/replied)
+11:56 (11/12) remodel FIXED-verified W-remodel-3 remodeling-model, W-remodel-6 remodeling-images (hub wasm rc0); next semio-hub-remodel-component
+13:05 (11/12) ifcdetails FIXED-verified W-ifcdetails-8 ifc4x3-population + ifc-details-type (population: overlay/receive/admission close_step(effect); type: source_loan cursor helpers advance_cursor/close_cursor/take_cursor)
+13:06 (11/12) ifcdetails CLAIMED ifc4x3-machine, ifc-2x3-base, ifc-details-edit stdio crates (next reds of semio-hub-stdio-component)
+12:01 (11/12) energylife EDITED native-mutations 🏷️text/✅️validation: inherent quote_original/advance_original_reply (row-less) behind the OwnedRowValidation impl, for lifecycle named creation
+12:01 (11/12) energylife CLAIMED native-mutations-singletons (green W-energylife-6), native-lifecycle construction+deletion, derive 🌱️birth/🌱️create/✂️delete (if they emit old RowFields API)
+13:30 (11/12) ifcdetails LOCK NEEDED 🌎️hub/Cargo.toml (ifc-2x3-base gained dep semio-s-artifact-stdio-ifc-2x3-base-inferences; io component imports text/binary/mutations/inferences; Part21Preamble impl moved to ifc-2x3-base-model snapshot)
+12:08 (11/12) remodel CLAIMED remodeling-model-diff, remodeling-schema (retained apply rewrite, BTreeMap->RetainedOrderedMap, rows-buffer/edit effect shape)
+13:55 (11/12) ifcdetails FIXED-verified W-ifcdetails-11 ifc-2x3-base (+ machine, details-edit in W-ifcdetails-10); CLAIMED ifc-2x3-sav/cv20/cobie, ifc-details-guidance
+14:25 (11/12) ifcdetails FIXED-verified W-ifcdetails-14 ifc-2x3-sav/cv20/cobie (editor interaction_topology moved into ArtifactEditor impl; removed OpBinaryReceiving macro line per stdio7 precedent); RELEASED all except ifc-details-guidance (150 errors, hand RetireOwned/RetirementCursor impls) - free/unstarted
+12:15 (11/12) ifcguidance CLAIMED ifc-details-guidance (all 🧶️guidance files), ifc-details-wire/ifc-2x3-base-details/ifc4x3-mvd SnapshotLease hoist (after green)
+12:16 (11/12) energylife FIXED-verified W-energylife-1 mut-boundary, W-energylife-6 native-mutations-singletons, W-energylife-8 native-mutations-lifecycle (wasm hub rc0); next hub-energy-component downstream
+12:18 (11/12) bimsnap CLAIMED bim-model-snapshot root 🦀️.rs (ModelSnapshot BTreeMap->RetainedOrderedMap), value/🧬️retained-clone/🗺️ordered-map/🗂️map-core (ADDITIVE: contains_key/keys/values/get_mut/values_mut/iter_mut/cold_clear/cold_retain/cold_extend), then bim consumers as compile demands
+12:20 (11/12) energylife CLAIMED semio-s-artifact-energy-model-mut-model (🔋️model/🧳️retained + leaf; first red of hub-energy-component W-energylife-9, 57 errors, unclaimed)
+12:21 (11/12) remodel EDITED session close_step effect-shaped, workflow imports, mutation pack-value receiving, mut-params-2 owners
+12:27 (11/12) remodel LOCK NEEDED 🌎️hub/Cargo.toml (remodeling-editor gains semio-framework-diagnostic, -dsl-record, -dsl-record-derive deps for app_commands! expansion)
+12:29 (11/12) remodel LOCK NEEDED 🌎️hub/Cargo.toml (remodeling top crate gains remodeling-inferences dep)
+12:29 (11/12) energylife FIXED-verified W-energylife-10 semio-s-artifact-energy-model-mut-model (identity change on RowFieldPreparation + shared RowLeafPreparation); next hub-energy-component
+12:30 (11/12) ifcguidance FIXED-verified W-ifcguidance-3 ifc-details-guidance (profile retire_self/closed_in/settled_construction, wire closed_cursor)
+12:31 (11/12) remodel LOCK NEEDED 🌎️hub/Cargo.toml (semio-hub-remodel gains semio-framework-value)
+12:32 (11/12) remodel FIXED-verified W-remodel-21 semio-hub-remodel-component (hub wasm rc0); RELEASED
+12:38 (11/12) ifcguidance CLAIMED ifc-details (work.rs command_wire.rs admission.rs, 87 errors W-ifcguidance-4); ifc4x3-exchange (30 errors) triage
+12:45 (11/12) ifcguidance FIXED-verified W-ifcguidance-5 ifc-details (work/command_wire/admission effect-shaped; profile receive_effect/receiving_fault)
+12:46 (11/12) bimsnap CLAIMED ifc4x3 io/native_bim.rs (RetainedOrderedMap consumer); FIXED-verified W-bimsnap-2 bim-model-snapshot (+ schema values PropertySet/ClassificationSet aliases, ordered-map map-core additive API, io/binary snapshot sqlite override removed)
+12:46 (11/12) energylife FIXED-verified W-energylife-12 mut-model+mut-boundary (singletons W-energylife-6, lifecycle W-energylife-8); RELEASED all. hub-energy-component W-energylife-11 reds left: editor-commands 33 (action producer), initialization 3 (EnergyModelSnapshot FromValue/SnapshotProjection Output/OpBinaryReceiving), energy-model 2 (cascade); see 1112-result-energylife.md
+12:50 (11/12) energyfinal CLAIMED energy initialization, energy-model, editor-commands (+ downstream energy reds to rc 0)
+12:47 (11/12) ifcguidance CLAIMED ifc4x3-exchange (io native_pack.rs native-gltf-owned/write/export/import, native_exchange.rs; first red of semio-hub-stdio-component after ifc-details)
+12:48 (11/12) bimsnap RELEASED all; FIXED-verified W-bimsnap-2 (bim-model-snapshot); ifc4x3 native_bim.rs edited, hub stdio W-bimsnap-3 shows no bim error, remaining 25 errors are ifc4x3-exchange (ifcguidance claim)
+13:00 (11/12) femproc CLAIMED fem-2d-results-state, fem-2d-viewer, fem-3d-editor-visual-job, process3d-host, process3d-viewer (+ fem/process hub component reds)
+12:49 (11/12) flowgis CLAIMED flow-flow-schema, gis-gismap-config, gis-gismap-windows (+ flow/gis hub component reds)
+12:55 (11/12) misc1 CLAIMED demonstrator-playground-editor, sourcing-curation-domain, puzzle-3d-editor (+ demonstrator/sourcing/puzzle hub component reds)
+13:05 (11/12) idml CLAIMED stdio-idml crate (all files) + stdio hub component reds
+12:58 (11/12) energyfinal CLAIMED framework value derive (expansion parse_container_attrs + 📽️projection): additive #[value(by_value_projection)] flag so a persisted snapshot projects Output=Self
+13:25 (11/12) misc1 FIXED-verified W-misc1-2 sourcing-curation-domain, demonstrator-playground-editor, puzzle-3d-editor; next components
+13:40 (11/12) idml CLAIMED kernel facade re-export: protocol::retained::polled as retained_polled (additive, 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs line 134)
+13:03 (11/12) ifcguidance FIXED-verified W-ifcguidance-9 ifc4x3-exchange (new io native_receiving.rs adapters decoded/encoded/nested)
+13:20 (11/12) femproc EDITED fem2d results config(+DslReceiving; app-surface ResultMode/FemResultsAnimation/loop/waveform derive), fem2d/3d mutations original_pack_value_operation_receiving, fem3d staged-step, process3d host decode + Process3dMutation receiving
+13:15 (11/12) ifcguidance CLAIMED ifc4x3-fem (io native_fem_build/owned/load_build, native_domains; 49 errors W-ifcguidance-10, same receive/receive_nested family)
+13:17 (11/12) ifcguidance CLAIMED framework-value arc-custody (generic ArcLease OriginalSourceProjection + get/addr), manifest view-model shared-source (drop duplicate ArcLease<ViewModel> impl), ifc wire/2x3-details/mvd lease aliases
+13:30 (11/12) misc1 CLAIMED puzzle-2d-snapshot, puzzle-2d editor window, puzzle-5d-mut-any-5, sourcing grid window config (W-misc1-3 reds)
+13:17 (11/12) flowgis FIXED-verified W-flowgis-4 flow-schema, gismap-config, gismap-windows (still claimed for hub flow/gis components)
+13:20 (11/12) energyfinal CLAIMED editor-commands 🛬️action (+Cargo.toml: semio-plugin... LOCK NEEDED if deps added)
+13:50 (11/12) idml FIXED-verified W-idml-1 (stdio-idml wasm rc 0); next semio-hub-stdio-component
+13:40 (11/12) energyfinal LOCK NEEDED 🌎️hub/Cargo.toml (energy editor-commands gained semio-framework-value-native-owned dep)
+14:05 (11/12) femproc CLAIMED framework store-bounds StoreState (drop Clone; fem snapshots hold non-Clone PersistentList) - experiment W-femproc-7
+14:20 (11/12) femproc RELEASED store-bounds StoreState: experiment reverted by hand per coordinator (Clone restored); fixing fem types instead
+13:33 (11/12) ifcguidance FIXED-verified W-ifcguidance-12 SnapshotLease hoist: generic ArcLease get/addr + OriginalSourceProjection (framework-value retained-clone projection.rs), view-model duplicate removed; wire/2x3-details/mvd use ArcLease aliases (view-model, details-wire, 2x3-base-details, ifc4x3-mvd rc 0)
+14:50 (11/12) femproc RELEASED; BLOCKED fem2d/3d viewer on Fem*Snapshot: Clone (see 1112-result-femproc.md); process3d host/viewer + visual-job clean in W-femproc-7
+13:55 (11/12) misc1 FIXED-verified W-misc1-4 (no error from) sourcing-curation-inferences, puzzle-5d-mut-any-5; puzzle-2d-snapshot window+sqlite fixed; BLOCKED on 2d lookup/prepare family (see 1112-result-misc1.md); RELEASED all
+15:00 (11/12) femproc CLAIMED fem2d/fem3d snapshot nodes/materials -> SealedShared<PersistentList> (coordinator ruling), model crates + editors
+15:20 (11/12) femproc CLAIMED process3d-editor (store-preparation, retained-commands)
+13:37 (11/12) puzzle2d CLAIMED puzzle-2d snapshot 🔎️lookup + prepare cursors (text, delete-node, connect-handles, create-node, flag, move-node) + store-preparation
+14:05 (11/12) idml FIXED-verified W-idml-3 (stdio-idml in hub stdio component graph: 0 errors); RELEASED stdio-idml + kernel retained_polled re-export; stdio component remaining red = stdio-ifc4x3-fem (ifcguidance claim) only
+14:20 (11/12) idml FIXED-verified W-idml-4 (stdio-idml wasm rc 0, final tree); RELEASED
+13:41 (11/12) ifcguidance FIXED-verified W-ifcguidance-14 ifc4x3-fem (exchange pub decoded/decoded_nested/scoped/settled/io_error; fem files via adapters)
+13:43 (11/12) ifcguidance RELEASED all; next red of semio-hub-stdio-component (W-ifcguidance-15): semio-s-artifact-stdio-ifc-4x3 (464 errors: templates ✍️apply factory/receive/work/staging-native, editor guided-work/work/render-work/receive/🦀️.rs, viewer MeshWindowKit KIND_ID, action_staging STAGED_FORM_BODY_KEY) - FREE
+13:44 (11/12) ifc4x3 CLAIMED semio-s-artifact-stdio-ifc-4x3 (all of stdio/ifc/standards/4x3)
+15:50 (11/12) femproc LOCK NEEDED 🌎️hub/🧩️compositions/{🏭️process,🏗️fem} semio-framework-value dep (dyn_enum_close expansion)
+13:46 (11/12) puzzle2d FIXED-verified W-puzzle2d-2 puzzle-2d-snapshot (lookup ported); continuing mutations prepare family
+14:20 (11/12) energyfinal CLAIMED energy editor-edit + viewer window-config OpBinary (pack value + original_pack_value_operation_receiving!)
+14:35 (11/12) energyfinal CLAIMED energy editor 🎛️retained-commands/🧬️original + 🧮️reduce-and-helpers
+13:55 (11/12) ifc4x3 CLAIMED ifc4x3-fem native_fem_build.rs 2 lines (nodes SealedShared<PersistentList> from femproc: .nodes.get().get(i))
+15:05 (11/12) energyfinal LOCK NEEDED 🌎️hub/Cargo.toml (hub composition semio-hub-energy gained semio-framework-value dep: dyn_enum_close! expands to it)
+14:01 (11/12) ifc4x3 CLAIMED framework 📦️packages/🦀️rust/🦀️.rs action_staging pub use += STAGED_FORM_BODY_KEY (const exists in arg-schema, was not re-exported); ifc-declarations 📚️catalog/🦀️.rs + ifc-details-profile type_metadata.rs + ifc4x3-express metadata.rs (IfcDetailsTypeMetadata trait moved into declarations for orphan rule)
+15:15 (11/12) energyfinal FIXED-verified W-energyfinal-10 semio-hub-energy-component (hub wasm rc0); RELEASED all (initialization, energy-model, editor-commands/action, editor retained-commands+reduce, editor-edit/viewer window-config OpBinary, derive by_value_projection)
+16:40 (11/12) femproc FIXED-verified W-femproc-21 (fem+process hub components rc0, all assigned crates); RELEASED all; LOCK NEEDED hub compositions fem+process (semio-framework-value)
+14:02 (11/12) coordinator: lock-164 + sync-164 running (energy editor-commands, hub-energy deps). Green hub components: procedural, cad, playbook, remodel, energy (W-energyfinal-10)
+14:05 (11/12) ifc4x3 CLAIMED framework arg-schema 📝️staging/🦀️.rs (+ impl OriginalSourceProjection<DslValue> for StagedFormRequest)
+14:15 (11/12) flowgis FIXED-verified W-flowgis-17 semio-hub-gis-component (gis done); flow: flow-schema/mutations/editor-leaves/viewer/editor-publication green; working flow-editor-retained (93 errs)
+14:15 (11/12) flowgis RELEASED all gis (FIXED-verified W-flowgis-17 semio-hub-gis-component) and flow-schema/mutations/editor-publication/leaves/viewer (W-flowgis-4,10,16); NOT claimed: flow-editor-retained (93 errs, 13 files) - see 1112-result-flowgis.md
+14:16 (11/12) floweditor CLAIMED flow-editor-retained (all files) + flow editor-publication child-publication ordering.close_step
+14:19 (11/12) ifc4x3 FIXED-verified W-ifc4x3-5 semio-s-artifact-stdio-ifc-4x3 (hub wasm rc 0); next: semio-hub-stdio-component
+14:19 (11/12) puzzle2d CLAIMED puzzle-2d/5d mutations DslReceiving+OpBinaryReceiving (Puzzle2dMutation, Puzzle5dMutation), 2d editor play-snapshot-authority RetireOwned, text candidate
+14:22 (11/12) ifc4x3 CLAIMED stdio html facade 🦀️.rs (editor/viewer re-exports) + hub compositions/stdio Cargo.toml (semio-framework-value dev-dep -> dependency; same package, no lock change expected)
+14:24 (11/12) ifc4x3 FIXED-verified W-ifc4x3-7 semio-hub-stdio-component (hub wasm rc 0, 0 errors); RELEASED all (ifc-4x3, ifc4x3-fem 2 lines, ifc-declarations/profile/express trait move, framework action_staging + arg-schema projection, html facade editor/viewer, hub compositions/stdio Cargo dev-dep->dep)
+14:24 (11/12) coordinator: stdio hub component green (W-ifc4x3-7); 9/13 hub components green; lock-165 queued (fem/process/stdio compositions); ext round 1122 started

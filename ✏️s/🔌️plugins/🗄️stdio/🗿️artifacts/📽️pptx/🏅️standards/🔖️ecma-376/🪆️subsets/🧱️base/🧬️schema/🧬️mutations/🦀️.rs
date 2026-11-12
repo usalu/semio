@@ -80,6 +80,7 @@ pub enum PptxMutation {
     /// 🧺 Removes one `[Content_Types].xml` entry.
     RemoveContentType(remove_content_type::RemoveContentType),
 }
+dsl::original_pack_value_operation_receiving!(PptxMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

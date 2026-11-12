@@ -53,6 +53,7 @@ pub enum CsvMutation {
     RemoveRecord(remove_record::RemoveRecord),
     SetField(set_field::SetField),
 }
+dsl::original_pack_value_operation_receiving!(CsvMutation);
 
 /// 🧾️ Kebab-case spelling of every `CsvMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `csv-rfc4180-any` (`../../🔣️oracle.json`) is measured against

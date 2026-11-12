@@ -69,6 +69,7 @@ pub enum PdfVtMutation {
     SetDpartMetadata(SetDpartMetadata),
     RemoveDpartMetadata(RemoveDpartMetadata),
 }
+dsl::original_pack_value_operation_receiving!(PdfVtMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs

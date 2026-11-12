@@ -218,12 +218,15 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
         let provisional_generation = input.context.map_or(0, |context| context.provisional_generation());
         let hop = {
             let doc = ArtifactView::with_operation(overlay.as_ref().unwrap_or(input.snapshot), input.history, input.operation.clone());
-            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, input.command, &doc, &committed, &cfg, provisional_generation))
+            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, input.command, &doc, &committed, &cfg, provisional_generation, cx))
         };
         if let Some(overlay) = overlay {
             overlay.retire_cold();
         }
-        let (emit, transient) = hop?;
+        let Some((emit, transient)) = hop? else {
+            self.consumed = false;
+            return Ok(ArtifactCommandWorkStep::Pending { stage: "flowEvalEffect", preview: b"" });
+        };
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { transient, ..Default::default() } })
     
         })();
@@ -280,18 +283,28 @@ pub fn generation2d_flow_eval_hop(
     committed: &ArtifactView<'_, Generation2dSnapshot>,
     cfg: &ConfigView<'_, Generation2dConfig>,
     provisional_generation: u64,
-) -> Result<(Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Vec<Generation2dTransientMutation>), Fault> {
+    cx: &mut StepContext<'_>,
+) -> Result<Option<(Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Vec<Generation2dTransientMutation>)>, Fault> {
     let (mut sessions, link) = owner.parts()?;
     let result = match command {
         Generation2dCommand::FlowEvalTick(payload) => {
             let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
-            let (emit, publication) = flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, sessions.get_mut(target))?;
+            let grant = cx.retained_grant();
+            let session = sessions.get_mut(target);
+            let Some((evaluated, _)) = cx.with_original_effect(grant, |_, effect| flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, session, effect)).map_err(|error| Fault::from(error.to_string()))? else {
+                link.wake();
+                return Ok(None);
+            };
+            let Some((emit, publication)) = evaluated? else {
+                link.wake();
+                return Ok(None);
+            };
             link.note_evaluated(target, generation2d_preview_digest(target, committed.snapshot, cfg, provisional_generation));
             let transient = match (target, publication) {
                 (PreviewEvalTarget::Generation, semio_os_flow::FlowEvalPublication::Changed(preview_text)) => vec![SetGenerationPreview { preview_text }.into()],
                 _ => Vec::new(),
             };
-            Ok((emit, transient))
+            Ok(Some((emit, transient)))
         }
         Generation2dCommand::FlowEvalResolve(_) => unreachable!(),
         _ => Err(Fault::from("generation2d-flow-eval-route-rejected")),
@@ -419,4 +432,3 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Generation2dBoundedCommandJob
 }
 //#endregion 🧵️RetainedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation2dSessionCommandWork, Generation2dFlowEvalWork, Generation2dGenerationCommandWork);

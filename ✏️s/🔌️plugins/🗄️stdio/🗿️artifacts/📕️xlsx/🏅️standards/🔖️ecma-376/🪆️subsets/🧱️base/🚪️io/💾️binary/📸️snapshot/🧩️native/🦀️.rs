@@ -93,33 +93,33 @@ fn read(reader: &mut OpcNativeReader<'_, '_, '_>) -> Result<XlsxSnapshot, ValueE
     Ok(XlsxSnapshot { schema, opc, xml_parts: std::mem::take(&mut parts.0) })
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>, native_control: &mut NativeDecodeControl<'_>) -> Result<XlsxSnapshot, ValueError> {
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode(payload: &IoPayload, limits: SqliteDatabaseLimits, native_control: &mut NativeDecodeControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     match payload {
-        IoPayload::Binary(bytes) => backing::input(bytes, true, control, native_control),
-        IoPayload::Text(text) => backing::input(text.as_bytes(), false, control, native_control),
+        IoPayload::Binary(bytes) => backing::input(bytes, true, limits, native_control),
+        IoPayload::Text(text) => backing::input(text.as_bytes(), false, limits, native_control),
     }
 }
 
-pub(in crate::standards::v_ecma_376::subsets::base::io) fn encode(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_control: &mut NativeEncodeControl<'_>) -> Result<IoPayload, ValueError> {
-    backing::encode(snapshot, encoding, control, native_control)
+pub(in crate::standards::v_ecma_376::subsets::base::io) fn encode(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, native_control: &mut NativeEncodeControl<'_>) -> Result<IoPayload, ValueError> {
+    backing::encode(snapshot, encoding, limits, native_control)
 }
 
 pub(in crate::standards::v_ecma_376::subsets::base::io) fn encode_standalone(snapshot: &XlsxSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<IoPayload, ValueError> {
     let mut observer = |_| true;
     let mut native_control = NativeEncodeControl::new(control.limits().max_allocation_bytes, &mut observer);
-    backing::encode(snapshot, encoding, control, &mut native_control)
+    backing::encode(snapshot, encoding, control.limits(), &mut native_control)
 }
 
 pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode_text(text: &str, control: &mut SqliteSnapshotControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     let mut observer = |_| true;
     let mut native_control = NativeDecodeControl::new(control.limits().max_allocation_bytes, &mut observer);
-    backing::input(text.as_bytes(), false, control, &mut native_control)
+    backing::input(text.as_bytes(), false, control.limits(), &mut native_control)
 }
 
 pub(in crate::standards::v_ecma_376::subsets::base::io) fn decode_binary(bytes: &[u8], control: &mut SqliteSnapshotControl<'_>) -> Result<XlsxSnapshot, ValueError> {
     let mut observer = |_| true;
     let mut native_control = NativeDecodeControl::new(control.limits().max_allocation_bytes, &mut observer);
-    backing::input(bytes, true, control, &mut native_control)
+    backing::input(bytes, true, control.limits(), &mut native_control)
 }
 
 pub(in crate::standards::v_ecma_376::subsets::base::io) fn pack_limits(limits: &store::mounted_pack_rt::PackLimits) -> SqliteDatabaseLimits {

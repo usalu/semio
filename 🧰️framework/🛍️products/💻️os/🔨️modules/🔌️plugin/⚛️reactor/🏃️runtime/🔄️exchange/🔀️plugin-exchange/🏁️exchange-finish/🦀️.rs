@@ -3,7 +3,7 @@
 use super::*;
 
 /// 🧾️ Records one pull of the pending effects exactly once: `None` is the retained "not admitted yet" answer and changes nothing, and a re-entry after the effects were recorded never pushes them again.
-pub(super) fn record_pending_effects(state: &mut semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState, pulled: Option<Vec<semio_framework::kernel::Effect>>) -> bool {
+pub(super) fn record_pending_effects(state: &mut semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState, pulled: Option<Vec<semio_framework::kernel::Effect>>) -> bool {
     if state.effects_done { return true }
     let Some(effects) = pulled else { return false };
     for effect in &effects { state.effects.push(encode_wire_serialized(effect)); }
@@ -136,7 +136,7 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
 #[cfg(test)]
 mod reentry_laws {
     use super::*;
-    use semio_framework_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState;
+    use semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState;
 
     fn notify(message: &str) -> semio_framework::kernel::Effect { semio_framework::kernel::Effect::Notify { message: message.to_string() } }
 

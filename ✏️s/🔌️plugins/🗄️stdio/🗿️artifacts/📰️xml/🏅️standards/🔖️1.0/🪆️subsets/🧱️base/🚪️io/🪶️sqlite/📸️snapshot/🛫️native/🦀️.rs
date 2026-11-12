@@ -67,14 +67,15 @@ impl Writer<'_, '_, '_> {
 }
 enum Action<'a> { Node(&'a XmlNode), Literal(&'static [u8]) }
 
-pub(crate) fn encode(snapshot: &XmlSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,_native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<IoPayload, ValueError> {
-    let limits = control.limits(); control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
-    let mut callback = |event: pack::value::native_encoding::NativeEncodeProgress| control.checkpoint(SqliteSnapshotPhase::EncodeNative, event.completed, event.total).is_ok();
-    let mut native = NativeEncodeControl::new(limits.max_value_bytes, &mut callback); native.begin_stage(0)?;
-    let mut measure = Writer { control: &mut native, output: None, count: 0, rows: 0, limits, encoding }; measure.snapshot(snapshot)?; let count = measure.count;
-    native.begin_stage(count)?; let mut bytes = native.allocate_vec(count)?;
-    let mut writer = Writer { control: &mut native, output: Some(&mut bytes), count: 0, rows: 0, limits, encoding }; writer.snapshot(snapshot)?; if writer.count != count || bytes.len() != count { return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"XML native measured and emitted lengths differ")); } native.checkpoint()?;
-    match encoding { SnapshotEncoding::Binary => Ok(IoPayload::Binary(bytes)), SnapshotEncoding::Text => Ok(IoPayload::Text(String::from_utf8(bytes).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"XML native output is not UTF-8"))?)) }
+pub(crate) fn encode(snapshot: &XmlSnapshot, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>, output: &mut Option<semio_os_kernel::os_store::serialization::SnapshotReceivingOutput<IoPayload>>) -> semio_os_kernel::os_store::serialization::SnapshotReceivingOutcome {
+    let limits = control.limits();
+    store::space_history::io::sqlite::snapshot::settlement::encode_typed(control, native_owner, output, |native| {
+        native.begin_stage(0)?;
+        let mut measure = Writer { control: &mut *native, output: None, count: 0, rows: 0, limits, encoding }; measure.snapshot(snapshot)?; let count = measure.count;
+        native.begin_stage(count)?; let mut bytes = native.allocate_vec(count)?;
+        let mut writer = Writer { control: &mut *native, output: Some(&mut bytes), count: 0, rows: 0, limits, encoding }; writer.snapshot(snapshot)?; if writer.count != count || bytes.len() != count { return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"XML native measured and emitted lengths differ")); } native.checkpoint()?;
+        match encoding { SnapshotEncoding::Binary => Ok(IoPayload::Binary(bytes)), SnapshotEncoding::Text => Ok(IoPayload::Text(String::from_utf8(bytes).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"XML native output is not UTF-8"))?)) }
+    })
 }
 
 /// 🧩️ One enclosing owner's native emission state, with cumulative admission.

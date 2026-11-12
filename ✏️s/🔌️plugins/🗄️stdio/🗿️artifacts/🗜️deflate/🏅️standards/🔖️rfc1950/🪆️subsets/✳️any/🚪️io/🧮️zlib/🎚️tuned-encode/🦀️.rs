@@ -140,9 +140,17 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
     fn begin_close(&mut self) {}
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if let Some(publication) = self.publication.as_mut() {
+            let demand = publication.retirement_demands()?;
+            let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect)))?;
+            if publication.terminal_is_empty() {
+                self.publication = None;
+            }
+            return Ok(step);
+        }
         semio_framework_job::close_original_granted_step(cx,|grant|{
             use semio_framework_job::InteractiveJobCloseStep;
-            let mut work = 0u64;
+            let mut work = 0u128;
             let result = (|| -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {            let demand = match self.close_demands() {
                 Ok(demand) => demand,
                 Err(error) => return Err(error),
@@ -152,16 +160,6 @@ impl semio_framework_job::InteractiveJob for TunedDeflateEncodeJob {
             }
             if !deflate_close_admits_demand(grant, demand) {
                 return Ok(deflate_close_idle());
-            }
-            if let Some(publication) = self.publication.as_mut() {
-                let step = { let turn = publication.close_step(grant); work += turn.work; turn.result? };
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
             }
             Ok(match self.engine.close_step() {
                 Some(released_bytes) => deflate_close_receipt(1, released_bytes),

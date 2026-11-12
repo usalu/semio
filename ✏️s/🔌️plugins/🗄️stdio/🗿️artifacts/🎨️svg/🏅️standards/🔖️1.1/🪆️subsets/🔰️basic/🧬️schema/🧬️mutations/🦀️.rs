@@ -85,6 +85,7 @@ pub enum SvgBasicMutation {
     /// 🔄 Sets (or clears) the typed `transform` list of the element at `path`.
     SetTransform(set_transform::SetTransform),
 }
+dsl::original_pack_value_operation_receiving!(SvgBasicMutation);
 
 /// 📇️ Kebab-case spelling of every `SvgBasicMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares.

@@ -279,7 +279,7 @@ impl ToolCancellationLease {
 
 impl Drop for ToolCancellationLease {
     fn drop(&mut self) {
-        assert!(std::thread::panicking(),"original cancellation lease requires its paid terminal cursor\n[DEBUG] ledger-lease-drop {}",std::backtrace::Backtrace::force_capture());
+        assert!(std::thread::panicking(),"original cancellation lease requires its paid terminal cursor");
     }
 }
 

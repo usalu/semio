@@ -11,6 +11,8 @@ pub mod retained_provisional_source;
 pub mod retained_scratch_rows;
 #[path="../🌊️flow-source/🔎️rows/🦀️.rs"]
 pub mod retained_scratch_scan;
+#[path="../🌊️flow-source/🔎️lookup/🦀️.rs"]
+pub mod retained_scratch_lookup;
 #[path="../🌊️flow-source/✏️host-scratch/🦀️.rs"]
 pub mod retained_host_scratch;
 #[path="../🌊️flow-source/🎟️driver/🦀️.rs"]

@@ -17,10 +17,11 @@ store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.or
 }
 }
 impl<T:RetireOwned>ErasedSnapshotRetirement for Workspace<T>{
-fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),work:0}}
-if self.active.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant)}
-store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.original,&mut self.active,grant)
+fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+if self.terminal_is_empty(){return semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),work:0})}
+if self.active.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,body,effect)}
+let admitted=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.original,&mut self.active,effect);
+semio_framework_value::RetainedWorkPoll::Complete(RetainedWorkOutcome{result:admitted.result.map_err(Into::into),work:admitted.work})
 }
 fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.active.is_none()}
 fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

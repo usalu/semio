@@ -3,7 +3,8 @@ use super::super::{FlowCommand,FlowSnapshot,FlowApp,FlowInstanceOperationOwner};
 use crate::editor::flow::host::{FlowComposedSourceWork,FlowComposedScene};
 use super::super::child_publication::FlowChildPublicationWork;
 use semio_plugin::{ArtifactInstanceOperationOwnerHandle,EditorApp,app::ArtifactOwnedToolJobContext,AppOperationContext};
-use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,close_original_retained_step,InteractiveJobCloseStep as Close};
+use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,InteractiveJobCloseStep as Close};
+use crate::retained::{close_with_effect,poll_outcome,begin_close_owner};
 use semio_framework_value::{RetireOwned,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneClose,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
 type Infos=<flow::registry::FlowOperatorInfoMap as std::ops::Deref>::Target;
@@ -27,7 +28,7 @@ impl FlowEvaluationCommandWork{
   match self.phase{
    0=>if self.child.read_step(parent,command,&context.children,operation,cx)?{self.phase=1},
    1=>if self.source.step(parent,Some(self.child.child_source()?),cx)?{self.phase=2},
-   2=>{let d=self.source.scene_alias_demand()?;if !cx.retained_work_can_enter(d){return Ok(None)}let turn=self.source.retain_scene(cx.retained_grant());cx.consume_fuel(turn.work);match turn.result{Ok(Some((scene,p)))=>{self.fields.as_mut().ok_or_else(invalid)?.scene=Some(scene);self.phase=3;cx.consume_retained(p)?},Ok(None)=>{},Err(error)=>return Err(OriginalTurnFailure::debit_original(error,cx))}},
+   2=>{let d=self.source.scene_alias_demand()?;if !cx.retained_work_can_enter(d){return Ok(None)}let turn=self.source.retain_scene(cx.retained_grant());cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));match turn.result{Ok(Some((scene,p)))=>{self.fields.as_mut().ok_or_else(invalid)?.scene=Some(scene);self.phase=3;cx.consume_retained(p)?},Ok(None)=>{},Err(error)=>return Err(OriginalTurnFailure::debit_original(error,cx))}},
    3=>{let binding=self.source.original_binding().ok_or_else(invalid)?;let fields=self.fields.as_mut().ok_or_else(invalid)?;if owner.with_original_mut::<FlowInstanceOperationOwner,_>(|instance|instance.publish_scene_original(context,binding,&mut fields.scene,cx))?.unwrap_or(false){self.phase=4}},
    4=>{let source=self.source.read_source(parent.get())?;let pipeline=&mut self.pipeline;if let Some(output)=owner.with_original_mut::<FlowInstanceOperationOwner,_>(|instance|instance.with_original_session(|session|pipeline.step(&source,infos,session,cx)))?.flatten(){self.phase=5;return Ok(Some(output))}},
    _=>return Err(invalid().into())
@@ -42,7 +43,7 @@ impl FlowEvaluationCommandWork{
 
   if !self.pipeline.terminal_is_empty(){return self.pipeline.close_step(cx).map(|step|match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}
   if !self.source.terminal_is_empty(){return self.source.close_step(cx).map(|step|match step{Close::Complete{progress}=>Close::Pending{progress},step=>step})}
-  let d=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_original_retained_step(cx,d,|g|{if !self.child.terminal_is_empty(){return self.child.close_step(g)}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}if self.fields.is_some(){let turn=self.retirement.begin_granted(&mut self.fields,g);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}if self.binding.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.binding=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(progress(d.copy_bytes))),work:1}})?;Ok(if self.terminal_is_empty(){Close::Complete{progress:step.progress()}}else{Close::Pending{progress:step.progress()}})
+  let d=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;let step=close_with_effect(cx,d,|g,effect|{if !self.child.terminal_is_empty(){return self.child.close_step(g,effect)}if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}if self.fields.is_some(){return begin_close_owner(&mut self.retirement,&mut self.fields,effect)}if self.binding.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.binding=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(progress(d.copy_bytes))),work:1}})?;Ok(if self.terminal_is_empty(){Close::Complete{progress:step.progress()}}else{Close::Pending{progress:step.progress()}})
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.pipeline.terminal_is_empty()&&self.source.terminal_is_empty()&&self.child.terminal_is_empty()&&self.fields.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }

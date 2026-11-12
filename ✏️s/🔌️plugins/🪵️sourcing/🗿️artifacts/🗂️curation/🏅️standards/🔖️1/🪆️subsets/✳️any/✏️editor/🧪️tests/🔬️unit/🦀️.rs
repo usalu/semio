@@ -2,10 +2,10 @@ use semio_framework_test_fixtures::fixture_text;
 
 pub(crate) mod context {
     
-    use semio_framework_plugin::EditorApp;
+    use semio_plugin::EditorApp;
     use crate::editor::sourcing::{SourcingCurationApp, SourcingCurationCommand, create_sourcing_curation_app};
-    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as new_app_with_registry_impl, observe_registered_fixture_app, render_registered_fixture_app, OriginalFixtureScope};
-    use semio_framework_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_plugin::artifact_app_laws::{close_registered_fixture_app, meta, new_app_with_registry_and_members as new_app_with_registry_impl, observe_registered_fixture_app, render_registered_fixture_app, OriginalFixtureScope};
+    use semio_plugin::{App, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type SourcingApp = VcsArtifactApp<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
@@ -16,17 +16,17 @@ pub(crate) mod context {
         App { definition: create_sourcing_curation_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("sourcing", SourcingCurationApp, sourcing_manifest_for_tests, "../..");
+    semio_plugin::history_edit_acceptance_law!("sourcing", SourcingCurationApp, sourcing_manifest_for_tests, "../..");
     
     /// 📱️ The app wired to the real manifest registry — the ONLY constructor this app has.
-    /// `semio_framework_plugin::artifact_app_laws::new_app`'s bare, registry-less instance is unreachable here:
+    /// `semio_plugin::artifact_app_laws::new_app`'s bare, registry-less instance is unreachable here:
     /// `bounded_first_step_tool_proofs!` declares fifteen tool rows, and `tool_job_registration`
     /// admits a row only when its id is `InteractiveJobClassification::Migrated` in the LIVE registry,
     /// so an empty `AppActionRegistry` rejects every row with `interactive-job.catalog-authority`.
     /// Same reason trinity's `🔌️jack`/`♻️rewriting` editors are registry-backed.
     pub async fn new_app() -> SourcingTestApp {
         let scope = OriginalFixtureScope::admit();
-        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+        let mut app = new_app_with_registry_impl::<EditorApp<SourcingCurationApp>, semio_s_artifact_stdio_semio::SemioMembers>(sourcing_manifest_for_tests, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(1).await;
         SourcingTestApp(app, scope)
     }
@@ -45,7 +45,7 @@ pub(crate) mod context {
     impl SourcingTestApp {
         /// 🔄️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
         pub fn close_fixture(&mut self) {
-            close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
+            close_registered_fixture_app(&mut self.0, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
     }
     
@@ -78,9 +78,9 @@ pub(crate) mod context {
             SourcingCurationCommand::SetContributions(payload) => {
                 let address = semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: "sourcing".into(), app_id: "s.sourcing.curation@1/*#editor".into() }, command_id: "setContributions".into() };
                 let arguments = Some(semio_framework_value::DslValue::object([("json".to_owned(), semio_framework_value::DslValue::String(payload.json.clone()))]));
-                semio_framework_plugin::artifact_app_laws::dispatch_fixture_command(&mut app.0, &address, arguments, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await.expect("dispatch")
+                semio_plugin::artifact_app_laws::dispatch_fixture_command(&mut app.0, &address, arguments, None, &meta("local"), &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await.expect("dispatch")
             }
-            _ => semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch"),
+            _ => semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch"),
         };
         settle(app).await;
         result
@@ -90,10 +90,10 @@ pub(crate) mod context {
     pub async fn settle(app: &mut SourcingTestApp) -> Vec<semio_framework::kernel::Effect> {
         let mut effects = Vec::new();
         for turn in 0usize..100_000 {
-            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
-            app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("typed operation publication");
-            if let Some(mut page) = semio_framework_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("typed operation result page") {
-                let token = semio_framework_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+            app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
+            app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("typed operation publication");
+            if let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("typed operation result page") {
+                let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
                 assert!(app.acknowledge_typed_operation_result(token).expect("typed operation acknowledgement"));
             }
             if let Some(effect) = app.take_typed_operation_effect() {
@@ -125,8 +125,8 @@ pub(crate) mod context {
     }
 
     /// 📤️ One media port exported through the app's original caller, its pending turns driven until the port answers.
-    pub async fn export_media(app: &mut SourcingTestApp, port: &str) -> semio_framework_plugin::Media {
-        for _ in 0..semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
+    pub async fn export_media(app: &mut SourcingTestApp, port: &str) -> semio_plugin::Media {
+        for _ in 0..semio_plugin::artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
             if let Some(media) = app.0.export_media(port, app.1.cx()).await.expect("media export turn") {
                 return media;
             }
@@ -140,10 +140,10 @@ pub(crate) mod context {
 
     /// 📊️ The table scene a rendered pool/curated body carries — found anywhere in the tree, since the
     /// pool nests its surface under a filter row while the curated body is the surface itself.
-    pub fn table_scene_of(node: &semio_framework_plugin::BuiltNode) -> Option<semio_framework_plugin::TableScene> {
-        if let semio_framework_plugin::Component::Surface(props) = &node.component {
-            if props.kind == semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table {
-                let spine: semio_framework_plugin::TableScene = semio_ui_scene::decode(props).expect("typed table spine");
+    pub fn table_scene_of(node: &semio_plugin::BuiltNode) -> Option<semio_plugin::TableScene> {
+        if let semio_plugin::Component::Surface(props) = &node.component {
+            if props.kind == semio_plugin::plugin_app_close_prelude::SurfaceKind::Table {
+                let spine: semio_plugin::TableScene = semio_ui_scene::decode(props).expect("typed table spine");
                 assert!(node.rejected_children.is_empty(), "exact retained table has no rejected children");
                 assert_eq!(spine.lanes.len(), 2, "complete table lane declarations");
                 assert_eq!(node.children.len(), spine.lanes.len(), "complete retained table carriers");
@@ -152,11 +152,11 @@ pub(crate) mod context {
                     assert_eq!(declared.len(), 1, "one exact declared table lane {name}");
                     let carriers: Vec<_> = node.children.iter().filter(|child| child.key.as_str() == key).collect();
                     assert_eq!(carriers.len(), 1, "one exact retained table carrier {key}");
-                    let payload = semio_framework_plugin::artifact_app_laws::built_carrier_text(carriers[0]);
+                    let payload = semio_plugin::artifact_app_laws::built_carrier_text(carriers[0]);
                     assert_eq!(payload.len(), declared[0].bytes as usize, "complete lane UTF-8 bytes");
                     assert_eq!(semio_ui_scene::scene_lane_hash(&payload), declared[0].hash, "complete lane digest");
                 }
-                return Some(semio_framework_plugin::artifact_app_laws::built_surface_scene(node).expect("complete first-party retained table scene"));
+                return Some(semio_plugin::artifact_app_laws::built_surface_scene(node).expect("complete first-party retained table scene"));
             }
         }
         node.children.iter().find_map(table_scene_of)
@@ -179,7 +179,7 @@ pub(crate) mod context {
 }
 
 
-use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, MediaClass, MediaForm, MediaPayload};
+use semio_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactToolPublicationLane, MediaClass, MediaForm, MediaPayload};
 use crate::{CurationSnapshot, SOURCING_CURATION_SCHEMA};
 use crate::editor::sourcing::config::{SetContributionsEdit, SetFilterModulesEdit, SetFilterQueryEdit, SourcingCurationConfig, SourcingCurationConfigMutation};
 use crate::editor::sourcing::modes::edit::windows::{curated, grid, pool, preview};
@@ -187,7 +187,7 @@ use crate::editor::sourcing::commands::{curation_add, curation_remove, curation_
 use crate::editor::sourcing::modes::edit;
 use crate::editor::sourcing::{SOURCING_CURATION_BOUNDED_TOOL_IDS, SOURCING_CURATION_CONFIG_GRANT_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_BYTES, SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS, SOURCING_CURATION_RETAINED_RAW_BYTES, SourcingCurationApp, SourcingCurationBoundedCommandJobFactory, SourcingCurationCommand, create_sourcing_curation_app, prepare_sourcing_curation_config, sourcing_curation_config_mutation_retained_bytes};
 use crate::editor::sourcing::editor_vocabulary::{sourcing_curation_io, DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_CURATION_CONFIG_TEXT_BYTES};
-use semio_framework_plugin::plugin_app_close_prelude::TypedOperationResultLane;
+use semio_plugin::plugin_app_close_prelude::TypedOperationResultLane;
 
 //#region 🧪️RetainedConfigOracle
 #[semio_framework_async_macros::async_test]
@@ -196,16 +196,16 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
-        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         let mut document = None;
         let mut terminal = false;
         for turn in 0usize..100_000 {
-            app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-            app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-            if let Some(mut page) = semio_framework_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
+            app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+            app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+            if let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
                 assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                 terminal |= page.lane == TypedOperationResultLane::Terminal;
-                let token = semio_framework_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+                let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
                 assert!(app.acknowledge_typed_operation_result(token).unwrap());
             }
             if let Some(effect) = app.take_typed_operation_effect() {
@@ -238,7 +238,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
             if app.close_terminal_is_empty() {
                 break;
             }
-            app.0.close_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();
+            app.0.close_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).unwrap();
             std::thread::yield_now();
         }
         assert!(app.close_terminal_is_empty());
@@ -253,13 +253,13 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
-    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+    semio_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_plugin::ActionMeta { expected_document_revision:None, actor: "fixture".into(), instance_id: 7, view_state: None }, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
     let mut loaded = None;
     for _ in 0..100_000 {
-        app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
-        app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        if let Some(mut page) = semio_framework_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
-            let token = semio_framework_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+        app.0.maintenance_step(app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
+        app.0.advance_typed_operation_publication(&mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        if let Some(mut page) = semio_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
+            let token = semio_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
             assert!(app.acknowledge_typed_operation_result(token).unwrap());
         }
         if let Some(semio_framework::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
@@ -276,12 +276,12 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     PluginApp::begin_document_archive_load(&mut app.0, 91, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 91, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
         }
-        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
+        let _ = PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("archive maintenance step");
         std::thread::yield_now();
     }
     let status = status.expect("archive load reaches a terminal state");
@@ -307,7 +307,7 @@ async fn a_saved_curation_archive_carries_its_catalog_member_and_reloads_with_it
     PluginApp::begin_document_archive_load(&mut app.0, 92, archive).expect("archive admission");
     let mut status = None;
     for _ in 0..1_000_000 {
-        let polled = PluginApp::poll_document_archive_load(&mut app.0, 92, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
+        let polled = PluginApp::poll_document_archive_load(&mut app.0, 92, &mut semio_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("archive status");
         if matches!(polled.state, protocol::DocumentArchiveLoadState::Ready | protocol::DocumentArchiveLoadState::Cancelled | protocol::DocumentArchiveLoadState::Fault) {
             status = Some(polled);
             break;
@@ -400,15 +400,15 @@ fn the_real_demonstrator_pack_is_admitted_by_the_registered_contributions_wire()
     let wire = semio_framework_pack_json::to_json_string(&("setContributions", semio_framework::DslValue::object([("json".to_string(), semio_framework::DslValue::String(pack.clone()))])));
     println!("[STATS] sourcing demonstrator pack packChars={} wireChars={}", pack.len(), wire.len());
     assert!(pack.len() > SOURCING_CURATION_RETAINED_RAW_BYTES, "the real pack is past the gesture envelope");
-    assert!(wire.len() <= semio_framework_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
+    assert!(wire.len() <= semio_plugin::CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES, "the real pack's command wire ({} B) must fit the registered admission", wire.len());
     let distilled = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&pack, SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
     assert!(distilled.len() <= SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "what is RETAINED is the distilled roster, never the pack");
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: distilled })).is_ok());
 }
 //#endregion 🧪️RetainedConfigOracle
 use crate::editor_unit_tests::context::{dispatch, new_app, sourcing_manifest_for_tests};
-use semio_framework_plugin::artifact_app_laws;
-use semio_framework_plugin::{EditorApp, PluginApp};
+use semio_plugin::artifact_app_laws;
+use semio_plugin::{EditorApp, PluginApp};
 
 #[semio_framework_async_macros::async_test]
 async fn view_kind_config_only_commands_pass_kind_discipline() {
@@ -478,7 +478,7 @@ async fn the_rail_stages_numeric_curation_counts_into_one_curated_edit() {
     let action = definition.actions.iter().find(|action| action.id == "curationSetCount").expect("curationSetCount is declared on the rail");
     for id in ["delta", "value"] {
         let arg = action.args.iter().find(|arg| arg.id == id).unwrap_or_else(|| panic!("curationSetCount declares {id}"));
-        assert!(matches!(arg.schema, semio_framework_plugin::ArgSchema::Number { .. }), "curationSetCount.{id} must be a number argument, found {:?}", arg.schema);
+        assert!(matches!(arg.schema, semio_plugin::ArgSchema::Number { .. }), "curationSetCount.{id} must be a number argument, found {:?}", arg.schema);
     }
     let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 }))).clone()), &mut None).expect("curationSetCount must convert");
     assert_eq!(built, SourcingCurationCommand::CurationSetCount(curation_set_count::CurationSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }));
@@ -674,12 +674,12 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 #[test]
 fn retained_table_lanes_restore_complete_neutral_owner() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚚️retained-table/🔣️.json")).unwrap();
-    let scene = semio_framework_plugin::TableScene::base(fixture["columnsJson"].as_str().unwrap(), fixture["rowsJson"].as_str().unwrap());
-    let node = semio_framework_plugin::scene_surface("neutral-retained-table", semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene).unwrap();
+    let scene = semio_plugin::TableScene::base(fixture["columnsJson"].as_str().unwrap(), fixture["rowsJson"].as_str().unwrap());
+    let node = semio_plugin::scene_surface("neutral-retained-table", semio_plugin::plugin_app_close_prelude::SurfaceKind::Table, &scene).unwrap();
     assert_eq!(node.children.len(), 2);
     assert!(serde_json::to_string(&node).unwrap_err().to_string().contains("BuiltChildren requires retained page transport"));
-    let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("typed table surface") };
-    let spine: semio_framework_plugin::TableScene = semio_ui_scene::decode(props).unwrap();
+    let semio_plugin::Component::Surface(props) = &node.component else { panic!("typed table surface") };
+    let spine: semio_plugin::TableScene = semio_ui_scene::decode(props).unwrap();
     assert_eq!(props.doc_schema.as_str(), fixture["surfaceSchema"].as_str().unwrap());
     assert!(spine.columns_json.is_empty() && spine.rows_json.is_empty());
     assert_eq!(spine.lanes.len(), fixture["lanes"].as_array().unwrap().len());

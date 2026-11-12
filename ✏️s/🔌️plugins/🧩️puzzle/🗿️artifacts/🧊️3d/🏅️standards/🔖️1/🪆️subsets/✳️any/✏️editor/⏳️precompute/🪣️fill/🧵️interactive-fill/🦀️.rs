@@ -784,7 +784,7 @@ impl FillBuilder {
             catalogs: std::mem::replace(&mut self.catalogs, FixedCatalogOwner { objects: FixedOwnerVec::refused(), vortices: FixedOwnerVec::refused(), cables: FixedOwnerVec::refused() }),
             weights: std::mem::replace(&mut self.weights, RetainedBrushKindWeights { object_weights: FixedOwnerMap::refused(), vortex_weights: FixedOwnerMap::refused() }),
             spatial_index: std::mem::replace(&mut self.spatial_index, CollisionSpatialIndex::original_empty(1.0)),
-            preparation_roots: self.preparation_roots.take(),
+            preparation_roots: self.preparation_roots.take().map(FillPreparationRoots::into_lease),
             preparation_spatial: self.preparation_spatial.take(),
             tail_removal: self.tail_removal.take(),
             sequence: std::mem::replace(&mut self.sequence, Vec::new()),
@@ -829,7 +829,7 @@ impl FillBuilder {
                 self.close_started = true;
                 self.collection_over_capacity = false;
                 self.preparation_capacity_refusal = None;
-                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+                semio_framework_value::RetainedWorkOutcome::<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { result: Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
             })?;
             return Ok(step);
         }

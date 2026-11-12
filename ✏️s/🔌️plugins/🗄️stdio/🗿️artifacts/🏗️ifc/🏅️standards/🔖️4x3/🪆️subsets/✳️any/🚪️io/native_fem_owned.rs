@@ -28,15 +28,20 @@ pub(super) fn work(owner: &mut Owner<'_, '_>, bytes: usize) -> Result<(), ValueE
     owner.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
     owner.native().step()
 }
+pub(super) fn authored(value: &mut Option<Fem3dSnapshotValue>, owner: &mut Owner<'_, '_>) -> Result<Fem3dSnapshot, ValueError> {
+    let mut output = None;
+    super::settled(Fem3dSnapshot::receive_authoring(value, &mut output, owner))?;
+    output.ok_or_else(|| invalid("FEM authoring published no snapshot"))
+}
 pub(super) fn vector<T: semio_framework_value::retirement::RetireOwned>(count: usize, owner: &mut Owner<'_, '_>) -> Result<Vec<T>, ValueError> {
-    owner.receive::<Vec<T>, Vec<T>>(|slot, native, body| {
+    decoded::<Vec<T>, Vec<T>>(owner, |slot, native, body| {
         *slot = Some(Vec::new());
         body.allocate_vec_into(native, count, slot.as_mut().unwrap(), 1)?;
         Ok(slot.take().unwrap())
     })
 }
 pub(super) fn copy(text: &str, owner: &mut Owner<'_, '_>) -> Result<String, ValueError> {
-    owner.receive::<String, String>(|slot, native, body| {
+    decoded::<String, String>(owner, |slot, native, body| {
         *slot = Some(String::new());
         body.copy_text_into(native, text, slot.as_mut().unwrap(), 1)?;
         Ok(slot.take().unwrap())
@@ -299,7 +304,7 @@ impl<'a> Graph<'a> {
         Ok((dimensions, scale))
     }
     fn require_load_unit(&self, assignment: &IfcEntity, role: LoadUnit, owner: &mut Owner<'_, '_>) -> Result<(), ValueError> {
-        owner.scoped_stage(|original| {
+        scoped(owner, |original| {
             original.native().begin_stage(0)?;
             work(original, size_of::<u64>())?;
             if assignment.name != "IFCUNITASSIGNMENT" {
@@ -888,7 +893,7 @@ fn members(source: &IfcSnapshot, frame: &mut Projection, owner: &mut Owner<'_, '
 
 /// 🫴️ Projects admitted analytical IFC data directly into the FEM owner's persistent receiving boundary.
 pub(super) fn receive(source: &IfcSnapshot, owner: &mut Owner<'_, '_>) -> Result<Fem3dSnapshot, ValueError> {
-    owner.scoped_stage(|owner| owner.receive_nested::<Projection, Fem3dSnapshot>(|slot, original| {
+    scoped(owner, |owner| decoded_nested::<Projection, Fem3dSnapshot>(owner, |slot, original| {
         original.native().begin_stage(0)?;
         work(original, size_of::<Projection>())?;
         *slot = Some(Projection::default());
@@ -920,7 +925,7 @@ pub(super) fn receive(source: &IfcSnapshot, owner: &mut Owner<'_, '_>) -> Result
         members(source, frame, original)?;
         let base=n+m+supports+frame.material_keys.len()+frame.section_keys.len();
         load_import::receive(&Graph{source,index:&frame.index,relations:&frame.relations},frame.unit_assignment,frame.load_state.as_mut().unwrap(),frame.value.as_mut().unwrap(),base,original)?;
-        Fem3dSnapshot::receive_authoring(&mut frame.value, original)
+        authored(&mut frame.value, original)
     }))
 }
 #[cfg(test)]

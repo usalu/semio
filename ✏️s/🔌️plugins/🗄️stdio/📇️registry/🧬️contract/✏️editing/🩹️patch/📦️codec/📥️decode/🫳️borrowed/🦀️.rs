@@ -17,9 +17,9 @@ impl<'source> SnapshotPatchReadCursor<'source>{
         Ok(Self{parser:JsonSourceCursor::new(PatchSource(source),JsonMemberPolicy::Reject,limits)?,candidate:None,patch:None,admitted:false})
     }
     /// ⏱️ Advances the original grammar while retaining accepted semantic cells on typed refusal.
-    pub fn step(&mut self,maximum_units:usize,control:&mut NativeDecodeControl<'_>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<bool,ValueError>{
+    pub fn step(&mut self,maximum_units:usize,control:&mut NativeDecodeControl<'_>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<bool,ValueError>{
         if maximum_units==0{return Ok(false);}if self.candidate.is_some(){return Ok(true);}
-        if let Some(value)=self.parser.step(maximum_units,control,grant).map_err(|error|error.into_value_error())?{self.candidate=Some(value);return Ok(true);}Ok(false)
+        if let Some(value)=self.parser.step(maximum_units,control,effect).map_err(|error|error.into_value_error())?{self.candidate=Some(value);return Ok(true);}Ok(false)
     }
     /// 👓️ Borrows the exact accepted semantic candidate without cloning or transferring it.
     pub fn candidate(&self)->Option<&DslValue>{self.candidate.as_ref()}
@@ -55,11 +55,14 @@ impl<'source> SnapshotPatchReadCursor<'source>{
     pub fn take_patch(&mut self)->Option<SnapshotPatch>{self.patch.take()}
     /// 🎟️ Publishes the one grammar-and-candidate ownership frame before transfer.
     pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<(semio_framework_pack_json::JsonGrammarCursor<DslValue>,Option<DslValue>,Option<SnapshotPatch>)>()}
-    /// ♻️ Retains the complete original reader when any independent handoff grant refuses.
-    pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,Self)>{
+    /// ♻️ Retains the complete original reader when the effect refuses the handoff.
+    pub fn into_retirement(self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,Self)>{
         let Self{parser,candidate,patch,admitted}=self;
-        let(source,parser)=parser.into_grammar();
-        semio_framework_value::admit_owned_retirement((parser,candidate,patch),grant).result.map_err(|(error,(parser,candidate,patch))|(error,Self{parser:JsonSourceCursor::from_grammar(source,parser),candidate,patch,admitted}))
+        let(source,parser)=parser.into_grammar();let policy=parser.policy;let mut slot=Some((parser,candidate,patch));let grant=effect.grant();
+        let turn=semio_framework_value::admit_owned_retirement(&mut slot,effect);
+        let restore=|slot:&mut Option<(semio_framework_pack_json::JsonGrammarCursor<DslValue>,Option<DslValue>,Option<SnapshotPatch>)>|{let(parser,candidate,patch)=slot.take().unwrap_or_else(||(semio_framework_pack_json::JsonGrammarCursor::new(policy),None,None));Self{parser:JsonSourceCursor::from_grammar(source,parser),candidate,patch,admitted}};
+        let result=match turn.result{Ok(Some(retired))=>Ok(retired),Ok(None)=>Err((if grant.maximum_items==0{ValueError::literal(ValueRefusalKind::WorkLimit,"patch reader retirement requires one admitted item")}else{ValueError::literal(ValueRefusalKind::OwnershipLimit,"patch reader retirement exceeds its admitted grant")},restore(&mut slot))),Err(error)=>Err((error,restore(&mut slot)))};
+        semio_framework_value::RetainedWorkOutcome{result,work:turn.work}
     }
 }
 fn refusal(message:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

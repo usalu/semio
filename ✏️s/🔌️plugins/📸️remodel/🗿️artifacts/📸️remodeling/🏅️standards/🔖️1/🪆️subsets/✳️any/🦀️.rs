@@ -23,7 +23,7 @@ fn examples() -> &'static [ExampleSource] {
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: std::sync::OnceLock<Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>> = std::sync::OnceLock::new();
-    DESCRIPTORS.get_or_init(|| vec![schema::inferences::remodeling_artifact_inference_descriptor()]).as_slice()
+    DESCRIPTORS.get_or_init(|| vec![semio_s_artifact_remodel_remodeling_inferences::standards::v1::subsets::any::schema::inferences::remodeling_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🧬️ Descriptor for `s.remodel.remodeling`, assembled from the four facets' own format leaves.

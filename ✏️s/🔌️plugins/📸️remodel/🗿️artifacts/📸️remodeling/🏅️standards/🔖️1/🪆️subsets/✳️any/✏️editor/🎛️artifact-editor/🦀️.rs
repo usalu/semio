@@ -30,10 +30,10 @@ impl ArtifactEditor for RemodelingPlayApp {
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = semio_framework_plugin::NoPresence;
-    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
-    type Transient = semio_framework_plugin::NoTransient;
-    type TransientMutation = semio_framework_plugin::NoTransientMutation;
+    type Presence = semio_plugin::NoPresence;
+    type PresenceMutation = semio_plugin::NoPresenceMutation;
+    type Transient = semio_plugin::NoTransient;
+    type TransientMutation = semio_plugin::NoTransientMutation;
 
     type Command = RemodelingCommand;
 
@@ -49,62 +49,62 @@ impl ArtifactEditor for RemodelingPlayApp {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(semio_framework_plugin::no_config_store_disposer())
+    fn build_config_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_plugin::no_config_store_disposer())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(semio_framework_plugin::no_presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_plugin::no_presence_store_disposer())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_local_root_retirement_factory())
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(semio_framework_plugin::no_presence_peer_retirement_factory())
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
-    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(semio_framework_plugin::no_transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_plugin::no_transient_store_disposer())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
+        Some(semio_plugin::no_transient_local_root_retirement_factory())
     }
 
     /// 🫧️ Every window kind's transient partition — where the import a window started lives between its dispatches.
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         transient::register(registry)
     }
 
     /// 📨️ A closing window aborts the import it started with zero trace; every other host fact leaves an import running.
-    fn host_event_demands(event: &semio_framework_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
-        if !matches!(event,semio_framework_plugin::HostEvent::Retiring{..}){return None}let header=std::mem::size_of::<RemodelingCommand>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(7),capacity_bytes:header.saturating_add(7),depth:1,..Default::default()})
+    fn host_event_demands(event: &semio_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
+        if !matches!(event,semio_plugin::HostEvent::Retiring{..}){return None}let header=std::mem::size_of::<RemodelingCommand>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(7),capacity_bytes:header.saturating_add(7),depth:1,..Default::default()})
     }
 
-    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<RemodelingCommand> {
+    fn host_event(event: &semio_plugin::HostEvent) -> Option<RemodelingCommand> {
         match event {
-            semio_framework_plugin::HostEvent::Retiring { .. } => Some(RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: Some("retired".to_string()) })),
+            semio_plugin::HostEvent::Retiring { .. } => Some(RemodelingCommand::ImportAbort(import_abort::ImportAbort { reason: Some("retired".to_string()) })),
             _ => None,
         }
     }
 
-    fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<model::windows::model::config::RemodelingModelWindowConfigOwner>()?;
         registry.register::<capture::windows::frames::config::RemodelingFramesWindowConfigOwner>()?;
         registry.register::<analyze::windows::report::config::RemodelingReportWindowConfigOwner>()
     }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
+    semio_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<RemodelingPlayApp>,
         owner_file: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.remodel.remodeling@1/*#editor",
@@ -142,32 +142,32 @@ impl ArtifactEditor for RemodelingPlayApp {
         registry.register(semio_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<EditorApp<Self>>::new(&controller))
     }
 
-    fn build_media_export_job(request: &mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>, output: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_media_export_job(request: &mut Option<semio_plugin::ArtifactMediaExportJobRequest<EditorApp<Self>>>, output: &mut Option<Box<dyn semio_plugin::ArtifactReservedJob + Send>>, construction:&mut semio_plugin::MediaConstruction,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
         if request.as_ref().is_some_and(|request| request.port == semio_plugin::native_snapshot_export::SNAPSHOT_PACK_PORT) {
-            return semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<EditorApp<Self>>::admit_original(request, output, cx);
+            return semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<EditorApp<Self>>::admit_original(request, output, construction, cx);
         }
-        Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::UnsupportedOwner, "Remodeling media port has no registered resumable producer").into())
+        Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::UnsupportedOwner, "Remodeling media port has no registered resumable producer").into())
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !REMODELING_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Remodeling command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Remodeling command does not match its exact registered tool").into());
         }
         if remodeling_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "Remodeling bounded route exceeded its declared work extent").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Remodeling bounded route exceeded its declared work extent").into());
         }
         let tool_id = original.command.command_id();
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RemodelingCommand::command_id, REMODELING_RETAINED_RAW_BYTES, REMODELING_RETAINED_WORK_ITEMS, false, |request| RemodelingWindowCommandWork::new(tool_id))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, RemodelingCommand::command_id, REMODELING_RETAINED_RAW_BYTES, REMODELING_RETAINED_WORK_ITEMS, false, |request| RemodelingWindowCommandWork::new(tool_id))
     }
 
     /// 🚀️ Boots on the registered boot example when its committed text parses, falling back to the
     /// artifact's own `default_remodeling_scene()` otherwise — the same shape `🧱️block`'s
     /// `default_block2d_snapshot()` uses, so an unparsable example degrades instead of panicking.
-    fn reference_birth()->Option<fn()->Result<RemodelingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<RemodelingSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::boot_snapshot())
     })}
 
@@ -223,7 +223,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                 let stream_id = REMODELING_WORKFLOW_PHOTOS_STREAM_ID;
                 let asset_prefix = format!("{stream_id}-frame-");
                 let reserved = scene.streams.iter().filter(|stream| stream.id == stream_id).flat_map(|stream| stream.frames.iter().map(|frame| frame.index))
-                    .chain(scene.assets.keys().filter_map(|id| id.strip_prefix(&asset_prefix)?.parse::<u32>().ok())).max();
+                    .chain(scene.assets.iter().filter_map(|(id, _)| id.strip_prefix(&asset_prefix)?.parse::<u32>().ok())).max();
                 let frame_index = match reserved {
                     Some(index) => index.checked_add(1).ok_or_else(|| MediaError::Payload(port.to_string(), "photos:in exhausted the frame index range".into()))?,
                     None => 0,
@@ -232,7 +232,7 @@ impl ArtifactEditor for RemodelingPlayApp {
                 let asset = ImageAsset { mime: mime.into(), data: json.clone(), width, height };
                 let mut mutations = vec![semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset(asset_key.clone(), asset)];
                 match scene.streams.iter().any(|stream| stream.id == stream_id) {
-                    true => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
+                    true => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame(stream_id.to_string(), FrameRef { index: frame_index, timestamp_ms: f64::from(frame_index) * 1000.0 / 30.0, asset_id: asset_key }, MediaKind::ImageSequence)),
                     false => mutations.push(semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream(MediaStream {
                         id: stream_id.to_string(),
                         name: "Workflow Photos".into(),
@@ -274,7 +274,7 @@ impl ArtifactEditor for RemodelingPlayApp {
         doc: &ArtifactView<'_, RemodelingSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<RemodelingMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
@@ -285,28 +285,28 @@ impl ArtifactEditor for RemodelingPlayApp {
         Ok(emit)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         let scene = doc.snapshot;
         let labels = remodeling_labels(view_state);
         let built = match body_key {
             model::windows::model::REMODELING_PLAY_BODY_MAIN => model::windows::model::render(scene, &model::windows::model::config::current(cfg)),
             capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, &capture::windows::frames::config::current(cfg)),
             analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, &analyze::windows::report::config::current(cfg)),
-            media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, media::REMODELING_PLAY_BODY_MEDIA)),
-            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, doc.tool_run(), view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, document::REMODELING_PLAY_BODY_PIPELINE)),
-            results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, results::REMODELING_PLAY_BODY_RESULTS)),
-            parameters::REMODELING_PLAY_BODY_PARAMETERS => parameters::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, parameters::REMODELING_PLAY_BODY_PARAMETERS)),
-            calibration_panel::REMODELING_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, calibration_panel::REMODELING_PLAY_BODY_CALIBRATION)),
-            tracks::REMODELING_PLAY_BODY_TRACKS => tracks::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, tracks::REMODELING_PLAY_BODY_TRACKS)),
-            quality::REMODELING_PLAY_BODY_QC => quality::render(scene, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, quality::REMODELING_PLAY_BODY_QC)),
-            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, media::REMODELING_PLAY_BODY_MEDIA)),
+            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, doc.tool_run(), view_state.locale, &semio_plugin::TreeWindows::for_body(view_state, document::REMODELING_PLAY_BODY_PIPELINE)),
+            results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, results::REMODELING_PLAY_BODY_RESULTS)),
+            parameters::REMODELING_PLAY_BODY_PARAMETERS => parameters::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, parameters::REMODELING_PLAY_BODY_PARAMETERS)),
+            calibration_panel::REMODELING_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, calibration_panel::REMODELING_PLAY_BODY_CALIBRATION)),
+            tracks::REMODELING_PLAY_BODY_TRACKS => tracks::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, tracks::REMODELING_PLAY_BODY_TRACKS)),
+            quality::REMODELING_PLAY_BODY_QC => quality::render(scene, labels, &semio_plugin::TreeWindows::for_body(view_state, quality::REMODELING_PLAY_BODY_QC)),
+            _ => return semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         };
-        built.map(semio_framework_plugin::built_to_component_tree)
+        built.map(semio_plugin::built_to_component_tree)
     }
 
     /// 👁️ Dynamic per-render window measures — the Model window's layer toggles must reflect the LIVE
     /// config, so they are supplied here rather than frozen into the manifest.
-    fn window_measures(doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(doc: &ArtifactView<'_, RemodelingSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = remodeling_labels(view_state);
         let Some(kind) = view_state.window_id.as_deref().and_then(|id| view_state.window_instances.iter().find(|window| window.id == id)).map(|window| window.window_kind_id.as_str()) else { return HashMap::new() };
         let measures = match kind {

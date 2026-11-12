@@ -2,6 +2,7 @@
 use super::*;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use super::source_loan::{advance_cursor, close_cursor, take_cursor};
 use std::mem::size_of;
 type PartsCursor = <Vec<IfcComplexType> as RetainedClone>::Cursor;
 type ValueCursor = <IfcValue as RetainedClone>::Cursor;
@@ -46,6 +47,8 @@ pub struct ConstituentRoster {
     inputs: super::type_input::Inputs,
     remap: super::type_remap::Plan,
     retirement: RetainedCloneClose,
+    recover: bool,
+    work: u64,
 }
 pub struct RetainedTypeAdmission<'a> {
     owner: &'a ConstituentRoster,
@@ -301,7 +304,7 @@ impl ConstituentRoster {
             16 => demand.capacity_bytes = self.state.target_arity.checked_mul(size_of::<IfcValue>()).ok_or_else(|| invalid("IFC retype tuple capacity overflow"))?,
             2 => {
                 let source = source.ok_or_else(|| invalid("IFC constituent move source missing"))?;
-                let child = cursor.advance_demands(source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position].complex), body.min(4096).saturating_sub(Self::base().copy_bytes))?;
+                let child = cursor.advance_demands(source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position].complex), body.min(4096).saturating_sub(Self::base().copy_bytes), self.work)?;
                 demand.copy_bytes = demand.copy_bytes.checked_add(child.copy_bytes).ok_or_else(|| invalid("IFC constituent move copy overflow"))?;
                 demand.capacity_bytes = child.capacity_bytes;
                 demand.release_bytes = child.release_bytes;
@@ -312,7 +315,7 @@ impl ConstituentRoster {
                 let child = if self.state.phase == 19 {
                     let source = source.ok_or_else(|| invalid("IFC primary value source missing"))?;
                     let index = *self.remap.map.as_ref().and_then(|map| map.get(self.state.next)).ok_or_else(|| invalid("IFC primary source ordinal missing"))?;
-                    value_cursor.advance_demands(source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position]).project(index, |entity| &entity.args[index]), body.min(4096).saturating_sub(Self::base().copy_bytes))?
+                    value_cursor.advance_demands(source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position]).project(index, |entity| &entity.args[index]), body.min(4096).saturating_sub(Self::base().copy_bytes), self.work)?
                 } else if value_cursor.terminal_is_empty() {
                     RetirementDemand { copy_bytes: size_of::<ValueCursor>(), depth: 1, ..Default::default() }
                 } else {
@@ -369,6 +372,7 @@ impl ConstituentRoster {
             return Err(invalid("IFC constituent move original owner changed or closed").into());
         }
         let body = cx.retained_grant().maximum_copy_bytes.min(4096);
+        self.work = cx.fuel_remaining();
         let demand = self.demands(event, Some(source), cursor, value_cursor, snapshot, body)?;
         if cx.should_yield() || !retained_clone_grant_admits(cx.retained_grant(), demand) {
             return Ok(false);
@@ -392,32 +396,25 @@ impl ConstituentRoster {
         }
         if self.state.phase == 19 || self.state.phase == 20 && !value_cursor.terminal_is_empty() {
             cx.consume_retained(RetainedCloneProgress { copied_bytes: Self::base().copy_bytes, ..Default::default() })?;
-            let child_grant = RetainedCloneGrant { maximum_copy_bytes: cx.retained_grant().maximum_copy_bytes.min(body.saturating_sub(Self::base().copy_bytes)), ..cx.retained_grant() };
             if self.state.phase == 19 && value_cursor.output_ready() {
                 if value.is_some() {
                     return Err(invalid("IFC primary value receiver occupied").into());
                 }
-                if !retained_clone_grant_admits(child_grant, value_cursor.take_demand()?) {
+                if !retained_clone_grant_admits(cx.retained_grant(), value_cursor.take_demand()?) {
                     return Ok(false);
                 }
-                let turn = value_cursor.take(child_grant);
-                cx.consume_fuel(turn.work);
-                let (moved, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(|| invalid("IFC primary moved payload missing"))?;
-                cx.consume_retained(progress)?;
-                *value = Some(moved);
-                value_cursor.begin_close();
-                self.state.phase = 20;
+                if take_cursor(cx, value_cursor, value)? {
+                    self.state.phase = 20;
+                }
                 return Ok(false);
             }
-            let turn = if self.state.phase == 19 {
+            let child_body = body.saturating_sub(Self::base().copy_bytes);
+            if self.state.phase == 19 {
                 let index = *self.remap.map.as_ref().and_then(|map| map.get(self.state.next)).ok_or_else(|| invalid("IFC primary source ordinal missing"))?;
-                value_cursor.advance(source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position]).project(index, |entity| &entity.args[index]), body.saturating_sub(Self::base().copy_bytes), child_grant)
+                advance_cursor(cx, value_cursor, source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position]).project(index, |entity| &entity.args[index]), child_body, &mut self.recover)?;
             } else {
-                value_cursor.close_step(child_grant)
-            };
-            cx.consume_fuel(turn.work);
-            let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
-            cx.consume_retained(step.progress())?;
+                close_cursor(cx, value_cursor, child_body, &mut self.recover)?;
+            }
             return Ok(false);
         }
         if self.state.phase == 2 {
@@ -426,18 +423,12 @@ impl ConstituentRoster {
                 if !retained_clone_grant_admits(cx.retained_grant(), cursor.take_demand()?) {
                     return Ok(false);
                 }
-                let turn = cursor.take(cx.retained_grant());
-                cx.consume_fuel(turn.work);
-                let (taken, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(|| invalid("IFC constituent parts payload missing"))?;
-                cx.consume_retained(progress)?;
-                *parts = Some(taken);
-                self.state.phase = if self.state.mapping { 16 } else { 3 };
+                if take_cursor(cx, cursor, parts)? {
+                    self.state.phase = if self.state.mapping { 16 } else { 3 };
+                }
                 return Ok(false);
             }
-            let turn = cursor.advance(source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position].complex), body.saturating_sub(Self::base().copy_bytes), cx.retained_grant());
-            cx.consume_fuel(turn.work);
-            let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
-            cx.consume_retained(step.progress())?;
+            advance_cursor(cx, cursor, source.borrow().project(self.state.position, |snapshot| &snapshot.entities[self.state.position].complex), body.saturating_sub(Self::base().copy_bytes), &mut self.recover)?;
             return Ok(false);
         }
         cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })?;
@@ -939,27 +930,28 @@ impl ConstituentRoster {
             Ok(RetirementDemand { copy_bytes: 2 * size_of::<State>() + size_of::<super::type_remap::Plan>(), depth: 1, ..Default::default() })
         }
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let grant = effect.grant();
         if !self.state.closing {
             return refused(invalid("IFC constituent move close not started"));
         }
         if !self.inputs.terminal_is_empty() {
-            return self.inputs.close_step(grant);
+            return self.inputs.close_step(effect);
         }
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return settled(self.retirement.step_granted(4096, effect));
         }
         if self.root_slots.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.root_slots, grant), "IFC primary ordinal retirement missing");
+            return owned_step(self.retirement.begin_granted(&mut self.root_slots, effect), "IFC primary ordinal retirement missing");
         }
         if self.remap.map.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.remap.map, grant), "IFC retype ordinal map retirement missing");
+            return owned_step(self.retirement.begin_granted(&mut self.remap.map, effect), "IFC retype ordinal map retirement missing");
         }
         if self.retyped_args.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.retyped_args, grant), "IFC constituent tuple retirement missing");
+            return owned_step(self.retirement.begin_granted(&mut self.retyped_args, effect), "IFC constituent tuple retirement missing");
         }
         if self.rebuilt.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.rebuilt, grant), "IFC constituent move retirement missing");
+            return owned_step(self.retirement.begin_granted(&mut self.rebuilt, effect), "IFC constituent move retirement missing");
         }
         let demand = match self.close_demands(grant.maximum_copy_bytes) {
             Ok(demand) => demand,
@@ -968,10 +960,15 @@ impl ConstituentRoster {
         if !retained_clone_grant_admits(grant, demand) {
             return idle_step(RetainedCloneStep::Progress(Default::default()));
         }
+        match paid(effect) {
+            Ok(true) => {}
+            Ok(false) => return idle_step(RetainedCloneStep::Progress(Default::default())),
+            Err(error) => return refused(error),
+        }
         self.state.binding = None;
         self.state.authority = None;
         self.remap.clear_metadata();
-        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: effect.performed_work() }
     }
     #[cfg(test)]
     pub fn metadata(&self) -> (State, usize, usize, usize, usize, [usize; 18], usize, usize, (super::type_input::State, usize, usize, bool, bool)) {

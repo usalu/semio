@@ -1,13 +1,28 @@
 //! 📨️ The parent command and genuine child read authorize one exact original native leaf batch.
 use semio_plugin::plugin_app_close_prelude::ChildEmitPreparation;
 use semio_plugin::{ChildContentView,AppOperationContext,app::{MemberKeyRef,child_read::{ChildReadCursor,ChildReadStamp,ChildReadSourceCustody,OriginalChildMemberLookup},child_read::command::{OriginalChildEditorCommandCursor,OriginalChildEditorCommandAuthority}}};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetireOwned,retained_clone::{RetainedCloneRef,retained_clone_grant_admits},retirement::controlled::ControlledRetirement};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,OriginalRetirementPoll,RetireOwned,retained_clone::{RetainedCloneRef,RetainedCloneClose,retained_clone_grant_admits},retirement::controlled::ControlledRetirement};
 use semio_framework_job::{StepContext,OriginalTurnFailure};
 use semio_s_artifact_stdio_semio_flow::{schema::{snapshot::SemioFlowSnapshot,mutations::SemioFlowMutation},editor::child_editor::{SEMIO_FLOW_CHILD_READ,SEMIO_FLOW_CHILD_APPLY_MUTATIONS,semio_flow_mutation_batch_demand,admit_semio_flow_mutation_batch}};
 use std::mem::size_of;
 #[path="🧷️reference/🦀️.rs"]mod reference;
 use reference::FLOW_CONTENT_REFERENCE_LENDER;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Flow child publication source changed")}
+/// 🔁️ Reads a settled close poll as a grant-shaped outcome; a suspended effect keeps its state and retries next turn.
+fn poll_outcome(poll:OriginalRetirementPoll)->RetainedWorkOutcome{
+ match poll{
+  RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work},
+  RetainedWorkPoll::Complete(turn)=>RetainedWorkOutcome{result:turn.result.map_err(|failure|failure.into_value_error()),work:turn.work},
+ }
+}
+/// 🧹️ Funds one grant-shaped close step of an owner ladder through the close turn's effect.
+fn close_with_effect(cx:&mut StepContext<'_>,demand:RetirementDemand,close:impl FnOnce(RetainedCloneGrant,&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome)->Result<semio_framework_job::InteractiveJobCloseStep,OriginalTurnFailure>{
+ semio_framework_job::close_original_effect_step(cx,demand,|effect|->OriginalRetirementPoll{let grant=effect.grant();let turn=close(grant,effect);RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})})
+}
+/// 🪪️ Admits one owner into its close ladder and reads the admission as a grant-shaped outcome.
+fn begin_close_owner<T:RetireOwned>(close:&mut RetainedCloneClose,slot:&mut Option<T>,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+ let turn=close.begin_granted(slot,effect);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}
+}
 fn add(a:RetirementDemand,b:RetirementDemand)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:a.copy_bytes.checked_add(b.copy_bytes).ok_or_else(invalid)?,capacity_bytes:a.capacity_bytes.checked_add(b.capacity_bytes).ok_or_else(invalid)?,release_bytes:a.release_bytes.checked_add(b.release_bytes).ok_or_else(invalid)?,depth:a.depth.max(b.depth)})}
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
@@ -40,23 +55,25 @@ impl FlowChildPublicationWork{
   let quote=owners.lookup.as_ref().unwrap().quote_ready_receiving::<SemioFlowSnapshot,_>(parent,children,key,operation,|read|{
    if self.stamp.is_none(){owners.read_cursor.as_ref().unwrap().next_demand(raw,&FLOW_CONTENT_REFERENCE_LENDER,0,read,&SEMIO_FLOW_CHILD_READ.identity)}else if !owners.child.ready(){owners.child.next_admit_demand()}else if self.phase==6{owners.qualifier.as_ref().unwrap().take_authority_demand()}else{owners.qualifier.as_ref().unwrap().next_demand()}
   })?;if !cx.retained_work_can_enter(quote){return Ok(None)}
-  let metadata=owners.lookup.as_ref().unwrap().borrow_ready_demand::<SemioFlowSnapshot>();let turn=owners.lookup.as_ref().unwrap().borrow_ready::<SemioFlowSnapshot,_>(parent,children,key,operation,cx.retained_grant());let borrow_work=turn.work;let borrowed=match turn.result{Ok(read)=>read,Err(error)=>{cx.consume_fuel(borrow_work);return Err(OriginalTurnFailure::debit_original(error,cx))}};let read=borrowed.read.ok_or_else(invalid)?;let g=RetainedCloneGrant{maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-metadata.copy_bytes,..cx.retained_grant()};
-  let(result,work)=if self.stamp.is_none(){
-   let cursor=owners.read_cursor.as_mut().unwrap();let result=SEMIO_FLOW_CHILD_READ.qualify(raw,&FLOW_CONTENT_REFERENCE_LENDER,0,&read,cursor,g);let work=cursor.last_turn_work();(result.map(|advance|{self.stamp=advance.stamp;advance.progress}),work)
-  }else if !owners.child.ready(){
-   let result=SEMIO_FLOW_CHILD_READ.admit_original_source(&read,self.stamp.as_ref().unwrap(),&mut owners.child,g);let work=owners.child.last_turn_work();(result.map(|step|step.progress()),work)
-  }else if self.phase==6{
-   let cursor=owners.qualifier.as_mut().unwrap();let turn=cursor.take_authority(&owners.child,&read,g);let work=turn.work;(turn.result.map(|advance|{if let Some(authority)=advance.authority{owners.authority=Some(authority)}advance.progress}),work)
-  }else{
-   let cursor=owners.qualifier.as_mut().unwrap();let result=SEMIO_FLOW_CHILD_APPLY_MUTATIONS.qualify_original(parent,command,self.stamp.as_ref().unwrap(),&read,cursor,g);let work=cursor.last_turn_work();(result.map(|advance|{if advance.stamp.is_some(){self.phase=6}advance.progress}),work)
-  };
-  cx.consume_fuel(borrow_work.max(work));let merge=|p:RetainedCloneProgress|RetainedCloneProgress{copied_items:borrowed.progress.copied_items.max(p.copied_items),copied_bytes:borrowed.progress.copied_bytes+p.copied_bytes,retained_capacity_bytes:borrowed.progress.retained_capacity_bytes+p.retained_capacity_bytes,released_bytes:borrowed.progress.released_bytes+p.released_bytes};
+  let metadata=owners.lookup.as_ref().unwrap().borrow_ready_demand::<SemioFlowSnapshot>();let turn=owners.lookup.as_ref().unwrap().borrow_ready::<SemioFlowSnapshot,_>(parent,children,key,operation,cx.retained_grant());let borrow_work=turn.work;let borrowed=match turn.result{Ok(read)=>read,Err(error)=>{cx.consume_fuel(u64::try_from(borrow_work).unwrap_or(u64::MAX));return Err(OriginalTurnFailure::debit_original(error,cx))}};let read=borrowed.read.ok_or_else(invalid)?;let g=RetainedCloneGrant{maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-metadata.copy_bytes,..cx.retained_grant()};
+  let Some((result,performed))=cx.with_original_effect(g,|_,effect|->Result<RetainedCloneProgress,ValueError>{
+   if self.stamp.is_none(){
+    let cursor=owners.read_cursor.as_mut().unwrap();SEMIO_FLOW_CHILD_READ.qualify(raw,&FLOW_CONTENT_REFERENCE_LENDER,0,&read,cursor,effect).map(|advance|{self.stamp=advance.stamp;advance.progress})
+   }else if !owners.child.ready(){
+    SEMIO_FLOW_CHILD_READ.admit_original_source(&read,self.stamp.as_ref().unwrap(),&mut owners.child,effect).map(|step|step.progress())
+   }else if self.phase==6{
+    let cursor=owners.qualifier.as_mut().unwrap();cursor.take_authority(&owners.child,&read,effect).map(|advance|{if let Some(authority)=advance.authority{owners.authority=Some(authority)}advance.progress})
+   }else{
+    let cursor=owners.qualifier.as_mut().unwrap();SEMIO_FLOW_CHILD_APPLY_MUTATIONS.qualify_original(parent,command,self.stamp.as_ref().unwrap(),&read,cursor,effect).map(|advance|{if advance.stamp.is_some(){self.phase=6}advance.progress})
+   }
+  })?else{cx.consume_fuel(u64::try_from(borrow_work).unwrap_or(u64::MAX));return Ok(None)};
+  cx.consume_fuel(u64::try_from(borrow_work.max(performed)).unwrap_or(u64::MAX));let merge=|p:RetainedCloneProgress|RetainedCloneProgress{copied_items:borrowed.progress.copied_items.max(p.copied_items),copied_bytes:borrowed.progress.copied_bytes+p.copied_bytes,retained_capacity_bytes:borrowed.progress.retained_capacity_bytes+p.retained_capacity_bytes,released_bytes:borrowed.progress.released_bytes+p.released_bytes};
   match result{Ok(p)=>cx.consume_retained(merge(p))?,Err(error)=>{let p=merge(error.retained_progress());return Err(OriginalTurnFailure::debit_original(error.with_retained_progress(p),cx))}}Ok(None)
 
  }
  pub fn begin_close(&mut self){self.closing=true}
  pub fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.owners.terminal_is_empty(){self.owners.next_demand(copy)}else{Ok(RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()})}}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.owners.terminal_is_empty(){let result=self.owners.step(g);return RetainedWorkOutcome{result,work:self.owners.last_turn_work()}}let d=RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.stamp=None;self.origin=None;self.references=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}
+ pub fn close_step(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}if !self.owners.terminal_is_empty(){return poll_outcome(self.owners.step(g.maximum_copy_bytes,effect))}let d=RetirementDemand{copy_bytes:size_of::<Option<ChildReadStamp>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<References>>(),depth:1,..Default::default()};if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.stamp=None;self.origin=None;self.references=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})),work:1}}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.owners.terminal_is_empty()&&self.stamp.is_none()&&self.origin.is_none()&&self.references.is_none()}
 }
 impl Drop for FlowChildPublicationWork{fn drop(&mut self){assert!(self.terminal_is_empty(),"original Flow child publication requires terminal original source and native leaf custody")}}

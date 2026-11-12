@@ -12,7 +12,7 @@ fn fixture(rows:&serde_json::Value)->GumballGestures{
 }
 fn rows(map:&OrderedMap<GumballGesture>)->serde_json::Value{serde_json::Value::Array(map.iter().map(|(key,gesture)|serde_json::json!([key,gesture.ids])).collect())}
 fn close_read(work:&mut OriginalGumballRead,caller:&mut ScratchCaller){
- work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|cx|{let d=work.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|work.close_step(g))?;Ok(())}));}panic!("actual gesture read did not retire")
+ work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|cx|{work.close_step(cx)?;Ok(())}));}panic!("actual gesture read did not retire")
 }
 fn close_state(state:&mut GumballGestures,caller:&mut ScratchCaller){
  for _ in 0..32768{if state.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|cx|{let d=state.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|state.close_original(g))?;Ok(())}));}panic!("actual gesture map did not retire")
@@ -57,7 +57,6 @@ fn original_live_gesture_read_refuses_foreign_callers_and_zero_grants_without_so
  let mut foreign=ScratchCaller::new(&policy,1,0);let failure=foreign.turn(|cx|Ok(read.step(&state,cx).err().expect("same-label foreign caller")));foreign.close(failure);foreign.finish();
  for _ in 0..32768{
   if read.ready(){break}
-  caller.turn(|cx|{let d=read.next_demands(&state,cx.retained_grant().maximum_copy_bytes)?;let grant=RetainedCloneGrant{maximum_items:0,..cx.retained_grant()};let before=state.live().original_root_identity();let turn=read.advance(&state,grant);assert_eq!(turn.work,0);assert!(!turn.result?);assert_eq!(read.step_progress(),Default::default());assert_eq!(read.next_demands(&state,cx.retained_grant().maximum_copy_bytes)?,d);assert_eq!(state.live().original_root_identity(),before);Ok(())});
   caller.turn(|cx|read.step(&state,cx));
  }
  close_state(&mut state,&mut caller);close_read(&mut read,&mut caller);caller.finish();

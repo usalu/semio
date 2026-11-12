@@ -36,6 +36,7 @@ semio-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-ifc-geometry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
@@ -47,6 +48,8 @@ semio-framework-async-macros = { workspace = true }
 
 [dependencies.semio-s-artifact-stdio-ifc-declarations]
 path = "../../../../../../../📚️catalog/📦️packages/🦀️rust"
+[dependencies.semio-s-artifact-stdio-ifc4-catalog]
+path = "../../📚️catalog/📦️packages/🦀️rust"
 [[test]]
 name = "original_ifc_native_receiving"
 path = "../../../🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🧪️tests/🫴️receiving/🦀️.rs"

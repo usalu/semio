@@ -13,7 +13,7 @@ use semio_framework_job::StepContext;
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll,RetirementPollExit};
 use neural::retirement::{close_reply,CloseReply,CloseComplete};
-use semio_os_flow_host_source::settle_close;
+use semio_os_flow_host_source::{close_with_effect,close_with_poll,poll_outcome,settle_close};
 use std::mem::{ManuallyDrop,size_of};
 /// 🧭️ The session baseline custody a funded current-source read inspects; the evaluation session is its one implementor.
 pub trait FlowSourceBaseline {
@@ -108,13 +108,13 @@ impl FlowSourceRead{
    2=>{fields.channels=Some(session.previous_channels().unwrap().alias());self.phase=3;},
    3=>{let child=fields.source.as_mut().unwrap();let result=child.step(snapshot,fields.infos.as_ref().unwrap().get(),effect);self.progress=child.step_progress();if let Some(tree)=result?{fields.tree=Some(tree);child.begin_close();self.phase=4;}},
    4=>{let child=fields.source.as_mut().unwrap();let poll=child.close_step(grant.maximum_copy_bytes,effect);self.progress=child.step_progress();if let RetainedWorkPoll::Complete(turn)=poll{turn.result.map_err(|failure|failure.into_value_error())?;}else{return Ok(FlowSourceReadStep::Working)}if child.terminal_is_empty(){fields.source=None;self.phase=5;}},
-   5=>{let result=fields.comparison.step(fields.tree.as_ref().unwrap(),fields.baseline.as_ref().unwrap().get().tree_source(),grant);self.progress=fields.comparison.step_progress();result?;if let Some(equal)=fields.comparison.result(){if !equal{return Ok(self.reject(FlowSourceReadFailure::ChangedSource))}fields.comparison.begin_close();self.phase=6;}},
-   6=>{let result=fields.comparison.close_step(grant);self.progress=fields.comparison.step_progress();result?;if fields.comparison.terminal_is_empty(){self.phase=26;}},
+   5=>{let result=fields.comparison.step(fields.tree.as_ref().unwrap(),fields.baseline.as_ref().unwrap().get().tree_source(),effect);self.progress=fields.comparison.step_progress();result?;if let Some(equal)=fields.comparison.result(){if !equal{return Ok(self.reject(FlowSourceReadFailure::ChangedSource))}fields.comparison.begin_close();self.phase=6;}},
+   6=>{let result=fields.comparison.close_step(effect);self.progress=fields.comparison.step_progress();result?;if fields.comparison.terminal_is_empty(){self.phase=26;}},
    26=>{fields.comparison=SourceCompare::new();self.phase=7;},
    7=>{let child=fields.seeds_source.as_mut().unwrap();let result=child.step(fields.tree.as_ref().unwrap(),effect);self.progress=child.step_progress();if let Some(seeds)=result?{fields.seeds=Some(seeds);child.begin_close();self.phase=8;}},
    8=>{let child=fields.seeds_source.as_mut().unwrap();let poll=child.close_step(grant.maximum_copy_bytes,effect);self.progress=child.step_progress();if let RetainedWorkPoll::Complete(turn)=poll{turn.result.map_err(|failure|failure.into_value_error())?;}else{return Ok(FlowSourceReadStep::Working)}if child.terminal_is_empty(){fields.seeds_source=None;self.phase=9;}},
-   9=>{let result=fields.comparison.step(fields.seeds.as_ref().unwrap(),fields.baseline.as_ref().unwrap().get().seed_source(),grant);self.progress=fields.comparison.step_progress();result?;if let Some(equal)=fields.comparison.result(){if !equal{return Ok(self.reject(FlowSourceReadFailure::ChangedSource))}fields.comparison.begin_close();self.phase=10;}},
-   10=>{let result=fields.comparison.close_step(grant);self.progress=fields.comparison.step_progress();result?;if fields.comparison.terminal_is_empty(){self.phase=11;}},
+   9=>{let result=fields.comparison.step(fields.seeds.as_ref().unwrap(),fields.baseline.as_ref().unwrap().get().seed_source(),effect);self.progress=fields.comparison.step_progress();result?;if let Some(equal)=fields.comparison.result(){if !equal{return Ok(self.reject(FlowSourceReadFailure::ChangedSource))}fields.comparison.begin_close();self.phase=10;}},
+   10=>{let result=fields.comparison.close_step(effect);self.progress=fields.comparison.step_progress();result?;if fields.comparison.terminal_is_empty(){self.phase=11;}},
    11=>{
     let Some(widget)=snapshot.widgets.get(self.widget)else{return Ok(self.reject(FlowSourceReadFailure::MissingWidget))};match compare_text(&mut self.offset,widget_id_for(widget),request.source_widget,&mut self.progress,grant){Some(true)=>{if !matches!(widget,Widget::Neuron{..}){return Ok(self.reject(FlowSourceReadFailure::MissingPort))}self.scan=0;self.phase=12;},Some(false)=>self.widget+=1,None=>{}}
    },
@@ -158,7 +158,7 @@ if self.origin.is_some_and(|original|original!=origin){return Some(FlowSourceRea
   self.progress=Default::default();if self.closing{return Err(refusal("original read admission is closing"))}if self.phase!=255||cx.is_cancelled()||cx.should_yield(){return Ok(FlowCurrentOutputRead::Working)}let grant=cx.retained_grant();if !admitted(self.next_demands(snapshot,grant.maximum_copy_bytes)?,grant){return Ok(FlowCurrentOutputRead::Working)}if let Some(reason)=self.failure.or_else(||self.current_failure(snapshot,revision,session,request,(cx.operation().0,cx.generation().0))){self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<FlowSourceReadFailure>()+CURRENT_SOURCE_CHECK_BYTES,..Default::default()};cx.consume_retained(self.progress)?;cx.consume_fuel(1);self.reject(reason);return Ok(FlowCurrentOutputRead::Refused(reason))}self.progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<FlowCurrentOutput>()+CURRENT_SOURCE_CHECK_BYTES,..Default::default()};cx.consume_retained(self.progress)?;cx.consume_fuel(1);Ok(FlowCurrentOutputRead::Ready(self.current_output(request).ok_or_else(||refusal("original admitted output identity is absent"))?))
  }
  pub fn current_output<'a>(&'a self,request:&FlowSourceReadRequest<'_>)->Option<FlowCurrentOutput<'a>>{
-  if self.phase!=255||self.failure.is_some()||self.closing||self.binding!=Some(request.original_binding()){return None}let value=self.sources.as_ref()?.channels.as_ref()?.0.outputs.slot_entry(self.channel)?.1.entry_at_rank(self.output)?.1.as_dictionary()?;Some(FlowCurrentOutput{identity:value.entry_at_rank(self.identity)?.1.as_atom()?.as_str()?,geometry:self.geometry,revision:self.revision,binding:self.binding?,origin:self.origin?})
+  if self.phase!=255||self.failure.is_some()||self.closing||self.binding!=Some(request.original_binding()){return None}let value=self.sources.as_ref()?.channels.as_ref()?.outputs.slot_entry(self.channel)?.1.entry_at_rank(self.output)?.1.as_dictionary()?;Some(FlowCurrentOutput{identity:value.entry_at_rank(self.identity)?.1.as_atom()?.as_str()?,geometry:self.geometry,revision:self.revision,binding:self.binding?,origin:self.origin?})
  }
  pub fn into_preview_source(mut self,snapshot:&FlowHostSnapshot,revision:[u8;32],session:&impl FlowSourceBaseline,request:&FlowSourceReadRequest<'_>,cx:&mut StepContext<'_>)->Result<FlowPreviewSource,(FlowPreviewSourceTransfer,Self)>{
   if !matches!(request.target,FlowSourceReadTarget::Preview){return Err((FlowPreviewSourceTransfer::Refused(FlowSourceReadFailure::IncompatiblePort),self))}

@@ -3,7 +3,7 @@ use super::super::*;
 use super::{text::FundedText,reach::ReachWork,ports::port_at};
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,FlowMutation,FlowLayoutEntry,ChangeLayout,WidgetLayout,widget_id_for};
 use semio_os_flow_host_core::authoring_layout::{LayeredLayoutCursor,LayeredLayoutNode,LayeredLayoutEdge};
-use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
+use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalConstructionDemand,OriginalConstructionAdmission,admit_original_construction_settled};
 use semio_framework_value::{RetireOwned,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use std::mem::{ManuallyDrop,size_of};
@@ -16,8 +16,8 @@ fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 fn paid(cx:&mut StepContext<'_>,d:RetirementDemand)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.is_cancelled()||!retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}cx.consume_retained(receipt(d))?;cx.consume_fuel(1);Ok(true)}
 fn quote<T>(count:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{capacity_bytes:count.checked_mul(size_of::<T>()).ok_or_else(invalid)?,..fixed(size_of::<Option<Vec<T>>>())})}
-fn reserve<T>(slot:&mut Option<Vec<T>>,count:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
- if slot.is_some(){return Ok(true)}let d=quote::<T>(count)?;admit_original_construction(cx,slot,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},|_|{
+fn reserve<T>(slot:&mut Option<Vec<T>>,admission:&mut OriginalConstructionAdmission,count:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+ if slot.is_some(){return Ok(true)}let d=quote::<T>(count)?;admit_original_construction_settled(cx,admission,slot,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},1,|_,_|{
   let result=(||{let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original reorganization storage allocation refused"))?;let actual=output.capacity().checked_mul(size_of::<T>()).ok_or_else(invalid)?;Ok((output,RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})();RetainedWorkOutcome{result,work:1}
  })
 }
@@ -25,9 +25,9 @@ fn reserve<T>(slot:&mut Option<Vec<T>>,count:usize,cx:&mut StepContext<'_>)->Res
 struct Handle{node:usize,port:usize,input:bool}
 #[derive(RetireOwned)]
 struct Fields{order:Option<Vec<usize>>,scratch:Option<Vec<usize>>,reverse:Option<Vec<usize>>,handles:Option<Vec<Handle>>,handle_order:Option<Vec<usize>>,handle_scratch:Option<Vec<usize>>,nodes:Option<Vec<LayeredLayoutNode>>,edges:Option<Vec<LayeredLayoutEdge>>,entries:Option<Vec<FlowLayoutEntry>>,output:Option<Vec<FlowMutation>>,id:Option<String>,error:Option<FlowCoreError>,sort:Option<IndexOrder>,lex:Option<TextOrder>,endpoint:Option<EndpointWork>,kernel:Option<LayeredLayoutCursor>}
-pub(super) struct ReorganizeWork{fields:ManuallyDrop<Fields>,reach:Option<ReachWork>,text:Option<FundedText>,retirement:RetainedCloneClose,phase:u8,scan:usize,kept:usize,handles:usize,input:bool,port:usize,blocked:bool,from:Option<usize>,to:Option<usize>,a:usize,b:usize,selection:Option<(bool,bool)>,count:usize,closing:bool}
+pub(super) struct ReorganizeWork{admission:OriginalConstructionAdmission,fields:ManuallyDrop<Fields>,reach:Option<ReachWork>,text:Option<FundedText>,retirement:RetainedCloneClose,phase:u8,scan:usize,kept:usize,handles:usize,input:bool,port:usize,blocked:bool,from:Option<usize>,to:Option<usize>,a:usize,b:usize,selection:Option<(bool,bool)>,count:usize,closing:bool}
 impl ReorganizeWork{
- pub(super) fn new()->Self{Self{fields:ManuallyDrop::new(Fields{order:None,scratch:None,reverse:None,handles:None,handle_order:None,handle_scratch:None,nodes:None,edges:None,entries:None,output:None,id:None,error:None,sort:None,lex:Some(TextOrder::new()),endpoint:None,kernel:None}),reach:None,text:None,retirement:Default::default(),phase:0,scan:0,kept:0,handles:0,input:true,port:0,blocked:false,from:None,to:None,a:0,b:0,selection:None,count:0,closing:false}}
+ pub(super) fn new()->Self{Self{admission:Default::default(),fields:ManuallyDrop::new(Fields{order:None,scratch:None,reverse:None,handles:None,handle_order:None,handle_scratch:None,nodes:None,edges:None,entries:None,output:None,id:None,error:None,sort:None,lex:Some(TextOrder::new()),endpoint:None,kernel:None}),reach:None,text:None,retirement:Default::default(),phase:0,scan:0,kept:0,handles:0,input:true,port:0,blocked:false,from:None,to:None,a:0,b:0,selection:None,count:0,closing:false}}
  pub(super) fn next_demands(&self,source:&dyn FlowSnapshotSource,_infos:&HistoryFoldIndex<String,OperatorInfo>,_options:&DagLayoutOptions,copy:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return self.close_demands(copy)}Ok(match self.phase{
    0|1=>quote::<usize>(source.widgets().len())?,7 if self.fields.order.as_ref().is_some_and(|rows|rows.len()==self.kept)&&self.fields.reverse.is_none()=>quote::<usize>(source.widgets().len())?,
@@ -54,14 +54,14 @@ impl ReorganizeWork{
   if self.fields.id.is_some()&&self.text.is_none(){return Ok(true)}
   if self.text.is_none(){if paid(cx,fixed(size_of::<Option<FundedText>>()))?{self.text=Some(FundedText::new())}return Ok(false)}
   let text=self.text.as_mut().unwrap();if self.fields.id.is_none(){if text.ready(){text.take_into(&mut self.fields.id,cx)?;if self.fields.id.is_some(){text.begin_close()}}else{text.advance(source,cx)?;}return Ok(false)}
-  if !text.terminal_is_empty(){let d=text.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|text.close_step(grant))?;return Ok(false)}
+  if !text.terminal_is_empty(){let d=text.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_with_poll(cx,d,|body,effect|text.close_step(body,effect))?;return Ok(false)}
   if !paid(cx,fixed(size_of::<Option<FundedText>>()))?{return Ok(false)}self.text=None;Ok(true)
  }
  pub(super) fn step(&mut self,source:&dyn FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,options:&DagLayoutOptions,cx:&mut StepContext<'_>)->Result<Option<Result<Vec<FlowMutation>,FlowCoreError>>,OriginalTurnFailure>{
   if self.closing{return Err(invalid().into())}
   match self.phase{
-   0=>if reserve(&mut self.fields.order,source.widgets().len(),cx)?{self.phase=1},
-   1=>if reserve(&mut self.fields.scratch,source.widgets().len(),cx)?{self.phase=2},
+   0=>if reserve(&mut self.fields.order,&mut self.admission,source.widgets().len(),cx)?{self.phase=1},
+   1=>if reserve(&mut self.fields.scratch,&mut self.admission,source.widgets().len(),cx)?{self.phase=2},
    2=>{if self.scan<source.widgets().len(){if paid(cx,fixed(2*size_of::<usize>()+size_of::<Self>()))?{let index=self.scan;self.fields.order.as_mut().unwrap().push(index);self.fields.scratch.as_mut().unwrap().push(0);self.scan+=1}}else if paid(cx,fixed(size_of::<Self>()))?{self.phase=3}},
    3=>if paid(cx,fixed(size_of::<IndexOrder>()+size_of::<Self>()))?{self.fields.sort=Some(IndexOrder::new());self.phase=4},
    4=>{let Fields{order,scratch,sort,..}=&mut*self.fields;if sort.as_mut().unwrap().step(order.as_mut().unwrap(),scratch.as_mut().unwrap(),|index|Label::text(widget_id_for(&source.widgets()[index])),cx)?{self.phase=5;self.scan=0}},
@@ -69,19 +69,19 @@ impl ReorganizeWork{
     let Fields{order,lex,..}=&mut*self.fields;let rows=order.as_ref().unwrap();let left=widget_id_for(&source.widgets()[rows[self.kept-1]]);let right=widget_id_for(&source.widgets()[rows[self.scan]]);let lex=lex.as_mut().unwrap();if lex.result().is_none(){lex.step(Label::text(left),Label::text(right),cx)?;}else if paid(cx,fixed(size_of::<Self>()))?{self.blocked=lex.result()==Some(0);self.phase=6}
    },
    6=>{if self.fields.lex.as_mut().unwrap().reset(cx)?{if !self.blocked{let value=self.fields.order.as_ref().unwrap()[self.scan];self.fields.order.as_mut().unwrap()[self.kept]=value;self.kept+=1}self.scan+=1;self.phase=5}},
-   7=>{if self.fields.order.as_ref().unwrap().len()>self.kept{if paid(cx,fixed(size_of::<usize>()+size_of::<Vec<usize>>()))?{self.fields.order.as_mut().unwrap().pop();}}else if reserve(&mut self.fields.reverse,source.widgets().len(),cx)?{self.scan=0;self.phase=8}},
+   7=>{if self.fields.order.as_ref().unwrap().len()>self.kept{if paid(cx,fixed(size_of::<usize>()+size_of::<Vec<usize>>()))?{self.fields.order.as_mut().unwrap().pop();}}else if reserve(&mut self.fields.reverse,&mut self.admission,source.widgets().len(),cx)?{self.scan=0;self.phase=8}},
    8=>{if self.scan<source.widgets().len(){if paid(cx,fixed(size_of::<usize>()+size_of::<Self>()))?{self.fields.reverse.as_mut().unwrap().push(usize::MAX);self.scan+=1}}else if paid(cx,fixed(size_of::<Self>()))?{self.scan=0;self.phase=9}},
    9=>{if self.scan<self.kept{if paid(cx,fixed(size_of::<usize>()+size_of::<Self>()))?{let original=self.fields.order.as_ref().unwrap()[self.scan];self.fields.reverse.as_mut().unwrap()[original]=self.scan;self.scan+=1}}else if paid(cx,fixed(size_of::<Self>()))?{self.reset_ports();self.phase=10}},
    10=>{if self.scan>=source.widgets().len(){if paid(cx,fixed(size_of::<Self>()))?{self.phase=11}return Ok(None)}if paid(cx,fixed(size_of::<Self>()+size_of::<Handle>()))?{if self.fields.reverse.as_ref().unwrap()[self.scan]==usize::MAX{self.scan+=1}else{let(end,port)=port_at(&source.widgets()[self.scan],infos,self.input,self.port);if port.is_some(){self.handles=self.handles.checked_add(1).ok_or_else(invalid)?}self.port_step(end)}}},
-   11=>if reserve(&mut self.fields.handles,self.handles,cx)?{self.phase=12},
-   12=>if reserve(&mut self.fields.handle_order,self.handles,cx)?{self.phase=13},
-   13=>if reserve(&mut self.fields.handle_scratch,self.handles,cx)?{self.reset_ports();self.phase=14},
+   11=>if reserve(&mut self.fields.handles,&mut self.admission,self.handles,cx)?{self.phase=12},
+   12=>if reserve(&mut self.fields.handle_order,&mut self.admission,self.handles,cx)?{self.phase=13},
+   13=>if reserve(&mut self.fields.handle_scratch,&mut self.admission,self.handles,cx)?{self.reset_ports();self.phase=14},
    14=>{if self.scan>=source.widgets().len(){if paid(cx,fixed(size_of::<Self>()))?{self.phase=15}return Ok(None)}if paid(cx,fixed(size_of::<Self>()+size_of::<Handle>()+2*size_of::<usize>()))?{let node=self.fields.reverse.as_ref().unwrap()[self.scan];if node==usize::MAX{self.scan+=1}else{let(end,port)=port_at(&source.widgets()[self.scan],infos,self.input,self.port);if port.is_some(){let index=self.fields.handles.as_ref().unwrap().len();self.fields.handles.as_mut().unwrap().push(Handle{node,port:self.port,input:self.input});self.fields.handle_order.as_mut().unwrap().push(index);self.fields.handle_scratch.as_mut().unwrap().push(0);}self.port_step(end)}}},
    15=>if paid(cx,fixed(size_of::<IndexOrder>()+size_of::<Self>()))?{self.fields.sort=Some(IndexOrder::new());self.phase=16},
    16=>{let Fields{order,handles,handle_order,handle_scratch,sort,..}=&mut*self.fields;let ids=order.as_ref().unwrap();let rows=handles.as_ref().unwrap();if sort.as_mut().unwrap().step(handle_order.as_mut().unwrap(),handle_scratch.as_mut().unwrap(),|index|handle_label(source,infos,ids,rows[index]),cx)?{self.phase=17}},
-   17=>if reserve(&mut self.fields.nodes,self.kept.checked_add(1).ok_or_else(invalid)?,cx)?{self.scan=0;self.phase=18},
+   17=>if reserve(&mut self.fields.nodes,&mut self.admission,self.kept.checked_add(1).ok_or_else(invalid)?,cx)?{self.scan=0;self.phase=18},
    18=>{if self.scan<=self.kept{if paid(cx,fixed(size_of::<LayeredLayoutNode>()+size_of::<Self>()))?{self.fields.nodes.as_mut().unwrap().push(LayeredLayoutNode::new());self.scan+=1}}else if paid(cx,fixed(size_of::<Self>()))?{self.phase=19}},
-   19=>if reserve(&mut self.fields.edges,source.synapses().len(),cx)?{self.scan=0;self.phase=20},
+   19=>if reserve(&mut self.fields.edges,&mut self.admission,source.synapses().len(),cx)?{self.scan=0;self.phase=20},
    20=>{if self.scan>=source.synapses().len(){if paid(cx,fixed(size_of::<LayeredLayoutCursor>()+size_of::<Self>()))?{self.fields.kernel=Some(LayeredLayoutCursor::new());self.phase=27}return Ok(None)}if paid(cx,fixed(size_of::<Option<ReachWork>>()+size_of::<Self>()))?{self.reach=Some(ReachWork::new());self.phase=21}},
    21=>{let wire=&source.synapses()[self.scan];if let Some(blocked)=self.reach.as_mut().unwrap().step(source,&wire.from,&wire.to,true,cx)?{self.blocked=blocked;self.reach.as_mut().unwrap().begin_close();self.phase=22}},
    22=>{let reach=self.reach.as_mut().unwrap();if !reach.terminal_is_empty(){let demand=reach.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_with_effect(cx,demand,|grant,effect|reach.close_step(grant,effect))?;return Ok(None)}if paid(cx,fixed(size_of::<Option<ReachWork>>()+size_of::<Self>()+size_of::<EndpointWork>()))?{self.reach=None;if self.blocked{self.scan+=1;self.phase=20}else{self.fields.endpoint=Some(EndpointWork::new());self.phase=23}}},
@@ -92,12 +92,12 @@ impl ReorganizeWork{
    27=>{if paid(cx,fixed(LayeredLayoutCursor::maximum_step_copy_bytes()))?{let Fields{kernel,nodes,edges,..}=&mut*self.fields;if kernel.as_mut().unwrap().step(nodes.as_mut().unwrap(),edges.as_ref().unwrap(),options).map_err(|_|invalid())?{self.a=0;self.b=0;self.count=0;self.phase=29}}},
    29=>{if self.select(source,cx)?{if paid(cx,fixed(size_of::<Self>()))?{self.phase=31}}else if self.selection.is_some(){self.phase=30}},
    30=>if self.fields.lex.as_mut().unwrap().reset(cx)?{let(a,b)=self.selection.take().unwrap();self.a+=usize::from(a);self.b+=usize::from(b);self.count=self.count.checked_add(1).ok_or_else(invalid)?;self.phase=29},
-   31=>if reserve(&mut self.fields.entries,self.count,cx)?{self.a=0;self.b=0;self.phase=33},
+   31=>if reserve(&mut self.fields.entries,&mut self.admission,self.count,cx)?{self.a=0;self.b=0;self.phase=33},
    33=>{if self.select(source,cx)?{if paid(cx,fixed(size_of::<Self>()))?{self.phase=37}}else if self.selection.is_some(){self.phase=34}},
    34=>if self.fields.lex.as_mut().unwrap().reset(cx)?{self.phase=35},
    35=>{let id=self.selected(source)?.0;if self.copy_id(id,cx)?{self.phase=36}},
    36=>if paid(cx,fixed(size_of::<FlowLayoutEntry>()+size_of::<Self>()))?{let layout=self.selected(source)?.1;let id=self.fields.id.take().ok_or_else(invalid)?;self.fields.entries.as_mut().unwrap().push(FlowLayoutEntry{id,layout:Some(layout)});let(a,b)=self.selection.take().unwrap();self.a+=usize::from(a);self.b+=usize::from(b);self.phase=33},
-   37=>if reserve(&mut self.fields.output,usize::from(self.count>0),cx)?{self.phase=38},
+   37=>if reserve(&mut self.fields.output,&mut self.admission,usize::from(self.count>0),cx)?{self.phase=38},
    38=>if paid(cx,fixed(size_of::<FlowMutation>()+size_of::<Option<Vec<FlowLayoutEntry>>>()+size_of::<Self>()))?{let entries=self.fields.entries.take().unwrap();if !entries.is_empty(){self.fields.output.as_mut().unwrap().push(FlowMutation::ChangeLayout(ChangeLayout{entries}))}self.phase=39},
    39=>if paid(cx,fixed(size_of::<Option<Vec<FlowMutation>>>()+size_of::<Self>()))?{self.phase=40;return Ok(Some(Ok(self.fields.output.take().ok_or_else(invalid)?)))},
    41=>if paid(cx,fixed(size_of::<Option<FlowCoreError>>()+size_of::<Self>()))?{self.phase=40;return Ok(Some(Err(self.fields.error.take().ok_or_else(invalid)?)))},
@@ -114,7 +114,7 @@ impl ReorganizeWork{
  pub(super) fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
   if let Some(reach)=self.reach.as_mut(){if !reach.terminal_is_empty(){return reach.close_step(grant,effect)}let d=fixed(size_of::<Option<ReachWork>>());if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.reach=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1}}
-  if let Some(text)=self.text.as_mut(){if !text.terminal_is_empty(){return text.close_step(grant)}let d=fixed(size_of::<Option<FundedText>>());if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.text=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1}}
+  if let Some(text)=self.text.as_mut(){if !text.terminal_is_empty(){return poll_outcome(text.close_step(grant.maximum_copy_bytes,effect))}let d=fixed(size_of::<Option<FundedText>>());if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.text=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1}}
   if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(grant.maximum_copy_bytes,effect))}
   macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,effect);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
   owner!(order);owner!(scratch);owner!(reverse);owner!(handles);owner!(handle_order);owner!(handle_scratch);owner!(nodes);owner!(edges);owner!(entries);owner!(output);owner!(id);owner!(error);owner!(sort);owner!(lex);owner!(endpoint);owner!(kernel);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}

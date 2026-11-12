@@ -1,5 +1,6 @@
 //! 📥️ Small source-choice requests receive the actual native value through original retained copying.
 use super::*;
+use super::source_loan::replied;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::size_of;
@@ -18,10 +19,12 @@ pub struct EnumerationEdit {
     binding: Option<(usize, usize)>,
     phase: u8,
     closing: bool,
+    recover: bool,
+    work: u64,
 }
 impl Default for EnumerationEdit {
     fn default() -> Self {
-        Self { query: Default::default(), cursor: IfcValue::retained_clone_cursor(), received: None, retirement: Default::default(), request: None, binding: None, phase: 0, closing: false }
+        Self { query: Default::default(), cursor: IfcValue::retained_clone_cursor(), received: None, retirement: Default::default(), request: None, binding: None, phase: 0, closing: false, recover: false, work: 1 }
     }
 }
 fn invalid(message: &'static str) -> ValueError {
@@ -74,6 +77,7 @@ impl EnumerationEdit {
                     .borrow()
                     .project(request.choice, |snapshot| &query.result(snapshot, 0).expect("bound original enumeration").allowed.expect("admitted source enumeration")[request.choice]),
                 body.saturating_sub(1).min(4096),
+                self.work,
             )?;
             demand.copy_bytes += size_of::<u8>();
             return Ok(demand);
@@ -105,6 +109,7 @@ impl EnumerationEdit {
         if self.closing {
             return Err(invalid("IFC enumeration receiving is closing").into());
         }
+        self.work = cx.fuel_remaining();
         let demand = self.demands(source, snapshot, cx.retained_grant().maximum_copy_bytes)?;
         if cx.should_yield() || !retained_clone_grant_admits(cx.retained_grant(), demand) {
             return Ok(false);
@@ -158,14 +163,8 @@ impl EnumerationEdit {
         }
         if self.phase == 2 {
             let query = &self.query;
-            let turn = self.cursor.advance(
-                source.unwrap().borrow().project(request.choice, |snapshot| &query.result(snapshot, 0).expect("bound original enumeration").allowed.expect("admitted source enumeration")[request.choice]),
-                cx.retained_grant().maximum_copy_bytes.saturating_sub(1).min(4096),
-                RetainedCloneGrant { maximum_copy_bytes: cx.retained_grant().maximum_copy_bytes.saturating_sub(1), ..cx.retained_grant() },
-            );
-            cx.consume_fuel(turn.work);
-            let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
-            cx.consume_retained(step.progress())?;
+            let body = cx.retained_grant().maximum_copy_bytes.saturating_sub(1).min(4096);
+            source_loan::advance_cursor(cx, &mut self.cursor, source.unwrap().borrow().project(request.choice, |snapshot| &query.result(snapshot, 0).expect("bound original enumeration").allowed.expect("admitted source enumeration")[request.choice]), body, &mut self.recover)?;
             if self.cursor.output_ready() {
                 self.phase = 3;
                 cx.consume_retained(RetainedCloneProgress { copied_bytes: size_of::<u8>(), ..Default::default() })?;
@@ -177,11 +176,9 @@ impl EnumerationEdit {
             if !retained_clone_grant_admits(grant, self.cursor.take_demand()?) {
                 return Ok(false);
             }
-            let turn = self.cursor.take(grant);
-            cx.consume_fuel(turn.work);
-            let (taken, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(|| invalid("IFC enumeration source value is absent"))?;
-            cx.consume_retained(progress)?;
-            self.received = Some(taken);
+            if !source_loan::take_cursor(cx, &mut self.cursor, &mut self.received)? {
+                return Ok(false);
+            }
             self.phase = 4;
             cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })?;
             cx.consume_fuel(1);
@@ -206,7 +203,6 @@ impl EnumerationEdit {
     pub fn begin_close(&mut self) {
         self.closing = true;
         self.query.begin_close();
-        self.cursor.begin_close();
     }
     pub fn terminal_is_empty(&self) -> bool {
         self.binding.is_none() && self.query.terminal_is_empty() && self.cursor.terminal_is_empty() && self.received.is_none() && self.retirement.is_empty()
@@ -223,7 +219,8 @@ impl EnumerationEdit {
         }
         Ok(RetirementDemand { copy_bytes: size_of::<Option<(usize, usize)>>(), depth: 1, ..Default::default() })
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let grant = effect.grant();
         if !self.closing {
             return refused(invalid("IFC enumeration receiving close was not started"));
         }
@@ -235,18 +232,31 @@ impl EnumerationEdit {
             return idle_step(RetainedCloneStep::Progress(Default::default()));
         }
         if !self.cursor.terminal_is_empty() {
-            return self.cursor.close_step(grant);
+            let body = 4096;
+            let cursor = &mut self.cursor;
+            let reply = if self.recover { replied(effect, |effect, reply| cursor.recover_close_into(body, effect, reply)) } else { replied(effect, |effect, reply| cursor.close_into(body, effect, reply)) };
+            return match reply {
+                Ok(Some(result)) => {
+                    self.recover = false;
+                    RetainedWorkOutcome { result: result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error), work: effect.performed_work() }
+                }
+                Ok(None) => {
+                    self.recover = true;
+                    idle_step(RetainedCloneStep::Progress(Default::default()))
+                }
+                Err(error) => refused(error),
+            };
         }
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return settled(self.retirement.step_granted(4096, effect));
         }
         if self.received.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.received, grant), "IFC enumeration received owner is absent");
+            return owned_step(self.retirement.begin_granted(&mut self.received, effect), "IFC enumeration received owner is absent");
         }
         if !self.query.terminal_is_empty() {
-            return self.query.close_step(grant);
+            return charged(effect, self.query.close_step(grant));
         }
         self.binding = None;
-        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: effect.performed_work() }
     }
 }

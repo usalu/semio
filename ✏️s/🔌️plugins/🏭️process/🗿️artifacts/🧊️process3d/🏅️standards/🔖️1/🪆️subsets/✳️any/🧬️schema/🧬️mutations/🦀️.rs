@@ -136,6 +136,7 @@ pub enum Process3dMutation {
     ChangeStockLabel(change_stock_label::ChangeStockLabel),
     ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid),
 }
+dsl::original_pack_value_operation_receiving!(Process3dMutation);
 //#endregion 🔖️Mutations
 
 //#region 🧪️Tests

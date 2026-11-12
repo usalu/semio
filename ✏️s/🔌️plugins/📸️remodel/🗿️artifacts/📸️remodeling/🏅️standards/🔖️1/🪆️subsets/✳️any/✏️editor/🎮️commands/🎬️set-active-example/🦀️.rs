@@ -49,8 +49,8 @@ fn example_media_content(example_id: &str, next: &mut RemodelingSnapshot) {
         let asset = ImageAsset { mime: synthetic_orbit::FRAME_MIME.to_string(), data: base64_codec::base64_standard_encode(bytes), width, height };
         let Some(artifact) = durable_remodeling_asset(&asset) else { continue };
         let handle = store_remodeling_asset(asset_id, &asset);
-        next.durable_artifacts.insert(handle.child_id.clone(), artifact);
-        next.assets.insert(asset_id.to_string(), handle);
+        next.durable_artifacts.cold_insert(handle.child_id.clone(), artifact);
+        next.assets.cold_insert(asset_id.to_string(), handle);
     }
 }
 

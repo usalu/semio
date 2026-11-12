@@ -6,8 +6,6 @@ use semio_framework_value::NativeEncodeControl;
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
 #[path="🛫️encoding/🦀️.rs"]
 pub mod original_encoding;
-#[path="🫴️receiving/🦀️.rs"]
-mod receiving;
 
 fn native_length(snapshot: &TxtSnapshot, control: &mut SqliteSnapshotControl<'_>,mut native:Option<&mut NativeEncodeControl<'_>>) -> Result<usize, ValueError> {
     if let Some(native)=native.as_deref_mut(){native.checkpoint()?;}
@@ -40,33 +38,39 @@ use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 impl ArtifactSqliteSnapshotHost for TxtSnapshot {
     
 
-    fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<SqliteDatabase,store::NativeSnapshotFailure>{receiving::project_receiving(self,control,owner)}
-    fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{receiving::reconstruct_receiving(database,control,owner)}
-    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{let progress=owner.progress();receiving::validate_subset(dialect,control,SqliteSnapshotPhase::ProjectSnapshot,progress,||owner.native().checkpoint())}
-    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{let progress=owner.progress();receiving::validate_subset(dialect,control,SqliteSnapshotPhase::ReconstructSnapshot,progress,||owner.native().checkpoint())}
-
-
-    
-
-    
-
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
-        let prelude=(||->Result<_,ValueError>{
-            let limits=control.limits();control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+        use store::space_history::io::sqlite::snapshot::settlement::TypedFileSettlement;
+        use store::sqlite_snapshot::SqliteStageFailure as Stage;
+        use semio_framework_value::RetainedWorkOutcome;
+        let limits=control.limits();
+        let admitted=(||->Result<(usize,usize),ValueError>{
+            if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original snapshot output slot is occupied"))}
+            native_owner.native().checkpoint()?;control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
             let size=match payload{store::io_schema::IoPayload::Binary(bytes)=>bytes.len(),store::io_schema::IoPayload::Text(text)=>text.len()};
             if size>limits.max_file_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native text input exceeds file byte limit"))}
-            Ok(limits)
+            let before=native_owner.native().owned_bytes();
+            let maximum=before.checked_add(control.allocation_remaining_bytes().min(limits.max_value_bytes)).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?;
+            Ok((before,maximum))
         })();
-        let limits=match prelude{Ok(limits)=>limits,Err(error)=>return semio_framework_value::RetainedWorkOutcome{result:Err(error.into()),work:0}};
-        let mut progress=|event:NativeDecodeProgress|control.checkpoint(SqliteSnapshotPhase::DecodeNative,event.completed,event.total).is_ok();
-        native_owner.scoped_native(limits.max_value_bytes,&mut progress,|owner|match payload{
-            store::io_schema::IoPayload::Binary(bytes)=>Self::receive_pack_rows(bytes,owner,Some(limits.max_rows)),
-            store::io_schema::IoPayload::Text(text)=>Self::receive_text(text,owner,Some(limits.max_rows)),
-        })
+        let(before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return RetainedWorkOutcome{result:Err(Stage::NotStarted(error)),work:0}};
+        let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::DecodeNative);
+        let mut observer=|event:NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+        let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<crate::standards::v_utf_8::subsets::any::io::binary::snapshot::TextReceiving,store::os_store::serialization::SnapshotReceivingOutput<Self>,store::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
+            let before_work=native.actual_work();
+            let operation=match payload{
+                store::io_schema::IoPayload::Binary(bytes)=>Self::bind_pack_rows(bytes,slot,native,body,Some(limits.max_rows)),
+                store::io_schema::IoPayload::Text(text)=>Self::bind_text(text,slot,native,body,Some(limits.max_rows)),
+            }.map_err(store::NativeSnapshotFailure::from);
+            let settled=settlement.finish_body(native.owned_bytes());
+            *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
+            RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}
+        }));
+        let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+        RetainedWorkOutcome{result,work:turn.work}
     }
 
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {
-        original_encoding::encode(self,encoding,control,native_owner)
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_,'_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+        original_encoding::encode(self,encoding,control,native_owner,output)
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {

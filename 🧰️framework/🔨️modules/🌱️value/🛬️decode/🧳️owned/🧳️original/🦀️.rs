@@ -13,6 +13,7 @@ use crate::native_decoding::OriginalEffectAuthority;
 type Authority<I,T>=OriginalEffectAuthority<NativeSlotProducer<I,T,<T as NativeReceive<I>>::Receiver>>;
 /// 🪪️ The registered codec supplies its genuine typed input source and required receiver without a cold conversion.
 pub struct NativeReceivingOriginal<I:Sync+'static,T:NativeReceive<I>,A:RetireOwned+Sync=I>{original:ManuallyDrop<Option<OriginalInput<I,A>>>,receiver:semio_framework_value_native_storage::NativeOwnedStorage<T::Receiver>,retired_header:Option<Box<T::Receiver>>,output:ManuallyDrop<Option<T>>,retirement:RetainedCloneClose,action:semio_framework_value_native_receiver_protocol::NativeReceivingChild<OriginalReceivingPrimary>,authority:ManuallyDrop<Option<Authority<I,T>>>,backing:semio_framework_value_native_receiver_protocol::NativeReceiverBackingClose,close_reply:ManuallyDrop<Option<Result<RetainedCloneStep,crate::OriginalRetirementFailure>>>,close_route:Option<(crate::retained_clone::OriginalEffectInvocationIdentity,bool,u128)>,closing:bool}
+fn cover_progress(a:RetainedCloneProgress,b:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:a.copied_items.max(b.copied_items),copied_bytes:a.copied_bytes.max(b.copied_bytes),retained_capacity_bytes:a.retained_capacity_bytes.max(b.retained_capacity_bytes),released_bytes:a.released_bytes.max(b.released_bytes)}}
 fn add_progress(a:RetainedCloneProgress,b:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:a.copied_items.saturating_add(b.copied_items),copied_bytes:a.copied_bytes.saturating_add(b.copied_bytes),retained_capacity_bytes:a.retained_capacity_bytes.saturating_add(b.retained_capacity_bytes),released_bytes:a.released_bytes.saturating_add(b.released_bytes)}}
 fn original_seed<I:Sync+'static,T:NativeReceive<I>>(_:bool)->Result<T::Receiver,ValueError>{Ok(T::receiver())}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"native original receiving is not in the required funded phase")}
@@ -41,7 +42,7 @@ impl<I:Sync+'static,T:NativeReceive<I>,A:RetireOwned+Sync> NativeReceivingOrigin
      work+=turn.work;
      match turn.result{
       Err(mut failure)=>{let primary=match &mut failure{NativeReceivingFailure::Primary(primary)=>primary,NativeReceivingFailure::ValueEffect(error)=>&mut error.receiving,NativeReceivingFailure::RetirementEffect(error)=>&mut error.receiving,NativeReceivingFailure::ReceivingEffect(error)=>&mut error.receiving};primary.progress=add_progress(primary.progress,total);return Complete(RetainedWorkOutcome{result:Err(failure),work})},
-      Ok(step)=>{let progress=step.progress();let idle=turn.work==0&&progress==RetainedCloneProgress::default();total=add_progress(total,progress);if idle{return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(total)),work})}}
+      Ok(step)=>{let progress=step.progress();let idle=turn.work==0&&progress==RetainedCloneProgress::default();total=add_progress(total,progress);if let Ok(accepted)=control.construction_submitted(){total=cover_progress(total,accepted)}if idle{return Complete(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(total)),work})}}
      }
     }
    }

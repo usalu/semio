@@ -74,9 +74,16 @@ impl ArtifactCommandWork<semio_plugin::EditorApp<FlowPlayApp>> for FlowContribut
         if !flow_contributions_registry_receipt(cx,maintenance)?{
             return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#});
         }
+        match set_contributions::register(payload){Ok(())=>{},Err(fault)if fault.message=="flow.registry-retirement-full"=>return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#}),Err(fault)=>return Err(fault)}
         let instance_owner = self.instance_owner.as_ref().ok_or_else(|| Fault::from("flow-contributions-instance-owner"))?;
-        let install=instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| set_contributions::install(payload, session))?);
-        match install{Ok(_)=>{},Err(fault)if fault.message=="flow.registry-retirement-full"=>return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-retirement",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#}),Err(fault)=>return Err(fault)}
+        let grant = cx.retained_grant();
+        let invalidated = instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| owner.with_session(|session| -> Result<Option<bool>, Fault> {
+            let Some((outcome, _)) = cx.with_original_effect(grant, |_, effect| set_contributions::invalidate(session, effect)).map_err(|error| Fault::from(error.to_string()))? else { return Ok(None) };
+            outcome
+        })?)?;
+        if invalidated.is_none() {
+            return Ok(ArtifactCommandWorkStep::Progress{stage:"flow-contributions-invalidation",preview:br#"{"en":"Preparing operators","de":"Operatoren werden vorbereitet"}"#});
+        }
         self.completed = true;
         Ok(ArtifactCommandWorkStep::Complete(Emit::default()))
     

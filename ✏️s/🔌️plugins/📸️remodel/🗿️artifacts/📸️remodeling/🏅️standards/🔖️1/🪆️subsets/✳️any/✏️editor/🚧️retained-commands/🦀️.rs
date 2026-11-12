@@ -182,6 +182,7 @@ impl RemodelingWindowCommandWork {
 
 impl ArtifactCommandWork<EditorApp<RemodelingPlayApp>> for RemodelingWindowCommandWork {
     fn tool_id(&self) -> &'static str { self.tool_id }
+    fn terminal_frame_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
     fn extent(
         &self,
         command: &RemodelingCommand,
@@ -271,5 +272,3 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for RemodelingRetainedCommandJobF
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️RemodelingPlayApp
-
-semio_plugin::retained_command::terminal_frame_bound!(RemodelingWindowCommandWork);

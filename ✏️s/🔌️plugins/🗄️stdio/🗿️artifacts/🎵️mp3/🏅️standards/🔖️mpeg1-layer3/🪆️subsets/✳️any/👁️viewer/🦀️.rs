@@ -74,10 +74,10 @@ impl ArtifactViewer for Mp3Viewer {
         Some(crate::standards::mpeg1_layer3::subsets::any::io::playback::app_io())
     }
 
-    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use crate::standards::mpeg1_layer3::subsets::any::io::playback;
         if request.as_ref().is_some_and(|source|source.port!=playback::PORT_ID||source.tool_id!=playback::TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Stdio media source requires its exact published output port").into())}
-        playback::Mp3PlaybackExportJob::admit_original(request,body,cx)
+        playback::Mp3PlaybackExportJob::admit_original(request,body,construction,cx)
     }
 
 

@@ -323,7 +323,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub const BLOCK3D_DIALECT: semio_plugin::app::Dialect = semio_plugin::app::Dialect { artifact_kind: "s.block.block3d", standard: semio_plugin::app::StandardId("1"), subset: semio_plugin::app::SubsetId::ANY };
 
 extern crate self as semio_s_artifact_block_3d_model;
-extern crate semio_framework_pack as pack;
+extern crate pack;
 #[path = "../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
 pub mod binary_snapshot;
 #[path = "../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]

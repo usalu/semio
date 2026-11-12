@@ -604,7 +604,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
         _ => None,
     }).ok_or(GumballRefusal::MeshMissing)?;
     let infos = semio_os_flow::flow_neuron_kind_info_map();
-    let source = infos.get(&kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.clone()))?;
+    let source = infos.get().get(&kind).ok_or_else(|| GumballRefusal::KindUnavailable(kind.clone()))?;
     if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) {
         return Err(GumballRefusal::NotIndexedMesh);
     }
@@ -617,7 +617,7 @@ pub fn ensure_component_node(editor: &mut GraphEditor<'_>, ids: &[String], opera
     if kind == next_kind && parameter("mode") == Some(target.granularity) && parameter("selection") == Some(selection.as_str()) && (operation == "translate" || parameter("pivot") == Some("selection")) && inputs.len() == 1 && inputs[0].to_port == "mesh" {
         return Ok((target.widget.into(), target.granularity.into(), components));
     }
-    let output = infos.get(&next_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(next_kind.clone()))?;
+    let output = infos.get().get(&next_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(next_kind.clone()))?;
     let base = format!("{}__{operation}Components", target.widget);
     let mut id = base.clone();
     let mut suffix = 2;
@@ -757,7 +757,7 @@ pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, oper
     let selected_id = widget_id_from_instance_id(selected_id);
     let infos = semio_os_flow::flow_neuron_kind_info_map();
     let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { Widget::Neuron { id, neuron_kind, .. } if id == selected_id => Some(neuron_kind.clone()), _ => None }).ok_or(GumballRefusal::NoShapeSource)?;
-    let source_info = infos.get(&source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
+    let source_info = infos.get().get(&source_kind).ok_or_else(|| GumballRefusal::KindUnavailable(source_kind.clone()))?;
     let source_port = source_info.outputs.iter().find(|port| selected_port.is_none_or(|selected| port.name == selected) && port.value_types.iter().any(|kind| kind == "mesh" || kind == "geometry")).ok_or(GumballRefusal::NoShapeOutput)?;
     let mesh = source_port.value_types.iter().any(|kind| kind == "mesh");
     let transform_kind = if mesh { format!("brep.mesh.{operation}") } else { gumball_xform_kind(operation).to_string() };
@@ -769,7 +769,7 @@ pub fn ensure_gumball_node(editor: &mut GraphEditor<'_>, selected_id: &str, oper
         if matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == &transform_kind) && editor.snapshot().synapses.iter().any(|wire| wire.from == selected_id && wire.from_port == source_port.name && wire.to == transform_id) { return Ok(transform_id); }
         return Err(GumballRefusal::IdentifierOccupied);
     }
-    let transform_output = infos.get(&transform_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(transform_kind.clone()))?;
+    let transform_output = infos.get().get(&transform_kind).and_then(|info| info.outputs.first()).ok_or_else(|| GumballRefusal::TransformUnavailable(transform_kind.clone()))?;
     let (source_x, source_y) = editor.snapshot().layout.get(selected_id).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     let descriptor = semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::object([
         ("kind".to_string(), semio_framework_value::DslValue::String("neuron".into())),
@@ -797,18 +797,21 @@ impl GumballGestures{
   if !self.retirement.is_empty(){return self.retirement.demands(copy)}
   self.retirement.next_owner_demands::<semio_framework_artifact_flow_flow::OrderedMap<GumballGesture>>(self.open.is_some(),&None,copy)
  }
- pub fn close_original(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
-  use semio_framework_value::{RetainedWorkOutcome,RetainedCloneStep,RetainedCloneProgress};
-  if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-  let d=match self.retirement_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant)}
-  let turn=self.retirement.begin_granted(&mut self.open,grant);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}
+ pub fn close_original(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
+  let result=self.close_ladder(body,effect);semio_framework_value::RetirementPollExit::settle(effect,result)
+ }
+ fn close_ladder(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::RetirementPollExit>{
+  use semio_framework_value::{RetainedCloneStep,RetainedCloneProgress,RetirementPollExit};
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  let d=self.retirement_demands(body)?;
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if !self.closing{self.closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+  if !self.retirement.is_empty(){return RetirementPollExit::resume(self.retirement.step_granted(body,effect))}
+  self.retirement.begin_granted(&mut self.open,effect).result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))).map_err(RetirementPollExit::from)
  }
  pub fn terminal_is_empty(&self)->bool{self.retirement.is_empty()&&self.open.as_ref().is_none_or(|map|map.is_empty())}
  /// 🧊️ Standalone cold callers explicitly dispose their actual live gesture roots.
- pub fn retire_cold(mut self){while !self.terminal_is_empty(){let d=self.retirement_demands(usize::MAX).expect("cold gesture retirement quote");let g=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};self.close_original(g).result.expect("cold gesture retirement") ;}}
+ pub fn retire_cold(mut self){assert!(self.retirement.is_empty(),"cold gesture retirement cannot adopt a started original close");self.closing=true;if let Some(open)=self.open.take(){open.retire_cold()}}
 }
 impl GumballGesture{
  fn retire_cold(self){for(_,leaf)in self.entries{leaf.retire_cold()}}
@@ -829,6 +832,9 @@ mod retained_scratch_testing;
 #[path="📥️source/🪪️identity/🦀️.rs"]
 mod original_node_identity;
 pub use original_node_identity::{GumballOperation,GumballNodeIdentity,GumballNodeIdentityWork};
+
+#[path="📥️source/🏗️birth/🦀️.rs"]
+mod source_birth;
 
 #[path="📥️source/🌐️graph/🦀️.rs"]
 mod original_graph;

@@ -50,6 +50,7 @@ macro_rules! native_material_row{
    fn from_parts([id,name]:[semio_framework_value::shared_issuance::SealedShared<String>;2],numbers:[semio_framework_value::Number;$count])->Self{Self{id,name,$($field:numbers[$ordinal-2].as_f64()),+}}
   }
   impl semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource for $value{
+   fn query_schema_key<'reply,'source>(&'source self,query:semio_framework_value_native_owned::native_decoding::owned::NativeSchemaKeySource,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value_native_owned::native_decoding::owned::NativeSourceKeyReply<'reply,'source>)->Result<semio_framework_value_native_owned::native_decoding::owned::NativeSourceKeyReplyComplete<'reply>,semio_framework_value::ValueError>{semio_framework_value_native_owned::native_decoding::owned::answer_schema_key(self,query,effect,reply)}
    fn query_scalar<'reply>(&self,query:$crate::Query,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::Reply<'reply>)->$crate::Done<'reply>{$crate::record_answer($crate::object_answer(query,2+$count),effect,reply)}
    fn recover_scalar<'reply>(&self,_query:$crate::Query,_effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::Reply<'reply>)->$crate::Done<'reply>{$crate::recover_answer(reply)}
    fn as_source(&self)->&dyn semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource{self}

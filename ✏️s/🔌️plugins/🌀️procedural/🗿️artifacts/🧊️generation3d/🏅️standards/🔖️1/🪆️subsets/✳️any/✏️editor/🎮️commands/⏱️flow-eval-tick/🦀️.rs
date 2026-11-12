@@ -65,6 +65,7 @@ pub fn evaluate(
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
+    effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
     let generate = window_kind_id == semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW;
     let mut patched = None;
@@ -72,14 +73,14 @@ pub fn evaluate(
         let mut state = doc.snapshot.generation.as_state().clone();
         state.selected_generation_id.clone_from(&cfg.snapshot.selected_generation_id);
         if semio_framework_artifact_playbook_playbook::selected_generation(&state).is_none() {
-            session.begin_window_tick(window_id, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
-            session.note_window_tick_outcome(window_id, false, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
+            session.begin_window_tick(window_id, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
+            session.note_window_tick_outcome(window_id, false, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
             return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, preview_eval::preview_eval_publication_for(session, &doc.snapshot.host_snapshot, retained_eval)));
         }
         patched = Some(semio_s_artifact_procedural_3d_model::generation_host_snapshot_for(&doc.snapshot.host_snapshot, &state, state.selected_generation_id.as_deref()));
     }
     let host_snapshot = patched.as_ref().unwrap_or(&doc.snapshot.host_snapshot);
-    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
+    let outcome = preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, preview_eval::preview_tolerance(&cfg.snapshot.lod_mode), session, retained_eval, turn_started_us, effect).map_err(|error| Fault::from(error.to_string()))?;
     let publication = preview_eval::preview_eval_publication_for(session, host_snapshot, retained_eval);
     if let Some(displaced) = patched {
         displaced.retire_cold();
@@ -110,14 +111,15 @@ pub fn continue_inline(
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
+    effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
 ) -> Result<(Emit<Generation3dMutation, Generation3dConfigMutation>, FlowEvalPublication), Fault> {
     if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
         return Ok((Emit { ui_scope: chain_ui_scope(window_kind_id, false), ..Default::default() }, FlowEvalPublication::Retained));
     }
-    session.arm_window_tick(window_id, doc.retained_grant()?).map_err(|error| Fault::from(error.to_string()))?;
-    evaluate(window_id, window_kind_id, doc, cfg, session, retained_eval, turn_started_us)
+    session.arm_window_tick(window_id, effect.grant()).map_err(|error| Fault::from(error.to_string()))?;
+    evaluate(window_id, window_kind_id, doc, cfg, session, retained_eval, turn_started_us, effect)
 }
 
-pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    evaluate(&payload.window_id, &payload.window_kind_id, doc, cfg, session, None, None).map(|(emit, _)| emit)
+pub fn handle(_payload: &FlowEvalTick, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    Err(Fault::from("generation3d-flow-eval-tick-requires-retained-route"))
 }

@@ -7,8 +7,8 @@ use semio_s_artifact_puzzle_2d_mutations::standards::v1::subsets::any::schema::m
 use semio_s_artifact_puzzle_2d_mutations::standards::v1::subsets::any::schema::mutations::ChangeTargetRegionHidden;
 use semio_s_artifact_puzzle_2d_mutations::standards::v1::subsets::any::schema::mutations::ChangeTargetRegionLocked;
 use semio_s_artifact_puzzle_2d_mutations::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
-use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
-use semio_framework_value::{paged::PagedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
+use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep,pay}};
+use semio_framework_value::{paged::PagedUtf8,OriginalRetirementPoll,RetainedAllocationEffect,RetirementPollExit,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum Puzzle2dFlagDisposition {Changed,NoOp,TargetMissing}
@@ -89,13 +89,14 @@ impl Puzzle2dFlagIntent for ChangeTargetRegionLocked {
 pub struct Puzzle2dFlagPreparationCursor<T:Puzzle2dFlagIntent> {source:Option<RetainedCloneBinding>,mutation:Option<RetainedCloneBinding>,lookup:Puzzle2dLookupCursor,index:Option<usize>,phase:u8,output:Option<Puzzle2dFlagPlan>,spent:bool,closing:bool,kind:std::marker::PhantomData<T>}
 impl<T:Puzzle2dFlagIntent> Default for Puzzle2dFlagPreparationCursor<T>{fn default()->Self{Self{source:None,mutation:None,lookup:Puzzle2dLookupCursor::new(T::SCOPE),index:None,phase:0,output:None,spent:false,closing:false,kind:std::marker::PhantomData}}}
 impl<T:Puzzle2dFlagIntent> Puzzle2dFlagPreparationCursor<T>{
- pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,grant:RetainedCloneGrant)->Result<Puzzle2dFlagPreparationStep,ValueError>{
+ pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,effect:&mut RetainedAllocationEffect<'_>)->Result<Puzzle2dFlagPreparationStep,ValueError>{
+  let grant=effect.grant();
   if self.closing||self.spent{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"flag preparation is closing or spent"))}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(Puzzle2dFlagPreparationStep::Pending(Default::default()))}
-  if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(Puzzle2dFlagPreparationStep::Pending(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(Puzzle2dFlagPreparationStep::Pending(progress))}
+  if let Some(progress)=source.bind(&mut self.source,effect).result?{return Ok(Puzzle2dFlagPreparationStep::Pending(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(Puzzle2dFlagPreparationStep::Pending(progress))}
   if let Some(plan)=self.output{return Ok(Puzzle2dFlagPreparationStep::Complete{plan,progress:Default::default()})}
-  if self.phase==0{return match self.lookup.advance(source,mutation.project(1,T::identifier),grant)?{Puzzle2dLookupStep::Pending(progress)=>Ok(Puzzle2dFlagPreparationStep::Pending(progress)),Puzzle2dLookupStep::Complete{location,progress}=>{self.index=location.map(|value|value.outer);self.lookup.take();self.phase=1;Ok(Puzzle2dFlagPreparationStep::Pending(progress))}}}
-  let bytes=2*size_of::<Option<bool>>();if grant.maximum_copy_bytes<bytes{return Ok(Puzzle2dFlagPreparationStep::Pending(Default::default()))}
+  if self.phase==0{return match self.lookup.advance(source,mutation.project(1,T::identifier),effect)?{Puzzle2dLookupStep::Pending(progress)=>Ok(Puzzle2dFlagPreparationStep::Pending(progress)),Puzzle2dLookupStep::Complete{location,progress}=>{self.index=location.map(|value|value.outer);self.lookup.take();self.phase=1;Ok(Puzzle2dFlagPreparationStep::Pending(progress))}}}
+  let bytes=2*size_of::<Option<bool>>();if grant.maximum_copy_bytes<bytes||!pay(effect)?{return Ok(Puzzle2dFlagPreparationStep::Pending(Default::default()))}
   let previous=self.index.map(|index|T::previous(source.get(),index));let disposition=match previous{None=>Puzzle2dFlagDisposition::TargetMissing,Some(previous)if previous==mutation.get().next()=>Puzzle2dFlagDisposition::NoOp,Some(_)=>Puzzle2dFlagDisposition::Changed};
   let plan=Puzzle2dFlagPlan{disposition,index:self.index,previous};self.output=Some(plan);Ok(Puzzle2dFlagPreparationStep::Complete{plan,progress:RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}})
  }
@@ -105,12 +106,14 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagPreparationCursor<T>{
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.output.is_some(){return Ok(0)}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_capacity_byte_demand(body)}RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.mutation},body)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if self.output.is_some(){return Ok(0)}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_release_byte_demand()}RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.mutation})}
  pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if self.output.is_some(){return Ok(1)}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_depth_demand()}RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.mutation})}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if !self.closing{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"flag preparation closure was not started"))}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let result=self.close_stepped(effect);RetirementPollExit::settle(effect,result)}
+ fn close_stepped(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  let grant=effect.grant();
+  if !self.closing{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"flag preparation closure was not started").into())}
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if self.output.is_some(){let bytes=size_of_val(&self.output);if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))}
-  if !self.lookup.terminal_is_empty(){return self.lookup.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
-  let step=RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+  if self.output.is_some(){let bytes=size_of_val(&self.output);if grant.maximum_copy_bytes<bytes||!pay(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))}
+  if !self.lookup.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(self.lookup.close_step(effect))?.progress()))}
+  let step=RetirementPollExit::resume(RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant.maximum_copy_bytes,effect))?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.lookup.terminal_is_empty()&&self.source.is_none()&&self.mutation.is_none()}
 }

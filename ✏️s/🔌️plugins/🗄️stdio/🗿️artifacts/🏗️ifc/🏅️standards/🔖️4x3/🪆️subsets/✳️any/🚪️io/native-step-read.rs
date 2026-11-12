@@ -68,8 +68,10 @@ impl Port<'_, '_, '_> {
 /// 📥️ Reads actual TXT line storage under the caller's original decoder and five-axis physical wallet.
 pub fn read(source: &TxtSnapshot, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<IfcSnapshot, NativeStepReadError> {
     let offset = Cell::new(0);
-    let result = owner.receive::<parse::Receiving, IfcSnapshot>(|slot, native, body| {
-        native.scoped_stage(|native| {
+    let mut output = None;
+    let turn = owner.receive::<parse::Receiving, IfcSnapshot, semio_os_kernel::NativeSnapshotFailure>(&mut output, &mut |slot, published, _marker, _unwind, native, body| semio_os_kernel::native_snapshot_turn(|work| {
+        work.performed();
+        let value = native.scoped_stage(|native| {
             native.begin_stage(0)?;
             body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<parse::Receiving>(), maximum_depth: 2, ..Default::default() })?;
             *slot = Some(parse::Receiving::default());
@@ -110,8 +112,11 @@ pub fn read(source: &TxtSnapshot, owner: &mut NativeSnapshotDecodeOwner<'_, '_>)
             }
             port.effect(size_of::<IfcSnapshot>(), || ())?;
             Ok(state.snapshot.take().unwrap())
-        })
-    });
+        })?;
+        *published = Some(value);
+        Ok(())
+    }));
+    let result = turn.result.map_err(|failure| ValueError::new(failure.kind(), failure.message().to_string())).and_then(|()| output.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "STEP read published no snapshot")));
     result.map_err(|cause| NativeStepReadError { cause, offset: offset.get() })
 }
 #[cfg(test)]

@@ -9,38 +9,38 @@ use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMuta
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot;
 use crate::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_framework_2d_compute::EngineHandles;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactBoundedFirstStepProof;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactStoreInitializationJob;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactBoundedFirstStepProof;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactStoreInitializationJob;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
 use semio_ui_locale::Label;
 use semio_s_artifact_stdio_contract::editing;
 
@@ -121,10 +121,10 @@ fn jpg_any_editor_retained_reduce(
     command: &JpgAnyEditCommand,
     _snapshot: &JpgSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<JpgAnyEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<JpgAnyEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<JpgMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
@@ -155,7 +155,7 @@ impl ToolJobFactory for JpgAnyEditorExampleFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         ToolExecutionContract::bounded_first_step(STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500)
     }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for JpgAnyEditorExampleFactory {
     type Owner = EditorApp<JpgAnyEditor>;
@@ -179,7 +179,7 @@ impl ToolJobFactory for JpgAnyPaintRegionFactory {
     fn payload_schema_id(&self) -> &str { paint_region::PAYLOAD_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { jpgany_editor_paint_region_execution_contract() }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: paint_region::MAXIMUM_RAW_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: paint_region::MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for JpgAnyPaintRegionFactory {
     type Owner = EditorApp<JpgAnyEditor>;
@@ -193,7 +193,7 @@ pub struct JpgAnyEditor;
 
 impl ArtifactEditor for JpgAnyEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = JpgSnapshot;
@@ -211,19 +211,19 @@ impl ArtifactEditor for JpgAnyEditor {
     const DIALECT: Dialect = JPG_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JPG_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.jpg@jfif-1.01", extension: ".jpg", media_type: "image/jpeg", binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.jpg@jfif-1.01", extension: ".jpg", media_type: "image/jpeg", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
         if !bytes.ends_with(&[0xff, 0xd9]) {
-            return Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "JPEG input must end at its EOI marker".into()));
+            return Err(semio_plugin::MediaError::Payload("artifact:natural".into(), "JPEG input must end at its EOI marker".into()));
         }
-        crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
+        crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
@@ -241,22 +241,22 @@ impl ArtifactEditor for JpgAnyEditor {
         registry.register(JpgAnyPaintRegionFactory::new(registry.controller_id()))?;
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) {
             return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx);
         }
         if original.tool_id == paint_region::ACTION_ID {
-            if jpg_any_editor_command_id(&original.command) != original.tool_id { return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-paint-region-tool-mismatch").into()); }
-            return semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, jpg_any_editor_command_id, paint_region::MAXIMUM_RAW_BYTES, paint_region::CAPACITY.work_items(), false, |request| paint_region::PaintRegionWork::new());
+            if jpg_any_editor_command_id(&original.command) != original.tool_id { return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-paint-region-tool-mismatch").into()); }
+            return semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, jpg_any_editor_command_id, paint_region::MAXIMUM_RAW_BYTES, paint_region::CAPACITY.work_items(), false, |request| paint_region::PaintRegionWork::new());
         }
         if !STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if jpg_any_editor_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, jpg_any_editor_command_id, STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, jpg_any_editor_retained_reduce, jpg_any_editor_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, jpg_any_editor_command_id, STDIO_JPG_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, jpg_any_editor_retained_reduce, jpg_any_editor_retained_extent))
     }
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
@@ -267,7 +267,7 @@ impl ArtifactEditor for JpgAnyEditor {
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
     ) -> Result<ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_framework_plugin::bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(semio_plugin::bounded_document_store_initialization_job::<_,_,::semio_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, STDIO_JPG_DOCUMENT_SCHEMA, operation, generation, actor))
     }
     fn command_id(command: &Self::Command) -> &'static str {
         jpg_any_editor_command_id(command)
@@ -278,7 +278,7 @@ impl ArtifactEditor for JpgAnyEditor {
         jpg_any_editor_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_plugin::Fault>>{Some(||{
         Ok(crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot())
     })}
 
@@ -286,8 +286,8 @@ impl ArtifactEditor for JpgAnyEditor {
         command: &Self::Command,
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
-        _interaction: &semio_framework_plugin::app::InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _interaction: &semio_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -298,12 +298,12 @@ impl ArtifactEditor for JpgAnyEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.jpg@jfif-1.01/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
-                .map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot, view_state.locale).map(semio_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.jpg@jfif-1.01/*#editor", &semio_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY))
+                .map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -323,7 +323,7 @@ impl editing::SnapshotEditingEditor for JpgAnyEditor {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_jpg_any_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_jpg_any_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(JPG_ANY_DIALECT)
         .document(["semio", "jpg"])
         .icon_id("image")
@@ -353,7 +353,7 @@ pub mod artifact_items_7 {
 use crate::{native_codecs};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)

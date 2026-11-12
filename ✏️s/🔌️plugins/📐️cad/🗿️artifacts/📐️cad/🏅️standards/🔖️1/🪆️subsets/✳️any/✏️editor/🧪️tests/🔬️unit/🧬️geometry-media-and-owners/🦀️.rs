@@ -212,7 +212,7 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
         if exported_mesh.positions.len() / 3 != positions.len() || exported_bounds != bounds { return Err("OBJ export substituted geometry outside the exact retained topology child".into()); }
         let mut unavailable = pane.geometry(CadPaneId::Shape).cloned().ok_or("owned pane geometry projection absent")?;
         unavailable.owned_breps.clear();
-        unavailable.owned_meshes.insert(geometry_id.clone(), std::sync::Arc::new(semio_plugin::MeshData::default()));
+        unavailable.owned_meshes.insert(geometry_id.clone(), semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::new(semio_plugin::MeshData::default())));
         if !object_mesh_data(object, Some(&unavailable)).positions.is_empty() || !semio_s_artifact_cad_cad_inferences::pane_world_solids(&mut kernel, std::slice::from_ref(object), Some(&unavailable)).is_empty() { return Err("unavailable declared topology was replaced by invented typology geometry".into()); }
         drop(panes);
         drop(children);

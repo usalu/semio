@@ -85,6 +85,7 @@ pub enum MdMutation {
     /// ranges touch and their neighbours are reparsed from the edited source, every other block stays.
     SpliceSource(splice_source::SpliceSource),
 }
+dsl::original_pack_value_operation_receiving!(MdMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

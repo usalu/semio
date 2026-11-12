@@ -3,7 +3,7 @@
 use semio_framework_2d_compute::EngineHandles;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_plugin::app::InteractionView;
-use semio_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, MeshWindowKit, ModeDefinition, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
+use semio_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, MeshWindowKit, WindowKit, ModeDefinition, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use semio_ui_locale::{Label, LocalizedLabel};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;

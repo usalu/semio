@@ -77,19 +77,14 @@ impl ArtifactSqliteSnapshotHost for XlsxSnapshot {
         }
     }
 
-    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner: &mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {
-        semio_os_kernel::native_snapshot_turn(|work| { work.performed(); native::encode(self, encoding, control, native_owner.native()).map_err(Into::into) })
+    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        let limits=control.limits();
+        store::space_history::io::sqlite::snapshot::settlement::encode_typed(control,native_owner,output,|native|crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self,encoding,limits,native))
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, semio_os_kernel::NativeSnapshotFailure> {
-        native_owner.receive::<Self, Self, semio_os_kernel::NativeSnapshotFailure>(|slot, native_control, body| semio_os_kernel::native_snapshot_turn(|work| { work.performed(); (|| -> Result<Self, ValueError> {
-            let value = native::decode(payload, control, native_control)?;
-            let owner = semio_framework_value::DecodedValue::new(value, |value: Self| value.retire_sqlite_snapshot());
-            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
-            *slot = Some(owner.take());
-            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() })?;
-            Ok(slot.take().expect("received snapshot slot"))
-        })().map_err(Into::into) }))
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        let limits=control.limits();
+        store::space_history::io::sqlite::snapshot::settlement::decode_typed(control,native_owner,output,|native|crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload,limits,native))
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {

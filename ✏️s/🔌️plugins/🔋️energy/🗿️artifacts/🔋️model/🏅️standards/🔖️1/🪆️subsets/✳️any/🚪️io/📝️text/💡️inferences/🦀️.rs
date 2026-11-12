@@ -59,12 +59,10 @@ impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
         })
     }
 }
-/// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of how many
-/// fields the canonical empty model carries. Same "match `infer` of the real default, don't derive
-/// structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️.rs`.
+/// 🌱 The census before any snapshot exists is the zero census; the native empty state only exists through its funded genesis, so no synchronous empty snapshot can be inferred here.
 impl Default for EnergyModelInference {
     fn default() -> Self {
-        Self { entries: energy_model_entries_of(&crate::model::Model::default()) }
+        Self { entries: crate::entries::EnergyModelEntries::default() }
     }
 }
 }

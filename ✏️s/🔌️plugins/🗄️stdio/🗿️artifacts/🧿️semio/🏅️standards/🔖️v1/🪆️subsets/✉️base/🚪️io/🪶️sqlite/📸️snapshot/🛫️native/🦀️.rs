@@ -32,32 +32,39 @@ impl Writer<'_,'_,'_>{
 }
 struct Word{bytes:[u8;384],length:usize}
 impl std::fmt::Write for Word{fn write_str(&mut self,value:&str)->std::fmt::Result{let end=self.length.checked_add(value.len()).filter(|end|*end<=self.bytes.len()).ok_or(std::fmt::Error)?;self.bytes[self.length..end].copy_from_slice(value.as_bytes());self.length=end;Ok(())}}
-/// 🧊️ Original output octets and nested admission recipient stay together through success, cancellation and refusal.
-#[derive(semio_framework_value::RetireOwned)]
-#[value(send_only)]
-struct EncodingPrefix{bytes:Vec<u8>,admission:NativeDecodeRetirementRecipient}
-impl EncodingPrefix{fn empty()->Self{Self{bytes:Vec::new(),admission:NativeDecodeRetirementRecipient::new()}}}
-pub fn encode(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encode_fields(encoding,text_preamble,binary_token,control,false,|_|Ok(()),fields,native_owner)}
-/// 🎟️ Uses the caller's physical ledger after the owner completes explicit SQL admission inside the retained prefix.
-pub fn encode_admitted(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,admit:impl FnOnce(&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{encode_fields(encoding,text_preamble,binary_token,control,true,admit,fields,native_owner)}
-fn encode_fields(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,semantic_admitted:bool,admit:impl FnOnce(&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{let native_control=native_owner.native();
+/// 🎟️ Emits one measured native payload; the owner's explicit SQL admission runs before any original native work.
+pub fn encode(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<super::native_decoding::Output<store::io::IoPayload>>)->super::native_decoding::Outcome{encode_fields(encoding,text_preamble,binary_token,control,false,|_|Ok(()),fields,native_owner,output)}
+/// 🎟️ Uses the caller's physical ledger after the owner completes explicit SQL admission before the retained prefix.
+pub fn encode_admitted(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,admit:impl FnOnce(&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<super::native_decoding::Output<store::io::IoPayload>>)->super::native_decoding::Outcome{encode_fields(encoding,text_preamble,binary_token,control,true,admit,fields,native_owner,output)}
+fn encode_fields(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,control:&mut SqliteSnapshotControl<'_>,semantic_admitted:bool,admit:impl FnOnce(&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>,fields:impl Fn(&mut Writer<'_,'_,'_>,SnapshotEncoding)->Result<(),ValueError>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<super::native_decoding::Output<store::io::IoPayload>>)->super::native_decoding::Outcome{
+ use store::space_history::io::sqlite::snapshot::settlement::TypedFileSettlement;
+ use store::sqlite_snapshot::SqliteStageFailure as Stage;
+ use semio_framework_value::RetainedWorkOutcome;
  let limits=control.limits();let primitive_value_limit=(!semantic_admitted).then_some(limits.max_value_bytes);
- owned_workspace(control,SqliteSnapshotPhase::EncodeNative,EncodingPrefix::empty,|prefix,control|{
- control.with_retirement_child(&mut prefix.admission,admit)?;
- control.allocation_stage_native(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
- let native_before=native_control.owned_bytes();
-    let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};let result=native_control.scoped_maximum(allowance,|native| {native.scoped_observer(&mut |event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total),|native|{
-
- let result=(||->Result<(),ValueError>{
- let envelope=|writer:&mut Writer<'_,'_,'_>|{if encoding==SnapshotEncoding::Text{writer.bytes(text_preamble.as_bytes())?;}else{writer.bytes(b"\x89SEM\r\n\x1a\n")?;writer.bytes(&u32::try_from(binary_token.len()).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Semio native envelope width"))?.to_le_bytes())?;writer.bytes(binary_token.as_bytes())?;}fields(writer,encoding)};
- native.begin_stage(0)?;let mut measure=Writer{control:native,output:None,count:0,entities:0,limits,primitive_value_limit};envelope(&mut measure)?;let count=measure.count;
- native.begin_stage(count)?;prefix.bytes=native.allocate_vec::<u8>(count)?;let mut writer=Writer{control:native,output:Some(&mut prefix.bytes),count:0,entities:0,limits,primitive_value_limit};envelope(&mut writer)?;if writer.count!=count||prefix.bytes.len()!=count{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Semio native measured and emitted sizes differ"))}native.checkpoint()?;if encoding==SnapshotEncoding::Text{std::str::from_utf8(&prefix.bytes).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"Semio native output is not UTF-8"))?;}Ok(())
+ let admitted=(||->Result<(usize,usize),ValueError>{
+  if output.is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"original snapshot output slot is occupied"))}
+  native_owner.native().checkpoint()?;control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;admit(control)?;
+  let before=native_owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?;Ok((before,maximum))
  })();
- result
-    })});
-    (result,native_control.owned_bytes().saturating_sub(native_before))
- })?
- },|prefix|{let bytes=std::mem::take(&mut prefix.bytes);match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(bytes).expect("native output was validated as UTF-8"))}})
+ let(before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return super::native_decoding::refused(error)};
+ let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::EncodeNative);
+ let mut observer=|event:semio_framework_value::native_encoding::NativeEncodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+ let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<Vec<u8>,super::native_decoding::Output<store::io::IoPayload>,store::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
+  let before_work=native.actual_work();
+  let operation=(||->Result<store::io::IoPayload,ValueError>{
+   let envelope=|writer:&mut Writer<'_,'_,'_>|{if encoding==SnapshotEncoding::Text{writer.bytes(text_preamble.as_bytes())?;}else{writer.bytes(b"\x89SEM\r\n\x1a\n")?;writer.bytes(&u32::try_from(binary_token.len()).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Semio native envelope width"))?.to_le_bytes())?;writer.bytes(binary_token.as_bytes())?;}fields(writer,encoding)};
+   native.begin_stage(0)?;let mut measure=Writer{control:&mut *native,output:None,count:0,entities:0,limits,primitive_value_limit};envelope(&mut measure)?;let count=measure.count;
+   native.begin_stage(count)?;*slot=Some(Vec::new());let prefix=slot.as_mut().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"native output prefix is absent"))?;body.allocate_encode_vec_into(native,count,prefix,1)?;
+   let mut writer=Writer{control:&mut *native,output:Some(&mut *prefix),count:0,entities:0,limits,primitive_value_limit};envelope(&mut writer)?;if writer.count!=count||prefix.len()!=count{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Semio native measured and emitted sizes differ"))}native.checkpoint()?;
+   let bytes=slot.take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"native output prefix was lost"))?;
+   Ok(match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(bytes).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"Semio native output is not UTF-8"))?)})
+  })().map_err(store::NativeSnapshotFailure::from);
+  let settled=settlement.finish_body(native.owned_bytes());
+  *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
+  RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}
+ }));
+ let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+ RetainedWorkOutcome{result,work:turn.work}
 }
 /// 🧷️ Emits a record-pack body as the binary field section of one measured native payload; the body is built under the writer's own allocation control, so its bytes are priced and cancellable before they are copied.
 pub fn record_binary<S:crate::SemioRecordPack>(snapshot:&S,writer:&mut Writer<'_,'_,'_>)->Result<(),ValueError>{writer.entities(1)?;let body=snapshot.record_binary(&mut *writer.control)?;writer.bytes(&body)}

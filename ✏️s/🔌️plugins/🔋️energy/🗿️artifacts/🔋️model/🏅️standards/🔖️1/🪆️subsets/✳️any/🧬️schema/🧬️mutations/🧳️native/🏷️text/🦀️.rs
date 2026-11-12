@@ -1,10 +1,9 @@
 //! 🏷️ Original row names validate, compare and prepare bounded text before replacing one immutable row path.
-use crate::{snapshot::{original::EnergyModelSnapshot,state::fields::{EntityRow,RetainedEntityLookup,RetainedSealedField,RetainedBranchProjection}},diff::original::EnergyModelDiff,row::{RowBranchPath,RowBranchPreparation},scalar::{CursorClose,cursor_demand,close_cursor,birth,invalid,scalar,nested,child,add,tag,receipt}};
-use semio_framework_value::{RetirementDemand,ValueError,RetainedOwnedProjection,shared_issuance::SealedShared,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneSource,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use crate::{snapshot::{original::EnergyModelSnapshot,state::fields::{EntityRow,RetainedEntityLookup,RetainedSealedField,RetainedBranchProjection}},diff::original::EnergyModelDiff,row::RowBranchPath,scalar::{birth,invalid,scalar,nested,child,add,receipt}};
+use semio_framework_value::{RetirementDemand,ValueError,RetainedOwnedProjection,shared_issuance::SealedShared,retained_clone::{RetainedCloneRef,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_persistent::{RetainedEqualityOwner,list::persistent::PersistentList};
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
-use protocol::{RetainedFieldPreparation,retained_mutation_demand_fits};
-use std::mem::{size_of,ManuallyDrop};
+use std::mem::size_of;
 #[path="🔎️name/🦀️.rs"]mod name;
 use name::NameLookup;
 /// 🧭️ The authored name policy preserves the collection's actual uniqueness rule and sealed string field.

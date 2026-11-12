@@ -54,6 +54,7 @@ pub enum DwgMutation {
     SetPreview(set_preview::SetPreview),
     SetApplicationHistory(set_application_history::SetApplicationHistory),
 }
+dsl::original_pack_value_operation_receiving!(DwgMutation);
 
 
 

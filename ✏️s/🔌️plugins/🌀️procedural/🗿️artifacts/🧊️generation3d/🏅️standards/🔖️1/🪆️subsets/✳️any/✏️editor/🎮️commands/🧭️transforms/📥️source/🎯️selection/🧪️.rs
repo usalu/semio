@@ -4,7 +4,7 @@ use super::super::retained_scratch_testing::ScratchCaller;
 use semio_s_artifact_procedural_3d_editor_selection::component_group;
 fn policy()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap()}
 fn close(work:&mut GumballSelectionWork,caller:&mut ScratchCaller){
- work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let d=work.next_close_demands(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,d,|g|work.close_step(g))?;Ok(())}));}panic!("gumball selection did not reach physical terminal")
+ work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{work.close_step(same)?;Ok(())}));}panic!("gumball selection did not reach physical terminal")
 }
 #[test]
 fn gumball_selections_preserve_basic_component_and_analytic_grouping(){
@@ -39,7 +39,7 @@ fn gumball_selection_denials_and_foreign_original_caller_leave_the_cursor_unspen
 }
 
 fn close_text(work:&mut GumballSelectionTextWork,caller:&mut ScratchCaller){
- work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let d=work.next_close_demands(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,d,|g|work.close_step(g))?;Ok(())}));}panic!("gumball selection text did not reach physical terminal")
+ work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{work.close_step(same)?;Ok(())}));}panic!("gumball selection text did not reach physical terminal")
 }
 #[test]
 fn original_sorted_selection_text_matches_compact_json_and_closes_every_prefix(){

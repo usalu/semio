@@ -60,6 +60,7 @@ pub enum RemodelingMutation {
     RemoveContent(RemoveContent),
     CommitReconstruction(CommitReconstruction),
 }
+dsl::original_pack_value_operation_receiving!(RemodelingMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️LeafPayloads

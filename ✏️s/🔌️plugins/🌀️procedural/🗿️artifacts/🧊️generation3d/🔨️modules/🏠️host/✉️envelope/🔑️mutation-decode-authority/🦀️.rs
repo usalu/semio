@@ -114,12 +114,13 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
             }
             if self.drive_ingress {
                 if let Some(exact) = self.session.as_mut().expect("P3 retained mutation session").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", retained.start + self.relative as u64))? {
-                    let (progressed, _) = self
-                        .session
-                        .as_mut()
-                        .expect("P3 retained mutation session")
-                        .reserve_retained_allocation(exact)
-                        .map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", retained.start + self.relative as u64))?;
+                    let grant = cx.retained_grant();
+                    let session = self.session.as_mut().expect("P3 retained mutation session");
+                    let reserved = cx.with_original_effect(grant, |_, effect| session.reserve_retained_allocation(exact, effect)).map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", retained.start + self.relative as u64))?;
+                    let Some((reserved, _)) = reserved else {
+                        return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
+                    };
+                    let (progressed, _) = reserved.map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", retained.start + self.relative as u64))?;
                     if !progressed {
                         return Err(self.diagnostic("generation3d-envelope.mutation-retained-allocation-stalled", retained.start + self.relative as u64));
                     }
@@ -157,12 +158,13 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
         if self.state == Generation3dMutationDecodeState::Drive {
             cx.set_stage("generation3d-retained-mutation");
             if let Some(exact) = self.session.as_mut().expect("P3 retained mutation session").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", token.start))? {
-                let (progressed, _) = self
-                    .session
-                    .as_mut()
-                    .expect("P3 retained mutation session")
-                    .reserve_retained_allocation(exact)
-                    .map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", token.start))?;
+                let grant = cx.retained_grant();
+                let session = self.session.as_mut().expect("P3 retained mutation session");
+                let reserved = cx.with_original_effect(grant, |_, effect| session.reserve_retained_allocation(exact, effect)).map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", token.start))?;
+                let Some((reserved, _)) = reserved else {
+                    return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
+                };
+                let (progressed, _) = reserved.map_err(|_| self.diagnostic("generation3d-envelope.mutation-retained-allocation", token.start))?;
                 if !progressed {
                     return Err(self.diagnostic("generation3d-envelope.mutation-retained-allocation-stalled", token.start));
                 }
@@ -180,13 +182,13 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
         if self.state == Generation3dMutationDecodeState::CloseSession {
             cx.consume_fuel(1);
             let maximum_bytes = self.session.as_ref().expect("P3 retained mutation session").next_retained_release_allocation_bytes().unwrap_or(0);
-            match self
-                .session
-                .as_mut()
-                .expect("P3 retained mutation session")
-                .close_step(1, maximum_bytes)
-                .map_err(|_| self.diagnostic("generation3d-envelope.mutation-session-close", token.start))?
-            {
+            let grant = cx.retained_grant();
+            let session = self.session.as_mut().expect("P3 retained mutation session");
+            let closed = cx.with_original_effect(grant, |_, effect| session.close_step(1, maximum_bytes, effect)).map_err(|_| self.diagnostic("generation3d-envelope.mutation-session-close", token.start))?;
+            let Some((closed, _)) = closed else {
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
+            };
+            match closed.map_err(|_| self.diagnostic("generation3d-envelope.mutation-session-close", token.start))? {
                 store::mounted_pack_rt::RetainedPackCloseStep::Pending { .. } => return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
                 store::mounted_pack_rt::RetainedPackCloseStep::Complete => {}
             }
@@ -246,7 +248,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
         }
         if let Some(session) = self.session.as_mut() {
             self.state = Generation3dMutationDecodeState::Closing;
-            return match session.close_step(1, grant.maximum_release_bytes).map_err(|_| diagnostic("generation3d-envelope.mutation-session-close", semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "mounted mutation session refused its close")))? {
+            return match session.close_step(1, grant.maximum_release_bytes, effect).map_err(|_| diagnostic("generation3d-envelope.mutation-session-close", semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "mounted mutation session refused its close")))? {
                 store::mounted_pack_rt::RetainedPackCloseStep::Pending { released_items, released_bytes } => Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, ..empty })),
                 store::mounted_pack_rt::RetainedPackCloseStep::Complete => {
                     drop(self.session.take());
@@ -256,11 +258,11 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
             };
         }
         if self.retirement.is_none() {
-            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).result.map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect).result.map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
             self.state = Generation3dMutationDecodeState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
+        let step = semio_s_artifact_procedural_3d_host::generation3d_settle_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect)).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation3dMutationDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));

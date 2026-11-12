@@ -23,6 +23,7 @@ pub enum PngMutation {
     SetGamma(SetGamma),
     ReplaceSamples(ReplaceSamples),
 }
+dsl::original_pack_value_operation_receiving!(PngMutation);
 
 #[cfg(any(test, feature = "testkit"))]
 pub fn demo_mutation_cases() -> Vec<PngMutation> {

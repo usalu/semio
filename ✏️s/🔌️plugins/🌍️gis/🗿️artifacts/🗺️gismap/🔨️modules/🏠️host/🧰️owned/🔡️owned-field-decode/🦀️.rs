@@ -154,7 +154,7 @@ macro_rules! gis_map_owned_field_authority {
                     }
                     let fault = self.diagnostic(concat!("gis-map-envelope.", $kind, "-retirement-fault"), 0);
                     let step = if self.retirement.is_some() {
-                        store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(fault, &failure))?
+                        store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, effect.grant().maximum_copy_bytes, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(fault, &failure))?
                     } else if self.value.is_some() {
                         store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, effect).result.map_err(|error| fault.with_native(error))?
                     } else {

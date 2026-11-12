@@ -162,10 +162,20 @@ impl semio_plugin::ArtifactInstanceOperationOwner for Generation3dViewInstanceOp
         let (progress, finished) = if session.terminal_is_empty() {
             (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
         } else {
-            match session.close_step(grant)? {
-                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
-                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
-                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d viewer evaluation session awaits its exact close grant" }),
+            let copy = session.next_close_copy_byte_demand()?;
+            let demand = semio_framework_value::RetirementDemand { copy_bytes: copy, capacity_bytes: session.next_close_capacity_byte_demand(copy)?, release_bytes: session.next_close_release_byte_demand()?, depth: session.next_close_depth_demand()? };
+            let loan = semio_plugin::app::original_lifecycle_grant(cx, grant);
+            let mut closed = None;
+            let step = cx.with_retained_loan(loan, |cx| cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| {
+                let step = session.close_step(effect)?;
+                let progress = step.progress();
+                closed = Some(step);
+                Ok::<_, semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Progress(progress))
+            }))).map_err(semio_plugin::PluginLifecycleFailure::from)?;
+            match closed {
+                Some(semio_framework_job::InteractiveJobCloseStep::Complete { progress }) => (progress, true),
+                Some(semio_framework_job::InteractiveJobCloseStep::Blocked) => return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d viewer evaluation session awaits its exact close grant" }),
+                _ => (step.progress(), false),
             }
         };
         if finished && session.terminal_is_empty() {

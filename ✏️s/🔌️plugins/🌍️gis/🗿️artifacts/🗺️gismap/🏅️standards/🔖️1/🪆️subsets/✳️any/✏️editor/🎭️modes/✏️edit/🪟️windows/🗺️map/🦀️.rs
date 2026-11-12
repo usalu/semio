@@ -67,7 +67,7 @@ fn default_layer_visibility() -> HashMap<String, bool> {
 
 fn layer_visibility_json(cfg: &MapWindowConfig) -> String {
     let mut map = default_layer_visibility();
-    for (id, visible) in &cfg.layer_visibility {
+    for (id, visible) in cfg.layer_visibility.iter() {
         map.insert(id.clone(), *visible);
     }
     serde_json::to_string(&map).unwrap_or_else(|_| "{}".into())
@@ -75,7 +75,7 @@ fn layer_visibility_json(cfg: &MapWindowConfig) -> String {
 
 fn layer_stroke_scale_json(cfg: &MapWindowConfig) -> String {
     let mut map: HashMap<String, f64> = GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), 1.0)).collect();
-    for (id, weight) in &cfg.layer_stroke_scale {
+    for (id, weight) in cfg.layer_stroke_scale.iter() {
         map.insert(id.clone(), clamp_map_layer_weight(*weight));
     }
     serde_json::to_string(&map).unwrap_or_else(|_| "{}".into())

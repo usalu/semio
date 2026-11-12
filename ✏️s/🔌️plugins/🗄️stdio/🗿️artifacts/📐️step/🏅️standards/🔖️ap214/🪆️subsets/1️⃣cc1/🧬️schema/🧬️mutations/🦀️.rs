@@ -70,6 +70,7 @@ pub enum StepCc1Mutation {
     RemoveShapeRepresentation(remove_shape_representation::RemoveShapeRepresentation),
     RestoreEntities(restore_entities::RestoreEntities),
 }
+dsl::original_pack_value_operation_receiving!(StepCc1Mutation);
 
 /// 📇️ Kebab-case spelling of every `StepCc1Mutation` variant, in declaration order — the
 /// `step-ap214-cc1` catalog in `../../🔣️oracle.json` must match verbatim.

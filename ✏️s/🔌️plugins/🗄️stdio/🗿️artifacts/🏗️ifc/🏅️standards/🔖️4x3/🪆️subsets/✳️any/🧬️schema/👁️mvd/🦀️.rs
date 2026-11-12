@@ -15,6 +15,8 @@ mod concept_types;
 pub use concept_types::{IfcConceptDiagnostic, IfcConceptLabel, IfcConceptSource, IfcConceptTarget, IfcConceptTargetReport};
 #[path = "../../../../../../📥️source/🗂️index/🦀️.rs"]
 mod source_index;
+#[path = "🧩️concepts/lease.rs"]
+mod lease;
 #[path = "🧩️concepts/preparation.rs"]
 mod preparation;
 #[path = "🧩️concepts/population.rs"]

@@ -51,6 +51,7 @@ pub enum PdfEMutation {
     EmbedFontFile(EmbedFontFile),
     RemoveFontFile(RemoveFontFile),
 }
+dsl::original_pack_value_operation_receiving!(PdfEMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs

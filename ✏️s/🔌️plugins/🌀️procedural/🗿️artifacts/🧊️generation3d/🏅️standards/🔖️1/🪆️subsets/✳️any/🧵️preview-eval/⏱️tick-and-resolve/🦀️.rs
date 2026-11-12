@@ -73,9 +73,10 @@ pub fn evaluate_tick(
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
-    retained_grant: semio_framework_value::RetainedCloneGrant,
+    effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
 ) -> Result<FlowEvalTickOutcome, semio_framework_value::ValueError> {
     let started_us = semio_framework_job::runtime_diagnostics_enabled().then(semio_framework_job::default_now_us).flatten();
+    let retained_grant = effect.grant();
     session.begin_window_tick(window_id, retained_grant)?;
     let census_before = node_census_digest(session.status_json());
     let mut host = match host_with_session(host_snapshot, session, retained_grant) {
@@ -95,7 +96,7 @@ pub fn evaluate_tick(
         extension_invocations.push(evaluate_invocation(pending, resume, dependency_json, window_id, window_kind_id));
     }
     if extension_invocations.is_empty() && !more {
-        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, retained_grant)?);
+        extension_invocations.extend(preview_tessellate_invocations(window_id, window_kind_id, session, host_snapshot, tolerance, effect)?);
     }
     session.note_window_tick_outcome(window_id, tick_is_unfinished(more, extension_invocations.len()), retained_grant)?;
     if !extension_invocations.is_empty() {

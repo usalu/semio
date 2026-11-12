@@ -132,11 +132,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     }
 
     /// 🔒️ Polls the retained operation owner and live run against the committed document snapshot.
-    pub async fn pending_effects(&mut self,view:Option<&ViewModel>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Vec<Effect>,Fault>{
-        if cx.should_yield(){return Ok(Vec::new())}
+    pub async fn pending_effects(&mut self,view:Option<&ViewModel>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<Effect>>,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(None)}
         self.refresh_cache().await?;
         let render_operation=self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let Some(grant)=semio_plugin_decl_views::MountedSnapshotReadPreparation::grant(self.mounted_policy.preparation,cx)else{return Ok(Vec::new())};
+        let Some(grant)=semio_plugin_decl_views::MountedSnapshotReadPreparation::grant(self.mounted_policy.preparation,cx)else{return Ok(None)};
         let snapshot_read={let(_,snapshot,_,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;let preparation=A::mounted_job_prepare_snapshot_read(render_operation,snapshot.as_ref(),&self.stores.window_config_store,view,grant);if preparation.record(grant,cx)?{Some(self.stores.store.snapshot_read().map_err(|error|error.into_fault())?)}else{None}};
         let effects={
             let(_,snapshot,config,_)=self.history.cache.as_ref().ok_or_else(||plugin_sdk_fault("pending poll cache unavailable"))?;
@@ -144,7 +144,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             let cfg=ConfigView{snapshot:config.as_ref(),window:None};
             A::pending_effects(&self.tools.instance_operation_owner,&doc,&cfg,view).await
         };
-        Ok(self.stores.stamp_polled_load_document_effects(effects))
+        Ok(Some(self.stores.stamp_polled_load_document_effects(effects)))
     }
 
     /// 🗂️ Applies the idempotent context-menu organizer at the common emission boundary.

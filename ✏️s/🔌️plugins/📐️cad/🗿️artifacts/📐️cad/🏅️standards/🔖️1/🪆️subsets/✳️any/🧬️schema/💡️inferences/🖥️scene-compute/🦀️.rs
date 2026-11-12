@@ -113,7 +113,7 @@ pub fn pane_world_solids(kernel: &mut Brep, objects: &[CadObject], geometry: Opt
         .filter(|object| object.visible)
         .filter_map(|object| {
             if let Some(geometry) = geometry.filter(|geometry| object.solid_handle.as_ref().is_some_and(|id| geometry.owned_meshes.contains_key(id))) {
-                let snapshot = geometry.owned_breps.get(object.solid_handle.as_ref()?)?;
+                let snapshot = geometry.owned_breps.get(object.solid_handle.as_ref()?)?.0.as_deref()?;
                 let body = semio_s_artifact_stdio_semio_brep::schema::snapshot::body::body_from_snapshot(snapshot).ok()?;
                 let local = kernel.merge_representation(body);
                 return Some(local.into_iter().filter_map(|solid| place_object_solid(kernel, solid, object)).collect::<Vec<_>>());
@@ -379,8 +379,8 @@ pub(crate) fn primary_primitive_kind(object: &CadObject) -> &str {
 }
 
 pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
-    if let Some(mesh) = object.solid_handle.as_ref().and_then(|id| geometry?.owned_meshes.get(id)) {
-        return (**mesh).clone();
+    if let Some(mesh) = object.solid_handle.as_ref().and_then(|id| geometry?.owned_meshes.get(id)?.0.as_deref()) {
+        return mesh.clone();
     }
     let kind = primary_primitive_kind(object);
     {

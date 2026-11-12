@@ -136,10 +136,10 @@ fn streamed_ticks_commit_the_net_leaf_once() {
     let first = drive(&FemGumballTransient::default(), "w", "rotateSelection", GesturePhase::Stream, tick(0.5), "base");
     assert!(first.committed.is_none(), "a stream tick commits nothing");
     let open = first.transient.expect("the first tick opens the window's gesture");
-    let minted = open.gestures["w"].transaction.clone();
+    let minted = open.gesture("w").expect("window w holds a gesture").transaction.clone();
     let second = drive(&open, "w", "rotateSelection", GesturePhase::Stream, tick(std::f64::consts::FRAC_PI_2 - 0.5), "base");
     let open = second.transient.expect("the second tick advances it");
-    assert_eq!(open.gestures["w"].transaction, minted, "every tick rides the same transaction");
+    assert_eq!(open.gesture("w").expect("window w holds a gesture").transaction, minted, "every tick rides the same transaction");
     let preview = open.preview::<Fem3dSnapshot, Fem3dSnapshotValue, Fem3dMutation>(&doc, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok()).expect("an open gesture previews");
     let swung = node(&preview, "n20_g");
     assert!((swung[0] - 4.0).abs() < 1e-9 && (swung[1] - 4.0).abs() < 1e-9, "the preview is the net quarter turn: {swung:?}");
@@ -163,15 +163,15 @@ fn host_aborts_leave_zero_trace_and_keep_sibling_gestures() {
     let aborted = drive(&both, "left", "translateSelection", GesturePhase::Abort(ToolAbortReason::CaptureLost), None, "base");
     assert!(aborted.committed.is_none());
     let rest = aborted.transient.expect("the abort clears the window's gesture");
-    assert_eq!(rest.gestures.keys().collect::<Vec<_>>(), vec!["right"], "only the owner's gesture is dropped");
+    assert_eq!(rest.windows().collect::<Vec<_>>(), vec!["right"], "only the owner's gesture is dropped");
     let moved_base = drive(&rest, "right", "translateSelection", GesturePhase::Commit, tick(), "moved");
     assert!(moved_base.committed.is_none(), "a commit on a moved base is dropped with its gesture");
     assert!(moved_base.transient.expect("baseMoved clears it").gestures.is_empty());
     let open = drive(&FemGumballTransient::default(), "w", "translateSelection", GesturePhase::Stream, tick(), "base").transient.expect("opens");
     let scale = fem3d_gumball_tick(&doc, &targets(&[("node", "n20_l1"), ("node", "n00_l1")]), Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 });
     let switched = drive(&open, "w", "scaleSelection", GesturePhase::Stream, scale, "base").transient.expect("the new verb opens its own gesture");
-    assert_eq!(switched.gestures["w"].verb, "scaleSelection", "the drag was dropped captureLost, the scaling opened fresh");
-    assert_ne!(switched.gestures["w"].transaction, open.gestures["w"].transaction);
+    assert_eq!(switched.gesture("w").expect("window w holds a gesture").verb, "scaleSelection", "the drag was dropped captureLost, the scaling opened fresh");
+    assert_ne!(switched.gesture("w").expect("window w holds a gesture").transaction, open.gesture("w").expect("window w holds a gesture").transaction);
 }
 
 #[test]

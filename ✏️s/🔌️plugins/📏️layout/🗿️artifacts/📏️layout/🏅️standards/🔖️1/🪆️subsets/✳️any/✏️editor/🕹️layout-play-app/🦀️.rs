@@ -203,10 +203,10 @@ impl ArtifactEditor for LayoutPlayApp {
         semio_plugin::plugin_app_close_prelude::admit_reserved_work::<EditorApp<Self>,LayoutImportJob>(source,body,construction,cx)
     }
 
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use semio_s_artifact_layout_layout_engine_export::LAYOUT_MEDIA_EXPORT_TOOL_ID;
         if request.as_ref().is_some_and(|input|input.port!="layout:out"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"layout producer requires its exact registered output port").into())}
-        LayoutMediaExportJob::admit_original(request,body,cx)
+        LayoutMediaExportJob::admit_original(request,body,construction,cx)
     }
 
     fn handle(

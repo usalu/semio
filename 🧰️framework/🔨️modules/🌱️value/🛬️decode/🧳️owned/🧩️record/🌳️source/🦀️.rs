@@ -172,6 +172,20 @@ pub fn add_receipt(mut p:RetainedCloneProgress,copy:usize)->Result<RetainedClone
 fn dsl_schema_key<'a>(source:&'a DslValue,query:NativeSchemaKeySource)->Result<NativeSourceKeyValue<'a>,ValueError>{use NativeSchemaKeySource as Q;match(query,source){(Q::Text,DslValue::String(text))=>Ok(NativeSourceKeyValue::Name(text)),(Q::EnumOrdinal,DslValue::Number(number))=>match number{crate::Number::UInt(value)=>u32::try_from(*value).ok(),crate::Number::Int(value)=>u32::try_from(*value).ok(),_=>None}.map(NativeSourceKeyValue::Ordinal).ok_or_else(invalid),(Q::Record(index)|Q::RecordName(index),DslValue::Object(entries))=>entries.get(index).map(|(name,_)|NativeSourceKeyValue::Name(name.as_str())).ok_or_else(invalid),(Q::RecordText(index),DslValue::Object(entries))=>match entries.get(index){Some((_,DslValue::String(text)))=>Ok(NativeSourceKeyValue::Name(text)),_=>Err(invalid())},_=>Err(invalid())}}
 fn string_schema_key<'a>(source:&'a String,query:NativeSchemaKeySource)->Result<NativeSourceKeyValue<'a>,ValueError>{match query{NativeSchemaKeySource::Text=>Ok(NativeSourceKeyValue::Name(source.as_str())),_=>Err(invalid())}}
 fn tuple_schema_key<T>(source:&(String,T),query:NativeSchemaKeySource)->Result<NativeSourceKeyValue<'_>,ValueError>{match query{NativeSchemaKeySource::VariantTag=>Ok(NativeSourceKeyValue::Name(source.0.as_str())),_=>Err(invalid())}}
+/// 🗝️ Answers a schema-key query from the Source's own typed accessors after charging one unit of the lent original Work.
+pub fn answer_schema_key<'reply,'source,S:NativeValueSource+?Sized>(source:&'source S,query:NativeSchemaKeySource,effect:&mut crate::RetainedAllocationEffect<'_>,reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{
+ if effect.remaining_work_units()?<1{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query lacks original Work"))}
+ if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query exceeded original Work"))))}
+ use NativeSchemaKeySource as Q;
+ Ok(reply.complete(match query{
+  Q::Text=>source.text().map(|text|NativeSourceKeyValue::Name(text.as_str())),
+  Q::EnumOrdinal=>source.enum_ordinal().map(NativeSourceKeyValue::Ordinal),
+  Q::VariantTag=>source.variant_tag().map(NativeSourceKeyValue::Name).ok_or_else(invalid),
+  Q::Record(index)=>source.record_key(index).map(|key|match key{crate::record::NativeRecordKey::Name(name)=>NativeSourceKeyValue::Name(name),crate::record::NativeRecordKey::Ordinal(id)=>NativeSourceKeyValue::Ordinal(u32::from(id))}),
+  Q::RecordName(index)=>source.record_name(index).map(NativeSourceKeyValue::Name),
+  Q::RecordText(index)=>source.record_child(index).and_then(|child|child.text().map(|text|NativeSourceKeyValue::Name(text.as_str()))),
+ }))
+}
 macro_rules! schema_key_source{($read:expr)=>{
  fn query_schema_key<'reply,'source>(&'source self,query:NativeSchemaKeySource,effect:&mut crate::RetainedAllocationEffect<'_>,reply:NativeSourceKeyReply<'reply,'source>)->Result<NativeSourceKeyReplyComplete<'reply>,ValueError>{if effect.remaining_work_units()?<1{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query lacks original Work"))}if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(ValueRefusalKind::WorkLimit,"schema key query exceeded original Work"))))}Ok(reply.complete(($read)(self,query)))}
 };}

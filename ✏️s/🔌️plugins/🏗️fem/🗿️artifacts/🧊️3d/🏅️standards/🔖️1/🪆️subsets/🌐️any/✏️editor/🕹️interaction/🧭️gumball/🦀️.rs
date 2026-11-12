@@ -387,7 +387,7 @@ mod tests;
 //#region 🎚️GumballConfig
 /// 🧭️ Which handles the transform gumball of ONE model window draws — view state, toggled from the
 /// Transform utility's options rail (`setTransformGumballFlag`), never a document field.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Fem3dGumballConfig {

@@ -148,12 +148,16 @@ pub use mutations_codec::*;
 
 impl OpBinary for Puzzle5dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+        Ok(protocol::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "puzzle5d operation", offset: 0, detail };
+        let value = protocol::os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| malformed(error.to_string()))
     }
 }
+
+protocol::original_pack_value_operation_receiving!(Puzzle5dMutation);
 }
 
 /// 🫳️ Borrows the original concrete leaf of a mutation and its canonical protocol tag before publication: the authoring wire source the artifact store requires.

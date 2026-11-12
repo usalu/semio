@@ -47,8 +47,8 @@ impl IfcSnapshot{pub(crate)fn admit_sqlite_values(&self,control:&mut SqliteSnaps
 impl ArtifactSqliteSnapshotHost for IfcSnapshot{
  
  fn retire_sqlite_snapshot(self){native::close(self)}
- fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {native::decode(payload,control,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<semio_os_kernel::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {native::encode(self,encoding,control,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {native::decode(payload,control,native_control,output)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<semio_os_kernel::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {native::encode(self,encoding,control,native_owner,output)}
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native_backing::preflight(self,control)}
  
     

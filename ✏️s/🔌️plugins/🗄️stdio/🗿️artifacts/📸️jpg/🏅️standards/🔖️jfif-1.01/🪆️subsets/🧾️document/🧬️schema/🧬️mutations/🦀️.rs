@@ -25,6 +25,7 @@ pub enum JpgMutation {
     ReplacePixels(ReplacePixelsMutation),
     ReplaceImage(ReplaceImage),
 }
+dsl::original_pack_value_operation_receiving!(JpgMutation);
 
 //#endregion Aggregate
 

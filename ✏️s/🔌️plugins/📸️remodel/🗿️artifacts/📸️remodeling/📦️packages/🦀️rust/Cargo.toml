@@ -26,6 +26,7 @@ semio-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor = { workspace = true }
 semio-s-artifact-remodel-remodeling-editor-kit = { workspace = true }
+semio-s-artifact-remodel-remodeling-inferences = { workspace = true }
 semio-s-artifact-remodel-remodeling-io = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }
 semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }

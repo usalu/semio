@@ -23,34 +23,14 @@ pub async fn puzzle2d_store(envelope: Puzzle2dEnvelope, actor: protocol::ActorId
     Ok(store)
 }
 
-/// 🪜️ Advances standalone retirement through the shared document disposer under one caller grant.
-/// The store retains the cursor between calls, so scheduling may pause without losing ownership.
-pub fn close_puzzle2d_store_step(store: &mut Puzzle2dStore, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, String> {
-    ArtifactDocumentStoreDisposer::<Puzzle2dSnapshot, Puzzle2dMutation>::new().close_step(store, grant).map_err(|fault| fault.message)
-}
-
-/// ♻️ Drives the shared granted cursor to its terminal-empty shell for unscheduled callers.
-/// History pages bound each turn's work and do not limit the number of recorded edits.
+/// ♻️ Retires a store built by [`puzzle2d_store`] to the terminal-empty shallow shell its own `Drop` asserts, from the store's own quoted
+/// demands (`close_owned_unscheduled`): the owners installed there include the authoring factory alias, which only the store's
+/// generic owned-store disposal retires.
 pub fn close_puzzle2d_store(store: &mut Puzzle2dStore) -> Result<(), String> {
-    while !store.close_owned_store_terminal_is_empty() {
-        let demand = store.close_owned_demands(PUZZLE2D_STORE_CLOSE_BYTES).map_err(semio_framework_value::ValueError::into_message)?;
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(PUZZLE2D_STORE_CLOSE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        match close_puzzle2d_store_step(store, grant)? {
-            PluginLifecycleStep::Blocked { reason } => return Err(format!("puzzle2d store close blocked: {reason}")),
-            PluginLifecycleStep::AwaitingInput { reason } => return Err(format!("puzzle2d store close awaits input: {reason}")),
-            PluginLifecycleStep::Progress(_) | PluginLifecycleStep::Complete(_) => {}
-        }
-    }
-    Ok(())
+    store.close_owned_unscheduled().map_err(semio_framework_value::ValueError::into_message)
 }
 
 pub type Puzzle2dEnvelope = ArtifactEnvelope<Puzzle2dSnapshot, Puzzle2dMutation>;
-
-const PUZZLE2D_STORE_CLOSE_BYTES: usize = 64 * 1024;
-
-#[cfg(test)]
-#[path = "🧪️tests/♻️store-close/🦀️.rs"]
-mod store_close_tests;
 
 //#region 🔖️AuthoringOwners
 /// 🏭️ Authoring-only semantic authority of a standalone Puzzle2d store: it names each mutation's original leaf as its pack wire

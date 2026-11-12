@@ -106,9 +106,6 @@ pub mod standards {
                         #[path = "."]
                         pub mod snapshot {
                             pub use semio_s_artifact_stdio_json_schema::standards::v_rfc8259::subsets::base::io::sqlite::snapshot::*;
-                            #[cfg(test)]
-                            #[path="../../../../../../../🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
-                            pub mod original_receiving_tests;
                         }
                     }
                 }

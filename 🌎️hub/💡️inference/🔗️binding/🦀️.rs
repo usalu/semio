@@ -84,11 +84,11 @@ pub trait MapInferenceProposalBindingV1: Send + Sync {
 /// require of their parameters.
 pub trait ComposedMapCommitBindingV1: Sized + Send + Sync + 'static {
     type ParentSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type ParentMutation: Mutation<Self::ParentSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::ParentSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type ParentMutation: Mutation<Self::ParentSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::ParentSnapshot> + semio_os_kernel::os_spr::StoreMutationFor<Self::ParentSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
     type DrawingSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type DrawingMutation: Mutation<Self::DrawingSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::DrawingSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type DrawingMutation: Mutation<Self::DrawingSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::DrawingSnapshot> + semio_os_kernel::os_spr::StoreMutationFor<Self::DrawingSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
     type ValueSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type ValueMutation: Mutation<Self::ValueSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::ValueSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type ValueMutation: Mutation<Self::ValueSnapshot> + semio_os_kernel::os_spr::ColdMutation<Self::ValueSnapshot> + semio_os_kernel::os_spr::StoreMutationFor<Self::ValueSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
 
     /// 🎯️ The exact member ids a fixed-three undo requires, in stable-member order.
     const COMMIT_MEMBERS: [&'static str; 2];

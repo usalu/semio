@@ -81,7 +81,7 @@ impl SnapshotAdmissionCursor {
                 if snapshot.nodes.len() > SESSION_MAXIMUM_NODES {
                     return Err(b"fem2d.session-node-capacity");
                 }
-                match snapshot.nodes.get(self.outer) {
+                match (*snapshot.nodes).get(self.outer) {
                     Some(node) => Some(bounded_string_capacities(&[&node.id])?),
                     None => None,
                 }
@@ -152,7 +152,7 @@ impl SnapshotAdmissionCursor {
                     return Ok(false);
                 }
             }
-            5 => match snapshot.materials.get(self.outer) {
+            5 => match (*snapshot.materials).get(self.outer) {
                 Some(material) => Some(bounded_string_capacities(&[&material.id, &material.name])?),
                 None => None,
             },

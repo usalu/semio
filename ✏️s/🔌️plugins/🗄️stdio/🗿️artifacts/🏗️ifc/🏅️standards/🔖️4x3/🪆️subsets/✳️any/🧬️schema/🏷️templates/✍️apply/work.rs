@@ -1,12 +1,13 @@
 //! 🧵️ Native template planning retains the original command and admits real forward and inverse Store wire.
 use super::receive::{fits, fixed, invalid, receipt, ApplicationReceiver};
 use super::*;
-use crate::details::{IfcPublication, SnapshotSource};
+use crate::details::{charged, closed_in, funded_turn, owned_step, settled, IfcPublication, SnapshotLease, SnapshotSource};
 use crate::editor::{Ifc4x3AnyEditor, Ifc4x3EditCommand};
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
 use semio_plugin::{EditorApp, Fault};
-use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSourceAdmission, RetainedCloneStep};
+use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneProgress, RetainedCloneStep, StagedSourceAdmission};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome};
 use semio_framework_value::{DslValue, RetirementDemand, ValueError, ValueRefusalKind};
 use std::{mem::size_of, sync::Arc};
 
@@ -42,8 +43,8 @@ pub struct IfcTemplateWork {
     planner: Planner,
     publication: IfcPublication,
     semantic: crate::validation::admission::RetainedExpressAdmission,
-    unborn: Option<Arc<IfcSnapshot>>,
-    admission: Option<RetainedCloneSourceAdmission<IfcSnapshot, Arc<IfcSnapshot>>>,
+    unborn: Option<SnapshotLease>,
+    admission: Option<StagedSourceAdmission<IfcSnapshot, SnapshotLease>>,
     retirement: RetainedCloneClose,
     phase: Phase,
     closing: bool,
@@ -101,84 +102,76 @@ impl IfcTemplateWork {
             return self.retirement.next_owner_demands::<Vec<IfcValue>>(true, &None, body);
         }
         if let Some(admission) = self.admission.as_ref() {
-            return if admission.phase() == "ready" { admission.next_demand() } else { admission.next_return_demand() };
+            return admission.close_demand();
         }
         if self.unborn.is_some() {
-            return self.retirement.next_owner_demands::<Arc<IfcSnapshot>>(true, &None, body);
+            return self.retirement.next_owner_demands::<SnapshotLease>(true, &None, body);
         }
         if let Some(source) = self.publication.view.source.as_ref().filter(|source| !source.terminal_is_empty()) {
             return source.next_close_demand(body);
         }
         Ok(RetirementDemand { depth: 1, ..Default::default() })
     }
-    fn close_owned(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_owned(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if self.publication.codec_live() {
-            return self.publication.close_codec(grant);
+            return self.publication.close_codec(effect);
         }
         if !self.semantic.terminal_is_empty() {
-            return self.semantic.close_step(grant);
+            let result = self.semantic.close_step(effect);
+            return charged(effect, RetainedWorkOutcome { result, work: 0 });
         }
         if !self.receiver.terminal_is_empty() {
-            return self.receiver.close_step(grant);
+            return self.receiver.close_step(effect);
         }
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant).result;
+            return settled(self.retirement.step_granted(4096, effect));
         }
         macro_rules! retire {
-            ($owner:expr) => {
-                return self.retirement.begin_granted($owner, grant).result?.ok_or_else(|| invalid("Template retained retirement omitted its original owner"));
+            ($owner:expr, $message:literal) => {
+                return owned_step(self.retirement.begin_granted($owner, effect), $message);
             };
         }
         if self.original.is_some() {
-            retire!(&mut self.original);
+            retire!(&mut self.original, "Template original retirement omitted its owner");
         }
         if self.planner.garbage.is_some() {
-            retire!(&mut self.planner.garbage);
+            retire!(&mut self.planner.garbage, "Template displaced values omitted their owner");
         }
         if self.planner.application.is_some() {
-            retire!(&mut self.planner.application);
+            retire!(&mut self.planner.application, "Template application omitted its owner");
         }
         if self.planner.mutations.is_some() {
-            retire!(&mut self.planner.mutations);
+            retire!(&mut self.planner.mutations, "Template mutations omitted their owner");
         }
         if self.planner.order.is_some() {
-            retire!(&mut self.planner.order);
+            retire!(&mut self.planner.order, "Template order omitted its owner");
         }
         if self.planner.scratch.is_some() {
-            retire!(&mut self.planner.scratch);
+            retire!(&mut self.planner.scratch, "Template scratch omitted its owner");
         }
         if self.planner.histories.is_some() {
-            retire!(&mut self.planner.histories);
+            retire!(&mut self.planner.histories, "Template histories omitted their owner");
         }
         if self.planner.properties.is_some() {
-            retire!(&mut self.planner.properties);
+            retire!(&mut self.planner.properties, "Template properties omitted their owner");
         }
         if self.planner.enumeration_values.is_some() {
-            retire!(&mut self.planner.enumeration_values);
+            retire!(&mut self.planner.enumeration_values, "Template enumeration values omitted their owner");
         }
         if let Some(admission) = self.admission.as_mut() {
-            let turn = if admission.phase() == "ready" {
-                admission.take_output(&mut self.publication.view.source, grant)
-            } else {
-                let mut inputs = None;
-                let turn = admission.return_inputs(&mut inputs, grant);
-                if let Some((owner, ())) = inputs {
-                    self.unborn = Some(owner);
-                }
-                turn
-            };
-            if admission.terminal_is_empty() || self.publication.view.source.is_some() {
+            let turn = admission.close_into(&mut self.unborn, &mut self.publication.view.source, 4096, effect);
+            if admission.terminal_is_empty() {
                 self.admission = None;
             }
-            return turn.result;
+            return turn;
         }
         if self.unborn.is_some() {
-            retire!(&mut self.unborn);
+            retire!(&mut self.unborn, "Template refused source omitted its original owner");
         }
         if let Some(source) = self.publication.view.source.as_mut().filter(|source| !source.terminal_is_empty()) {
-            return source.close_step(grant);
+            return settled(source.close_step(4096, effect));
         }
-        Ok(RetainedCloneStep::Complete(Default::default()))
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }
     }
 }
 impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
@@ -227,14 +220,17 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
                         demand.copy_bytes = demand.copy_bytes.max(alias);
                         Ok(demand)
                     }
-                    None => Ok(RetirementDemand { copy_bytes: alias, depth: 1, ..Default::default() }),
+                    None => {
+                        let demand = SnapshotSource::borrowed_constructor_demand::<SnapshotLease>();
+                        Ok(RetirementDemand { copy_bytes: alias, capacity_bytes: demand.capacity_bytes, depth: demand.depth.max(1), ..Default::default() })
+                    }
                 }
             }
             Phase::Plan => self.planner.demand(input.snapshot),
             Phase::Wire => self.publication.demands(),
             Phase::Semantic => {
                 let source = self.publication.view.source.as_ref().ok_or_else(|| invalid("Template semantic captured source is missing"))?.try_authority()?;
-                self.semantic.demands(source.as_ref(), self.planner.mutations.as_deref().unwrap())
+                self.semantic.demands(source.get()?, self.planner.mutations.as_deref().unwrap())
             }
         }
     }
@@ -252,12 +248,11 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
         let before = cx.retained_progress();
         let fuel = cx.fuel_remaining();
         if matches!(self.phase, Phase::Plan) && (self.planner.garbage.is_some() || !self.retirement.is_empty()) {
-            semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+            closed_in(cx, demand, |effect| {
                 if self.retirement.is_empty() {
-                    let turn = self.retirement.begin_granted(&mut self.planner.garbage, grant);
-                    semio_framework_value::RetainedWorkOutcome { result: turn.result.and_then(|step| step.ok_or_else(|| invalid("Template scalar envelope omitted its retirement owner"))), work: turn.work }
+                    owned_step(self.retirement.begin_granted(&mut self.planner.garbage, effect), "Template scalar envelope omitted its retirement owner")
                 } else {
-                    self.retirement.step_granted(grant)
+                    settled(self.retirement.step_granted(4096, effect))
                 }
             })?;
             return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-template-envelope", preview: b"" });
@@ -283,25 +278,24 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
             }
             Phase::Source => {
                 let owner = input.snapshot_owner.ok_or_else(|| invalid("Template preparation requires its original captured snapshot"))?;
-                let grant = cx.retained_grant();
                 let alias = size_of::<Arc<IfcSnapshot>>();
                 if self.admission.is_none() {
-                    self.admission = Some(SnapshotSource::admission_borrowed(Arc::clone(owner), |snapshot| snapshot.as_ref()));
+                    self.admission = Some(StagedSourceAdmission::borrowed(SnapshotLease::new(Arc::clone(owner))));
                     cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias, ..Default::default() })?;
                     cx.consume_fuel(1);
                 } else {
                     let admission = self.admission.as_mut().ok_or_else(|| invalid("Template source admission is missing"))?;
-                    let turn = if admission.phase() == "ready" { admission.take_output(&mut self.publication.view.source, grant) } else { admission.advance(grant) };
-                    cx.consume_fuel(turn.work);
-                    match turn.result {
-                        Ok(step) => {
-                            cx.consume_retained(step.progress())?;
-                            if self.publication.view.source.is_some() {
-                                self.admission = None;
-                                self.phase = Phase::Plan;
-                            }
+                    if admission.terminal_is_empty() {
+                        if self.publication.view.source.is_none() {
+                            return Err(invalid("Template source admission published no source").into());
                         }
-                        Err(error) => return Err(OriginalTurnFailure::debit_original(error, cx)),
+                        self.admission = None;
+                        self.phase = Phase::Plan;
+                    } else {
+                        let source = &mut self.publication.view.source;
+                        if funded_turn(cx, |effect| admission.advance(source, effect))?.is_none() {
+                            return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-template-source", preview: b"" });
+                        }
                     }
                 }
             }
@@ -322,7 +316,7 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
             }
             Phase::Semantic => {
                 let source = self.publication.view.source.as_ref().ok_or_else(|| invalid("Template semantic captured source is missing"))?.try_authority()?;
-                self.semantic.advance(source.as_ref(), self.planner.mutations.as_deref().unwrap(), cx)?;
+                self.semantic.advance(source.get()?, self.planner.mutations.as_deref().unwrap(), cx)?;
             }
         }
         Ok(if cx.retained_progress() != before || cx.fuel_remaining() < fuel { ArtifactCommandWorkStep::Progress { stage: "ifc-template", preview: b"" } } else { ArtifactCommandWorkStep::Pending { stage: "ifc-template", preview: b"" } })
@@ -370,7 +364,7 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
             return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() });
         }
         let demand = self.close_demand(cx.retained_grant().maximum_copy_bytes.min(4096))?;
-        semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { result: self.close_owned(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.min(4096), ..grant }), work: 1 })
+        closed_in(cx, demand, |effect| self.close_owned(effect))
     }
 }
 

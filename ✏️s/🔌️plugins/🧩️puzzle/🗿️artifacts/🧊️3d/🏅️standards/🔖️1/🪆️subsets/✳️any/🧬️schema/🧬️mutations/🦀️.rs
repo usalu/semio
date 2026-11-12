@@ -28,7 +28,7 @@ use protocol::{Mutation};
 /// mutation: camera pose is session-only app runtime state (`ActionKind::View`), never a document
 /// operation. There is deliberately no whole-document mutation: import/reset/example-load goes
 /// through `store::ArtifactStore::reset` (non-history), never through this enum.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
@@ -74,6 +74,8 @@ pub enum Puzzle3dMutation {
     RotateSelection(RotateSelection),
     ScaleSelection(ScaleSelection),
 }
+
+dsl::original_ordinal_operation_receiving!(Puzzle3dMutation);
 
 //#region 🏷️Kinds
 /// 🏷️ The kebab-case spelling of every [`Puzzle3dMutation`] variant, in declaration order — the exact

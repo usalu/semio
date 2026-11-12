@@ -136,6 +136,15 @@ impl StagedFormRequest{
     /// 📨️ Match one admitted donor to the actual real window without inspecting command values.
     pub fn context_matches(&self,window:Option<&str>,locale:semio_ui_locale::Locale)->bool{self.token.admitted()&&window.is_some_and(|window|!window.is_empty()&&self.token.window==window)&&self.locale==locale}
 }
+/// 🧭️ The admitted request projects its own command arguments as the original clone source.
+impl semio_framework_value::retained_clone::OriginalSourceProjection<DslValue> for StagedFormRequest{
+    fn projection_work_demand(&self)->Result<u64,semio_framework_value::ValueError>{Ok(1)}
+    fn project_source<'reply,'source>(&'source self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalProjectionReply<'reply,'source,DslValue>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply,std::ptr::NonNull<DslValue>,semio_framework_value::ValueError>,semio_framework_value::ValueError>{
+        if !effect.performed(1)?{return Ok(reply.complete(Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"staged request argument projection exceeded its original work"))));}
+        Ok(reply.complete(Ok(&self.args)))
+    }
+    fn recover_source_projection<'reply,'source>(&'source self,_:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value::retained_clone::OriginalProjectionReply<'reply,'source,DslValue>)->Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'reply,std::ptr::NonNull<DslValue>,semio_framework_value::ValueError>,semio_framework_value::ValueError>{Ok(reply.pending())}
+}
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]

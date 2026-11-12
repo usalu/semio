@@ -6941,6 +6941,7 @@ dependencies = [
  "semio-plugin-decl-app",
  "semio-plugin-decl-emission",
  "semio-plugin-decl-surface",
+ "semio-plugin-document-media",
  "semio-plugin-instance-app",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",

@@ -157,7 +157,6 @@ impl ArtifactOwnedToolJobFactory for Ifc2x3Cv20EditorExampleFactory {
     type Owner = EditorApp<Ifc2x3Cv20Editor>;
     const TOOL_IDS: &'static [&'static str] = IFC2X3_CV20_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_CV20_DOCUMENT_SCHEMA;
-    fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(inspector::topology(doc.snapshot))}
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[IFC2X3_CV20_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 //#region 🔖️Editor
@@ -165,6 +164,7 @@ impl ArtifactOwnedToolJobFactory for Ifc2x3Cv20EditorExampleFactory {
 pub struct Ifc2x3Cv20Editor;
 
 impl ArtifactEditor for Ifc2x3Cv20Editor {
+    fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(inspector::topology(doc.snapshot))}
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![semio_s_artifact_stdio_ifc_2x3_base::examples::demo::source()]

@@ -106,7 +106,7 @@ fn append_controlled<T, const N: usize>(owner: &mut PagedList<T, N>, value: T, c
     while !owner.has_reserved_slot() {
         let required = owner.next_allocation_bytes()?;
         control.charge(required)?;
-        let progress = owner.reserve_one(required).map_err(|error| ValueError::from(error.refusal()))?;
+        let progress = owner.reserve_one_cold(required).map_err(|error| ValueError::from(error.refusal()))?;
         if !progress.progressed {
             return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "retained XML controlled allocation did not progress"));
         }

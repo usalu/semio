@@ -84,16 +84,24 @@ pub struct SemioSnapshotRetirementFactory<P>(pub std::marker::PhantomData<fn() -
 macro_rules! semio_snapshot_retirement {
     ($snapshot:ty) => {
         impl ::semio_os_kernel::SnapshotRetirementFactory<$snapshot> for $crate::SemioSnapshotRetirementFactory<$snapshot> {
-            fn retirement_birth_bytes(&self, _snapshot: &::std::sync::Arc<$snapshot>) -> usize {
-                ::semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<$snapshot>()
+            fn retirement_birth_bytes(&self, snapshot: &::semio_framework_value::factory::SharedOriginalStorage<$snapshot>) -> usize {
+                ::semio_framework_value::SnapshotRetirementFactory::retirement_birth_bytes(&::semio_framework_value::SharedValueRetirementFactory::<$snapshot>::default(), snapshot)
             }
 
-            fn retire(
-                &self,
-                snapshot: ::std::sync::Arc<$snapshot>,
-                grant: ::semio_framework_value::retained_clone::RetainedCloneGrant,
-            ) -> ::semio_framework_value::RetainedWorkOutcome<(Box<dyn ::semio_os_kernel::ErasedSnapshotRetirement>, ::semio_framework_value::retained_clone::RetainedCloneProgress), (::semio_framework_value::ValueError, ::std::sync::Arc<$snapshot>)> {
-                ::semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
+            fn retire_demands(&self, snapshot: &::semio_framework_value::factory::SharedOriginalStorage<$snapshot>) -> ::std::result::Result<::semio_framework_value::RetirementDemand, ::semio_framework_value::ValueError> {
+                ::semio_framework_value::SnapshotRetirementFactory::retire_demands(&::semio_framework_value::SharedValueRetirementFactory::<$snapshot>::default(), snapshot)
+            }
+
+            fn retire_work_demand(&self, snapshot: &::semio_framework_value::factory::SharedOriginalStorage<$snapshot>) -> ::std::result::Result<u64, ::semio_framework_value::ValueError> {
+                ::semio_framework_value::SnapshotRetirementFactory::retire_work_demand(&::semio_framework_value::SharedValueRetirementFactory::<$snapshot>::default(), snapshot)
+            }
+
+            fn retire<'reply>(&self, snapshot: &mut ::std::option::Option<::semio_framework_value::factory::SharedOriginalStorage<$snapshot>>, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>, reply: ::semio_framework_value::FactoryProducerReply<'reply, dyn ::semio_framework_value::ErasedSnapshotRetirement, ::semio_framework_value::OriginalRetirementFailure>) -> ::semio_framework_value::FactoryProducerReplyComplete<'reply, ::semio_framework_value::OriginalRetirementFailure> {
+                ::semio_framework_value::SnapshotRetirementFactory::retire(&::semio_framework_value::SharedValueRetirementFactory::<$snapshot>::default(), snapshot, effect, reply)
+            }
+
+            fn recover_retire<'reply>(&self, snapshot: &mut ::std::option::Option<::semio_framework_value::factory::SharedOriginalStorage<$snapshot>>, effect: &mut ::semio_framework_value::RetainedAllocationEffect<'_>, reply: ::semio_framework_value::FactoryProducerReply<'reply, dyn ::semio_framework_value::ErasedSnapshotRetirement, ::semio_framework_value::OriginalRetirementFailure>) -> ::semio_framework_value::FactoryProducerReplyComplete<'reply, ::semio_framework_value::OriginalRetirementFailure> {
+                ::semio_framework_value::SnapshotRetirementFactory::recover_retire(&::semio_framework_value::SharedValueRetirementFactory::<$snapshot>::default(), snapshot, effect, reply)
             }
         }
     };

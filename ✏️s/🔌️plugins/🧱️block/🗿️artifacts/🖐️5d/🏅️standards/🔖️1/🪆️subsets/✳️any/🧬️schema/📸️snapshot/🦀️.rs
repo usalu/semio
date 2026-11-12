@@ -232,7 +232,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 
 extern crate self as semio_s_artifact_block_5d_model;
-extern crate semio_framework_pack as pack;
+extern crate pack;
 #[path = "../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
 pub mod binary_snapshot;
 #[path = "../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]

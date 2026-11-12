@@ -15,13 +15,11 @@ pub struct ExtensionEvaluationResources {
     pub(super) close_failure: Option<original_failure::EvaluationCloseFailure>,
     pub(super) close_failure_place: Option<semio_framework_job::OriginalDomainReservation<original_failure::EvaluationCloseFailure>>,
     pub(super) closing: bool,
-    pub(super) work: u64,
 }
 
 impl ExtensionEvaluationResources {
-    pub(crate) fn take_work(&mut self)->u64{std::mem::take(&mut self.work)+self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut().map_or(0,EvaluationInvokeCursor::take_work)}
     pub fn new(registry: Registry) -> Self {
-        Self { invoke: std::sync::Mutex::new(None), original_registry: Some(registry), registry_issuer: neural_engine::SharedRegistryIssuer::new(), registry_source_close: None, registry: None, lease: None, retirement: None, close_failure: None, close_failure_place: None, closing: false, work: 0 }
+        Self { invoke: std::sync::Mutex::new(None), original_registry: Some(registry), registry_issuer: neural_engine::SharedRegistryIssuer::new(), registry_source_close: None, registry: None, lease: None, retirement: None, close_failure: None, close_failure_place: None, closing: false }
     }
     pub fn registry(&self) -> Option<&neural_engine::SharedRegistry> { self.registry.as_ref() }
     /// 🧪️ Names the fields that still hold a value.
@@ -37,24 +35,24 @@ impl ExtensionEvaluationResources {
         }
         Ok(if admitted.progress == RetainedCloneProgress::default() { None } else { Some(false) })
     }
-    pub fn source_close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
-        let empty=RetainedCloneProgress::default();
+    pub fn source_close(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+        let grant=effect.grant();let empty=RetainedCloneProgress::default();
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         let pending=self.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(cursor)=pending {let step=match self.registry.as_ref(){Some(registry)=>cursor.close_step_with_registry(registry,grant)?,None=>cursor.close_step(grant)?};if cursor.terminal_is_empty(){*pending=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(cursor)=pending {let step=match self.registry.as_ref(){Some(registry)=>cursor.close_step_with_registry(registry,body,effect)?,None=>cursor.close_step(body,effect)?};if cursor.terminal_is_empty(){*pending=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(registry)=&self.registry{
-            if evaluation_retirement_pending(registry){return retire_cancelled_evaluations_close_step(registry,grant,&mut self.work).map(|step|RetainedCloneStep::Progress(step.progress()));}
+            if evaluation_retirement_pending(registry){return RetirementPollExit::resume(retire_cancelled_evaluations_close_step(registry,body,effect)).map(|step|RetainedCloneStep::Progress(step.progress()));}
             if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation resource lease handoff requires admitted depth").into());}
             self.lease=Some(self.registry.take().unwrap().into_retirement());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
         }
         if let Some(lease)=&mut self.lease{
-            let step=lease.close_step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"extension evaluation source lease")?;
+            let step=RetirementPollExit::resume(lease.close_step(body,effect))?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"extension evaluation source lease")?;
             if lease.terminal_is_empty(){self.lease=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.registry_source_close.is_some(){return evaluation_child_close(&mut self.registry_source_close,grant,&mut self.work).map_err(Into::into);}
-        if self.original_registry.is_some(){return evaluation_admit_original(&mut self.original_registry,&mut self.registry_source_close,grant,&mut self.work).map_err(Into::into);}
+        if self.registry_source_close.is_some(){return evaluation_child_close(&mut self.registry_source_close,body,effect);}
+        if self.original_registry.is_some(){return evaluation_admit_original(&mut self.original_registry,&mut self.registry_source_close,effect);}
         let Some(retirement)=self.retirement.as_mut() else{return Ok(RetainedCloneStep::Complete(empty));};
-        let step=retirement.close_step(grant)?;
+        let step=RetirementPollExit::resume(retirement.close_step(body,effect))?;
         if retirement.terminal_is_empty(){self.retirement=None;}
         Ok(step)
     }
@@ -97,8 +95,10 @@ impl semio_plugin::ExtensionResourceOwner for ExtensionEvaluationResources {
         }
         let remaining=cx.retained_grant();let demand=self.retirement_demands(remaining.maximum_copy_bytes)?;
         if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()))}
-        cx.consume_fuel(1);let grant=RetainedCloneGrant{maximum_items:1,..remaining};
-        let closed=self.source_close(grant);cx.consume_fuel(self.take_work());
+        let grant=RetainedCloneGrant{maximum_items:1,..remaining};
+        let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|{let result=self.source_close(grant.maximum_copy_bytes,effect);RetirementPollExit::settle(effect,result)})? else{return Ok(PluginLifecycleStep::Progress(Default::default()))};
+        cx.consume_work(performed);
+        let closed=match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(EvaluationFailure::from)};
         match closed{
             Ok(step)=>{let progress=step.progress();if let Err(refusal)=cx.consume_retained(progress){self.close_failure=Some(original_failure::EvaluationCloseFailure{initial:None,closure:refusal.into(),receipt_refusal:None});return Ok(PluginLifecycleStep::Progress(progress))}Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty()))}
             Err(closure)=>{let progress=closure.retained_progress();let receipt_refusal=cx.consume_retained(progress).err();self.close_failure=Some(original_failure::EvaluationCloseFailure{initial:None,closure,receipt_refusal});Ok(PluginLifecycleStep::Progress(progress))}

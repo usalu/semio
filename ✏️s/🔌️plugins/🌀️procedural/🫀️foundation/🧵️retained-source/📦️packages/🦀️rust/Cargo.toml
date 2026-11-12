@@ -27,6 +27,9 @@ semio-framework-value = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-pack-json = { workspace = true }
+semio-framework-value-ordered = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-original-vector = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/📦️packages/🦀️rust" }
+semio-framework-value-native-receiving-original = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 

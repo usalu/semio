@@ -1,7 +1,7 @@
 //! 🌐️ First-party Semio geometry session with explicit instance ownership.
 use semio_os_flow::mesh::*;
 use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, VALUE_TYPE_GEOMETRY, VALUE_TYPE_NUMBER, VALUE_TYPE_POINT, VALUE_TYPE_VECTOR};
-use semio_framework_value::{ValueType,ValueError,ValueRefusalKind};
+use semio_framework_value::{ValueType,ValueError,ValueRefusalKind,OriginalRetirementFailure,OriginalRetirementPoll,RetainedAllocationEffect,RetainedWorkPoll};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::retirement::controlled::{ControlledRetirement,RetainedOwnerGate};
 use semio_framework_mesh_engine::HistoryFoldIndex;
@@ -50,7 +50,7 @@ mod generic_invoke;
 use generic_invoke::{arg_bool_or, arg_f64, arg_f64_or, arg_handle, arg_handles, arg_points, arg_usize, arg_vec3, handle_result, invoke_args, mesh_result, number_result, topology_result, unit_result, vec3_result};
 #[path = "🧠️session-core/🦀️.rs"]
 mod session_core;
-use session_core::{controlled, ownership_advance, ownership_busy, ownership_progress, record_shell, shell_bytes, SessionRetirement, SessionState, ShellAllocator, ShellArc};
+use session_core::{controlled, ownership_advance, ownership_busy, ownership_progress, record_shell, settled_poll, settled_step, shell_bytes, spend_event, SessionRetirement, SessionState, ShellAllocator, ShellArc};
 pub use session_core::{mesh_payload_bytes, GeometryOperations, Session, SessionCapture};
 
 /// 🧹️ Original analytic metadata keeps its exact typed owner until independently admitted release.

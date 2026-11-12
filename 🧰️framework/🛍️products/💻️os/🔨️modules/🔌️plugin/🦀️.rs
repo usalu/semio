@@ -218,6 +218,7 @@ pub mod plugin_app_close_prelude {
     pub use semio_plugin_decl_app;
     pub use semio_plugin_decl_media;
     pub use semio_plugin_decl_views;
+    pub use semio_plugin_document_media;
     pub use semio_plugin_ownership;
     pub use semio_plugin_window_config;
     pub use semio_framework_tool_run::ToolRunTraceCursor;
@@ -442,6 +443,7 @@ pub use app::{
     InteractionWrite,
     KeybindingSpec,
     MediaClass,
+    MediaConstruction,
     MediaType,
     Menu,
     MeshDocumentImporter,

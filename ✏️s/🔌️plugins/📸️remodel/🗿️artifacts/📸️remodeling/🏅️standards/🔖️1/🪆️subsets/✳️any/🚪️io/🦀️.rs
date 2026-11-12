@@ -253,7 +253,7 @@ pub fn seed_remodeling_mesh(scene: &mut RemodelingSnapshot, mesh: &MeshData) -> 
     let chunks = mesh_durable_chunks(mesh);
     let chunk_count = u64::try_from(chunks.len()).map_err(|error| error.to_string())?;
     let content_id = mesh_content_id(&chunks);
-    scene.durable_artifacts.insert(content_id.clone(), RemodelingDurableArtifact { kind: "mesh".into(), mime: None, width: 0, height: 0, chunks });
+    scene.durable_artifacts.cold_insert(content_id.clone(), RemodelingDurableArtifact { kind: "mesh".into(), mime: None, width: 0, height: 0, chunks });
     scene.results.mesh = RemodelingMesh { mesh: remodeling_mesh_content_handle(&content_id, chunk_count), source: MeshSource::Imported, texture_asset_id: None, watertight: None };
     Ok(())
 }
@@ -296,7 +296,7 @@ pub fn scene_from_png_bytes(bytes: &[u8]) -> Result<RemodelingSnapshot, String> 
     let asset = ImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_encode(bytes), width: png.width, height: png.height };
     let asset_id = "png-import-0".to_string();
     let mut scene = default_remodeling_scene();
-    scene.assets.insert(asset_id.clone(), image_asset_child_handle(&asset_id, &asset));
+    scene.assets.cold_insert(asset_id.clone(), image_asset_child_handle(&asset_id, &asset));
     scene.streams.push(MediaStream {
         id: "png-import".into(),
         name: "Imported PNG".into(),

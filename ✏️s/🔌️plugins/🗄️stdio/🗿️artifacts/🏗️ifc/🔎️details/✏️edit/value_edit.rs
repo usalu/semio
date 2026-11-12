@@ -140,14 +140,14 @@ impl IfcValueEdit {
         }
         self.retirement.next_owner_demands::<Parent>(self.retired_parent.is_some(), &None, 4096)
     }
-    fn retirement_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    fn retirement_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return settled(self.retirement.step_granted(4096, effect));
         }
         if self.retired.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.retired, grant), "IFC displaced value owner missing");
+            return owned_step(self.retirement.begin_granted(&mut self.retired, effect), "IFC displaced value owner missing");
         }
-        owned_step(self.retirement.begin_granted(&mut self.retired_parent, grant), "IFC parent owner missing")
+        owned_step(self.retirement.begin_granted(&mut self.retired_parent, effect), "IFC parent owner missing")
     }
     pub fn demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.retired.is_some() || self.retired_parent.is_some() || !self.retirement.is_empty() {
@@ -193,8 +193,7 @@ impl IfcValueEdit {
             return Ok(false);
         }
         if self.retired.is_some() || self.retired_parent.is_some() || !self.retirement.is_empty() {
-            let turn = self.retirement_step(grant);
-            cx.consume_fuel(turn.work);
+            let Some(turn) = effected(cx, |effect| self.retirement_step(effect))? else { return Ok(false) };
             let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
             cx.consume_retained(step.progress())?;
             return Ok(false);
@@ -482,7 +481,7 @@ impl IfcValueEdit {
         }
         self.retirement.next_owner_demands::<Vec<Parent>>(self.parents.is_some(), &None, 4096)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if !self.closing {
             return refused(invalid("IFC native edit close was not initiated"));
         }
@@ -490,23 +489,23 @@ impl IfcValueEdit {
             return idle_step(RetainedCloneStep::Complete(Default::default()));
         }
         if !self.receiver.terminal_is_empty() {
-            return self.receiver.close_step(grant);
+            return self.receiver.close_step(effect);
         }
         if self.retired.is_some() || self.retired_parent.is_some() || !self.retirement.is_empty() {
-            return self.retirement_step(grant);
+            return self.retirement_step(effect);
         }
         if self.current.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.current, grant), "IFC current owner missing");
+            return owned_step(self.retirement.begin_granted(&mut self.current, effect), "IFC current owner missing");
         }
         if self.replacement.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.replacement, grant), "IFC replacement owner missing");
+            return owned_step(self.retirement.begin_granted(&mut self.replacement, effect), "IFC replacement owner missing");
         }
         if self.input.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.input, grant), "IFC original input owner missing");
+            return owned_step(self.retirement.begin_granted(&mut self.input, effect), "IFC original input owner missing");
         }
         if self.rebuilt.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.rebuilt, grant), "IFC rebuilt collection owner missing");
+            return owned_step(self.retirement.begin_granted(&mut self.rebuilt, effect), "IFC rebuilt collection owner missing");
         }
-        owned_step(self.retirement.begin_granted(&mut self.parents, grant), "IFC ancestor owner missing")
+        owned_step(self.retirement.begin_granted(&mut self.parents, effect), "IFC ancestor owner missing")
     }
 }

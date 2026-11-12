@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/fem/editor/gumball-transient/schema.json",
   "title": "FemGumballTransient",
-  "description": "🫧️ The FEM editors' local-only transient: every open gumball gesture of one artifact instance, keyed by the owning window id. Ephemeral tool state — never history, never shared.",
+  "description": "🫧️ The FEM editors' local-only transient: every open gumball gesture of one artifact instance, one entry per owning window id. Ephemeral tool state — never history, never shared.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,9 +10,9 @@
   ],
   "properties": {
     "gestures": {
-      "type": "object",
-      "additionalProperties": {
-        "$ref": "#/definitions/FemGumballGesture"
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FemGumballWindowGesture"
       },
       "x-semio-state": "transient"
     }
@@ -101,6 +101,24 @@
               }
             }
           }
+        }
+      }
+    },
+    "FemGumballWindowGesture": {
+      "description": "🪟️ One window's in-flight gumball gesture, keyed by its owning window id; ordered by window.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "window",
+        "gesture"
+      ],
+      "properties": {
+        "window": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gesture": {
+          "$ref": "#/definitions/FemGumballGesture"
         }
       }
     }

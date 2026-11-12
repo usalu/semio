@@ -115,6 +115,7 @@ pub enum SemioMutation {
     ApplyObject(apply_object::ApplyObject),
     ApplyKit(apply_kit::ApplyKit),
 }
+dsl::original_pack_value_operation_receiving!(SemioMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioMutation` variant, in declaration order — the leaf kinds the
 /// `semio-v1-base` mutation catalog (`../../🔮️oracles/🔣️.json`) declares and `✉️mutate-semio-base`'s

@@ -37,11 +37,15 @@ pub struct SetContributions {
 /// The key is [`semio_os_flow::flow_extension_registry_generation`], not "this was the
 /// last page": a re-push of an unchanged closure leaves the generation where it was and owes nothing,
 /// while ANY later contribution change re-evaluates (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn install(payload: &SetContributions, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
+pub fn register(payload: &SetContributions) -> Result<(), Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
-    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
-    Ok(session.invalidate_for_flow_extension_registry(semio_os_flow::flow_extension_registry_generation(), grant).map_err(|error| Fault::from(error.to_string()))?.0)
+    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)
+}
+
+/// 🧩️ Invalidates the session's evaluations under the caller's original effect; `None` means the effect was not admitted and the session is unchanged.
+pub fn invalidate(session: &mut FlowEvalSession, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<bool>, Fault> {
+    Ok(session.invalidate_for_flow_extension_registry(semio_os_flow::flow_extension_registry_generation(), effect).map_err(|error| Fault::from(error.to_string()))?.map(|(changed, _)| changed))
 }
 
 /// 🧩️ The `view_commands!` row. Its `handle(payload, doc, cfg)` signature is framework-fixed and

@@ -97,6 +97,7 @@ pub enum SemioPresentationMutation {
     /// 🔗 Repoints the layout with id `id` to master `master_id`.
     SetLayoutMaster(set_layout_master::SetLayoutMaster),
 }
+dsl::original_pack_value_operation_receiving!(SemioPresentationMutation);
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `📽️mutate-semio-presentation`

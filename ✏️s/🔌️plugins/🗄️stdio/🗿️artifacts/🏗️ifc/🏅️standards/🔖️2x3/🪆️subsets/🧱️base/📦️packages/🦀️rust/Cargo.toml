@@ -34,6 +34,7 @@ semio-s-artifact-stdio-binary = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-descriptor = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-base-inferences = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-mutations = { workspace = true }
 

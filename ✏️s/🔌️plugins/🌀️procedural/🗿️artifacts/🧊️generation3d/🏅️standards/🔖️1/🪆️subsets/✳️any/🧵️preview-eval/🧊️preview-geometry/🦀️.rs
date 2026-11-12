@@ -527,7 +527,7 @@ pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Valu
 /// mints the `req`, parks the continuation and dispatches the mesh JSON straight back into the
 /// addressed surface — a hand-minted `RequestId` owns no registry slot, so every tessellation result
 /// would be discarded and the 3d preview could never paint.
-pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, tolerance: f64, grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<ExtensionInvocation>, semio_framework_value::ValueError> {
+pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, session: &mut FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, tolerance: f64, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Vec<ExtensionInvocation>, semio_framework_value::ValueError> {
     let Ok(geometry_extension_address) = geometry_extension_address() else {
         return Ok(Vec::new());
     };
@@ -541,7 +541,7 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
         let live = preview_mesh_retention_handles(&eval, host_snapshot, session);
         (live, pending_preview_tessellate_handles(&eval, host_snapshot, session))
     };
-    retain_preview_meshes(session, live, grant)?;
+    retain_preview_meshes(session, live, effect)?;
     let mut invocations = Vec::new();
     for handle in pending {
         let node_hash = semio_os_flow::preview_tessellate_node_hash(&handle, tolerance_bits);
@@ -561,11 +561,11 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
     Ok(invocations)
 }
 
-/// 💚️ Retains exactly the live roster of preview meshes, one granted retention turn at a time, and refuses a retention that stops making progress.
-pub fn retain_preview_meshes(session: &mut FlowEvalSession, live: HashSet<String>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+/// 💚️ Retains exactly the live roster of preview meshes, one step per loop inside the caller's original effect, and refuses a retention that stops making progress.
+pub fn retain_preview_meshes(session: &mut FlowEvalSession, live: HashSet<String>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(), semio_framework_value::ValueError> {
     session.begin_retain_preview_meshes(live.into_iter().collect()).map_err(|(error, _)| error)?;
     while !session.preview_retention_terminal_is_empty() {
-        session.retain_preview_meshes_step(grant)?;
+        session.retain_preview_meshes_step(effect)?;
         if session.preview_retention_step_progress() == Default::default() && !session.preview_retention_terminal_is_empty() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "preview mesh retention was granted too little to advance"));
         }

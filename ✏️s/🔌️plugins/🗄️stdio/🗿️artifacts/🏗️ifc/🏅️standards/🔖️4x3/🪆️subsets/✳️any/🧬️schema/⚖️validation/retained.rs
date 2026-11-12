@@ -28,3 +28,10 @@ pub fn debit(cx: &mut StepContext<'_>, demand: RetirementDemand) -> Result<(), O
     cx.consume_fuel(1);
     Ok(())
 }
+/// ⏳️ A suspended close keeps its state and retries next turn as zero progress; only a settled failure is a refusal.
+pub fn settled(poll: semio_framework_value::OriginalRetirementPoll) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    match poll {
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default())),
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error),
+    }
+}

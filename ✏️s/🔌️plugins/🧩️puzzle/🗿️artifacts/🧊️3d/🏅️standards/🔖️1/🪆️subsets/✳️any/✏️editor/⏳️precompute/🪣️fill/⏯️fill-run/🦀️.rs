@@ -670,7 +670,7 @@ impl InteractiveJob for FillRunJob {
         self.begin_close();
         if !self.outbox.terminal_is_empty() {
             let demand = self.outbox.retirement_demands()?;
-            return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
+            return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(self.outbox.close_step(effect)));
         }
         if !self.builder.terminal_is_empty() {
             let step = self.builder.close_turn(cx)?;
@@ -693,7 +693,7 @@ impl InteractiveJob for FillRunJob {
                     live_record: self.live_record.take(),
                 });
                 self.close_started = true;
-                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+                semio_framework_value::RetainedWorkOutcome::<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> { result: Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
             });
         }
         self.close_owners.close_step(cx)

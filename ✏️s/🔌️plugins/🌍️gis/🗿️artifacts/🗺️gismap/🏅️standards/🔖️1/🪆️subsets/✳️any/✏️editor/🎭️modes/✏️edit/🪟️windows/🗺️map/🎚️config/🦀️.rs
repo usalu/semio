@@ -7,7 +7,9 @@
 use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+
+/// 🗺️ Ordered per-layer map retained by value across window-config clones.
+pub type LayerMap<V> = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, V>;
 
 /// 🪟️ Id of the play app's one map window kind; the window config is the first owner so the config does not reach back into the window module.
 pub const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
@@ -29,7 +31,7 @@ pub const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
 pub struct MapWindowConfig {
     /// 👁️ Per-layer visibility; a missing entry defaults to visible.
     #[dsl(block)]
-    pub layer_visibility: BTreeMap<String, bool>,
+    pub layer_visibility: LayerMap<bool>,
     /// 🎥️ The free/live map camera (`{x,y,zoom}` JSON).
     pub camera_json: String,
     /// 🖼️ `"image" | "vector" | "combined"`.
@@ -40,7 +42,7 @@ pub struct MapWindowConfig {
     pub lod_mode: String,
     /// 👁️ Per-layer stroke-weight multiplier; a missing entry defaults to `1.0`.
     #[dsl(block)]
-    pub layer_stroke_scale: BTreeMap<String, f64>,
+    pub layer_stroke_scale: LayerMap<f64>,
 }
 
 //#region 🔖️ArtifactCodec
@@ -107,12 +109,12 @@ fn default_gis2d_vector_style() -> String {
 impl Default for MapWindowConfig {
     fn default() -> Self {
         Self {
-            layer_visibility: BTreeMap::new(),
+            layer_visibility: LayerMap::new(),
             camera_json: default_gis2d_camera_json(),
             render_mode: default_gis2d_render_mode(),
             vector_style: default_gis2d_vector_style(),
             lod_mode: "automatic".into(),
-            layer_stroke_scale: BTreeMap::new(),
+            layer_stroke_scale: LayerMap::new(),
         }
     }
 }
@@ -215,6 +217,8 @@ impl protocol::OpBinary for MapWindowConfigMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
+
+dsl::original_ordinal_operation_receiving!(MapWindowConfigMutation);
 
 //#endregion 🔖️OpCodec
 

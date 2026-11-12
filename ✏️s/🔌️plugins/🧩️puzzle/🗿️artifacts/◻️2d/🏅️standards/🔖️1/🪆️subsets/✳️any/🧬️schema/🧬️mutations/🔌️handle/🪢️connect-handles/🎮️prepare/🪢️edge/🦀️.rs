@@ -1,5 +1,7 @@
 //! 🪢️ Assembles actual native edge fields through separately granted ownership turns.
 
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::{controlled_step, cursor_advance, cursor_retire, cursor_taken, edit_progress, edit_step, list_reserve, pay, settled_step};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit};
 use crate::standards::v1::subsets::any::schema::mutations::{ConnectHandles};
 use crate::standards::v1::subsets::any::schema::records::Puzzle2dEdge;
 use semio_framework_value::{ValueError, ValueRefusalKind, paged::PagedUtf8, retirement::controlled::ControlledRetirement, retained_clone::{RetainedClone, RetainedCloneBinding, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep}};
@@ -29,18 +31,19 @@ impl Default for Puzzle2dConnectEdgeCursor {
 }
 
 impl Puzzle2dConnectEdgeCursor {
-    pub fn advance(&mut self, mutation: RetainedCloneRef<'_, ConnectHandles>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn advance(&mut self, mutation: RetainedCloneRef<'_, ConnectHandles>, body:usize,effect:&mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant=effect.grant();
         if self.closing || self.phase == 5 { return Err(refusal("edge assembly is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}
         if self.phase == 0 {
-            if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.edge = Some(Puzzle2dEdge { id: Text::default(), source: Text::default(), target: Text::default(), edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, visible: None, locked: None });
             self.phase = 1;
             return Ok(copy(size_of::<Puzzle2dEdge>()));
         }
         if self.phase == 1 {
-            if grant.maximum_copy_bytes < size_of::<f64>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if grant.maximum_copy_bytes < size_of::<f64>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
             let payload = mutation.get();
             let scalar = self.scalar;
             let edge = self.edge.as_mut().ok_or_else(|| refusal("edge assembly lost its native owner"))?;
@@ -52,8 +55,8 @@ impl Puzzle2dConnectEdgeCursor {
         if self.phase == 2 {
             let field = self.field;
             if self.child == 0 {
-                let step = if field < 3 { self.text.advance(mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }),body, grant).result? }
-                else { self.optional.advance(mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }),body, grant).result? };
+                let step = if field < 3 { cursor_advance(&mut self.text,mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }),body,effect)? }
+                else { cursor_advance(&mut self.optional,mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }),body,effect)? };
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.child = 1; }
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
@@ -61,20 +64,20 @@ impl Puzzle2dConnectEdgeCursor {
                 let bytes = if field < 3 { size_of::<Text>() } else { size_of::<Option<Text>>() };
                 if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 if field < 3 {
-                    let value = self.text.take(grant).result?.map(|(owner, _)| owner).ok_or_else(|| refusal("edge field completed without text ownership"))?;
+                    let Some(value) = cursor_taken(&mut self.text, effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
                     let edge = self.edge.as_mut().ok_or_else(|| refusal("edge assembly lost its native owner"))?;
                     match field { 0 => edge.id = value, 1 => edge.source = value, _ => edge.target = value }
-                    self.text.begin_close();
+                    
                 } else {
-                    let value = self.optional.take(grant).result?.map(|(owner, _)| owner).ok_or_else(|| refusal("edge field completed without optional ownership"))?;
+                    let Some(value) = cursor_taken(&mut self.optional, effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); };
                     let edge = self.edge.as_mut().ok_or_else(|| refusal("edge assembly lost its native owner"))?;
                     match field { 3 => edge.edge_kind = value, 4 => edge.source_tip = value, _ => edge.target_tip = value }
-                    self.optional.begin_close();
+                    
                 }
                 self.child = 2;
                 return Ok(copy(bytes));
             }
-            let step = if field < 3 { self.text.close_step(grant).result? } else { self.optional.close_step(grant).result? };
+            let step = if field < 3 { cursor_retire(&mut self.text, effect)? } else { cursor_retire(&mut self.optional, effect)? };
             let empty = if field < 3 { self.text.terminal_is_empty() } else { self.optional.terminal_is_empty() };
             if empty {
                 if field < 3 { self.text = Text::retained_clone_cursor(); } else { self.optional = Option::<Text>::retained_clone_cursor(); }
@@ -85,7 +88,7 @@ impl Puzzle2dConnectEdgeCursor {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.phase == 3 {
-            if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.phase = 4;
             return Ok(RetainedCloneStep::Complete(copy(size_of::<Puzzle2dEdge>()).progress()));
         }
@@ -93,7 +96,7 @@ impl Puzzle2dConnectEdgeCursor {
     }
 
     pub fn take(&mut self) -> Option<Puzzle2dEdge> { if self.closing || self.phase != 4 { return None; } self.phase = 5; self.edge.take() }
-    pub fn begin_close(&mut self) { self.closing = true; self.text.begin_close(); self.optional.begin_close(); }
+    pub fn begin_close(&mut self) { self.closing = true;   }
     pub fn next_close_copy_byte_demand(&self) -> Result<usize,ValueError> {
         if !self.text.terminal_is_empty(){return self.text.next_close_copy_byte_demand();}
         if !self.optional.terminal_is_empty(){return self.optional.next_close_copy_byte_demand();}
@@ -122,18 +125,20 @@ impl Puzzle2dConnectEdgeCursor {
         if self.edge.is_some(){return Ok(1);}
         RetainedCloneBinding::depth_demand(&self.mutation)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        if !self.closing { return Err(refusal("edge assembly closure was not started")); }
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let result=self.close_stepped(effect);RetirementPollExit::settle(effect,result)}
+    fn close_stepped(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+        let grant=effect.grant();
+        if !self.closing { return Err(refusal("edge assembly closure was not started").into()); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.text.terminal_is_empty() { return self.text.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if !self.optional.terminal_is_empty() { return self.optional.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if let Some(owner) = self.retirement.as_mut() { let step = owner.step(grant)?; if owner.terminal_is_empty() { self.retirement = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if !self.text.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.text,effect)?.progress())); }
+        if !self.optional.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.optional,effect)?.progress())); }
+        if let Some(owner) = self.retirement.as_mut() { let step = controlled_step(owner,effect)?; if owner.terminal_is_empty() { self.retirement = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.edge.is_some() {
-            if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            match ControlledRetirement::new(self.edge.take().unwrap()) { Ok(owner) => self.retirement = Some(owner), Err((error, edge)) => { self.edge = Some(edge); return Err(error); } }
+            if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>()||!pay(effect)? { return Ok(RetainedCloneStep::Progress(Default::default())); }
+            match ControlledRetirement::new(self.edge.take().unwrap()) { Ok(owner) => self.retirement = Some(owner), Err((error, edge)) => { self.edge = Some(edge); return Err(error.into()); } }
             return Ok(copy(size_of::<Puzzle2dEdge>()));
         }
-        let step = RetainedCloneBinding::close_one(&mut self.mutation, grant).result?;
+        let step = RetirementPollExit::resume(RetainedCloneBinding::close_one(&mut self.mutation,grant.maximum_copy_bytes,effect))?;
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.text.terminal_is_empty() && self.optional.terminal_is_empty() && self.edge.is_none() && self.retirement.is_none() && self.mutation.is_none() }
@@ -147,7 +152,7 @@ fn refusal(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::Inva
 
 impl crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dNativePreparation for Puzzle2dConnectEdgeCursor {
     fn begin_close(&mut self){Puzzle2dConnectEdgeCursor::begin_close(self);}
-    fn close_granted(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::close_step(self,grant)}
+    fn close_step(&mut self,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{Puzzle2dConnectEdgeCursor::close_step(self,effect)}
     fn terminal_is_empty(&self)->bool{Puzzle2dConnectEdgeCursor::terminal_is_empty(self)}
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::next_close_copy_byte_demand(self)}
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Puzzle2dConnectEdgeCursor::next_close_capacity_byte_demand(self,body)}

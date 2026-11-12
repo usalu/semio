@@ -130,6 +130,7 @@ pub enum BcfMutation {
     SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot),
     SetParts(set_parts::SetParts),
 }
+dsl::original_pack_value_operation_receiving!(BcfMutation);
 
 /// 📇️ Kebab-case spelling of every `BcfMutation` variant, in declaration order -- the exhaustive
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim

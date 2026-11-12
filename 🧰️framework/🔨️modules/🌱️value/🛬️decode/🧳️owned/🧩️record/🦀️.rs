@@ -9,4 +9,4 @@ pub use crate::source::NativeSchemaKeySource;
 pub use semio_framework_value_native_storage::NativeRecordStorage;
 
 
-pub use crate::source::{NativeSourceKeyReply,NativeSourceKeyReplyComplete,NativeSourceKeyValue};
+pub use crate::source::{answer_schema_key,NativeSourceKeyReply,NativeSourceKeyReplyComplete,NativeSourceKeyValue};

@@ -16,7 +16,7 @@ use semio_os_store_snapshot_clone::RetainedCloneEditCursor;
 use semio_os_store_snapshot_clone::RetainedCloneEditStep;
 use semio_os_store_snapshot_clone::RetainedClonePreparationFactory;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
-use semio_framework_value::{AuthoringWallet, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll};
 use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 use semio_framework_value::testing::physical_test_close_grant;
 use crate::store::ArtifactStore;
@@ -88,13 +88,9 @@ pub fn artifact_envelope_decode_test_cursor(chunks: &[&[u8]]) -> OwnedSchemaReco
     OwnedSchemaRecordCursor::try_new(artifact_envelope_owned_schema(), tokens).unwrap_or_else(|_| panic!("valid envelope schema"))
 }
 
-/// 🏦️ Finite work one standalone envelope close fixture turn may spend.
-pub const ENVELOPE_CLOSE_TURN_WORK: u64 = 64;
-
-/// 🧪️ Drives one poll-returning envelope close step inside a standalone authored effect funded exactly by `grant`; a pending or unadmitted turn fails the test.
+/// 🧪️ Drives one poll-returning envelope close step inside an owner-less host-pump effect funded exactly by `grant`; a pending or unadmitted turn fails the test.
 pub fn envelope_close_turn<T, E>(grant: RetainedCloneGrant, operation: impl FnOnce(&mut RetainedAllocationEffect<'_>) -> RetainedWorkPoll<T, E>) -> RetainedWorkOutcome<T, E> {
-    let mut wallet = AuthoringWallet::new(grant, u128::from(ENVELOPE_CLOSE_TURN_WORK));
-    wallet.run_settled(grant, ENVELOPE_CLOSE_TURN_WORK, operation).expect("authored envelope close effect").expect("envelope close work quote is admitted").0
+    match pump_turn(grant, operation).expect("envelope close work quote is admitted") { RetainedWorkPoll::Complete(turn) => turn, RetainedWorkPoll::Pending { .. } => panic!("envelope close turn stayed pending") }
 }
 
 pub fn envelope_field_close_grant() -> RetainedCloneGrant {
@@ -102,26 +98,16 @@ pub fn envelope_field_close_grant() -> RetainedCloneGrant {
 }
 
 
+/// 🎟️ The envelope cleanup caller is the shared once-paid job fixture caller, so every cleanup turn carries its real producer invocation.
 pub struct OriginalEnvelopeCaller {
-    pub operation: semio_framework_job::OperationId,
-    pub generation: semio_framework_job::Generation,
-    pub authority: semio_framework_job_payload::JobPayloadAuthority,
-    pub cancel: std::mem::ManuallyDrop<Option<semio_framework_job::CancelToken>>,
-    pub sequence: u64,
-    pub clock: fn() -> Option<u64>,
-    pub budget: Option<semio_framework_job::StepBudget>,
-    pub receipt: RetainedCloneProgress,
-    pub born: usize,
+    pub inner: semio_framework_job::OriginalJobFixtureCaller,
 }
 
 impl OriginalEnvelopeCaller {
     pub fn admit(operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,source:RetainedCloneGrant,clock:fn()->Option<u64>,deadline:u64,fuel:u64)->Self{
-        let((cancel,receipt),born,freed)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_job::CancelToken::admit_root(source).result.unwrap().unwrap());
-        assert!(receipt.fits(source));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(born,freed));let mut total=born;
-        let((authority,receipt),born,freed)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_job_payload::JobPayloadAuthority::admit(operation,generation,source,&mut None).result.unwrap().unwrap());
-        assert!(receipt.fits(source));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(born,freed));total+=born;
-        Self{operation,generation,authority,cancel:std::mem::ManuallyDrop::new(Some(cancel)),sequence:0,clock,budget:Some(semio_framework_job::StepBudget::new(fuel,deadline,source)),receipt:RetainedCloneProgress::default(),born:total}
+        Self{inner:semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,source,clock,deadline,fuel)}
     }
+
 
     pub fn admit_cleanup(id:&str)->Self{
         let policies:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧵️job/🎟️context/🪙️loan/🧪️tests/🧫️fixtures/🎟️store.json")).unwrap();
@@ -131,27 +117,17 @@ impl OriginalEnvelopeCaller {
     }
 
     pub fn context(&mut self)->semio_framework_job::StepContext<'_>{
-        let budget=self.budget.take().expect("original cleanup context can only be issued once");
-        semio_framework_job::StepContext::with_payload_authority(self.operation,self.generation,budget,self.cancel.as_ref().unwrap(),self.clock,&mut self.sequence,&mut self.receipt,&self.authority).unwrap()
+        self.inner.lend_context()
     }
 
-    pub fn retire(mut self,source:RetainedCloneGrant){
-        let mut released=0;
-        for _ in 0..256{if self.authority.terminal_is_empty(){break}let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||self.authority.close_step(source).result.unwrap());assert!(step.progress().fits(source));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));released+=freed;}
-        assert!(self.authority.terminal_is_empty());
-        let mut cancel=semio_framework_async::CancelTokenRetirement::from_token(self.cancel.take().unwrap());
-        for _ in 0..256{if cancel.terminal_is_empty(){break}let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||cancel.close_step(source).result.unwrap());assert!(step.progress().fits(source));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));released+=freed;}
-        assert!(cancel.terminal_is_empty());assert_eq!(released,self.born);let(_,born,freed)=semio_framework_trace_memory_testing::observe_backing(||drop(cancel));assert_eq!((born,freed),(0,0));
+    pub fn retire(self,source:RetainedCloneGrant){
+        self.inner.retire(source);
     }
-}
-
-impl Drop for OriginalEnvelopeCaller{
-    fn drop(&mut self){assert!(std::thread::panicking()||self.cancel.is_none()&&self.authority.terminal_is_empty(),"original envelope caller requires paid terminal closure");}
 }
 
 pub fn drive_test_envelope_field_return(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>, detached: &mut Option<ArtifactEnvelopeReturnedFieldDecoder<(), ()>>) {
     if let Some(retirement) = detached.as_mut() {
-        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(retirement, effect)).result.expect("test app return pump closes one exact decoder owner");
+        let step = envelope_close_turn(envelope_field_close_grant(), |effect| ErasedSnapshotRetirement::close_step(retirement, envelope_field_close_grant().maximum_copy_bytes, effect)).result.expect("test app return pump closes one exact decoder owner");
         if matches!(step, RetainedCloneStep::Complete(_)) {
             assert!(retirement.terminal_is_empty());
             drop(detached.take());
@@ -193,14 +169,27 @@ pub fn demo_child_dialect() -> semio_framework_artifact_reference::ArtifactDiale
 }
 
 
-pub struct OriginalMemberCaller{pub parent:semio_framework_job::OriginalCallerSourceParent,pub policy:RetainedCloneGrant,pub sequence:u64,pub fuel:u64,pub deadline:u64,pub maximum_turns:usize,pub born:usize}
+/// 🎟️ The member-open caller is the shared once-paid job fixture caller with the member policy fixtures, so every turn carries its real producer invocation.
+pub struct OriginalMemberCaller{pub inner:Option<semio_framework_job::OriginalJobFixtureCaller>,pub policy:RetainedCloneGrant,pub maximum_turns:usize}
 
 impl OriginalMemberCaller{
  pub fn policy(&self)->RetainedCloneGrant{self.policy}
  pub fn maximum_turns(&self)->usize{self.maximum_turns}
- pub fn new()->Self{let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["snapshotInput"]["policy"].clone()).unwrap();let receiving:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🧫️receiving/🔣️.json")).unwrap();let caller=&receiving["caller"];assert_eq!(caller["clockUs"],1);let operation=semio_framework_job::OperationId(caller["operation"].as_u64().unwrap());let generation=semio_framework_job::Generation(caller["generation"].as_u64().unwrap());let((cancel,p),root_born,r)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_job::CancelToken::admit_root(policy).result.unwrap().unwrap());assert_eq!((p.retained_capacity_bytes,p.released_bytes),(root_born,r));assert!(p.fits(policy));let((authority,p),ledger_born,r)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_job_payload::JobPayloadAuthority::admit(operation,generation,policy,&mut None).result.unwrap().unwrap());assert_eq!((p.retained_capacity_bytes,p.released_bytes),(ledger_born,r));assert!(p.fits(policy));let((parent,p),parent_born,r)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_job::OriginalCallerSourceParent::admit(authority,cancel,policy,&mut None).result.unwrap_or_else(|_|panic!("original paid source roots")));assert_eq!((p.retained_capacity_bytes,p.released_bytes),(parent_born,r));assert!(p.fits(policy));Self{parent,policy,sequence:0,fuel:caller["fuel"].as_u64().unwrap(),deadline:caller["deadlineUs"].as_u64().unwrap(),maximum_turns:caller["maximumTurns"].as_u64().unwrap()as usize,born:root_born+ledger_born+parent_born}}
- pub fn run<T>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&semio_framework_job::OriginalCallerSourceParent,&mut semio_framework_job::StepContext<'_>)->T)->(T,RetainedCloneProgress){assert!(grant.maximum_items<=self.policy.maximum_items&&grant.maximum_copy_bytes<=self.policy.maximum_copy_bytes&&grant.maximum_capacity_bytes<=self.policy.maximum_capacity_bytes&&grant.maximum_release_bytes<=self.policy.maximum_release_bytes&&grant.maximum_depth<=self.policy.maximum_depth);let mut received=Default::default();let mut cx=self.parent.borrow_context(semio_framework_job::StepBudget::new(self.fuel,self.deadline,grant),||Some(1),&mut self.sequence,&mut received).unwrap();let result=run(&self.parent,&mut cx);let progress=cx.retained_progress();drop(cx);assert_eq!(received,progress);(result,received)}
- pub fn close(&mut self){let mut freed=0;for _ in 0..256{if self.parent.terminal_is_empty(){break}let(step,b,r)=semio_framework_trace_memory_testing::observe_backing(||self.parent.close_step(self.policy).result.unwrap());assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(b,r));assert!(step.progress().fits(self.policy));freed+=r;}assert!(self.parent.terminal_is_empty());assert_eq!(freed,self.born);}
+ pub fn new()->Self{
+  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+  let policy:RetainedCloneGrant=serde_json::from_value(fixture["snapshotInput"]["policy"].clone()).unwrap();
+  let receiving:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🧫️receiving/🔣️.json")).unwrap();
+  let caller=&receiving["caller"];assert_eq!(caller["clockUs"],1);
+  let inner=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(caller["operation"].as_u64().unwrap()),semio_framework_job::Generation(caller["generation"].as_u64().unwrap()),policy,||Some(1),caller["deadlineUs"].as_u64().unwrap(),caller["fuel"].as_u64().unwrap());
+  Self{inner:Some(inner),policy,maximum_turns:caller["maximumTurns"].as_u64().unwrap()as usize}
+ }
+ pub fn run<T>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&semio_framework_job::OriginalCallerSourceParent,&mut semio_framework_job::StepContext<'_>)->T)->(T,RetainedCloneProgress){
+  assert!(grant.maximum_items<=self.policy.maximum_items&&grant.maximum_copy_bytes<=self.policy.maximum_copy_bytes&&grant.maximum_capacity_bytes<=self.policy.maximum_capacity_bytes&&grant.maximum_release_bytes<=self.policy.maximum_release_bytes&&grant.maximum_depth<=self.policy.maximum_depth);
+  let inner=self.inner.as_mut().expect("original member caller is open");
+  let result=inner.turn(grant,|cx|{let parent=cx.original_source_parent()?;Ok(run(parent,cx))}).expect("original member caller turn");
+  (result,inner.receipt())
+ }
+ pub fn close(&mut self){if let Some(inner)=self.inner.take(){inner.retire(self.policy);}}
 }
 
 pub fn retire_original_member_open(open:&mut impl MemberOpenOperation,caller:&mut OriginalMemberCaller)->(usize,usize,usize){

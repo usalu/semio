@@ -3,10 +3,10 @@ use super::state::EnergyModelState;
 use semio_framework_value::shared_issuance::SealedShared;
 
 /// 🔋️ Native Energy document authority contains the sole persistent model and its original composition headers.
-#[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree,framework_schema::ArtifactSchema)]
+#[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree,framework_schema::ArtifactSchema)]
 #[artifact_schema(id="s.energy.model")]
 #[canonical_json(owner=semio_framework_pack_json)]
-#[value(rename_all="camelCase")]
+#[value(rename_all="camelCase",by_value_projection)]
 pub struct EnergyModelSnapshot{
     #[state(artifact)]
     pub schema:SealedShared<String>,
@@ -19,27 +19,6 @@ pub struct EnergyModelSnapshot{
     #[link_slot(roles("weather"))]
     pub weather_link:SealedShared<Option<store::ArtifactLink>>,
 }
-
-/// 🌳️ The fixed immutable root aliases each of its eleven sealed authorities without traversing a row.
-impl semio_framework_value_snapshot_projection::snapshot_projection::ImmutableRootProjection for EnergyModelSnapshot{
- fn root_projection_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),depth:1,..Default::default()})}
- fn root_projection_work_demand(_:semio_framework_value::RetainedCloneRef<'_,Self>)->Result<u64,semio_framework_value::ValueError>{Ok(11)}
- fn project_root(original:semio_framework_value::RetainedCloneRef<'_,Self>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
-  let grant=effect.grant();let mut work=0u64;
-  let result=(||{
-  let demand=Self::root_projection_demand(original)?;
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(None);}
-  let child=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};
-  let s=original.get();let m=&s.model;
-  let mut child_effect=effect.nested(child);
-  macro_rules! alias{($field:expr)=>{{let turn=$field.try_duplicate(&mut child_effect);work+=turn.work;turn.result?.0}}}
-  let root=Self{schema:alias!(s.schema),model:EnergyModelState{identity:alias!(m.identity),geometry:alias!(m.geometry),materials:alias!(m.materials),loads:alias!(m.loads),controls:alias!(m.controls),systems:alias!(m.systems),generation:alias!(m.generation),outputs:alias!(m.outputs)},referenced_model:alias!(s.referenced_model),weather_link:alias!(s.weather_link)};
-  Ok(Some((root,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
-  })();
-  semio_framework_value::RetainedWorkOutcome{result,work}
- }
-}
-
 
 #[path="🌱️genesis/🦀️.rs"]pub mod genesis;
 

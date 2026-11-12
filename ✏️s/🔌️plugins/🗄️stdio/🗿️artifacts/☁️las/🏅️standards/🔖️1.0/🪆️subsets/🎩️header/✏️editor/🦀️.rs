@@ -7,40 +7,40 @@ use crate::editor::las::modes::edit::windows::main;
 use crate::standards::v1_0::subsets::any::schema::mutations::{LasMutation};
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
-use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
-use semio_framework_plugin::AppOperationContext;
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::ArtifactOwnedToolJobFactory;
-use semio_framework_plugin::ArtifactOwnedToolJobRequest;
-use semio_framework_plugin::ArtifactToolFactoryRegistry;
-use semio_framework_plugin::ArtifactToolPublicationContract;
-use semio_framework_plugin::ArtifactToolPublicationLane;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
+use semio_plugin::app::InteractionView;
+use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+use semio_plugin::AppOperationContext;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::ArtifactOwnedToolJobFactory;
+use semio_plugin::ArtifactOwnedToolJobRequest;
+use semio_plugin::ArtifactToolFactoryRegistry;
+use semio_plugin::ArtifactToolPublicationContract;
+use semio_plugin::ArtifactToolPublicationLane;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
 use {semio_framework_artifact_reference::Dialect};
-use semio_framework_plugin::DraftView;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::Emit;
-use semio_framework_plugin::Fault;
+use semio_plugin::DraftView;
+use semio_plugin::Editor;
+use semio_plugin::Emit;
+use semio_plugin::Fault;
 use semio_ui_locale::Label;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_plugin::NoDraft;
-use semio_framework_plugin::NoDraftMutation;
-use semio_framework_plugin::NoPresence;
-use semio_framework_plugin::NoPresenceMutation;
-use semio_framework_plugin::NoTransient;
-use semio_framework_plugin::NoTransientMutation;
+use semio_plugin::NoConfig;
+use semio_plugin::NoConfigMutation;
+use semio_plugin::NoDraft;
+use semio_plugin::NoDraftMutation;
+use semio_plugin::NoPresence;
+use semio_plugin::NoPresenceMutation;
+use semio_plugin::NoTransient;
+use semio_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_plugin::ToolExecutionContract;
-use semio_framework_plugin::ToolFactoryKey;
-use semio_framework_plugin::ToolJobFactory;
-use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_plugin::ToolOperationSpec;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ToolExecutionContract;
+use semio_plugin::ToolFactoryKey;
+use semio_plugin::ToolJobFactory;
+use semio_plugin::ToolJobFactoryError;
+use semio_plugin::ToolOperationSpec;
+use semio_plugin::EditorApp;
+use semio_plugin::InteractiveJobClassification;
 use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 
@@ -117,10 +117,10 @@ fn las_any_editor_retained_reduce(
     command: &LasAnyEditCommand,
     _snapshot: &LasSnapshot,
     _config: &NoConfig,
-    _history: &semio_framework_plugin::HistoryView,
+    _history: &semio_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
-    _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<LasAnyEditor>>>,
+    _hover: &semio_plugin::app::InteractionHoverState,
+    _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<LasAnyEditor>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<LasMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
@@ -149,7 +149,7 @@ impl ToolJobFactory for LasAnyEditorExampleFactory {
     fn payload_schema_id(&self) -> &str { LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA }
     fn classification(&self) -> InteractiveJobClassification { InteractiveJobClassification::Migrated }
     fn execution_contract(&self) -> ToolExecutionContract { ToolExecutionContract::bounded_first_step(LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 64, 1, 65_536, 7_500) }
-    semio_framework_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES, checkpoint_resume: false);
 }
 
 impl ArtifactOwnedToolJobFactory for LasAnyEditorExampleFactory {
@@ -164,7 +164,7 @@ pub struct LasAnyEditor;
 
 impl ArtifactEditor for LasAnyEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
-    fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    fn examples() -> Vec<semio_plugin::ExampleSource> {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = LasSnapshot;
@@ -182,19 +182,19 @@ impl ArtifactEditor for LasAnyEditor {
     const DIALECT: Dialect = LAS_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LAS_ANY_DOCUMENT_SCHEMA;
 
-    fn natural_file_codec() -> Option<semio_framework_plugin::NaturalFileCodec> {
-        Some(semio_framework_plugin::NaturalFileCodec { format_kind: "s.stdio.las@1.0", extension: ".las", media_type: "application/vnd.las", binary: true })
+    fn natural_file_codec() -> Option<semio_plugin::NaturalFileCodec> {
+        Some(semio_plugin::NaturalFileCodec { format_kind: "s.stdio.las@1.0", extension: ".las", media_type: "application/vnd.las", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        semio_s_artifact_stdio_las_schema::schema::inferences::encode_las(snapshot).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_plugin::MediaError> {
+        semio_s_artifact_stdio_las_schema::schema::inferences::encode_las(snapshot).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
-        semio_s_artifact_stdio_las_schema::schema::inferences::decode_las(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_plugin::MediaError> {
+        semio_s_artifact_stdio_las_schema::schema::inferences::decode_las(bytes).map_err(|error| semio_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
-    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
@@ -214,16 +214,16 @@ impl ArtifactEditor for LasAnyEditor {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if editing::is_snapshot_edit_action(&original.tool_id) { return editing::build_snapshot_edit_tool_job::<Self>(request, output, cx); }
         if !LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
         }
         if las_any_editor_command_id(&original.command) != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "stdio-example-tool-mismatch").into());
         }
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, las_any_editor_command_id, LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, las_any_editor_retained_reduce, las_any_editor_retained_extent))
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, las_any_editor_command_id, LAS_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES, 1, false, |request| BoundedArtifactCommandWork::new(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, las_any_editor_retained_reduce, las_any_editor_retained_extent))
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -236,7 +236,7 @@ impl ArtifactEditor for LasAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); las_any_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->Result<LasSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<LasSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(LasSnapshot::default())
     })}
 
@@ -245,7 +245,7 @@ impl ArtifactEditor for LasAnyEditor {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &InteractionView<'_>,
-        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -258,11 +258,11 @@ impl ArtifactEditor for LasAnyEditor {
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.las@1.0/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
-            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+            main::BODY_KEY => main::render(doc.snapshot).map(semio_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.las@1.0/*#editor", &semio_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_plugin::built_to_component_tree),
+            _ => semio_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -334,7 +334,7 @@ impl editing::SnapshotEditingEditor for LasAnyEditor {
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_las_any_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_las_any_editor() -> semio_plugin::AppDefinition {
     let builder = Editor::builder(LAS_ANY_DIALECT).document(["stdio", "las"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::LAS_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
@@ -379,7 +379,7 @@ pub mod artifact_items_7 {
 use crate::{native_codecs};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
+pub fn definition() -> Result<semio_plugin::ArtifactDefinition, semio_plugin::PluginAssemblyError> {
     let factories = native_codecs();
     let executables = semio_s_artifact_stdio_contract::native_codec_executables(ARTIFACT_DEFINITION_SCHEMA, &factories)?;
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)

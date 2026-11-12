@@ -53,6 +53,7 @@ pub enum SemioKitMutation {
     RemoveDesign(remove_design::RemoveDesign),
     EditDesign(edit_design::EditDesign),
 }
+dsl::original_pack_value_operation_receiving!(SemioKitMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioKitMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-kit` mutation catalog (`../../🔣️oracle.json`) declares and

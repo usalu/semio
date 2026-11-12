@@ -2,7 +2,7 @@
 extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_diff as diff;
-use semio_s_artifact_energy_model_native_mutations::{leaf,reference,row,scalar,owned,text};
+use semio_s_artifact_energy_model_native_mutations::{leaf,reference,row,scalar,owned,text,custody,retained};
 
 #[cfg(test)]#[global_allocator]
 static ORIGINAL_NATIVE_LIFECYCLE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

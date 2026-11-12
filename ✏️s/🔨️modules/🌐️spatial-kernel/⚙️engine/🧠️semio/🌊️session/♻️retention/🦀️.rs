@@ -37,19 +37,20 @@ impl SessionRetention {
     fn body_demand(&self,kernel:&Brep,copy:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand {copy_bytes:self.body.next_copy_byte_demand(kernel)?,capacity_bytes:self.body.next_capacity_byte_demand(kernel,copy)?,release_bytes:self.body.next_release_byte_demand(kernel)?,depth:self.body.next_depth_demand(kernel)?})}
     pub(super) fn normal_step_progress(&self)->RetainedCloneProgress{self.receipt}
     fn advance()->RetainedCloneStep{ownership_advance()}
-    pub(super) fn step(&mut self,session:&Session,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.receipt=Default::default();let result=self.step_retained(session,grant);if let Ok(step)=&result{self.receipt=step.progress();}result}
-    fn step_retained(&mut self,session:&Session,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    pub(super) fn step(&mut self,session:&Session,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{self.receipt=Default::default();let result=self.step_retained(session,effect);if let Ok(step)=&result{self.receipt=step.progress();}result}
+    fn step_retained(&mut self,session:&Session,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+        let grant=effect.grant();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if let Some(owner)=&mut self.cache{let result=owner.step(grant);self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.cache=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if let Some(owner)=&mut self.job{let result=owner.step(grant);self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.job=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=&mut self.cache{let result=settled_step(owner.step(grant.maximum_copy_bytes,effect));self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.cache=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=&mut self.job{let result=settled_step(owner.step(grant.maximum_copy_bytes,effect));self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.job=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if self.cancelled{
-            if let Some(owner)=&mut self.request{let result=owner.step(grant);self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.request=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-            let mut kernel=session.kernel().try_lock().map_err(|_|ownership_busy())?;let result=self.body.step(&mut kernel,grant);self.receipt=self.body.normal_step_progress();return result;
+            if let Some(owner)=&mut self.request{let result=settled_step(owner.step(grant.maximum_copy_bytes,effect));self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.request=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+            let mut kernel=session.kernel().try_lock().map_err(|_|ownership_busy())?;let result=self.body.step(&mut kernel,effect);self.receipt=self.body.normal_step_progress();return result;
         }
-        if self.phase==2{if let Some(owner)=&mut self.request{let result=owner.step(grant);self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.request=None;self.phase=3;}return Ok(RetainedCloneStep::Progress(step.progress()));}}
+        if self.phase==2{if let Some(owner)=&mut self.request{let result=settled_step(owner.step(grant.maximum_copy_bytes,effect));self.receipt=owner.step_progress();let step=result?;if owner.terminal_is_empty(){self.request=None;self.phase=3;}return Ok(RetainedCloneStep::Progress(step.progress()));}}
         if self.phase==3{
             let family=session.state.claims.try_lock().map_err(|_|ownership_busy())?;let mut kernel=session.kernel().try_lock().map_err(|_|ownership_busy())?;
-            if self.clock==session.state.next_authority.load(std::sync::atomic::Ordering::Acquire)&&self.body.candidate_handle(&kernel).is_none(){let result=self.body.step(&mut kernel,grant);self.receipt=self.body.normal_step_progress();if self.body.terminal_is_empty(){self.phase=4;self.slot=0;}drop(family);return result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+            if self.clock==session.state.next_authority.load(std::sync::atomic::Ordering::Acquire)&&self.body.candidate_handle(&kernel).is_none(){let result=self.body.step(&mut kernel,effect);self.receipt=self.body.normal_step_progress();if self.body.terminal_is_empty(){self.phase=4;self.slot=0;}drop(family);return result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         }
         let demand=self.demand(session,grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(ownership_progress());}
@@ -76,7 +77,7 @@ impl SessionRetention {
                 if self.family>=family.slot_count(){self.body.decide(&kernel,self.found)?;self.family=0;self.claim=0;self.found=false;return Ok(Self::advance());}
                 if let Some((_,claims))=family.slot_entry(self.family){if claims.active&&self.claim<claims.handles.slot_count(){if let Some((key,live))=claims.handles.slot_entry(self.claim){self.found|=*live&&key==handle;}self.claim+=1;}else{self.family+=1;self.claim=0;}}else{self.family+=1;self.claim=0;}return Ok(Self::advance());
             }
-            let result=self.body.step(&mut kernel,grant);self.receipt=self.body.normal_step_progress();if self.body.terminal_is_empty(){self.phase=4;self.slot=0;}result.map(|step|RetainedCloneStep::Progress(step.progress()))
+            let result=self.body.step(&mut kernel,effect);self.receipt=self.body.normal_step_progress();if self.body.terminal_is_empty(){self.phase=4;self.slot=0;}result.map(|step|RetainedCloneStep::Progress(step.progress()))
         }else if self.phase==4{
             let kernel=session.kernel().try_lock().map_err(|_|ownership_busy())?;let mut cache=session.mesh_cache().try_lock().map_err(|_|ownership_busy())?;
             if grant.maximum_depth<cache.next_extract_slot_depth_demand(self.slot)?.max(1){return Ok(ownership_progress());}

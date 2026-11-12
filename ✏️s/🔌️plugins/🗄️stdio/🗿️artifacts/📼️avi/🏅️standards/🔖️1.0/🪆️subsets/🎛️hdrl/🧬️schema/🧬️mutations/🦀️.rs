@@ -55,6 +55,7 @@ pub enum AviMutation {
     RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk),
     SetHdrlExtra(set_hdrl_extra::SetHdrlExtra),
 }
+dsl::original_pack_value_operation_receiving!(AviMutation);
 
 /// 📇️ Kebab-case spelling of every `AviMutation` variant, in declaration order -- the exhaustive
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim

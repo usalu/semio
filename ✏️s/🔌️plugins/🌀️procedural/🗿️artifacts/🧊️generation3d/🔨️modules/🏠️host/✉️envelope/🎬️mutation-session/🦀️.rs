@@ -161,9 +161,9 @@ impl Generation3dMutationSession {
         body.next_allocation_bytes().map_err(|_| "generation3d-mutation.body-allocation")
     }
 
-    pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<(bool, usize), &'static str> {
+    pub fn reserve_retained_allocation(&mut self, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(bool, usize), &'static str> {
         let body = self.body.as_mut().ok_or("generation3d-mutation.body-owner")?;
-        body.reserve_allocation(maximum_bytes)
+        body.reserve_allocation(maximum_bytes, effect)
             .map(|step| (step.progressed, step.allocated_bytes))
             .map_err(|_| "generation3d-mutation.body-allocation")
     }
@@ -179,7 +179,7 @@ impl Generation3dMutationSession {
         self.body.as_ref()?.next_release_allocation_bytes().ok().flatten()
     }
 
-    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::mounted_pack_rt::RetainedPackCloseStep, store::PackRefusal> {
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<store::mounted_pack_rt::RetainedPackCloseStep, store::PackRefusal> {
         use store::mounted_pack_rt::RetainedPackCloseStep;
         if self.phase == Generation3dMutationSessionPhase::Closed {
             return Ok(RetainedPackCloseStep::Complete);
@@ -192,14 +192,14 @@ impl Generation3dMutationSession {
             return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(owner) = self.owner.as_mut() {
-            if !owner.close_step() {
+            if !owner.close_step(effect) {
                 return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             drop(self.owner.take());
             return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(body) = self.body.as_mut() {
-            match body.close_step(maximum_items, maximum_bytes)? {
+            match body.close_step(maximum_items, maximum_bytes, effect)? {
                 RetainedPackCloseStep::Pending { released_items, released_bytes } => {
                     return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
                 }

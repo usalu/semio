@@ -3,19 +3,19 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v_rfc4180::subsets::any::schema::snapshot::{CsvSnapshot,CsvRecord,CsvField};
 use semio_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
 #[path="💰️backing/🦀️.rs"] mod backing;
-#[path="🫴️receiving/🦀️.rs"]mod receiving;
 pub(super) fn semantic(snapshot:&CsvSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase)->Result<usize,ValueError>{backing::semantic(snapshot,control,phase)}
 #[path="🛂️admission/🦀️.rs"]pub mod admission;
 impl ArtifactSqliteSnapshotHost for CsvSnapshot{
-fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_subset(dialect,control,||native.native().checkpoint())}
- fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,native:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_subset(dialect,control,||native.native().checkpoint())}
+fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,_database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{
+  control.checkpoint(semio_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,0).map_err(store::io_schema::IoError::from_value_error)?;
+  if dialect.subset=="*"{return Ok(store::io_schema::IoOutcome::clean(()))}
+  Err(store::io_schema::IoError::from_value_error(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"CSV subset has no authored semantic validator")))
+ }
  
  
  
- fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<SqliteDatabase,store::NativeSnapshotFailure>{receiving::project_receiving(self,control,owner)}
- fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{receiving::reconstruct_receiving(database,control,owner)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {native::decode(payload,control,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {native::encode(self,encoding,control,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome{native::decode(payload,control,native_control,output)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome{native::encode(self,encoding,control,native_owner,output)}
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{native::preflight(self,encoding,control)}
  fn retire_sqlite_snapshot(self){<Self as semio_framework_value::FromValue>::retire_decoded(self)}
 }

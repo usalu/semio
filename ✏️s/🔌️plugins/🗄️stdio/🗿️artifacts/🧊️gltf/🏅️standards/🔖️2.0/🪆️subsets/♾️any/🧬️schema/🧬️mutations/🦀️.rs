@@ -252,6 +252,7 @@ pub enum GltfMutation {
     RemoveRequiredExtension(RemoveRequiredExtensionMutation),
     RemoveUsedExtension(RemoveUsedExtensionMutation),
 }
+dsl::original_pack_value_operation_receiving!(GltfMutation);
 
 //#region 🌉️TestBridge
 

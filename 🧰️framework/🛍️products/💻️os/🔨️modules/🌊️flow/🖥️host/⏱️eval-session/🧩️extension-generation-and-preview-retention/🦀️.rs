@@ -154,7 +154,7 @@ impl FlowEvalSession {
             self.state.preview_retention_progress=progress;return Ok(RetainedCloneStep::Progress(progress))
         }
         if owner.phase==6 {
-            let port=self.geometry_port.as_mut().unwrap();let result=port.retain_step(grant);progress=port.retain_step_progress();
+            let port=self.geometry_port.as_mut().unwrap();let result=port.retain_step(effect);progress=port.retain_step_progress();
             if port.retain_terminal_is_empty(){owner.phase=7;}
             self.state.preview_retention=Some(owner);self.state.preview_retention_progress=progress;
             let step=result.map_err(|error|error.with_retained_progress(progress))?;semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,self.geometry_port.as_ref().unwrap().retain_terminal_is_empty(),"Flow original preview geometry retention")?;

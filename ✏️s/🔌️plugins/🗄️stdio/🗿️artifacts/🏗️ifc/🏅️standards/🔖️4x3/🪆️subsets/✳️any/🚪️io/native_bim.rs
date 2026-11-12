@@ -3,6 +3,7 @@ use super::*;
 use super::graph::*;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot,Site,Building,Storey};
 use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
 use std::collections::{BTreeMap,HashMap};
 
 fn compound(angle:f64)->Result<IfcValue,ExchangeError> {
@@ -20,7 +21,7 @@ fn angle(value:Option<&IfcValue>)->Result<f64,ExchangeError> {
     if p[1].abs()>=60.||p[2].abs()>=60.||p.get(3).is_some_and(|n|n.abs()>=1_000_000.)||p.iter().any(|n|*n<0.)&&p.iter().any(|n|*n>0.) {return Err(error("bim.angle","Invalid signed compound angle"));}
     Ok(p[0]+p[1]/60.+p[2]/3600.+p.get(3).copied().unwrap_or(0.)/3_600_000_000.)
 }
-fn elevations<'a>(storeys:&'a BTreeMap<String,Storey>,control:&mut dyn FnMut(ExchangeProgress)->bool)->Result<HashMap<&'a str,f64>,ExchangeError> {
+fn elevations<'a>(storeys:&'a RetainedOrderedMap<String,Storey>,control:&mut dyn FnMut(ExchangeProgress)->bool)->Result<HashMap<&'a str,f64>,ExchangeError> {
     let mut groups:BTreeMap<&str,BTreeMap<i32,(&str,f64)>>=BTreeMap::new();
     for (index,(key,storey)) in storeys.iter().enumerate() {
         checkpoint(control,"bim-levels",index,storeys.len())?;
@@ -128,13 +129,13 @@ pub fn ifc_to_bim_controlled(snapshot:&IfcSnapshot,control:&mut dyn FnMut(Exchan
                 if frame.parent.is_some()||frame.position!=[0.;3]||frame.angle!=0.||parents.get(&entity.id)!=Some(&project.id) {return Err(error("bim.site-placement","Site requires identity absolute placement under project"));}
                 let latitude=angle(entity.args.get(9))?;let longitude=angle(entity.args.get(10))?;
                 if latitude.abs()>90.||longitude.abs()>180. {return Err(error("bim.angle","Geographic angle out of range"));}
-                output.sites.insert(key(entity.id),Site {name:text(entity.args.get(2)),latitude,longitude,elevation:length(number(entity.args.get(11))?,graph.scale)?,true_north:north.unwrap(),boundary:vec![]});
+                output.sites.cold_insert(key(entity.id),Site {name:text(entity.args.get(2)),latitude,longitude,elevation:length(number(entity.args.get(11))?,graph.scale)?,true_north:north.unwrap(),boundary:vec![]});
             },
             "IFCBUILDING"=>{
                 let parent=graph.entity(*parents.get(&entity.id).ok_or_else(||error("bim.site","Building requires site aggregate parent"))?)?;
                 let frame=graph.local(entity.args.get(5))?;
                 if parent.name!="IFCSITE"||frame.parent!=parent.args.get(5).and_then(IfcValue::as_reference) {return Err(error("bim.building-placement","Building requires direct site-relative horizontal frame"));}
-                output.buildings.insert(key(entity.id),Building {site:key(parent.id),name:text(entity.args.get(2)),origin:Point2 {x:length(frame.position[0],graph.scale)?,y:length(frame.position[1],graph.scale)?},rotation:frame.angle,elevation:length(frame.position[2],graph.scale)?});
+                output.buildings.cold_insert(key(entity.id),Building {site:key(parent.id),name:text(entity.args.get(2)),origin:Point2 {x:length(frame.position[0],graph.scale)?,y:length(frame.position[1],graph.scale)?},rotation:frame.angle,elevation:length(frame.position[2],graph.scale)?});
             },
             "IFCBUILDINGSTOREY"=>{
                 let parent=graph.entity(*parents.get(&entity.id).ok_or_else(||error("bim.building","Storey requires building parent"))?)?;
@@ -149,7 +150,7 @@ pub fn ifc_to_bim_controlled(snapshot:&IfcSnapshot,control:&mut dyn FnMut(Exchan
                 let height=graph.length_property(values.get("Height").ok_or_else(||error("bim.height","Explicit authored height required"))?)?;
                 if height<=0. {return Err(error("bim.height","Positive storey height required"));}
                 let cut_height=values.get("CutHeight").map(|property|graph.length_property(property)).transpose()?;
-                output.storeys.insert(key(entity.id),Storey {building:key(parent.id),name:text(entity.args.get(2)),level,height,cut_height});
+                output.storeys.cold_insert(key(entity.id),Storey {building:key(parent.id),name:text(entity.args.get(2)),level,height,cut_height});
             },
             _=>{},
         }

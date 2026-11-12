@@ -176,4 +176,3 @@ impl<A: Puzzle3dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Puzzle3dWindowCommandWork);

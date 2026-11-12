@@ -1,8 +1,8 @@
 //! 🔤️ Borrowed optional UTF8 intents compare original native owners before plan publication.
 use crate::standards::v1::subsets::any::schema::mutations::ChangeNodeIcon;
 use semio_s_artifact_puzzle_2d_mutations::standards::v1::subsets::any::schema::mutations::EditTargetRegionLabel;
-use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep}};
-use semio_framework_value::{paged::PagedUtf8,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,paged::PagedUtf8BoundedOrdCursor,ordered_map::{BoundedOrdCursor,BoundedOrdGrant,BoundedOrdStep}}};
+use crate::{Puzzle2dSnapshot,standards::v1::subsets::any::schema::lookup::{Puzzle2dIdentifierComparison,Puzzle2dLookupCursor,Puzzle2dLookupScope,Puzzle2dLookupStep,pay,settled_step}};
+use semio_framework_value::{paged::PagedUtf8,OriginalRetirementPoll,RetainedAllocationEffect,RetirementPollExit,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep}};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum Puzzle2dTextDisposition {Changed,NoOp,TargetMissing}
@@ -31,47 +31,51 @@ impl Puzzle2dTextIntent for EditTargetRegionLabel {
 }
 
 pub struct Puzzle2dTextPreparationCursor<T:Puzzle2dTextIntent> {
- source:Option<RetainedCloneBinding>,mutation:Option<RetainedCloneBinding>,lookup:Puzzle2dLookupCursor,comparison:PagedUtf8BoundedOrdCursor<{usize::MAX}>,index:Option<usize>,disposition:Puzzle2dTextDisposition,phase:u8,output:Option<Puzzle2dTextPlan>,closing:bool,spent:bool,kind:std::marker::PhantomData<T>,
+ source:Option<RetainedCloneBinding>,mutation:Option<RetainedCloneBinding>,lookup:Puzzle2dLookupCursor,comparison:Puzzle2dIdentifierComparison,index:Option<usize>,disposition:Puzzle2dTextDisposition,phase:u8,output:Option<Puzzle2dTextPlan>,closing:bool,spent:bool,kind:std::marker::PhantomData<T>,
 }
 impl<T:Puzzle2dTextIntent> Default for Puzzle2dTextPreparationCursor<T>{fn default()->Self{Self{source:None,mutation:None,lookup:Puzzle2dLookupCursor::new(T::SCOPE),comparison:Default::default(),index:None,disposition:Puzzle2dTextDisposition::TargetMissing,phase:0,output:None,closing:false,spent:false,kind:std::marker::PhantomData}}}
 impl<T:Puzzle2dTextIntent> Puzzle2dTextPreparationCursor<T>{
- pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,grant:RetainedCloneGrant)->Result<Puzzle2dTextPreparationStep,ValueError>{
+ pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,T>,effect:&mut RetainedAllocationEffect<'_>)->Result<Puzzle2dTextPreparationStep,ValueError>{
+  let grant=effect.grant();
   if self.closing||self.spent{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"text preparation is closing or spent"))}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(Puzzle2dTextPreparationStep::Pending(Default::default()))}
-  if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(Puzzle2dTextPreparationStep::Pending(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(Puzzle2dTextPreparationStep::Pending(progress))}
+  if let Some(progress)=source.bind(&mut self.source,effect).result?{return Ok(Puzzle2dTextPreparationStep::Pending(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(Puzzle2dTextPreparationStep::Pending(progress))}
   if let Some(plan)=self.output{return Ok(Puzzle2dTextPreparationStep::Complete{plan,progress:Default::default()})}
-  if self.phase==0{return match self.lookup.advance(source,mutation.project(1,T::identifier),grant)?{Puzzle2dLookupStep::Pending(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(progress)),Puzzle2dLookupStep::Complete{location,progress}=>{self.index=location.map(|value|value.outer);self.lookup.take();self.phase=1;Ok(Puzzle2dTextPreparationStep::Pending(progress))}}}
+  if self.phase==0{return match self.lookup.advance(source,mutation.project(1,T::identifier),effect)?{Puzzle2dLookupStep::Pending(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(progress)),Puzzle2dLookupStep::Complete{location,progress}=>{self.index=location.map(|value|value.outer);self.lookup.take();self.phase=1;Ok(Puzzle2dTextPreparationStep::Pending(progress))}}}
   if self.phase==1{
-   let bytes=2*size_of::<bool>();if grant.maximum_copy_bytes<bytes{return Ok(Puzzle2dTextPreparationStep::Pending(Default::default()))}
+   let bytes=2*size_of::<bool>();if grant.maximum_copy_bytes<bytes||!pay(effect)?{return Ok(Puzzle2dTextPreparationStep::Pending(Default::default()))}
    self.phase=3;
    if let Some(index)=self.index{match(T::previous(source.get(),index).is_some(),mutation.get().next().is_some()){(false,false)=>self.disposition=Puzzle2dTextDisposition::NoOp,(true,true)=>self.phase=2,_=>self.disposition=Puzzle2dTextDisposition::Changed}}
-   if self.phase==3{self.comparison.begin_close();}
    return Ok(Puzzle2dTextPreparationStep::Pending(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))
   }
   if self.phase==2{
    let index=self.index.expect("immutable text ordinal");
    let left=source.project(2,|snapshot|T::previous(snapshot,index).as_ref().expect("immutable previous text"));
    let right=mutation.project(2,|payload|payload.next().as_ref().expect("immutable next text"));
-   let step=self.comparison.compare(left,right,BoundedOrdGrant{maximum_items:grant.maximum_items,maximum_bytes:grant.maximum_copy_bytes},grant).result?;
-   return match step{BoundedOrdStep::Authority(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(progress)),BoundedOrdStep::Progress(progress)=>Ok(Puzzle2dTextPreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()})),BoundedOrdStep::Complete{ordering,progress}=>{self.disposition=if ordering==std::cmp::Ordering::Equal{Puzzle2dTextDisposition::NoOp}else{Puzzle2dTextDisposition::Changed};self.phase=3;self.comparison.begin_close();Ok(Puzzle2dTextPreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()}))}}
+   let(ordering,progress)=self.comparison.compare(left,right,effect)?;
+   let Some(ordering)=ordering else{return Ok(Puzzle2dTextPreparationStep::Pending(progress))};
+   self.disposition=if ordering==std::cmp::Ordering::Equal{Puzzle2dTextDisposition::NoOp}else{Puzzle2dTextDisposition::Changed};self.phase=3;return Ok(Puzzle2dTextPreparationStep::Pending(progress))
   }
-  if self.phase==3{let step=self.comparison.close_step(grant).result?;if self.comparison.terminal_is_empty(){self.phase=4;self.lookup.begin_close();}return Ok(Puzzle2dTextPreparationStep::Pending(step.progress()))}
-  if self.phase==4{let step=self.lookup.close_step(grant)?;if self.lookup.terminal_is_empty(){self.phase=5;}return Ok(Puzzle2dTextPreparationStep::Pending(step.progress()))}
+  if self.phase==3{let step=settled_step(self.comparison.close_step(effect))?;if self.comparison.terminal_is_empty(){self.phase=4;self.lookup.begin_close();}return Ok(Puzzle2dTextPreparationStep::Pending(step.progress()))}
+  if self.phase==4{let step=settled_step(self.lookup.close_step(effect))?;if self.lookup.terminal_is_empty(){self.phase=5;}return Ok(Puzzle2dTextPreparationStep::Pending(step.progress()))}
+  if !pay(effect)?{return Ok(Puzzle2dTextPreparationStep::Pending(Default::default()))}
   let plan=Puzzle2dTextPlan{disposition:self.disposition,index:self.index};self.output=Some(plan);Ok(Puzzle2dTextPreparationStep::Complete{plan,progress:RetainedCloneProgress{copied_items:1,..Default::default()}})
  }
  pub fn take(&mut self)->Option<Puzzle2dTextPlan>{if self.closing{return None}let output=self.output.take();if output.is_some(){self.spent=true}output}
- pub fn begin_close(&mut self){self.closing=true;self.lookup.begin_close();self.comparison.begin_close();}
+ pub fn begin_close(&mut self){self.closing=true;self.lookup.begin_close();}
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if self.output.is_some(){return Ok(size_of_val(&self.output))}if !self.comparison.terminal_is_empty(){return self.comparison.next_close_copy_byte_demand()}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_copy_byte_demand()}RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.mutation})}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if self.output.is_some(){return Ok(0)}if !self.comparison.terminal_is_empty(){return self.comparison.next_close_capacity_byte_demand(body)}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_capacity_byte_demand(body)}RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.mutation},body)}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if self.output.is_some(){return Ok(0)}if !self.comparison.terminal_is_empty(){return self.comparison.next_close_release_byte_demand()}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_release_byte_demand()}RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.mutation})}
- pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if self.output.is_some(){return Ok(1)}if !self.comparison.terminal_is_empty(){return BoundedOrdCursor::next_close_depth_demand(&self.comparison)}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_depth_demand()}RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.mutation})}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if !self.closing{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"text preparation close was not begun"))}
+ pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if self.output.is_some(){return Ok(1)}if !self.comparison.terminal_is_empty(){return self.comparison.next_close_depth_demand()}if !self.lookup.terminal_is_empty(){return self.lookup.next_close_depth_demand()}RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.mutation})}
+ pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let result=self.close_stepped(effect);RetirementPollExit::settle(effect,result)}
+ fn close_stepped(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+  let grant=effect.grant();
+  if !self.closing{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"text preparation close was not begun").into())}
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if self.output.is_some(){let bytes=size_of_val(&self.output);if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))}
-  if !self.comparison.terminal_is_empty(){return self.comparison.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}
-  if !self.lookup.terminal_is_empty(){return self.lookup.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
-  let step=RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+  if self.output.is_some(){let bytes=size_of_val(&self.output);if grant.maximum_copy_bytes<bytes||!pay(effect)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))}
+  if !self.comparison.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(self.comparison.close_step(effect))?.progress()))}
+  if !self.lookup.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(self.lookup.close_step(effect))?.progress()))}
+  let step=RetirementPollExit::resume(RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant.maximum_copy_bytes,effect))?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.output.is_none()&&self.comparison.terminal_is_empty()&&self.lookup.terminal_is_empty()&&self.source.is_none()&&self.mutation.is_none()}
 }

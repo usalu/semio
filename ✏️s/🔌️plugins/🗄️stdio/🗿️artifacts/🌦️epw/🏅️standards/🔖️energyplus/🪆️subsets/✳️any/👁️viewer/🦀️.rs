@@ -73,8 +73,8 @@ impl ArtifactViewer for EpwViewer {
         let controller=registry.controller_id().to_string();registry.register(semio_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_plugin::ViewerApp<Self>>::new(&controller))
     }
 
-    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
-        semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_plugin::ViewerApp<Self>>::admit_original(request,body,cx)
+    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
+        semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_plugin::ViewerApp<Self>>::admit_original(request,body,construction,cx)
     }
 
     fn reference_birth()->Option<fn()->Result<EpwSnapshot,semio_plugin::Fault>>{Some(||{

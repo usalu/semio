@@ -219,7 +219,7 @@ pub fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
             max[axis] = max[axis].max(point[axis]);
         }
     };
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         expand([node.x, node.y, node.z]);
     }
     for solid in &doc.solids {

@@ -81,6 +81,7 @@ pub enum StepCc6Mutation {
     SetShapeRepresentation(set_shape_representation::SetShapeRepresentation),
     RestoreEntities(restore_entities::RestoreEntities),
 }
+dsl::original_pack_value_operation_receiving!(StepCc6Mutation);
 
 /// 📇️ Kebab-case spelling of every `StepCc6Mutation` variant, in declaration order — the
 /// `step-ap214-cc6` catalog in `../../🔣️oracle.json` must match verbatim. Four kinds,

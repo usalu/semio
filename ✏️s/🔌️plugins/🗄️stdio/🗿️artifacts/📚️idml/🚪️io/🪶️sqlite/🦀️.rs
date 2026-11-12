@@ -46,16 +46,21 @@ fn children<'a>(database: &'a SqliteDatabase, name: &str, parents: &BTreeSet<i64
     Ok(grouped)
 }
 
-fn census(snapshot: &IdmlSnapshot, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {
-    control.checkpoint(phase, 0, 0)?;
+fn extent(snapshot: &IdmlSnapshot) -> Result<(usize, usize), ValueError> {
     let mut rows = 1usize;
     let mut bytes = DOCUMENT_SCHEMA.len().saturating_add(snapshot.dom_version.len());
     for part in &snapshot.parts {
         rows = rows.checked_add(1).and_then(|total| total.checked_add(part.bytes.len())).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "IDML semantic row count overflow"))?;
         bytes = bytes.saturating_add(part.path.len()).saturating_add(part.bytes.len().saturating_mul(32)).saturating_add(40);
-        control.check_rows(rows)?;
-        control.check_value_bytes(bytes)?;
     }
+    Ok((rows, bytes))
+}
+
+fn census(snapshot: &IdmlSnapshot, control: &mut SqliteSnapshotControl<'_>, phase: SqliteSnapshotPhase) -> Result<(), ValueError> {
+    control.checkpoint(phase, 0, 0)?;
+    let (rows, bytes) = extent(snapshot)?;
+    control.check_rows(rows)?;
+    control.check_value_bytes(bytes)?;
     control.checkpoint(phase, rows, rows)
 }
 
@@ -102,30 +107,31 @@ impl ArtifactSqliteSnapshotHost for IdmlSnapshot {
         census(self, control, SqliteSnapshotPhase::EncodeNative)
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_control: &mut store::NativeSnapshotDecodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<Self, store::NativeSnapshotFailure> {
-        store::native_snapshot_turn(|work| {
-        work.performed();
-        native_control.native().checkpoint()?;
-        control.checkpoint(SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-        let snapshot = match payload {
-            store::io_schema::IoPayload::Binary(bytes) => Self::decode_pack(bytes).map_err(|error| refusal(error.to_string()))?,
-            store::io_schema::IoPayload::Text(text) => Self::parse_dsl(text).map_err(|error| refusal(error.to_string()))?,
-        };
-        census(&snapshot, control, SqliteSnapshotPhase::DecodeNative)?;
-        snapshot.package()?;
-        Ok(snapshot)
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>, native_control: &mut store::NativeSnapshotDecodeOwner<'_, '_>, output: &mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>) -> store::os_store::serialization::SnapshotReceivingOutcome {
+        let limits = control.limits();
+        store::space_history::io::sqlite::snapshot::settlement::decode_typed(control, native_control, output, |native| {
+            native.checkpoint()?;
+            let snapshot = match payload {
+                store::io_schema::IoPayload::Binary(bytes) => Self::decode_pack(bytes).map_err(|error| refusal(error.to_string()))?,
+                store::io_schema::IoPayload::Text(text) => Self::parse_dsl(text).map_err(|error| refusal(error.to_string()))?,
+            };
+            let (rows, bytes) = extent(&snapshot)?;
+            if rows > limits.max_rows || bytes > limits.max_value_bytes { return Err(ValueError::new(ValueRefusalKind::WorkLimit, "IDML semantic extent exceeds the SQLite limits")); }
+            snapshot.package()?;
+            Ok(snapshot)
         })
     }
 
-    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload, store::NativeSnapshotFailure> {
-        store::native_snapshot_turn(|work| {
-        work.performed();
-        native_owner.native().checkpoint()?;
-        census(self, control, SqliteSnapshotPhase::EncodeNative)?;
-        Ok(match encoding {
-            SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(self.encode_pack()),
-            SnapshotEncoding::Text => store::io_schema::IoPayload::Text(self.print_dsl()),
-        })
+    fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>, native_owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>, output: &mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>) -> store::os_store::serialization::SnapshotReceivingOutcome {
+        if let Err(error) = census(self, control, SqliteSnapshotPhase::EncodeNative) {
+            return semio_framework_value::RetainedWorkOutcome { result: Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)), work: 0 };
+        }
+        store::space_history::io::sqlite::snapshot::settlement::encode_typed(control, native_owner, output, |native| {
+            native.checkpoint()?;
+            Ok(match encoding {
+                SnapshotEncoding::Binary => store::io_schema::IoPayload::Binary(self.encode_pack()),
+                SnapshotEncoding::Text => store::io_schema::IoPayload::Text(self.print_dsl()),
+            })
         })
     }
 }

@@ -59,7 +59,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, _cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation2dPlayApp>>, cx: &mut StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation2dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation2d-contributions-work-repeated"));
@@ -70,17 +70,27 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dContrib
         };
         let windows = generation2d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
         let servable = semio_s_artifact_procedural_2d_preview_eval::may_rearm(&input.snapshot.host_snapshot);
+        set_contributions::register(payload)?;
+        let grant = cx.retained_grant();
+        let mut pending = false;
         let emit = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
             let mut emit = Emit::default();
             let invalidated = {
                 let (sessions, _) = owner.parts()?;
-                set_contributions::install(payload, &mut [sessions.document, sessions.generation], input.operation.retained)?
+                let Some((outcome, _)) = cx.with_original_effect(grant, |_, effect| set_contributions::invalidate(&mut [sessions.document, sessions.generation], effect)).map_err(|error| Fault::from(error.to_string()))? else { return Ok(None) };
+                outcome?
             };
-            if invalidated {
-                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+            match invalidated {
+                None => pending = true,
+                Some(true) => owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?,
+                Some(false) => {}
             }
-            Ok(emit)
+            Ok(Some(emit))
         })?;
+        let Some(emit) = emit.filter(|_| !pending) else {
+            self.consumed = false;
+            return Ok(ArtifactCommandWorkStep::Pending { stage: "contributions-invalidation", preview: b"" });
+        };
         Ok(ArtifactCommandWorkStep::Complete(emit))
     
         })();
@@ -189,4 +199,3 @@ pub(super) fn generation2d_bounded_first_step_tool_proofs() -> Vec<semio_plugin:
     proofs
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation2dContributionsWork);

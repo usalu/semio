@@ -1,32 +1,44 @@
-//! 🚚️ Genuine Zone sparse preparation validates original identity and physics before central writes.
+//! 🚚️ Genuine Zone sparse preparation validates original identity and physics before the shared central writes.
 use super::{StateZonePatch,StateZone,EntityId};
-use protocol::{ApplyCapability,MutationMessage,RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,RetainedRowPatchApply};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
+use protocol::{ApplyCapability,MutationMessage,RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,retained::{Done,Reply,RetainedPatchDiffApply,conclude}};
+use semio_framework_value::{OriginalRetirementCloseLoan,OriginalRetirementOutcome,OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::size_of;
-/// 🚦️ Zone authored fields validate before shared sparse staging and central capability exchange.
-pub struct StateZoneApply{fields:RetainedRowPatchApply<StateZone,StateZonePatch>,phase:u8}
+
+/// 🚦️ Zone authored fields validate once before the shared sparse staging and central capability exchange.
+pub struct StateZoneApply{inner:RetainedPatchDiffApply<StateZone,StateZonePatch>,checked:bool,refused:bool}
 impl RetainedDiffFragment<StateZone> for StateZonePatch{type FragmentApply=StateZoneApply;}
 impl RetainedDiffApply<StateZone,StateZonePatch> for StateZoneApply{
- fn new()->Self{Self{fields:Default::default(),phase:0}}
- fn preflight_demand(&self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,_:RetainedCloneRef<'_, StateZone>,body:usize)->Result<RetirementDemand,ValueError>{if self.phase==0{return Ok(RetirementDemand{copy_bytes:2*size_of::<EntityId>()+size_of::<Option<f64>>()+size_of::<Option<u32>>()+size_of::<u8>(),depth:1,..Default::default()});}if self.phase==1{return zone_nested(self.fields.stage_demand(d,s,body)?);}Err(zone_invalid())}
- fn preflight_work_demand(&self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,post:RetainedCloneRef<'_,StateZone>,body:usize)->Result<u64,ValueError>{self.preflight_demand(d,s,post,body)?;if self.phase==0{Ok(1)}else{self.fields.stage_work_demand(d,s,body)}}
- fn preflight(&mut self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,post:RetainedCloneRef<'_, StateZone>,body:usize,g:RetainedCloneGrant,_:&mut NativeDecodeControl<'_>)->semio_framework_value::RetainedWorkOutcome<RetainedDiffPreflightAdvance,semio_framework_value::OriginalRetirementFailure>{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{
-  let demand=<Self as RetainedDiffApply<StateZone,StateZonePatch>>::preflight_demand(self,d,s,post,body)?;if !retained_mutation_demand_fits(demand,g){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}
-  if self.phase==0{work=1;let admitted=post.get().id==s.get().id&&d.get().volume_m3.is_none_or(|v|v.is_finite()&&v>0.0)&&d.get().multiplier.is_none_or(|v|v>0);self.phase=if admitted{1}else{4};let p=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};return Ok(if admitted{RetainedDiffPreflightAdvance::Progress(p)}else{RetainedDiffPreflightAdvance::Ready(p,false)});}
-  let turn=self.fields.stage(d,s,body,zone_child(g));work=turn.work;let step=turn.result.map_err(|error|if work==0{error}else{let p=zone_receipt(error.retained_progress()).unwrap_or(error.retained_progress());error.with_retained_progress(p)})?;let p=zone_receipt(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;Ok(RetainedDiffPreflightAdvance::Ready(p,true))}else{Ok(RetainedDiffPreflightAdvance::Progress(p))}
- })();semio_framework_value::RetainedWorkOutcome{result,work}}
+ fn new()->Self{Self{inner:RetainedPatchDiffApply::new(),checked:false,refused:false}}
+ fn preflight_demand(&self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,p:RetainedCloneRef<'_,StateZone>,body:usize,max:u64)->Result<RetirementDemand,ValueError>{if self.refused{return Err(zone_invalid())}if self.checked{return self.inner.preflight_demand(d,s,p,body,max)}Ok(RetirementDemand{copy_bytes:2*size_of::<EntityId>()+size_of::<Option<f64>>()+size_of::<Option<u32>>()+size_of::<u8>(),depth:1,..Default::default()})}
+ fn preflight_work_demand(&self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,p:RetainedCloneRef<'_,StateZone>,body:usize,max:u64)->Result<u64,ValueError>{if self.refused{return Err(zone_invalid())}if self.checked{return self.inner.preflight_work_demand(d,s,p,body,max)}Ok(1)}
+ fn preflight_reply<'r>(&mut self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,p:RetainedCloneRef<'_,StateZone>,body:usize,max:u64,effect:&mut RetainedAllocationEffect<'_>,receiving:&mut NativeDecodeControl<'_>,reply:Reply<'r,RetainedDiffPreflightAdvance>,recover:bool)->Result<Done<'r,RetainedDiffPreflightAdvance>,ValueError>{
+  if self.refused{return Err(zone_invalid())}
+  if self.checked{return self.inner.preflight_reply(d,s,p,body,max,effect,receiving,reply,recover)}
+  let grant=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+  let result:Result<RetainedDiffPreflightAdvance,RetirementPollExit>=(||{
+   if recover{return Err(zone_invalid().into())}
+   let demand=self.preflight_demand(d,s,p,body,max)?;
+   if max==0||effect.remaining_work_units()?<1||!retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()))}
+   if !effect.performed(1)?{return Err(zone_invalid().into())}
+   work=1;self.checked=true;
+   let admitted=p.get().id==s.get().id&&d.get().volume_m3.is_none_or(|v|v.is_finite()&&v>0.0)&&d.get().multiplier.is_none_or(|v|v>0);
+   let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+   if admitted{Ok(RetainedDiffPreflightAdvance::Progress(progress))}else{self.refused=true;Ok(RetainedDiffPreflightAdvance::Ready(progress,false))}
+  })();
+  conclude(effect,base,result,work,RetainedDiffPreflightAdvance::progress,reply)
+ }
  fn take_messages(&mut self)->Vec<MutationMessage>{Vec::new()}
- fn commit_demand(&self,_:RetainedCloneRef<'_,StateZonePatch>,_:RetainedCloneRef<'_,StateZone>,_:&StateZone,_:usize)->Result<RetirementDemand,ValueError>{if self.phase!=2{return Err(zone_invalid());}zone_nested(self.fields.exchange_demand()?)}
- fn commit_work_demand(&self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,post:&StateZone,body:usize)->Result<u64,ValueError>{self.commit_demand(d,s,post,body)?;self.fields.exchange_work_demand()}
- fn commit(&mut self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,post:&mut StateZone,g:RetainedCloneGrant,c:ApplyCapability)->semio_framework_value::OriginalRetirementOutcome{let mut work=0;let result:Result<_,semio_framework_value::OriginalRetirementFailure>=(||{let demand=<Self as RetainedDiffApply<StateZone,StateZonePatch>>::commit_demand(self,d,s,post,g.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let turn=self.fields.exchange(post,c,zone_child(g));work=turn.work;let step=turn.result.map_err(|error|if work==0{error}else{let p=zone_receipt(error.retained_progress()).unwrap_or(error.retained_progress());error.with_retained_progress(p)})?;let p=zone_receipt(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3;Ok(RetainedCloneStep::Complete(p))}else{Ok(RetainedCloneStep::Progress(p))}})();semio_framework_value::RetainedWorkOutcome{result,work}}
- fn begin_close(&mut self){self.fields.begin_close();}
- fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.fields.close_demand(body)}
- fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.fields.close_work_demand(body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::OriginalRetirementOutcome{self.fields.close_step(g)}
- fn terminal_is_empty(&self)->bool{self.fields.terminal_is_empty()}
+ fn commit_demand(&self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,p:&StateZone,body:usize)->Result<RetirementDemand,ValueError>{self.inner.commit_demand(d,s,p,body)}
+ fn commit_work_demand(&self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,p:&StateZone,body:usize)->Result<u64,ValueError>{self.inner.commit_work_demand(d,s,p,body)}
+ fn commit(&mut self,d:RetainedCloneRef<'_,StateZonePatch>,s:RetainedCloneRef<'_,StateZone>,p:&mut StateZone,effect:&mut RetainedAllocationEffect<'_>,c:ApplyCapability)->OriginalRetirementOutcome{self.inner.commit(d,s,p,effect,c)}
+ fn begin_close(&mut self){self.inner.begin_close();}
+ fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.inner.close_demand(body)}
+ fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{self.inner.close_work_demand(body)}
+ fn requires_original_birth(&self)->bool{self.inner.requires_original_birth()}
+ fn requires_original_control(&self)->bool{self.inner.requires_original_control()}
+ fn close_original_birth_step(&mut self,original:&mut OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->OriginalRetirementPoll{self.inner.close_original_birth_step(original,grant)}
+ fn close_reply<'r>(&mut self,original:Option<&mut OriginalRetirementCloseLoan<'_>>,body:usize,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{self.inner.close_reply(original,body,effect,reply,recover)}
+ fn terminal_is_empty(&self)->bool{self.inner.terminal_is_empty()}
 }
 fn zone_invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"Energy Zone sparse apply lost its validated phase")}
-fn zone_nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(1).ok_or_else(zone_invalid)?;d.depth=d.depth.checked_add(1).ok_or_else(zone_invalid)?;Ok(d)}
-fn zone_child(g:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-1,maximum_depth:g.maximum_depth-1,..g}}
-fn zone_receipt(mut p:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(1).ok_or_else(zone_invalid)?;Ok(p)}

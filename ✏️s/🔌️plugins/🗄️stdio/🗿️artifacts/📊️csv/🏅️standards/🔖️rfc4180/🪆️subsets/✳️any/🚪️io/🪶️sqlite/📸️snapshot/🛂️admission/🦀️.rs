@@ -27,18 +27,19 @@ fn binding_demands_with_checkpoint(root:&RecordValue,mut checkpoint:impl FnMut()
  }
  Ok(semio_framework_value::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copied,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:6})
 }
-/// 🧵️ Receives each original CSV row and field before its children can allocate or cancel.
-pub fn bind(root:&RecordValue,output:&mut Option<CsvSnapshot>,native:&mut NativeDecodeControl<'_>,wallet:&mut semio_os_kernel::NativeSnapshotBodyWallet)->Result<(),ValueError>{
- if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"CSV native destination must be empty"))}
- let demand=binding_demands_with_checkpoint(root,||native.checkpoint())?;wallet.admit_frontier(demand)?;
- if native.owned_bytes().checked_add(demand.maximum_capacity_bytes).is_none_or(|extent|extent>native.maximum_bytes()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"CSV typed destination exceeds original native ceiling"))}
+/// 🧵️ Registers every typed child before birth and returns actual progress to its original wallet.
+pub fn bind(root:&RecordValue,output:&mut Option<CsvSnapshot>,owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->std::result::Result<(),semio_os_kernel::NativeSnapshotFailure>{
+ if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"CSV native destination must be empty").into())}
+ let demand=binding_demands_with_checkpoint(root,||owner.native().checkpoint())?;let construction=owner.admit_constructed(demand)?;let native=owner.native();
  let schema=text(field(root,0)?)?;let has_header=boolean(field(root,1)?)?;let rows=list(field(root,2)?)?;let total=rows.iter().try_fold(1usize,|count,row|count.checked_add(1).and_then(|count|count.checked_add(list(field(record(row).ok()?,0).ok()?).ok()?.len())).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"CSV typed workload overflow")))?;
- wallet.record_progress(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<CsvSnapshot>(),..Default::default()})?;
  *output=Some(CsvSnapshot{schema:String::new(),has_header,records:Vec::new()});
+ let mut progress=semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<CsvSnapshot>(),..Default::default()};
  let result=native.scoped_stage(|native|{
-  native.begin_stage(total)?;let snapshot=output.as_mut().unwrap();wallet.copy_text_into(native,schema,&mut snapshot.schema,2)?;native.step()?;wallet.allocate_vec_into(native,rows.len(),&mut snapshot.records,2)?;
-  for row in rows{let cells=list(field(record(row)?,0)?)?;let header=semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<CsvRecord>(),..Default::default()};wallet.record_progress(header)?;snapshot.records.push(CsvRecord{fields:Vec::new()});let destination=&mut snapshot.records.last_mut().unwrap().fields;wallet.allocate_vec_into(native,cells.len(),destination,4)?;native.step()?;
-   for cell in cells{let cell=record(cell)?;let quoted=boolean(field(cell,1)?)?;let value=text(field(cell,0)?)?;wallet.record_progress(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<CsvField>(),..Default::default()})?;destination.push(CsvField{value:String::new(),quoted});wallet.copy_text_into(native,value,&mut destination.last_mut().unwrap().value,6)?;native.step()?;}
+  native.begin_stage(total)?;let snapshot=output.as_mut().unwrap();let result=native.copy_text_into(schema,&mut snapshot.schema);if result.is_ok()||snapshot.schema.capacity()>0{progress.copied_items+=1;}progress.copied_bytes+=snapshot.schema.len();progress.retained_capacity_bytes+=snapshot.schema.capacity();result?;native.step()?;
+  snapshot.records=native.allocate_vec(rows.len())?;progress.copied_items+=1;progress.copied_bytes+=size_of::<Vec<CsvRecord>>();progress.retained_capacity_bytes+=snapshot.records.capacity()*size_of::<CsvRecord>();
+  for row in rows{let cells=list(field(record(row)?,0)?)?;snapshot.records.push(CsvRecord{fields:Vec::new()});progress.copied_items+=1;progress.copied_bytes+=size_of::<CsvRecord>();let destination=&mut snapshot.records.last_mut().unwrap().fields;*destination=native.allocate_vec(cells.len())?;progress.copied_bytes+=size_of::<Vec<CsvField>>();progress.retained_capacity_bytes+=destination.capacity()*size_of::<CsvField>();native.step()?;
+   for cell in cells{let cell=record(cell)?;let quoted=boolean(field(cell,1)?)?;let value=text(field(cell,0)?)?;destination.push(CsvField{value:String::new(),quoted});progress.copied_items+=1;progress.copied_bytes+=size_of::<CsvField>();let target=&mut destination.last_mut().unwrap().value;let result=native.copy_text_into(value,target);progress.copied_bytes+=target.len();progress.retained_capacity_bytes+=target.capacity();result?;native.step()?;}
   }Ok::<(),ValueError>(())
- });result.map_err(|error|error.with_retained_progress(wallet.progress()))
+ });
+ let posted=owner.record_constructed_progress(construction,progress);result.map_err(|error|error.with_retained_progress(progress))?;posted
 }

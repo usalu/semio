@@ -190,7 +190,7 @@ impl RetainedZlibEncoder {
                     None => (deflate_close_idle(), 0),
                 }
             };
-            semio_framework_value::RetainedWorkOutcome { result: Ok(step), work }
+            semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> { result: Ok(step), work }
         })
     }
 

@@ -135,7 +135,7 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active_retirement.is_some() {
-            let step = match artifact_retirement_box_close_step(&mut self.active_retirement, &mut effect.nested(child)) { RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(Default::default()), RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_value_error())? };
+            let step = match artifact_retirement_box_close_step(&mut self.active_retirement, child.maximum_copy_bytes, &mut effect.nested(child)) { RetainedWorkPoll::Pending { .. } => RetainedCloneStep::Progress(Default::default()), RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_value_error())? };
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.semantic_refusal.is_some() { let turn = semio_framework_value::retirement::admit_owned_retirement(&mut *self.semantic_refusal, &mut effect.nested(child)); return match turn.result? { Some((owner, progress)) => { self.active_retirement = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }, None => Ok(RetainedCloneStep::Progress(Default::default())) }; }

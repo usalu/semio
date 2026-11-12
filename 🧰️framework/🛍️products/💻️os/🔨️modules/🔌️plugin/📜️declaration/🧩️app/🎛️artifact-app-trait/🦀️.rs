@@ -173,7 +173,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     }
     /// 🎞️ Builds an owned resumable producer for an explicitly registered media-output port.
     /// The completed `Media` crosses back to the host only after the job's fresh commit boundary.
-    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(_request:&mut Option<ArtifactMediaExportJobRequest<Self>>,_body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>,_construction:&mut crate::media_contract::MediaConstruction,_cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered media output lacks its concrete source-preserving producer").into())
     }
 

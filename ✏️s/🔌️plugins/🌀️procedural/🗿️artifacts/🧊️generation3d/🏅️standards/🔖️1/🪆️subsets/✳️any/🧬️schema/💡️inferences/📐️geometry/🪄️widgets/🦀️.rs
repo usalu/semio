@@ -3,6 +3,7 @@
 use semio_s_artifact_procedural_3d_geometry_value::outputs;
 use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::SharedEvaluation;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_s_artifact_procedural_3d_geometry_value::FAULT_PREFIX;
 use semio_s_artifact_procedural_3d_model::catalogue::Quality;
@@ -12,7 +13,7 @@ use std::sync::Arc;
 /// 🚫️ The refusal code of a widget kind that has no geometry meaning.
 pub const WIDGET_UNSUPPORTED: &str = "generation3d.geometry.widget-unsupported";
 
-fn pass_through(wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<WidgetEvaluation>>) -> WidgetEvaluation {
+fn pass_through(wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<SharedEvaluation>) -> WidgetEvaluation {
     let mut merged = semio_s_artifact_procedural_3d_geometry_value::Outputs::new();
     for wire in wires {
         let Some(source) = parent(&wire.from) else {
@@ -36,7 +37,7 @@ fn pass_through(wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<Widg
 
 /// 🧮️ Evaluates a widget that is not an operator: sliders, notes, images and variables provide their document value, a preview passes its source through, actions and exports consume without output, a cluster is refused.
 /// `wires` are the synapses ending at the widget; `parent` answers the evaluation of a source widget. An operator widget has no evaluation here.
-pub fn evaluate(widget: &Widget, wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<WidgetEvaluation>>) -> Option<WidgetEvaluation> {
+pub fn evaluate(widget: &Widget, wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<SharedEvaluation>) -> Option<WidgetEvaluation> {
     let provided = |port: &str, value: GeometryValue| WidgetEvaluation::ok(outputs([(port, value)]), Quality::ExactAnalytic);
     Some(match widget {
         Widget::Neuron { .. } => return None,

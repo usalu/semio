@@ -20,10 +20,10 @@ fn the_committed_transient_is_canonical_and_round_trips_every_codec() {
 #[test]
 fn a_window_gesture_is_keyed_by_its_window_alone() {
     let transient: FemGumballTransient = semio_framework_pack_json::from_json_str(&FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed transient decodes");
-    let gesture = transient.gestures["model-left"].clone();
+    let gesture = transient.gesture("model-left").expect("the left window holds a gesture").clone();
     let both = transient.with_gesture("model-right", Some(gesture.clone()));
     assert_eq!(both.gestures.len(), 2);
     let cleared = both.with_gesture("model-left", None);
-    assert_eq!(cleared.gestures.keys().collect::<Vec<_>>(), vec!["model-right"], "clearing one window's gesture keeps the sibling's");
-    assert_eq!(cleared.gestures["model-right"], gesture);
+    assert_eq!(cleared.windows().collect::<Vec<_>>(), vec!["model-right"], "clearing one window's gesture keeps the sibling's");
+    assert_eq!(cleared.gesture("model-right"), Some(&gesture));
 }

@@ -119,6 +119,7 @@ pub enum JsonIJsonMutation {
     /// ➖️ Removes the element at `index` from the array at `path`. Inherited from ✳️any.
     RemoveArrayElement(remove_array_element::RemoveArrayElement),
 }
+dsl::original_pack_value_operation_receiving!(JsonIJsonMutation);
 
 /// 🧾️ Kebab-case spelling of every `JsonIJsonMutation` variant, in declaration order — the
 /// `json-rfc8259-i-json` catalog in `../../🔣️oracle.json` is measured against this exact

@@ -22,6 +22,7 @@ pub enum JsonMutation {
     RemoveArrayElement(RemoveArrayElementMutation),
     SetScalar(SetScalarMutation),
 }
+dsl::original_pack_value_operation_receiving!(JsonMutation);
 
 
 

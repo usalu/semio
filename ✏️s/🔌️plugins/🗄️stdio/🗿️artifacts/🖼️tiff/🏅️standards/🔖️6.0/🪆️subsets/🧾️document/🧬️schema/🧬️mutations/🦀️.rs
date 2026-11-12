@@ -26,6 +26,7 @@ pub enum TiffMutation {
     PaintRegion(PaintRegionMutation),
     ReplaceSamples(ReplaceSamplesMutation),
 }
+dsl::original_pack_value_operation_receiving!(TiffMutation);
 
 //#endregion Aggregate
 

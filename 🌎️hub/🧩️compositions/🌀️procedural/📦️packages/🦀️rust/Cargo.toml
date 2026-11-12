@@ -36,6 +36,8 @@ semio-plugin = { workspace = true }
 # impl HERE, so the domain-neutral tool-run types have to resolve in this crate too.
 semio-framework-tool-run = { workspace = true }
 semio-framework-job = { workspace = true }
+# 🪢️ `dyn_enum_close!` also copies value-typed `PluginApp` signatures into the generated impl.
+semio-framework-value = { workspace = true }
 
 [dev-dependencies]
 semio-s-artifact-procedural-3d-examples = { workspace = true }

@@ -1,7 +1,7 @@
 //! 🫴️ Original owned graph values move through a bounded native receiving frontier.
 use super::*;
 use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_value::{RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 
 #[derive(Clone, Copy)]
@@ -212,14 +212,14 @@ impl IfcValueReceiver {
         }
         self.retirement.next_owner_demands::<Frame>(self.retired_frame.is_some(), &None, 4096)
     }
-    fn retire_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    fn retire_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return settled(self.retirement.step_granted(4096, effect));
         }
         if self.retired_input.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.retired_input, grant), "IFC envelope retirement omitted its owner");
+            return owned_step(self.retirement.begin_granted(&mut self.retired_input, effect), "IFC envelope retirement omitted its owner");
         }
-        owned_step(self.retirement.begin_granted(&mut self.retired_frame, grant), "IFC collection retirement omitted its owner")
+        owned_step(self.retirement.begin_granted(&mut self.retired_frame, effect), "IFC collection retirement omitted its owner")
     }
     fn payload(&self, index: usize) -> Result<&DslValue, ValueError> {
         if self.payload_kind.is_some() {
@@ -254,16 +254,12 @@ impl IfcValueReceiver {
             return Ok(false);
         }
         if self.retired_input.is_some() || self.retired_frame.is_some() || !self.retirement.is_empty() {
-            let turn = self.retire_step(cx.retained_grant());
+            let Some(turn) = effected(cx, |effect| self.retire_step(effect))? else { return Ok(false) };
             let progress = match turn.result {
                 Ok(step) => step.progress(),
-                Err(error) => {
-                    cx.consume_fuel(turn.work);
-                    return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx));
-                }
+                Err(error) => return Err(semio_framework_job::OriginalTurnFailure::debit_original(error, cx)),
             };
             cx.consume_retained(progress)?;
-            cx.consume_fuel(turn.work);
             return Ok(false);
         }
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
@@ -496,7 +492,7 @@ impl IfcValueReceiver {
         }
         self.retirement.next_owner_demands::<Vec<Frame>>(self.frames.is_some(), &None, 4096)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if !self.closing {
             return RetainedWorkOutcome { result: Err(invalid("IFC receiver close was not initiated")), work: 0 };
         }
@@ -504,17 +500,17 @@ impl IfcValueReceiver {
             return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 };
         }
         if self.retired_input.is_some() || self.retired_frame.is_some() || !self.retirement.is_empty() {
-            return self.retire_step(grant);
+            return self.retire_step(effect);
         }
         if self.current.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.current, grant), "IFC input retirement omitted its owner");
+            return owned_step(self.retirement.begin_granted(&mut self.current, effect), "IFC input retirement omitted its owner");
         }
         if self.output.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.output, grant), "IFC output retirement omitted its owner");
+            return owned_step(self.retirement.begin_granted(&mut self.output, effect), "IFC output retirement omitted its owner");
         }
         if self.frame.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.frame, grant), "IFC frame retirement omitted its owner");
+            return owned_step(self.retirement.begin_granted(&mut self.frame, effect), "IFC frame retirement omitted its owner");
         }
-        owned_step(self.retirement.begin_granted(&mut self.frames, grant), "IFC stack retirement omitted its owner")
+        owned_step(self.retirement.begin_granted(&mut self.frames, effect), "IFC stack retirement omitted its owner")
     }
 }

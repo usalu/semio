@@ -9,6 +9,16 @@ use semio_framework_2d_compute::EngineHandles;
 #[derive(Default)]
 pub struct Fem3dPlayApp;
 
+/// 🫧️ The one transient mutation replaces the whole gumball transient, so its admitted payload moves into the new transient.
+fn fem3d_transient_footprint(_: &<Fem3dPlayApp as ArtifactEditor>::TransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<<Fem3dPlayApp as ArtifactEditor>::TransientMutation>()))
+}
+
+fn fem3d_transient_transfer(mutation: <Fem3dPlayApp as ArtifactEditor>::TransientMutation) -> <Fem3dPlayApp as ArtifactEditor>::Transient {
+    let semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation::Snapshot { transient } = mutation;
+    transient
+}
+
 impl ArtifactEditor for Fem3dPlayApp {
     /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12), the fem 2d table.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
@@ -80,7 +90,12 @@ impl ArtifactEditor for Fem3dPlayApp {
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+            fem3d_transient_footprint,
+            fem3d_transient_transfer,
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Transient>::default()),
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::TransientMutation>::default()),
+        )))
     }
 
     fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {

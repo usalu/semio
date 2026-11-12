@@ -65,27 +65,8 @@ fn load_document_effect(model: &crate::model::Model) -> Result<semio_plugin::ker
     let snapshot = EnergyModelSnapshot::from_model(model).map_err(refused)?;
     let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("model", ENERGY_MODEL_DOCUMENT_SCHEMA));
-    retire_temporary(snapshot).map_err(refused)?;
+    snapshot.retire().map_err(refused)?;
     Ok(semio_plugin::kernel::Effect::LoadDocument { pack, spr })
-}
-
-/// ♻️ Retires a temporary native owner under its own quote to the terminal-empty witness, so a sealed share is never dropped without its paid handback; a refused retirement leaks the owner instead of panicking.
-fn retire_temporary<T: semio_framework_value::retirement::RetireOwned>(value: T) -> Result<(), semio_framework_value::ValueError> {
-    use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress}, retirement::admit_owned_retirement, RetirementDemand};
-    const BODY_BYTES: usize = 4096;
-    let grant = |demand: RetirementDemand| RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(BODY_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-    let birth = grant(RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), ..Default::default() });
-    let (mut owner, _) = admit_owned_retirement(value, birth).result.map_err(|(error, value)| { std::mem::forget(value); error })?;
-    let mut idle = 0;
-    while !owner.terminal_is_empty() {
-        let demand = owner.next_demand(BODY_BYTES)?;
-        let progress = owner.close_step(grant(demand)).result?.progress();
-        idle = if progress == RetainedCloneProgress::default() { idle + 1 } else { 0 };
-        if idle > 4 {
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "temporary document retirement stalled under its own quote"));
-        }
-    }
-    Ok(())
 }
 
 /// 🆔️ Mints the next free `EntityId` for a collection addressed by its own ids — `max + 1`, so an

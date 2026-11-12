@@ -28,6 +28,7 @@ semio-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust" }
 
 [dev-dependencies]

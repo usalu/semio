@@ -15,7 +15,7 @@ pub struct UnsupportedMemberSnapshotOpen<P> {
     pub marker: PhantomData<fn() -> P>,
 }
 
-impl<P: Send + Sync + 'static> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
+impl<P: 'static> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
     type Snapshot = P;
     fn begin_birth_bytes(request: &MemberOpenRequest) -> Result<usize, MemberOpenDiagnostic> { request.admitted_expected().map(|_| 0) }
 
@@ -37,7 +37,7 @@ impl<P: Send + Sync + 'static> MemberSnapshotOpenOperation for UnsupportedMember
     }
 }
 
-impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
+impl<P: 'static> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_os_store_read::retirement_owner_demands(&self.request, body) }
     fn next_computational_work(&self, body: usize) -> Result<u64, ValueError> { semio_os_store_read::retirement_owner_work_demand(&self.request, body) }
     fn close_step(&mut self, body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
@@ -61,12 +61,12 @@ impl<P> Drop for UnsupportedMemberSnapshotOpen<P> {
     }
 }
 
-pub struct UnsupportedMemberFactoryOpen<M: Send + Sync + 'static> {
+pub struct UnsupportedMemberFactoryOpen<M: 'static> {
     pub source_loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,
     pub snapshot: UnsupportedMemberSnapshotOpen<M>,
 }
 
-impl<M: Send + Sync + 'static> UnsupportedMemberFactoryOpen<M> {
+impl<M: 'static> UnsupportedMemberFactoryOpen<M> {
     pub fn begin(admission:&mut MemberOpenSourceAdmission,opened:&mut Option<Self>,cx:&mut StepContext<'_>,parent:&OriginalCallerSourceParent)->Result<bool,OriginalTurnFailure>{
         if opened.is_some(){return Err(member_admission_diagnostic(MemberOpenDiagnostic::Stale).into())}
         if !admission.admit_source(parent,cx)?||cx.should_yield()||cx.retained_grant().maximum_items==0{return Ok(false)}
@@ -75,7 +75,7 @@ impl<M: Send + Sync + 'static> UnsupportedMemberFactoryOpen<M> {
     }
 }
 
-impl<M: Send + Sync + 'static> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
+impl<M: 'static> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
     type Member = M;
 
     fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> Result<MemberOpenStep<M>,OriginalTurnFailure> {
@@ -109,4 +109,4 @@ impl<M: Send + Sync + 'static> MemberOpenOperation for UnsupportedMemberFactoryO
     fn terminal_drop_byte_demand(&self) -> Option<usize> { self.terminal_is_empty().then_some(0) }
 }
 
-impl<M: Send + Sync + 'static> Drop for UnsupportedMemberFactoryOpen<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"unsupported factory abandoned original request or source loan")}}
+impl<M: 'static> Drop for UnsupportedMemberFactoryOpen<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"unsupported factory abandoned original request or source loan")}}

@@ -22,8 +22,8 @@ enum FillRevalidatePhase {
 /// ♻️ The owners one `FillRevalidateJob` still holds when it closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct FillRevalidateOwners {
-    pub scene: Arc<SceneConfig>,
-    pub meshes: Arc<FillMeshMap>,
+    pub scene: semio_framework_value::retirement::arc_custody::ArcLease<SceneConfig>,
+    pub meshes: semio_framework_value::retirement::arc_custody::ArcLease<FillMeshMap>,
     pub(super) placements: Vec<FillRunPlacement>,
     head: Vec<PlacedCollisionEntry>,
     head_ids: semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, ()>,
@@ -325,14 +325,14 @@ impl InteractiveJob for FillRevalidateJob {
         self.begin_close();
         if !self.outbox.terminal_is_empty() {
             let demand = self.outbox.retirement_demands()?;
-            return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
+            return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(self.outbox.close_step(effect)));
         }
         if !self.close_started {
             let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
             return semio_framework_job::close_original_retained_step(cx, demand, |_| {
                 self.close_owners.stage(FillRevalidateOwners {
-                    scene: unsafe { std::mem::ManuallyDrop::take(&mut self.scene) },
-                    meshes: unsafe { std::mem::ManuallyDrop::take(&mut self.meshes) },
+                    scene: semio_framework_value::retirement::arc_custody::ArcLease::new(unsafe { std::mem::ManuallyDrop::take(&mut self.scene) }),
+                    meshes: semio_framework_value::retirement::arc_custody::ArcLease::new(unsafe { std::mem::ManuallyDrop::take(&mut self.meshes) }),
                     placements: std::mem::take(&mut self.placements),
                     head: std::mem::take(&mut self.head),
                     head_ids: std::mem::take(&mut self.head_ids),
@@ -343,7 +343,7 @@ impl InteractiveJob for FillRevalidateJob {
                     steps: std::mem::take(&mut self.steps),
                 });
                 self.close_started = true;
-                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+                semio_framework_value::RetainedWorkOutcome::<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> { result: Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
             });
         }
         self.close_owners.close_step(cx)

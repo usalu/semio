@@ -157,7 +157,7 @@ fn unit(form: &IfcTemplateForm) -> Option<u64> {
         _ => None,
     }
 }
-fn guid(value: &str) -> bool {
+pub(super) fn guid(value: &str) -> bool {
     value.len() == 22 && matches!(value.as_bytes()[0], b'0'..=b'3') && value.as_bytes()[1..].iter().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$'))
 }
 impl Planner {

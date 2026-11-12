@@ -311,4 +311,3 @@ impl Puzzle5dProximityConnectWork {
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Puzzle5dProximityConnectWork);

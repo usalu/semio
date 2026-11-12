@@ -10,14 +10,14 @@ use semio_s_artifact_stdio_contract_window_kit::load_example_effect;
 use pack::snapshot::ArtifactDsl;
 use kernel::{Mutation, MutationDiff, OpBinary};
 use semio_framework_value::{DslValue, FromValue, ToValue};
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
-use semio_framework_plugin::ActionArgDef;
-use semio_framework_plugin::ActionDefinition;
-use semio_framework_plugin::ActionKind;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::FaultCode;
-use semio_framework_plugin::FaultOrigin;
-use {semio_framework_plugin::AppOperationContext,semio_framework_plugin::ArtifactBoundedFirstStepProof,semio_framework_plugin::ArtifactEditor,semio_framework_plugin::ArtifactOwnedToolJobFactory,semio_framework_plugin::ArtifactOwnedToolJobRequest,semio_framework_plugin::ArtifactToolFactoryRegistry,semio_framework_plugin::ArtifactToolPublicationContract,semio_framework_plugin::ArtifactToolPublicationLane,semio_framework_artifact_reference::Dialect,semio_framework_plugin::EditorApp,semio_framework_plugin::Emit,semio_framework_plugin::InteractiveJobClassification,semio_framework_plugin::ToolExecutionContract,semio_framework_plugin::ToolFactoryKey,semio_framework_plugin::ToolJobFactory,semio_framework_plugin::ToolJobFactoryError,semio_framework_plugin::ToolOperationSpec};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
+use semio_plugin::ActionArgDef;
+use semio_plugin::ActionDefinition;
+use semio_plugin::ActionKind;
+use semio_plugin::Fault;
+use semio_plugin::FaultCode;
+use semio_plugin::FaultOrigin;
+use {semio_plugin::AppOperationContext,semio_plugin::ArtifactBoundedFirstStepProof,semio_plugin::ArtifactEditor,semio_plugin::ArtifactOwnedToolJobFactory,semio_plugin::ArtifactOwnedToolJobRequest,semio_plugin::ArtifactToolFactoryRegistry,semio_plugin::ArtifactToolPublicationContract,semio_plugin::ArtifactToolPublicationLane,semio_framework_artifact_reference::Dialect,semio_plugin::EditorApp,semio_plugin::Emit,semio_plugin::InteractiveJobClassification,semio_plugin::ToolExecutionContract,semio_plugin::ToolFactoryKey,semio_plugin::ToolJobFactory,semio_plugin::ToolJobFactoryError,semio_plugin::ToolOperationSpec};
 use semio_ui_locale::LocalizedLabel;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -79,12 +79,12 @@ macro_rules! bounded_native_editing_editor {
         $(,)?) => {
         impl $crate::BoundedNativeEditingEditor for $editor {
             const NATIVE_TOOL_IDS: &'static [&'static str] = &[$($tool),+ $(,$($host_tool),+)?];
-            const NATIVE_PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
-                $(semio_framework_plugin::ArtifactToolPublicationContract {
+            const NATIVE_PUBLICATION_CONTRACTS: &'static [semio_plugin::ArtifactToolPublicationContract] = &[
+                $(semio_plugin::ArtifactToolPublicationContract {
                     tool_id: $tool,
-                    lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact],
+                    lanes: &[semio_plugin::ArtifactToolPublicationLane::Artifact],
                 }),+
-                $(,$(semio_framework_plugin::ArtifactToolPublicationContract { tool_id: $host_tool, lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] }),+)?
+                $(,$(semio_plugin::ArtifactToolPublicationContract { tool_id: $host_tool, lanes: &[semio_plugin::ArtifactToolPublicationLane::HostOnly] }),+)?
             ];
             const NATIVE_PAYLOAD_SCHEMA: &'static str = $payload_schema;
             $(const NATIVE_CHECKPOINT_RESUME: bool = $checkpoint_resume;)?
@@ -93,14 +93,14 @@ macro_rules! bounded_native_editing_editor {
                 $command: &Self::Command,
                 $snapshot: &Self::Snapshot,
             ) -> Result<
-                semio_framework_plugin::Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>,
-                semio_framework_plugin::Fault,
+                semio_plugin::Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>,
+                semio_plugin::Fault,
             > $reduce
 
             $(
                 fn native_edit_work(
                     tool_id: &'static str,
-                ) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> {
+                ) -> Box<dyn semio_plugin::retained_command::ArtifactCommandWork<semio_plugin::EditorApp<Self>>> {
                     $work(tool_id)
                 }
             )?
@@ -133,13 +133,13 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
         contract: $contract:expr,
         tools: [$($tool:literal),+ $(,)?]
     ) => {
-        fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-            let qualify = |proof: semio_framework_plugin::ArtifactBoundedFirstStepProof| {
+        fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+            let qualify = |proof: semio_plugin::ArtifactBoundedFirstStepProof| {
                 $(let proof = proof.with_factory_type::<$owner, $factory_type>();)?
                 proof
             };
             let mut proofs = vec![$(
-                qualify(semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<$owner>(
+                qualify(semio_plugin::ArtifactBoundedFirstStepProof::new::<$owner>(
                     $owner_file,
                     $controller,
                     $factory,
@@ -161,13 +161,13 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
         $(factory_type: $factory_type:ty,)?
         tools: { $($tool:literal => $contract:expr),+ $(,)? }
     ) => {
-        fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-            let qualify = |proof: semio_framework_plugin::ArtifactBoundedFirstStepProof| {
+        fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
+            let qualify = |proof: semio_plugin::ArtifactBoundedFirstStepProof| {
                 $(let proof = proof.with_factory_type::<$owner, $factory_type>();)?
                 proof
             };
             let mut proofs = vec![$(
-                qualify(semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<$owner>(
+                qualify(semio_plugin::ArtifactBoundedFirstStepProof::new::<$owner>(
                     $owner_file,
                     $controller,
                     $factory,
@@ -186,8 +186,8 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
 #[macro_export]
 macro_rules! snapshot_editing_publication_authority {
     () => {
-        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            Some(semio_framework_plugin::plugin_app_close_prelude::store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn semio_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+            Some(semio_plugin::plugin_app_close_prelude::store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
         }
     };
 }
@@ -211,7 +211,7 @@ macro_rules! snapshot_details_editor_support {
         })?
         $(,)?
     ) => {
-        fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
             let mut proofs = $crate::snapshot_edit_bounded_first_step_proofs::<Self>($owner_file, $controller, $artifact_schema);
             $(
                 let _ = stringify!($bounded_native);
@@ -219,7 +219,7 @@ macro_rules! snapshot_details_editor_support {
             )?
             $($(
                 proofs.push(
-                    semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<semio_framework_plugin::EditorApp<Self>>(
+                    semio_plugin::ArtifactBoundedFirstStepProof::new::<semio_plugin::EditorApp<Self>>(
                         $owner_file,
                         $controller,
                         $native_factory_name,
@@ -227,15 +227,15 @@ macro_rules! snapshot_details_editor_support {
                         $artifact_schema,
                         $native_contract,
                     )
-                    .with_factory_type::<semio_framework_plugin::EditorApp<Self>, $native_factory_type>(),
+                    .with_factory_type::<semio_plugin::EditorApp<Self>, $native_factory_type>(),
                 );
             )+)?
             proofs
         }
 
         fn register_tool_job_factories(
-            registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>,
-        ) -> Result<(), semio_framework_plugin::Fault> {
+            registry: &mut semio_plugin::ArtifactToolFactoryRegistry<'_, semio_plugin::EditorApp<Self>>,
+        ) -> Result<(), semio_plugin::Fault> {
             $(
                 let _ = stringify!($bounded_native);
                 $crate::register_bounded_native_edit_tool_factory::<Self>(registry)?;
@@ -247,30 +247,30 @@ macro_rules! snapshot_details_editor_support {
             $(
                 let _ = stringify!($native_snapshot_pack);
                 let controller = registry.controller_id().to_string();
-                registry.register(semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_framework_plugin::EditorApp<Self>>::new(&controller))?;
+                registry.register(semio_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_plugin::EditorApp<Self>>::new(&controller))?;
             )?
             $crate::register_snapshot_edit_tool_factory::<Self>(registry)
         }
 
         $(
-            fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<semio_framework_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure>{
+            fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut semio_plugin::__job::StepContext<'_>)->Result<bool,semio_plugin::__job::OriginalTurnFailure>{
                 let _=stringify!($native_snapshot_pack);
-                semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_framework_plugin::EditorApp<Self>>::admit_original(request,body,cx)
+                semio_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_plugin::EditorApp<Self>>::admit_original(request,body,construction,cx)
             }
         )?
 
         fn build_tool_job(
-            request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>,
-            output: &mut Option<semio_framework_plugin::ErasedToolJob>,
-            _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>,
-        ) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+            request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>,
+            output: &mut Option<semio_plugin::ErasedToolJob>,
+            _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>,
+        ) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
             let (is_snapshot_edit, is_bounded_native) = {
-                let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+                let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
                 (
                     $crate::is_snapshot_edit_action(&original.tool_id),
                     false $(|| {
                         let _ = stringify!($bounded_native);
-                        <$crate::BoundedNativeEditToolJobFactory<Self> as semio_framework_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS.contains(&original.tool_id.as_str())
+                        <$crate::BoundedNativeEditToolJobFactory<Self> as semio_plugin::ArtifactOwnedToolJobFactory>::TOOL_IDS.contains(&original.tool_id.as_str())
                     })?,
                 )
             };
@@ -287,14 +287,14 @@ macro_rules! snapshot_details_editor_support {
         }
 
         $(
-            fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+            fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(semio_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
                 Some($document_store_owners(grant))
             }
         )?
 
         fn build_artifact_store_one_item_preparation_factory(
-        ) -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            let factory = semio_framework_plugin::plugin_app_close_prelude::store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
+        ) -> Option<std::sync::Arc<dyn semio_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+            let factory = semio_plugin::plugin_app_close_prelude::store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
             $(
                 let _ = stringify!($bounded_native);
                 let factory = $crate::routed_native_edit_preparation_factory(
@@ -302,7 +302,7 @@ macro_rules! snapshot_details_editor_support {
                     factory,
                 );
             )?
-            Some(semio_framework_plugin::plugin_app_close_prelude::store::operation_wire_preparation_factory(factory, <Self as $crate::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_framework_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
+            Some(semio_plugin::plugin_app_close_prelude::store::operation_wire_preparation_factory(factory, <Self as $crate::SnapshotEditingEditor>::snapshot_operation_wire_source, |operation| { let semantics = semio_plugin::plugin_app_close_prelude::protocol::SemanticMutation::semantics(operation); Some((semantics.entity, semantics.kind)) }))
         }
 
     };

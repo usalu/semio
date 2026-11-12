@@ -1,10 +1,10 @@
 //! 🧳 Genuine immutable source custody around canonical borrowed IDML admission.
 use super::{IdmlAdmissionCursor,IdmlAdmissionSource,IdmlAdmissionGrant,IdmlVersionView,IdmlPartReplacement};
 use crate::IdmlSnapshot;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneProgress,RetainedCloneStep}};
+use semio_os_kernel::{RetainedFlight as Flight,retained_polled as polled};
 const FIXED:usize=512;
 const UNIT:usize=64;
-fn fits(demand:RetirementDemand,grant:RetainedCloneGrant)->bool{grant.maximum_items!=0&&demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes&&demand.depth<=grant.maximum_depth}
 /// 🚦 Immutable package admission yields no mutable post or event publication authority.
 #[derive(Clone,Copy,Debug)]
 pub enum RetainedIdmlAdmissionAdvance {Progress(RetainedCloneProgress),Ready(RetainedCloneProgress,bool)}
@@ -21,34 +21,45 @@ impl RetainedIdmlAdmission {
         if self.replacement_index.is_some()!=replacement.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"IDML replacement profile changed"));}
         original.check_binding(&self.source)?;if let Some(replacement)=replacement{replacement.check_binding(&self.replacement_source)?;}Ok(())
     }
+    fn steps(body:usize,maximum:u64)->usize{((body.saturating_sub(FIXED))/UNIT).min(1024).min(usize::try_from(maximum.saturating_sub(1)).unwrap_or(usize::MAX))}
     /// 📏 Quotes an original lease, one page, or a bounded syntax/name work slice before access.
-    pub fn demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,body:usize)->Result<RetirementDemand,ValueError>{
-        self.read_demand(original,None,body)
+    pub fn demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{
+        self.read_demand(original,None,body,maximum)
     }
     /// 📏 Includes the genuine original mutation-byte lease before any replacement read.
-    pub fn replacement_demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:RetainedCloneRef<'_,Vec<u8>>,body:usize)->Result<RetirementDemand,ValueError>{self.read_demand(original,Some(replacement),body)}
-    fn read_demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:Option<RetainedCloneRef<'_,Vec<u8>>>,body:usize)->Result<RetirementDemand,ValueError>{
+    pub fn replacement_demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:RetainedCloneRef<'_,Vec<u8>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{self.read_demand(original,Some(replacement),body,maximum)}
+    fn read_demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:Option<RetainedCloneRef<'_,Vec<u8>>>,body:usize,maximum:u64)->Result<RetirementDemand,ValueError>{
         if self.closing||self.ready{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"IDML retained admission already settled"));}
         self.inputs(original,replacement)?;
         if !original.check_binding(&self.source)?{return Ok(RetirementDemand{copy_bytes:original.binding_copy_bytes(),depth:1,..Default::default()});}
         if let Some(replacement)=replacement{if !replacement.check_binding(&self.replacement_source)?{return Ok(RetirementDemand{copy_bytes:replacement.binding_copy_bytes(),depth:1,..Default::default()});}}
         let capacity_bytes=self.cursor.next_capacity_bytes();
-        let copy_bytes=if capacity_bytes!=0{FIXED+UNIT+self.cursor.next_copy_bytes()}else{if body<FIXED+UNIT{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"IDML admission body cannot fit one bounded syntax unit"));}FIXED+((body-FIXED)/UNIT).min(1024)*UNIT};
+        let copy_bytes=if capacity_bytes!=0{FIXED+UNIT+self.cursor.next_copy_bytes()}else{if body<FIXED+UNIT{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"IDML admission body cannot fit one bounded syntax unit"));}FIXED+Self::steps(body,maximum.max(2))*UNIT};
         Ok(RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()})
     }
+    /// ⛽ Quotes the alias duplication or the bounded admission slice in original work units.
+    pub fn work_demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,body:usize,maximum:u64)->Result<u64,ValueError>{self.read_work_demand(original,None,body,maximum)}
+    /// ⛽ Includes the replacement alias duplication before any replacement read.
+    pub fn replacement_work_demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:RetainedCloneRef<'_,Vec<u8>>,body:usize,maximum:u64)->Result<u64,ValueError>{self.read_work_demand(original,Some(replacement),body,maximum)}
+    fn read_work_demand(&self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:Option<RetainedCloneRef<'_,Vec<u8>>>,body:usize,maximum:u64)->Result<u64,ValueError>{
+        self.read_demand(original,replacement,body,maximum)?;
+        let work=if !original.check_binding(&self.source)?{original.binding_work_demand(&self.source)?}else if let Some(replacement)=replacement.filter(|replacement|!replacement.check_binding(&self.replacement_source).unwrap_or(false)){replacement.binding_work_demand(&self.replacement_source)?}else if self.cursor.next_capacity_bytes()!=0{1}else{Self::steps(body,maximum).max(1) as u64};
+        Ok(if work<=maximum{work}else{0})
+    }
     /// ▶ Reads the genuine original source only after all selected grant axes fit.
-    pub fn advance(&mut self,original:RetainedCloneRef<'_,IdmlSnapshot>,body:usize,grant:RetainedCloneGrant)->Result<RetainedIdmlAdmissionAdvance,ValueError>{
-        self.read_advance(original,None,body,grant)
+    pub fn advance(&mut self,original:RetainedCloneRef<'_,IdmlSnapshot>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<RetainedIdmlAdmissionAdvance,ValueError>{
+        self.read_advance(original,None,body,maximum,effect,work)
     }
     /// ▶ Reads both genuine immutable original sources under the selected quote.
-    pub fn advance_replacement(&mut self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:RetainedCloneRef<'_,Vec<u8>>,body:usize,grant:RetainedCloneGrant)->Result<RetainedIdmlAdmissionAdvance,ValueError>{self.read_advance(original,Some(replacement),body,grant)}
-    fn read_advance(&mut self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:Option<RetainedCloneRef<'_,Vec<u8>>>,body:usize,grant:RetainedCloneGrant)->Result<RetainedIdmlAdmissionAdvance,ValueError>{
-        let demand=self.read_demand(original,replacement,body)?;
-        if !fits(demand,grant){return Ok(RetainedIdmlAdmissionAdvance::Progress(Default::default()));}
-        if let Some(progress)=original.bind(&mut self.source,grant).result?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}
-        if let Some(replacement)=replacement{if let Some(progress)=replacement.bind(&mut self.replacement_source,grant).result?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}}
-        let capacity=demand.capacity_bytes;let maximum_work=if capacity!=0{1}else{(demand.copy_bytes-FIXED)/UNIT};
+    pub fn advance_replacement(&mut self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:RetainedCloneRef<'_,Vec<u8>>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<RetainedIdmlAdmissionAdvance,ValueError>{self.read_advance(original,Some(replacement),body,maximum,effect,work)}
+    fn read_advance(&mut self,original:RetainedCloneRef<'_,IdmlSnapshot>,replacement:Option<RetainedCloneRef<'_,Vec<u8>>>,body:usize,maximum:u64,effect:&mut RetainedAllocationEffect<'_>,work:&mut u128)->Result<RetainedIdmlAdmissionAdvance,ValueError>{
+        let demand=self.read_demand(original,replacement,body,maximum)?;
+        let turn=original.bind(&mut self.source,effect);*work+=turn.work;
+        if let Some(progress)=turn.result?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}
+        if let Some(replacement)=replacement{let turn=replacement.bind(&mut self.replacement_source,effect);*work+=turn.work;if let Some(progress)=turn.result?{return Ok(RetainedIdmlAdmissionAdvance::Progress(progress));}}
+        let capacity=demand.capacity_bytes;let maximum_work=if capacity!=0{1}else{Self::steps(body,maximum).max(1)};
         let step=self.cursor.advance(IdmlAdmissionSource{snapshot:original.get(),replacement:self.replacement_index.zip(replacement).map(|(index,source)|IdmlPartReplacement{index,bytes:source.get().as_slice()}),compare_version:self.replacement_index.is_none()},IdmlAdmissionGrant{maximum_work,maximum_copy_bytes:if capacity!=0{self.cursor.next_copy_bytes()}else{0},maximum_capacity_bytes:capacity,maximum_release_bytes:0});
+        *work+=step.work.max(1) as u128;
         let progress=RetainedCloneProgress{copied_items:1,copied_bytes:FIXED+step.work*UNIT+step.copied_bytes,retained_capacity_bytes:step.retained_capacity_bytes,..Default::default()};
         if step.done||step.error.is_some(){self.ready=true;self.error=step.error;self.version=step.version;return Ok(RetainedIdmlAdmissionAdvance::Ready(progress,self.error.is_none()));}
         Ok(RetainedIdmlAdmissionAdvance::Progress(progress))
@@ -74,12 +85,18 @@ impl RetainedIdmlAdmission {
         let release=self.cursor.next_release_bytes();if release!=0{return Ok(RetirementDemand{copy_bytes:FIXED,release_bytes:release,depth:1,..Default::default()});}
         RetainedCloneBinding::close_demand(if self.replacement_source.is_some(){&self.replacement_source}else{&self.source},body)
     }
+    /// ⛽ Quotes the selected page release or original source binding action in original work units.
+    pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+        if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"IDML admission closure not started"));}
+        if self.cursor.next_release_bytes()!=0{return Ok(1);}
+        RetainedCloneBinding::close_work_demand(if self.replacement_source.is_some(){&self.replacement_source}else{&self.source},body)
+    }
     /// 🪜 Releases at most one exact page or one original source binding action.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        let demand=self.close_demand(grant.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if !fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.cursor.next_release_bytes()!=0{let step=self.cursor.close_one(grant.maximum_release_bytes);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:FIXED,released_bytes:step.released_bytes,..Default::default()}));}
-        let step=RetainedCloneBinding::close_one(if self.replacement_source.is_some(){&mut self.replacement_source}else{&mut self.source},grant).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>,flight:&mut Flight,recover:bool,work:&mut u128)->Result<RetainedCloneStep,RetirementPollExit>{
+        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+        let grant=effect.grant();
+        if self.cursor.next_release_bytes()!=0{let step=self.cursor.close_one(grant.maximum_release_bytes);*work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:FIXED,released_bytes:step.released_bytes,..Default::default()}));}
+        let step=polled(flight,effect,recover,1,body,work,|e|RetainedCloneBinding::close_one(if self.replacement_source.is_some(){&mut self.replacement_source}else{&mut self.source},body,e))?.map_err(RetirementPollExit::from)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     /// 🪹 No numeric page or genuine source alias remains retained.
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()&&self.source.is_none()&&self.replacement_source.is_none()}

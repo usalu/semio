@@ -71,10 +71,6 @@ fn reconstruct_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSn
 }
 
 impl ArtifactSqliteSnapshotHost for StlSnapshot {
-    fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<SqliteDatabase,store::NativeSnapshotFailure>{receiving::project_receiving(self,control,owner)}
-    fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{receiving::reconstruct_receiving(database,control,owner)}
-    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_decoding(self,dialect,database,control,owner)}
-    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_encoding(self,dialect,database,control,owner)}
     fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {if let Err(error)=(||->Result<(),semio_framework_value::ValueError>{(|| -> Result<(),ValueError>{control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;control.check_rows(self.triangles.len().checked_mul(4).and_then(|count|count.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"STL native row count overflow"))?)?;Ok(())})()?;self.admit_sqlite_values(control,SqliteSnapshotPhase::EncodeNative)?;Ok(())})(){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}store::encode_sqlite_snapshot_record_native(encoding,"stdio.stl",crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::spec_producer(), &mut |native|crate::standards::v_ascii::subsets::any::io::binary::snapshot::native_pack::record_controlled(self,native),control,native_owner,output)}
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{self.preflight_sqlite_encoding(_encoding,control)}
 
@@ -101,5 +97,3 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 
 
 
-#[path="🫴️receiving/🦀️.rs"]
-mod receiving;

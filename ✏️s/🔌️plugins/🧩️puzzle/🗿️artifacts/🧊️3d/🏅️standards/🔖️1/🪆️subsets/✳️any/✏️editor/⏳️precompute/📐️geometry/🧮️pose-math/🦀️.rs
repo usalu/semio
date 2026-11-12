@@ -157,8 +157,40 @@ impl CollisionMeshRetirement {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetirement {
-    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::retirement::RetirementStep {
+    semio_framework_value::native_retirement_reply!();
+    fn next_computational_work(&self, _: usize) -> Result<u64, semio_framework_value::ValueError> { Ok(u64::from(!self.terminal_is_empty())) }
+
+
+    fn terminal_is_empty(&self) -> bool {
+        self.shared.is_none() && self.vertices.capacity() == 0 && self.triangles.capacity() == 0 && self.tree.is_empty()
+    }
+
+    fn next_close_byte_demand(&self) -> Option<usize> {
+        Some(if self.shared.is_some() {
+            0
+        } else if self.vertices.capacity() != 0 {
+            self.vertices.capacity() * size_of::<rigid::Point3>()
+        } else if self.triangles.capacity() != 0 {
+            self.triangles.capacity() * size_of::<[u32; 3]>()
+        } else if self.tree.is_empty() {
+            0
+        } else {
+            collision::BvhTree::NODE_BYTES
+        })
+    }
+
+    fn next_birth_bytes(&self, _: usize) -> Option<usize> {
+        Some(if self.shared.as_ref().is_some_and(|shared| std::sync::Arc::strong_count(shared) == 1) && self.tree.capacity() == 0 { COLLISION_MESH_TREE_STACK * size_of::<collision::BvhTree>() } else { 0 })
+    }
+
+    fn terminal_release_bytes(&self) -> Option<usize> {
+        Some(Self::birth_bytes())
+    }
+}
+impl CollisionMeshRetirement {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
+        use semio_framework_value::retirement::RetirementCursor as _;
         let grant = effect.grant();
         if self.terminal_is_empty() {
             return RetirementStep::Complete(0);
@@ -215,33 +247,8 @@ impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetire
         }
         RetirementStep::Bytes(demand)
     }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.shared.is_none() && self.vertices.capacity() == 0 && self.triangles.capacity() == 0 && self.tree.is_empty()
-    }
-
-    fn next_close_byte_demand(&self) -> Option<usize> {
-        Some(if self.shared.is_some() {
-            0
-        } else if self.vertices.capacity() != 0 {
-            self.vertices.capacity() * size_of::<rigid::Point3>()
-        } else if self.triangles.capacity() != 0 {
-            self.triangles.capacity() * size_of::<[u32; 3]>()
-        } else if self.tree.is_empty() {
-            0
-        } else {
-            collision::BvhTree::NODE_BYTES
-        })
-    }
-
-    fn next_birth_bytes(&self, _: usize) -> Option<usize> {
-        Some(if self.shared.as_ref().is_some_and(|shared| std::sync::Arc::strong_count(shared) == 1) && self.tree.capacity() == 0 { COLLISION_MESH_TREE_STACK * size_of::<collision::BvhTree>() } else { 0 })
-    }
-
-    fn terminal_release_bytes(&self) -> Option<usize> {
-        Some(Self::birth_bytes())
-    }
 }
+
 
 impl Drop for CollisionMeshRetirement {
     fn drop(&mut self) {

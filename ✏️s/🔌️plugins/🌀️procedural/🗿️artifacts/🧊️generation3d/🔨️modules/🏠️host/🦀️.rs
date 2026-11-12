@@ -185,11 +185,13 @@ fn generation3d_retire_displaced_cold(value: Generation3dReplayDisplaced) {
     }
 }
 
-/// 🪜️ Pays one Flow frontier turn out of the frontier's own quoted currencies — the mounted-pack session ladder this serves still counts items and bytes, so it cannot forward a caller grant.
-pub fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement) -> Result<(), semio_framework_value::ValueError> {
-    let copy = flow.next_copy_byte_demand()?;
-    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: flow.next_capacity_byte_demand(copy)?, maximum_release_bytes: flow.next_release_byte_demand()?, maximum_depth: flow.next_depth_demand()?.max(1) };
-    flow.step(grant).result.map(|_| ())
+/// 🪜️ Pays one Flow frontier turn under the caller's original effect.
+pub fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(), semio_framework_value::ValueError> {
+    let body = effect.grant().maximum_copy_bytes;
+    match flow.step(body, effect) {
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(()),
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map(|_| ()).map_err(|failure| failure.into_parts().0.unwrap_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "Flow retirement failed without a cause"))),
+    }
 }
 
 /// 🅿️ Parks one string list on an EMPTY Flow frontier; the callers only park once the previous owner is fully retired.
@@ -669,5 +671,13 @@ pub fn generation3d_apply_retained_mutations_for_test(snapshot: &mut Generation3
         if let Some(displaced) = generation3d_apply_initialization_mutation(snapshot, mutation).expect("P3 production fixture retained replay") {
             generation3d_retire_displaced_cold(displaced);
         }
+    }
+}
+
+/// 🧾️ Folds one finished retirement poll into a plain value step; a pending poll made no physical progress.
+pub fn generation3d_settle_poll(poll: semio_framework_value::OriginalRetirementPoll) -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+    match poll {
+        semio_framework_value::RetainedWorkPoll::Pending { .. } => Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),
+        semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_parts().0.unwrap_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed, "retirement failed without a cause"))),
     }
 }

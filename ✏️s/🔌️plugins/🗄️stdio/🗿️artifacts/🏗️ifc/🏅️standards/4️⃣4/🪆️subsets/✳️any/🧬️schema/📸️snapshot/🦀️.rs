@@ -13,7 +13,6 @@
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_IFC_DOCUMENT_SCHEMA: &str = "stdio.ifc";
-pub use crate::standards::v4::subsets::any::io::sqlite::snapshot::native::owned::IfcOriginalPackReceiving;
 
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};

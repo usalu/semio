@@ -30,6 +30,7 @@ semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/�
 semio-plugin-app-builder = { path = "../../../../🏗️builder/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-command = { path = "../../../../🎮️command/📦️packages/🦀️rust" }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust" }
 semio-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-plugin-decl-surface = { path = "../../../../📜️declaration/🪟️surface/📦️packages/🦀️rust" }
 semio-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust" }

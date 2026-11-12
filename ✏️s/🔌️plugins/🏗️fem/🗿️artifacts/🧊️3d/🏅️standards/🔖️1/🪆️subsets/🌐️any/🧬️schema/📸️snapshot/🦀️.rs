@@ -28,17 +28,17 @@ semio_s_fem_receiving::write_pack!(Fem3dSnapshot,Fem3dSnapshotValue,"fem.fem3d")
 pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem3d document snapshot (persistent fields of the artifact).
-#[derive(Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dSnapshot {
     #[state(artifact)]
-    pub nodes: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_node::volumetric::FemNode>,
+    pub nodes: semio_framework_value::shared_issuance::SealedShared<semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_node::volumetric::FemNode>>,
     #[state(artifact)]
     pub elements: Vec<FemElement>,
     #[state(artifact)]
-    pub materials: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_material::volumetric::FemMaterial>,
+    pub materials: semio_framework_value::shared_issuance::SealedShared<semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_material::volumetric::FemMaterial>>,
     #[state(artifact)]
     pub sections: Vec<FemSection>,
     #[state(artifact)]

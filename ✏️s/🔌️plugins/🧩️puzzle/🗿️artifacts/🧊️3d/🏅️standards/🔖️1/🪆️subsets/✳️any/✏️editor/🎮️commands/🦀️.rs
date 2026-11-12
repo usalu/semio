@@ -62,7 +62,7 @@ enum Puzzle3dPrologueSyncStage {
 #[derive(Default, semio_framework_value::RetireOwned)]
 pub struct Puzzle3dActionPrologue {
     scene: Option<Puzzle3dScene>,
-    base: Option<std::sync::Arc<Puzzle3dSnapshot>>,
+    base: Option<semio_framework_value::retirement::arc_custody::ArcLease<Puzzle3dSnapshot>>,
     sync_stage: Puzzle3dPrologueSyncStage,
     built: Option<semio_s_artifact_puzzle_3d_model::SceneConfig>,
 }
@@ -72,7 +72,7 @@ impl Puzzle3dActionPrologue {
     /// concrete mutation of the action is built against.
     pub fn scene_step(&mut self, snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view_state: Option<&semio_plugin::ViewModel>, window_id: Option<&str>) {
         let active_utility = puzzle3d_scene_active_utility(config, view_state, window_id);
-        self.base = Some(snapshot.typed_arc());
+        self.base = Some(semio_framework_value::retirement::arc_custody::ArcLease::new(snapshot.typed_arc()));
         self.scene = Some(scene_from_snapshot(snapshot.typed(), config.clone(), &active_utility));
     }
 
@@ -136,7 +136,7 @@ impl Puzzle3dActionPrologue {
         if self.refreshed(config, view_state, window_id).is_none() {
             return (Emit::default(), EphemeralEmit::default());
         }
-        let (Some(mut scene), Some(base)) = (self.scene.take(), self.base.take()) else {
+        let (Some(mut scene), Some(base)) = (self.scene.take(), self.base.take().and_then(|base| base.0)) else {
             return (Emit::default(), EphemeralEmit::default());
         };
         let shared_before = window_ownership::shared(config);

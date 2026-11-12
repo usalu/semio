@@ -52,7 +52,6 @@ pub(super) enum AcceptPhase {
 
 pub type FillMeshMap = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, CollisionBody>;
 
-#[derive(semio_framework_value::RetireOwned)]
 pub struct FillPreparationRoots {
     pub scene: Arc<SceneConfig>,
     pub meshes: Arc<FillMeshMap>,
@@ -62,6 +61,17 @@ impl FillPreparationRoots {
     pub fn new(scene: Arc<SceneConfig>, meshes: Arc<FillMeshMap>) -> Self {
         Self { scene, meshes }
     }
+
+    pub(super) fn into_lease(self) -> FillPreparationLease {
+        FillPreparationLease { scene: semio_framework_value::retirement::arc_custody::ArcLease::new(self.scene), meshes: semio_framework_value::retirement::arc_custody::ArcLease::new(self.meshes) }
+    }
+}
+
+/// 🔗️ The shared roots of a closing fill builder: read leases that retire their Arc backing before the last payload.
+#[derive(semio_framework_value::RetireOwned)]
+pub(super) struct FillPreparationLease {
+    pub(super) scene: semio_framework_value::retirement::arc_custody::ArcLease<SceneConfig>,
+    pub(super) meshes: semio_framework_value::retirement::arc_custody::ArcLease<FillMeshMap>,
 }
 
 #[derive(Debug)]
@@ -282,7 +292,7 @@ pub struct FillBuilder {
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct FillClosingOwners {
     pub(super) base: FixedSceneOwner,
-    pub(super) preparation_roots: Option<FillPreparationRoots>,
+    pub(super) preparation_roots: Option<FillPreparationLease>,
     pub(super) preparation_spatial: Option<CollisionIndexMutation>,
     pub(super) tail_removal: Option<CollisionIndexRemoval>,
     pub(super) sequence: Vec<BrushPlacePayload>,

@@ -57,14 +57,14 @@ impl RetainedExpressAdmission {
             self.overlay.close_demands(body)
         }
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing {
             return Err(refusal("express.admission-not-closing"));
         }
         if !self.receiver.terminal_is_empty() {
-            self.receiver.close_step(grant)
+            self.receiver.close_step(effect)
         } else {
-            self.overlay.close_step(grant)
+            self.overlay.close_step(effect)
         }
     }
     pub fn terminal_is_empty(&self) -> bool {

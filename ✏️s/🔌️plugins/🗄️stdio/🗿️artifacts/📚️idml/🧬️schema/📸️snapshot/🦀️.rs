@@ -1,10 +1,10 @@
 //! 📸️ Native IDML persisted snapshot with strict package admission.
-use semio_framework_value::{DslValue, FromValue, ToValue, ValueError, ValueRefusalKind, NativeDecodeControl};
+use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind, NativeDecodeControl};
 use crate::schema::{IdmlPart, PackageWire};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields, by_value_projection)]
 pub struct IdmlSnapshot {
     pub dom_version: String,
     pub parts: Vec<IdmlPart>,
@@ -39,12 +39,4 @@ impl FromValue for IdmlSnapshot {
         control.checkpoint()?;
         Ok(snapshot)
     }
-}
-
-/// 📽️ A new unpublished post copies genuine owned fields through the existing bounded projection cursor.
-impl semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection for IdmlSnapshot{
- type Output=Self;
- type Projection=semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
- fn projection_birth_demand()->semio_framework_value::RetirementDemand{Self::Projection::birth_demand()}
- fn begin_projection(grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Self::Projection,semio_framework_value::retained_clone::RetainedCloneProgress),ValueError>{Self::Projection::begin(grant)}
 }

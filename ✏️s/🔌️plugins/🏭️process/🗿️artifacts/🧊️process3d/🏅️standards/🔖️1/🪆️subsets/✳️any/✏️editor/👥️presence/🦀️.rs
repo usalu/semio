@@ -290,20 +290,11 @@ pub fn process3d_presence_is_terminal_empty(presence: &Process3dPresence) -> boo
 }
 
 /// 👥️ Exact local and peer root ownership for process3d presence: the original typed fields and their retained physical backing retire through the shared admitted owner.
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub struct Process3dPresenceRetirementFactory;
-
-impl store::SnapshotRetirementFactory<Process3dPresence> for Process3dPresenceRetirementFactory {
-    fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<Process3dPresence>) -> usize {
-        semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<Process3dPresence>()
-    }
-
-    fn retire(&self, root: std::sync::Arc<Process3dPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<Process3dPresence>)> {
-        semio_framework_value::retirement::arc_custody::admit_shared_retirement(root, grant, true)
-    }
+pub fn process3d_presence_retirement_factory() -> std::sync::Arc<dyn store::SnapshotRetirementFactory<Process3dPresence>> {
+    std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<Process3dPresence>::default())
 }
 
-/// 🧹️ The close-lane disposer paired with [`Process3dPresenceRetirementFactory`].
+/// 🧹️ The close-lane disposer paired with [`process3d_presence_retirement_factory`].
 pub fn process3d_presence_store_disposer() -> Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Process3dPresence, Process3dPresenceMutation>>> {
     Box::new(semio_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Process3dPresence::default()), process3d_presence_is_terminal_empty).expect("the default process3d presence root holds no engagement input"))
 }

@@ -79,6 +79,7 @@ pub enum EpwMutation {
     /// (see `EpwRecord::field_at`).
     SetRecordField(set_record_field::SetRecordField),
 }
+dsl::original_pack_value_operation_receiving!(EpwMutation);
 
 /// 🧾️ Kebab-case spelling of every `EpwMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `epw-energyplus-any` (`../../🔣️oracle.json`) is measured against

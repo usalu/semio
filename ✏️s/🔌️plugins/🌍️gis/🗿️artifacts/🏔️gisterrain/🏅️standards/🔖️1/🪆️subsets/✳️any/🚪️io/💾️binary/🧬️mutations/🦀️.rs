@@ -42,10 +42,14 @@ use crate::schema::mutations::{GisTerrainMutation};
 
 impl protocol::OpBinary for GisTerrainMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+        Ok(protocol::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "gis terrain operation", offset: 0, detail };
+        let value = protocol::os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| malformed(error.to_string()))
     }
 }
+
+dsl::original_pack_value_operation_receiving!(GisTerrainMutation);
 }

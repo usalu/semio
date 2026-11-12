@@ -15,6 +15,9 @@ mod validation {
 }
 #[path="native_pack.rs"]
 pub mod original_pack;
+#[path = "native_receiving.rs"]
+mod native_receiving;
+pub use native_receiving::{decoded, decoded_nested, encoded, failure, nested, nested_value, refused, scoped, settled};
 #[path = "native-gltf-owned.rs"]
 mod gltf_owned;
 
@@ -116,9 +119,9 @@ fn decode_glb_checked(bytes: &[u8]) -> Result<GltfSnapshot, ExchangeError> {
     Ok(snapshot)
 }
 
-fn io_error(value: ExchangeError) -> IoError {
+pub fn io_error(value: ExchangeError) -> IoError {
     let kind=if value.code=="exchange.cancelled" {semio_framework_value::ValueRefusalKind::Canceled} else {semio_framework_value::ValueRefusalKind::InvalidValue};
-    IoError {cause:semio_framework_value::ValueError::new(kind,value.message.clone()),diagnostics:vec![Diagnostic::error(value.code,TextSpan::default(),value.message)]}
+    IoError {cause:semio_framework_value::ValueError::new(kind,value.message.clone()).into(),diagnostics:vec![Diagnostic::error(value.code,TextSpan::default(),value.message)]}
 }
 
 /// 🔌 Original caller cancellation reaches all graph and geometry loops; target pack encoding uses its original encoder.

@@ -45,7 +45,7 @@ fn materialize_package(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotCont
     control
         .allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress,allocation|{
             let mut callback = |event: NativeEncodeProgress| progress(event.completed, event.total);
-            let mut native_allocation=|request:semio_framework_value::native_encoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+            let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
             let result = snapshot.opc.materialize_package(&mut native);
             let owned = native.owned_bytes();
             (result, owned)
@@ -62,7 +62,7 @@ pub(crate) fn project(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotContr
         }
         let document = control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress,allocation|{
             let mut callback = |event: NativeEncodeProgress| progress(event.completed, event.total);
-            let mut native_allocation=|request:semio_framework_value::native_encoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+            let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
             let result = match native.allocate_vec::<XmlNode>(part.document.nodes.len()) {
                 Ok(retirement) => part.materialize_document(&mut native).map(|document| MaterializedDocument { document: Some(document), retirement }),
                 Err(error) => Err(error),

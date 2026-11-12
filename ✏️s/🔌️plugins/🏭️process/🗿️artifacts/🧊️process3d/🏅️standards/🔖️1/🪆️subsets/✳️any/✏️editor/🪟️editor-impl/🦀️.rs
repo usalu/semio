@@ -146,11 +146,11 @@ impl ArtifactEditor for Process3dPlayApp {
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_s_artifact_process_process3d_presence::Process3dPresenceRetirementFactory))
+        Some(semio_s_artifact_process_process3d_presence::process3d_presence_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_s_artifact_process_process3d_presence::Process3dPresenceRetirementFactory))
+        Some(semio_s_artifact_process_process3d_presence::process3d_presence_retirement_factory())
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {

@@ -328,7 +328,10 @@ impl Outbox {
 
     pub(super) fn retire_step(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
         self.retiring = true;
-        match self.publication.close_step(cx.retained_grant()).result? {
+        let grant = cx.retained_grant();
+        let publication = &mut self.publication;
+        let Some((step, _)) = cx.with_original_effect(grant, |_, effect| publication.close_step(effect).result)? else { return Ok(()) };
+        match step? {
             RetainedCloneStep::Progress(progress) => cx.consume_retained(progress),
             RetainedCloneStep::Complete(progress) => {
                 cx.consume_retained(progress)?;
@@ -344,12 +347,12 @@ impl Outbox {
         self.publication.borrow_outcome(descriptor)
     }
 
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(super) fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if self.kind.is_none() && self.publication.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
         self.retiring = true;
-        let step = self.publication.close_step(grant).result?;
+        let step = self.publication.close_step(effect).result?;
         if self.publication.terminal_is_empty() {
             self.kind = None;
             self.retiring = false;
@@ -376,10 +379,18 @@ pub(super) fn borrow_remodel_outcome<'a>(outbox: &'a Outbox, descriptor: &'a Job
     }
 }
 
-pub(super) fn close_outbox_turn(outbox: &mut Outbox, grant: RetainedCloneGrant) -> Result<Option<InteractiveJobCloseStep>, ValueError> {
+pub(super) fn close_outbox_turn(outbox: &mut Outbox, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<RetainedCloneStep>, ValueError> {
     if outbox.terminal_is_empty() {
         return Ok(None);
     }
-    outbox.close_step(grant).map(|step| Some(InteractiveJobCloseStep::Pending { progress: step.progress() }))
+    outbox.close_step(effect).map(Some)
+}
+
+pub(super) fn settled(effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, result: Result<RetainedCloneStep, ValueError>, charge: bool) -> semio_framework_value::RetainedWorkPoll<RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+    let result = result.and_then(|step| match charge {
+        true if !effect.performed(1)? => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "reconstruction close exceeded its original action")),
+        _ => Ok(step),
+    });
+    semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: result.map_err(Into::into), work: effect.performed_work() })
 }
 //#endregion 📤️Outbox

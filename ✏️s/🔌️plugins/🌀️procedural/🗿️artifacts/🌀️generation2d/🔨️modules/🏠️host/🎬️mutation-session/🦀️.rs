@@ -149,9 +149,9 @@ impl Generation2dMutationSession {
         body.next_allocation_bytes().map_err(|_| "generation2d-mutation.body-allocation")
     }
 
-    pub(super) fn reserve_retained_allocation(&mut self, maximum_bytes: usize) -> Result<(bool, usize), &'static str> {
+    pub(super) fn reserve_retained_allocation(&mut self, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<(bool, usize), &'static str> {
         let body = self.body.as_mut().ok_or("generation2d-mutation.body-owner")?;
-        body.reserve_allocation(maximum_bytes)
+        body.reserve_allocation(maximum_bytes, effect)
             .map(|step| (step.progressed, step.allocated_bytes))
             .map_err(|_| "generation2d-mutation.body-allocation")
     }
@@ -167,7 +167,7 @@ impl Generation2dMutationSession {
         self.body.as_ref()?.next_release_allocation_bytes().ok().flatten()
     }
 
-    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::mounted_pack_rt::RetainedPackCloseStep, store::PackRefusal> {
+    pub(super) fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<store::mounted_pack_rt::RetainedPackCloseStep, store::PackRefusal> {
         use store::mounted_pack_rt::RetainedPackCloseStep;
         if self.phase == Generation2dMutationSessionPhase::Closed {
             return Ok(RetainedPackCloseStep::Complete);
@@ -187,7 +187,7 @@ impl Generation2dMutationSession {
             return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(body) = self.body.as_mut() {
-            match body.close_step(maximum_items, maximum_bytes)? {
+            match body.close_step(maximum_items, maximum_bytes, effect)? {
                 RetainedPackCloseStep::Pending { released_items, released_bytes } => {
                     return Ok(RetainedPackCloseStep::Pending { released_items, released_bytes });
                 }

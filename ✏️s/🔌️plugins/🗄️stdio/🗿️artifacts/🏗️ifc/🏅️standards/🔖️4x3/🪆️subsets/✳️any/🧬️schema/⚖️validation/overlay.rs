@@ -288,14 +288,14 @@ impl PopulationOverlay {
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.retirement.next_owner_demands::<Storage>(self.storage.is_some(), &None, body)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing {
             return Err(refusal("express.overlay-not-closing"));
         }
         if self.storage.is_some() {
-            self.retirement.begin_granted(&mut self.storage, grant).result?.ok_or_else(|| refusal("express.overlay-close-owner"))
+            self.retirement.begin_granted(&mut self.storage, effect).result?.ok_or_else(|| refusal("express.overlay-close-owner"))
         } else if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant).result
+            settled(self.retirement.step_granted(4096, effect))
         } else {
             Ok(RetainedCloneStep::Complete(Default::default()))
         }

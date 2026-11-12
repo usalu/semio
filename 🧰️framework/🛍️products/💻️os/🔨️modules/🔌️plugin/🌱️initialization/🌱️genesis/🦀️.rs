@@ -8,6 +8,12 @@ use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedClonePro
 pub struct OriginalStoreBirth{admission:semio_framework_job::OriginalConstructionAdmission,failure:Option<semio_framework_job::OriginalConstructionFailure>,active:Option<Box<dyn store::ErasedSnapshotRetirement>>,clone:Option<(semio_framework_value::SharedUtf8,RetainedCloneProgress)>}
 impl OriginalStoreBirth{
  pub fn terminal_is_empty(&self)->bool{self.admission.terminal_is_empty()&&self.failure.is_none()&&self.active.is_none()}
+ /// 🎭️ Leases the actor text once under the caller's own effect and stashes it for the next construction; `false` while the turn cannot fund it.
+ pub fn lease_actor(&mut self,actor:&protocol::ActorId,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.clone.is_some(){return Ok(true)}let grant=cx.retained_grant();match cx.with_original_effect(grant,|_,effect|actor.0.admit_clone(effect))?{Some((turn,performed))=>{cx.consume_work(performed);self.clone=Some(turn.result?);Ok(true)},None=>Ok(false)}}
+ /// 🎭️ Hands the stashed actor lease to one construction.
+ pub fn take_actor(&mut self)->Option<(semio_framework_value::SharedUtf8,RetainedCloneProgress)>{self.clone.take()}
+ /// 🎭️ Returns an actor lease a refused construction did not consume.
+ pub fn restore_actor(&mut self,lease:Option<(semio_framework_value::SharedUtf8,RetainedCloneProgress)>){if lease.is_some(){self.clone=lease}}
  fn status(&mut self,cx:&mut StepContext<'_>,status:semio_framework_job::OriginalConstructionStatus)->Result<bool,OriginalTurnFailure>{
   match status{
    semio_framework_job::OriginalConstructionStatus::Pending=>Ok(false),

@@ -7,7 +7,7 @@ fn append<T, const N: usize>(target: &mut PagedList<T, N>, value: T, control: &m
     while !target.has_reserved_slot() {
         let bytes = target.next_allocation_bytes().map_err(ValueError::from)?;
         control.charge(bytes)?;
-        let progress = target.reserve_one(bytes).map_err(|error| ValueError::from(error.refusal()))?;
+        let progress = target.reserve_one_cold(bytes).map_err(|error| ValueError::from(error.refusal()))?;
         if !progress.progressed || progress.allocated_bytes != bytes {
             return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "retained OPC page request differs from admitted backing"));
         }

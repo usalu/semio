@@ -8,6 +8,7 @@ use semio_framework_3d_brep_engine::{BrepError, GeometryKind, ShapeValue};
 use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap;
+use semio_framework_value::retirement::{arc_custody::ArcLease, RetireOwned};
 use std::sync::Arc;
 
 pub const FAULT_PREFIX: &str = "generation3d.geometry.";
@@ -98,7 +99,7 @@ pub struct SelectionValue {
 }
 
 /// 💎️ One value on a widget port.
-#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug)]
 pub enum GeometryValue {
     Number(f64),
     Integer(i64),
@@ -111,6 +112,51 @@ pub enum GeometryValue {
     Mesh(Arc<HalfedgeMesh>),
     Selection(SelectionValue),
     List(Vec<GeometryValue>),
+}
+
+/// 🔗️ The retirement view of a port value: shared shapes and meshes close through Arc leases.
+#[derive(semio_framework_value::RetireOwned)]
+pub enum GeometryValueOwner {
+    Number(f64),
+    Integer(i64),
+    Boolean(bool),
+    Text(String),
+    Vector([f64; 3]),
+    Point([f64; 3]),
+    Plane(PlaneValue),
+    Shape(ArcLease<ShapeValue>),
+    Mesh(ArcLease<HalfedgeMesh>),
+    Selection(SelectionValue),
+    List(Vec<GeometryValue>),
+}
+
+impl From<GeometryValue> for GeometryValueOwner {
+    fn from(value: GeometryValue) -> Self {
+        match value {
+            GeometryValue::Number(value) => Self::Number(value),
+            GeometryValue::Integer(value) => Self::Integer(value),
+            GeometryValue::Boolean(value) => Self::Boolean(value),
+            GeometryValue::Text(value) => Self::Text(value),
+            GeometryValue::Vector(value) => Self::Vector(value),
+            GeometryValue::Point(value) => Self::Point(value),
+            GeometryValue::Plane(value) => Self::Plane(value),
+            GeometryValue::Shape(value) => Self::Shape(ArcLease::new(value)),
+            GeometryValue::Mesh(value) => Self::Mesh(ArcLease::new(value)),
+            GeometryValue::Selection(value) => Self::Selection(value),
+            GeometryValue::List(value) => Self::List(value),
+        }
+    }
+}
+
+/// ♻️ Port values retire through their lease view.
+impl RetireOwned for GeometryValue {
+    type RetirementCursor = <GeometryValueOwner as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        GeometryValueOwner::from(self).retirement_seed()
+    }
+    fn controlled_retirement_supported() -> bool {
+        GeometryValueOwner::controlled_retirement_supported()
+    }
 }
 
 /// 🟰️ Meshes are sealed shared values, so two mesh values are equal exactly when they are the same allocation.
@@ -222,6 +268,34 @@ pub type Outputs = RetainedOrderedMap<String, GeometryValue>;
 /// 🧮️ Builds outputs from `(port, value)` pairs.
 pub fn outputs<const N: usize>(entries: [(&str, GeometryValue); N]) -> Outputs {
     entries.into_iter().map(|(port, value)| (port.to_string(), value)).collect()
+}
+
+/// 🔗️ One shared widget evaluation: the inferred value retires through its Arc lease.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SharedEvaluation(Arc<WidgetEvaluation>);
+
+impl SharedEvaluation {
+    /// 🏗️ Shares one finished evaluation.
+    pub fn new(evaluation: WidgetEvaluation) -> Self {
+        Self(Arc::new(evaluation))
+    }
+}
+
+impl std::ops::Deref for SharedEvaluation {
+    type Target = Arc<WidgetEvaluation>;
+    fn deref(&self) -> &Arc<WidgetEvaluation> {
+        &self.0
+    }
+}
+
+impl RetireOwned for SharedEvaluation {
+    type RetirementCursor = <ArcLease<WidgetEvaluation> as RetireOwned>::RetirementCursor;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        ArcLease::new(self.0).retirement_seed()
+    }
+    fn controlled_retirement_supported() -> bool {
+        ArcLease::<WidgetEvaluation>::controlled_retirement_supported()
+    }
 }
 
 /// 📦️ The result of one widget: its outputs, or the fault that left it without, and the fidelity it was computed with.

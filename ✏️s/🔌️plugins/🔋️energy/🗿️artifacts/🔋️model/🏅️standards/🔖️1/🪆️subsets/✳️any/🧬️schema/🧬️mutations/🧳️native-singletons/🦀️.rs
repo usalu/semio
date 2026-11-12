@@ -3,7 +3,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_plugin_energy_engine_model as model;
-use semio_s_artifact_energy_model_native_mutations::{leaf,row,scalar};
+use semio_s_artifact_energy_model_native_mutations::{leaf,row,scalar,custody,retained};
 
 #[cfg(test)]#[global_allocator]
 static ORIGINAL_NATIVE_SINGLETONS_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

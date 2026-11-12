@@ -42,6 +42,7 @@ pub enum Mp3Mutation {
     /// 🗑️ Removes one ID3v2 frame by id.
     RemoveId3Frame(remove_id3_frame::RemoveId3Frame),
 }
+dsl::original_pack_value_operation_receiving!(Mp3Mutation);
 
 
 

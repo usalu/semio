@@ -137,7 +137,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadC
     fn cancel(&mut self) { self.cancelled = true; }
     fn last_turn_work(&self) -> u64 { self.last_work }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> { Ok(self.owners.close_step(grant.retained_grant())?) }
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll { self.owners.close_step(effect) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }

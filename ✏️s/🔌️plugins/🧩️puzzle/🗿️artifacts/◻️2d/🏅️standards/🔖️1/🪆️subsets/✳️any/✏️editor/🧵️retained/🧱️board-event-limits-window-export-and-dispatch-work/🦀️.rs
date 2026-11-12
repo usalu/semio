@@ -343,4 +343,3 @@ pub fn puzzle2d_active_example_extent(command: &Puzzle2dCommand, _snapshot: &Puz
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
 
-semio_plugin::retained_command::terminal_frame_bound!(Puzzle2dExportWork);

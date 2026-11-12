@@ -50,6 +50,7 @@ pub enum TsvMutation {
     /// ✏️ Patches one cell's value in place.
     SetCell(set_cell::SetCell),
 }
+dsl::original_pack_value_operation_receiving!(TsvMutation);
 
 /// 🧾️ Kebab-case spelling of every `TsvMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `tsv-iana-any` (`../../🔮️oracles/🔣️.json`) is measured against this

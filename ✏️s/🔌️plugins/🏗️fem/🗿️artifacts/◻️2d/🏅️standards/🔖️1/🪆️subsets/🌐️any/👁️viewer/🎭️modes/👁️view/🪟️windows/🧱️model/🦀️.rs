@@ -48,7 +48,7 @@ fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
 /// `fem2d_structure_layers`.
 fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<semio_framework_pack_json::Value> {
     let mut layers = Vec::new();
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         let (sx, sy) = screen_2d(node.x, node.y);
         layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("node-{}", node.id.as_str()), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
     }

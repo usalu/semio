@@ -57,7 +57,7 @@ impl RetainedParameterNumericText {
     pub fn as_str(&self) -> &str { std::str::from_utf8(&self.bytes[..self.len]).expect("numeric diagnostic text is UTF-8") }
 }
 
-use semio_framework_value::{ErasedSnapshotRetirement, OriginalRetirementFailure, OriginalRetirementOutcome, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{ErasedSnapshotRetirement, OriginalRetirementFailure, OriginalRetirementOutcome, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneBinding, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep};
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{FeatureParams, IngestParams, MatchParams};
 use std::mem::{size_of, ManuallyDrop};
@@ -74,8 +74,8 @@ impl RetainedParameterTextSource<'_> {
     fn kind(self) -> u8 { match self { Self::Ingest(_) => 1, Self::Feature(_) => 2, Self::Matching(_) => 3 } }
     fn check(self, binding: &Option<RetainedCloneBinding>) -> Result<bool, ValueError> { match self { Self::Ingest(x) => x.check_binding(binding), Self::Feature(x) => x.check_binding(binding), Self::Matching(x) => x.check_binding(binding) } }
     fn binding_bytes(self) -> usize { match self { Self::Ingest(x) => x.binding_copy_bytes(), Self::Feature(x) => x.binding_copy_bytes(), Self::Matching(x) => x.binding_copy_bytes() } }
-    fn bind(self, binding: &mut Option<RetainedCloneBinding>, grant: RetainedCloneGrant) -> RetainedWorkOutcome<Option<RetainedCloneProgress>, ValueError> {
-        match self { Self::Ingest(x) => x.bind(binding, grant), Self::Feature(x) => x.bind(binding, grant), Self::Matching(x) => x.bind(binding, grant) }
+    fn bind(self, binding: &mut Option<RetainedCloneBinding>, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome<Option<RetainedCloneProgress>, ValueError> {
+        match self { Self::Ingest(x) => x.bind(binding, effect), Self::Feature(x) => x.bind(binding, effect), Self::Matching(x) => x.bind(binding, effect) }
     }
     fn format(self) -> Result<RetainedParameterNumericText, std::fmt::Error> {
         match self {
@@ -128,8 +128,10 @@ impl RetainedParameterTextOwner {
     }
 
     /// ▶️ Performs only the admitted source binding, fixed scalar format, reservation, or byte segment.
-    pub fn advance(&mut self, source: RetainedParameterTextSource<'_>, body: usize, maximum_work_units: u64, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
-        let mut work = 0;
+    pub fn advance(&mut self, source: RetainedParameterTextSource<'_>, body: usize, maximum_work_units: u64, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementOutcome {
+        let grant = effect.grant();
+        let base = effect.performed_work();
+        let mut work: u128 = 0;
         let result: Result<_, OriginalRetirementFailure> = (|| {
             let selected = self.work_demand(source, body, maximum_work_units)?;
             if self.phase == 4 { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -139,16 +141,16 @@ impl RetainedParameterTextOwner {
             let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() };
             work = 1;
             match self.phase {
-                0 => { let turn = source.bind(&mut self.binding, RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - 2 * size_of::<u8>(), ..grant }); work = turn.work; progress = turn.result?.ok_or_else(text_invalid)?; progress.copied_bytes += 2 * size_of::<u8>(); self.source_kind = source.kind(); self.phase = 1; },
-                1 => { let text = match source.format() { Ok(text) => text, Err(_) => { work = selected; return Err(text_invalid().with_retained_progress(progress).into()); } }; work = 1 + RetainedParameterNumericText::MAX_BYTES as u64 + text.as_str().len() as u64; self.text = Some(text); self.phase = 2; },
+                0 => { let turn = source.bind(&mut self.binding, &mut effect.nested(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - 2 * size_of::<u8>(), ..grant })); work = turn.work; progress = turn.result?.ok_or_else(text_invalid)?; progress.copied_bytes += 2 * size_of::<u8>(); self.source_kind = source.kind(); self.phase = 1; },
+                1 => { let text = match source.format() { Ok(text) => text, Err(_) => { work = u128::from(selected); return Err(text_invalid().with_retained_progress(progress).into()); } }; work = 1 + RetainedParameterNumericText::MAX_BYTES as u128 + text.as_str().len() as u128; self.text = Some(text); self.phase = 2; },
                 2 => { let mut value = String::new(); value.try_reserve_exact(d.capacity_bytes).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "parameter text reservation failed"))?; progress.retained_capacity_bytes = value.capacity(); *self.output = Some(value); self.phase = 3; },
-                3 => { let text = self.text.as_ref().ok_or_else(text_invalid)?.as_str(); let n = d.copy_bytes - size_of::<usize>() - size_of::<u8>(); if n == 0 && self.offset < text.len() { work = 0; return Ok(RetainedCloneStep::Progress(Default::default())); } let end = self.offset + n; self.output.as_mut().ok_or_else(text_invalid)?.push_str(&text[self.offset..end]); self.offset = end; work += n as u64; if self.offset == text.len() { self.phase = 4; } },
+                3 => { let text = self.text.as_ref().ok_or_else(text_invalid)?.as_str(); let n = d.copy_bytes - size_of::<usize>() - size_of::<u8>(); if n == 0 && self.offset < text.len() { work = 0; return Ok(RetainedCloneStep::Progress(Default::default())); } let end = self.offset + n; self.output.as_mut().ok_or_else(text_invalid)?.push_str(&text[self.offset..end]); self.offset = end; work += n as u128; if self.offset == text.len() { self.phase = 4; } },
                 _ => return Err(text_invalid().into()),
             }
             if !progress.fits(grant) { return Err(text_invalid().with_retained_progress(progress).into()); }
             Ok(if self.phase == 4 { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
         })();
-        RetainedWorkOutcome { result, work }
+        protocol::retained_settle(effect, base, result, work)
     }
 
     /// 📤️ Transfers the completed original string only under its own physical grant.
@@ -180,19 +182,32 @@ impl RetainedParameterTextOwner {
         RetainedCloneBinding::close_work_demand(&self.binding, body)
     }
     /// ♻️ Retires one retained child or source alias.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
-        let mut work = 0;
+    pub fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let grant = effect.grant();
+        let base = effect.performed_work();
+        let mut work: u128 = 0;
+        let mut pending = None;
         let result: Result<_, OriginalRetirementFailure> = (|| {
-            let d = self.close_demand(grant.maximum_copy_bytes)?;
+            let d = self.close_demand(body)?;
             if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
             if !protocol::retained_mutation_demand_fits(d, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            if !self.retirement.is_empty() { let turn = self.retirement.step_granted(grant); work = turn.work; return Ok(RetainedCloneStep::Progress(turn.result?.progress())); }
-            let turn = self.retirement.begin_granted(&mut self.output, grant); work += turn.work; if let Some(step) = turn.result? { return Ok(RetainedCloneStep::Progress(step.progress())); }
+            if !self.retirement.is_empty() {
+                return match self.retirement.step_granted(body, effect) {
+                    RetainedWorkPoll::Pending { work: owed } => { pending = Some(owed); Ok(RetainedCloneStep::Progress(Default::default())) }
+                    RetainedWorkPoll::Complete(turn) => { work = turn.work; Ok(RetainedCloneStep::Progress(turn.result?.progress())) }
+                };
+            }
+            let turn = self.retirement.begin_granted(&mut self.output, effect); work += turn.work; if let Some(step) = turn.result? { return Ok(RetainedCloneStep::Progress(step.progress())); }
             if self.text.is_some() { self.text = None; work += 1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() })); }
-            let turn = RetainedCloneBinding::close_one(&mut self.binding, grant); work += turn.work; let step = turn.result?;
-            Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+            match RetainedCloneBinding::close_one(&mut self.binding, body, effect) {
+                RetainedWorkPoll::Pending { work: owed } => { pending = Some(owed); Ok(RetainedCloneStep::Progress(Default::default())) }
+                RetainedWorkPoll::Complete(turn) => { work += turn.work; let step = turn.result?; Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }) }
+            }
         })();
-        RetainedWorkOutcome { result, work }
+        match pending {
+            Some(owed) => RetainedWorkPoll::Pending { work: owed },
+            None => RetainedWorkPoll::Complete(protocol::retained_settle(effect, base, result, work)),
+        }
     }
     /// 🫙️ Reports whether all original custody has been retired.
     pub fn terminal_is_empty(&self) -> bool { self.binding.is_none() && self.text.is_none() && self.output.is_none() && self.retirement.is_empty() }
@@ -262,8 +277,10 @@ impl RetainedParameterDiagnosticOwner {
     }
 
     /// ▶️ Constructs one retained component without evaluating a cold mutation.
-    pub fn advance(&mut self, source: RetainedParameterTextSource<'_>, body: usize, maximum_work_units: u64, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
-        let mut work = 0;
+    pub fn advance(&mut self, source: RetainedParameterTextSource<'_>, body: usize, maximum_work_units: u64, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementOutcome {
+        let grant = effect.grant();
+        let base = effect.performed_work();
+        let mut work: u128 = 0;
         let result: Result<_, OriginalRetirementFailure> = (|| {
             let selected = self.work_demand(source, body, maximum_work_units)?;
             if self.phase == 6 { return Ok(RetainedCloneStep::Complete(Default::default())); }
@@ -273,10 +290,10 @@ impl RetainedParameterDiagnosticOwner {
             let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() };
             work = 1;
             match self.phase {
-                0 => { let turn = self.text.advance(source, body, maximum_work_units - 1, diagnostic_child(grant)); work += turn.work; let step = turn.result.map_err(|error| { let p = diagnostic_progress(error.retained_progress()).unwrap_or_else(|_| error.retained_progress()); error.with_retained_progress(p) })?; progress = diagnostic_progress(step.progress())?; if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 1; } },
+                0 => { let turn = self.text.advance(source, body, maximum_work_units - 1, &mut effect.nested(diagnostic_child(grant))); work += turn.work; let step = turn.result.map_err(|error| { let p = diagnostic_progress(error.retained_progress()).unwrap_or_else(|_| error.retained_progress()); error.with_retained_progress(p) })?; progress = diagnostic_progress(step.progress())?; if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 1; } },
                 1 => { let extra = 2 * size_of::<Option<String>>() + size_of::<u8>(); let turn = self.text.take(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - extra, ..grant }); work = turn.work; let (message, p) = turn.result?.ok_or_else(text_invalid)?; *self.message = Some(message); progress = p; progress.copied_bytes += extra; self.phase = 2; },
                 2 => { let mut code = String::new(); code.try_reserve_exact(d.capacity_bytes).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "parameter diagnostic code reservation failed"))?; progress.retained_capacity_bytes = code.capacity(); *self.code = Some(code); self.phase = 3; },
-                3 => { let code = "mutation.invariant"; let n = d.copy_bytes - size_of::<usize>() - size_of::<u8>(); if n == 0 && self.offset < code.len() { work = 0; return Ok(RetainedCloneStep::Progress(Default::default())); } let end = self.offset + n; self.code.as_mut().ok_or_else(text_invalid)?.push_str(&code[self.offset..end]); self.offset = end; work += n as u64; if end == code.len() { self.phase = 4; } },
+                3 => { let code = "mutation.invariant"; let n = d.copy_bytes - size_of::<usize>() - size_of::<u8>(); if n == 0 && self.offset < code.len() { work = 0; return Ok(RetainedCloneStep::Progress(Default::default())); } let end = self.offset + n; self.code.as_mut().ok_or_else(text_invalid)?.push_str(&code[self.offset..end]); self.offset = end; work += n as u128; if end == code.len() { self.phase = 4; } },
                 4 => { let mut rows = Vec::new(); rows.try_reserve_exact(1).map_err(|_| ValueError::literal(ValueRefusalKind::OwnershipLimit, "parameter diagnostic row reservation failed"))?; progress.retained_capacity_bytes = rows.capacity() * size_of::<protocol::MutationMessage>(); *self.rows = Some(rows); self.phase = 5; },
                 5 => { if self.code.is_none() || self.message.is_none() || self.rows.is_none() { return Err(text_invalid().into()); } let row = protocol::MutationMessage { level: semio_framework_diagnostic::Severity::Fatal, code: semio_framework_diagnostic::FaultCode(self.code.take().expect("validated diagnostic code")), message: self.message.take().expect("validated diagnostic text"), target: Vec::new(), op_index: None }; self.rows.as_mut().expect("validated diagnostic vector").push(row); self.ledger = Some(protocol::MutationMessageLedgerRetirement::new(String::new(), self.rows.take().expect("validated diagnostic vector"))); self.phase = 6; work = 3; },
                 _ => return Err(text_invalid().into()),
@@ -284,7 +301,7 @@ impl RetainedParameterDiagnosticOwner {
             if !progress.fits(grant) { return Err(text_invalid().with_retained_progress(progress).into()); }
             Ok(if self.phase == 6 { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
         })();
-        RetainedWorkOutcome { result, work }
+        protocol::retained_settle(effect, base, result, work)
     }
 
     /// 📏️ Quotes the diagnostic vector handoff.
@@ -295,7 +312,7 @@ impl RetainedParameterDiagnosticOwner {
         let d = self.take_demand();
         if !protocol::retained_mutation_demand_fits(d, grant) { return RetainedWorkOutcome { result: Ok(None), work: 0 }; }
         let result = self.ledger.as_mut().ok_or_else(text_invalid).and_then(|ledger| ledger.take_messages_controlled(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - size_of::<u8>(), ..grant })).and_then(|value| value.ok_or_else(text_invalid)).map(|(rows, mut progress)| { progress.copied_bytes += size_of::<u8>(); self.phase = 7; Some((rows, progress)) });
-        RetainedWorkOutcome { work: u64::from(result.is_ok()), result }
+        RetainedWorkOutcome { work: u128::from(result.is_ok()), result }
     }
 
     /// 🛑️ Begins cleanup of every partially prepared component and original binding.
@@ -324,20 +341,36 @@ impl RetainedParameterDiagnosticOwner {
         Ok(0)
     }
     /// ♻️ Retires one actual original component or the bounded diagnostic ledger.
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
-        let mut work = 0;
+    pub fn close_step(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let grant = effect.grant();
+        let base = effect.performed_work();
+        let mut work: u128 = 0;
+        let mut pending = None;
         let result: Result<_, OriginalRetirementFailure> = (|| {
-            let d = self.close_demand(grant.maximum_copy_bytes)?;
+            let d = self.close_demand(body)?;
             if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
             if !protocol::retained_mutation_demand_fits(d, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            if !self.text.terminal_is_empty() { let turn = self.text.close_step(diagnostic_child(grant)); work = 1 + turn.work; let step = turn.result.map_err(|error| { let p = diagnostic_progress(error.retained_progress()).unwrap_or_else(|_| error.retained_progress()); error.with_retained_progress(p) })?; return Ok(RetainedCloneStep::Progress(diagnostic_progress(step.progress())?)); }
-            if !self.retirement.is_empty() { let turn = self.retirement.step_granted(grant); work = turn.work; return Ok(RetainedCloneStep::Progress(turn.result?.progress())); }
-            for slot in [&mut self.code, &mut self.message] { let turn = self.retirement.begin_granted(slot, grant); work += turn.work; if let Some(step) = turn.result? { return Ok(RetainedCloneStep::Progress(step.progress())); } }
+            if !self.text.terminal_is_empty() {
+                return match self.text.close_step(body.saturating_sub(size_of::<u8>()), &mut effect.nested(diagnostic_child(grant))) {
+                    RetainedWorkPoll::Pending { work: owed } => { pending = Some(owed); Ok(RetainedCloneStep::Progress(Default::default())) }
+                    RetainedWorkPoll::Complete(turn) => { work = 1 + turn.work; let step = turn.result.map_err(|error| { let p = diagnostic_progress(error.retained_progress()).unwrap_or_else(|_| error.retained_progress()); error.with_retained_progress(p) })?; Ok(RetainedCloneStep::Progress(diagnostic_progress(step.progress())?)) }
+                };
+            }
+            if !self.retirement.is_empty() {
+                return match self.retirement.step_granted(body, effect) {
+                    RetainedWorkPoll::Pending { work: owed } => { pending = Some(owed); Ok(RetainedCloneStep::Progress(Default::default())) }
+                    RetainedWorkPoll::Complete(turn) => { work = turn.work; Ok(RetainedCloneStep::Progress(turn.result?.progress())) }
+                };
+            }
+            for slot in [&mut self.code, &mut self.message] { let turn = self.retirement.begin_granted(slot, effect); work += turn.work; if let Some(step) = turn.result? { return Ok(RetainedCloneStep::Progress(step.progress())); } }
             if let Some(rows) = self.rows.take() { self.ledger = Some(protocol::MutationMessageLedgerRetirement::new(String::new(), rows)); work = 1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() })); }
-            if let Some(ledger) = self.ledger.as_mut() { if ledger.terminal_is_empty() { self.ledger = None; work = 1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() })); } let step = ledger.close_step(grant); work = ledger.last_turn_work(); return Ok(RetainedCloneStep::Progress(step?.progress())); }
+            if let Some(ledger) = self.ledger.as_mut() { if ledger.terminal_is_empty() { self.ledger = None; work = 1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() })); } let step = ledger.close_step(grant); work = u128::from(ledger.last_turn_work()); return Ok(RetainedCloneStep::Progress(step?.progress())); }
             Ok(RetainedCloneStep::Complete(Default::default()))
         })();
-        RetainedWorkOutcome { result, work }
+        match pending {
+            Some(owed) => RetainedWorkPoll::Pending { work: owed },
+            None => RetainedWorkPoll::Complete(protocol::retained_settle(effect, base, result, work)),
+        }
     }
     /// 🫙️ Confirms no child or diagnostic custody remains.
     pub fn terminal_is_empty(&self) -> bool { self.text.terminal_is_empty() && self.code.is_none() && self.message.is_none() && self.rows.is_none() && self.ledger.is_none() && self.retirement.is_empty() }

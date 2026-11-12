@@ -425,7 +425,7 @@ fn emit_mesh(out: &mut GltfSnapshot, item: &IfcEntity, points: &[IfcValue], face
     Ok(())
 }
 pub(super) fn receive(source: &IfcSnapshot, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<GltfSnapshot, ValueError> {
-    owner.receive::<Receiving, GltfSnapshot>(|slot, native, body| {
+    decoded::<Receiving, GltfSnapshot>(owner, |slot, native, body| {
         native.scoped_stage(|native| {
             native.begin_stage(0)?;
             let mut p = Port { native, body };

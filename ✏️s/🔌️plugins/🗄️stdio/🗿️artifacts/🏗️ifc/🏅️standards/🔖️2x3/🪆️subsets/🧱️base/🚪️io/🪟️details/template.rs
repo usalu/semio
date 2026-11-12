@@ -1,6 +1,6 @@
 //! 🌱️ Native catalog templates retain construction frames and original population positions across turns.
 use super::*;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose};
 use std::mem::size_of;
 #[derive(Clone,Copy)]enum Spec{Expression(&'static Expr),Name(&'static str)}
@@ -33,5 +33,5 @@ impl Template{
  pub(super)fn begin_close(&mut self){self.closing=true;}
  pub(super)fn terminal_is_empty(&self)->bool{self.result.is_none()&&self.frames.iter().all(|frame|frame.items.is_none())&&self.retirement.is_empty()}
  pub(super)fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<V>(false,&None,body);}if self.result.is_some(){return self.retirement.next_owner_demands::<V>(true,&None,body);}self.retirement.next_owner_demands::<Vec<V>>(self.frames.iter().any(|frame|frame.items.is_some()),&None,body)}
- pub(super)fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(error());}if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result;}if self.result.is_some(){return self.retirement.begin_granted(&mut self.result,grant).result?.ok_or_else(error);}for frame in &mut self.frames{if frame.items.is_some(){return self.retirement.begin_granted(&mut frame.items,grant).result?.ok_or_else(error);}}Ok(RetainedCloneStep::Complete(Default::default()))}
+ pub(super)fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(error());}if !self.retirement.is_empty(){return settled(self.retirement.step_granted(4096,effect));}if self.result.is_some(){return self.retirement.begin_granted(&mut self.result,effect).result?.ok_or_else(error);}for frame in &mut self.frames{if frame.items.is_some(){return self.retirement.begin_granted(&mut frame.items,effect).result?.ok_or_else(error);}}Ok(RetainedCloneStep::Complete(Default::default()))}
 }

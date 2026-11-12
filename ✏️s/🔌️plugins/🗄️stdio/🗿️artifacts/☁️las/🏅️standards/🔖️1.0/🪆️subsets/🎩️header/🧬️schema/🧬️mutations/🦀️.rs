@@ -69,6 +69,7 @@ pub enum LasMutation {
     RemovePoint(remove_point::RemovePoint),
     SetPoint(set_point::SetPoint),
 }
+dsl::original_pack_value_operation_receiving!(LasMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

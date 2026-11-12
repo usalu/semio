@@ -110,7 +110,7 @@ struct NaturalReceiving {
     snapshot: Option<GltfSnapshot>,
 }
 fn read_natural(source: &[u8], owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<GltfSnapshot, ValueError> {
-    owner.receive::<NaturalReceiving, GltfSnapshot>(|slot, native, body| {
+    decoded::<NaturalReceiving, GltfSnapshot>(owner, |slot, native, body| {
         native.scoped_stage(|native| {
             native.begin_stage(0)?;
             body.admit_frontier(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<NaturalReceiving>(), maximum_depth: 2, ..Default::default() })?;
@@ -129,7 +129,7 @@ fn read_natural(source: &[u8], owner: &mut NativeSnapshotDecodeOwner<'_, '_>) ->
 const IMPORT_LOSS: &str = "Static triangle positions, indices and authored world transforms are baked in SI metres/Z-up into new IFC tessellated proxies. Source glTF hierarchy, identities, materials, textures, normals, UVs, cameras, extras and non-geometric metadata are omitted. This geometry receiving route does not claim full foreign glTF validation or lossless source reconstruction. Animation, skins, morphs, sparse accessors, external buffers and selected extensions refuse atomically.";
 const EXPORT_LOSS: &str = "Explicit IFC Body triangulated face sets, local placements and representation world coordinate systems are baked into glTF SI metres/Y-up with FLOAT coordinates and new mesh identities. IFC relationships, properties, materials, normals, source identities, presentation and analysis semantics are omitted. Mapped, swept, boolean, boundary, geographic and relational-void evaluation are unsupported and refuse atomically; this route does not claim complete IFC geometry or MVD coverage.";
 fn warning(message: &'static str, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Vec<Diagnostic>, ValueError> {
-    owner.receive::<Vec<Diagnostic>, Vec<Diagnostic>>(|slot, native, body| {
+    decoded::<Vec<Diagnostic>, Vec<Diagnostic>>(owner, |slot, native, body| {
         native.scoped_stage(|native| {
             native.begin_stage(0)?;
             let mut p = Port { native, body };
@@ -184,22 +184,19 @@ pub(super) fn import_payload(source: &IoPayload, natural: bool, control: &mut Io
     if natural && !bytes.starts_with(b"glTF") {
         return Err(IoError::from_value_error(invalid("natural GLB carrier does not have its declared GLB header")));
     }
-    control
-        .receive_nested::<Route, IoOutcome<IfcSnapshot>>(|slot, original| {
+    nested_value::<Route, IoOutcome<IfcSnapshot>>(control, |slot, original| {
             header(original, size_of::<Route>(), false)?;
             *slot = Some(Route::default());
             let state = slot.as_mut().unwrap();
-            state.gltf = Some(if natural { read_natural(bytes, &mut original.snapshot_decode()?)? } else { gltf_io::binary::snapshot::owned_pack::geometry::receive_geometry_pack(bytes, &mut original.snapshot_decode()?)? });
+            state.gltf = Some(if natural { read_natural(bytes, &mut original.snapshot_decode()?)? } else { gltf_io::snapshot_codecs::pack_codec::geometry::receive_geometry_pack(bytes, &mut original.snapshot_decode()?)? });
             state.graph = Some(import::receive(state.gltf.as_ref().unwrap(), &mut original.snapshot_decode()?)?);
             state.diagnostics = warning(IMPORT_LOSS, &mut original.snapshot_decode()?)?;
             header(original, size_of::<IoOutcome<IfcSnapshot>>(), false)?;
             Ok(IoOutcome { value: state.graph.take().unwrap(), diagnostics: std::mem::take(&mut state.diagnostics) })
-        })
-        .map_err(IoError::from_value_error)
+    })
 }
 pub(super) fn export_payload(source: &IfcSnapshot, natural: bool, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
-    control
-        .receive_nested::<Route, IoOutcome<IoPayload>>(|slot, original| {
+    nested_value::<Route, IoOutcome<IoPayload>>(control, |slot, original| {
             header(original, size_of::<Route>(), false)?;
             *slot = Some(Route::default());
             let state = slot.as_mut().unwrap();
@@ -207,13 +204,12 @@ pub(super) fn export_payload(source: &IfcSnapshot, natural: bool, control: &mut 
             state.wire = Some(if natural {
                 write::encode(state.gltf.as_ref().unwrap(), &mut original.snapshot_encode()?)?
             } else {
-                gltf_io::binary::snapshot::owned_pack::geometry::encode_geometry_pack(state.gltf.as_ref().unwrap(), &mut original.snapshot_encode()?)?
+                gltf_io::snapshot_codecs::pack_codec::geometry::encode_geometry_pack(state.gltf.as_ref().unwrap(), &mut original.snapshot_encode()?)?
             });
             state.diagnostics = warning(EXPORT_LOSS, &mut original.snapshot_decode()?)?;
             header(original, size_of::<IoOutcome<IoPayload>>(), true)?;
             Ok(IoOutcome { value: IoPayload::Binary(state.wire.take().unwrap()), diagnostics: std::mem::take(&mut state.diagnostics) })
-        })
-        .map_err(IoError::from_value_error)
+    })
 }
 #[cfg(test)]
 #[path = "native-gltf-owned-tests.rs"]

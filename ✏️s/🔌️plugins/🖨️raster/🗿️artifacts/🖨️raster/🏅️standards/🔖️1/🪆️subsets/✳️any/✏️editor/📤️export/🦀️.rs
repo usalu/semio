@@ -6,6 +6,8 @@ mod original_work;
 pub use original_work::ImageExportWork;
 use crate::{RasterPlayApp, RasterCommand};
 use semio_framework_action_bus::RetainedToolWireInput;
+use semio_plugin::MediaConstruction;
+use semio_framework_job::OriginalConstructionDemand;
 use semio_plugin::{ArtifactOwnedToolJobRequest,ArtifactToolCompletion,ArtifactDownloadOutput,EphemeralEmit};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory};
 
@@ -45,13 +47,14 @@ pub struct RasterImageExportJob {
     download:Option<ArtifactToolCompletion<EditorApp<RasterPlayApp>>>,request_owner:std::mem::ManuallyDrop<Option<ArtifactOwnedToolJobRequest<EditorApp<RasterPlayApp>>>>,raw_input:Option<RetainedToolWireInput>,
 }
 impl RasterImageExportJob {
-    pub fn admit_original(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<RasterPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn admit_original(request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<RasterPlayApp>>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,construction:&mut MediaConstruction,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let _=cx.original_source_parent()?;if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let grant=cx.retained_grant();
-        if body.is_none(){let original=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"raster media producer lost its original request"))?;let bytes=size_of::<Self>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        if body.is_none(){let original=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"raster media producer lost its original request"))?;let bytes=size_of::<Self>();let(source_identity,operation)=(original.source_identity,original.operation);return construction.built(cx,body,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:bytes,release_bytes:0,depth:1},||{
             let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"raster original body allocation refused"))?;
-            let owner=Self{source_identity:original.source_identity,request_metadata:std::mem::ManuallyDrop::new(None),metadata_retirement:Default::default(),operation:original.operation,snapshot:None,snapshot_close:None,work:ImageExportWork::default(),chunks:None,credit:None,completion:None,publication:RetainedJobPublication::new(),publishing:None,source:Vec::new(),delivered:false,pending_result:std::mem::ManuallyDrop::new(None),result_published:false,completed:false,closing:false,units:0,close_work:0,progress_pending:None,rejected_download:None,active:None,pending_page:std::mem::ManuallyDrop::new(None),page_published:false,credited:0,output_metadata:std::mem::ManuallyDrop::new(None),metadata_phase:0,download:None,request_owner:std::mem::ManuallyDrop::new(None),raw_input:None};
-            *body=Some(unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+            let owner=Self{source_identity,request_metadata:std::mem::ManuallyDrop::new(None),metadata_retirement:Default::default(),operation,snapshot:None,snapshot_close:None,work:ImageExportWork::default(),chunks:None,credit:None,completion:None,publication:RetainedJobPublication::new(),publishing:None,source:Vec::new(),delivered:false,pending_result:std::mem::ManuallyDrop::new(None),result_published:false,completed:false,closing:false,units:0,close_work:0,progress_pending:None,rejected_download:None,active:None,pending_page:std::mem::ManuallyDrop::new(None),page_published:false,credited:0,output_metadata:std::mem::ManuallyDrop::new(None),metadata_phase:0,download:None,request_owner:std::mem::ManuallyDrop::new(None),raw_input:None};
+            let boxed:Box<dyn ArtifactReservedJob+Send>=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};Ok((boxed,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}))}).map(|_|false)
         }
+        if construction.settling(){construction.settle(cx)?;return Ok(false)}
         let owner=(&mut**body.as_mut().unwrap()as &mut dyn std::any::Any).downcast_mut::<Self>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"raster producer body requires its exact concrete owner"))?;
         if owner.snapshot.is_some()&&request.is_none(){return Ok(true)}if owner.snapshot.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"raster original request cannot overwrite a prepared snapshot").into())}
         let bytes=size_of::<ArtifactMediaExportJobRequest<EditorApp<RasterPlayApp>>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}let original=request.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"raster producer lost its retained request"))?;

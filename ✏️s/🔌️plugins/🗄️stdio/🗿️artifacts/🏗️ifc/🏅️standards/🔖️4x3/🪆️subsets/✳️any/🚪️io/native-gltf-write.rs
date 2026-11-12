@@ -237,7 +237,7 @@ fn validate(source: &GltfSnapshot, p: &mut Port<'_, '_, '_>) -> Result<(), Value
     Ok(())
 }
 pub(super) fn encode(source: &GltfSnapshot, owner: &mut NativeSnapshotEncodeOwner<'_, '_>) -> Result<Vec<u8>, ValueError> {
-    owner.receive::<Writing, Vec<u8>>(|slot, native, body| {
+    encoded::<Writing, Vec<u8>>(owner, |slot, native, body| {
         native.scoped_stage(|native| {
             native.begin_stage(0)?;
             let mut p = Port { native, body };

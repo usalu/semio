@@ -10,7 +10,7 @@ use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 //#region 🔖️Mutation
 /// 🔍️ `scale-selection` payload — object and target-volume ids and the per-axis factors every one of
 /// their scales is multiplied by.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]

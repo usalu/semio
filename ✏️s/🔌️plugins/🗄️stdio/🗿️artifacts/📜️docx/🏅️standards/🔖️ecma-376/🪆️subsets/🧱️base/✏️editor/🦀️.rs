@@ -150,6 +150,7 @@ impl Default for DocxSetPageWork {
 }
 
 impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn tool_id(&self) -> &'static str {
         self.tool_id
     }
@@ -215,7 +216,7 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|grant|{
             if !self.closing {
-                return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Blocked), work: 0 };
+                return semio_framework_value::RetainedWorkOutcome::<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnPrimary> { result: Ok(semio_framework_job::InteractiveJobCloseStep::Blocked), work: 0 };
             }
             semio_framework_value::RetainedWorkOutcome { result: Ok(self.copied_text.close_step(grant)), work: 0 }
         })
@@ -367,7 +368,7 @@ macro_rules! canonical_docx_set_page_work {
             fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
                 semio_framework_job::close_original_granted_step(cx,|grant|{
                     if !self.closing {
-                        return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Blocked), work: 0 };
+                        return semio_framework_value::RetainedWorkOutcome::<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnPrimary> { result: Ok(semio_framework_job::InteractiveJobCloseStep::Blocked), work: 0 };
                     }
                     semio_framework_value::RetainedWorkOutcome { result: Ok(self.copied_text.close_step(grant)), work: 0 }
                 })
@@ -583,4 +584,3 @@ pub fn create_docx_editor() -> semio_plugin::AppDefinition {
 mod tests;
 //#endregion 🧪️Tests
 
-semio_plugin::retained_command::terminal_frame_bound!(DocxSetPageWork);

@@ -34,6 +34,16 @@ pub fn list<T:ColdRetire,S>(rows:Vec<S>,receive:impl Fn(S)->Result<T,ValueError>
  let d=builder.inner.take_demand()?;let mut output=None;cold(d,|effect|settled(effect,|effect,reply|builder.inner.take_into(&mut output,effect,reply)))??;
  output.ok_or_else(||ValueError::invariant("exact cold publication was refused"))
 }
+/// ❄️ Assembles and seals one cold persistent list so a snapshot field can alias it.
+pub fn sealed_list<T:ColdRetire+Send+Sync,S>(rows:Vec<S>,receive:impl Fn(S)->Result<T,ValueError>)->Result<SealedShared<PersistentList<T>>,ValueError>{
+ let value=list(rows,receive)?;
+ seal(value).map_err(|(error,value)|{if discard(value).is_err(){unreachable!("unpublished cold pages have no aliases")}error})
+}
+/// ♻️ Dismantles an unpublished sealed cold list.
+pub fn discard_sealed<T:ColdRetire+Send+Sync>(value:SealedShared<PersistentList<T>>)->Result<(),()>{
+ let d=value.original_transfer_demand().map_err(|_|())?;
+ match value.try_unwrap(grant(d)).result{Ok((list,_))=>discard(list).map_err(|_|()),Err(_)=>Err(())}
+}
 /// ♻️ Dismantles an unpublished cold candidate.
 pub fn discard<T:ColdRetire>(mut value:PersistentList<T>)->Result<(),PersistentList<T>>{if value.cold_dismantle(){Ok(())}else{Err(value)}}
 /// ♻️ Retires one decoded but unused owner in owner-less pump turns, each funded by exactly its quote.

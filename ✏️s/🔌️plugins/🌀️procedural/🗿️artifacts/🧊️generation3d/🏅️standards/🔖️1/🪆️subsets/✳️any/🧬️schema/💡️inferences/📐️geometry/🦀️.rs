@@ -37,6 +37,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::Arc;
 use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::SharedEvaluation;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_s_artifact_procedural_3d_geometry_value::FAULT_PREFIX;
 
@@ -184,7 +185,7 @@ fn faulted(code: &str, en: String, de: String, quality: Quality) -> Started {
     Started::Ready(WidgetEvaluation::faulted(WidgetFault::new(format!("{FAULT_PREFIX}{code}"), en, de), quality))
 }
 
-fn begin(snapshot: &GeometryInput<'_>, key: &str, parents: &[Arc<WidgetEvaluation>]) -> Started {
+fn begin(snapshot: &GeometryInput<'_>, key: &str, parents: &[SharedEvaluation]) -> Started {
     let host = &snapshot.snapshot.host_snapshot;
     let Some(widget) = host.widgets.iter().find(|widget| widget_id(widget) == key) else {
         return faulted("widget-missing", format!("Widget \u{201c}{key}\u{201d} does not exist."), format!("Widget \u{201c}{key}\u{201d} existiert nicht."), Quality::ExactAnalytic);
@@ -199,8 +200,8 @@ fn begin(snapshot: &GeometryInput<'_>, key: &str, parents: &[Arc<WidgetEvaluatio
         return faulted("cycle", format!("Widget \u{201c}{key}\u{201d} is part of a wiring cycle or depends on one."), format!("Widget \u{201c}{key}\u{201d} ist Teil eines Verbindungszyklus oder hängt von einem ab."), quality);
     }
     let wires: Vec<&SynapseSpec> = host.synapses.iter().filter(|synapse| synapse.to == key).collect();
-    let by_id: BTreeMap<&str, &Arc<WidgetEvaluation>> = expected.iter().map(String::as_str).zip(parents.iter()).collect();
-    let parent = |id: &str| by_id.get(id).map(|evaluation| Arc::clone(evaluation));
+    let by_id: BTreeMap<&str, &SharedEvaluation> = expected.iter().map(String::as_str).zip(parents.iter()).collect();
+    let parent = |id: &str| by_id.get(id).map(|evaluation| (*evaluation).clone());
     if let Some(evaluation) = widgets::evaluate(widget, &wires, &parent) {
         return Started::Ready(evaluation);
     }
@@ -296,7 +297,7 @@ impl<'a> GeometryInput<'a> {
 
 impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
     type Key = String;
-    type Value = Arc<WidgetEvaluation>;
+    type Value = SharedEvaluation;
     type Dependency = GeometryDependency;
 
     const FIELD_ID: &'static str = "s.procedural.generation3d.inference.geometry";
@@ -323,7 +324,7 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
             match Self::compute_cold_step(snapshot, key, parents, &mut pending, &mut cx) {
                 Ok(ComputeStep::Done { value, .. }) => return value,
                 Ok(ComputeStep::Working { .. }) => continue,
-                Err(fault) => return Arc::new(WidgetEvaluation::faulted(WidgetFault::new(fault.code, fault.message.clone(), fault.message), Quality::ExactAnalytic)),
+                Err(fault) => return SharedEvaluation::new(WidgetEvaluation::faulted(WidgetFault::new(fault.code, fault.message.clone(), fault.message), Quality::ExactAnalytic)),
             }
         }
     }
@@ -345,7 +346,7 @@ impl<'a> OriginalInferredField<GeometryInput<'a>> for Generation3dGeometry {
     fn clone_original_parent(original:&Self::Value,output:&mut Option<Self::Value>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         let _=cx.original_source_parent()?.source_identity()?;if let Some(output)=output.as_ref(){if !Arc::ptr_eq(original,output){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original inferred parent donor changed its source owner").into())}return Ok(true)}
         let grant=cx.retained_grant();let bytes=std::mem::size_of::<Self::Value>();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);*output=Some(Arc::clone(original));Ok(true)
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);*output=Some(original.clone());Ok(true)
     }
 
     fn compute_step(snapshot:&GeometryInput<'a>,_source:&Self::Source,key:&Self::Key,parents:&[Self::Value],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{original_field::compute_step(snapshot,key,parents,pending,cx)}
@@ -353,10 +354,10 @@ impl<'a> OriginalInferredField<GeometryInput<'a>> for Generation3dGeometry {
 }
 
 impl Generation3dGeometry{
-    fn compute_cold_step(snapshot: &GeometryInput<'_>, key: &String, parents: &[Arc<WidgetEvaluation>], pending: &mut Option<Box<dyn InferencePending>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ComputeStep<Arc<WidgetEvaluation>>, InferenceFault> {
+    fn compute_cold_step(snapshot: &GeometryInput<'_>, key: &String, parents: &[SharedEvaluation], pending: &mut Option<Box<dyn InferencePending>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ComputeStep<SharedEvaluation>, InferenceFault> {
         if pending.is_none() {
             match begin(snapshot, key, parents) {
-                Started::Ready(evaluation) => return Ok(ComputeStep::Done { value: Arc::new(evaluation), fuel_used: 1 }),
+                Started::Ready(evaluation) => return Ok(ComputeStep::Done { value: SharedEvaluation::new(evaluation), fuel_used: 1 }),
                 Started::Job(job, kind) => *pending = Some(Box::new(GeometryPending { job, kind, catalogue: Arc::clone(&snapshot.catalogue) })),
             }
         }
@@ -369,7 +370,7 @@ impl Generation3dGeometry{
             Some(WidgetStep::Done(evaluation)) => {
                 let checked = contract_checked(parked.catalogue.kind(&parked.kind).ok_or_else(|| InferenceFault::new(format!("{FAULT_PREFIX}internal"), "the admitted kind is missing"))?, evaluation);
                 *pending = None;
-                Ok(ComputeStep::Done { value: Arc::new(checked), fuel_used: 1 })
+                Ok(ComputeStep::Done { value: SharedEvaluation::new(checked), fuel_used: 1 })
             }
         }
     }
@@ -429,13 +430,13 @@ impl Generation3dWidgetRecord {
 
 impl Generation3dGeometryRecord {
     /// 🈵️ The record of a full evaluation.
-    pub fn of(evaluations: &BTreeMap<String, Arc<WidgetEvaluation>>) -> Self {
+    pub fn of(evaluations: &BTreeMap<String, SharedEvaluation>) -> Self {
         Self { widgets: evaluations.iter().map(|(id, evaluation)| (id.clone(), Generation3dWidgetRecord::of(evaluation))).collect(), faulted: evaluations.values().filter(|evaluation| evaluation.fault.is_some()).count() as u32 }
     }
 }
 
 /// 🧲️ Evaluates a snapshot completely and cold, the semantic source every cached or stepped run equals.
-pub fn infer_geometry(snapshot: &GeometryInput<'_>) -> BTreeMap<String, Arc<WidgetEvaluation>> {
+pub fn infer_geometry(snapshot: &GeometryInput<'_>) -> BTreeMap<String, SharedEvaluation> {
     protocol::infer_field::<GeometryInput<'_>, Generation3dGeometry>(snapshot, None)
 }
 //#endregion 🔖️Record

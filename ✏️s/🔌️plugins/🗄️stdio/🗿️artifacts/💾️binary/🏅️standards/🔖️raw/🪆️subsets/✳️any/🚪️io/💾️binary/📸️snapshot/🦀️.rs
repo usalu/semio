@@ -39,11 +39,15 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
     }
 }
 impl store::ArtifactPackReceiving for BinarySnapshot {
-    fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{
-        owner.receive::<Self,Self,store::NativeSnapshotFailure>(|slot,native,body|store::native_snapshot_turn(|work|{work.performed();(||->Result<Self,semio_framework_value::ValueError>{
-            crate::standards::v_raw::subsets::any::io::sqlite::snapshot::bind_raw_pack(bytes,slot,native,body)?;
-            slot.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Binary receiving lost original typed output"))
-        })().map_err(Into::into)}))
+    fn receive_pack(bytes:&[u8],output:&mut Option<Self>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<(),store::NativeSnapshotFailure>{
+        owner.receive::<Self,Self,store::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,body|{
+            let before=native.actual_work();
+            let result=(||->Result<(),semio_framework_value::ValueError>{
+                crate::standards::v_raw::subsets::any::io::sqlite::snapshot::bind_raw_pack(bytes,slot,native,body)?;
+                *published=Some(slot.take().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Binary receiving lost original typed output"))?);Ok(())
+            })().map_err(store::NativeSnapshotFailure::from);
+            semio_framework_value::RetainedWorkOutcome{result,work:native.actual_work().saturating_sub(before)}
+        })
     }
 }
 }

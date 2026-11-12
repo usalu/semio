@@ -186,7 +186,8 @@ impl EventAdmission {
             cx.consume_fuel(1);
             return Ok(false);
         }
-        let step = if self.codec.complete { self.codec.close(grant) } else { self.codec.advance(store::ArtifactPreparedOperationSource::CanonicalJson { header: b"", body: store::ArtifactCanonicalTreeSource::view(event) }, &mut self.chunk, grant) };
+        let (codec, chunk) = (&mut self.codec, &mut self.chunk);
+        let Some(step) = effected(cx, |effect| if codec.complete { codec.close(effect) } else { codec.advance(store::ArtifactPreparedOperationSource::CanonicalJson { header: b"", body: store::ArtifactCanonicalTreeSource::view(event) }, chunk, effect) })? else { return Ok(false) };
         let step = match step {
             Ok(step) => step,
             Err(error) => {
@@ -197,7 +198,6 @@ impl EventAdmission {
         self.bytes = self.bytes.checked_add(step.written_bytes).ok_or_else(|| invalid("IFC event wire size overflow"))?;
         let items = step.processed_items;
         cx.consume_retained(RetainedCloneProgress { copied_items: items, copied_bytes: step.copied_bytes, retained_capacity_bytes: step.retained_capacity_bytes, released_bytes: step.released_bytes })?;
-        cx.consume_fuel(items.max(1) as u64);
         if self.bytes > editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES {
             return Err(invalid("IFC event exceeds its declared raw byte extent").into());
         }
@@ -215,13 +215,13 @@ impl EventAdmission {
     pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
         self.codec.retirement_demands()
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
-        let step = match self.codec.close(grant) {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let step = match self.codec.close(effect) {
             Ok(step) => step,
-            Err(error) => return refused(error.reason),
+            Err(error) => return RetainedWorkOutcome { result: Err(error.reason), work: effect.performed_work() },
         };
         let progress = RetainedCloneProgress { copied_items: step.processed_items, copied_bytes: step.copied_bytes, retained_capacity_bytes: step.retained_capacity_bytes, released_bytes: step.released_bytes };
-        RetainedWorkOutcome { result: Ok(if step.complete { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }), work: 1 }
+        RetainedWorkOutcome { result: Ok(if step.complete { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }), work: effect.performed_work() }
     }
 }
 #[cfg(test)]

@@ -205,7 +205,7 @@ fn restore(database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -
     control.check_database(database, SqliteSnapshotPhase::ReconstructSnapshot)?;
     control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |remaining, callback,allocation|{
         let mut progress = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| callback(event.completed, event.total);
-        let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);
+        let mut native=NativeDecodeControl::new_forwarded(remaining,&mut progress,allocation);
         let result = reconstruct(database, &mut native);
         (result, native.owned_bytes())
     })?

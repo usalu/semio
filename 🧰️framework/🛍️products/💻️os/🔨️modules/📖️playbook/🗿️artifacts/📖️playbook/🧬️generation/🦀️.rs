@@ -1,12 +1,10 @@
 //! 🧬️ Immutable shared generation ownership and exact final-owner JSON retirement.
 
 use super::GenerationPlayState;
-use crate::os_store as store;
-use store::ErasedSnapshotRetirement as _;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 #[cfg(test)] use semio_framework_value::{ValueRefusalKind};
 use std::mem::ManuallyDrop;
-use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneStep},retirement::{RetireOwned,arc_custody::SharedControlledRetirement}};
+use semio_framework_value::retirement::{RetireOwned,arc_custody::ArcLeaseRetirement};
 use std::sync::Arc;
 
 //#region 🪪️ImmutableRoot
@@ -52,18 +50,10 @@ impl GenerationPlayRoot {
     }
     pub fn into_retirement(mut self) -> GenerationRootRetirement {
         assert!(GenerationPlayState::controlled_retirement_supported(), "generation fields require complete controlled retirement");
-        GenerationRootRetirement { owned: SharedControlledRetirement::lease(self.0.take().expect("original generation lease")) }
+        GenerationRootRetirement::lease(self.0.take().expect("original generation lease"))
     }
-    pub fn retire_cold(self) {
-        let mut retirement = self.into_retirement();
-        loop {
-            let copy=4096.max(retirement.next_copy_byte_demand().expect("cold generation copy demand"));
-            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).expect("cold generation capacity demand"),maximum_release_bytes:retirement.next_release_byte_demand().expect("cold generation release demand"),maximum_depth:retirement.next_depth_demand().expect("cold generation depth demand")};
-            let step=retirement.close_step(grant).result.expect("cold generation retirement");
-            assert!(step.progress().fits(grant),"cold generation receipt exceeds original grant");
-            if matches!(step,RetainedCloneStep::Complete(_)){assert!(retirement.terminal_is_empty());break;}
-            assert_ne!(step.progress(),Default::default(),"cold generation requires returned observer leases");
-        }
+    pub fn retire_cold(mut self) {
+        if let Some(state) = Arc::into_inner(self.0.take().expect("original generation lease")) { GenerationPlayState::retire_decoded(state); }
     }
 }
 
@@ -75,11 +65,12 @@ impl Drop for GenerationPlayRoot {
     }
 }
 impl RetireOwned for GenerationPlayRoot {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        semio_framework_value::retirement::erased_cursor(Box::new(self.into_retirement()))
+    type RetirementCursor = GenerationRootRetirement;
+    fn retirement_seed(self) -> Self::RetirementCursor {
+        self.into_retirement()
     }
     fn retirement_birth_bytes(&self) -> Option<usize> {
-        Some(semio_framework_value::retirement::erased_cursor_birth_bytes() + size_of::<GenerationRootRetirement>())
+        Some(size_of::<GenerationRootRetirement>())
     }
     fn controlled_retirement_supported() -> bool {
         true
@@ -89,16 +80,7 @@ impl RetireOwned for GenerationPlayRoot {
 
 //#region 🧹️FinalOwnerRetirement
 /// 🔗️ Closes one original generation lease and funds the complete final-owner backing separately.
-pub struct GenerationRootRetirement {owned:SharedControlledRetirement<GenerationPlayState>}
-impl store::ErasedSnapshotRetirement for GenerationRootRetirement {
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owned.next_demand(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_framework_value::RetainedWorkOutcome{result:self.owned.step(grant),work:1}}
-    fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owned.next_copy_byte_demand()}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.owned.next_capacity_byte_demand(copy)}
-    fn next_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owned.next_release_byte_demand()}
-    fn next_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owned.next_depth_demand()}
-    fn terminal_is_empty(&self)->bool{self.owned.terminal_is_empty()}
-}
+pub type GenerationRootRetirement = ArcLeaseRetirement<GenerationPlayState>;
 //#endregion 🧹️FinalOwnerRetirement
 
 //#region 🧪️RootLaws

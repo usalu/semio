@@ -83,6 +83,7 @@ pub enum SvgTinyMutation {
     /// ♻️ The inverse of the down-conversion: puts the stripped elements and attributes back at their exact positions.
     RestoreNonTiny(restore_non_tiny::RestoreNonTiny),
 }
+dsl::original_pack_value_operation_receiving!(SvgTinyMutation);
 
 /// 📇️ Kebab-case spelling of every `SvgTinyMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares. The framework

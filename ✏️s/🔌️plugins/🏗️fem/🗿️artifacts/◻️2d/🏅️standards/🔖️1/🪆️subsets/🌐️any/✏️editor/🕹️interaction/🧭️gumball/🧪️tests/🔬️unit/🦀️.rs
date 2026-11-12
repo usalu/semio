@@ -81,10 +81,10 @@ fn streamed_ticks_commit_the_net_leaf_once() {
     let first = drive(&FemGumballTransient::default(), "w", GesturePhase::Stream, tick(0.5), "base");
     assert!(first.committed.is_none(), "a stream tick commits nothing");
     let open = first.transient.expect("the first tick opens the window's gesture");
-    let minted = open.gestures["w"].transaction.clone();
+    let minted = open.gesture("w").expect("window w holds a gesture").transaction.clone();
     let second = drive(&open, "w", GesturePhase::Stream, tick(0.25), "base");
     let open = second.transient.expect("the second tick advances it");
-    assert_eq!(open.gestures["w"].transaction, minted, "every tick rides the same transaction");
+    assert_eq!(open.gesture("w").expect("window w holds a gesture").transaction, minted, "every tick rides the same transaction");
     let preview = open.preview::<Fem2dSnapshot, Fem2dMutation>(&doc).expect("an open gesture previews");
     let start = doc.nodes.iter().find(|node| node.id == "n1").expect("n1").x;
     assert_eq!(preview.nodes.iter().find(|node| node.id == "n1").expect("n1").x, start + 0.75, "the preview is the net transform");
@@ -108,7 +108,7 @@ fn host_aborts_leave_zero_trace_and_keep_sibling_gestures() {
     let aborted = drive(&both, "left", GesturePhase::Abort(ToolAbortReason::Blur), None, "base");
     assert!(aborted.committed.is_none());
     let rest = aborted.transient.expect("the abort clears the window's gesture");
-    assert_eq!(rest.gestures.keys().collect::<Vec<_>>(), vec!["right"], "only the owner's gesture is dropped");
+    assert_eq!(rest.windows().collect::<Vec<_>>(), vec!["right"], "only the owner's gesture is dropped");
     let moved = drive(&rest, "right", GesturePhase::Commit, tick(), "moved");
     assert!(moved.committed.is_none(), "a commit on a moved base is dropped with its gesture");
     assert!(moved.transient.expect("baseMoved clears it").gestures.is_empty());

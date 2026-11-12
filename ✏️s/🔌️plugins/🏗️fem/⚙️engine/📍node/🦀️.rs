@@ -43,6 +43,7 @@ macro_rules! native_node{
   #[value(rename_all="camelCase")]
   pub struct FemNodeValue{pub id:String,$(#[dsl(unit="m")]pub $field:f64),+}
   impl semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource for FemNodeValue{
+   fn query_schema_key<'reply,'source>(&'source self,query:semio_framework_value_native_owned::native_decoding::owned::NativeSchemaKeySource,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:semio_framework_value_native_owned::native_decoding::owned::NativeSourceKeyReply<'reply,'source>)->Result<semio_framework_value_native_owned::native_decoding::owned::NativeSourceKeyReplyComplete<'reply>,semio_framework_value::ValueError>{semio_framework_value_native_owned::native_decoding::owned::answer_schema_key(self,query,effect,reply)}
    fn query_scalar<'reply>(&self,query:$crate::Query,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::Reply<'reply>)->$crate::Done<'reply>{$crate::record_answer($crate::node_answer(query,$count),effect,reply)}
    fn recover_scalar<'reply>(&self,_query:$crate::Query,_effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,reply:$crate::Reply<'reply>)->$crate::Done<'reply>{$crate::recover_answer(reply)}
    fn as_source(&self)->&dyn semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource{self}

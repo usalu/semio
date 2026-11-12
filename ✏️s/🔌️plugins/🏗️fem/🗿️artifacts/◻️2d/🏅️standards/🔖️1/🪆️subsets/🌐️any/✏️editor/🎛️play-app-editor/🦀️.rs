@@ -7,6 +7,16 @@ use super::*;
 #[derive(Default)]
 pub struct Fem2dPlayApp;
 
+/// 🫧️ The one transient mutation replaces the whole gumball transient, so its admitted payload moves into the new transient.
+fn fem2d_transient_footprint(_: &<Fem2dPlayApp as ArtifactEditor>::TransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<<Fem2dPlayApp as ArtifactEditor>::TransientMutation>()))
+}
+
+fn fem2d_transient_transfer(mutation: <Fem2dPlayApp as ArtifactEditor>::TransientMutation) -> <Fem2dPlayApp as ArtifactEditor>::Transient {
+    let semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransientMutation::Snapshot { transient } = mutation;
+    transient
+}
+
 impl ArtifactEditor for Fem2dPlayApp {
     /// 📢️ The localized notices of the gumball and canvas refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
@@ -66,7 +76,12 @@ impl ArtifactEditor for Fem2dPlayApp {
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+            fem2d_transient_footprint,
+            fem2d_transient_transfer,
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::Transient>::default()),
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Self::TransientMutation>::default()),
+        )))
     }
 
     fn register_window_config_owners(registry: &mut semio_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
@@ -256,7 +271,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                     Some(holes_value) => semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&holes_value)).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
                     None => Vec::new(),
                 };
-                let material_id = doc.snapshot.materials.get(0).map_or_else(|| "unassigned".into(), |material| material.id.as_str().to_owned());
+                let material_id = (*doc.snapshot.materials).get(0).map_or_else(|| "unassigned".into(), |material| material.id.as_str().to_owned());
                 let id = doc.operation().and_then(|operation| operation.entity_id("r", "regions")).map_err(|fault| MediaError::Payload(port.into(), format!("{fault:?}")))?;
                 let region = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
                 Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))

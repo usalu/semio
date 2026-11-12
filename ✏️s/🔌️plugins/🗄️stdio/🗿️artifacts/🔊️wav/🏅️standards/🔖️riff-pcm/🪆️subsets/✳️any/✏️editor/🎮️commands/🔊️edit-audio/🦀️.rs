@@ -429,6 +429,7 @@ impl EditAudioWork {
 }
 
 impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn tool_id(&self) -> &'static str {
         self.tool_id.unwrap_or(SET_SAMPLE_ACTION_ID)
     }
@@ -495,21 +496,21 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
-            use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueRefusalKind};
-            let mut work = 0u64;
-            let result = (|| {
-            if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
-            let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return Err(error) };
-            if demand == semio_framework_value::RetirementDemand::default() { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }); }
-            if grant.maximum_depth < demand.depth { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "interactive job close exceeds its admitted depth")); }
-            if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }); }
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
+        if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
+        let demand = self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        if demand == semio_framework_value::RetirementDemand::default() { return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() }); }
+        semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| -> Result<semio_framework_value::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+            use semio_framework_value::RetainedCloneStep;
+            let grant = effect.grant();
             let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-            let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             let progress = if self.retirement.is_some() {
-                { let turn = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant); work += turn.work; match turn.result { Ok(step) => step.progress(), Err(error) => return Err(error) } }
+                match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect) {
+                    semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result?.progress(),
+                    semio_framework_value::RetainedWorkPoll::Pending { .. } => RetainedCloneProgress::default(),
+                }
             } else if self.pending.is_some() {
-                { let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, grant); work += turn.work; match turn.result { Ok(step) => step.progress(), Err(error) => return Err(error) } }
+                store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, effect).result?.progress()
             } else if let Some(mutation) = self.mutations.pop() {
                 self.pending = Some(mutation);
                 item
@@ -517,19 +518,18 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
                 let released_bytes = std::mem::take(&mut self.mutations).capacity() * size_of::<WavMutation>();
                 RetainedCloneProgress { released_bytes, ..item }
             } else if !self.format_ext_copy.terminal_is_empty() {
-                match self.format_ext_copy.close_step(child) { InteractiveJobCloseStep::Pending { progress } | InteractiveJobCloseStep::Complete { progress } => progress, InteractiveJobCloseStep::Blocked => RetainedCloneProgress::default()}
+                let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
+                match self.format_ext_copy.close_step(child) { InteractiveJobCloseStep::Pending { progress } | InteractiveJobCloseStep::Complete { progress } => progress, InteractiveJobCloseStep::Blocked => RetainedCloneProgress::default() }
             } else if self.format_ext.is_some() {
                 self.ext_pending = self.format_ext.take().flatten();
                 item
             } else if self.ext_pending.is_some() {
-                { let turn = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.ext_pending, &mut self.retirement, grant); work += turn.work; match turn.result { Ok(step) => step.progress(), Err(error) => return Err(error) } }
+                store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.ext_pending, &mut self.retirement, effect).result?.progress()
             } else {
                 self.plan = None;
                 item
             };
-            Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } })
-            })();
-            semio_framework_value::RetainedWorkOutcome { result, work }
+            Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
         })
     }
 
@@ -844,4 +844,3 @@ mod tests {
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(EditAudioWork);

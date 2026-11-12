@@ -15,8 +15,8 @@ use semio_s_artifact_remodel_remodeling_images::editor::remodeling::engine::imag
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::decode_still_image;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::payload_from_data_url;
 use semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::terminology::remodeling_labels;
-use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame;
-use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::add_stream_frame::add_stream_frame;
+use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_asset::create_asset;
 use semio_s_artifact_remodel_remodeling_mut_media::standards::v1::subsets::any::schema::mutations::create_stream::create_stream;
 use semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::RemodelingMutation;
 use semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema::mint_remodeling_id;

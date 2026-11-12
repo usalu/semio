@@ -134,6 +134,7 @@ pub enum CadWorldWindowConfigMutation {
     #[dsl(key = "set")]
     Set(CadWorldWindowConfigSet),
 }
+dsl::original_pack_value_operation_receiving!(CadWorldWindowConfigMutation);
 
 impl store::snapshot_clone_preparation::ConfigApplyMutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
     fn exchange(self, post: &mut CadWorldWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {

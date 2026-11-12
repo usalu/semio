@@ -6,21 +6,46 @@ use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase,SqliteDat
 /// 📥️ Borrowed native payload body after envelope unwrapping, in the encoding the caller supplied.
 pub enum Body<'a>{Binary(&'a[u8]),Text(&'a str)}
 
-/// 🧶️ Admits file size, SQL allocation ledger and progress, then lends the unwrapped body to the typed reader.
-pub fn with_body<T>(payload:&store::io::IoPayload,id:&str,control:&mut SqliteSnapshotControl<'_>,native_control:&mut NativeDecodeControl<'_>,read:impl FnOnce(Body<'_>,&mut NativeDecodeControl<'_>,SqliteDatabaseLimits)->Result<T,ValueError>)->Result<T,ValueError>{
+/// 🪙️ Receiving output slot of one native snapshot owner.
+pub type Output<T>=store::os_store::serialization::SnapshotReceivingOutput<T>;
+/// 🧾️ Receiving outcome of one native snapshot owner.
+pub type Outcome=store::os_store::serialization::SnapshotReceivingOutcome;
+/// 🚫️ Refuses before any original native work started.
+pub fn refused(error:ValueError)->Outcome{semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+/// 🧶️ Admits file size and the SQL allocation ledger, then lends the unwrapped body to the typed reader inside the original receiving frame.
+pub fn decode_receiving<T:semio_framework_value::retirement::RetireOwned>(payload:&store::io::IoPayload,id:&str,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>,output:&mut Option<Output<T>>,empty:impl FnOnce()->T,read:impl FnOnce(Body<'_>,&mut T,&mut NativeDecodeControl<'_>,SqliteDatabaseLimits)->Result<(),ValueError>)->Outcome{
+ use store::space_history::io::sqlite::snapshot::settlement::TypedFileSettlement;
+ use store::sqlite_snapshot::SqliteStageFailure as Stage;
+ use semio_framework_value::RetainedWorkOutcome;
  let limits=control.limits();
- let size=match payload{store::io::IoPayload::Binary(v)=>v.len(),store::io::IoPayload::Text(v)=>v.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio native input exceeds file limit"))}
- control.allocation_stage_native(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
-  let native_before=native_control.owned_bytes();
-  let Some(allowance)=native_before.checked_add(remaining) else{return (Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow")),0)};
-  let result=native_control.scoped_maximum(allowance,|native|{native.scoped_observer(&mut |event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total),|native|{
-   (||->Result<T,ValueError>{match payload{
-    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,id,store::semio_format::Component::Pack,1,native)?;read(Body::Binary(body),native,limits)},
-    store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,id,store::semio_format::Component::Dsl,1,native).map_err(store::semio_format::SemioError::into_value_error)?;read(Body::Text(body),native,limits)}
-   }})()
-  })});
-  (result,native_control.owned_bytes().saturating_sub(native_before))
- })?
+ let admitted=(||->Result<(usize,usize),ValueError>{
+  if output.is_some(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"original snapshot output slot is occupied"))}
+  native_owner.native().checkpoint()?;control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;
+  let size=match payload{store::io::IoPayload::Binary(v)=>v.len(),store::io::IoPayload::Text(v)=>v.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio native input exceeds file limit"))}
+  let before=native_owner.native().owned_bytes();let maximum=before.checked_add(control.allocation_remaining_bytes()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native snapshot allowance overflow"))?;Ok((before,maximum))
+ })();
+ let(before,maximum)=match admitted{Ok(admitted)=>admitted,Err(error)=>return refused(error)};
+ let settlement=TypedFileSettlement::new(control,before,SqliteSnapshotPhase::DecodeNative);
+ let mut observer=|event:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|settlement.observe(event.owned_bytes,event.completed,event.total);
+ let mut empty=Some(empty);let mut read=Some(read);
+ let turn=native_owner.scoped_native(maximum,&mut observer,|owner|owner.receive::<T,Output<T>,store::NativeSnapshotFailure>(output,&mut |slot,published,_marker,_unwind,native,_body|{
+  let before_work=native.actual_work();
+  let operation=(||->Result<T,ValueError>{
+   *slot=Some((empty.take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"native receiving frame ran twice"))?)());
+   let root=slot.as_mut().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"native receiving root is absent"))?;
+   let read=read.take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"native receiving frame ran twice"))?;
+   match payload{
+    store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,id,store::semio_format::Component::Pack,1,native)?;read(Body::Binary(body),root,native,limits)?},
+    store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,id,store::semio_format::Component::Dsl,1,native).map_err(store::semio_format::SemioError::into_value_error)?;read(Body::Text(body),root,native,limits)?}
+   }
+   native.checkpoint()?;slot.take().ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,"native receiving root was lost"))
+  })().map_err(store::NativeSnapshotFailure::from);
+  let settled=settlement.finish_body(native.owned_bytes());
+  *published=Some(match settled{Ok(())=>operation.map_err(Stage::Operation),Err(refusal)=>Err(Stage::Settlement{operation,refusal,receipt:None})});
+  RetainedWorkOutcome{result:Ok(()),work:native.actual_work().checked_sub(before_work).expect("original native work is monotone")}
+ }));
+ let result=match settlement.cause.borrow_mut().take(){Some(refusal)=>Err(Stage::Settlement{operation:turn.result,refusal,receipt:None}),None=>turn.result.map_err(Stage::Operation)};
+ RetainedWorkOutcome{result,work:turn.work}
 }
 pub fn length(reader:&mut store::ByteReader<'_>)->Result<usize,ValueError>{usize::try_from(reader.read_varint_u64().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?).map_err(|_|ValueError::new(ValueRefusalKind::WorkLimit,"Semio native length exceeds address space"))}
 pub fn bytes<'a>(reader:&mut store::ByteReader<'a>)->Result<&'a[u8],ValueError>{let length=length(reader)?;reader.read_bytes(length).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))}
@@ -55,9 +80,6 @@ impl<T:semio_framework_value::retirement::RetireOwned> Owned<T>{
  pub fn new(value:T)->Self{Self{value:Some(value)}}
  pub fn get_mut(&mut self)->&mut T{self.value.as_mut().expect("live Semio native owner")}
  pub fn take(mut self)->T{self.value.take().expect("live Semio native owner")}
-}
-impl<T:semio_framework_value::retirement::RetireOwned> Drop for Owned<T>{
- fn drop(&mut self){if let Some(value)=self.value.take(){let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX};let (mut cursor,_)=semio_framework_value::retirement::admit_owned_retirement(value,grant).result.unwrap_or_else(|(error,_)|panic!("cold Semio native retirement refused: {error:?}"));while !cursor.terminal_is_empty(){cursor.close_step(grant).result.expect("valid Semio native retirement cursor");}}}
 }
 
 pub fn float32(value:&str,control:&mut NativeDecodeControl<'_>)->Result<f32,ValueError>{control.scoped_stage(|control|{control.begin_stage(value.len())?;for _ in value.bytes(){control.step()?;}if let Some(word)=value.strip_prefix("nan32_"){if word.len()!=8||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))}let bits=u32::from_str_radix(word,16).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))?;if bits&0x7f800000!=0x7f800000||bits&0x7fffff==0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio native binary32 word has non-NaN class"))}return Ok(f32::from_bits(bits))}value.parse::<f32>().map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 number"))})}

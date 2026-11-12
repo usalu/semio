@@ -6,9 +6,15 @@ semio_framework_value_retirement_contract::shared_controlled_owner!();
 use super::{admit_retirement_cursor,record_retirement_work,retirement_cursor_birth_demand};
 
 /// 🔗️ A std Arc read lease retires through [`ArcLeaseRetirement`]: it releases its Arc backing, then retires the last payload as a separately funded child.
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,PartialEq)]
 pub struct ArcLease<T:RetireOwned+Sync>(pub Option<Arc<T>>);
-impl<T:RetireOwned+Sync> ArcLease<T>{pub fn new(source:Arc<T>)->Self{Self(Some(source))}}
+impl<T:RetireOwned+Sync> ArcLease<T>{
+    pub fn new(source:Arc<T>)->Self{Self(Some(source))}
+    /// 🔗️ Borrows the leased allocation while the lease still holds it.
+    pub fn get(&self)->Result<&T,ValueError>{self.0.as_deref().ok_or_else(||ValueError::invariant("Arc lease is empty"))}
+    /// 📍️ The leased allocation's address, or zero once the lease is released.
+    pub fn addr(&self)->usize{self.0.as_ref().map_or(0,|source|Arc::as_ptr(source) as usize)}
+}
 impl<T:RetireOwned+Sync> RetireOwned for ArcLease<T>{
     type RetirementCursor=ArcLeaseRetirement<T>;
     fn retirement_seed(self)->Self::RetirementCursor{ArcLeaseRetirement::from_source(self.0)}

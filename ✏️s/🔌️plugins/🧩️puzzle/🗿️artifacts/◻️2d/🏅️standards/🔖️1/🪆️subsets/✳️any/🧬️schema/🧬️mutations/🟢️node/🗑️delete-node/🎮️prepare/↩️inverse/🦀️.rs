@@ -1,5 +1,7 @@
 //! ↩️ Builds the exact native deletion inverse through controlled retained record owners.
 
+use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::{controlled_step, cursor_advance, cursor_retire, cursor_taken, edit_progress, edit_step, list_reserve, pay, settled_step};
+use semio_framework_value::{OriginalRetirementPoll, RetainedAllocationEffect, RetirementPollExit};
 use crate::standards::v1::subsets::any::schema::preparation::native_preparation_child::Puzzle2dCloseAxis;
 use super::{Puzzle2dDeleteNodePreparationCursor, Puzzle2dDeleteNodePreparationStep};
 use crate::standards::v1::subsets::any::schema::mutations::DeleteNode;
@@ -41,14 +43,15 @@ impl Default for Puzzle2dDeleteNodeInverseCursor {
 }
 
 impl Puzzle2dDeleteNodeInverseCursor {
-    pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,DeleteNode>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    pub fn advance(&mut self,source:RetainedCloneRef<'_,Puzzle2dSnapshot>,mutation:RetainedCloneRef<'_,DeleteNode>,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError> {
+        let grant=effect.grant();
         if self.closing || self.phase==21 { return Err(refusal("delete inverse is closing or spent")); }
         if grant.maximum_items==0 || grant.maximum_depth==0 { return Ok(progress(0,0,0)); }
-        if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=source.bind(&mut self.source,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}if let Some(progress)=mutation.bind(&mut self.mutation,effect).result?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
-                if let Some(step)=self.preparation.ensure(grant)? {return Ok(step);}
-                let step=self.preparation.owner_mut().advance(source,mutation,grant)?;
+                if let Some(step)=self.preparation.ensure(effect)? {return Ok(step);}
+                let step=self.preparation.owner_mut().advance(source,mutation,effect)?;
                 let result=match step {
                     Puzzle2dDeleteNodePreparationStep::Pending(p)=>p,
                     Puzzle2dDeleteNodePreparationStep::Node { index,progress }=>{ if let Some(index)=index { self.node_index=index;self.phase=1; } progress },
@@ -59,56 +62,51 @@ impl Puzzle2dDeleteNodeInverseCursor {
             }
             1 => {
                 let index=self.node_index;
-                let step=self.node.advance(source.project(1,|snapshot|&snapshot.nodes).try_project(1,|nodes|nodes.get(index).ok_or_else(||refusal("immutable inverse node ordinal is absent")))?,body,grant).result?;
+                let step=cursor_advance(&mut self.node,source.project(1,|snapshot|&snapshot.nodes).try_project(1,|nodes|nodes.get(index).ok_or_else(||refusal("immutable inverse node ordinal is absent")))?,body,effect)?;
                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=2;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             2 => {
                 if grant.maximum_copy_bytes<size_of::<Puzzle2dMutation>() { return Ok(progress(0,0,0)); }
-                let node=self.node.take(grant).result?.map(|(owner, _)| owner).ok_or_else(||refusal("delete inverse lost completed native node"))?;
+                let node=match cursor_taken(&mut self.node,effect)?{Some(owner)=>owner,None=>return Ok(RetainedCloneStep::Progress(Default::default()))};
                 self.pending=Some(Puzzle2dMutation::CreateNode(CreateNode {node,index:Some(self.node_index)}));
-                self.node.begin_close();self.phase=3;
+                self.phase=3;
                 Ok(progress(1,size_of::<Puzzle2dMutation>(),0))
             }
             3 => {
-                let step=self.node.close_step(grant).result?;
+                let step=cursor_retire(&mut self.node,effect)?;
                 if self.node.terminal_is_empty() {self.resume=0;self.phase=8;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             4 => {
                 let bytes=size_of::<RetainedFieldCursor<Puzzle2dEdge>>();
-                if grant.maximum_copy_bytes<bytes {return Ok(progress(0,0,0));}
+                if grant.maximum_copy_bytes<bytes||!pay(effect)? {return Ok(progress(0,0,0));}
                 self.edge=RetainedFieldCursor::<Puzzle2dEdge>::default();self.phase=5;
                 Ok(progress(1,bytes,0))
             }
             5 => {
                 let index=self.edge_index;
-                let step=self.edge.advance(source.project(1,|snapshot|&snapshot.edges).try_project(1,|edges|edges.get(index).ok_or_else(||refusal("immutable inverse edge ordinal is absent")))?,body,grant).result?;
+                let step=cursor_advance(&mut self.edge,source.project(1,|snapshot|&snapshot.edges).try_project(1,|edges|edges.get(index).ok_or_else(||refusal("immutable inverse edge ordinal is absent")))?,body,effect)?;
                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=6;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             6 => {
                 let bytes=size_of::<Puzzle2dMutation>()+size_of::<[Option<bool>;2]>();
                 if grant.maximum_copy_bytes<bytes {return Ok(progress(0,0,0));}
-                let edge=self.edge.take(grant).result?.map(|(owner, _)| owner).ok_or_else(||refusal("delete inverse lost completed native edge"))?;
+                let edge=match cursor_taken(&mut self.edge,effect)?{Some(owner)=>owner,None=>return Ok(RetainedCloneStep::Progress(Default::default()))};
                 self.visible=edge.visible;self.locked=edge.locked;self.flag=0;
                 self.pending=Some(Puzzle2dMutation::ConnectHandles(ConnectHandles {id:edge.id,source:edge.source,target:edge.target,edge_kind:edge.edge_kind,gap:edge.gap,shift:edge.shift,rise:edge.rise,rotation:edge.rotation,turn:edge.turn,tilt:edge.tilt,x:edge.x,y:edge.y,source_tip:edge.source_tip,target_tip:edge.target_tip,tolerance:None,index:Some(self.edge_index)}));
-                self.edge.begin_close();self.phase=7;
+                self.phase=7;
                 Ok(progress(1,bytes,0))
             }
             7 => {
-                let step=self.edge.close_step(grant).result?;
+                let step=cursor_retire(&mut self.edge,effect)?;
                 if self.edge.terminal_is_empty() {self.resume=10;self.phase=8;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             8 => {
-                if !self.inverse.has_reserved_slot() {
-                    let demand=self.inverse.next_capacity_allocation_bytes(1).map_err(ValueError::from)?.ok_or_else(||refusal("delete inverse lost native page demand"))?;
-                    if demand>grant.maximum_capacity_bytes {return Ok(progress(0,0,0));}
-                    let admitted=self.inverse.reserve_one(grant.maximum_capacity_bytes).map_err(|error|ValueError::from(error.refusal()))?;
-                    return Ok(progress(usize::from(admitted.progressed),0,admitted.allocated_bytes));
-                }
-                if grant.maximum_copy_bytes<size_of::<Puzzle2dMutation>() {return Ok(progress(0,0,0));}
+                if !self.inverse.has_reserved_slot() { let Some(progress)=list_reserve(&mut self.inverse,effect)? else { return Ok(RetainedCloneStep::Progress(Default::default())); }; return Ok(RetainedCloneStep::Progress(progress)); }
+                if grant.maximum_copy_bytes<size_of::<Puzzle2dMutation>()||!pay(effect)? {return Ok(progress(0,0,0));}
                 let operation=self.pending.take().ok_or_else(||refusal("delete inverse lost pending native mutation"))?;
                 if let Err(operation)=self.inverse.push_reserved(operation) {self.pending=Some(operation);return Err(refusal("delete inverse lost admitted output page"));}
                 self.phase=self.resume;
@@ -119,35 +117,35 @@ impl Puzzle2dDeleteNodeInverseCursor {
                 let flag=if self.flag==0 {self.visible}else{self.locked};
                 if flag.is_none() {self.flag+=1;return Ok(progress(1,0,0));}
                 let bytes=size_of::<<PagedUtf8<{usize::MAX}> as RetainedClone>::Cursor>();
-                if grant.maximum_copy_bytes<bytes {return Ok(progress(0,0,0));}
+                if grant.maximum_copy_bytes<bytes||!pay(effect)? {return Ok(progress(0,0,0));}
                 self.identifier=PagedUtf8::retained_clone_cursor();self.phase=11;
                 Ok(progress(1,bytes,0))
             }
             11 => {
                 let index=self.edge_index;
-                let step=self.identifier.advance(source.project(1,|snapshot|&snapshot.edges).try_project(1,|edges|edges.get(index).ok_or_else(||refusal("immutable inverse flag edge is absent")))?.project(1,|edge|&edge.id),body,grant).result?;
+                let step=cursor_advance(&mut self.identifier,source.project(1,|snapshot|&snapshot.edges).try_project(1,|edges|edges.get(index).ok_or_else(||refusal("immutable inverse flag edge is absent")))?.project(1,|edge|&edge.id),body,effect)?;
                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=12;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             12 => {
                 if grant.maximum_copy_bytes<size_of::<Puzzle2dMutation>() {return Ok(progress(0,0,0));}
-                let id=self.identifier.take(grant).result?.map(|(owner, _)| owner).ok_or_else(||refusal("delete inverse lost literal flag identifier"))?;
+                let id=match cursor_taken(&mut self.identifier,effect)?{Some(owner)=>owner,None=>return Ok(RetainedCloneStep::Progress(Default::default()))};
                 self.pending=Some(if self.flag==0 {Puzzle2dMutation::ChangeEdgeVisible(ChangeEdgeVisible {id,new_visible:self.visible})}else{Puzzle2dMutation::ChangeEdgeLocked(ChangeEdgeLocked {id,new_locked:self.locked})});
-                self.identifier.begin_close();self.phase=13;
+                self.phase=13;
                 Ok(progress(1,size_of::<Puzzle2dMutation>(),0))
             }
             13 => {
-                let step=self.identifier.close_step(grant).result?;
+                let step=cursor_retire(&mut self.identifier,effect)?;
                 if self.identifier.terminal_is_empty() {self.flag+=1;self.resume=10;self.phase=8;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             15 => {
-                let step=self.preparation.close_granted(grant)?;
+                let step=settled_step(self.preparation.close_step(effect))?;
                 if self.preparation.terminal_is_empty() {self.phase=16;}
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             16 => {
-                if grant.maximum_copy_bytes<size_of::<PagedList<Puzzle2dMutation,{usize::MAX}>>() {return Ok(progress(0,0,0));}
+                if grant.maximum_copy_bytes<size_of::<PagedList<Puzzle2dMutation,{usize::MAX}>>()||!pay(effect)? {return Ok(progress(0,0,0));}
                 self.phase=20;
                 Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,copied_bytes:size_of::<PagedList<Puzzle2dMutation,{usize::MAX}>>(),retained_capacity_bytes:0, released_bytes: 0 }))
             }
@@ -157,7 +155,7 @@ impl Puzzle2dDeleteNodeInverseCursor {
     }
 
     pub fn take(&mut self)->Option<PagedList<Puzzle2dMutation,{usize::MAX}>> {if self.closing || self.phase!=20 {return None;}self.phase=21;Some(std::mem::take(&mut self.inverse))}
-    pub fn begin_close(&mut self) {self.closing=true;self.preparation.begin_close();self.node.begin_close();self.edge.begin_close();self.identifier.begin_close();}
+    pub fn begin_close(&mut self) {self.closing=true;self.preparation.begin_close();}
 
     fn close_demand(&self,axis:Puzzle2dCloseAxis)->Result<usize,ValueError>{
         if !self.preparation.terminal_is_empty(){return match axis {Puzzle2dCloseAxis::Copy=>self.preparation.next_close_copy_byte_demand(),Puzzle2dCloseAxis::Capacity(body)=>self.preparation.next_close_capacity_byte_demand(body),Puzzle2dCloseAxis::Release=>self.preparation.next_close_release_byte_demand(),Puzzle2dCloseAxis::Depth=>self.preparation.next_close_depth_demand()}}
@@ -176,26 +174,28 @@ impl Puzzle2dDeleteNodeInverseCursor {
     pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Release)}
     pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.close_demand(Puzzle2dCloseAxis::Depth)}
 
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        if !self.closing {return Err(refusal("delete inverse closure was not started"));}
+    pub fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{let result=self.close_stepped(effect);RetirementPollExit::settle(effect,result)}
+    fn close_stepped(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+        let grant=effect.grant();
+        if !self.closing {return Err(refusal("delete inverse closure was not started").into());}
         if grant.maximum_items==0 || grant.maximum_depth==0 {return Ok(progress(0,0,0));}
-        if !self.preparation.terminal_is_empty() {return self.preparation.close_granted(grant);}
-        if !self.node.terminal_is_empty() {return self.node.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if !self.edge.terminal_is_empty() {return self.edge.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if !self.identifier.terminal_is_empty() {return self.identifier.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if let Some(owner)=self.pending_close.as_mut() {let step=owner.step(grant)?;if owner.terminal_is_empty(){self.pending_close=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if !self.preparation.terminal_is_empty() {return Ok(RetainedCloneStep::Progress(RetirementPollExit::resume(self.preparation.close_step(effect))?.progress()));}
+        if !self.node.terminal_is_empty() {return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.node,effect)?.progress()));}
+        if !self.edge.terminal_is_empty() {return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.edge,effect)?.progress()));}
+        if !self.identifier.terminal_is_empty() {return Ok(RetainedCloneStep::Progress(cursor_retire(&mut self.identifier,effect)?.progress()));}
+        if let Some(owner)=self.pending_close.as_mut() {let step=controlled_step(owner,effect)?;if owner.terminal_is_empty(){self.pending_close=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if self.pending.is_some() {
-            if grant.maximum_copy_bytes<size_of::<Puzzle2dMutation>() {return Ok(progress(0,0,0));}
-            match ControlledRetirement::new(self.pending.take().unwrap()) {Ok(owner)=>self.pending_close=Some(owner),Err((error,owner))=>{self.pending=Some(owner);return Err(error);}}
+            if grant.maximum_copy_bytes<size_of::<Puzzle2dMutation>()||!pay(effect)? {return Ok(progress(0,0,0));}
+            match ControlledRetirement::new(self.pending.take().unwrap()) {Ok(owner)=>self.pending_close=Some(owner),Err((error,owner))=>{self.pending=Some(owner);return Err(error.into());}}
             return Ok(progress(1,size_of::<Puzzle2dMutation>(),0));
         }
-        if let Some(owner)=self.inverse_close.as_mut() {let step=owner.step(grant)?;if owner.terminal_is_empty(){self.inverse_close=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=self.inverse_close.as_mut() {let step=controlled_step(owner,effect)?;if owner.terminal_is_empty(){self.inverse_close=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if !self.inverse.terminal_is_empty() {
-            if grant.maximum_copy_bytes<size_of::<PagedList<Puzzle2dMutation,{usize::MAX}>>() {return Ok(progress(0,0,0));}
-            match ControlledRetirement::new(std::mem::take(&mut self.inverse)) {Ok(owner)=>self.inverse_close=Some(owner),Err((error,owner))=>{self.inverse=owner;return Err(error);}}
+            if grant.maximum_copy_bytes<size_of::<PagedList<Puzzle2dMutation,{usize::MAX}>>()||!pay(effect)? {return Ok(progress(0,0,0));}
+            match ControlledRetirement::new(std::mem::take(&mut self.inverse)) {Ok(owner)=>self.inverse_close=Some(owner),Err((error,owner))=>{self.inverse=owner;return Err(error.into());}}
             return Ok(progress(1,size_of::<PagedList<Puzzle2dMutation,{usize::MAX}>>(),0));
         }
-        let step=RetainedCloneBinding::close_one(if self.mutation.is_some(){&mut self.mutation}else{&mut self.source},grant).result?;
+        let step=RetirementPollExit::resume(RetainedCloneBinding::close_one(if self.mutation.is_some(){&mut self.mutation}else{&mut self.source},grant.maximum_copy_bytes,effect))?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{retirement_progress(step)})
     }
 

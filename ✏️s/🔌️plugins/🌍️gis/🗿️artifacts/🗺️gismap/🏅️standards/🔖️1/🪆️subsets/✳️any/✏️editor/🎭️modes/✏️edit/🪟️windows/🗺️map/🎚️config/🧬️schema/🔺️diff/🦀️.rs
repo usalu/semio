@@ -57,10 +57,10 @@ impl MapWindowConfigDelta {
         for (id, value) in &self.layer_visibility {
             match value {
                 Some(value) => {
-                    next.layer_visibility.insert(id.clone(), *value);
+                    next.layer_visibility.cold_insert(id.clone(), *value);
                 }
                 None => {
-                    next.layer_visibility.remove(id);
+                    next.layer_visibility.cold_remove(id);
                 }
             }
         }
@@ -79,10 +79,10 @@ impl MapWindowConfigDelta {
         for (id, value) in &self.layer_stroke_scale {
             match value {
                 Some(value) => {
-                    next.layer_stroke_scale.insert(id.clone(), *value);
+                    next.layer_stroke_scale.cold_insert(id.clone(), *value);
                 }
                 None => {
-                    next.layer_stroke_scale.remove(id);
+                    next.layer_stroke_scale.cold_remove(id);
                 }
             }
         }

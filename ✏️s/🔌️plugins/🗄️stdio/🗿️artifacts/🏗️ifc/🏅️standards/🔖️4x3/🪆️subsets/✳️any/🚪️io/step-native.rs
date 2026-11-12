@@ -10,16 +10,21 @@ impl Serializer<IfcSnapshot> for Ifc4x3IntoTxtNative {
     const INTO: semio_framework_artifact_reference::Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(source: &IfcSnapshot, _: &ArchiveChildren, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
-        control.receive_nested::<Vec<u8>, IoOutcome<IoPayload>>(|slot, original| {
+        let mut output = None;
+        let turn = control.receive_nested::<Vec<u8>, IoOutcome<IoPayload>, semio_os_kernel::NativeSnapshotFailure>(&mut output, &mut |slot, published, _marker, _unwind, original| semio_os_kernel::native_snapshot_turn(|work| {
+            work.performed();
             *slot = Some(write_ifc4x3_step_pack(source, &mut original.snapshot_encode()?)?);
             let mut owner = original.snapshot_encode()?;
             let bytes = size_of::<IoOutcome<IoPayload>>();
             let demand = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_depth: 1, ..Default::default() };
             let remaining = owner.remaining_grant();
-            if demand.maximum_items > remaining.maximum_items || demand.maximum_copy_bytes > remaining.maximum_copy_bytes || demand.maximum_depth > remaining.maximum_depth { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "STEP final outcome exceeds original grant")); }
+            if demand.maximum_items > remaining.maximum_items || demand.maximum_copy_bytes > remaining.maximum_copy_bytes || demand.maximum_depth > remaining.maximum_depth { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "STEP final outcome exceeds original grant").into()); }
             owner.native().checkpoint()?;
             owner.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
-            Ok(IoOutcome { value: IoPayload::Binary(slot.take().unwrap()), diagnostics: Vec::new() })
-        }).map_err(IoError::from_value_error)
+            *published = Some(IoOutcome { value: IoPayload::Binary(slot.take().unwrap()), diagnostics: Vec::new() });
+            Ok(())
+        }));
+        turn.result.map_err(|failure| IoError::from_value_error(ValueError::new(failure.kind(), failure.message().to_string())))?;
+        output.ok_or_else(|| IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated, "STEP export published no outcome")))
     }
 }

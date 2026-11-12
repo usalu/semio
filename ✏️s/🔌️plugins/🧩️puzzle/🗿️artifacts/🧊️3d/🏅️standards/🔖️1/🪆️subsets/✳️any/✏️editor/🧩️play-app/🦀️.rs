@@ -86,11 +86,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(presence::Puzzle3dPresenceRetirementFactory))
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(presence::Puzzle3dPresenceRetirementFactory))
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
@@ -575,8 +575,9 @@ impl Puzzle3dPlayApp {
             let labels = puzzle3d_labels(view_state).ok_or_else(|| semio_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle3d has no authored label set for the host's locale/terminology axes"))?;
             match base_body_key {
                 main::BODY_KEY => {
-                    let provisional = doc.tool_run().map(|run| std::sync::Arc::clone(&run.provisional_entities)).unwrap_or_default();
-                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.scene_snapshot, &provisional, &interaction.referenced);
+                    let no_provisional = std::collections::BTreeSet::new();
+                    let provisional = doc.tool_run().map_or(&no_provisional, |run| run.provisional_entities.get());
+                    let (instances_json, meshes_json, instances_delta_json) = app.geometry_jsons(&envelope.scene_snapshot, provisional, &interaction.referenced);
                     let menu_target = envelope.runtime.suggestion_menu.as_ref().map(|menu| menu.vortex_full_id.as_str());
                     let suggestions = menu_target.and_then(|target| owner?.with_mut::<Puzzle3dInstanceOperationOwner, _>(|owner| Ok(owner.brush_suggestions.found(target).cloned())).ok().flatten());
                     main::render(&envelope, &precompute, instances_json, meshes_json, instances_delta_json, interaction, suggestions.as_ref())

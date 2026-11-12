@@ -145,7 +145,7 @@ pub struct ColdPairDocumentLoad {
     pub cursor: ColdDocumentPairCursor,
     pub superseded: bool,
     pub archive: Box<store::DocumentArchivePack>,
-    pub admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
+    pub admission: semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
     pub admitted: bool,
 }
 
@@ -153,7 +153,7 @@ impl ColdPairDocumentLoad {
     pub fn new(load: ColdDocumentPairLoad, transfer_generation: u64, cursor: ColdDocumentPairCursor) -> Self {
         let files = load.files();
         let archive = Box::new(store::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr: files.spr.clone(), members: Vec::new() });
-        Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false, archive, admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false }
+        Self { load, operation: COLD_PAIR_DOCUMENT_LOAD_OPERATION | transfer_generation, cursor, superseded: false, archive, admission: semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false }
     }
 
 }

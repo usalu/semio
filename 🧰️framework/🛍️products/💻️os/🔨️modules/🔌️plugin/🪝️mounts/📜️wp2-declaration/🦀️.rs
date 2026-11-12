@@ -29,12 +29,12 @@ pub(crate) use semio_plugin_decl_views::gesture_contract;
 pub(crate) use semio_plugin_decl_views::history_view;
 pub(crate) mod media_contract {
     pub use semio_plugin_decl_media::*;
-    pub use semio_plugin_decl_app::media_contract::{ArtifactMediaExportJobRequest, ArtifactMediaExportRequestRetirement};
+    pub use semio_plugin_decl_app::media_contract::{ArtifactMediaExportJobRequest, ArtifactMediaExportRequestRetirement, MediaConstruction};
 }
 pub(crate) use semio_plugin_decl_surface::natural_file_import;
 pub(crate) use semio_plugin_decl_views::presence_retirement;
 pub use presence_retirement::{
-    bounded_presence_root_retirement_factory, bounded_presence_store_disposer, no_presence_local_root_retirement_factory, no_presence_peer_retirement_factory, no_presence_store_disposer, NoPresenceRetirementFactory, PresenceStoreOwnedDisposer,
+    bounded_presence_root_retirement_factory, bounded_presence_store_disposer, no_presence_local_root_retirement_factory, no_presence_peer_retirement_factory, no_presence_store_disposer, PresenceStoreOwnedDisposer,
 };
 pub(crate) mod surface_contract {
     pub use semio_plugin_decl_surface::*;
@@ -59,7 +59,7 @@ pub use no_config_retirement::{no_config_store_disposer, no_config_store_owners}
 pub(crate) use semio_plugin_decl_views::no_draft_retirement;
 pub use no_draft_retirement::{no_draft_store_disposer, no_draft_store_owners};
 pub(crate) use semio_plugin_decl_views::transient_retirement;
-pub use transient_retirement::{no_transient_local_root_retirement_factory, no_transient_store_disposer, NoTransientRetirementFactory};
+pub use transient_retirement::{no_transient_local_root_retirement_factory, no_transient_store_disposer};
 //#endregion 📬️PublicationFacet
 //#region ⚛️ReactorFacet
 pub(crate) mod plugin_program {

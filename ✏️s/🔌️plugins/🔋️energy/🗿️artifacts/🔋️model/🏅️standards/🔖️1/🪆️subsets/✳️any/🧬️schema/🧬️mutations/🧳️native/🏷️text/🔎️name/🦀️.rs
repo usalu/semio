@@ -1,23 +1,43 @@
 //! 🔎️ Duplicate names compare bounded bytes from each original row while excluding the addressed identifier.
 use super::*;
-use semio_framework_value_persistent::list::persistent::{PersistentListRead,PersistentListReadStep};
-pub(super) struct NameLookup<S:TextRowPath>{reader:PersistentListRead<S::Row>,row:Option<RetainedOwnedProjection<S::Row>>,equality:RetainedEqualityOwner<String>,input:Option<RetainedCloneBinding>,key:Option<RetainedCloneBinding>,phase:u8,result:Option<bool>,closing:bool}
+use semio_framework_value_persistent::list::persistent::PersistentListRead;
+use semio_framework_value::retained_clone::{RetainedOwnedProjectionAdmission,RetainedCloneBinding};
+use crate::custody::{self,Cursor,Bound};
+use crate::scalar::{Quote,bind};
+use crate::retained::{Done,Flight,Reply,conclude,native_child};
+use semio_framework_value::{RetainedAllocationEffect,RetirementPollExit};
+crate::custody::std_cursor!([T:EntityRow] RetainedOwnedProjectionAdmission<T>,[],|_|{});
+pub(super) struct NameLookup<S:TextRowPath>{reader:PersistentListRead<S::Row>,admission:RetainedOwnedProjectionAdmission<S::Row>,row:Option<Box<RetainedOwnedProjection<S::Row>>>,equality:RetainedEqualityOwner<String>,input:Bound,key:Bound,phase:u8,result:Option<bool>,closing:bool,flight:Flight}
 impl<S:TextRowPath> NameLookup<S>{
- pub fn new()->Self{Self{reader:PersistentListRead::new(),row:None,equality:RetainedEqualityOwner::new(),input:None,key:None,phase:0,result:None,closing:false}}
+ pub fn new()->Self{Self{reader:PersistentListRead::new(),admission:Default::default(),row:None,equality:RetainedEqualityOwner::new(),input:Default::default(),key:Default::default(),phase:0,result:None,closing:false,flight:Default::default()}}
  pub fn result(&self)->Option<bool>{self.result}
- fn old(&self)->Result<RetainedCloneRef<'_,String>,ValueError>{Ok(self.row.as_ref().ok_or_else(invalid)?.borrow()?.project(0,|r|S::read(r).get()))}
+ fn old_of(row:&Option<Box<RetainedOwnedProjection<S::Row>>>)->Result<RetainedCloneRef<'_,String>,ValueError>{Ok(row.as_ref().ok_or_else(invalid)?.borrow()?.project(0,|r|S::read(r).get()))}
  fn fixed()->usize{2*size_of::<Option<RetainedOwnedProjection<S::Row>>>()+size_of::<u32>()+2}
- pub fn demand(&self,input:RetainedCloneRef<'_,String>,key:RetainedCloneRef<'_,u32>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.result.is_some(){return Err(invalid());}input.check_binding(&self.input)?;key.check_binding(&self.key)?;match self.phase{0=>nested(scalar(input.binding_copy_bytes()),1),1=>nested(scalar(key.binding_copy_bytes()),1),2=>nested(self.reader.demand(S::rows(original))?,Self::fixed()),3=>nested(self.equality.demand(input,self.old()?,body.saturating_sub(2))?,2),4=>nested(self.equality.close_demand(body.saturating_sub(1))?,1),5=>{let row=self.row.as_ref().ok_or_else(invalid)?;if row.terminal_is_empty(){Ok(scalar(2*size_of::<Option<RetainedOwnedProjection<S::Row>>>()+size_of::<RetainedEqualityOwner<String>>()+1))}else{row.close_demand(body)}},_=>Err(invalid())}}
- pub fn advance(&mut self,input:RetainedCloneRef<'_,String>,key:RetainedCloneRef<'_,u32>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(input,key,original,body)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let mut p=receipt(d);match self.phase{
-  0=>{p=add(input.bind(&mut self.input,child(g,1)).result?.ok_or_else(invalid)?,1)?;self.phase=1;},1=>{p=add(key.bind(&mut self.key,child(g,1)).result?.ok_or_else(invalid)?,1)?;self.phase=2;},
-  2=>{let extra=Self::fixed();let step=self.reader.advance(S::rows(original),child(g,extra)).result.map_err(|e|tag(e,extra))?;p=add(step.progress(),extra)?;match step{PersistentListReadStep::Row(_,_,row)if row.get().entity_id()!=*key.get()=>{let(owner,progress)=row.retain_owned(child(g,extra)).result.map_err(|e|tag(e,extra))?;if progress.retained_capacity_bytes!=0||progress.released_bytes!=0{return Err(invalid().with_retained_progress(p));}self.row=Some(owner);self.phase=3;},PersistentListReadStep::Complete(_)=>self.result=Some(false),_=>{}}},
-  3=>{let old=self.row.as_ref().ok_or_else(invalid)?.borrow()?.project(0,|r|S::read(r).get());let step=self.equality.advance(input,old,body.saturating_sub(2),child(g,2)).result.map_err(|e|tag(e,2))?;p=add(step.progress,2)?;if let Some(equal)=step.equal{if equal{self.result=Some(true);}else{self.equality.begin_close();self.phase=4;}}},
-  4=>{p=add(self.equality.close_step(child(g,1)).result.map_err(|e|tag(e,1))?.progress(),1)?;if self.equality.terminal_is_empty(){self.phase=5;}},
-  5=>{let row=self.row.as_mut().ok_or_else(invalid)?;if row.terminal_is_empty(){drop(self.row.take());self.equality=RetainedEqualityOwner::new();self.phase=2;}else{p=row.close_step(g).result?.progress();}},_=>return Err(invalid())}Ok(if self.result.is_some(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
- pub fn begin_close(&mut self){self.closing=true;self.equality.begin_close();self.reader.begin_close();}
- pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}if !self.equality.terminal_is_empty(){return self.equality.close_demand(body);}if let Some(row)=self.row.as_ref(){return if row.terminal_is_empty(){Ok(scalar(2*size_of::<Option<RetainedOwnedProjection<S::Row>>>()))}else{row.close_demand(body)};}if !self.reader.terminal_is_empty(){return self.reader.close_demand(body);}RetainedCloneBinding::close_demand(if self.input.is_some(){&self.input}else{&self.key},body)}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demand(g.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.equality.terminal_is_empty(){return self.equality.close_step(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(row)=self.row.as_mut(){if row.terminal_is_empty(){drop(self.row.take());return Ok(RetainedCloneStep::Progress(receipt(d)));}return row.close_step(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}if !self.reader.terminal_is_empty(){return self.reader.close_step(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}let step=RetainedCloneBinding::close_one(if self.input.is_some(){&mut self.input}else{&mut self.key},g).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
- pub fn terminal_is_empty(&self)->bool{self.closing&&self.equality.terminal_is_empty()&&self.row.is_none()&&self.reader.terminal_is_empty()&&self.input.is_none()&&self.key.is_none()}
+ fn admit_worst()->RetirementDemand{RetirementDemand{copy_bytes:RetainedCloneBinding::alias_copy_bytes()+size_of::<Option<std::ptr::NonNull<S::Row>>>(),depth:1,..Default::default()}}
+ pub fn quote(&self,input:RetainedCloneRef<'_,String>,key:RetainedCloneRef<'_,u32>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,max:u64)->Result<Quote,ValueError>{if self.closing||self.result.is_some()||!self.flight.idle(){return Err(invalid());}input.check_binding(&self.input.0)?;key.check_binding(&self.key.0)?;match self.phase{
+  0=>Ok((nested(scalar(input.binding_copy_bytes()),1)?,input.binding_work_demand(&self.input.0)?)),1=>Ok((nested(scalar(key.binding_copy_bytes()),1)?,key.binding_work_demand(&self.key.0)?)),
+  2=>{let mut d=self.reader.demand(S::rows(original))?;let a=Self::admit_worst();d.copy_bytes+=a.copy_bytes;Ok((nested(d,Self::fixed())?,self.reader.advance_work_demand(S::rows(original))?.saturating_add(RetainedCloneBinding::alias_work_demand())))},
+  6=>Ok((nested(self.admission.take_demand()?,Self::fixed())?,self.admission.take_work_demand()?)),
+  3=>Ok((nested(self.equality.demand(input,Self::old_of(&self.row)?,body.saturating_sub(2),max)?,2)?,self.equality.work_demand(input,Self::old_of(&self.row)?,body.saturating_sub(2),max)?)),
+  4=>Ok((Cursor::demand(&self.equality,body)?,Cursor::work(&self.equality,body)?)),
+  5=>Ok((Cursor::demand(&self.row,body)?,Cursor::work(&self.row,body)?)),
+  _=>Err(invalid())}}
+ pub fn advance_reply<'r>(&mut self,input:RetainedCloneRef<'_,String>,key:RetainedCloneRef<'_,u32>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,max:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+  let quote=if recover{None}else{Some(self.quote(input,key,original,body,max))};let g=effect.grant();
+  custody::gated(effect,reply,quote,max,|effect,work|{let mut p=RetainedCloneProgress::default();match self.phase{
+   0=>{p=add(bind(input,&mut self.input,&mut effect.nested(child(g,1)),work)?,1)?;self.phase=1;},1=>{p=add(bind(key,&mut self.key,&mut effect.nested(child(g,1)),work)?,1)?;self.phase=2;},
+   2=>{let extra=Self::fixed();let mut row=None;let reader=&mut self.reader;let step=native_child(effect,work,|e,r|reader.advance_into(S::rows(original),&mut row,&mut e.nested(child(g,extra)),r))??;p=add(step.progress(),extra)?;
+    if let Some((_,projected))=row{if projected.get().entity_id()!=*key.get(){let admission=&mut self.admission;let admitted=native_child(effect,work,|e,r|admission.admit(projected,e,r))??;p=add(p,admitted.progress().copied_bytes)?;self.phase=6;}}else if matches!(step,RetainedCloneStep::Complete(_)){self.result=Some(false);}},
+   6=>{let mut taken=None;let admission=&mut self.admission;let step=native_child(effect,work,|e,r|admission.take(&mut taken,e,r))??;self.row=taken.map(Box::new);p=add(step.progress(),Self::fixed())?;if self.row.is_some(){self.phase=3;}},
+   3=>{let old=Self::old_of(&self.row)?;let nb=body.saturating_sub(2);let equality=&mut self.equality;
+    let step=protocol::retained_routed!(self.flight,effect,recover,1,body,max,None,*work,|r| equality.advance_into(input,old,nb,max,&mut effect.nested(child(g,2)),r),equality.recover_advance_into(input,old,nb,max,&mut effect.nested(child(g,2)),r));
+    let step=step?;p=add(step.progress,2)?;if let Some(equal)=step.equal{if equal{self.result=Some(true);}else{self.phase=4;}}},
+   4=>{let step=custody::chain_step(&mut self.flight,&mut [&mut self.equality as &mut dyn Cursor],None,body,effect,work,recover)?;p=step.progress();if self.equality.terminal_is_empty(){self.phase=5;}},
+   5=>{let step=custody::finish(&mut self.flight,&mut self.row,body,effect,work,recover)?;p=step.progress();if self.row.is_none(){self.equality=RetainedEqualityOwner::new();self.phase=2;}},
+   _=>return Err(invalid().into())}
+   Ok(if self.result.is_some(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})})
+ }
+ pub fn begin_close(&mut self){self.closing=true;}
+ custody_impl!(equality,row,admission,reader,input,key);
 }
-impl<S:TextRowPath> CursorClose for NameLookup<S>{fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{Self::close_demand(self,b)}fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,g)}fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}}
-impl<S:TextRowPath> Drop for NameLookup<S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original name lookup retains collection or comparison custody");}}
+crate::custody::std_cursor!([S:TextRowPath] NameLookup<S>,[],|s|s.begin_close());

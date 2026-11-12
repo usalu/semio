@@ -127,7 +127,7 @@ const PACK_PRODUCER: semio_os_kernel::os_vcs::io::binary::genesis::ArtifactPackG
 fn member_store<P, M>(schema: &str, id: &str, snapshot: P, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<semio_os_kernel::os_store::OwnerRef>, actor: protocol::ActorId) -> Result<ArtifactStore<P, M>, MapBindingRefusalV1>
 where
     P: ArtifactPack + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
-    M: Mutation<P> + protocol::ColdMutation<P> + semio_os_kernel::OpBinary + semio_os_kernel::OpText + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
+    M: Mutation<P> + protocol::ColdMutation<P> + semio_os_kernel::OpBinary + semio_os_kernel::original_receiving::OpBinaryReceiving + semio_os_kernel::OpText + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
 {
     let mut envelope = semio_os_kernel::os_store::document_materialize::create_document_envelope::<P, M>(schema, id, snapshot, None, &PACK_PRODUCER);
     envelope.dialect = Some(dialect);

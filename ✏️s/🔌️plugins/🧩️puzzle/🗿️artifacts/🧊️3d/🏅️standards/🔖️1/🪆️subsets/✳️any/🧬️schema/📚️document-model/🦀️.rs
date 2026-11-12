@@ -190,7 +190,7 @@ impl semio_framework_dsl_record::DslField for Puzzle3dScale {
 
 // #region 🔖️Document
 /// ⚓️ Whether a root object keeps its stored plane (`Fixed`) or resets to default XY (`Derived`).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -203,7 +203,7 @@ pub enum Puzzle3dObjectAnchor {
 
 /// 🔘️ One vortex on an object's rim — `vortex_kind` gates attraction compatibility, `position`/
 /// `direction` place and orient it, `radius` sizes its brush-fill collision.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -239,7 +239,7 @@ pub struct Puzzle3dVortex {
 /// 🧱️ One placed object — `origin`/`orientation`/`scale` (a scalar-or-`[x,y,z]` `Puzzle3dScale`,
 /// see that type and `vec3_scale`) pose it, `anchor` gates flatten-root plane retention, `vortices`
 /// are its rim attraction ports.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -282,7 +282,7 @@ pub struct Puzzle3dObject {
 
 /// 🔗️ One attraction between two full vortex ids (`object_id:vortex_id`), with the eight compose
 /// connection parameters (`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt` plus diagram `x`/`y`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -322,7 +322,7 @@ pub struct Puzzle3dAttraction {
 /// 🧊️ A persisted oriented box constraining fill placement (Volume Brush voxels or Transform-gumball
 /// edited volumes). `scale` is a scalar-or-`[x,y,z]` `Puzzle3dScale` — see that type and
 /// `volume_scale_vec`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -348,7 +348,7 @@ pub struct Puzzle3dTargetVolume {
 }
 
 /// 🌐️ Where a reference image/media's bytes live and what kind of media it is.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -363,7 +363,7 @@ pub struct Puzzle3dReferenceSource {
 }
 
 /// 🖼️ A reference plane pinned in world space at `origin`, `width_world` meters wide.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -390,7 +390,7 @@ pub struct Puzzle3dReference {
 }
 
 /// 🔗️ How specifically two vortex/cable kinds are allowed to attract.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "lowercase"))]
@@ -405,7 +405,7 @@ pub enum Puzzle3dCompatSpecificity {
 }
 
 /// 🧩️ One allowed (or, unidirectional, one-way-allowed) link pair between two vortex/cable kind ids.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -427,7 +427,7 @@ pub struct Puzzle3dKindCompatibility {
 }
 
 /// 🏷️ One freeform attribute on a catalog object-kind (compose `Attribute` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -448,7 +448,7 @@ pub struct Puzzle3dAttribute {
 }
 
 /// ✍️ One author credit on a catalog object-kind (compose `Author` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -472,7 +472,7 @@ pub struct Puzzle3dAuthor {
 }
 
 /// 🖼️ One tagged representation/LOD URL on a catalog object-kind (compose `Representation` analogue).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -503,7 +503,7 @@ pub struct Puzzle3dRepresentation {
 
 /// 🌱️ One rim-vortex template on a `Puzzle3dCatalogObjectKind` — compose connector analogue with
 /// `point`/`direction`/`t`/`mandatory`.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -558,7 +558,7 @@ impl Default for Puzzle3dCatalogVortexTemplate {
 }
 
 /// 🧱️ One object-kind catalog row — type-like (compose `Type` analogue).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -605,7 +605,7 @@ pub struct Puzzle3dCatalogObjectKind {
 }
 
 /// 🔘️ One vortex-kind catalog row — port-like (compose `Port` analogue).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -641,7 +641,7 @@ pub struct Puzzle3dCatalogVortexKind {
 }
 
 /// 🧵️ One cable-kind catalog row (mirrors `CableKindCatalog`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -662,7 +662,7 @@ pub struct Puzzle3dCatalogCableKind {
 }
 
 /// 🔗️ One attraction-kind catalog row.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -681,7 +681,7 @@ pub struct Puzzle3dCatalogAttractionKind {
 /// 🗂️ The compile-time-catalog side of a self-contained scene_snapshot export: object/vortex/cable/
 /// attraction kind rows — see `puzzle/3d/manifest/*.manifest.json` for the same schema at the
 /// manifest layer.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
@@ -707,7 +707,7 @@ pub struct Puzzle3dKindCatalogs {
 
 /// 🗂️ EngineSceneSnapshot-carried metadata: the explicit link-compatibility table plus the object/vortex/cable/
 /// attraction kind catalog bundle (typed — see `Puzzle3dKindCatalogs`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testing"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]

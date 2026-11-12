@@ -2,11 +2,11 @@
 
 use crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg;
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot as JpgSnapshot;
-use semio_framework_plugin::app::{ImageView, ImageWindowKit};
-use semio_framework_plugin::{Buildable, BuiltNode, HasBase, WindowKindDefinition, WindowKit};
-use semio_framework_plugin::plugin_app_close_prelude::{self as ui, Label};
+use semio_plugin::app::{ImageView, ImageWindowKit};
+use semio_plugin::{Buildable, BuiltNode, HasBase, WindowKindDefinition, WindowKit};
+use semio_plugin::plugin_app_close_prelude::{self as ui, Label};
 use semio_ui_locale::{Locale, LocalizedLabel};
-use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema};
+use semio_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema};
 
 pub const MAXIMUM_INTERACTIVE_ROWS: u32 = 65_536;
 
@@ -21,20 +21,20 @@ pub fn definition() -> WindowKindDefinition {
 }
 
 /// ⚠️ Saving re-encodes the lossy scan; the notice states this limitation and what is preserved.
-fn reencode_notice(locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn reencode_notice(locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let text = match locale {
         Locale::En => "Saving re-encodes the JPEG scan (lossy). Metadata segments such as EXIF and ICC profiles are preserved.",
         Locale::De => "Beim Speichern wird der JPEG-Scan neu kodiert (verlustbehaftet). Metadaten-Segmente wie EXIF und ICC-Profile bleiben erhalten.",
     };
-    ui::text(Label::try_from(text).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("stdio.jpg.reencode-notice", "re-encode notice exceeds UI bound"))?)
+    ui::text(Label::try_from(text).map_err(|_| semio_plugin::PluginAssemblyError::new("stdio.jpg.reencode-notice", "re-encode notice exceeds UI bound"))?)
         .try_id("jpg-reencode-notice")
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("stdio.jpg.reencode-notice", "re-encode notice id admission"))?
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("stdio.jpg.reencode-notice", "re-encode notice id admission"))?
         .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("stdio.jpg.reencode-notice", "re-encode notice build admission"))
+        .map_err(|_| semio_plugin::PluginAssemblyError::new("stdio.jpg.reencode-notice", "re-encode notice build admission"))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(snapshot: &JpgSnapshot, locale: Locale) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(snapshot: &JpgSnapshot, locale: Locale) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     ImageWindowKit::render_with_accessory(&image_view(snapshot), reencode_notice(locale)?)
 }
 

@@ -10,21 +10,53 @@ pub trait NestedBranchPath:Send+Sync+'static{
  fn output()->Self::Output;
 }
 /// 🧳️ Child headers, displaced parent fields and output cursors retain their original paid custody.
-pub struct NestedBranchOutput<P:NestedBranchPath>{original:Option<RetainedCloneBinding>,stage:Option<Box<RetainedBranchProjection<P::Parent>>>,output:Option<Box<P::Output>>,value:ManuallyDrop<Option<SealedShared<P::Branch>>>,displaced:ManuallyDrop<Option<SealedShared<P::Branch>>>,parent:ManuallyDrop<Option<SealedShared<P::Parent>>>,decision:ManuallyDrop<Option<EnergyModelDiff>>,retirement:RetainedCloneClose,phase:u8,closing:bool}
-impl<P:NestedBranchPath> NestedBranchOutput<P>{pub fn new()->Self{Self{original:None,stage:None,output:None,value:ManuallyDrop::new(None),displaced:ManuallyDrop::new(None),parent:ManuallyDrop::new(None),decision:ManuallyDrop::new(None),retirement:Default::default(),phase:0,closing:false}}}
+pub struct NestedBranchOutput<P:NestedBranchPath>{original:Bound,staged:Staged<P::Parent>,output:Option<Box<P::Output>>,value:Held<SealedShared<P::Branch>>,displaced:Held<SealedShared<P::Branch>>,decision:Held<EnergyModelDiff>,flight:Flight,phase:u8,closing:bool}
+impl<P:NestedBranchPath> NestedBranchOutput<P>{
+ pub fn new()->Self{Self{original:Default::default(),staged:Default::default(),output:None,value:Default::default(),displaced:Default::default(),decision:Default::default(),flight:Default::default(),phase:0,closing:false}}
+ custody_impl!(output,staged,decision,value,displaced,original);
+}
 impl<P:NestedBranchPath> BranchOutput<P::Branch> for NestedBranchOutput<P>{
- fn demand(&self,value:&Option<SealedShared<P::Branch>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.phase>=12{return Err(invalid());}original.check_binding(&self.original)?;if self.phase<2&&value.is_none(){return Err(invalid());}match self.phase{
-  0=>nested(scalar(original.binding_copy_bytes()),1),1=>Ok(scalar(4*size_of::<Option<SealedShared<P::Branch>>>()+1)),2=>Ok(birth::<RetainedBranchProjection<P::Parent>>()),3|5=>nested(self.stage.as_ref().ok_or_else(invalid)?.demand(P::parent(original),body.saturating_sub(1))?,1),4=>nested(RetainedBranchProjection::<P::Parent>::exchange_demand::<SealedShared<P::Branch>>(),1),6=>nested(self.stage.as_ref().ok_or_else(invalid)?.take_demand()?,2*size_of::<Option<SealedShared<P::Parent>>>()+1),7=>cursor_demand(&self.stage,body),8=>Ok(birth::<P::Output>()),9=>nested(self.output.as_ref().ok_or_else(invalid)?.demand(&self.parent,original,body.saturating_sub(1))?,1),10=>nested(self.output.as_ref().ok_or_else(invalid)?.take_demand()?,2*size_of::<Option<EnergyModelDiff>>()+1),11=>cursor_demand(&self.output,body),_=>Err(invalid())}}
- fn advance(&mut self,value:&mut Option<SealedShared<P::Branch>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(value,original,body)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let mut p=receipt(d);match self.phase{
-  0=>{p=add(original.bind(&mut self.original,child(g,1)).result?.ok_or_else(invalid)?,1)?;self.phase=1;},1=>{*self.value=Some(value.take().ok_or_else(invalid)?);self.phase=2;},2=>{self.stage=Some(Box::new(RetainedBranchProjection::new()));self.phase=3;},3|5=>{let stage=self.stage.as_mut().ok_or_else(invalid)?;p=add(stage.advance(P::parent(original),body.saturating_sub(1),child(g,1)).map_err(|e|tag(e,1))?.progress(),1)?;if self.phase==3&&stage.raw_ready(){self.phase=4;}else if self.phase==5&&stage.ready(){self.phase=6;}},4=>{let stage=self.stage.as_mut().ok_or_else(invalid)?;let(_,progress)=stage.exchange(P::select,&mut self.value,&mut self.displaced,child(g,1)).map_err(|e|tag(e,1))?;stage.begin_seal()?;self.phase=5;p=add(progress,1)?;},6=>{let extra=2*size_of::<Option<SealedShared<P::Parent>>>()+1;let stage=self.stage.as_mut().ok_or_else(invalid)?;let(parent,progress)=stage.take(child(g,extra)).map_err(|e|tag(e,extra))?.ok_or_else(invalid)?;*self.parent=Some(parent);stage.begin_close();self.phase=7;p=add(progress,extra)?;},7=>{p=close_cursor(&mut self.stage,g)?;if self.stage.is_none(){self.phase=8;}},8=>{self.output=Some(Box::new(P::output()));self.phase=9;},9=>{let output=self.output.as_mut().ok_or_else(invalid)?;p=add(output.advance(&mut self.parent,original,body.saturating_sub(1),child(g,1)).map_err(|e|tag(e,1))?.progress(),1)?;if output.ready(){self.phase=10;}},10=>{let extra=2*size_of::<Option<EnergyModelDiff>>()+1;let output=self.output.as_mut().ok_or_else(invalid)?;let(diff,progress)=output.take(child(g,extra)).map_err(|e|tag(e,extra))?.ok_or_else(invalid)?;*self.decision=Some(diff);output.begin_close();self.phase=11;p=add(progress,extra)?;},11=>{p=close_cursor(&mut self.output,g)?;if self.output.is_none(){self.phase=12;}},_=>return Err(invalid())}semio_framework_value::retained_clone::admit_retained_clone_progress(g,p,"original Energy enclosing branch adoption")?;Ok(if self.ready(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
- fn ready(&self)->bool{!self.closing&&self.phase==12}
- fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.ready()||self.decision.is_none(){return Err(invalid());}Ok(scalar(2*size_of::<Option<EnergyModelDiff>>()+1))}
- fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !retained_mutation_demand_fits(d,g){return Ok(None);}self.phase=13;Ok(Some((self.decision.take().ok_or_else(invalid)?,receipt(d))))}
- fn begin_close(&mut self){self.closing=true;if let Some(c)=self.stage.as_mut(){c.begin_close();}if let Some(c)=self.output.as_mut(){c.begin_close();}}
+ fn quote(&self,value:&Option<SealedShared<P::Branch>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,maximum_work_units:u64)->Result<Quote,ValueError>{if self.closing||self.phase>=7||!self.flight.idle(){return Err(invalid());}original.check_binding(&self.original.0)?;if self.phase<2&&value.is_none(){return Err(invalid());}match self.phase{
+  0=>Ok((nested(scalar(original.binding_copy_bytes()),1)?,original.binding_work_demand(&self.original.0)?)),
+  1=>Ok((scalar(4*size_of::<Option<SealedShared<P::Branch>>>()+1),1)),
+  2=>self.staged.quote::<SealedShared<P::Branch>>(P::parent(original),body,maximum_work_units),
+  3=>Ok((birth::<P::Output>(),1)),
+  4=>self.output.as_ref().ok_or_else(invalid)?.quote(self.staged.sealed.get_opt(),original,body.saturating_sub(1),maximum_work_units),
+  5=>{let(d,w)=self.output.as_ref().ok_or_else(invalid)?.take_quote()?;Ok((nested(d,2*size_of::<Option<EnergyModelDiff>>()+1)?,w))},
+  6=>Ok((Cursor::demand(&self.output,body)?,Cursor::work(&self.output,body)?)),
+  _=>Err(invalid())}}
+ fn advance_reply<'r>(&mut self,value:&mut Option<SealedShared<P::Branch>>,original:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,maximum_work_units:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+  let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+   let mut units=0u64;
+   if !recover{
+    if !self.flight.idle(){return Err(invalid().into())}
+    let(d,u)=self.quote(value,original,body,maximum_work_units)?;
+    if u>maximum_work_units||effect.remaining_work_units()?<u||!retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()))}
+    units=u;
+   }
+   let mut p=RetainedCloneProgress::default();let nested_body=body.saturating_sub(1);
+   match self.phase{
+    0=>{p=add(bind(original,&mut self.original,&mut effect.nested(child(g,1)),&mut work)?,1)?;self.phase=1;},
+    1=>{self.value.set(value.take().ok_or_else(invalid)?);self.phase=2;p=receipt(scalar(4*size_of::<Option<SealedShared<P::Branch>>>()+1));},
+    2=>{let Self{staged,value,displaced,..}=self;let mut exchange=|stage:&mut RetainedBranchProjection<P::Parent>,e:&mut RetainedAllocationEffect<'_>|stage.exchange(P::select,value.slot(),displaced.slot(),e);
+     let step=staged_step::<_,SealedShared<P::Branch>>(staged,P::parent(original),body,maximum_work_units,effect,&mut work,recover,&mut exchange,&mut units)?;p=step.progress();if staged.ready(){self.phase=3;}},
+    3=>{self.output=Some(Box::new(P::output()));self.phase=4;p=receipt(birth::<P::Output>());},
+    4=>{let output=self.output.as_mut().ok_or_else(invalid)?;
+     let step=protocol::retained_routed!(self.flight,effect,recover,1,body,maximum_work_units,None,work,|r| output.advance_reply(self.staged.sealed.slot(),original,nested_body,maximum_work_units,&mut effect.nested(child(g,1)),r,false),output.advance_reply(self.staged.sealed.slot(),original,nested_body,maximum_work_units,&mut effect.nested(child(g,1)),r,true));
+     let step=step?;p=add(step.progress(),1)?;if output.ready(){self.phase=5;}},
+    5=>{let extra=2*size_of::<Option<EnergyModelDiff>>()+1;let output=self.output.as_mut().ok_or_else(invalid)?;let(diff,progress)=output.take(&mut effect.nested(child(g,extra)))?.ok_or_else(invalid)?;self.decision.set(diff);output.begin_close();self.phase=6;p=add(progress,extra)?;},
+    6=>{let step=custody::finish(&mut self.flight,&mut self.output,body,effect,&mut work,recover)?;p=step.progress();if self.output.is_none(){self.phase=7;}},
+    _=>return Err(invalid().into()),
+   }
+   admit_retained_clone_progress(g,p,"original Energy enclosing branch adoption")?;
+   work=work.max(u128::from(units)).max(u128::from(effect.performed_work().saturating_sub(base)));
+   Ok(if self.ready(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
+  })();conclude(effect,base,result,work,|step|step.progress(),reply)
+ }
+ fn ready(&self)->bool{!self.closing&&self.phase==7}
+ fn take_quote(&self)->Result<Quote,ValueError>{if !self.ready()||self.decision.is_none(){return Err(invalid());}Ok((scalar(2*size_of::<Option<EnergyModelDiff>>()+1),1))}
+ fn take(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{let(d,_)=self.take_quote()?;if effect.remaining_work_units()?<1||!retained_mutation_demand_fits(d,effect.grant()){return Ok(None);}if !effect.performed(1)?{return Err(invalid());}self.phase=8;Ok(Some((self.decision.take().ok_or_else(invalid)?,receipt(d))))}
+ fn begin_close(&mut self){self.closing=true;self.mark_close();}
 }
-impl<P:NestedBranchPath> CursorClose for NestedBranchOutput<P>{
- fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}if self.output.is_some(){return cursor_demand(&self.output,body);}if self.stage.is_some(){return cursor_demand(&self.stage,body);}if !self.retirement.is_empty()||self.decision.is_some(){return self.retirement.next_owner_demands::<EnergyModelDiff>(self.decision.is_some(),&None,body);}if self.value.is_some()||self.displaced.is_some(){return self.retirement.next_owner_demands::<SealedShared<P::Branch>>(true,&None,body);}if self.parent.is_some(){return self.retirement.next_owner_demands::<SealedShared<P::Parent>>(true,&None,body);}RetainedCloneBinding::close_demand(&self.original,body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demand(g.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}if self.output.is_some(){return close_cursor(&mut self.output,g).map(RetainedCloneStep::Progress);}if self.stage.is_some(){return close_cursor(&mut self.stage,g).map(RetainedCloneStep::Progress);}if !self.retirement.is_empty(){return self.retirement.step_granted(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.decision,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.value,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.displaced,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.parent,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}let s=RetainedCloneBinding::close_one(&mut self.original,g).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(s.progress())}else{RetainedCloneStep::Progress(s.progress())})}
- fn terminal_is_empty(&self)->bool{self.closing&&self.stage.is_none()&&self.output.is_none()&&self.value.is_none()&&self.displaced.is_none()&&self.parent.is_none()&&self.decision.is_none()&&self.retirement.is_empty()&&self.original.is_none()}
-}
-impl<P:NestedBranchPath> Drop for NestedBranchOutput<P>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"original nested branch output retains parent or displaced authority");if empty{unsafe{ManuallyDrop::drop(&mut self.value);ManuallyDrop::drop(&mut self.displaced);ManuallyDrop::drop(&mut self.parent);ManuallyDrop::drop(&mut self.decision);}}}}
+crate::custody::std_cursor!([P:NestedBranchPath] NestedBranchOutput<P>,[],|s|s.begin_close());

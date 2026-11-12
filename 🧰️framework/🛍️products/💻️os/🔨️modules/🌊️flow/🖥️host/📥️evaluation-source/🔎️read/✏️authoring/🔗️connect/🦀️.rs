@@ -2,18 +2,19 @@
 use super::super::*;
 use super::{compare::TextCompare,text::FundedText,ports::{PortProbe,PortTypes},types::{TypeCompatibility,TypeTextWork,TextInput},synapse::SynapseWork,reach::ReachWork};
 use semio_framework_artifact_flow_flow::{FlowSnapshotSource,Widget,FlowMutation,SynapseSpec,AddSynapse,RemoveSynapse,widget_id_for};
-use semio_framework_job::{admit_original_construction,OriginalConstructionDemand,OriginalTurnFailure,StepContext,close_original_retained_step};
+use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
+use super::storage::Construction;
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original connection changed its retained frontier")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 #[derive(semio_framework_value::RetireOwned)]
 struct Fields{id:Option<String>,leaf_id:Option<String>,wire:Option<SynapseSpec>,output:Option<Vec<FlowMutation>>,error:Option<FlowCoreError>,error_text:[Option<String>;4],flags:Vec<u8>}
-pub(super) struct ConnectWork{fields:ManuallyDrop<Fields>,text:Option<FundedText>,typed:Option<TypeTextWork>,synapse:Option<SynapseWork>,reach:Option<ReachWork>,retirement:RetainedCloneClose,compare:TextCompare,slot:usize,matched:Option<bool>,query_result:Option<bool>,from_probe:PortProbe,to_probe:PortProbe,compatibility:TypeCompatibility,from_index:Option<usize>,to_index:Option<usize>,phase:u8,scan:usize,count:usize,fault:u8,error_slot:usize,number:[u8;21],number_len:usize,closing:bool}
+pub(super) struct ConnectWork{construction:Construction,fields:ManuallyDrop<Fields>,text:Option<FundedText>,typed:Option<TypeTextWork>,synapse:Option<SynapseWork>,reach:Option<ReachWork>,retirement:RetainedCloneClose,compare:TextCompare,slot:usize,matched:Option<bool>,query_result:Option<bool>,from_probe:PortProbe,to_probe:PortProbe,compatibility:TypeCompatibility,from_index:Option<usize>,to_index:Option<usize>,phase:u8,scan:usize,count:usize,fault:u8,error_slot:usize,number:[u8;21],number_len:usize,closing:bool}
 impl ConnectWork{
- pub(super) fn new()->Self{Self{fields:ManuallyDrop::new(Fields{id:None,leaf_id:None,wire:None,output:None,error:None,error_text:[None,None,None,None],flags:Vec::new()}),text:None,typed:None,synapse:None,reach:None,retirement:Default::default(),compare:TextCompare::new(),slot:0,matched:None,query_result:None,from_probe:PortProbe::new(),to_probe:PortProbe::new(),compatibility:TypeCompatibility::new(),from_index:None,to_index:None,phase:0,scan:0,count:0,fault:0,error_slot:0,number:[0;21],number_len:0,closing:false}}
+ pub(super) fn new()->Self{Self{construction:Default::default(),fields:ManuallyDrop::new(Fields{id:None,leaf_id:None,wire:None,output:None,error:None,error_text:[None,None,None,None],flags:Vec::new()}),text:None,typed:None,synapse:None,reach:None,retirement:Default::default(),compare:TextCompare::new(),slot:0,matched:None,query_result:None,from_probe:PortProbe::new(),to_probe:PortProbe::new(),compatibility:TypeCompatibility::new(),from_index:None,to_index:None,phase:0,scan:0,count:0,fault:0,error_slot:0,number:[0;21],number_len:0,closing:false}}
  fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let d=fixed(bytes);if cx.should_yield()||!retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}cx.consume_retained(receipt(d))?;cx.consume_fuel(1);Ok(true)}
  fn fail(&mut self,fault:u8){self.fault=fault;self.phase=40}
  fn query_fields(compare:&mut TextCompare,slot:&mut usize,matched:&mut Option<bool>,query_result:&mut Option<bool>,left:[&str;4],right:[&str;4],len:usize,cx:&mut StepContext<'_>)->Result<Option<bool>,OriginalTurnFailure>{
@@ -29,7 +30,7 @@ impl ConnectWork{
   let output=if id{&mut fields.id}else{&mut fields.leaf_id};if output.is_some()&&text.is_none(){return Ok(true)}
   if text.is_none(){if Self::paid(cx,size_of::<FundedText>())?{*text=Some(FundedText::new())}return Ok(false)}
   let cursor=text.as_mut().unwrap();if output.is_none(){if cursor.ready(){cursor.take_into(output,cx)?;if output.is_some(){cursor.begin_close()}}else{cursor.advance(source,cx)?;}return Ok(false)}
-  if !cursor.terminal_is_empty(){let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|g|cursor.close_step(g))?;return Ok(false)}
+  if !cursor.terminal_is_empty(){let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_with_poll(cx,d,|body,effect|cursor.close_step(body,effect))?;return Ok(false)}
   if Self::paid(cx,size_of::<Option<FundedText>>())?{*text=None;return Ok(true)}Ok(false)
  }
  pub(super) fn next_demands(&self,source:&dyn FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,from:&str,from_port:&str,to:&str,to_port:&str,copy:usize)->Result<RetirementDemand,ValueError>{
@@ -40,11 +41,11 @@ impl ConnectWork{
   let _=infos;let capacity_bytes=match self.phase{13=>source.synapses().len(),20=>(self.count+1).checked_mul(size_of::<FlowMutation>()).ok_or_else(invalid)?,_=>0};Ok(RetirementDemand{capacity_bytes,..fixed(1024.max(size_of::<SynapseWork>()).max(size_of::<TypeTextWork>()))})
  }
  fn reserve(&mut self,cx:&mut StepContext<'_>,d:RetirementDemand,next:u8)->Result<(),OriginalTurnFailure>{
-  let mut accepted=None;admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},|_|{let result=(||{let actual=match self.phase{
+  self.construction.run(cx,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},||(||{let actual=match self.phase{
    13=>{self.fields.flags.try_reserve_exact(d.capacity_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original connection reachability roster refused"))?;self.fields.flags.capacity()},
    20=>{let mut output=Vec::new();output.try_reserve_exact(self.count+1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original connection mutation roster refused"))?;let bytes=output.capacity()*size_of::<FlowMutation>();self.fields.output=Some(output);bytes},
    _=>return Err(invalid()),
-  };self.scan=0;self.phase=next;Ok(((),RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})();RetainedWorkOutcome{result,work:1}})?;Ok(())
+  };self.scan=0;self.phase=next;Ok(((),RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})())?;Ok(())
  }
  pub(super) fn step(&mut self,source:&dyn FlowSnapshotSource,infos:&HistoryFoldIndex<String,OperatorInfo>,serial:&mut u64,from:&str,from_port:&str,to:&str,to_port:&str,cx:&mut StepContext<'_>)->Result<Option<Result<Vec<FlowMutation>,FlowCoreError>>,OriginalTurnFailure>{
   if self.closing{return Err(invalid().into())}match self.phase{
@@ -91,7 +92,7 @@ impl ConnectWork{
  pub(super) fn close_step(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
   macro_rules! child{($field:ident,$ty:ty,$c:ident=>$call:expr)=>{if let Some(child)=self.$field.as_mut(){if child.terminal_is_empty(){let d=fixed(size_of::<Option<$ty>>());if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.$field=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(receipt(d))),work:1}}let $c=child;return $call}}}
-  child!(reach,ReachWork,c=>c.close_step(g,effect));child!(text,FundedText,c=>c.close_step(g));child!(typed,TypeTextWork,c=>c.close_step(g,effect));child!(synapse,SynapseWork,c=>c.close_step(g,effect));if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}
+  child!(reach,ReachWork,c=>c.close_step(g,effect));child!(text,FundedText,c=>poll_outcome(c.close_step(g.maximum_copy_bytes,effect)));child!(typed,TypeTextWork,c=>c.close_step(g,effect));child!(synapse,SynapseWork,c=>c.close_step(g,effect));if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}
   macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,effect);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
   owner!(id);owner!(leaf_id);owner!(wire);owner!(output);owner!(error);
   if let Some(field)=self.fields.error_text.iter_mut().find(|s|s.is_some()){let turn=self.retirement.begin_granted(field,effect);return RetainedWorkOutcome{result:turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}

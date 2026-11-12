@@ -5,6 +5,7 @@ use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputsConstruction;
 use semio_s_artifact_procedural_3d_geometry_inputs::construction::{insert_advance,insert_close,insert_take};
 use semio_s_artifact_procedural_3d_geometry_compute::original::OriginalFixedOutputJob;
 use semio_s_artifact_procedural_3d_geometry_value::Outputs;
+use semio_s_artifact_procedural_3d_geometry_value::SharedEvaluation;
 use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
 use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
 use semio_s_artifact_procedural_3d_geometry_value::PlaneValue;
@@ -33,16 +34,16 @@ impl Equality{
 struct State{completed:usize,phase:u8,widget:usize,category:usize,kind:usize,link:usize,probe:usize,duplicate:usize,port:usize,wire:usize,selected_wire:Option<usize>,parent:usize,output:usize,parent_identity:Option<usize>,parents:PagedList<usize,{usize::MAX}>,equality:Equality,values:Option<Outputs>,value:Option<GeometryValue>,key:String,byte:usize,reserved:bool,text_source:Option<(usize,usize)>,insertion:Option<Insert>,construction:WidgetInputsConstruction,inputs:Option<WidgetInputs>,job:Option<OriginalFixedOutputJob>,fault:Option<OriginalWidgetFaultProduction>}
 
 /// 🧳️ One actual erased pending frame; every retained output stays outside ordinary Drop until donated or paid closed.
-pub struct OriginalGeometryPending{source:Source,cyclic:bool,owner:ControlledRetirement<State>,evaluation:ManuallyDrop<Option<WidgetEvaluation>>,output:ManuallyDrop<Option<Arc<WidgetEvaluation>>>,output_close:Option<ControlledRetirement<(Option<WidgetEvaluation>,Option<Arc<WidgetEvaluation>>)>>,cancelled:bool}
+pub struct OriginalGeometryPending{source:Source,cyclic:bool,owner:ControlledRetirement<State>,evaluation:ManuallyDrop<Option<WidgetEvaluation>>,output:ManuallyDrop<Option<SharedEvaluation>>,output_close:Option<ControlledRetirement<(Option<WidgetEvaluation>,Option<SharedEvaluation>)>>,cancelled:bool}
 impl OriginalGeometryPending{
  fn new(source:Source,cyclic:bool)->Self{let mut state=State::default();state.values=Some(Outputs::default());Self{source,cyclic,owner:ControlledRetirement::new(state).ok().unwrap(),evaluation:ManuallyDrop::new(None),output:ManuallyDrop::new(None),output_close:None,cancelled:false}}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.evaluation.is_none()&&self.output.is_none()&&self.output_close.as_ref().is_none_or(ControlledRetirement::terminal_is_empty)}
  fn check(&self,snapshot:&GeometryInput<'_>,key:&str,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{if self.source!=source(snapshot,key,cx)?{return Err(invalid("original geometry pending requires its initiating caller snapshot catalogue and key").into())}Ok(())}
- fn step(&mut self,snapshot:&GeometryInput<'_>,key:&str,parents:&[Arc<WidgetEvaluation>],cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+ fn step(&mut self,snapshot:&GeometryInput<'_>,key:&str,parents:&[SharedEvaluation],cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   self.check(snapshot,key,cx)?;if self.cancelled||!open(cx){return Ok(())}
   if self.owner.original().is_none_or(|state|state.phase==20){
    if !self.owner.terminal_is_empty(){close_owner(&mut self.owner,cx)?;return Ok(())}
-   if self.output.is_none(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<WidgetEvaluation>();if cx.retained_grant().maximum_capacity_bytes<bytes{return Ok(())}let evaluation=self.evaluation.take().ok_or_else(||invalid("original geometry pending has no produced evaluation donor"))?;*self.output=Some(Arc::new(evaluation));post(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})?}return Ok(())
+   if self.output.is_none(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<WidgetEvaluation>();if cx.retained_grant().maximum_capacity_bytes<bytes{return Ok(())}let evaluation=self.evaluation.take().ok_or_else(||invalid("original geometry pending has no produced evaluation donor"))?;*self.output=Some(SharedEvaluation::new(evaluation));post(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})?}return Ok(())
   }
   let state=self.owner.original_mut().unwrap();let host=&snapshot.snapshot.host_snapshot;
   if state.phase==0{
@@ -84,7 +85,13 @@ impl OriginalGeometryPending{
    }
    5=>{
     let grant=cx.retained_grant();if state.parents.has_reserved_slot(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.phase=6;}
-    else{let bytes=state.parents.next_allocation_bytes().map_err(ValueError::from)?;let depth=state.parents.next_reserve_depth_demand().map_err(ValueError::from)?;let copy=state.parents.next_reserve_copy_byte_demand().map_err(ValueError::from)?;if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<bytes||grant.maximum_depth<depth{return Ok(())}let receipt=state.parents.reserve_one_funded(grant).map_err(|error|OriginalTurnFailure::debit_original(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}),cx))?;post(cx,receipt)?;}
+    else{let bytes=state.parents.next_allocation_bytes().map_err(ValueError::from)?;let depth=state.parents.next_reserve_depth_demand().map_err(ValueError::from)?;let copy=state.parents.next_reserve_copy_byte_demand().map_err(ValueError::from)?;if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<bytes||grant.maximum_depth<depth{return Ok(())}let Some((turn,performed))=cx.with_original_effect(grant,|_,effect|state.parents.reserve_one_funded(effect))?else{return Ok(())};cx.consume_work(performed);
+     match turn.result{
+      Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(receipt))=>cx.consume_retained(receipt).map_err(|error|error.with_retained_progress(receipt))?,
+      Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Denied)=>return Ok(()),
+      Err(semio_framework_value_persistent::list::PagedListReservationFailure::Allocation{error,..})=>return Err(OriginalTurnFailure::debit_original(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}),cx)),
+      Err(semio_framework_value_persistent::list::PagedListReservationFailure::Work(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
+     }}
    }
    6=>{
     if cx.retained_grant().maximum_depth<state.parents.next_push_depth_demand().map_err(ValueError::from)?{return Ok(())}state.parents.push_reserved(state.probe).map_err(|_|invalid("original parent roster reserved slot changed"))?;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.link+=1;state.phase=1;
@@ -137,7 +144,7 @@ fn source(snapshot:&GeometryInput<'_>,key:&str,cx:&mut StepContext<'_>)->Result<
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yield()&&!cx.is_cancelled()&&grant.maximum_items>0&&grant.maximum_depth>0}
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
-fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}
+fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;Ok(())}
 
 fn range(port:&Port,number:f64)->Result<(),ValueError>{if !number.is_finite()||port.min.is_some_and(|minimum|if port.exclusive_min{number<=minimum}else{number<minimum})||port.max.is_some_and(|maximum|number>maximum){return Err(invalid("original geometry input number is outside its declared range"))}Ok(())}
 fn component(port:&Port)->Result<SelectionKind,ValueError>{use semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent;match port.selection.as_ref().map(|selection|selection.component){Some(SelectionComponent::Vertex)=>Ok(SelectionKind::Vertex),Some(SelectionComponent::Edge)=>Ok(SelectionKind::Edge),Some(SelectionComponent::Face)=>Ok(SelectionKind::Face),_=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original input selection has no fixed component producer"))}}
@@ -187,13 +194,13 @@ impl InferencePending for OriginalGeometryPending{
 impl Drop for OriginalGeometryPending{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original geometry pending reached Drop before original payload and output closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.evaluation);ManuallyDrop::drop(&mut self.output)}}}}
 
 /// 🪜️ The actual InferredField entry creates, advances and closes one original dynamic widget owner.
-pub fn compute_step(snapshot:&GeometryInput<'_>,key:&String,parents:&[Arc<WidgetEvaluation>],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>)->Result<ComputeStep<Arc<WidgetEvaluation>>,InferenceWorkFailure>{
+pub fn compute_step(snapshot:&GeometryInput<'_>,key:&String,parents:&[SharedEvaluation],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>)->Result<ComputeStep<SharedEvaluation>,InferenceWorkFailure>{
  compute_entry(snapshot,key,parents,pending,cx,false)
 }
 
 /// 🔄️ An actual cyclic plan row creates a localized fault under its original caller.
-pub fn compute_cyclic_step(snapshot:&GeometryInput<'_>,key:&String,pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>)->Result<ComputeStep<Arc<WidgetEvaluation>>,InferenceWorkFailure>{compute_entry(snapshot,key,&[],pending,cx,true)}
-fn compute_entry(snapshot:&GeometryInput<'_>,key:&String,parents:&[Arc<WidgetEvaluation>],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>,cyclic:bool)->Result<ComputeStep<Arc<WidgetEvaluation>>,InferenceWorkFailure>{
+pub fn compute_cyclic_step(snapshot:&GeometryInput<'_>,key:&String,pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>)->Result<ComputeStep<SharedEvaluation>,InferenceWorkFailure>{compute_entry(snapshot,key,&[],pending,cx,true)}
+fn compute_entry(snapshot:&GeometryInput<'_>,key:&String,parents:&[SharedEvaluation],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut StepContext<'_>,cyclic:bool)->Result<ComputeStep<SharedEvaluation>,InferenceWorkFailure>{
  let binding=source(snapshot,key,cx)?;if pending.is_none(){if !open(cx)||cx.retained_grant().maximum_capacity_bytes<size_of::<OriginalGeometryPending>(){return Ok(ComputeStep::Working{fuel_used:0,progress:0.0})}*pending=Some(Box::new(OriginalGeometryPending::new(binding,cyclic)));post(cx,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:size_of::<OriginalGeometryPending>(),..Default::default()})?;return Ok(ComputeStep::Working{fuel_used:1,progress:0.0})}
  let owner=pending.as_mut().and_then(|owner|owner.as_any_mut().downcast_mut::<OriginalGeometryPending>()).ok_or_else(||invalid("original geometry pending slot has a different owner type"))?;owner.check(snapshot,key,cx)?;if owner.cyclic!=cyclic{return Err(invalid("original geometry pending cyclic plan classification changed").into())}let before=cx.fuel_remaining();owner.step(snapshot,key,parents,cx)?;let used=usize::try_from(before.saturating_sub(cx.fuel_remaining())).unwrap_or(usize::MAX);
  if let Some(state)=owner.owner.original_mut(){state.completed=state.completed.checked_add(used).ok_or_else(||invalid("original geometry pending work progress overflow"))?}

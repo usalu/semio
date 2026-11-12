@@ -26,22 +26,27 @@ pub struct SetContributions {
 /// faulted. Answers whether any session was invalidated, which is what owes the attached previews a
 /// fresh evaluation. The key is [`semio_os_flow::flow_extension_registry_generation`], so a
 /// re-push of an unchanged closure owes nothing while any later contribution change re-evaluates.
-pub fn install(payload: &SetContributions, sessions: &mut [&mut FlowEvalSession], grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
+pub fn register(payload: &SetContributions) -> Result<(), Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
-    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
+    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)
+}
+
+/// 🧩️ Invalidates every `sessions` evaluation under the caller's original effect; `None` means the effect was not admitted and the remaining sessions are unchanged.
+pub fn invalidate(sessions: &mut [&mut FlowEvalSession], effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<bool>, Fault> {
     let generation = semio_os_flow::flow_extension_registry_generation();
     let mut invalidated = false;
     for session in sessions.iter_mut() {
-        invalidated |= session.invalidate_for_flow_extension_registry(generation, grant).map_err(|error| Fault::from(error.to_string()))?.0;
+        let Some((changed, _)) = session.invalidate_for_flow_extension_registry(generation, effect).map_err(|error| Fault::from(error.to_string()))? else { return Ok(None) };
+        invalidated |= changed;
     }
-    Ok(invalidated)
+    Ok(Some(invalidated))
 }
 
 /// 🧩️ The `app_commands!` row. Its framework-fixed signature carries no attached-window roster, so it
 /// installs the page and invalidates the session it is handed; the SERVED route
 /// (`Generation2dContributionsWork::step`) is the one that owes the attached previews an evaluation.
-pub fn handle(payload: &SetContributions, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    install(payload, &mut [session], doc.retained_grant()?)?;
+pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+    register(payload)?;
     Ok(Emit::default())
 }

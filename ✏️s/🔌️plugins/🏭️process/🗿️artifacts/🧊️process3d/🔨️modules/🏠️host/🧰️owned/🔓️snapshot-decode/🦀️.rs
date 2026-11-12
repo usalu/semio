@@ -81,7 +81,13 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         if self.state == Process3dSnapshotDecodeState::CloseSession {
             cx.consume_fuel(1);
             let maximum_bytes = self.session().next_retained_release_allocation_bytes().unwrap_or(0);
-            if matches!(self.session().close_step(1, maximum_bytes).map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", token.start))?, store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { .. }) {
+            let grant = cx.retained_grant();
+            let session = self.session.as_mut().expect("Process3d mounted pack session retained");
+            let closed = cx.with_original_effect(grant, |_, effect| session.close_step(1, maximum_bytes, effect)).map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", token.start))?;
+            let Some((closed, _)) = closed else {
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
+            };
+            if matches!(closed.map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", token.start))?, store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { .. }) {
                 return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             drop(self.session.take());
@@ -151,7 +157,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         }
         if self.session.is_some() {
             self.session().request_cancel();
-            let step = self.session().close_step(1, grant.maximum_release_bytes).map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", 0))?;
+            let step = self.session().close_step(1, grant.maximum_release_bytes, effect).map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", 0))?;
             self.state = Process3dSnapshotDecodeState::Closing;
             if let store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { released_items, released_bytes } = step {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: released_items, released_bytes, ..empty }));
@@ -180,7 +186,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             self.state = Process3dSnapshotDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        let step = store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0), &failure))?;
+        let step = store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0), &failure))?;
         if self.retirement.is_none() {
             self.state = Process3dSnapshotDecodeState::Complete;
         }
@@ -273,7 +279,11 @@ impl Process3dSnapshotDecodeAuthority {
 
     fn reserve_pending(&mut self, code: &'static str, offset: u64, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let Some(exact) = self.session().next_retained_allocation_bytes().map_err(|_| self.diagnostic(code, offset))? else { return Ok(false) };
-        let step = self.session().reserve_retained_allocation(exact).map_err(|_| self.diagnostic(code, offset))?;
+        let grant = cx.retained_grant();
+        let session = self.session.as_mut().expect("Process3d mounted pack session retained");
+        let reserved = cx.with_original_effect(grant, |_, effect| session.reserve_retained_allocation(exact, effect)).map_err(|_| self.diagnostic(code, offset))?;
+        let Some((reserved, _)) = reserved else { return Ok(true) };
+        let step = reserved.map_err(|_| self.diagnostic(code, offset))?;
         if !step.progressed {
             return Err(self.diagnostic("process3d-envelope.snapshot-allocation-stalled", offset));
         }

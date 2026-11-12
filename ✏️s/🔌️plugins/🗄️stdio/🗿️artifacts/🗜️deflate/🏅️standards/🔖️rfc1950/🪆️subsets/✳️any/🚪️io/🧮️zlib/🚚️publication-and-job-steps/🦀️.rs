@@ -8,7 +8,7 @@ use super::*;
 /// ♻️ Closes the lent publication from the next step's own wallet before encoding resumes.
 pub(super) fn retire_delivered_publication<'a>(publication: &mut Option<Box<Publication>>, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
     let Some(active) = publication.as_mut() else { return Ok(None) };
-    semio_framework_job::close_original_granted_step(context, |grant| active.close_step(grant))?;
+    semio_framework_job::close_original_effect_step(context, active.retirement_demands()?, |effect| semio_framework_value::RetainedWorkPoll::Complete(active.close_step(effect)))?;
     if active.terminal_is_empty() {
         *publication = None;
     }
@@ -92,9 +92,17 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
     fn begin_close(&mut self) {}
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if let Some(publication) = self.publication.as_mut() {
+            let demand = publication.retirement_demands()?;
+            let step = semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect)))?;
+            if publication.terminal_is_empty() {
+                self.publication = None;
+            }
+            return Ok(step);
+        }
         semio_framework_job::close_original_granted_step(cx,|grant|{
             use semio_framework_job::InteractiveJobCloseStep;
-            let mut work = 0u64;
+            let mut work = 0u128;
             let result = (|| -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {            let demand = match self.close_demands() {
                 Ok(demand) => demand,
                 Err(error) => return Err(error),
@@ -104,16 +112,6 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
             }
             if !deflate_close_admits_demand(grant, demand) {
                 return Ok(deflate_close_idle());
-            }
-            if let Some(publication) = self.publication.as_mut() {
-                let step = { let turn = publication.close_step(grant); work += turn.work; turn.result? };
-                if publication.terminal_is_empty() {
-                    self.publication = None;
-                }
-                return Ok(match step {
-                    InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress },
-                    step => step,
-                });
             }
             if let Some(released_bytes) = release_next_backing(&mut [&mut self.input, &mut self.writer.out, &mut self.head, &mut self.previous]) {
                 return Ok(deflate_close_receipt(1, released_bytes));

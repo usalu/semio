@@ -2,9 +2,10 @@
 use super::*;
 macro_rules! state_patch{
  ($patch:ident,$owner:ident for $row:ty {$($field:ident:$kind:ty),+$(,)?})=>{
-  #[derive(Default,Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree)]
-  #[canonical_json(owner=semio_framework_pack_json)]
+  #[derive(Default,Debug,PartialEq,ToValue,NativeReceive,RetireOwned,CanonicalJsonTree)]
+  #[canonical_json(owner=pack_json)]
   pub struct $patch{$(#[value(skip_serializing_if="Option::is_none")]pub $field:Option<$kind>,)+}
+  protocol::retained_empty_option_patch!($patch {$($field),+});
   protocol::retained_row_patch!(pub $owner for $patch => $row {$($field:$kind),+});
  };
 }
@@ -320,7 +321,7 @@ state_patch!(StateTimeSeriesSchedulePatch,state_time_series_schedule_fields for 
 pub use apply::StateZoneApply;
 
 /// 🌳️ Prepared branch deltas retain the original immutable candidate produced by sparse path staging.
-#[derive(Default,Debug,PartialEq,ToValue,semio_framework_value::RetireOwned)]
+#[derive(Default,Debug,PartialEq,ToValue,RetireOwned)]
 pub struct EnergyModelStatePatch{
  #[value(skip_serializing_if="Option::is_none")]pub identity:Option<SealedShared<ModelIdentityState>>,
  #[value(skip_serializing_if="Option::is_none")]pub geometry:Option<SealedShared<ModelGeometryState>>,
@@ -331,6 +332,7 @@ pub struct EnergyModelStatePatch{
  #[value(skip_serializing_if="Option::is_none")]pub generation:Option<SealedShared<ModelGenerationState>>,
  #[value(skip_serializing_if="Option::is_none")]pub outputs:Option<SealedShared<ModelOutputState>>,
 }
+protocol::retained_empty_option_patch!(EnergyModelStatePatch {identity,geometry,materials,loads,controls,systems,generation,outputs});
 protocol::retained_row_patch!(pub energy_model_fields for EnergyModelStatePatch=>EnergyModelState{identity:SealedShared<ModelIdentityState>,geometry:SealedShared<ModelGeometryState>,materials:SealedShared<ModelMaterialState>,loads:SealedShared<ModelLoadState>,controls:SealedShared<ModelControlState>,systems:SealedShared<ModelSystemState>,generation:SealedShared<ModelGenerationState>,outputs:SealedShared<ModelOutputState>});
 
 #[path="🌳️branches/🦀️.rs"]pub mod branches;

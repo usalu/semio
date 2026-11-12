@@ -111,6 +111,7 @@ struct ContainerAttrs {
     transparent: bool,
     send_only: bool,
     boxed_original: bool,
+    by_value_projection: bool,
     receive_recursive: bool,
     bound: Option<String>,
     crate_path: Option<String>,
@@ -211,6 +212,7 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "transparent" => out.transparent = true,
             "send_only" => out.send_only = true,
             "boxed_original" => out.boxed_original = true,
+            "by_value_projection" => out.by_value_projection = true,
             "receive_recursive" if value.is_none() => out.receive_recursive = true,
             "bound" => out.bound = value,
             "rename_all_fields" => out.rename_all_fields = value,
@@ -598,5 +600,7 @@ pub fn declared_equality_crate(input:&DeriveInput)->syn::Result<syn::Path>{conta
 #[path="../🛬️receive/🦀️.rs"]mod native_receiving;
 pub fn expand_native_receive(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}
 
+/// 🧱️ A persisted snapshot root projects as a plain value instead of a boxed candidate.
+pub fn declared_by_value_projection(input:&DeriveInput)->syn::Result<bool>{Ok(parse_container_attrs(&input.attrs)?.by_value_projection)}
 /// 📦️ A defining owner explicitly opts into unique allocation field retirement.
 pub fn declared_boxed_original(input:&DeriveInput)->syn::Result<bool>{Ok(parse_container_attrs(&input.attrs)?.boxed_original)}

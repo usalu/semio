@@ -98,8 +98,8 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
         editing::register_snapshot_edit_tool_factory::<Self>(registry)?;
         template_factory::register(registry)
     }
-    fn build_tool_job(request: semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>) -> Result<Option<semio_plugin::ToolOperationSpec>, Fault> {
-        template_factory::build(request)
+    fn build_tool_job(request: &mut Option<semio_plugin::ArtifactOwnedToolJobRequest<semio_plugin::EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction: &mut semio_plugin::__job::OriginalConstructionAdmission, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        template_factory::build(request, output, cx)
     }
     semio_s_artifact_stdio_contract::snapshot_editing_publication_authority!();
 
@@ -118,10 +118,12 @@ impl ArtifactEditor for Ifc4x3AnyEditor {
         }
         editing::snapshot_edit_event_from_action(action, args.as_ref())?.map(|event| Ifc4x3EditCommand::EditSnapshot { event }).ok_or_else(|| Fault::from(format!("unsupported IFC4x3 action '{action}'")))
     }
-    fn initial_snapshot() -> IfcSnapshot {
-        let mut snapshot = IfcSnapshot::default();
-        snapshot.header.file_schema = vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3_ADD2".into())])];
-        snapshot
+    fn reference_birth() -> Option<fn() -> Result<IfcSnapshot, Fault>> {
+        Some(|| {
+            let mut snapshot = IfcSnapshot::default();
+            snapshot.header.file_schema = vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3_ADD2".into())])];
+            Ok(snapshot)
+        })
     }
     fn import_media(port: &str, media: &semio_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_plugin::MediaError> {
         semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)

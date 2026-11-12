@@ -30,7 +30,7 @@ semio_framework_value::artifact_retire_struct!(Entity { name,arguments });
 semio_framework_value::artifact_retire_struct!(Instance { id,entities });
 semio_framework_value::artifact_retire_struct!(Edm { producer,module,creation_date,host,database,database_version,database_creation_date,schema,model,model_creation_date,header_model,header_model_creation_date,user,group,license,options });
 semio_framework_value::artifact_retire_struct!(Frame { schema,file_description,file_name,file_schema,instances,values,edm });
-pub(crate) fn close<T:RetireOwned>(value:T){let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("IFC2x3 native cold retirement refused: {error}"));while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().expect("IFC2x3 native cold copy demand");let release=owner.next_release_byte_demand().expect("IFC2x3 native cold release demand");let capacity=owner.next_capacity_byte_demand(if copy==0{release}else{copy}).expect("IFC2x3 native cold capacity demand");let depth=owner.next_depth_demand().expect("IFC2x3 native cold depth demand");owner.step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth}).expect("IFC2x3 native cold grant");}}
+pub(crate) fn close<T:RetireOwned>(value:T){drop(value)}
 fn positioned(error:ValueError)->TextError { TextError::from_value_error(error,TextSpan::at(1,1)) }
 fn invalid(message:&'static str)->ValueError { ValueError::new(ValueRefusalKind::InvalidValue,message) }
 
@@ -110,12 +110,15 @@ fn reconstruct(frame:Frame,control:&mut NativeDecodeControl<'_>)->Result<Ifc2x3S
     if let Some(value)=native.edm.take(){out.edm_preamble=Some(Ifc2x3EdmPreamble{producer:value.producer,module:value.module,creation_date:value.creation_date,host:value.host,database:value.database,database_version:value.database_version,database_creation_date:value.database_creation_date,schema:value.schema,model:value.model,model_creation_date:value.model_creation_date,header_model:value.header_model,header_model_creation_date:value.header_model_creation_date,user:value.user,group:value.group,license:value.license,options:value.options});}
     out.schema=std::mem::take(&mut native.schema);Ok(result.take())
 }
-pub(crate) fn encode(value:&Ifc2x3Snapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
-    value.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;let maximum=control.limits().max_rows;
-    work.take(store::encode_sqlite_snapshot_record_native(encoding,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),|native|{let mut frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(project(value,native,maximum)?,close::<Frame>);frame.as_mut().__dsl_to_record_controlled(native)},control,native_owner))})}
-pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Ifc2x3Snapshot,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
+pub(crate) fn encode(value:&Ifc2x3Snapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+    if let Err(error)=value.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+    let maximum=control.limits().max_rows;
+    store::encode_sqlite_snapshot_record_native(encoding,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),&mut |native|{let mut frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(project(value,native,maximum)?,close::<Frame>);frame.as_mut().__dsl_to_record_controlled(native)},control,native_owner,output)
+}
+pub(crate) fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Ifc2x3Snapshot>>)->store::os_store::serialization::SnapshotReceivingOutcome {
     let limits=control.limits();let maximum=limits.max_rows;
-    work.take(store::decode_sqlite_snapshot_record_native(payload,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Ifc2x3Snapshot::admit_sqlite_record(record,limits,native)?;let frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(binding::frame(record,native,maximum)?,close::<Frame>);reconstruct(frame.take(),native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))})}
+    store::decode_sqlite_snapshot_record_native(payload,STDIO_IFC2X3_DOCUMENT_SCHEMA,Frame::__dsl_spec_producer(),&mut |record,snapshot_output,native|{let constructed:Result<_,ValueError>=(||{Ifc2x3Snapshot::admit_sqlite_record(record,limits,native)?;let frame=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(binding::frame(record,native,maximum)?,close::<Frame>);reconstruct(frame.take(),native)})();*snapshot_output=Some(constructed?);Ok(())},control,native_control,output)
+}
 
 pub(crate) fn encode_pack(value:&Ifc2x3Snapshot,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
  let limits=store::sqlite_snapshot::SqliteDatabaseLimits::default();let mut progress=|_|true;let mut native=NativeEncodeControl::new(limits.max_allocation_bytes,&mut progress);
@@ -143,6 +146,10 @@ pub(crate) fn parse_text(text:&str)->Result<Ifc2x3Snapshot,TextError>{
  reconstruct(binding::frame(&record,&mut native,limits.max_rows).map_err(positioned)?,&mut native).map_err(positioned)
 }
 
+fn staged(outcome:store::os_store::serialization::SnapshotReceivingOutcome)->Result<(),ValueError>{
+ use store::sqlite_snapshot::SqliteStageFailure as Stage;
+ outcome.result.map_err(|stage|match stage{Stage::NotStarted(error)=>error,Stage::Settlement{refusal,..}=>refusal,Stage::Operation(failure)=>ValueError::new(failure.kind(),failure.message().to_string()),Stage::WorkSettlement{..}=>ValueError::new(ValueRefusalKind::InvariantViolated,"IFC2x3 native print work settlement refused")})
+}
 pub(crate) fn print_text(value:&Ifc2x3Snapshot)->String{
- match semio_s_artifact_stdio_contract::native_print::print_as_original_caller(store::sqlite_snapshot::SqliteDatabaseLimits::default(),|control,owner|encode(value,SnapshotEncoding::Text,control,owner)).expect("IFC2x3 complete native text within default limits"){IoPayload::Text(text)=>text,IoPayload::Binary(_)=>unreachable!()}
+ match semio_s_artifact_stdio_contract::native_print::print_as_original_caller(store::sqlite_snapshot::SqliteDatabaseLimits::default(),|control,owner|{let mut output=None;staged(encode(value,SnapshotEncoding::Text,control,owner,&mut output))?;match output.take(){Some(Ok(payload))=>Ok(payload),_=>Err(invalid("IFC2x3 native print retained no payload"))}}).expect("IFC2x3 complete native text within default limits"){IoPayload::Text(text)=>text,IoPayload::Binary(_)=>unreachable!()}
 }

@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 /// 🔄️ The rigid motion from the previous camera in trajectory order to this one, `Se3` logged down
 /// to a translation vector and a scalar rotation angle (radians, always `>= 0`) — zero for the
 /// first pose (no predecessor).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelingPoseDelta {

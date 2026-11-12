@@ -549,11 +549,10 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
     fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
-            let turn = self.publication.close_step(cx.retained_grant());
-            cx.consume_fuel(turn.work);
-            let step = turn.result?;
-            cx.consume_retained(step.progress())?;
-            if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+            let demand = self.publication.retirement_demands()?;
+            let publication = &mut self.publication;
+            semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect)))?;
+            if self.publication.terminal_is_empty() {
                 self.delivered = false;
                 self.source = Vec::new();
             }
@@ -662,6 +661,12 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if !self.publication.terminal_is_empty() {
+            self.closing = true;
+            let demand = self.publication.retirement_demands()?;
+            let publication = &mut self.publication;
+            return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect)));
+        }
         semio_framework_job::close_original_granted_step(cx,|grant|{
             use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
             let mut work = 1;
@@ -681,12 +686,6 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
                 return Ok(InteractiveJobCloseStep::Pending { progress: Default::default() });
             }
             let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-            if !self.publication.terminal_is_empty() {
-                let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-                let turn = self.publication.close_step(child);
-                work = turn.work;
-                return Ok(InteractiveJobCloseStep::Pending { progress: turn.result?.progress() });
-            }
             if self.delivered {
                 self.delivered = false;
                 return Ok(InteractiveJobCloseStep::Pending { progress: item });

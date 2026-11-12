@@ -144,6 +144,7 @@ pub enum SemioMeshMutation {
     ReplaceTextureBytes(replace_texture_bytes::ReplaceTextureBytes),
     MoveVertex(move_vertex::MoveVertex),
 }
+dsl::original_pack_value_operation_receiving!(SemioMeshMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioMeshMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-mesh` mutation catalog (`../../🔣️oracle.json`) declares and

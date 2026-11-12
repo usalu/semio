@@ -101,6 +101,27 @@ impl<K: Ord, V> RetainedOrderedMap<K, V> {
     }
 }
 
+/// 🔍️ Reads and edits standalone cold dictionaries in place without changing their page layout.
+impl<K: Ord, V> RetainedOrderedMap<K, V> {
+    pub fn contains_key<Q: Ord + ?Sized>(&self, key: &Q) -> bool where K: std::borrow::Borrow<Q> { self.search(key).is_ok() }
+    pub fn keys(&self) -> impl Iterator<Item = &K> { self.iter().map(|(key, _)| key) }
+    pub fn values(&self) -> impl Iterator<Item = &V> { self.iter().map(|(_, value)| value) }
+    pub fn first_key_value(&self) -> Option<(&K, &V)> { self.get_index(0) }
+    pub fn last_key_value(&self) -> Option<(&K, &V)> { self.len.checked_sub(1).and_then(|ordinal| self.get_index(ordinal)) }
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (&K, &mut V)> { self.pages.iter_mut().flat_map(|page| page.iter_mut().map(|(key, value)| (&*key, value))) }
+    pub fn values_mut(&mut self) -> impl Iterator<Item = &mut V> { self.iter_mut().map(|(_, value)| value) }
+    pub fn get_mut<Q: Ord + ?Sized>(&mut self, key: &Q) -> Option<&mut V> where K: std::borrow::Borrow<Q> {
+        let ordinal = self.search(key).ok()?;
+        self.pages.get_mut(ordinal / RETAINED_ORDERED_MAP_PAGE_CAPACITY)?.get_mut(ordinal % RETAINED_ORDERED_MAP_PAGE_CAPACITY).map(|(_, value)| value)
+    }
+    pub fn cold_clear(&mut self) { self.pages.clear(); self.len = 0; }
+    pub fn cold_extend(&mut self, entries: impl IntoIterator<Item = (K, V)>) { for (key, value) in entries { self.cold_insert(key, value); } }
+    pub fn cold_retain(&mut self, mut keep: impl FnMut(&K, &mut V) -> bool) {
+        let kept: Vec<(K, V)> = std::mem::take(&mut self.pages).into_iter().flatten().filter_map(|(key, mut value)| keep(&key, &mut value).then_some((key, value))).collect();
+        *self = Self::from_sorted_entries(kept).expect("retained entries stay strictly ordered");
+    }
+}
+
 impl<K:Ord,V> FromIterator<(K, V)> for RetainedOrderedMap<K, V> {
     fn from_iter<I:IntoIterator<Item=(K,V)>>(entries:I)->Self{let mut map=Self::default();for(key,value)in entries{map.cold_insert(key,value);}map}
 }

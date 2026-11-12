@@ -34,9 +34,10 @@ fn settle_insert(cx:&mut StepContext<'_>,step:Result<Option<RetainedCloneStep>,V
 struct Source {operation:u64,generation:u64,parent:usize,widget:usize,widget_bytes:usize,kind:usize,ports:usize,port_count:usize}
 semio_framework_value::artifact_retire_leaf!(Source);
 
+#[doc(hidden)]
 #[derive(Default,semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct State {
+pub struct State {
     source:Option<Source>,
     widget:String,
     labels:Option<Labels>,
@@ -135,7 +136,8 @@ pub fn text_event(output:&mut String,source:&str,byte:&mut usize,reserved:&mut b
 }
 
 impl RetireOwned for WidgetInputsConstruction {
-    fn retirement(mut self)->Box<dyn RetirementCursor>{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement()}
+    type RetirementCursor=<State as RetireOwned>::RetirementCursor;
+    fn retirement_seed(mut self)->Self::RetirementCursor{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement_seed()}
     fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}
     fn controlled_retirement_supported()->bool{true}
     fn retirement_element_copy_bytes()->usize{size_of::<Self>()}

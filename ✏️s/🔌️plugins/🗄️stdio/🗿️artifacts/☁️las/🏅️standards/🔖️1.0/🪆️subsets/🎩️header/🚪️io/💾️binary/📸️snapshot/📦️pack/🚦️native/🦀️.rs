@@ -30,6 +30,16 @@ fn forecast_snapshot(value:&LasSnapshot,maximum:usize,control:&mut NativeEncodeC
 }
 pub fn retire(value:LasSnapshot){owner::retire(value)}
 /// 📥️ Uses one cumulative controller from borrowed envelope through direct actual owned fields.
-pub fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<LasSnapshot,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{let limits=control.limits();let maximum=limits.max_rows;work.take(store::decode_sqlite_snapshot_record_native(payload,"stdio.las",Snapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {(||->Result<_,ValueError>{LasSnapshot::admit_sqlite_record(record,limits,native)?;forecast_record(record,maximum,native)?;owner::from_record(record,native)})()})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))})}
+pub fn decode(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<LasSnapshot>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+ store::decode_sqlite_snapshot_record_receiving(payload,"stdio.las",Snapshot::__dsl_spec_producer(),&mut |record,snapshot_output,owner,control|semio_os_kernel::native_snapshot_turn(|work|work.measured(owner.native(),|native|{
+  let limits=control.limits();let maximum=limits.max_rows;
+  LasSnapshot::admit_sqlite_record(record,limits,native)?;forecast_record(record,maximum,native)?;
+  *snapshot_output=Some(owner::from_record(record,native)?);Ok::<(),ValueError>(())
+ })),control,native_control,output)
+}
 /// 📤️ Emits the declared LAS record protocol with exact raw IEEE words and no external-file quantization.
-pub fn encode(value:&LasSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{value.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative)?;let maximum=control.limits().max_rows;work.take(store::encode_sqlite_snapshot_record_native(encoding,"stdio.las",Snapshot::__dsl_spec_producer(),|native|(|| -> Result<_,ValueError>{forecast_snapshot(value,maximum,native)?;owner::to_record(value,native)})(),control,native_owner))})}
+pub fn encode(value:&LasSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+ if let Err(error)=value.admit_sqlite_values(control,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+ let maximum=control.limits().max_rows;
+ store::encode_sqlite_snapshot_record_native(encoding,"stdio.las",Snapshot::__dsl_spec_producer(),&mut |native|(|| -> Result<_,ValueError>{forecast_snapshot(value,maximum,native)?;owner::to_record(value,native)})(),control,native_owner,output)
+}

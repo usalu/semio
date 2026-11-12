@@ -7,12 +7,13 @@ use semio_framework_value::{
 };
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, OriginalConstructionAuthority, owned::{NativeReceiveSlot, native_work_limit}};
 use semio_framework_value_persistent::list::persistent::PersistentList;
+use semio_framework_value::shared_issuance::SealedShared;
 use semio_s_fem_receiving::reply::{admission_advance, admission_demand, OriginalStepRecipient, receiving_failure, settled};
 use semio_s_fem_material::volumetric::{FemMaterial, FemMaterialValue};
 use semio_s_fem_node::volumetric::{FemNode, FemNodeValue};
 use std::mem::{ManuallyDrop, size_of};
-type Nodes = PersistentList<FemNode>;
-type Materials = PersistentList<FemMaterial>;
+type Nodes = SealedShared<PersistentList<FemNode>>;
+type Materials = SealedShared<PersistentList<FemMaterial>>;
 type NodeReceiver = NativeReceiveSlot<Vec<FemNodeValue>, Nodes>;
 type MaterialReceiver = NativeReceiveSlot<Vec<FemMaterialValue>, Materials>;
 const ACTION_WORK: u64 = 4;
@@ -21,6 +22,13 @@ fn settle<T, E: From<ValueError>>(poll: RetainedWorkPoll<T, E>) -> RetainedWorkO
     match poll {
         RetainedWorkPoll::Complete(turn) => turn,
         RetainedWorkPoll::Pending { work } => RetainedWorkOutcome { result: Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "FEM receiving child cannot stay pending on a synchronous recipient").into()), work },
+    }
+}
+/// 🔁️ A pending child keeps its state and is polled again on the next transition instead of being refused.
+fn retry<E>(poll: RetainedWorkPoll<RetainedCloneStep, E>) -> RetainedWorkOutcome<RetainedCloneStep, E> {
+    match poll {
+        RetainedWorkPoll::Complete(turn) => turn,
+        RetainedWorkPoll::Pending { work } => RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work },
     }
 }
 fn invalid() -> ValueError {
@@ -65,6 +73,12 @@ impl Fem3dSnapshot {
 
 }
 
+impl Default for Fem3dSnapshot {
+    fn default() -> Self {
+        Self::from_reference(Default::default()).expect("an empty FEM snapshot seals")
+    }
+}
+
 impl Fem3dSnapshot {
     /// ❄️ Reference projection copies the persistent rows into the explicit authoring value for cold algebra and reports.
     pub fn to_reference(&self) -> Fem3dSnapshotValue {
@@ -106,8 +120,8 @@ fn validate_cold_authoring(value: &Fem3dSnapshotValue) -> Result<(), ValueError>
     use crate::standards::v1::subsets::any::schema::structure::{FemElement,FemLoad,element_id};
     let invalid = || ValueError::literal(ValueRefusalKind::InvalidValue, "FEM reference graph or row is invalid");
     value.validate_interaction_identities()?;
-    for n in &value.nodes { if !(n.x.is_finite() && n.y.is_finite() && n.z.is_finite()) { return Err(invalid()); } }
-    for m in &value.materials { if !(m.e.is_finite() && m.e > 0.0 && m.nu.is_finite() && m.nu > -1.0 && m.nu < 0.5 && m.rho.is_finite() && m.rho > 0.0 && m.g.is_finite() && m.g > 0.0) { return Err(invalid()); } }
+    for n in value.nodes.iter() { if !(n.x.is_finite() && n.y.is_finite() && n.z.is_finite()) { return Err(invalid()); } }
+    for m in value.materials.iter() { if !(m.e.is_finite() && m.e > 0.0 && m.nu.is_finite() && m.nu > -1.0 && m.nu < 0.5 && m.rho.is_finite() && m.rho > 0.0 && m.g.is_finite() && m.g > 0.0) { return Err(invalid()); } }
     let nodes: HashSet<&str> = value.nodes.iter().map(|v|v.id.as_str()).collect();
     let materials: HashSet<&str> = value.materials.iter().map(|v|v.id.as_str()).collect();
     let sections: HashSet<&str> = value.sections.iter().map(|v|v.id.as_str()).collect();
@@ -249,7 +263,7 @@ impl Fem3dReceiving {
                     let rx = self.$rx.as_mut().ok_or_else(invalid)?;
                     let maximum = native_work_limit(control, rx.advance_work_demand(source, body)?)?;
                     let witness = control.source_witness()?;
-                    let turn = settle(rx.advance(source, control, witness, body, maximum, g));
+                    let turn = retry(rx.advance(source, control, witness, body, maximum, g));
                     let p = work.take(RetainedWorkOutcome { result: turn.result.map_err(receiving_failure), work: turn.work })?.progress();
                     if rx.ready() {
                         self.phase += 1;
@@ -306,6 +320,8 @@ impl Fem3dReceiving {
                 let p = effect!(effect => settle(settled(effect, |effect, reply| source.take_authority_into(&mut taken, body, effect, reply))).result)?.progress();
                 if let Some(value) = taken {
                     *self.pending = Some(value);
+                }
+                if self.pending.is_some() && source.terminal_is_empty() {
                     self.phase = 15;
                 }
                 p
@@ -317,7 +333,7 @@ impl Fem3dReceiving {
                 receipt(d)
             }
             10 => {
-                work.performed();                let row = self.nodes.as_ref().ok_or_else(invalid)?.get(self.validated);
+                work.performed();                let row = (**self.nodes.as_ref().ok_or_else(invalid)?).get(self.validated);
                 match row {
                     Some(row) => {
                         row.validate().map_err(|e| e.with_retained_progress(receipt(d)))?;
@@ -331,7 +347,7 @@ impl Fem3dReceiving {
                 receipt(d)
             }
             11 => {
-                work.performed();                let row = self.materials.as_ref().ok_or_else(invalid)?.get(self.validated);
+                work.performed();                let row = (**self.materials.as_ref().ok_or_else(invalid)?).get(self.validated);
                 match row {
                     Some(row) => {
                         row.validate().map_err(|e| e.with_retained_progress(receipt(d)))?;

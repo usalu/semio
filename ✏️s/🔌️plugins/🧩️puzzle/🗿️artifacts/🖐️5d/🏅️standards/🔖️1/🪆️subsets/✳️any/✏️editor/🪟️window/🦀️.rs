@@ -204,6 +204,9 @@ impl protocol::ColdMutation<$state> for $mutation {
 config_mutation!(Puzzle5dBoardWindowConfigMutation, Puzzle5dBoardWindowConfigMutationSet, Puzzle5dBoardWindowConfig, Puzzle5dBoardWindowConfigDiff, "Set Puzzle 5D Board Window Configuration", "puzzle.5dboardwindowconfig");
 config_mutation!(Puzzle5dWorldWindowConfigMutation, Puzzle5dWorldWindowConfigMutationSet, Puzzle5dWorldWindowConfig, Puzzle5dWorldWindowConfigDiff, "Set Puzzle 5D World Window Configuration", "puzzle.5dworldwindowconfig");
 
+protocol::original_pack_value_operation_receiving!(Puzzle5dBoardWindowConfigMutation);
+protocol::original_pack_value_operation_receiving!(Puzzle5dWorldWindowConfigMutation);
+
 impl semio_plugin::WindowConfigApplyMutation<Puzzle5dBoardWindowConfig> for Puzzle5dBoardWindowConfigMutation {
     fn exchange(self, post: &mut Puzzle5dBoardWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::Set(Puzzle5dBoardWindowConfigMutationSet { mut patch }) = self;

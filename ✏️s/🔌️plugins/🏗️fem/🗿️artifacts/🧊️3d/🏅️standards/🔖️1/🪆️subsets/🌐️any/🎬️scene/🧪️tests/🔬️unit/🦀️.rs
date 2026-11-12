@@ -19,7 +19,7 @@ fn find<'a>(instances: &'a [Value], id: &str) -> &'a Value {
 fn every_entity_is_an_instance_keyed_by_its_own_id_and_granularity() {
     let doc = demo();
     let all = instances(&doc);
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         assert_eq!(find(&all, &fem3d_entity_target("node", &node.id).unwrap()).get("interactionGranularityId").and_then(Value::as_str), Some(FEM3D_GRANULARITY_NODE));
     }
     for element in &doc.elements {

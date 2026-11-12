@@ -34,9 +34,9 @@ use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, Geometr
 #[value(rename_all = "camelCase")]
 pub struct CadGeometry {
     #[value(skip)]
-    pub owned_meshes: HashMap<String, std::sync::Arc<MeshData>>,
+    pub owned_meshes: HashMap<String, semio_framework_value::retirement::arc_custody::ArcLease<MeshData>>,
     #[value(skip)]
-    pub owned_breps: HashMap<String, std::sync::Arc<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>,
+    pub owned_breps: HashMap<String, semio_framework_value::retirement::arc_custody::ArcLease<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>,
     #[value(default)]
     pub anchors: Vec<DslValue>,
     #[value(default)]

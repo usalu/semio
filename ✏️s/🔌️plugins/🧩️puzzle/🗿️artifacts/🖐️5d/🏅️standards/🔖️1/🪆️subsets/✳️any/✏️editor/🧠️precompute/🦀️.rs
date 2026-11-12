@@ -611,7 +611,7 @@ impl InteractiveJob for Puzzle5dPlannerToolRunJob {
             self.begin_close();
             if !self.outbox.terminal_is_empty() {
                 let demand = self.outbox.retirement_demands()?;
-                return semio_framework_job::close_original_retained_step(cx, demand, |grant| self.outbox.close_step(grant));
+                return semio_framework_job::close_original_effect_step(cx, demand, |effect| semio_framework_value::RetainedWorkPoll::Complete(self.outbox.close_step(effect)));
             }
             if !self.inner.terminal_is_empty() {
                 let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };

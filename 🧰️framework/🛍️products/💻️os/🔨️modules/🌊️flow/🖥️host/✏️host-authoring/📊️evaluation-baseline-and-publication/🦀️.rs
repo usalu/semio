@@ -78,7 +78,9 @@ impl FlowHost {
 
     pub(super) fn displace_dictionary(&mut self, value: Dictionary) {
         let grant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4096 };
-        if let Err((_, value)) = self.displaced.push_dictionary(value, grant) { value.retire_cold(); }
+        let mut value = Some(value);
+        let admitted = neural::retirement::cold_effect(grant, |effect| self.displaced.push_dictionary(&mut value, effect).result);
+        if !matches!(admitted, Ok(Ok(Some(_)))) { if let Some(value) = value { value.retire_cold(); } }
     }
 
     /// 🧹️ Hands every value displaced since the last drain to the artifact's bounded retirement
@@ -158,8 +160,8 @@ impl FlowHost {
         if original.text.is_some()||original.display.is_some()||original.pending.capacity()!=0||original.remaining.capacity()!=0||original.snapshot.is_some()||original.leases.snapshot.is_some()||original.leases.channels.is_some()||original.leases.current.is_some(){self.baseline_retirement=Some(ControlledRetirement::new(original).unwrap_or_else(|_|unreachable!("original publication sources are supported")));}
         self.pending_extension_evals=std::mem::take(&mut owner.pending);
         self.pending_remaining=std::mem::take(&mut owner.remaining);
-        self.current_channels=owner.shared_channels.take().map(|lease|lease.0);
-        if owner.converged{self.previous_snapshot=owner.shared_snapshot.take().map(|lease|lease.0);self.previous_channels=self.current_channels.clone();self.baseline_registry_generation=owner.generation;}
+        self.current_channels=owner.shared_channels.take();
+        if owner.converged{self.previous_snapshot=owner.shared_snapshot.take();self.previous_channels=self.current_channels.clone();self.baseline_registry_generation=owner.generation;}
         self.pending_baseline_publication=None;
         let progress=RetainedCloneProgress{copied_items:1,..empty};self.baseline_publication_progress=progress;
         Ok(if self.baseline_publication_terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})

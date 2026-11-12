@@ -84,6 +84,7 @@ pub mod testkit{
 }
 
 pub use semio_os_flow_host_source::receiving::JsonField as FlowJsonField;
+pub use semio_os_flow_host_source::{close_with_effect,poll_outcome};
 /// 🎟️ Settles one retirement poll into a close step: a pending poll keeps its state and reports no progress, a refusal keeps its primary cause.
 pub fn poll_close_step(poll:semio_framework_value::OriginalRetirementPoll)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
  match poll{

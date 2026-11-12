@@ -28,11 +28,11 @@ impl store::ArtifactOwnedValueRetirementFactory<GisMapSnapshot> for GisMapSnapsh
 }
 
 impl store::SnapshotRetirementFactory<GisMapSnapshot> for GisMapSnapshotRetirementFactory {
-    fn retirement_birth_bytes(&self, snapshot: &std::sync::Arc<GisMapSnapshot>) -> usize { SharedFactory::<GisMapSnapshot>::default().retirement_birth_bytes(snapshot) }
-    fn retire_demands(&self, snapshot: &std::sync::Arc<GisMapSnapshot>) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { SharedFactory::<GisMapSnapshot>::default().retire_demands(snapshot) }
-    fn retire_work_demand(&self, snapshot: &std::sync::Arc<GisMapSnapshot>) -> Result<u64, semio_framework_value::ValueError> { SharedFactory::<GisMapSnapshot>::default().retire_work_demand(snapshot) }
-    fn retire<'reply>(&self, snapshot: &mut Option<std::sync::Arc<GisMapSnapshot>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: ErasedReply<'reply>) -> ErasedReplyComplete<'reply> { SharedFactory::<GisMapSnapshot>::default().retire(snapshot, effect, reply) }
-    fn recover_retire<'reply>(&self, snapshot: &mut Option<std::sync::Arc<GisMapSnapshot>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: ErasedReply<'reply>) -> ErasedReplyComplete<'reply> { SharedFactory::<GisMapSnapshot>::default().recover_retire(snapshot, effect, reply) }
+    fn retirement_birth_bytes(&self, snapshot: &semio_framework_value::factory::SharedOriginalStorage<GisMapSnapshot>) -> usize { SharedFactory::<GisMapSnapshot>::default().retirement_birth_bytes(snapshot) }
+    fn retire_demands(&self, snapshot: &semio_framework_value::factory::SharedOriginalStorage<GisMapSnapshot>) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { SharedFactory::<GisMapSnapshot>::default().retire_demands(snapshot) }
+    fn retire_work_demand(&self, snapshot: &semio_framework_value::factory::SharedOriginalStorage<GisMapSnapshot>) -> Result<u64, semio_framework_value::ValueError> { SharedFactory::<GisMapSnapshot>::default().retire_work_demand(snapshot) }
+    fn retire<'reply>(&self, snapshot: &mut Option<semio_framework_value::factory::SharedOriginalStorage<GisMapSnapshot>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: ErasedReply<'reply>) -> ErasedReplyComplete<'reply> { SharedFactory::<GisMapSnapshot>::default().retire(snapshot, effect, reply) }
+    fn recover_retire<'reply>(&self, snapshot: &mut Option<semio_framework_value::factory::SharedOriginalStorage<GisMapSnapshot>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: ErasedReply<'reply>) -> ErasedReplyComplete<'reply> { SharedFactory::<GisMapSnapshot>::default().recover_retire(snapshot, effect, reply) }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]

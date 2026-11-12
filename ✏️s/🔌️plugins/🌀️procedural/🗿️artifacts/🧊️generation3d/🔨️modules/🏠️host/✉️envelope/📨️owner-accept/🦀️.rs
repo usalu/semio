@@ -387,10 +387,10 @@ impl Generation3dRetainedMutationOwner {
         self.value.take()
     }
 
-    pub(super) fn close_step(&mut self) -> bool {
+    pub(super) fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> bool {
         self.string = None;
         if !self.closing_targets.terminal_is_empty() {
-            generation3d_close_flow_frontier(&mut self.closing_targets).expect("admitted semantic target retirement");
+            generation3d_close_flow_frontier(&mut self.closing_targets, effect).expect("admitted semantic target retirement");
             return false;
         }
         if let Some(frame) = self.stack.pop() {

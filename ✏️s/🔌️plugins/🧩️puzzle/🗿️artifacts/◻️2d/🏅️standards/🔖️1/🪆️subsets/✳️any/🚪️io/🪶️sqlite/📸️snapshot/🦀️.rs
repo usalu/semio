@@ -19,7 +19,7 @@ const REGION:&[FloatColumn]=&[FloatColumn::Binary64(4),FloatColumn::Binary64(5),
 const TEMPLATE:&[FloatColumn]=&[FloatColumn::Binary64(9),FloatColumn::Binary64(10),FloatColumn::Binary64(12)];
 fn optional_text(value:&Option<PagedUtf8<{usize::MAX}>>)->Cell<'_>{value.as_ref().map_or(Cell::Null,|value|Cell::PagedText(value))}
 fn allocate_collection<T>(length:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedList<T,{usize::MAX}>,ValueError>{
- let mut output=PagedList::new();while let Some(bytes)=output.next_capacity_allocation_bytes(length)?{control.checkpoint()?;control.charge(bytes)?;let progress=output.reserve_capacity_one(length,bytes).map_err(|error|ValueError::from(error.refusal()))?;if !progress.progressed{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Puzzle paged collection admission did not progress"))}}Ok(output)
+ let mut output=PagedList::new();while let Some(bytes)=output.next_capacity_allocation_bytes(length)?{control.checkpoint()?;control.charge(bytes)?;let progress=output.reserve_exact_capacity_one_cold(length,bytes).map_err(|error|ValueError::from(error.refusal()))?;if !progress.progressed{return Err(ValueError::new(ValueRefusalKind::InvariantViolated,"Puzzle paged collection admission did not progress"))}}Ok(output)
 }
 fn optional_real(value:Option<f64>)->Cell<'static>{value.map_or(Cell::Null,Cell::Real)}
 fn optional_flag(value:Option<bool>)->Cell<'static>{value.map_or(Cell::Null,|value|Cell::Integer(i64::from(value)))}

@@ -80,7 +80,7 @@ impl FlowEvalSession {
         if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original Flow session close requires its actual cursor depth"))}
-        if let Some(source)=self.state.pending_snapshot_copy.as_mut(){if source.terminal_is_empty(){if grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Pending{progress:empty})}self.state.pending_snapshot_copy=None;return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..empty}})}source.begin_close();let step=source.close_step(grant)?;return Ok(Step::Pending{progress:step.progress()})}
+        if let Some(source)=self.state.pending_snapshot_copy.as_mut(){if source.terminal_is_empty(){if grant.maximum_release_bytes<demand.release_bytes{return Ok(Step::Pending{progress:empty})}self.state.pending_snapshot_copy=None;return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..empty}})}source.begin_close();let semio_framework_value::RetainedWorkPoll::Complete(turn)=source.close_step(grant.maximum_copy_bytes,effect)else{return Ok(Step::Pending{progress:empty})};let step=turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;return Ok(Step::Pending{progress:step.progress()})}
         if let Some(source)=self.state.pending_tick_snapshot_retirement.as_mut(){let poll=source.step(grant.maximum_copy_bytes,effect);let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll else{return Ok(Step::Pending{progress:empty})};let step=turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?;if source.terminal_is_empty(){self.state.pending_tick_snapshot_retirement=None}return Ok(Step::Pending{progress:step.progress()})}
         if let Some(source)=self.state.pending_tick_snapshot.take(){self.state.pending_tick_snapshot_retirement=Some(ControlledRetirement::new(source).unwrap_or_else(|_|unreachable!()));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if self.state.pending_tick_snapshot_origin.take().is_some(){return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
@@ -91,7 +91,7 @@ impl FlowEvalSession {
         }
         if let Some(host)=self.state.pending_host.take(){self.state.retiring_host=Some(FlowHostRetirement::new(host));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..empty}})}
         if let Some(port)=self.retiring_geometry_port.as_mut(){
-            let result=port.close_step(grant).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.terminal_is_empty(),"Flow session original geometry port"));
+            let result=port.close_step(effect).and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.terminal_is_empty(),"Flow session original geometry port"));
             if port.terminal_is_empty(){self.retiring_geometry_port=None;}
             return match result{Ok(step)=>Ok(Step::Pending{progress:step.progress()}),Err(error)=>Err(error)}
         }

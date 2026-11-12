@@ -213,7 +213,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             .with_gesture(gesture),
             artifact_owned_tool_birth_grant(),
             cx,
-        ).0) } else { None };
+        ).0.admitted().map_err(|error| error.into_fault())?) } else { None };
         let producer_request = Some(ArtifactOwnedToolJobRequest {
             source_binding: semio_framework::action_bus::OriginalToolSourceBinding::borrow(cx),
                 retained:self.mounted_policy.maintenance,

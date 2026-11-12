@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::{ge
 use semio_os_kernel::io::{io_mechanism::{self, ArchiveChildren, Deserializer, IoEntry, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
 use pack::snapshot::{ArtifactNativeSnapshot, NativeSnapshotEncoding, NativeSnapshotInput};
 use std::sync::OnceLock;
-use semio_s_artifact_stdio_ifc4x3_exchange::{base_io_entries, bim, checkpoint, composition_error, error, graph, loss, original_pack, projection, ExchangeError, ExchangeProgress, GLTF_DIALECT};
+use semio_s_artifact_stdio_ifc4x3_exchange::{base_io_entries, bim, checkpoint, composition_error, decoded, decoded_nested, error, graph, io_error, loss, nested, original_pack, projection, refused, scoped, settled, ExchangeError, ExchangeProgress, GLTF_DIALECT};
 use semio_s_artifact_stdio_ifc4x3_schema as catalog;
 use semio_s_artifact_stdio_ifc4x3_step as io;
 mod validation {

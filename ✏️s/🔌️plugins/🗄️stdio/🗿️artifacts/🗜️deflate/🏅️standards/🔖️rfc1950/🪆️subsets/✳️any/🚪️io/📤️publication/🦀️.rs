@@ -1,9 +1,9 @@
 //! 📤️ Resumable publication of bounded DEFLATE checkpoint state and committed output bytes.
 
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-use semio_framework_job::{receive_original_retained_work, OriginalTurnFailure, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
+use semio_framework_job::{receive_original_retained_work, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneProgress, RetainedCloneStep, StepContext};
 use semio_framework_job_payload::{JobPayloadStream, RetainedPayloadBuilder};
-use semio_framework_value::{RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]
 pub enum Kind {
@@ -12,10 +12,10 @@ pub enum Kind {
 }
 
 /// 🧯️ Maps one child close turn onto the parent job's close vocabulary; a child never completes its parent.
-pub fn close_result(work: &mut u64, turn: RetainedWorkOutcome) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
+pub fn close_result(work: &mut u128, turn: RetainedWorkOutcome) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
     *work += turn.work;
     Ok(match turn.result {
-        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
+        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => RetainedCloneStep::Progress(progress),
         Err(error) => return Err(error),
     })
 }
@@ -141,44 +141,45 @@ impl Publication {
         Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
+    pub fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         let mut work = 0;
-        let result = self.close_turn(grant, &mut work);
+        let result = self.close_turn(effect, &mut work);
         RetainedWorkOutcome { result, work }
     }
 
-    fn close_turn(&mut self, grant: RetainedCloneGrant, work: &mut u64) -> Result<InteractiveJobCloseStep, ValueError> {
+    fn close_turn(&mut self, effect: &mut RetainedAllocationEffect<'_>, work: &mut u128) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         let demand = match self.retirement_demands() {
             Ok(demand) => demand,
             Err(error) => return Err(error),
         };
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth {
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
         if !self.single.terminal_is_empty() {
-            return close_result(work, self.single.close_step(grant));
+            return close_result(work, self.single.close_step(effect));
         }
         if !self.state.terminal_is_empty() {
-            return close_result(work, self.state.close_step_granted(grant));
+            return close_result(work, self.state.close_step(effect));
         }
         if !self.output.terminal_is_empty() {
-            return close_result(work, self.output.close_step_granted(grant));
+            return close_result(work, self.output.close_step(effect));
         }
         if self.primary.capacity() != 0 {
             let released_bytes = self.primary.capacity();
             self.primary = Vec::new();
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
         }
         if self.secondary.capacity() != 0 {
             let released_bytes = self.secondary.capacity();
             self.secondary = Vec::new();
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }));
         }
         if self.delivered {
             self.delivered = false;
-            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() })
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
     }
 
     pub fn terminal_is_empty(&self) -> bool {

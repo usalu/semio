@@ -171,8 +171,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-        self.owners.close_step(grant.retained_grant()).map_err(Into::into)
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.owners.close_step(effect)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -194,6 +194,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
     fn terminal_is_empty(&self) -> bool {
         self.owners.terminal_is_empty()
     }
+}
 
 impl Process3dConfigStorePreparation {
     fn advance_inner(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
@@ -238,8 +239,6 @@ impl Process3dConfigStorePreparation {
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
     }
-
-}
 }
 //#endregion 📬️ConfigStorePreparation
 
@@ -543,8 +542,8 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
-        self.owners.close_step(grant.retained_grant()).map_err(Into::into)
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.owners.close_step(effect)
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
@@ -566,6 +565,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Proc
     fn terminal_is_empty(&self) -> bool {
         self.owners.terminal_is_empty()
     }
+}
 
 impl Process3dArtifactPreparation {
     fn advance_inner(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
@@ -623,7 +623,5 @@ impl Process3dArtifactPreparation {
         *self.owners.prepared = Some(prepared);
         Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
     }
-
-}
 }
 //#endregion 📬️ArtifactStorePreparation

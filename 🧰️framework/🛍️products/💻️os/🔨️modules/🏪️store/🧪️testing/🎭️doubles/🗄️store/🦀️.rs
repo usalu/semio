@@ -96,7 +96,7 @@ where
 }
 
 pub fn complete_test_catalog<P, M>(admitted: Result<(DocumentStoreOwners<P, M>, RetainedCloneProgress), DocumentStoreOwnersAdmissionError<P, M>>) -> DocumentStoreOwners<P, M>
-where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + semio_os_spr::Mutation<P> + semio_os_spr::ColdMutation<P>,
+where P: Clone + ToValue + FromValue + Send + Sync + 'static, M: Clone + ToValue + FromValue + semio_os_spr::Mutation<P> + semio_os_spr::ColdMutation<P> + Send + Sync + 'static,
 {
     let grant=physical_test_close_grant();
     let (mut owners,progress)=admitted.unwrap_or_else(|error|panic!("test catalog ingress refused while retaining original custody: {}",error.error));
@@ -694,7 +694,7 @@ impl DemoMemberWirePreparation {
                 Err(original) => { self.base = Some(original); Ok(RetainedCloneStep::Progress(empty)) }
             };
         }
-        if self.active.is_some() { return settled_close(artifact_retirement_box_close_step(&mut self.active,&mut effect.nested(child))); }
+        if self.active.is_some() { return settled_close(artifact_retirement_box_close_step(&mut self.active,child.maximum_copy_bytes,&mut effect.nested(child))); }
         if let Some(original) = self.authority.take() {
             return match original.retire(child) {
                 Ok((owner,progress)) => { self.active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) },
@@ -702,7 +702,7 @@ impl DemoMemberWirePreparation {
             };
         }
         if let Some(factory) = self.factory.as_mut() {
-            let step = settled_close(factory.step(&mut effect.nested(child)))?;
+            let step = settled_close(factory.step(child.maximum_copy_bytes,&mut effect.nested(child)))?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"captured wire issuer")?;
             if factory.terminal_is_empty() { self.factory = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));

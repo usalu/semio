@@ -4,10 +4,9 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use std::collections::BTreeMap;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::VideoCodec;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MediaStream;
-use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingAssetChild;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingAssetStore;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::CalibrationState;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::ReconstructionParams;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::GroundControlPoint;
@@ -74,7 +73,7 @@ pub struct RemodelingArtifact {
     #[state(artifact)]
     pub streams: Vec<MediaStream>,
     #[state(artifact)]
-    pub assets: BTreeMap<String, RemodelingAssetChild>,
+    pub assets: RemodelingAssetStore,
     #[state(artifact)]
     pub durable_artifacts: RemodelingDurableArtifactStore,
     #[state(artifact)]

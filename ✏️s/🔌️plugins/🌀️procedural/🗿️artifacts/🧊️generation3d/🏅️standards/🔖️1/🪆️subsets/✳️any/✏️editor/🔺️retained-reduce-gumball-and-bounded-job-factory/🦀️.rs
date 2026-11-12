@@ -219,9 +219,10 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dSession
         if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
-        let demand=self.source_read.as_ref().map(|read|read.next_close_demands(cx.retained_grant().maximum_copy_bytes)).transpose()?.unwrap_or_default();
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=(
-            ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{use semio_framework_job::InteractiveJobCloseStep;if let Some(read)=self.source_read.as_mut(){match read.close_step(grant){Ok(step)if read.terminal_is_empty()=>Ok(InteractiveJobCloseStep::Complete{progress:step.progress()}),Ok(step)=>Ok(InteractiveJobCloseStep::Pending{progress:step.progress()}),Err(error)=>return Err(error)}}else{Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}})().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+        let body=cx.retained_grant().maximum_copy_bytes;
+        let demand=self.source_read.as_ref().map(|read|read.next_close_demands(body)).transpose()?.unwrap_or_default();
+        let Some(read)=self.source_read.as_mut() else{return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})};
+        let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|read.close_step(body,effect))?;
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
@@ -309,4 +310,3 @@ impl semio_plugin::ArtifactOwnedToolJobFactory for Generation3dBoundedCommandJob
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️Generation3dPlayApp
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dSessionCommandWork);

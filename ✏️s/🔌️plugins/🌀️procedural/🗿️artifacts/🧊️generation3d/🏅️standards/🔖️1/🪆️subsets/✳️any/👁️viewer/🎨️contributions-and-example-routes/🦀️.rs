@@ -56,7 +56,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation3d-view-contributions-work-repeated"));
@@ -66,16 +66,31 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCont
             return Err(Fault::from("generation3d-view-contributions-route-rejected"));
         };
         let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
+        set_contributions::register(payload)?;
         let mut emit = Emit::default();
+        let mut pending = false;
         self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
-            if owner.with_session(|session| set_contributions::install(payload, session, input.operation.retained))?? {
-                let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
-                let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
-                viewed.retire();
-                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+            let grant = cx.retained_grant();
+            let invalidated = owner.with_session(|session| -> Result<Option<bool>, Fault> {
+                let Some((outcome, _)) = cx.with_original_effect(grant, |_, effect| set_contributions::invalidate(session, effect)).map_err(|error| Fault::from(error.to_string()))? else { return Ok(None) };
+                outcome
+            })??;
+            match invalidated {
+                None => pending = true,
+                Some(true) => {
+                    let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
+                    let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
+                    viewed.retire();
+                    owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+                }
+                Some(false) => {}
             }
             Ok(())
         })?;
+        if pending {
+            self.consumed = false;
+            return Ok(ArtifactCommandWorkStep::Pending { stage: "contributions-invalidation", preview: b"" });
+        }
         Ok(ArtifactCommandWorkStep::Complete(emit))
     
         })();
@@ -234,4 +249,3 @@ pub(super) fn generation3d_view_route_first_step_tool_proofs() -> Vec<semio_plug
     proofs
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dViewContributionsWork);

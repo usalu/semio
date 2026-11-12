@@ -48,7 +48,7 @@ struct NodeMerger {
 impl NodeMerger {
     fn new(doc: &Fem3dSnapshot) -> Self {
         let mut merger = Self { nodes: Vec::with_capacity(doc.nodes.len()), cells: HashMap::new() };
-        for node in &doc.nodes {
+        for node in doc.nodes.iter() {
             merger.register(node.id.as_str().to_owned(), [node.x, node.y, node.z]);
         }
         merger

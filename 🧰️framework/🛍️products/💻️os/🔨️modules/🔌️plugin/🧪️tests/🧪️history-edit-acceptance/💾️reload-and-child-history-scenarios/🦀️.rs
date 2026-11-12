@@ -19,7 +19,12 @@ where
     reloaded.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
     let loaded = async {
         assert_eq!(reloaded.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
-        PluginApp::begin_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, archive).map_err(|fault| AcceptanceError::from(fault).context("the archive is refused".into()))?;
+        let mut archive = archive;
+        let mut admission = semio_plugin_document_media::OriginalDocumentArchiveAdmission::empty();
+        loop {
+            if PluginApp::begin_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut archive, &mut admission, cx).map_err(|fault| AcceptanceError::from(fault).context("the archive is refused".into()))? { break }
+            if cx.should_yield() { return Err("the archive admission never settles".to_string().into()) }
+        }
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
             let status = semio_plugin_testing_laws::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut reloaded, ACCEPTANCE_ARCHIVE_OPERATION, &mut identity,cx).await).map_err(|fault| AcceptanceError::from(fault).context("the archive load faulted".into()))?;
             match status.state {

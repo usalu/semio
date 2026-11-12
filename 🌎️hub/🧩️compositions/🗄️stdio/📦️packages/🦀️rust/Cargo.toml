@@ -35,6 +35,7 @@ semio-framework-hash = { workspace = true }
 semio-os-kernel = { workspace = true }
 semio-plugin = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true }
 pack = { workspace = true }
 # 🧩️ Composition Dependencies
@@ -51,7 +52,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-ui-locale = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 blake3 = "1.8.2"

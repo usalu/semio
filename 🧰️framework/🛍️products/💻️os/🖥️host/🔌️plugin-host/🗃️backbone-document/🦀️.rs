@@ -223,24 +223,14 @@ where
     P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
-    use store::ErasedSnapshotRetirement as _;
     fn grant_of(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
         semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
     }
     let fault = |error: ValueError| VcsError::ValidationFailed(error.to_string());
     let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<P, Op>().map_err(fault)?;
     let birth = grant_of(owners.uninstalled_envelope_retirement_demands(&envelope));
-    let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, birth).map_err(|(error, _, _)| fault(error))?;
-    loop {
-        let demand = retirement.next_demand(4096).map_err(fault)?;
-        match retirement.close_step(grant_of(demand)).result.map_err(fault)? {
-            semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => {
-                assert!(retirement.terminal_is_empty(), "backbone envelope retirement reports its exact terminal");
-                return Ok(());
-            }
-            semio_framework_value::retained_clone::RetainedCloneStep::Progress(_) => std::thread::yield_now(),
-        }
-    }
+    let (retirement, _) = owners.retire_envelope_uninstalled(envelope, birth).map_err(|(error, _, _)| fault(error))?;
+    store::os_store::document_store_owners::close_unscheduled_retirement(retirement).map_err(fault)
 }
 
 /// 👑️ Lends a copied authoritative envelope, then retires every exact nested owner.

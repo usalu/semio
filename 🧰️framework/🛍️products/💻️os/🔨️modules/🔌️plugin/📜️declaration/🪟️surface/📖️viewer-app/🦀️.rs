@@ -160,8 +160,8 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         V::build_reserved_tool_job(request,body,construction,cx)
     }
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        V::build_media_export_job(request,body,cx)
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_plugin_decl_app::media_contract::MediaConstruction,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        V::build_media_export_job(request,body,construction,cx)
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {

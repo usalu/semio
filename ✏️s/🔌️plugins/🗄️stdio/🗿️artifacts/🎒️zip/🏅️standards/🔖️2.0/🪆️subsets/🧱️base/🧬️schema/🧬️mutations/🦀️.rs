@@ -29,6 +29,7 @@ pub enum ZipMutation {
     RenameEntry(rename_entry::RenameEntry),
     SetEntryData(set_entry_data::SetEntryData),
 }
+dsl::original_pack_value_operation_receiving!(ZipMutation);
 //#endregion 🔖️Model
 
 //#region 🔖️Kinds

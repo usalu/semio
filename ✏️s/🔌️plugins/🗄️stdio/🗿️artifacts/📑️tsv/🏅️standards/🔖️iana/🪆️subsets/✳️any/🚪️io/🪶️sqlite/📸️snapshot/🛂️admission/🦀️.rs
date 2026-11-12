@@ -17,10 +17,10 @@ fn binding_demands_with_checkpoint(root:&RecordValue,mut checkpoint:impl FnMut()
  Ok(semio_framework_value::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:copied,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:4})
 }
 /// 🧵️ Registers every typed child before birth and returns actual progress to its original wallet.
-pub fn bind(root:&RecordValue,output:&mut Option<TsvSnapshot>,native:&mut NativeDecodeControl<'_>,wallet:&mut semio_os_kernel::NativeSnapshotBodyWallet)->Result<(),ValueError>{
- if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"TSV native destination must be empty"))}
- wallet.admit_frontier(binding_demands_with_checkpoint(root,||native.checkpoint())?)?;
- let schema=text(field(root,0)?)?;let rows=list(field(root,1)?)?;let trailing_newline=boolean(field(root,2)?)?;let line_ending=match field(root,3)?{FieldValue::Enum(0)=>LineEnding::Lf,FieldValue::Enum(1)=>LineEnding::Crlf,_=>return Err(invalid("TSV native ending ordinal differs"))};
+pub fn bind(root:&RecordValue,output:&mut Option<TsvSnapshot>,owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<(),semio_os_kernel::NativeSnapshotFailure>{
+ if output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"TSV native destination must be empty").into())}
+ let demand=binding_demands_with_checkpoint(root,||owner.native().checkpoint())?;let construction=owner.admit_constructed(demand)?;let native=owner.native();
+ let schema=text(field(root,0)?)?;let rows=list(field(root,1)?)?;let trailing_newline=boolean(field(root,2)?)?;let line_ending=match field(root,3)?{FieldValue::Enum(0)=>LineEnding::Lf,FieldValue::Enum(1)=>LineEnding::Crlf,_=>return Err(invalid("TSV native ending ordinal differs").into())};
  let total=rows.iter().try_fold(1usize,|n,row|n.checked_add(1).and_then(|n|n.checked_add(list(row).ok()?.len())).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"TSV typed workload overflow")))?;
  *output=Some(TsvSnapshot{schema:String::new(),records:Vec::new(),trailing_newline,line_ending});
  let mut progress=semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<TsvSnapshot>(),..Default::default()};
@@ -31,7 +31,7 @@ pub fn bind(root:&RecordValue,output:&mut Option<TsvSnapshot>,native:&mut Native
    for cell in cells{destination.push(String::new());progress.copied_items+=1;progress.copied_bytes+=size_of::<String>();let target=destination.last_mut().unwrap();let result=native.copy_text_into(text(cell)?,target);progress.copied_bytes+=target.len();progress.retained_capacity_bytes+=target.capacity();result?;native.step()?;}
   }Ok::<(),ValueError>(())
  });
- wallet.record_progress(progress).map_err(|error|error.with_retained_progress(progress))?;result.map_err(|error|error.with_retained_progress(progress))
+ let posted=owner.record_constructed_progress(construction,progress);result.map_err(|error|error.with_retained_progress(progress))?;posted
 }
 
 fn write(root:&RecordValue,total:usize,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{

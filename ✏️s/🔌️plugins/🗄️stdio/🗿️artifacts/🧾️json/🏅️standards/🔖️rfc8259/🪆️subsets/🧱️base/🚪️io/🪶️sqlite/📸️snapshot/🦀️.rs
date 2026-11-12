@@ -32,15 +32,9 @@ fn measure(snapshot: &JsonSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 }
 
 use semio_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
-#[path="🫴️receiving/🦀️.rs"]
-mod receiving;
 impl ArtifactSqliteSnapshotHost for JsonSnapshot {
-    fn to_sqlite_database_receiving(&self,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<SqliteDatabase,store::NativeSnapshotFailure>{receiving::project_receiving(self,control,owner)}
-    fn from_sqlite_database_receiving(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->semio_framework_value::RetainedWorkOutcome<Self,store::NativeSnapshotFailure>{receiving::reconstruct_receiving(database,control,owner)}
-    fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_decoding(self,dialect,database,control,owner)}
-    fn validate_sqlite_snapshot_subset_encoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>)->store::io_schema::IoResult<()>{receiving::validate_encoding(self,dialect,database,control,owner)}
 
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control,native_owner)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::encode(self,encoding,control,native_owner,output)}
     fn retire_sqlite_snapshot(self) { crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::retire(self); }
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::preflight(self, control)
@@ -54,8 +48,8 @@ impl ArtifactSqliteSnapshotHost for JsonSnapshot {
         Ok(semio_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
-    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {
-        crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control,native_control)
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control,native_control,output)
     }
 
     

@@ -87,6 +87,7 @@ pub enum IfcMutation {
     /// 🧩️ Replaces the additional type constituents of entity `id`.
     SetEntityComplex(set_entity_complex::SetEntityComplex),
 }
+dsl::original_pack_value_operation_receiving!(IfcMutation);
 
 /// 📇️ Kebab-case spelling of every `IfcMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim

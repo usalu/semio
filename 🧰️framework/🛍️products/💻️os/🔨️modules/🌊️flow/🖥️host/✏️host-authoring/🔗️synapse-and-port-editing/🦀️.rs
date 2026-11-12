@@ -76,7 +76,7 @@ impl FlowHost {
                 _ => None,
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
+        let spec = self.kind_infos.get().get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
         let widget = self.host_snapshot.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { input_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
@@ -120,7 +120,7 @@ impl FlowHost {
                 _ => None,
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
+        let spec = self.kind_infos.get().get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
         let widget = self.host_snapshot.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { input_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
@@ -167,7 +167,7 @@ impl FlowHost {
                 _ => None,
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
+        let spec = self.kind_infos.get().get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
         let widget = self.host_snapshot.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { output_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
@@ -211,7 +211,7 @@ impl FlowHost {
                 _ => None,
             })
             .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
+        let spec = self.kind_infos.get().get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
         let widget = self.host_snapshot.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { output_ports, .. } = widget else {
             return Err(FlowCoreError::NotNeuron(widget_id.to_string()));

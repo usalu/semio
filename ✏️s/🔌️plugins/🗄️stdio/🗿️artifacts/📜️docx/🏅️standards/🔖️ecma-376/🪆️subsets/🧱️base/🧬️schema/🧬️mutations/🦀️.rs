@@ -155,6 +155,7 @@ pub enum DocxMutation {
     /// 🧺 Removes one `[Content_Types].xml` entry.
     RemoveContentType(remove_content_type::RemoveContentType),
 }
+dsl::original_pack_value_operation_receiving!(DocxMutation);
 
 /// 📇️ Kebab-case spelling of every `DocxMutation` variant, in declaration order -- the exhaustive
 /// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim

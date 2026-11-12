@@ -30,7 +30,7 @@ pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::del
     if !referencing.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Asset \"{}\" is still referenced by {} place(s) in the document.", payload.key, referencing.len()), referencing);
     }
-    let content = base.durable_artifacts.contains_key(&handle.child_id).then(|| vec![RemodelingContentRow::Truncate { id: handle.child_id.clone(), from: 0 }]);
+    let content = base.durable_artifacts.get(&handle.child_id).is_some().then(|| vec![RemodelingContentRow::Truncate { id: handle.child_id.clone(), from: 0 }]);
     protocol::MutationOutcome::new(RemodelingDiff {
         assets: Some(RemodelingRows { rows: vec![RemodelingRow::Remove { key: payload.key.clone() }] }),
         durable_artifacts: content.map(|rows| RemodelingContentDelta { rows }),

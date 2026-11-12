@@ -40,13 +40,13 @@ fn generation3d_view_continue_inline(
     session: &mut FlowEvalSession,
     retained_eval: Option<&str>,
     turn_started_us: Option<u64>,
-    retained_grant: semio_framework_value::RetainedCloneGrant,
+    effect: &mut semio_framework_value::RetainedAllocationEffect<'_>,
 ) -> Result<preview_eval::FlowEvalTickOutcome, semio_framework_value::ValueError> {
     if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
         return Ok(preview_eval::FlowEvalTickOutcome { extension_invocations: Vec::new(), publication: semio_os_flow::FlowEvalPublication::Retained, census_moved: false });
     }
-    session.arm_window_tick(window_id, retained_grant)?;
-    preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, turn_started_us, retained_grant)
+    session.arm_window_tick(window_id, effect.grant())?;
+    preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, turn_started_us, effect)
 }
 
 /// 🐢️ The viewer's binding of [`preview_eval::chain_ui_scope`] — one preview body, no graph body
@@ -114,6 +114,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
             if self.evaluation.is_folded(){if let Some(ui_scope)=self.evaluation.publish_scope(cx)?{self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(Emit{ui_scope,..Default::default()}))}}else{self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner,_>(|owner|owner.with_session_waking(|session|self.evaluation.step(payload,session,cx)))??;}
             return Ok(ArtifactCommandWorkStep::Progress{stage:"previewReceive",preview:br#"{"en":"Receiving evaluation output","de":"Auswertungsergebnis wird empfangen"}"#})
         }
+        let mut turn_failure = None;
         let original: Result<_, Fault> = (|| {
         if self.complete || self.closing {
             return Err(Fault::from("generation3d-view-flow-eval-window-work-terminal"));
@@ -129,18 +130,24 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         let tolerance = input.config.tolerance();
         let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
         let retained_grant=cx.retained_grant();
-        let outcome = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
+        let funded = cx.with_original_effect(retained_grant, |_, effect| self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
             owner.with_session_waking(|session| {
                 let host_snapshot = &viewed.snapshot().host_snapshot;
                 match input.command {
-                    Generation3dViewCommand::FlowEvalTick(_) => preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, None, retained_grant).map_err(|error| Fault::from(error.to_string())),
+                    Generation3dViewCommand::FlowEvalTick(_) => preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, None, effect).map_err(|error| Fault::from(error.to_string())),
                     Generation3dViewCommand::FlowEvalResolve(_) => unreachable!(),
                     Generation3dViewCommand::FlowTessellateResolve(_) => unreachable!(),
                     _ => Err(Fault::from("generation3d-view-flow-eval-window-command-mismatch")),
                 }
             })
-        });
+        }));
         viewed.retire();
+        let (outcome, performed) = match funded {
+            Ok(Some(funded)) => funded,
+            Ok(None) => return Ok(ArtifactCommandWorkStep::Progress{stage:"previewEvaluate",preview:br#"{"en":"Evaluating preview","de":"Vorschau wird ausgewertet"}"#}),
+            Err(refused) => { turn_failure = Some(refused); return Err(Fault::from("generation3d-view-flow-eval-window-turn-refused")) }
+        };
+        cx.consume_work(performed);
         let outcome = outcome??;
         self.complete = true;
         let window_transient = match outcome.publication {
@@ -153,6 +160,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlow
         })
     
         })();
+        if let Some(refused) = turn_failure { return Err(refused.into()) }
         original.map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
@@ -276,4 +284,3 @@ impl ArtifactOwnedToolJobFactory for Generation3dViewBoundedCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dViewFlowEvalWindowWork, Generation3dViewFlowResolveWork);

@@ -530,4 +530,3 @@ impl Puzzle2dRedrawHandlesWork{
  }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Puzzle2dForceLayoutWork, Puzzle2dRedrawHandlesWork);

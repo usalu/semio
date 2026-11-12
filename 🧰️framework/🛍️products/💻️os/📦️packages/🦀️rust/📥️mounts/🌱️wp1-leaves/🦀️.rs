@@ -5,7 +5,7 @@
 
 /// 🗣️ The OS product grammars live in `semio-os-dsl`; every historical `os_dsl::` path keeps resolving here.
 pub use semio_os_dsl as os_dsl;
-pub use semio_os_dsl::{original_mirrored_operation_receiving, original_ordinal_operation_receiving, original_tagged_operation_receiving};
+pub use semio_os_dsl::{original_mirrored_operation_receiving, original_ordinal_operation_receiving, original_pack_value_operation_receiving, original_tagged_operation_receiving};
 
 pub mod os_pack {
     #[cfg(not(target_arch = "wasm32"))]

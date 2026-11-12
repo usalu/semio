@@ -21,6 +21,16 @@ fn parse_flow_viewport(args: &semio_framework_value::DslValue) -> Result<semio_o
     semio_framework_value::FromValue::from_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))
 }
 
+/// 🫧️ The one transient mutation replaces the whole preview text, so its admitted payload moves into the new transient.
+fn generation2d_transient_footprint(_: &Generation2dTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<Generation2dTransientMutation>()))
+}
+
+fn generation2d_transient_transfer(mutation: Generation2dTransientMutation) -> Generation2dTransient {
+    let Generation2dTransientMutation::SetGenerationPreview(set) = mutation;
+    Generation2dTransient { generation_preview_text: set.preview_text }
+}
+
 impl ArtifactEditor for Generation2dPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_plugin::ExampleSource> {
@@ -95,7 +105,12 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+            generation2d_transient_footprint,
+            generation2d_transient_transfer,
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Generation2dTransient>::default()),
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Generation2dTransientMutation>::default()),
+        )))
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {

@@ -1,9 +1,8 @@
 //! 🔤️ Resident choices borrow immutable declaration words while their contiguous backing retires under the original owner.
 use semio_plugin_decl_staged_form::StagedScalarChoice;
-use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, retained_clone_grant_admits};
-use semio_framework_value::retirement::{RetireOwned, RetirementCursor, RetirementStep};
-use semio_framework_value::{RetirementDemand, ValueError};
+use super::{RetainedWorkOutcome,idle_step,paid,refused,retire_self};
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits};
+use semio_framework_value::{RetainedAllocationEffect, RetirementDemand, ValueError};
 use std::mem::{ManuallyDrop, size_of};
 pub(super) struct Choices {
     rows: ManuallyDrop<Option<Vec<StagedScalarChoice<'static>>>>,
@@ -28,19 +27,12 @@ impl Drop for Choices {
         assert!(std::thread::panicking() || self.rows.is_none(), "declaration choices require original retirement");
     }
 }
-impl RetireOwned for Choices {
-    fn retirement(self) -> Box<dyn RetirementCursor> {
-        Box::new(self)
+impl Choices {
+    fn begin_close(&mut self) {}
+    fn empty(&self) -> bool {
+        self.rows.is_none()
     }
-    fn retirement_birth_bytes(&self) -> Option<usize> {
-        Some(size_of::<Self>())
-    }
-    fn controlled_retirement_supported() -> bool {
-        true
-    }
-}
-impl RetirementCursor for Choices {
-    fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> {
+    fn close_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> {
         Ok(match self.rows.as_ref() {
             Some(rows) if !rows.is_empty() => RetirementDemand { copy_bytes: 2 * size_of::<Self>() + size_of::<StagedScalarChoice>() + size_of::<usize>(), depth: 1, ..Default::default() },
             Some(rows) => RetirementDemand {
@@ -52,40 +44,31 @@ impl RetirementCursor for Choices {
             None => Default::default(),
         })
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
+    fn close_owned(&mut self, body: usize, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if self.rows.is_none() {
-            return RetirementStep::Complete(0);
+            return idle_step(RetainedCloneStep::Complete(Default::default()));
         }
-        let demand = match self.next_demand(grant.maximum_copy_bytes) {
+        let demand = match self.close_demands(body) {
             Ok(demand) => demand,
-            Err(error) => return RetirementStep::Failure(error, 0),
+            Err(error) => return refused(error),
         };
-        if !retained_clone_grant_admits(grant, demand) {
-            return RetirementStep::BudgetExhausted;
+        if !retained_clone_grant_admits(effect.grant(), demand) {
+            return idle_step(RetainedCloneStep::Progress(Default::default()));
+        }
+        match paid(effect) {
+            Ok(true) => {}
+            Ok(false) => return idle_step(RetainedCloneStep::Progress(Default::default())),
+            Err(error) => return refused(error),
         }
         if !self.rows.as_ref().unwrap().is_empty() {
             self.rows.as_mut().unwrap().pop();
         } else {
             drop(self.rows.take());
         }
-        RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() }, 1)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.rows.is_none()
-    }
-    fn next_close_byte_demand(&self) -> Option<usize> {
-        Some(self.rows.as_ref().filter(|rows| rows.is_empty()).map_or(0, |rows| rows.capacity() * size_of::<StagedScalarChoice>()))
-    }
-    fn next_work_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.next_demand(usize::MAX)?.copy_bytes)
-    }
-    fn next_birth_bytes(&self, _: usize) -> Option<usize> {
-        Some(0)
-    }
-    fn terminal_release_bytes(&self) -> Option<usize> {
-        Some(size_of::<Self>())
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() })), work: effect.performed_work() }
     }
 }
+retire_self!([] Choices);
 
 #[cfg(test)]
 #[path = "../type_input_choices_tests.rs"]

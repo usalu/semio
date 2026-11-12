@@ -1,4 +1,14 @@
 use super::*;
+#[path="⏱️effect/🦀️.rs"]
+mod effect;
+const WORK:u64=1<<32;
+fn closing<R>(items:usize,bytes:usize,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<R>)->R{
+    let grant=semio_framework_value::RetainedCloneGrant{maximum_items:items,maximum_copy_bytes:bytes,maximum_capacity_bytes:bytes,maximum_release_bytes:bytes,maximum_depth:1};
+    effect::with_effect(grant,WORK,&mut None,run).result.unwrap()
+}
+fn stepping(reader:&mut SnapshotPatchReadCursor<'_>,units:usize,decode:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<bool,semio_framework_value::ValueError>{
+    effect::with_effect(grant,WORK,&mut None,|effect|reader.step(units,decode,effect))
+}
 use kernel::{OpBinary, OpText};
 use semio_s_artifact_stdio_contract_editing::{check_publication_limits, snapshot_edit_value_is_admitted};
 
@@ -581,7 +591,7 @@ fn paged_snapshot_patch_original_json_source_keeps_every_variant_and_owned_prefi
     for case in fixture["cases"].as_array().unwrap(){let text=case.as_str().unwrap();let patch=SnapshotPatch::parse_op(text).unwrap();assert_eq!(patch.encode_op().unwrap(),text.as_bytes());assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());operations.push(patch);}
     operations.push(SnapshotPatch::Set{path:"/title".into(),value:DslValue::String(fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize))});
     let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let items=fixture["maximumCloseItems"].as_u64().unwrap()as usize;let bytes=fixture["maximumCloseBytes"].as_u64().unwrap()as usize;
-    let close=|owner:&mut OwnedOperationBytes,maximum_steps:usize|{let mut released=0;for _ in 0..maximum_steps{match owner.close_one(items,bytes).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);released+=released_bytes;}}}assert!(owner.terminal_is_empty());assert_eq!(owner.allocated_bytes(),0);released};
+    let close=|owner:&mut OwnedOperationBytes,maximum_steps:usize|{let mut released=0;for _ in 0..maximum_steps{match closing(items,bytes,|effect|owner.close_one(effect)){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);released+=released_bytes;}}}assert!(owner.terminal_is_empty());assert_eq!(owner.allocated_bytes(),0);released};
     let kind=|error:kernel::ProtocolError|match error{kernel::ProtocolError::Pack(kernel::PackError::Refusal(refusal))=>refusal.kind(),error=>panic!("expected genuine typed Pack refusal, got {error:?}")};
     for patch in &operations{
         let expected=patch.encode_op().unwrap();let steps=expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize;let mut options=kernel::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
@@ -590,7 +600,7 @@ fn paged_snapshot_patch_original_json_source_keeps_every_variant_and_owned_prefi
         let mut preparation=OperationBytePreparation::try_new(expected.len(),allocation).unwrap();let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
         for _ in 0..steps{preparation.fund_one(items,bytes,&mut encoding).unwrap();if preparation.is_funded(){break;}}assert!(preparation.is_funded());let paid=encoding.owned_bytes();let backing=preparation.allocated_bytes();
         patch.encode_op_into(&options,&mut preparation,&mut encoding).unwrap();assert_eq!(encoding.owned_bytes(),paid);assert_eq!(preparation.allocated_bytes(),backing);
-        let mut owner=preparation.take_ready().unwrap();assert!(owner.iter().eq(expected.iter().copied()));assert_eq!(serde_json::to_value(&owner).unwrap(),serde_json::to_value(&expected).unwrap());assert_eq!(owner.close_one(0,bytes).unwrap(),OperationByteCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!(owner.len(),expected.len());assert!(close(&mut owner,steps)>=expected.len());
+        let mut owner=preparation.take_ready().unwrap();assert!(owner.iter().eq(expected.iter().copied()));assert_eq!(serde_json::to_value(&owner).unwrap(),serde_json::to_value(&expected).unwrap());assert_eq!(closing(0,bytes,|effect|owner.close_one(effect)),OperationByteCloseStep::Pending{released_items:0,released_bytes:0});assert_eq!(owner.len(),expected.len());assert!(close(&mut owner,steps)>=expected.len());
         let mut short=options.clone();short.limits.max_file_len-=1;let mut prefix=OwnedOperationBytes::try_new(expected.len(),allocation).unwrap();let mut allow=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allow);
         assert_eq!(kind(patch.encode_op_into(&short,&mut prefix,&mut encoding).unwrap_err()),ValueRefusalKind::OwnershipLimit);assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix,steps);
     }
@@ -609,7 +619,7 @@ fn paged_snapshot_patch_original_json_source_honors_paid_allocation_policy(){
     for _ in 0..steps{preparation.fund_one(items,bytes,&mut encoding).unwrap();if preparation.is_funded(){break;}}assert!(preparation.is_funded());let paid=encoding.owned_bytes();let backing=preparation.allocated_bytes();
     let mut options=kernel::codec::PackEncodeOptions::default();options.limits.max_file_len=expected.len()as u64;options.limits.max_total_alloc=fixture["refusedAllocationBytes"].as_u64().unwrap();assert!(paid>options.limits.max_total_alloc as usize);
     let result=patch.encode_op_into(&options,&mut preparation,&mut encoding);let accepted=preparation.accepted_prefix().unwrap().len();assert_eq!(encoding.owned_bytes(),paid);assert_eq!(preparation.allocated_bytes(),backing);assert_eq!(encoding.maximum_bytes(),allocation);
-    for _ in 0..steps{match preparation.close_one(items,bytes).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);}}}assert!(preparation.terminal_is_empty());assert_eq!(preparation.allocated_bytes(),0);
+    for _ in 0..steps{match closing(items,bytes,|effect|preparation.close_one(effect)){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=items);assert!(released_bytes<=bytes);}}}assert!(preparation.terminal_is_empty());assert_eq!(preparation.allocated_bytes(),0);
     let error=result.expect_err("original caller allocation policy must reject already-admitted backing before accepting source bytes");let kernel::ProtocolError::Pack(kernel::PackError::Refusal(refusal))=error else{panic!("expected exact typed Pack allocation refusal")};assert_eq!(refusal.kind(),semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(accepted,0);
 }
 
@@ -622,7 +632,7 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
     let read_fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/📦️operation-read.json")).unwrap();
     let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let cleanup=read_fixture["maximumCleanupBytes"].as_u64().unwrap()as usize;
     let policy=&read_fixture["normalStepGrant"];let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:policy["maximumDepth"].as_u64().unwrap()as usize};
-    let close_source=|source:&mut OwnedOperationBytes|{for _ in 0..source.len()+128{match source.close_one(1,4096).unwrap(){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);}}}assert!(source.terminal_is_empty());};
+    let close_source=|source:&mut OwnedOperationBytes|{for _ in 0..source.len()+128{match closing(1,4096,|effect|source.close_one(effect)){OperationByteCloseStep::Complete=>break,OperationByteCloseStep::Pending{released_items,released_bytes}=>{assert!(released_items<=1);assert!(released_bytes<=4096);}}}assert!(source.terminal_is_empty());};
     let mut cases=fixture["cases"].as_array().unwrap().iter().map(|case|case.as_str().unwrap().to_owned()).collect::<Vec<_>>();
     cases.push(serde_json::json!({"operation":"set","path":"/title","value":fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize)}).to_string());
     for text in &cases{
@@ -630,8 +640,8 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
         let span=kernel::codec::ByteSpan::from_source(&source);assert!(span.contiguous().is_none());let pointer=span.get(0).unwrap()as *const u8;
         let mut options=kernel::codec::PackDecodeOptions::default();options.limits.max_file_len=text.len()as u64;options.limits.max_total_alloc=allocation as u64;
         let mut reader=SnapshotPatchReadCursor::new(span,&options).unwrap();let live=std::cell::Cell::new(true);let mut allowed=|_|live.get();let mut decode=NativeDecodeControl::new(allocation,&mut allowed);
-        assert!(!reader.step(0,&mut decode,grant).unwrap());let before=reader.position();live.set(false);assert_eq!(reader.step(1,&mut decode,grant).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(reader.position(),before);live.set(true);
-        while !reader.step(1,&mut decode,grant).unwrap(){}let paid=decode.owned_bytes();
+        assert!(!stepping(&mut reader,0,&mut decode,grant).unwrap());let before=reader.position();live.set(false);assert_eq!(stepping(&mut reader,1,&mut decode,grant).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(reader.position(),before);live.set(true);
+        while !stepping(&mut reader,1,&mut decode,grant).unwrap(){}let paid=decode.owned_bytes();
         let value_pointer=match reader.candidate(){Some(DslValue::Object(fields))=>fields.iter().find_map(|(key,value)|if key=="value"{match value{DslValue::String(text)=>Some(text.as_ptr()),_=>None}}else{None}),_=>None};
         live.set(false);assert_eq!(reader.admit_patch(&mut decode).unwrap_err().kind,ValueRefusalKind::Canceled);assert!(reader.candidate().is_some());assert!(reader.take_patch().is_none());assert_eq!(decode.owned_bytes(),paid);live.set(true);
         reader.admit_patch(&mut decode).unwrap();assert_eq!(decode.owned_bytes(),paid);let patch=reader.take_patch().unwrap();assert!(reader.take_patch().is_none());assert_eq!(patch,SnapshotPatch::decode_op(text.as_bytes()).unwrap());
@@ -639,11 +649,11 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
         assert_eq!(serde_json::from_str::<serde_json::Value>(&patch.print_op()).unwrap(),serde_json::from_str::<serde_json::Value>(text).unwrap());assert_eq!(span.get(0).unwrap()as *const u8,pointer);
         close_original_patch_reader(reader,cleanup);
         let mut canonical=kernel::codec::PackEncodeOptions::default();canonical.limits.max_file_len=patch.encode_op().unwrap().len()as u64;let canonical_text=patch.encode_op().unwrap();let mut comparison=OperationByteComparison::new(kernel::codec::ByteSpan::from_slice(&canonical_text));let mut allowed=|_|true;let mut encoding=NativeEncodeControl::new(allocation,&mut allowed);patch.encode_op_into(&canonical,&mut comparison,&mut encoding).unwrap();comparison.finish().unwrap();
-        let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::new(patch).unwrap();while !close.terminal_is_empty(){let copy=close.next_copy_byte_demand().unwrap();let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};assert!(close.step(grant).unwrap().progress().fits(grant));}close_source(&mut source);
+        let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::new(patch).unwrap();while !close.terminal_is_empty(){let copy=close.next_copy_byte_demand().unwrap();let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:close.next_release_byte_demand().unwrap(),maximum_depth:close.next_depth_demand().unwrap()};assert!(effect::settled(effect::with_effect(grant,WORK,&mut None,|effect|close.step(copy,effect))).result.unwrap().progress().fits(grant));}close_source(&mut source);
     }
     for row in read_fixture["invalid"].as_array().unwrap(){
         let text=row["source"].as_str().unwrap();assert!(serde_json::from_str::<serde_json::Value>(text).is_ok());assert!(SnapshotPatch::decode_op(text.as_bytes()).is_err());
-        let mut options=kernel::codec::PackDecodeOptions::default();options.limits.max_file_len=text.len()as u64;options.limits.max_total_alloc=allocation as u64;let mut reader=SnapshotPatchReadCursor::new(kernel::codec::ByteSpan::from_slice(text.as_bytes()),&options).unwrap();let mut allowed=|_|true;let mut decode=NativeDecodeControl::new(allocation,&mut allowed);while !reader.step(1,&mut decode,grant).unwrap(){}let paid=decode.owned_bytes();
+        let mut options=kernel::codec::PackDecodeOptions::default();options.limits.max_file_len=text.len()as u64;options.limits.max_total_alloc=allocation as u64;let mut reader=SnapshotPatchReadCursor::new(kernel::codec::ByteSpan::from_slice(text.as_bytes()),&options).unwrap();let mut allowed=|_|true;let mut decode=NativeDecodeControl::new(allocation,&mut allowed);while !stepping(&mut reader,1,&mut decode,grant).unwrap(){}let paid=decode.owned_bytes();
         assert_eq!(reader.admit_patch(&mut decode).unwrap_err().kind,ValueRefusalKind::InvalidValue);assert!(reader.candidate().is_some());assert!(reader.take_patch().is_none());assert_eq!(decode.owned_bytes(),paid);
         assert_eq!(serde_json::Value::from(reader.candidate().unwrap()),serde_json::from_str::<serde_json::Value>(text).unwrap());close_original_patch_reader(reader,cleanup);
     }
@@ -652,7 +662,7 @@ fn retained_snapshot_patch_reader_moves_original_cells_and_retains_refused_candi
 fn close_original_patch_reader(reader:SnapshotPatchReadCursor<'_>,maximum_bytes:usize){
     use semio_framework_value::{retained_clone::RetainedCloneGrant,close_factory_ticket};
     let grant=RetainedCloneGrant::one_capacity_turn(reader.retirement_birth_bytes(),256);
-    let(owner,birth)=reader.into_retirement(grant).map_err(|(error,_)|error).unwrap();assert!(birth.fits(grant));let mut owner=Some(owner);
-    for _ in 0..100000{let Some(cursor)=owner.as_ref()else{return;};let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(maximum_bytes).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(close_factory_ticket(&mut owner,grant).result.unwrap().progress().fits(grant));}
+    let(owner,birth)=effect::with_effect(grant,WORK,&mut None,|effect|reader.into_retirement(effect)).result.map_err(|(error,_)|error).unwrap();assert!(birth.fits(grant));let mut owner=Some(owner);
+    for _ in 0..100000{let Some(cursor)=owner.as_ref()else{return;};let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(maximum_bytes).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(effect::settled(effect::with_effect(grant,WORK,&mut None,|effect|close_factory_ticket(&mut owner,maximum_bytes,effect))).result.unwrap().progress().fits(grant));}
     panic!("original patch reader failed to retire");
 }

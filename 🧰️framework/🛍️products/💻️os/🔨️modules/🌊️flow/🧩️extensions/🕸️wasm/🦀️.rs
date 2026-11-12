@@ -3,7 +3,7 @@
 use neural_engine::{inject_channel_defaults, ColdOwner, Dictionary, Registry};
 
 use semio_framework_value::{DslValue, FromValue, ToValue};
-use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
+use semio_framework_value::{ErasedSnapshotRetirement,OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetirementPollExit,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 pub use semio_os_flow_operators::extensions::schema::*;
 
@@ -30,7 +30,11 @@ pub use reply_failure_and_child_demands::{
     evaluation_admit_original, evaluation_child_close, evaluation_child_demands,
     evaluation_owned_birth, EvaluationFailure, EvaluationReply, EvaluationWire,
 };
-use reply_failure_and_child_demands::evaluation_value_demands;
+use reply_failure_and_child_demands::{
+    evaluation_effect, evaluation_effect_cx, evaluation_effect_step, evaluation_pause_decoding,
+    evaluation_pause_encoding, evaluation_resume_decoding, evaluation_resume_encoding,
+    evaluation_settled, evaluation_value_demands,
+};
 
 #[path = "🧰️input-preparation-and-envelope-source/🦀️.rs"]
 mod input_preparation_and_envelope_source;

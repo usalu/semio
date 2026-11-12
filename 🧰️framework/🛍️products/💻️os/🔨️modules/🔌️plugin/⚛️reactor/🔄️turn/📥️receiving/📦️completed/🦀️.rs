@@ -12,7 +12,7 @@ use semio_framework_value::{DslValue, RetainedCloneGrant};
 use semio_framework_job_native_decode::{OriginalNativeDecodeSource, OriginalNativeDecodePolicy, OriginalNativeDecodeIssued};
 use semio_framework_pack_json::{JsonGrammarCursor, JsonSourceCursor, JsonReadLimits, JsonMemberPolicy};
 use pack::intrinsic::RetainedIntrinsicDocument;
-use semio_plugin_reactor_receiving_source::retired;
+use semio_plugin_reactor_receiving_source::retired_poll;
 #[doc(hidden)]
 #[path="⚠️fault/🦀️.rs"]
 pub mod fault;
@@ -47,7 +47,7 @@ impl CompletedInput{
   match outcome.value?{Ok(value)=>Ok(value),Err(error)=>{*self.issue=Some(DecodeFailure::Json(error,outcome.progress));self.phase=250;Ok(None)}}
  }
  fn close_grammar(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if let Some(owner)=self.grammar_close.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.grammar_close.take();return Ok(false)}
+  if let Some(owner)=self.grammar_close.as_mut(){if !owner.terminal_is_empty(){retired_poll(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.grammar_close.take();return Ok(false)}
   if self.grammar.is_some(){if !metadata(cx)?{return Ok(false)}let source=self.grammar.take().unwrap();match ControlledRetirement::new(source){Ok(owner)=>*self.grammar_close=Some(owner),Err((error,source))=>{*self.grammar=Some(source);return Err(error.into())}}return Ok(false)}Ok(true)
  }
  fn outcome_bytes(inputs:&Inputs)->&[u8]{match inputs.event.as_ref().unwrap(){Event::Completed{result:semio_framework::kernel::RequestOutcome::Ok(bytes),..}=>bytes,_=>unreachable!()}}
@@ -88,10 +88,10 @@ impl CompletedInput{
   if let Some(owner)=self.pack.as_mut(){if !owner.terminal_is_empty(){let grant=cx.retained_grant();let demand=owner.original_close_demands(grant.maximum_copy_bytes).map_err(|error|ValueError::literal(error.kind(),"original intrinsic close quote refused"))?;if !permits(cx,grant,demand){return Ok(false)}let Some(call)=through(cx,true,|effect|owner.close_original_step(effect))?else{return Ok(false)};if let Err(error)=call.result{*self.issue=Some(DecodeFailure::Pack(error,call.progress));return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original intrinsic close retained its refusal").into())}return Ok(false)}if !metadata(cx)?{return Ok(false)}self.pack.take();return Ok(false)}
   if !self.close_grammar(cx)?{return Ok(false)}
   if let Some(binding)=self.binding.as_mut(){if !binding.close_step(cx)?{return Ok(false)}if !metadata(cx)?{return Ok(false)}self.binding.take();return Ok(false)}
-  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.closing.take();return Ok(false)}
+  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){retired_poll(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.closing.take();return Ok(false)}
   if self.inputs.is_some(){if !metadata(cx)?{return Ok(false)}let inputs=self.inputs.take().unwrap();match ControlledRetirement::new(inputs){Ok(owner)=>*self.closing=Some(owner),Err((error,inputs))=>{*self.inputs=Some(inputs);return Err(error.into())}}return Ok(false)}
   if self.issue_place.is_some(){if let Some(failure)=self.admit_issue(cx)?{return Err(failure)}return Ok(false)}
-  if let Some(owner)=self.issue_close.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.issue_close.take();return Ok(false)}
+  if let Some(owner)=self.issue_close.as_mut(){if !owner.terminal_is_empty(){retired_poll(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.issue_close.take();return Ok(false)}
   if self.issue.is_some(){if !metadata(cx)?{return Ok(false)}let issue=self.issue.take().unwrap();match ControlledRetirement::new(issue){Ok(owner)=>*self.issue_close=Some(owner),Err((error,issue))=>{*self.issue=Some(issue);return Err(error.into())}}return Ok(false)}
   if !self.native.terminal_is_empty(){self.native.close_step(cx)?;return Ok(false)}
   if !metadata(cx)?{return Ok(false)}self.closed=true;Ok(true)

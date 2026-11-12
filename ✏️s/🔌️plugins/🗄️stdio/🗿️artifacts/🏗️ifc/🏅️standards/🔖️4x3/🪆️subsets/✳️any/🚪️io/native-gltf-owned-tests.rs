@@ -306,9 +306,9 @@ fn original_owned_official_geometry_rows_roundtrip_through_real_models_and_canon
             }
         }
         let target = decode_run(|owner| export::receive(&graph, owner)).unwrap();
-        let native = encode_run(|owner| gltf_io::binary::snapshot::owned_pack::geometry::encode_geometry_pack(&target, owner)).unwrap();
+        let native = encode_run(|owner| gltf_io::snapshot_codecs::pack_codec::geometry::encode_geometry_pack(&target, owner)).unwrap();
         assert_eq!(native, target.encode_pack(), "{file}");
-        let received = decode_run(|owner| gltf_io::binary::snapshot::owned_pack::geometry::receive_geometry_pack(&native, owner)).unwrap();
+        let received = decode_run(|owner| gltf_io::snapshot_codecs::pack_codec::geometry::receive_geometry_pack(&native, owner)).unwrap();
         let restored = decode_run(|owner| import::receive(&received, owner)).unwrap();
         product_placements(&restored);
         assert_eq!(bounds(&restored).3, triangles);
@@ -339,7 +339,7 @@ fn original_geometry_native_source_keeps_material_and_large_extras_custody() {
     source.document.meshes[0].primitives[0].material = Some(0);
     source.document.extras = Some(GltfJson::String("x".repeat(65536)));
     let wire = source.encode_pack();
-    let received = decode_run(|owner| gltf_io::binary::snapshot::owned_pack::geometry::receive_geometry_pack(&wire, owner)).unwrap();
+    let received = decode_run(|owner| gltf_io::snapshot_codecs::pack_codec::geometry::receive_geometry_pack(&wire, owner)).unwrap();
     assert!(received.document.materials.is_empty());
     assert!(received.document.extras.is_none());
     assert!(received.document.meshes[0].primitives[0].material.is_none());
@@ -393,7 +393,7 @@ fn material_heavy_native_receiving_cancellation_keeps_the_original_pack_recipien
     native.install_retirement_recipient(&mut recipient).unwrap();
     let identity = (native.ledger_identity(), native.retirement_recipient_identity());
     let mut owner = NativeSnapshotDecodeOwner::new(&mut native, grant());
-    let error = gltf_io::binary::snapshot::owned_pack::geometry::receive_geometry_pack(&wire, &mut owner).unwrap_err();
+    let error = gltf_io::snapshot_codecs::pack_codec::geometry::receive_geometry_pack(&wire, &mut owner).unwrap_err();
     assert_eq!(error.kind, ValueRefusalKind::Canceled);
     assert!(owner.progress().copied_items > 0);
     drop(owner);

@@ -9,6 +9,7 @@ use semio_s_artifact_procedural_3d_geometry_value::PlaneValue;
 use semio_s_artifact_procedural_3d_geometry_value::SelectionKind;
 use semio_s_artifact_procedural_3d_geometry_value::SelectionValue;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
+use semio_s_artifact_procedural_3d_geometry_value::SharedEvaluation;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetFault;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_model::catalogue::Localized;
@@ -430,7 +431,7 @@ fn literal_fault(port: &Port) -> WidgetFault {
     fault(INPUT_LITERAL, port, |label| format!("The value stored for input \u{201c}{label}\u{201d} is not a {expected_en}."), |label| format!("Der für Eingang \u{201c}{label}\u{201d} gespeicherte Wert ist kein(e) {expected_de}."))
 }
 
-fn source_value(port: &Port, wire: &SynapseSpec, parent: &dyn Fn(&str) -> Option<Arc<WidgetEvaluation>>) -> Result<GeometryValue, WidgetFault> {
+fn source_value(port: &Port, wire: &SynapseSpec, parent: &dyn Fn(&str) -> Option<SharedEvaluation>) -> Result<GeometryValue, WidgetFault> {
     let Some(evaluation) = parent(&wire.from) else {
         let from = wire.from.clone();
         return Err(fault(INPUT_MISSING, port, |label| format!("Input \u{201c}{label}\u{201d} is wired to widget \u{201c}{from}\u{201d}, which does not exist."), |label| format!("Eingang \u{201c}{label}\u{201d} ist mit dem Widget \u{201c}{from}\u{201d} verbunden, das nicht existiert.")));
@@ -451,7 +452,7 @@ fn source_value(port: &Port, wire: &SynapseSpec, parent: &dyn Fn(&str) -> Option
     })
 }
 
-fn connected_value(port: &Port, wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<WidgetEvaluation>>) -> Result<GeometryValue, WidgetFault> {
+fn connected_value(port: &Port, wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<SharedEvaluation>) -> Result<GeometryValue, WidgetFault> {
     if counted(port) {
         let mut items = Vec::new();
         for wire in wires {
@@ -486,7 +487,7 @@ fn selection_component(port: &Port, resolved: &Outputs) -> Result<Option<Selecti
 
 /// 🏷️ Resolves every input port of `kind` for widget `widget`: wiring first (`wires` are the synapses ending at the widget), then the stored literal in `params`, then the catalogue default.
 /// `parent` answers the evaluation of a source widget. The first refusal is returned as a localized fault naming the port.
-pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<WidgetEvaluation>>) -> Result<WidgetInputs, WidgetFault> {
+pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<SharedEvaluation>) -> Result<WidgetInputs, WidgetFault> {
     if let Some(unknown) = wires.iter().find(|wire| kind.input(&wire.to_port).is_none()) {
         let name = unknown.to_port.clone();
         return Err(WidgetFault::new(INPUT_UNKNOWN, format!("A wire ends at \u{201c}{name}\u{201d}, which is not an input of {}.", kind.label.en), format!("Eine Verbindung endet bei \u{201c}{name}\u{201d}, das kein Eingang von {} ist.", kind.label.de)).at(name));

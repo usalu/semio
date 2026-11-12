@@ -89,7 +89,7 @@ impl FlowEvalSession {
             4=>{
                 let state=&mut *self.state;
                 let port=state.geometry_port.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancelling geometry source disappeared"))?;
-                let result=port.cancel_step(grant);progress=port.cancel_step_progress();state.preview_cancellation_progress=progress;let step=result.map_err(|error|error.with_retained_progress(progress))?;
+                let result=port.cancel_step(effect);progress=port.cancel_step_progress();state.preview_cancellation_progress=progress;let step=result.map_err(|error|error.with_retained_progress(progress))?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,port.cancel_terminal_is_empty(),"Flow session original geometry cancellation")?;
                 if port.cancel_terminal_is_empty(){state.preview_cancellation_phase=5;}
             },

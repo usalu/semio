@@ -3,12 +3,14 @@ use crate::model::*;
 use crate::schedule::ScheduleId;
 use semio_framework_value::shared_issuance::SealedShared;
 use semio_framework_value_persistent::list::persistent::PersistentList;
-use semio_framework_value_derive::ToValue;
+use semio_framework_value_derive::{ToValue,NativeReceive};
+use semio_framework_value::{RetireOwned,SnapshotProjection,CanonicalJsonTree};
+use semio_framework_pack_json as pack_json;
 #[path="🔺️diff/🦀️.rs"]pub mod diff;
 
+macro_rules! records{($($(#[$meta:meta])* pub struct $name:ident $body:tt)*)=>{$($(#[$meta])* #[derive(Debug,PartialEq,ToValue,NativeReceive,RetireOwned,SnapshotProjection,CanonicalJsonTree)] #[canonical_json(owner=pack_json)] pub struct $name $body)*}}
+records!{
 /// 🪡️ Original Site fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateSite {
  pub latitude_deg: f64,
  pub longitude_deg: f64,
@@ -18,8 +20,6 @@ pub struct StateSite {
 }
 
 /// 🌾️ Original Zone fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateZone {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -30,8 +30,6 @@ pub struct StateZone {
 }
 
 /// 🏞️ Original Space fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateSpace {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -40,8 +38,6 @@ pub struct StateSpace {
 }
 
 /// 🧊️ Original Surface fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateSurface {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -56,8 +52,6 @@ pub struct StateSurface {
 }
 
 /// 🌀️ Original Fenestration fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateFenestration {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -79,8 +73,6 @@ pub struct StateFenestration {
 }
 
 /// 🧱️ Original Material fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateMaterial {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -95,8 +87,6 @@ pub struct StateMaterial {
 }
 
 /// 🌁️ Original GlazingMaterial fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateGlazingMaterial {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -114,8 +104,6 @@ pub struct StateGlazingMaterial {
 }
 
 /// 🌂️ Original GasMaterial fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateGasMaterial {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -124,8 +112,6 @@ pub struct StateGasMaterial {
 }
 
 /// 🌃️ Original Construction fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateConstruction {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -133,8 +119,6 @@ pub struct StateConstruction {
 }
 
 /// 🌄️ Original PeopleGain fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StatePeopleGain {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -147,8 +131,6 @@ pub struct StatePeopleGain {
 }
 
 /// 🌅️ Original LightingGain fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateLightingGain {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -160,8 +142,6 @@ pub struct StateLightingGain {
 }
 
 /// 🌆️ Original EquipmentGain fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateEquipmentGain {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -172,8 +152,6 @@ pub struct StateEquipmentGain {
 }
 
 /// 🌇️ Original Thermostat fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateThermostat {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -184,8 +162,6 @@ pub struct StateThermostat {
 }
 
 /// 🌈️ Original IdealLoadsSystem fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateIdealLoadsSystem {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -198,8 +174,6 @@ pub struct StateIdealLoadsSystem {
 }
 
 /// 🌉️ Original Humidistat fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateHumidistat {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -210,8 +184,6 @@ pub struct StateHumidistat {
 }
 
 /// 🌊️ Original SetpointManager fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateSetpointManager {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -220,8 +192,6 @@ pub struct StateSetpointManager {
 }
 
 /// 🌋️ Original ZoneEquipmentAssignment fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateZoneEquipmentAssignment {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -232,8 +202,6 @@ pub struct StateZoneEquipmentAssignment {
 }
 
 /// 🌌️ Original ModelAirLoop fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateModelAirLoop {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -244,8 +212,6 @@ pub struct StateModelAirLoop {
 }
 
 /// 🌍️ Original PlantLoopConfig fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StatePlantLoopConfig {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -257,8 +223,6 @@ pub struct StatePlantLoopConfig {
 }
 
 /// 🌎️ Original OutdoorAirSystem fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateOutdoorAirSystem {
  pub id: EntityId,
  pub air_loop_id: EntityId,
@@ -267,8 +231,6 @@ pub struct StateOutdoorAirSystem {
 }
 
 /// 🌏️ Original ShadingSurface fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateShadingSurface {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -277,8 +239,6 @@ pub struct StateShadingSurface {
 }
 
 /// 🌐️ Original SpaceList fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateSpaceList {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -286,8 +246,6 @@ pub struct StateSpaceList {
 }
 
 /// 🌑️ Original ThermalEnclosure fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateThermalEnclosure {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -295,16 +253,12 @@ pub struct StateThermalEnclosure {
 }
 
 /// 🌒️ Original AdjacencyPair fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateAdjacencyPair {
  pub surface_a_id: EntityId,
  pub surface_b_id: EntityId,
 }
 
 /// 🌓️ Original MechanicalVentilation fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateMechanicalVentilation {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -315,8 +269,6 @@ pub struct StateMechanicalVentilation {
 }
 
 /// 🌔️ Original AirflowNetworkDefinition fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateAirflowNetworkDefinition {
  pub zone_node_ids: SealedShared<Vec<(EntityId, u32)>>,
  pub outdoor_node_id: u32,
@@ -324,8 +276,6 @@ pub struct StateAirflowNetworkDefinition {
 }
 
 /// 🌕️ Original ElectricalLoadCenter fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateElectricalLoadCenter {
  pub id: EntityId,
  pub name: SealedShared<String>,
@@ -335,8 +285,6 @@ pub struct StateElectricalLoadCenter {
 }
 
 /// 🌖️ Original PvSystemAssignment fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StatePvSystemAssignment {
  pub id: EntityId,
  pub dc_capacity_w: f64,
@@ -352,8 +300,6 @@ pub struct StatePvSystemAssignment {
 }
 
 /// 🌗️ Original BatteryAssignment fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateBatteryAssignment {
  pub id: EntityId,
  pub capacity_kwh: f64,
@@ -363,8 +309,6 @@ pub struct StateBatteryAssignment {
 }
 
 /// 🌘️ Original ShwSystemConfig fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateShwSystemConfig {
  pub id: EntityId,
  pub heater_capacity_w: f64,
@@ -374,8 +318,6 @@ pub struct StateShwSystemConfig {
 }
 
 /// 🌙️ Original SolarThermalConfig fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateSolarThermalConfig {
  pub id: EntityId,
  pub collector_area_m2: f64,
@@ -386,8 +328,6 @@ pub struct StateSolarThermalConfig {
 }
 
 /// 🌚️ Original RefrigerationConfig fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateRefrigerationConfig {
  pub id: EntityId,
  pub case_count: u32,
@@ -396,8 +336,6 @@ pub struct StateRefrigerationConfig {
 }
 
 /// 🌛️ Original WaterSystemConfig fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateWaterSystemConfig {
  pub id: EntityId,
  pub fixture_count: u32,
@@ -406,8 +344,6 @@ pub struct StateWaterSystemConfig {
 }
 
 /// 🌜️ Original FaultDefinition fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateFaultDefinition {
  pub id: EntityId,
  pub target_equipment_id: EntityId,
@@ -417,8 +353,6 @@ pub struct StateFaultDefinition {
 }
 
 /// 🌝️ Original OutputVariableSpec fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateOutputVariableSpec {
  pub name: SealedShared<String>,
  pub key: SealedShared<String>,
@@ -426,8 +360,6 @@ pub struct StateOutputVariableSpec {
 }
 
 /// 🌞️ Original SizingObject fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateSizingObject {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -436,8 +368,6 @@ pub struct StateSizingObject {
 }
 
 /// 🌟️ Original DaylightZoneConfig fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateDaylightZoneConfig {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -447,16 +377,12 @@ pub struct StateDaylightZoneConfig {
 }
 
 /// 🌠️ Original RoomAirModelAssignment fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateRoomAirModelAssignment {
  pub zone_id: EntityId,
  pub model: SealedShared<RoomAirModelType>,
 }
 
 /// 🌡️ Original GroundTemperatureConfig fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateGroundTemperatureConfig {
  pub building_surface_c: SealedShared<[f64; 12]>,
  pub shallow_c: SealedShared<[f64; 12]>,
@@ -464,8 +390,6 @@ pub struct StateGroundTemperatureConfig {
 }
 
 /// 🌢️ Original Infiltration fields retain independent immutable payload authorities.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateInfiltration {
  pub id: EntityId,
  pub zone_id: EntityId,
@@ -483,24 +407,18 @@ pub struct StateInfiltration {
 }
 
 /// 📅️ Original ScheduleLimits schedule fields remain separately shared.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateScheduleLimits {
  pub min: f64,
  pub max: f64,
 }
 
 /// 🔗️ Original ConstantSchedule schedule fields remain separately shared.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateConstantSchedule {
  pub id: ScheduleId,
  pub value: f64,
 }
 
 /// 🫂️ Original DailySchedule schedule fields remain separately shared.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateDailySchedule {
  pub id: ScheduleId,
  pub hourly_values: SealedShared<[f64; 24]>,
@@ -509,16 +427,12 @@ pub struct StateDailySchedule {
 }
 
 /// 🌣️ Original WeeklySchedule schedule fields remain separately shared.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateWeeklySchedule {
  pub id: ScheduleId,
  pub daily_schedule_ids: SealedShared<[ScheduleId; 7]>,
 }
 
 /// 🌤️ Original CompactScheduleRule schedule fields remain separately shared.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateCompactScheduleRule {
  pub start_month: u8,
  pub start_day: u8,
@@ -528,8 +442,6 @@ pub struct StateCompactScheduleRule {
 }
 
 /// 🌥️ Original AnnualSchedule schedule fields remain separately shared.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateAnnualSchedule {
  pub id: ScheduleId,
  pub rules: SealedShared<Vec<crate::schedule::CompactScheduleRule>>,
@@ -539,8 +451,6 @@ pub struct StateAnnualSchedule {
 }
 
 /// 🌦️ Original TimeSeriesSchedule schedule fields remain separately shared.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateTimeSeriesSchedule {
  pub id: ScheduleId,
  pub values: SealedShared<Vec<f64>>,
@@ -548,8 +458,6 @@ pub struct StateTimeSeriesSchedule {
 }
 
 /// 📚️ Persisted schedule collections retain original immutable ranked rows.
-#[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
 pub struct StateScheduleSet {
  pub constants:PersistentList<StateConstantSchedule>,
  pub daily:PersistentList<StateDailySchedule>,
@@ -557,11 +465,12 @@ pub struct StateScheduleSet {
  pub annual:PersistentList<StateAnnualSchedule>,
  pub time_series:PersistentList<StateTimeSeriesSchedule>,
 }
+}
 
 macro_rules! state_group {
  ($name:ident {$($field:ident:$kind:ty),*$(,)?})=>{
-  #[derive(Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-  #[canonical_json(owner=semio_framework_pack_json)]
+  #[derive(Debug,PartialEq,ToValue,NativeReceive,RetireOwned,SnapshotProjection,CanonicalJsonTree)]
+  #[canonical_json(owner=pack_json)]
   pub struct $name{$(pub $field:$kind,)*}
  };
 }
@@ -600,8 +509,8 @@ state_group!(ModelOutputState{
  output_variables:PersistentList<StateOutputVariableSpec>,sizing_objects:PersistentList<StateSizingObject>,schedules:SealedShared<StateScheduleSet>,
 });
 /// 🏢️ The sole logical Model record has fixed shared branches and no numerical or child mirrors.
-#[derive(Clone,Debug,PartialEq,ToValue,semio_framework_value_derive::NativeReceive,semio_framework_value::RetireOwned,semio_framework_value::SnapshotProjection,semio_framework_value::CanonicalJsonTree)]
-#[canonical_json(owner=semio_framework_pack_json)]
+#[derive(Clone,Debug,PartialEq,ToValue,NativeReceive,RetireOwned,SnapshotProjection,CanonicalJsonTree)]
+#[canonical_json(owner=pack_json)]
 pub struct EnergyModelState{
  #[value(flatten)]pub identity:SealedShared<ModelIdentityState>,
  #[value(flatten)]pub geometry:SealedShared<ModelGeometryState>,

@@ -266,8 +266,9 @@ pub mod document_io {
     }
 
     impl semio_framework_value::retirement::RetireOwned for Generation3dDocumentEnvelope {
-        fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.bytes),deferred(self.filename),deferred(self.mime_type),deferred(self.data)]) }
-        fn retirement_birth_bytes(&self) -> Option<usize> { use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.bytes),deferred_birth_bytes_for(&self.filename),deferred_birth_bytes_for(&self.mime_type),deferred_birth_bytes_for(&self.data)]) }
+        type RetirementCursor = <(Option<Vec<u8>>, Option<String>, Option<String>, Option<String>) as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
+        fn retirement_seed(self) -> Self::RetirementCursor { semio_framework_value::retirement::RetireOwned::retirement_seed((self.bytes, self.filename, self.mime_type, self.data)) }
+        fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<Self::RetirementCursor>()) }
         fn controlled_retirement_supported() -> bool { true }
     }
 

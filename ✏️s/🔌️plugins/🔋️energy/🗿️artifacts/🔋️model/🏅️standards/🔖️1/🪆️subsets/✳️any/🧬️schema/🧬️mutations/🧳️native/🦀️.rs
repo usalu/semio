@@ -2,6 +2,8 @@
 extern crate semio_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_diff as diff;
+pub mod retained{pub use protocol::{RetainedDone as Done,RetainedFlight as Flight,RetainedReply as Reply,retained_conclude as conclude,retained_native_child as native_child,retained_slot as slot};}
+#[macro_use]#[path="🛡️custody/🦀️.rs"]pub mod custody;
 #[path="🔢️scalar/🦀️.rs"]pub mod scalar;
 
 #[cfg(test)]#[global_allocator]

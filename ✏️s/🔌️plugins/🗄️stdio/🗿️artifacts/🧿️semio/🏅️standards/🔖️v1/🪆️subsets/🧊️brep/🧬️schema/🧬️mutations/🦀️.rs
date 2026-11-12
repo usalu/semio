@@ -93,6 +93,7 @@ pub enum SemioBrepMutation {
     ReplaceSurface(replace_surface::ReplaceSurface),
     MoveVertex(move_vertex::MoveVertex),
 }
+dsl::original_pack_value_operation_receiving!(SemioBrepMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioBrepMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-brep` mutation catalog (`../../🔣️oracle.json`) declares and

@@ -327,6 +327,42 @@ fn simulation_config_for(template: &SimulationConfig, model: &Model) -> Simulati
 }
 //#endregion 🔖️ContractHelpers
 
+/// 🏭️ One settled original construction attempt: its resident admission frame and born marker survive every Pending turn and close under the owner's retirement.
+#[derive(Default)]
+pub(crate) struct Construction{admission:semio_framework_job::OriginalConstructionAdmission,built:Option<bool>}
+impl Construction{
+    pub(crate) fn run_into<T>(&mut self,cx:&mut StepContext<'_>,output:&mut Option<T>,demand:semio_framework_job::OriginalConstructionDemand,build:impl FnOnce()->Result<(T,RetainedCloneProgress),ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        semio_framework_job::admit_original_construction_settled(cx,&mut self.admission,output,demand,1,|_,reported|{let result=build();if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&reported.is_none(){*reported=Some(progress.retained_capacity_bytes)}}sim_retirement::energy_construct(result)})
+    }
+    pub(crate) fn run_flag(&mut self,cx:&mut StepContext<'_>,demand:semio_framework_job::OriginalConstructionDemand,build:impl FnOnce()->Result<(bool,RetainedCloneProgress),ValueError>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+        let mut built=self.built.take();let settled=self.run_into(cx,&mut built,demand,build);
+        match settled{Ok(true)=>Ok(built),Ok(false)=>{self.built=built;Ok(None)},Err(failure)=>{self.built=built;Err(failure)}}
+    }
+    pub(crate) fn close_demand(&self)->RetirementDemand{
+        if self.built.is_some(){RetirementDemand{copy_bytes:size_of::<Option<bool>>(),depth:1,..Default::default()}}else{self.admission.close_demand()}
+    }
+    pub(crate) fn terminal_is_empty(&self)->bool{self.built.is_none()&&self.admission.terminal_is_empty()}
+    pub(crate) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if self.built.is_some(){
+            let demand=self.close_demand();
+            return sim_retirement::energy_effect_step(cx,demand,|effect|{if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"energy construction marker exceeded its original work"))}self.built=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))});
+        }
+        self.admission.retire_step(cx)
+    }
+}
+
+/// 🧱️ Charges one local frontier move to the calling turn's effect and reports its fixed receipt; an unfunded move is a typed refusal.
+pub(crate) fn effect_move(effect:&mut semio_framework_value::RetainedAllocationEffect<'_>,progress:RetainedCloneProgress)->Result<RetainedCloneStep,ValueError>{
+    if progress==RetainedCloneProgress::default(){return Ok(RetainedCloneStep::Progress(progress))}
+    if !effect.performed(1)?{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"energy close move exceeded its original work"))}
+    Ok(RetainedCloneStep::Progress(progress))
+}
+
+/// ⏳️ A suspended retirement keeps its state and retries next turn as zero progress; only a settled failure is an error.
+pub(crate) fn settled_step(poll:semio_framework_value::OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError>{
+    sim_retirement::energy_poll(poll).map(|step|step.unwrap_or(RetainedCloneStep::Progress(RetainedCloneProgress::default())))
+}
+
 #[path = "🧮️retained-input/🦀️.rs"]
 mod retained_input;
 use retained_input::{CaptureCensus, ModelCapture};

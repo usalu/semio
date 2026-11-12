@@ -156,10 +156,10 @@ impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
 
 /// ♻️ The typed authority retires through its own owner, then the deferred first-party host view, each as its own bounded cursor turn.
 impl semio_framework_value::retirement::RetireOwned for Puzzle3dPlaySnapshot {
-    type RetirementCursor = semio_framework_value::retirement_fields_type!(std::sync::Arc<Puzzle3dSnapshot>, Option<std::sync::Arc<DslValue>>);
+    type RetirementCursor = semio_framework_value::retirement_fields_type!(semio_framework_value::retirement::arc_custody::ArcLease<Puzzle3dSnapshot>, Option<semio_framework_value::retirement::arc_custody::ArcLease<DslValue>>);
     fn retirement_seed(self) -> Self::RetirementCursor {
         let Self { typed, value } = self;
-        semio_framework_value::retirement_fields_seed!(typed, value.into_inner())
+        semio_framework_value::retirement_fields_seed!(semio_framework_value::retirement::arc_custody::ArcLease::new(typed), value.into_inner().map(semio_framework_value::retirement::arc_custody::ArcLease::new))
     }
 
     fn retirement_birth_bytes(&self) -> Option<usize> {

@@ -187,21 +187,12 @@ const JPEG_UNITS_PER_STEP: usize = 1;
 /// steps instead of the whole zlib stream being inflated in one.
 const PNG_INFLATE_UNITS_PER_STEP: usize = 4_096;
 
-#[derive(Default)]
+#[derive(Default, semio_framework_value::RetireOwned)]
 struct CompressedRopeReadCounters {
-    sequential_reads: std::sync::atomic::AtomicUsize,
-    sequential_bytes: std::sync::atomic::AtomicUsize,
-    largest_sequential_read: std::sync::atomic::AtomicUsize,
-    random_byte_reads: std::sync::atomic::AtomicUsize,
-}
-
-impl semio_framework_value::retirement::RetireOwned for CompressedRopeReadCounters {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        drop(self);
-        semio_framework_value::retirement::leaf(())
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(semio_framework_value::retirement::leaf_birth_bytes::<()>()) }
-    fn controlled_retirement_supported() -> bool { true }
+    sequential_reads: std::sync::atomic::AtomicU64,
+    sequential_bytes: std::sync::atomic::AtomicU64,
+    largest_sequential_read: std::sync::atomic::AtomicU64,
+    random_byte_reads: std::sync::atomic::AtomicU64,
 }
 
 #[cfg(test)]
@@ -215,14 +206,34 @@ pub struct CompressedRopeReadMetrics {
 }
 
 /// 🧩️ Persistent bounded compressed-input rope with independently shared leaves.
-#[derive(Clone, Default, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct CompressedChunkRope {
-    chunks: Vec<std::sync::Arc<Vec<u8>>>,
+    chunks: Vec<semio_framework_value::retirement::arc_custody::ArcLease<Vec<u8>>>,
     len: usize,
-    reads: std::sync::Arc<CompressedRopeReadCounters>,
+    reads: semio_framework_value::retirement::arc_custody::ArcLease<CompressedRopeReadCounters>,
+}
+
+impl Clone for CompressedChunkRope {
+    fn clone(&self) -> Self {
+        Self { chunks: self.chunks.clone(), len: self.len, reads: semio_framework_value::retirement::arc_custody::ArcLease(self.reads.0.clone()) }
+    }
+}
+
+impl Default for CompressedChunkRope {
+    fn default() -> Self {
+        Self { chunks: Vec::new(), len: 0, reads: semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::new(CompressedRopeReadCounters::default())) }
+    }
+}
+
+fn rope_leaf(lease: &semio_framework_value::retirement::arc_custody::ArcLease<Vec<u8>>) -> &[u8] {
+    lease.0.as_deref().map_or(&[], Vec::as_slice)
 }
 
 impl CompressedChunkRope {
+    fn counters(&self) -> &CompressedRopeReadCounters {
+        self.reads.0.as_deref().expect("compressed rope counters lease is live")
+    }
+
     pub fn from_leaves(leaves: impl IntoIterator<Item = std::sync::Arc<Vec<u8>>>, max_bytes: usize) -> Result<Self, ImageError> {
         let mut rope = Self::default();
         for leaf in leaves {
@@ -244,7 +255,7 @@ impl CompressedChunkRope {
             return Err(ImageError::Decode("compressed input exceeds its bounded envelope".into()));
         }
         self.len = next;
-        self.chunks.push(bytes);
+        self.chunks.push(semio_framework_value::retirement::arc_custody::ArcLease::new(bytes));
         Ok(())
     }
 
@@ -257,12 +268,12 @@ impl CompressedChunkRope {
     }
 
     fn byte(&self, index: usize) -> Option<u8> {
-        self.reads.random_byte_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.counters().random_byte_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         if index >= self.len {
             return None;
         }
         let mut remaining = index;
-        for chunk in &self.chunks {
+        for chunk in self.chunks.iter().map(rope_leaf) {
             if remaining < chunk.len() {
                 return chunk.get(remaining).copied();
             }
@@ -273,16 +284,16 @@ impl CompressedChunkRope {
 
     #[cfg(test)]
     pub fn leaf_lengths(&self) -> Vec<usize> {
-        self.chunks.iter().map(|chunk| chunk.len()).collect()
+        self.chunks.iter().map(|chunk| rope_leaf(chunk).len()).collect()
     }
 
     #[cfg(test)]
     pub fn read_metrics(&self) -> CompressedRopeReadMetrics {
-        let random_byte_reads = self.reads.random_byte_reads.load(std::sync::atomic::Ordering::Relaxed);
+        let random_byte_reads = self.counters().random_byte_reads.load(std::sync::atomic::Ordering::Relaxed) as usize;
         CompressedRopeReadMetrics {
-            sequential_reads: self.reads.sequential_reads.load(std::sync::atomic::Ordering::Relaxed),
-            sequential_bytes: self.reads.sequential_bytes.load(std::sync::atomic::Ordering::Relaxed),
-            largest_sequential_read: self.reads.largest_sequential_read.load(std::sync::atomic::Ordering::Relaxed),
+            sequential_reads: self.counters().sequential_reads.load(std::sync::atomic::Ordering::Relaxed) as usize,
+            sequential_bytes: self.counters().sequential_bytes.load(std::sync::atomic::Ordering::Relaxed) as usize,
+            largest_sequential_read: self.counters().largest_sequential_read.load(std::sync::atomic::Ordering::Relaxed) as usize,
             random_byte_reads,
             largest_random_read: usize::from(random_byte_reads != 0),
         }
@@ -317,7 +328,7 @@ impl std::io::Read for ChunkRopeReader {
         let mut written = 0;
         let read_limit = output.len().min(COMPRESSED_ROPE_LEAF_BYTES);
         while written < read_limit {
-            let Some(chunk) = self.rope.chunks.get(self.chunk) else { break };
+            let Some(chunk) = self.rope.chunks.get(self.chunk).map(rope_leaf) else { break };
             if self.offset == chunk.len() {
                 self.chunk = self.chunk.checked_add(1).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "compressed rope chunk cursor overflow"))?;
                 self.offset = 0;
@@ -332,9 +343,10 @@ impl std::io::Read for ChunkRopeReader {
             self.offset = input_end;
             written = output_end;
         }
-        self.rope.reads.sequential_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        self.rope.reads.sequential_bytes.fetch_add(written, std::sync::atomic::Ordering::Relaxed);
-        self.rope.reads.largest_sequential_read.fetch_max(written, std::sync::atomic::Ordering::Relaxed);
+        let counters = self.rope.counters();
+        counters.sequential_reads.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        counters.sequential_bytes.fetch_add(written as u64, std::sync::atomic::Ordering::Relaxed);
+        counters.largest_sequential_read.fetch_max(written as u64, std::sync::atomic::Ordering::Relaxed);
         Ok(written)
     }
 }
@@ -359,12 +371,46 @@ impl<T> std::ops::DerefMut for OpaqueOwner<T> {
 }
 
 impl<T: Send + 'static> semio_framework_value::retirement::RetireOwned for OpaqueOwner<T> {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        drop(self);
-        semio_framework_value::retirement::leaf(())
-    }
-    fn retirement_birth_bytes(&self) -> Option<usize> { Some(semio_framework_value::retirement::leaf_birth_bytes::<()>()) }
+    type RetirementCursor = OpaqueOwnerRetirement<T>;
+    fn retirement_seed(self) -> Self::RetirementCursor { OpaqueOwnerRetirement(Some(self.0)) }
+    fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<OpaqueOwnerRetirement<T>>()) }
     fn controlled_retirement_supported() -> bool { true }
+}
+
+#[doc(hidden)]
+pub struct OpaqueOwnerRetirement<T>(Option<T>);
+
+impl<T: Send + 'static> OpaqueOwnerRetirement<T> {
+    fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::retirement::RetirementStep {
+        use semio_framework_value::retirement::{record_retirement_work, RetirementCursor, RetirementStep};
+        let grant = effect.grant();
+        if self.0.is_none() {
+            return RetirementStep::Complete(0);
+        }
+        let demand = self.next_demand(0).expect("opaque owner header demand");
+        if effect.maximum_work_units() == 0 || grant.maximum_items == 0 || !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return RetirementStep::BudgetExhausted;
+        }
+        let work = match record_retirement_work(effect, 1) {
+            Ok(work) => work,
+            Err((error, work)) => return RetirementStep::Failure(error.into(), work),
+        };
+        self.0 = None;
+        RetirementStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }, work)
+    }
+}
+
+impl<T: Send + 'static> semio_framework_value::retirement::RetirementCursor for OpaqueOwnerRetirement<T> {
+    semio_framework_value::native_retirement_reply!();
+    fn next_computational_work(&self, _: usize) -> Result<u64, semio_framework_value::ValueError> { Ok(u64::from(self.0.is_some())) }
+    fn next_demand(&self, _: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: if self.0.is_some() { size_of::<Option<T>>() } else { 0 }, depth: usize::from(self.0.is_some()), ..Default::default() })
+    }
+    fn terminal_is_empty(&self) -> bool { self.0.is_none() }
+    fn next_work_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.next_demand(0)?.copy_bytes) }
+    fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
+    fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
+    fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
 }
 
 #[derive(semio_framework_value::RetireOwned)]

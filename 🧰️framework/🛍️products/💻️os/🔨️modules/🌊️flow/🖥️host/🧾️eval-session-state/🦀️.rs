@@ -475,6 +475,13 @@ impl SessionRetirement {
     }
 }
 
+/// 🧳️ Intake failure retains the exact typed original source or identifies its same-session custody.
+pub enum FlowSnapshotIntakeFailure<Original>{Original{failure:semio_framework_job::OriginalTurnFailure,source:Original},Retained{failure:semio_framework_job::OriginalTurnFailure}}
+
+/// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
+pub struct FlowEvalSession {
+    pub(super) state: std::mem::ManuallyDrop<FlowEvalSessionState>,
+}
 impl std::ops::Deref for FlowEvalSession {
     type Target = FlowEvalSessionState;
     fn deref(&self) -> &Self::Target {

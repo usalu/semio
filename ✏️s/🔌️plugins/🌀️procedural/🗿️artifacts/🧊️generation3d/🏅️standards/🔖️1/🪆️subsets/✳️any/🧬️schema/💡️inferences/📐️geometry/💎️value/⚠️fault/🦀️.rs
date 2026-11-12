@@ -1,12 +1,13 @@
 //! ⚠️ Original localized widget faults reserve and copy their real UTF8 payload before evaluation donation.
 use super::{WidgetFault,Localized};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,retirement::{RetireOwned,RetirementCursor}};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,retirement::RetireOwned};
 use std::mem::ManuallyDrop;
 const CODE:&str="generation3d.geometry.cycle";
 const EN:[&str;2]=["Widget “","” is part of a wiring cycle or depends on one."];
 const DE:[&str;2]=["Widget “","” ist Teil eines Verbindungszyklus oder hängt von einem ab."];
+#[doc(hidden)]
 #[derive(semio_framework_value::RetireOwned)]
-struct State{code:String,en:String,de:String,phase:u8,segment:usize,byte:usize,subject:Option<(usize,usize)>}
+pub struct State{code:String,en:String,de:String,phase:u8,segment:usize,byte:usize,subject:Option<(usize,usize)>}
 
 /// 🧵️ Partial fault text remains protected until donated once or explicitly retired by the original caller.
 pub struct OriginalWidgetFaultProduction{state:ManuallyDrop<State>,transferred:bool}
@@ -25,5 +26,5 @@ impl OriginalWidgetFaultProduction{
  }
 }
 fn overflow()->ValueError{ValueError::literal(ValueRefusalKind::OwnershipLimit,"original localized widget fault UTF8 extent overflow")}
-impl RetireOwned for OriginalWidgetFaultProduction{fn retirement(mut self)->Box<dyn RetirementCursor>{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
+impl RetireOwned for OriginalWidgetFaultProduction{type RetirementCursor=<State as RetireOwned>::RetirementCursor;fn retirement_seed(mut self)->Self::RetirementCursor{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}}
 impl Drop for OriginalWidgetFaultProduction{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original widget fault requires paid partial text closure");if self.terminal_is_empty()&&!self.transferred{unsafe{ManuallyDrop::drop(&mut self.state)}}}}

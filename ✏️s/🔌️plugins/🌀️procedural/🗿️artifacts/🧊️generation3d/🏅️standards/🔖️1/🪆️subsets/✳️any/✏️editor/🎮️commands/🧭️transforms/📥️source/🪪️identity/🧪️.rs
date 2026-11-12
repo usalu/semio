@@ -4,7 +4,7 @@ use super::super::retained_scratch_testing::ScratchCaller;
 fn policy()->serde_json::Value{serde_json::from_str(include_str!("../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🎟️caller/🧪️tests/🧫️fixtures/🎟️caller.json")).unwrap()}
 fn operation(text:&str)->GumballOperation{match text{"translate"=>GumballOperation::Translate,"rotate"=>GumballOperation::Rotate,"scale"=>GumballOperation::Scale,_=>panic!("invalid identity case")}}
 fn close(work:&mut GumballNodeIdentityWork,caller:&mut ScratchCaller){
- work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{let d=work.next_close_demands(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,d,|g|work.close_step(g))?;Ok(())}));}panic!("gumball identifier did not close")
+ work.begin_close();for _ in 0..32768{if work.terminal_is_empty(){return}caller.turn(|cx|cx.with_original_retirement(|same|{work.close_step(same)?;Ok(())}));}panic!("gumball identifier did not close")
 }
 #[test]
 fn original_node_identifiers_match_cold_utf8_and_component_suffixes_with_one_fuel(){

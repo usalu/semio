@@ -148,6 +148,7 @@ pub enum DxfMutation {
     /// 📑 Replaces the raw-retained unmodeled `TABLE`s.
     SetOtherTables(set_other_tables::SetOtherTables),
 }
+dsl::original_pack_value_operation_receiving!(DxfMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

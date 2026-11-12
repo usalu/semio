@@ -6,6 +6,7 @@ use neural_engine::Dictionary;
 use neural_engine::EvalError;
 use neural_engine::Value;
 use semio_framework_value::ValueError;
+use semio_framework_value::{OriginalRetirementFailure,OriginalRetirementPoll,RetainedWorkPoll};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
@@ -197,7 +198,7 @@ pub fn drive_job(mut job:MeshOperatorJob)->Result<Dictionary,EvalError> {
             OperatorJobStep::Working(_)=>{},
         }
     };
-    for _ in 0..1_000_000 {if matches!(job.close_step(sync_grant()).result?,RetainedCloneStep::Complete(_)) {return Ok(output);}}
+    for _ in 0..1_000_000 {if matches!(neural_engine::retirement::cold_effect(sync_grant(),|effect|settled(job.close_step(effect)))??,RetainedCloneStep::Complete(_)) {return Ok(output);}}
     Err(invalid("mesh operation did not reach its terminal retirement"))
 }
 pub fn mesh_output(mesh: &HalfedgeMesh) -> Result<Dictionary, EvalError> {drive_job(MeshOperatorJob::output(mesh.clone())?)}
@@ -210,6 +211,8 @@ pub fn operator_progress(progress: MeshModelingProgress) -> neural_engine::Opera
 pub fn add_progress(left:RetainedCloneProgress,right:RetainedCloneProgress)->RetainedCloneProgress {
     RetainedCloneProgress {copied_items:left.copied_items.saturating_add(right.copied_items),copied_bytes:left.copied_bytes.saturating_add(right.copied_bytes),retained_capacity_bytes:left.retained_capacity_bytes.saturating_add(right.retained_capacity_bytes),released_bytes:left.released_bytes.saturating_add(right.released_bytes)}
 }
+/// 🔁️ Reads one settled retirement poll as its step; a suspended effect keeps its state and retries next turn.
+pub fn settled(poll:OriginalRetirementPoll)->Result<RetainedCloneStep,ValueError> {match poll {RetainedWorkPoll::Pending{..}=>Ok(RetainedCloneStep::Progress(Default::default())),RetainedWorkPoll::Complete(turn)=>turn.result.map_err(OriginalRetirementFailure::into_value_error)}}
 pub fn turn_grant(grant:RetainedCloneGrant)->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,..grant}}
 pub fn sync_grant()->RetainedCloneGrant {RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:256}}
 pub fn value_error(error:EvalError)->ValueError {ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string())}

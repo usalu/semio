@@ -83,7 +83,7 @@ impl SnapshotPreflight {
     pub(super) fn step_one(&mut self, snapshot: &Fem3dSnapshot) -> Result<bool, ()> {
         match self.stage {
             SnapshotPreflightStage::Nodes => {
-                let Some(node) = snapshot.nodes.get(self.outer) else {
+                let Some(node) = (*snapshot.nodes).get(self.outer) else {
                     self.next_stage(SnapshotPreflightStage::Elements);
                     return Ok(false);
                 };

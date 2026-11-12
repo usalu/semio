@@ -2,24 +2,36 @@
 use super::*;
 /// ↩️ Authored deletion sources retain the original bundle and move each exact inverse piece without gathering a second source.
 pub trait MultiDeletePath:DeleteRowPath where Self::Row:EntityRow{type InverseItem:RetireOwned+Send+'static;fn inverse_count(row:&Self::Row)->Result<usize,ValueError>;fn inverse_item_demand(bundle:&Self::Inverse,ordinal:usize,body:usize)->Result<RetirementDemand,ValueError>;fn take_inverse_item(bundle:&mut Self::Inverse,ordinal:usize,body:usize,g:RetainedCloneGrant)->Result<Option<(Self::InverseItem,RetainedCloneProgress)>,ValueError>;}
-pub struct MultiDeleteRowPreparation<S:MultiDeletePath>where S::Row:EntityRow{base:DeleteRowPreparation<S>,bundle:ManuallyDrop<Option<S::Inverse>>,item:ManuallyDrop<Option<S::InverseItem>>,retirement:RetainedCloneClose,ordinal:usize,phase:u8,closing:bool}
+pub struct MultiDeleteRowPreparation<S:MultiDeletePath>where S::Row:EntityRow{base:DeleteRowPreparation<S>,bundle:Held<S::Inverse>,item:Held<S::InverseItem>,ordinal:usize,phase:u8,closing:bool,flight:Flight}
+impl<S:MultiDeletePath> MultiDeleteRowPreparation<S> where S::Row:EntityRow{
+ fn begin_close(&mut self){self.closing=true;self.mark_close();}
+ semio_s_artifact_energy_model_native_mutations::custody_impl!(item,bundle,base);
+}
+semio_s_artifact_energy_model_native_mutations::std_cursor!([S:MultiDeletePath] MultiDeleteRowPreparation<S>,[S::Row:EntityRow],|s|s.begin_close());
 impl<S:MultiDeletePath> RowFieldPreparation for MultiDeleteRowPreparation<S>where S::Row:EntityRow{
  type Input=S::Payload;type Inverse=S::InverseItem;
- fn new()->Self{Self{base:DeleteRowPreparation::new(),bundle:ManuallyDrop::new(None),item:ManuallyDrop::new(None),retirement:Default::default(),ordinal:0,phase:0,closing:false}}
+ fn new()->Self{Self{base:<DeleteRowPreparation<S> as RowFieldPreparation>::new(),bundle:Default::default(),item:Default::default(),ordinal:0,phase:0,closing:false,flight:Default::default()}}
  fn check(&self,p:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>)->Result<(),ValueError>{self.base.check(p,k,o)}
- fn demand(&self,p:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize)->Result<RetirementDemand,ValueError>{self.base.demand(p,k,o,b)}
- fn advance(&mut self,p:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.base.advance(p,k,o,b,g)}
+ fn quote(&self,p:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize,m:u64)->Result<Quote,ValueError>{RowFieldPreparation::quote(&self.base,p,k,o,b,m)}
+ fn advance_reply<'r>(&mut self,p:RetainedCloneRef<'_,Self::Input>,k:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize,m:u64,e:&mut RetainedAllocationEffect<'_>,r:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{self.base.advance_reply(p,k,o,b,m,e,r,recover)}
  fn ready(&self)->bool{!self.closing&&self.base.ready()}fn outcome(&self)->Option<RowOutcome>{self.base.outcome()}
- fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.base.take_demand()}fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{self.base.take(g)}
+ fn take_quote(&self)->Result<Quote,ValueError>{self.base.take_quote()}
+ fn take(&mut self,e:&mut RetainedAllocationEffect<'_>)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{self.base.take(e)}
  fn inverse_count(&self)->Result<usize,ValueError>{if self.closing||self.base.phase!=100{return Err(invalid());}let row=self.base.row.as_ref().ok_or_else(invalid)?.borrow()?;<S as MultiDeletePath>::inverse_count(row.get())}
- fn inverse_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.base.body.is_some_and(|v|v!=b){return Err(invalid());}match self.phase{0=>if self.base.inverse_ready(){nested(self.base.take_inverse_demand()?,2*size_of::<Option<S::Inverse>>()+1)}else{self.base.inverse_demand(b)},1=>nested(S::inverse_item_demand(self.bundle.as_ref().ok_or_else(invalid)?,self.ordinal,b.saturating_sub(1))?,2*size_of::<Option<S::InverseItem>>()+1),_=>Err(invalid())}}
- fn prepare_inverse(&mut self,b:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.inverse_demand(b)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let p=match self.phase{0=>if self.base.inverse_ready(){let extra=2*size_of::<Option<S::Inverse>>()+1;let(bundle,p)=self.base.take_inverse(child(g,extra)).map_err(|e|tag(e,extra))?.ok_or_else(invalid)?;*self.bundle=Some(bundle);self.phase=1;add(p,extra)?}else{self.base.prepare_inverse(b,g)?.progress()},1=>{let extra=2*size_of::<Option<S::InverseItem>>()+1;let(item,p)=S::take_inverse_item(self.bundle.as_mut().ok_or_else(invalid)?,self.ordinal,b.saturating_sub(1),child(g,extra)).map_err(|e|tag(e,extra))?.ok_or_else(invalid)?;*self.item=Some(item);self.phase=2;add(p,extra)?},_=>return Err(invalid())};semio_framework_value::retained_clone::admit_retained_clone_progress(g,p,"original multi-intent deletion inverse")?;Ok(if self.inverse_ready(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ fn inverse_quote(&self,b:usize,m:u64)->Result<Quote,ValueError>{if self.closing||self.base.body.is_some_and(|v|v!=b){return Err(invalid());}match self.phase{
+  0=>if RowFieldPreparation::inverse_ready(&self.base){let(d,w)=self.base.take_inverse_quote()?;Ok((nested(d,2*size_of::<Option<S::Inverse>>()+1)?,w))}else{self.base.inverse_quote(b,m)},
+  1=>Ok((nested(S::inverse_item_demand(self.bundle.get().ok_or_else(invalid)?,self.ordinal,b.saturating_sub(1))?,2*size_of::<Option<S::InverseItem>>()+1)?,1)),
+  _=>Err(invalid())}}
+ fn prepare_inverse_reply<'r>(&mut self,b:usize,m:u64,e:&mut RetainedAllocationEffect<'_>,r:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+  if self.phase==0&&!RowFieldPreparation::inverse_ready(&self.base){return self.base.prepare_inverse_reply(b,m,e,r,recover)}
+  let q=if recover{None}else{Some(RowFieldPreparation::inverse_quote(self,b,m))};
+  custody::gated(e,r,q,m,|effect,_|{let p=match self.phase{
+   0=>{let extra=2*size_of::<Option<S::Inverse>>()+1;let g=effect.grant();let(bundle,p)=self.base.take_inverse(&mut effect.nested(child(g,extra)))?.ok_or_else(invalid)?;self.bundle.set(bundle);self.phase=1;add(p,extra)?},
+   1=>{let extra=2*size_of::<Option<S::InverseItem>>()+1;let g=effect.grant();let(item,p)=S::take_inverse_item(self.bundle.get_mut().ok_or_else(invalid)?,self.ordinal,b.saturating_sub(1),child(g,extra))?.ok_or_else(invalid)?;self.item.set(item);self.phase=2;add(p,extra)?},
+   _=>return Err(invalid().into())};
+   Ok(if self.phase==2&&self.item.is_some(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})})
+ }
  fn inverse_ready(&self)->bool{!self.closing&&self.phase==2&&self.item.is_some()}
- fn take_inverse_demand(&self)->Result<RetirementDemand,ValueError>{if !self.inverse_ready(){return Err(invalid());}Ok(scalar(2*size_of::<Option<S::InverseItem>>()+2*size_of::<usize>()+1))}
- fn take_inverse(&mut self,g:RetainedCloneGrant)->Result<Option<(Self::Inverse,RetainedCloneProgress)>,ValueError>{let d=self.take_inverse_demand()?;if !retained_mutation_demand_fits(d,g){return Ok(None);}let ordinal=self.ordinal.checked_add(1).ok_or_else(invalid)?;let item=self.item.take().ok_or_else(invalid)?;self.ordinal=ordinal;self.phase=1;Ok(Some((item,receipt(d))))}
- fn begin_close(&mut self){self.closing=true;self.base.begin_close();}
- fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}let b=self.base.body.unwrap_or(b);if !self.retirement.is_empty()||self.item.is_some(){return self.retirement.next_owner_demands::<S::InverseItem>(self.item.is_some(),&None,b);}if self.bundle.is_some(){return self.retirement.next_owner_demands::<S::Inverse>(true,&None,b);}self.base.close_demand(b)}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let b=self.base.body.unwrap_or(g.maximum_copy_bytes);let d=self.close_demand(b)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let g=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes,..g};if !self.retirement.is_empty(){return self.retirement.select(b)?.step(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.item,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.bundle,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}self.base.close_step(g)}
- fn terminal_is_empty(&self)->bool{self.closing&&self.bundle.is_none()&&self.item.is_none()&&self.retirement.is_empty()&&self.base.terminal_is_empty()}
+ fn take_inverse_quote(&self)->Result<Quote,ValueError>{if !RowFieldPreparation::inverse_ready(self){return Err(invalid());}Ok((scalar(2*size_of::<Option<S::InverseItem>>()+2*size_of::<usize>()+1),1))}
+ fn take_inverse(&mut self,e:&mut RetainedAllocationEffect<'_>)->Result<Option<(Self::Inverse,RetainedCloneProgress)>,ValueError>{let(d,_)=self.take_inverse_quote()?;if !retained_mutation_demand_fits(d,e.grant()){return Ok(None);}let ordinal=self.ordinal.checked_add(1).ok_or_else(invalid)?;let item=self.item.take().ok_or_else(invalid)?;self.ordinal=ordinal;self.phase=1;Ok(Some((item,receipt(d))))}
 }
-impl<S:MultiDeletePath> Drop for MultiDeleteRowPreparation<S>where S::Row:EntityRow{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"original multi-intent deletion retains its recreation source");if empty{unsafe{ManuallyDrop::drop(&mut self.bundle);ManuallyDrop::drop(&mut self.item);}}}}

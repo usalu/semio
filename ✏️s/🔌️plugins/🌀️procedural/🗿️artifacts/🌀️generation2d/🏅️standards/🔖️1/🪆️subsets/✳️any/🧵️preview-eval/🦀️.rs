@@ -213,13 +213,13 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semi
 
 /// 👆️ The hop a generate preview owes while no generation is selected: it ran, it has nothing to
 /// evaluate, and it clears the evaluation it would otherwise keep showing.
-pub fn settle_empty_tick(window_id: &str, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
+pub fn settle_empty_tick(window_id: &str, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<bool, semio_framework_value::ValueError> {
     session.begin_window_tick(window_id, grant)?;
     session.note_window_tick_outcome(window_id, false, grant)?;
     if !session.eval_json().is_empty() {
-        session.set_eval_json(std::sync::Arc::new(String::new()), grant).map_err(|(error, _)| error)?;
+        return Ok(session.set_eval_json(&mut None, effect)?.is_some());
     }
-    Ok(())
+    Ok(true)
 }
 
 /// 🗜️ Folds one `evaluate` answer into `session` and settles the window's outstanding answer. An

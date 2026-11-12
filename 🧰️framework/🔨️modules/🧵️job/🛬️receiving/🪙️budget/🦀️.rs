@@ -12,13 +12,13 @@ pub fn retained_is_subset(a:RetainedCloneGrant,b:RetainedCloneGrant)->bool{retai
 pub fn native_call_context<T,E>(error:ValueError)->semio_framework_value_call::NativeCallFailure<T,E>{semio_framework_value_call::NativeCallFailure{output:None,operation:None,context:Some(error),receipt_refusal:None}}
 
 /// 🫴️ The actual Job ledger receives every original physical effect once.
-pub struct OriginalJobConstructionRecipient<'a>{original:RetainedCloneGrant,start:RetainedCloneProgress,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress,submitted:RetainedCloneProgress,recovery:Option<RetainedCloneGrant>,construction_open:bool}
+pub struct OriginalJobConstructionRecipient<'a>{original:RetainedCloneGrant,start:RetainedCloneProgress,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress,submitted:RetainedCloneProgress,recovery:Option<RetainedCloneGrant>,construction_open:bool,source:Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity>}
 /// 🫴️ The resident producer; each Job turn lends its exact ledger as the context.
 pub struct OriginalJobConstructionDriver;
 impl semio_framework_value_native_owned::native_decoding::OriginalConstructionRecipient for OriginalJobConstructionDriver{
  type Context<'turn,'source>=OriginalJobConstructionRecipient<'turn> where 'source:'turn;
  fn validate_context<'turn,'source>(&self,_:&OriginalJobConstructionRecipient<'turn>)->Result<(),ValueError> where 'source:'turn{Ok(())}
- fn source_turn<'turn,'source>(&self,_:&OriginalJobConstructionRecipient<'turn>)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{None}
+ fn source_turn<'turn,'source>(&self,c:&OriginalJobConstructionRecipient<'turn>)->Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity> where 'source:'turn{c.source}
  fn grant<'reply,'turn,'source>(&mut self,c:&mut OriginalJobConstructionRecipient<'turn>,quote:semio_framework_value_native_owned::native_decoding::OriginalConstructionGrant<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalConstructionGrantComplete<'reply> where 'source:'turn{let demand=quote.demand();quote.complete(c.grant_for(demand))}
  fn accept<'reply,'turn,'source>(&mut self,c:&mut OriginalJobConstructionRecipient<'turn>,receipt:semio_framework_value_native_owned::native_decoding::OriginalConstructionAccept<'reply>)->semio_framework_value_native_owned::native_decoding::OriginalConstructionAcceptComplete<'reply> where 'source:'turn{let(grant,progress)=(receipt.grant(),receipt.progress());receipt.complete(c.accept_receipt(grant,progress))}
  fn submitted<'turn,'source>(&self,c:&OriginalJobConstructionRecipient<'turn>)->RetainedCloneProgress where 'source:'turn{c.submitted}
@@ -29,8 +29,10 @@ impl OriginalJobConstructionRecipient<'_>{
 }
 impl<'a> OriginalJobConstructionRecipient<'a>{
  /// ♻️ Returns only an actual frozen receipt against its same original pooled hold.
- pub fn new_recovery(original:RetainedCloneGrant,held:RetainedCloneGrant,construction_open:bool,start:RetainedCloneProgress,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress)->Self{Self{original,start,spent,receiving_spent,submitted:Default::default(),recovery:Some(held),construction_open}}
+ pub fn new_recovery(original:RetainedCloneGrant,held:RetainedCloneGrant,construction_open:bool,start:RetainedCloneProgress,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress)->Self{Self{original,start,spent,receiving_spent,submitted:Default::default(),recovery:Some(held),construction_open,source:None}}
 
  /// 🎫️ Borrows the initiating Job's exact physical ledger and its nested receiving receipt.
- pub fn new(original:RetainedCloneGrant,start:RetainedCloneProgress,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress)->Self{Self{original,start,spent,receiving_spent,submitted:Default::default(),recovery:None,construction_open:true}}
+ pub fn new(original:RetainedCloneGrant,start:RetainedCloneProgress,spent:&'a mut RetainedCloneProgress,receiving_spent:&'a mut RetainedCloneProgress)->Self{Self{original,start,spent,receiving_spent,submitted:Default::default(),recovery:None,construction_open:true,source:None}}
+ /// 🧭️ Binds the physical ledger to the same original Source turn as its Work.
+ pub fn with_source(mut self,source:Option<semio_framework_value_native_owned::native_decoding::OriginalSourceTurnIdentity>)->Self{self.source=source;self}
 }

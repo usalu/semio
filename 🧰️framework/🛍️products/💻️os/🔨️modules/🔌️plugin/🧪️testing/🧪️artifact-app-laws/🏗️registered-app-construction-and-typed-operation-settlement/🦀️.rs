@@ -35,7 +35,7 @@ pub async fn consume_media_refused_then_funded<P: PluginApp>(app: &mut P, port: 
         let mut polled = None;
         cx.with_retained_loan(semio_framework_value::RetainedCloneGrant::default(), |unfunded| {
             let mut poll = std::pin::pin!(app.consume_media(port, &mut artifact, unfunded));
-            polled = Some(poll.as_mut().poll(&mut std::task::Context::from_waker(std::task::Waker::noop())));
+            polled = Some(std::future::Future::poll(poll.as_mut(), &mut std::task::Context::from_waker(std::task::Waker::noop())));
             Ok(())
         })?;
         match polled.expect("the unfunded poll ran") {
@@ -160,7 +160,7 @@ pub fn settle_store_constructor<A: ArtifactApp, M: store::ReferenceSpaceMember +
 pub fn drain_store_displaced_retirements<P, Mutation>(store: &mut store::ArtifactStore<P, Mutation>)
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + store::OpBinary + store::OpText + Send + 'static,
+    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + store::OpBinary + store::OpBinaryReceiving + store::OpText + Send + 'static,
 {
     for _ in 0..1_000_000 {
         if store.maintenance_retirements_terminal_is_empty() { return; }
@@ -178,7 +178,7 @@ pub fn settle_store_constructor_close<A: ArtifactApp, M: store::ReferenceSpaceMe
         retain_original_ownership_receipts(app, mounted_policy, &mut receipts).expect("original fixture constructor close receipts");
         if app.constructor.constructor_terminal_is_empty() { return receipts; }
         assert!(std::time::Instant::now() < deadline, "registered fixture store constructor close did not settle");
-        app.stores.close_store_constructor_unit(&mut app.constructor, mounted_policy.close).expect("registered fixture store constructor close turn");
+        fixture_pump_turn(mounted_policy.close, |effect| app.stores.close_store_constructor_unit(&mut app.constructor, effect)).expect("registered fixture store constructor close quote admitted").expect("registered fixture store constructor close turn");
     }
 }
 

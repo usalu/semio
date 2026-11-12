@@ -118,12 +118,12 @@ fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
     if target.granularity != granularity || !matches!(operation, "filletEdges" | "chamferEdges" | "shell" | "draft" | "defeature") { return Err("The B-Rep operation requires matching edge or face selection".into()); }
     let infos = semio_os_flow::flow_neuron_kind_info_map();
     let source_kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected geometry no longer exists")?;
-    let source = infos.get(&source_kind).and_then(|info| info.outputs.iter().find(|port| port.name == target.channel)).ok_or("The selected geometry output is unavailable")?;
+    let source = infos.get().get(&source_kind).and_then(|info| info.outputs.iter().find(|port| port.name == target.channel)).ok_or("The selected geometry output is unavailable")?;
     let collection = source.cardinality.is_collection() || source.value_types.iter().any(|kind| kind == "list") && !source.value_types.iter().any(|kind| kind == "geometry");
     if !source.value_types.iter().any(|kind| matches!(kind.as_str(), "geometry" | "list")) || !collection && target.index != 0 { return Err("Select components of one current B-Rep geometry output".into()); }
     let feature_kind = format!("brep.solid.{operation}");
-    let output = infos.get(&feature_kind).and_then(|info| info.outputs.first()).ok_or("The B-Rep operation is unavailable")?;
-    let source_output = infos.get("brep.brep").and_then(|info| info.outputs.iter().find(|port| port.value_types == ["geometry"])).ok_or("The topology source output is unavailable")?;
+    let output = infos.get().get(&feature_kind).and_then(|info| info.outputs.first()).ok_or("The B-Rep operation is unavailable")?;
+    let source_output = infos.get().get("brep.brep").and_then(|info| info.outputs.iter().find(|port| port.value_types == ["geometry"])).ok_or("The topology source output is unavailable")?;
     let consumers: Vec<_> = editor.snapshot().synapses.iter().filter(|wire| wire.from == target.widget && wire.from_port == target.channel).map(|wire| (wire.to.clone(), wire.to_port.clone())).collect();
     let (x, y) = editor.snapshot().layout.get(target.widget).map_or((0.0, 0.0), |layout| (layout.x, layout.y));
     let selector = add_edit_widget(editor, &format!("{}__selected", target.widget), "brep.brep", x + 220.0, y)?;
@@ -137,7 +137,7 @@ fn insert_brep_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
         editor.connect_ports(target.widget, target.channel, &id, "list")?;
         editor.connect_ports(&selector, "sourceIndex", &id, "index")?;
         editor.connect_ports(&feature, &output.name, &id, "value")?;
-        let channel = infos.get("list.set").and_then(|info| info.outputs.first()).ok_or("The collection replacement operation is unavailable")?.name.clone();
+        let channel = infos.get().get("list.set").and_then(|info| info.outputs.first()).ok_or("The collection replacement operation is unavailable")?.name.clone();
         (id, channel)
     } else { (feature.clone(), output.name.clone()) };
     for (consumer, input) in consumers { editor.connect_ports(&replacement.0, &replacement.1, &consumer, &input)?; }
@@ -161,10 +161,10 @@ fn insert_mesh_operation(editor: &mut GraphEditor<'_>, operation: &str, granular
     if target.index != 0 { return Err("Extract one mesh from the list before editing its components".into()); }
     let infos = semio_os_flow::flow_neuron_kind_info_map();
     let kind = editor.snapshot().widgets.iter().find_map(|widget| match widget { semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, .. } if id == target.widget => Some(neuron_kind.clone()), _ => None }).ok_or("The selected mesh no longer exists")?;
-    let source = infos.get(&kind).ok_or("The selected mesh operator is unavailable")?;
+    let source = infos.get().get(&kind).ok_or("The selected mesh operator is unavailable")?;
     if !source.outputs.iter().any(|port| port.name == target.channel && !port.cardinality.is_collection() && port.value_types.iter().any(|kind| kind == "mesh")) { return Err("Select a single indexed mesh output; convert B-Rep geometry to a mesh first".into()); }
     let next_kind = format!("brep.mesh.{operation}");
-    let output = infos.get(&next_kind).and_then(|info| info.outputs.first()).ok_or("The mesh operation is unavailable")?;
+    let output = infos.get().get(&next_kind).and_then(|info| info.outputs.first()).ok_or("The mesh operation is unavailable")?;
     let base = format!("{}__{}", target.widget, operation);
     let mut id = base.clone();
     let mut suffix = 2;

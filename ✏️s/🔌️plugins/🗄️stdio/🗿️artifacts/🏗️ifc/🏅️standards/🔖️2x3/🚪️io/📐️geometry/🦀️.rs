@@ -1,6 +1,7 @@
 //! 🖼️ Shared IFC2x3 surface projection and explicit representation diagnostics.
 use super::{geometry,Ifc2x3Snapshot};
-use semio_plugin::{world3d_camera_json, world3d_selection_json_with_granularity, BuiltNode, MeshWindowKit, SurfaceKind, WindowKit};
+use semio_plugin::{world3d_camera_json, world3d_selection_json_with_granularity, BuiltNode, MeshWindowKit, WindowKit};
+use semio_plugin::app::SurfaceKind;
 
 pub fn render_with(document: &Ifc2x3Snapshot, limits: geometry::GeometryLimits, progress: &mut dyn FnMut(geometry::GeometryProgress) -> bool) -> semio_plugin::UiAssemblyResult<BuiltNode> {
     let scene = geometry::project_with(document, limits, progress);

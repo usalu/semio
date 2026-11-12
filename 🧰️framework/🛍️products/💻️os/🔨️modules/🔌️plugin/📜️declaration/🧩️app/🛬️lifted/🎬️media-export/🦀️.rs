@@ -80,3 +80,46 @@ impl<A:ArtifactApp> ArtifactMediaExportRequestRetirement<A>{
 fn settle(effect:&mut RetainedAllocationEffect<'_>,result:Result<RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>)->OriginalRetirementPoll{RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()})}
 
 impl<A:ArtifactApp> Drop for ArtifactMediaExportRequestRetirement<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"retained media request requires its original paid close")}}
+
+/// 🏛️ One caller-resident construction frame, its retained failure and that failure's retirement: the single birth protocol of every media-export job and its preparation.
+#[derive(Default)]
+pub struct MediaConstruction{admission:semio_framework_job::OriginalConstructionAdmission,failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalConstructionFailure>>,failure_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_job::OriginalConstructionFailure>>>}
+impl MediaConstruction{
+ pub fn terminal_is_empty(&self)->bool{self.admission.terminal_is_empty()&&self.failure.is_none()&&self.failure_close.is_none()}
+ pub fn settling(&self)->bool{!self.admission.terminal_is_empty()}
+ /// 🏗️ Runs one construction over the frame and reports its raw status; the caller settles it.
+ pub fn admit<O>(&mut self,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,RetainedCloneProgress),ValueError>)->Result<semio_framework_job::OriginalConstructionStatus,semio_framework_job::OriginalTurnFailure>{
+  semio_framework_job::admit_original_construction(cx,output,&mut self.admission,demand,1,|_,reported|{let result=construct();if let Ok((_,progress))=&result{if progress.retained_capacity_bytes!=0&&reported.is_none(){*reported=Some(progress.retained_capacity_bytes)}}semio_framework_value::RetainedWorkOutcome{result,work:1}})
+ }
+ /// 🏗️ Births one candidate into its empty slot; `true` once settled, a refusal keeps its complete causes in the frame.
+ pub fn built<O>(&mut self,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+  match self.admit(cx,output,demand,construct)?{
+   semio_framework_job::OriginalConstructionStatus::Ready=>self.admission.reset_step(cx),
+   semio_framework_job::OriginalConstructionStatus::Pending=>Ok(false),
+   semio_framework_job::OriginalConstructionStatus::Failed=>{self.admission.take_failure_into_step(&mut self.failure,cx)?;Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"media export construction failed; its complete causes are retained").into())}
+  }
+ }
+ /// 🧾️ Settles a ready frame left over after its candidate was already published.
+ pub fn settle(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.admission.terminal_is_empty(){Ok(true)}else{self.admission.reset_step(cx)}}
+ /// 📏️ Quotes the next close move of the frame, its failure or that failure's retirement.
+ pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if self.failure.is_some()||self.failure_close.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.failure,&self.failure_close,body)}
+  let close=self.admission.close_demand();if !self.admission.has_failure(){return Ok(close)}
+  let take=self.admission.take_failure_demand().physical();
+  Ok(RetirementDemand{copy_bytes:take.copy_bytes.max(close.copy_bytes),capacity_bytes:take.capacity_bytes.max(close.capacity_bytes),release_bytes:take.release_bytes.max(close.release_bytes),depth:take.depth.max(close.depth)})
+ }
+ /// ♻️ Takes the failure, retires it, then retires the frame, one funded move per call; `None` once terminal.
+ pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneProgress>,semio_framework_job::OriginalTurnFailure>{
+  if self.terminal_is_empty(){return Ok(None)}
+  if self.failure.is_none()&&self.failure_close.is_none(){
+   let before=cx.retained_progress();
+   if !(self.admission.has_failure()&&self.admission.take_failure_into_step(&mut self.failure,cx)?){self.admission.close_step(cx)?;}
+   let after=cx.retained_progress();
+   return Ok(Some(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))
+  }
+  let demand=self.close_demand(cx.retained_grant().maximum_copy_bytes)?;
+  let step=semio_framework_job::close_original_retained_effect_step(cx,demand,|effect|store::os_store::snapshot_read::settle_close_poll(semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.failure,&mut self.failure_close,effect)))?;
+  Ok(Some(step.progress()))
+ }
+}
+impl Drop for MediaConstruction{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"media export construction requires its original paid close")}}

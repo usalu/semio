@@ -99,7 +99,6 @@ struct Process3dMountedString {
 /// a schema-erased record and cannot reach a batch pack decoder.
 pub struct Process3dMountedSnapshotOwner {
     candidate: std::mem::ManuallyDrop<Option<Process3dSnapshot>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     stack: Vec<Process3dMountedFrame>,
     string: Option<Process3dMountedString>,
     complete: bool,
@@ -157,7 +156,7 @@ impl Process3dMountedSnapshotOwner {
             step_payloads: Vec::new(),
             tool_solids: Vec::new(),
         };
-        Ok(Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), retirement: std::mem::ManuallyDrop::new(None), stack, string: None, complete: false, handed_back: false })
+        Ok(Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), stack, string: None, complete: false, handed_back: false })
     }
 
     fn candidate(&mut self) -> Result<&mut Process3dSnapshot, &'static str> {
@@ -550,16 +549,8 @@ impl mounted::RetainedTypedPackOwner for Process3dMountedSnapshotOwner {
             }
             return false;
         }
-        if self.retirement.is_some() {
-            if let Ok(demand) = store::os_store::snapshot_read::artifact_retirement_box_demands(self.retirement.as_ref().expect("observed original retirement"), store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                let _ = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, process3d_self_funded_grant(demand));
-            }
-            return false;
-        }
-        if self.candidate.is_some() {
-            if let Ok(demand) = store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.candidate) {
-                let _ = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.candidate, &mut self.retirement, process3d_self_funded_grant(demand));
-            }
+        if let Some(candidate) = self.candidate.take() {
+            drop(candidate);
             return false;
         }
         self.handed_back = true;
@@ -567,13 +558,8 @@ impl mounted::RetainedTypedPackOwner for Process3dMountedSnapshotOwner {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.handed_back && self.candidate.is_none() && self.retirement.is_none() && self.stack.is_empty() && self.string.is_none()
+        self.handed_back && self.candidate.is_none() && self.stack.is_empty() && self.string.is_none()
     }
-}
-
-/// 🎟️ The mounted-pack owner trait carries no scheduler grant, so its synchronous close funds each turn from its own quoted demand.
-fn process3d_self_funded_grant(demand: semio_framework_value::RetirementDemand) -> semio_framework_value::retained_clone::RetainedCloneGrant {
-    semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
 }
 
 impl Drop for Process3dMountedSnapshotOwner {

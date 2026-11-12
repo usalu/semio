@@ -90,6 +90,7 @@ impl PaintRegionWork {
 }
 
 impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn tool_id(&self) -> &'static str { ACTION_ID }
 
     fn extent(&self, command: &TiffAnyEditCommand, snapshot: &crate::TiffSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>) -> Option<usize> {
@@ -131,7 +132,7 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|grant|{
-            if !self.closing { return semio_framework_value::RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Blocked), work: 0 }; }
+            if !self.closing { return semio_framework_value::RetainedWorkOutcome::<InteractiveJobCloseStep, semio_framework_job::OriginalTurnPrimary> { result: Ok(InteractiveJobCloseStep::Blocked), work: 0 }; }
             semio_framework_value::RetainedWorkOutcome { result: Ok(semio_s_artifact_stdio_contract::editing::close_revision_turn(&mut self.revision, grant)), work: 1 }
         })
     }
@@ -146,4 +147,3 @@ impl ArtifactCommandWork<EditorApp<TiffAnyEditor>> for PaintRegionWork {
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(PaintRegionWork);

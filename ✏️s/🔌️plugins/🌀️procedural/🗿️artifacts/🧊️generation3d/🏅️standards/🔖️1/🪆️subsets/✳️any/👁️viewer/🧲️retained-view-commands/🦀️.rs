@@ -225,7 +225,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let mut work=1;let result=(
+        let body=cx.retained_grant().maximum_copy_bytes;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let grant=effect.grant();let result=(
             ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
@@ -251,8 +251,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             };
         }
         if let Some(retirement) = self.emit_retirement.as_mut() {
-            let step = retirement.step(grant);
-            work = retirement.last_turn_work();
+            let step = match retirement.step(body, effect) { semio_framework_value::RetainedWorkPoll::Pending{..} => Ok(RetainedCloneStep::Progress(Default::default())), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_value_error()) };
             if retirement.terminal_is_empty() {
                 self.emit_retirement = None;
             }
@@ -274,8 +273,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             };
         }
         if let Some(retirement) = self.presence_retirement.as_mut() {
-            let step = retirement.step(grant);
-            work = retirement.last_turn_work();
+            let step = match retirement.step(body, effect) { semio_framework_value::RetainedWorkPoll::Pending{..} => Ok(RetainedCloneStep::Progress(Default::default())), semio_framework_value::RetainedWorkPoll::Complete(turn) => turn.result.map_err(|failure| failure.into_value_error()) };
             if retirement.terminal_is_empty() {
                 self.presence_retirement = None;
             }
@@ -285,7 +283,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             };
         }
         Ok(InteractiveJobCloseStep::Complete { progress: idle })
-    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work}})?;
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetirementPollExit::settle(effect,result.map_err(semio_framework_value::RetirementPollExit::from))})?;
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
@@ -312,4 +310,3 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
 }
 //#endregion 🧵️RetainedCommands
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dViewCommandWork);

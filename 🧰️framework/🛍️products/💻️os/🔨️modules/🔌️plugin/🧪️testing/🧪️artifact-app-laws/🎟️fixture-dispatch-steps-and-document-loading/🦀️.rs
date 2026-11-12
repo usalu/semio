@@ -285,11 +285,16 @@ where
     A: ArtifactApp,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
-    let archive = PluginApp::document_load_archive(app, files)?;
-    PluginApp::begin_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive)?;
-    let mut polls = 0usize;
+    let mut archive = PluginApp::document_load_archive(app, files)?;
     let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
+    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
+    for _ in 0..4096 {
+        if PluginApp::begin_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx)? { break; }
+        fixture_renew_turn(cx, fresh, fresh_grant)?;
+    }
+    assert!(admission.completed(), "fixture document archive admission did not finish");
+    let mut polls = 0usize;
     ensure_fixture_cancellation_issuer(app,cx)?;
     let status = loop {
         fixture_renew_turn(cx, fresh, fresh_grant)?;
@@ -307,10 +312,11 @@ where
 /// loads a document straight after opening the instance finds every store owner catalog installed.
 pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+    let mut exchange = semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty();
     while semio_plugin_runtime_ops::ops_document::plugin_store_constructor_pending(runtime, instance_id).await? {
         if std::time::Instant::now() >= deadline { return Err(semio_framework::Fault::from("the instance store constructor did not settle").into()); }
         if cx.should_yield(){return Err(semio_framework::Fault::from("store constructor requires its next original source turn").into())}cx.consume_fuel(1);
-        semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, instance_id, None, identity, cx).await?;
+        semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, instance_id, &mut None, &mut exchange, identity, cx).await?;
     }
     Ok(())
 }
@@ -320,14 +326,20 @@ pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_plug
 /// takes.
 pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     plugin_settle_store_constructor(runtime, instance_id, identity,cx).await?;
-    let archive = semio_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
-    semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, archive).await?;
-    let mut polls = 0usize;
+    let mut archive = semio_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
     let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
+    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
+    for _ in 0..4096 {
+        if semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx).await? { break; }
+        fixture_renew_turn(cx, fresh, fresh_grant)?;
+    }
+    assert!(admission.completed(), "fixture document archive admission did not finish");
+    let mut exchange = semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty();
+    let mut polls = 0usize;
     let status = loop {
         fixture_renew_turn(cx, fresh, fresh_grant)?;
-        cx.consume_fuel(1);semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,None,identity,cx).await?;
+        cx.consume_fuel(1);semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,&mut None,&mut exchange,identity,cx).await?;
         let status = semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
             break status;
@@ -530,7 +542,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_plugin_decl_surface::Art
 
             assert!(progress.fits(turn.grant));
 
-            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant).result.expect("fixture original payload admission").expect("fixture original input funds payload"));
+            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant,&mut None).result.expect("fixture original payload admission").expect("fixture original input funds payload"));
 
             assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 
@@ -558,7 +570,9 @@ pub fn assert_viewer_genesis_children_declared<V: semio_plugin_decl_surface::Art
 
         pub fn receive<T>(&mut self, grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> T) -> T {
 
-            self.context(grant).with_native_receiving(|receiving| Ok::<_, semio_framework_value::ValueError>(operation(receiving))).expect("fixture original receiving loan")
+            let (mut scope, mut result) = (None, None);
+            self.context(grant).with_native_receiving(&mut scope, |receiving, _| { result = Some(operation(receiving)); Ok(()) }).expect("fixture original receiving loan");
+            result.expect("fixture original receiving loan ran its unit")
 
         }
 
@@ -569,19 +583,14 @@ pub fn assert_viewer_genesis_children_declared<V: semio_plugin_decl_surface::Art
         pub fn close(&mut self) {
 
             for _ in 0..100_000 {
-
                 if self.decoder.terminal_is_empty() { break; }
-
-                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.decoder.close_step(self.turn.grant).result.expect("fixture original decoder paid closure"));
-
-                let progress = match step { semio_framework_value::RetainedCloneStep::Progress(progress) | semio_framework_value::RetainedCloneStep::Complete(progress) => progress };
-
+                let grant = self.turn.grant;
+                let mut cx = semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(self.turn.operation), semio_framework_job::Generation(self.turn.generation), semio_framework_job::StepBudget::new(1_000_000, u64::MAX, grant), self.cancel.as_ref().expect("fixture original cancellation retained"), || Some(0), &mut self.sequence, &mut self.progress, &self.payload).expect("fixture original payload loan");
+                let (closed, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.decoder.close_on_source(&mut cx));
+                closed.expect("fixture original decoder paid closure");
+                let progress = cx.retained_progress();
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
-
-                assert!(progress.fits(self.turn.grant), "fixture receiving closure exceeded its original input");
-
-                assert_ne!(progress, semio_framework_value::RetainedCloneProgress::default(), "fixture receiving closure stalled under its original input");
-
+                assert!(progress.fits(grant), "fixture receiving closure exceeded its original input");
             }
 
             assert!(self.decoder.terminal_is_empty(),"fixture original receiving retirement did not finish");
@@ -590,7 +599,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_plugin_decl_surface::Art
 
                 if self.payload.terminal_is_empty() { break; }
 
-                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.payload.close_step(self.turn.grant).result.expect("fixture original payload paid closure"));let progress=step.progress();
+                let (outcome,heap)=fixture_pump_turn(self.turn.grant,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||self.payload.close_step(effect))).expect("fixture original payload close quote admitted");let step=outcome.result.expect("fixture original payload paid closure");let progress=step.progress();
 
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 
@@ -610,7 +619,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_plugin_decl_surface::Art
 
                     if owner.terminal_is_empty() { break; }
 
-                    let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(self.turn.grant).result.expect("fixture original cancellation paid closure"));let progress=step.progress();
+                    let (outcome,heap)=fixture_pump_turn(self.turn.grant,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(effect))).expect("fixture original cancellation close quote admitted");let step=outcome.result.expect("fixture original cancellation paid closure");let progress=step.progress();
 
                     assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 

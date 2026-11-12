@@ -145,9 +145,7 @@ impl Inputs {
                 return Ok(false);
             }
             5 if !self.receiver.terminal_is_empty() => {
-                let grant = RetainedCloneGrant { maximum_copy_bytes: cx.retained_grant().maximum_copy_bytes.min(4096), ..cx.retained_grant() };
-                let turn = self.receiver.close_step(grant);
-                cx.consume_fuel(turn.work);
+                let Some(turn) = effected(cx, |effect| self.receiver.close_step(effect))? else { return Ok(false) };
                 let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
                 cx.consume_retained(step.progress())?;
                 return Ok(false);
@@ -311,24 +309,24 @@ impl Inputs {
         }
         self.retirement.next_owner_demands::<Vec<Input>>(self.values.is_some(), &None, body)
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
         if !self.state.closing {
             return refused(invalid("IFC type input close not started"));
         }
         if !self.receiver.terminal_is_empty() {
-            return self.receiver.close_step(grant);
+            return self.receiver.close_step(effect);
         }
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return settled(self.retirement.step_granted(4096, effect));
         }
         if self.raw.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.raw, grant), "IFC type input raw retirement missing");
+            return owned_step(self.retirement.begin_granted(&mut self.raw, effect), "IFC type input raw retirement missing");
         }
         if self.value.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.value, grant), "IFC type input value retirement missing");
+            return owned_step(self.retirement.begin_granted(&mut self.value, effect), "IFC type input value retirement missing");
         }
         if self.values.is_some() {
-            return owned_step(self.retirement.begin_granted(&mut self.values, grant), "IFC type input roster retirement missing");
+            return owned_step(self.retirement.begin_granted(&mut self.values, effect), "IFC type input roster retirement missing");
         }
         RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }
     }

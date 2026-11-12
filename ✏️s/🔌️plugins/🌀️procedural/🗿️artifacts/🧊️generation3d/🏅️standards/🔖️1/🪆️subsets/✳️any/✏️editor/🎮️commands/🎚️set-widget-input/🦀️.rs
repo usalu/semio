@@ -118,7 +118,7 @@ pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetIn
     let Widget::Neuron { neuron_kind, params, .. } = widget else { return Err("Select an operator input or a text source".into()) };
     if host_snapshot.synapses.iter().any(|synapse| synapse.to == payload.widget_id && synapse.to_port == payload.channel) { return Err("This input is connected; edit its source or disconnect it first".into()); }
     let infos = semio_os_flow::flow_neuron_kind_info_map();
-    let port = infos.get(neuron_kind).and_then(|info| info.inputs.iter().find(|input| input.name == payload.channel)).ok_or("The selected operator input is unavailable")?;
+    let port = infos.get().get(neuron_kind).and_then(|info| info.inputs.iter().find(|input| input.name == payload.channel)).ok_or("The selected operator input is unavailable")?;
     let stored = params.get(&payload.channel).map(|value| value.to_value());
     let current = stored.clone().or_else(|| port.default.as_ref().map(|value| value.to_value()));
     if port.cardinality.is_collection() {
@@ -139,7 +139,7 @@ pub fn mesh_source_text(host: &FlowHostSnapshot, widget_id: &str, channel: &str)
         Widget::Neuron { id, neuron_kind, params, .. } if channel == "data" && neuron_kind == "brep.mesh.construct" => {
             if let Some(wire) = host.synapses.iter().find(|wire| wire.to == *id && wire.to_port == "data") { return mesh_source_text(host, &wire.from, "text"); }
             let infos = semio_os_flow::flow_neuron_kind_info_map();
-            let value = params.get("data").or_else(|| infos.get(neuron_kind).and_then(|info| info.inputs.iter().find(|port| port.name == "data")).and_then(|port| port.default.as_ref())).ok_or("Choose a mesh source")?.to_value();
+            let value = params.get("data").or_else(|| infos.get().get(neuron_kind).and_then(|info| info.inputs.iter().find(|port| port.name == "data")).and_then(|port| port.default.as_ref())).ok_or("Choose a mesh source")?.to_value();
             let text = value.get("value").and_then(semio_framework_value::DslValue::as_str).or_else(|| value.as_str()).ok_or("Mesh source must be text")?;
             Ok((id.clone(), "data".into(), text.into()))
         }

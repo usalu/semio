@@ -6,13 +6,12 @@ use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::sna
 use semio_s_artifact_stdio_ifc_details as shared;
 pub type Ifc4x3DetailsProvider<'a> = shared::IfcDetailsProvider<'a, Ifc4x3DetailsProfile>;
 pub struct Ifc4x3DetailsProfile;
-impl shared::IfcDetailsTypeMetadata for crate::validation::metadata::StaticTypeExpression {
-    fn projection(&'static self)->shared::IfcTypeProjection { shared::IfcTypeProjection{kind:self.kind,name:self.name,width:self.width,fixed:self.fixed,aggregate:self.aggregate,lower:self.lower,upper:self.upper,lower_expression:self.lower_expression,upper_expression:self.upper_expression,unique:self.unique,optional:self.optional,item:self.item.map(|item|item as &dyn shared::IfcDetailsTypeMetadata)} }
-}
 pub use shared::{IfcPublication, SnapshotSource};
 pub use shared::IfcDetailsRenderWork;
 pub use shared::{IfcTypeInputSourceWork,IfcPreparedTypeInputSource};
 pub use shared::{IfcValueReceiveMode, IfcValueReceiver};
+pub use shared::{charged, closed_in, costed, idle_step, owned_step, receive_effect, retire_self, settled};
+pub use shared::source_loan::{advance_cursor, closed_cursor, funded_turn, take_cursor, SnapshotLease};
 pub use shared::{IfcCandidateRules,IfcCandidateRuleStep,IfcTypeCandidate};
 impl shared::IfcDetailsProfile for Ifc4x3DetailsProfile {
     type CandidateRules = crate::validation::local::NativeCandidateRules;

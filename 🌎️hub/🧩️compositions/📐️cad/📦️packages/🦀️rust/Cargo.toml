@@ -44,6 +44,7 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
+semio-framework-value = { workspace = true }
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-s-artifact-cad-cad-viewer = { workspace = true }
 

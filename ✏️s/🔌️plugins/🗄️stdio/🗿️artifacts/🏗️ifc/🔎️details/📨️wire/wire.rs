@@ -1,16 +1,17 @@
 //! 🧵️ Borrowed forward and inverse Store wire admission advances the original native codec.
 use super::*;
+use super::source_loan::SnapshotLease;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonText as Text, ArtifactCanonicalJsonTree as Tree};
 use semio_plugin::plugin_app_close_prelude::store;
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
-use std::sync::Arc;
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};
+pub(crate) use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome as Outcome, RetirementDemand, ValueError, ValueRefusalKind};
 #[path = "inverse.rs"]
 mod inverse;
 #[path = "preimage.rs"]
 mod preimage;
 
-pub type SnapshotSource = RetainedCloneSource<IfcSnapshot, Arc<IfcSnapshot>>;
+pub type SnapshotSource = RetainedCloneSource<IfcSnapshot, SnapshotLease>;
 
 #[derive(Clone, Copy, Default)]
 enum Phase {
@@ -114,7 +115,7 @@ fn entity_id(mutation: &IfcMutation) -> Option<u64> {
 
 impl IfcInverseWire {
     fn snapshot(&self) -> Result<&IfcSnapshot, ValueError> {
-        self.source.as_ref().ok_or_else(|| refusal("IFC publication source missing"))?.try_authority().map(Arc::as_ref)
+        self.source.as_ref().ok_or_else(|| refusal("IFC publication source missing"))?.try_authority()?.get()
     }
 
     fn tag(&self) -> &'static str {
@@ -317,7 +318,7 @@ impl IfcPublication {
             }
             Phase::Prepare => {
                 let source = self.view.source.as_ref().ok_or_else(|| refusal("IFC publication source missing"))?;
-                let snapshot = source.try_authority()?.as_ref();
+                let snapshot = source.try_authority()?.get()?;
                 if self.view.overlay.advance(snapshot, mutations, cx)? {
                     self.view.position = self.view.overlay.before.position;
                     if matches!(self.view.inverse, Inverse::Insert | Inverse::Name | Inverse::Complex) && self.view.overlay.before.origin.is_none()
@@ -335,14 +336,17 @@ impl IfcPublication {
                     self.live = true;
                     self.bytes = 0;
                 }
-                let grant = cx.retained_grant();
-                let result = if matches!(self.phase, Phase::Forward) {
-                    let source = store::ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: store::ArtifactCanonicalTreeSource::view(&mutations[self.mutation]) };
-                    self.codec.advance(source, &mut self.chunk, grant)
-                } else {
-                    let inverse = inverse::BorrowedInverse { view: &self.view, mutations };
-                    self.codec.advance(store::ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: &inverse }, &mut self.chunk, grant)
-                };
+                let forward = matches!(self.phase, Phase::Forward);
+                let (codec, chunk, view, mutation) = (&mut self.codec, &mut self.chunk, &self.view, self.mutation);
+                let Some(result) = effected(cx, |effect| {
+                    if forward {
+                        let source = store::ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: store::ArtifactCanonicalTreeSource::view(&mutations[mutation]) };
+                        codec.advance(source, chunk, effect)
+                    } else {
+                        let inverse = inverse::BorrowedInverse { view, mutations };
+                        codec.advance(store::ArtifactPreparedOperationSource::CanonicalJson { header: b"op", body: &inverse }, chunk, effect)
+                    }
+                })? else { return Ok(false) };
                 match result {
                     Ok(progress) => {
                         let complete = progress.complete;
@@ -350,7 +354,7 @@ impl IfcPublication {
                         cx.consume_retained(receipt(progress))?;
                         self.counted(written)?;
                         if complete {
-                            self.phase = if matches!(self.phase, Phase::Forward) { Phase::CloseForward } else { Phase::CloseInverse };
+                            self.phase = if forward { Phase::CloseForward } else { Phase::CloseInverse };
                         }
                     }
                     Err(error) => {
@@ -358,10 +362,12 @@ impl IfcPublication {
                         return Err(error.reason.into());
                     }
                 }
+                return Ok(false);
             }
             Phase::CloseForward | Phase::CloseInverse => {
                 let forward = matches!(self.phase, Phase::CloseForward);
-                let progress = match self.codec.close(cx.retained_grant()) {
+                let Some(closed) = effected(cx, |effect| self.codec.close(effect))? else { return Ok(false) };
+                let progress = match closed {
                     Ok(progress) => progress,
                     Err(error) => {
                         return Err(semio_framework_job::OriginalTurnFailure::debit_original(error.reason, cx));
@@ -373,6 +379,7 @@ impl IfcPublication {
                     self.live = false;
                     self.phase = if forward { Phase::RestartForward } else { Phase::RestartInverse };
                 }
+                return Ok(false);
             }
             Phase::RestartForward | Phase::RestartInverse => {
                 let forward = matches!(self.phase, Phase::RestartForward);
@@ -413,13 +420,19 @@ impl IfcPublication {
     pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
         if !self.codec.closed { self.codec.retirement_demands() } else { self.view.overlay.close_demands() }
     }
-    pub fn close_codec(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_codec(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Outcome {
+        let before = effect.performed_work();
         if self.codec.closed {
-            return RetainedWorkOutcome { result: self.view.overlay.close(grant), work: 1 };
+            let result = match paid(effect) {
+                Ok(true) => self.view.overlay.close(effect.grant()),
+                Ok(false) => Ok(RetainedCloneStep::Progress(Default::default())),
+                Err(error) => Err(error),
+            };
+            return Outcome { result, work: effect.performed_work() - before };
         }
-        let progress = match self.codec.close(grant) {
+        let progress = match self.codec.close(effect) {
             Ok(progress) => progress,
-            Err(error) => return refused(error.reason),
+            Err(error) => return Outcome { result: Err(error.reason), work: effect.performed_work() - before },
         };
         let complete = progress.complete;
         let progress = receipt(progress);
@@ -429,7 +442,7 @@ impl IfcPublication {
         } else {
             RetainedCloneStep::Progress(progress)
         };
-        RetainedWorkOutcome { result: Ok(step), work: 1 }
+        Outcome { result: Ok(step), work: effect.performed_work() - before }
     }
 }
 

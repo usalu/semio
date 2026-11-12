@@ -203,4 +203,3 @@ impl ArtifactOwnedToolJobFactory for Gis2dRetainedCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️Gis2dPlayApp
 
-semio_plugin::retained_command::terminal_frame_bound!(GisMapWindowWork);

@@ -210,4 +210,3 @@ pub(super) fn generation3d_view_flow_first_step_tool_proofs() -> Vec<semio_plugi
     proofs
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dViewDocumentIoWork);

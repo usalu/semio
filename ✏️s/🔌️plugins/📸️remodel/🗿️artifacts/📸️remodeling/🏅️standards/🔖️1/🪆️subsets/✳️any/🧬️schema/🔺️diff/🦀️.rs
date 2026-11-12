@@ -21,7 +21,7 @@ use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::sche
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MotionParams;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::MotionTrackSummary;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::QcReportSnapshot;
-use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingAssetChild;
+use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::{RemodelingAssetChild, RemodelingAssetStore, RemodelingDurableArtifactStore};
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingDurableArtifact;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingMesh;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
@@ -33,7 +33,6 @@ use framework_schema::ArtifactSchema;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the remodeling artifact; persistent entries apply via MutationDiff.
@@ -508,28 +507,28 @@ impl RemodelingContentDelta {
         RemodelingContentRow::Append { id: id.to_string(), header: Some(RemodelingContentHeader { kind: artifact.kind.clone(), mime: artifact.mime.clone(), width: artifact.width, height: artifact.height }), chunks: artifact.chunks.clone() }
     }
 
-    fn apply_rows(&self, store: &BTreeMap<String, RemodelingDurableArtifact>) -> MutationApplyResult<BTreeMap<String, RemodelingDurableArtifact>> {
+    fn apply_rows(&self, store: &RemodelingDurableArtifactStore) -> MutationApplyResult<RemodelingDurableArtifactStore> {
         let mut next = store.clone();
         for (row, entry) in self.rows.iter().enumerate() {
             let at = |field: &str| ["rows".to_string(), row.to_string(), field.to_string()];
             match entry {
                 RemodelingContentRow::Append { id, header: Some(header), chunks } => {
-                    if next.contains_key(id) {
+                    if next.get(id).is_some() {
                         return Err(MutationApplyError::new("mutation.apply.duplicate-id", "created content already exists").at(at("id")));
                     }
-                    next.insert(id.clone(), RemodelingDurableArtifact { kind: header.kind.clone(), mime: header.mime.clone(), width: header.width, height: header.height, chunks: chunks.clone() });
+                    next.cold_insert(id.clone(), RemodelingDurableArtifact { kind: header.kind.clone(), mime: header.mime.clone(), width: header.width, height: header.height, chunks: chunks.clone() });
                 }
                 RemodelingContentRow::Append { id, header: None, chunks } => {
-                    let artifact = next.get_mut(id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "extended content does not exist").at(at("id")))?;
+                    let mut artifact = next.cold_remove(id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "extended content does not exist").at(at("id")))?;
                     artifact.chunks.extend(chunks.iter().cloned());
+                    next.cold_insert(id.clone(), artifact);
                 }
                 RemodelingContentRow::Truncate { id, from } => {
-                    let artifact = next.get_mut(id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "truncated content does not exist").at(at("id")))?;
+                    let mut artifact = next.cold_remove(id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "truncated content does not exist").at(at("id")))?;
                     let keep = usize::try_from(*from).ok().filter(|keep| *keep < artifact.chunks.len()).ok_or_else(|| MutationApplyError::new("mutation.apply.invalid-base", "truncation point is not inside the stored leaves").at(at("from")))?;
-                    if keep == 0 {
-                        next.remove(id);
-                    } else {
+                    if keep != 0 {
                         artifact.chunks.truncate(keep);
+                        next.cold_insert(id.clone(), artifact);
                     }
                 }
             }
@@ -549,7 +548,7 @@ impl RemodelingContentDelta {
     }
 
     /// 🔁️ The negative delta, read row by row: an `append` that creates is undone by truncating to zero, an `append` that extends by truncating to the length it started from, a `truncate` by re-appending the base leaves it cut (or re-creating the base artifact when it removed it); in reverse order. The length a row starts from is the base length for the first row of an artifact and is carried through the earlier rows of the same artifact after that.
-    pub fn inverse_rows(&self, base: &BTreeMap<String, RemodelingDurableArtifact>) -> Self {
+    pub fn inverse_rows(&self, base: &RemodelingDurableArtifactStore) -> Self {
         let mut undo: Vec<RemodelingContentRow> = Vec::new();
         for (position, entry) in self.rows.iter().enumerate() {
             let id = entry.id();
@@ -756,11 +755,11 @@ impl RemodelingDiff {
 //#endregion 🔖️Builders
 
 //#region 🔖️Apply
-fn asset_entries(assets: &BTreeMap<String, RemodelingAssetChild>) -> Vec<RemodelingAssetEntry> {
+fn asset_entries(assets: &RemodelingAssetStore) -> Vec<RemodelingAssetEntry> {
     assets.iter().map(|(key, child)| RemodelingAssetEntry { key: key.clone(), child: child.clone() }).collect()
 }
 
-fn asset_map(entries: Vec<RemodelingAssetEntry>) -> BTreeMap<String, RemodelingAssetChild> {
+fn asset_map(entries: Vec<RemodelingAssetEntry>) -> RemodelingAssetStore {
     entries.into_iter().map(|entry| (entry.key, entry.child)).collect()
 }
 
@@ -876,6 +875,27 @@ impl protocol::ColdDiffAlgebra<RemodelingSnapshot> for RemodelingDiff {
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 //#endregion 🔁️Re-exports
+
+//#region 🚪️Codec
+impl semio_os_kernel::DiffBinary for RemodelingDiff {
+    fn encode_diff(&self) -> Result<Vec<u8>, semio_os_kernel::ProtocolError> {
+        Ok(semio_os_kernel::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
+    }
+    fn decode_diff(bytes: &[u8]) -> Result<Self, semio_os_kernel::ProtocolError> {
+        let value = semio_os_kernel::os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| semio_os_kernel::ProtocolError::Malformed { what: "artifact diff", offset: 0, detail: error.to_string() })?;
+        semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| semio_os_kernel::ProtocolError::Malformed { what: "artifact diff", offset: 0, detail: error.to_string() })
+    }
+}
+
+impl semio_os_kernel::DiffText for RemodelingDiff {
+    fn print_diff(&self) -> String {
+        semio_framework_pack_json::to_json_string(self)
+    }
+    fn parse_diff(text: &str) -> Result<Self, semio_os_kernel::__diagnostic::TextError> {
+        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_os_kernel::__diagnostic::TextError::from_value_error(error, semio_os_kernel::__diagnostic::TextSpan::at(1, 1)))
+    }
+}
+//#endregion 🚪️Codec
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

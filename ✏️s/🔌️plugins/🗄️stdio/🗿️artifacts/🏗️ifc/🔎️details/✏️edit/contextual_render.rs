@@ -162,7 +162,7 @@ impl IfcDetailsRenderWork {
             }
             3 => {
                 let turn = self.query.close_step(cx.retained_grant());
-                cx.consume_fuel(turn.work);
+                cx.consume_fuel(u64::try_from(turn.work).unwrap_or(u64::MAX));
                 let step = turn.result?;
                 cx.consume_retained(step.progress())?;
                 if self.query.terminal_is_empty() {

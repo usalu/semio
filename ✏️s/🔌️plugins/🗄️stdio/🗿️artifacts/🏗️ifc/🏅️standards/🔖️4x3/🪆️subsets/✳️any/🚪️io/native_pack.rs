@@ -22,12 +22,10 @@ pub fn serializer<T: Serializer<IfcSnapshot>>() -> IoEntry {
         let IoPayload::Binary(bytes) = input else {
             return Err(invalid("IFC route requires its declared binary native Pack"));
         };
-        control
-            .receive_nested::<IfcSnapshot, IoResult<IoPayload>>(|slot, original| {
-                *slot = Some(<IfcSnapshot as ArtifactPackReceiving>::receive_pack(bytes, &mut original.snapshot_decode()?)?);
-                Ok(semio_framework_async::poll::resolve_ready(T::serialize(slot.as_ref().unwrap(), &ArchiveChildren::empty(), original)))
-            })
-            .map_err(IoError::from_value_error)?
+        nested::<IfcSnapshot, IoOutcome<IoPayload>>(control, |slot, original, work| {
+            work.take(<IfcSnapshot as ArtifactPackReceiving>::receive_pack(bytes, slot, &mut original.snapshot_decode().map_err(IoError::from_value_error)?)).map_err(refused)?;
+            semio_framework_async::poll::resolve_ready(T::serialize(slot.as_ref().unwrap(), &ArchiveChildren::empty(), original))
+        })
     }
     IoEntry { owned_serializer: T::OWNED_FACTORY, from: crate::io::IFC4X3_DIALECT, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<T> }
 }
@@ -40,20 +38,14 @@ pub fn deserializer<T: Deserializer<IfcSnapshot>>() -> IoEntry {
         if T::CONFORMANCE.is_some() {
             return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "original IFC route requires a separately funded conformance producer")));
         }
-        control
-            .receive_nested::<IoOutcome<IfcSnapshot>, IoResult<IoPayload>>(|slot, original| {
-                let outcome = match semio_framework_async::poll::resolve_ready(T::deserialize(input, original)) {
-                    Ok(outcome) => outcome,
-                    Err(error) => return Ok(Err(error)),
-                };
-                *slot = Some(outcome);
-                original.receive_nested::<Vec<u8>, IoResult<IoPayload>>(|wire, original| {
-                    *wire = Some(slot.as_ref().unwrap().value.encode_exchange_pack(&mut original.snapshot_encode()?)?);
-                    publish_header(original)?;
-                    Ok(Ok(IoOutcome { value: IoPayload::Binary(wire.take().unwrap()), diagnostics: std::mem::take(&mut slot.as_mut().unwrap().diagnostics) }))
-                })
+        nested::<IoOutcome<IfcSnapshot>, IoOutcome<IoPayload>>(control, |slot, original, _| {
+            *slot = Some(semio_framework_async::poll::resolve_ready(T::deserialize(input, original))?);
+            nested::<Vec<u8>, IoOutcome<IoPayload>>(original, |wire, original, work| {
+                work.take(slot.as_ref().unwrap().value.encode_exchange_pack(wire, &mut original.snapshot_encode().map_err(IoError::from_value_error)?)).map_err(refused)?;
+                publish_header(original).map_err(IoError::from_value_error)?;
+                Ok(IoOutcome { value: IoPayload::Binary(wire.take().unwrap()), diagnostics: std::mem::take(&mut slot.as_mut().unwrap().diagnostics) })
             })
-            .map_err(IoError::from_value_error)?
+        })
     }
     IoEntry { owned_serializer: None, from: T::FROM, into: crate::io::IFC4X3_DIALECT, fidelity: T::FIDELITY, direction: IoEntryDirection::Import, sniff: Some(sniff::<T>), run: run::<T> }
 }

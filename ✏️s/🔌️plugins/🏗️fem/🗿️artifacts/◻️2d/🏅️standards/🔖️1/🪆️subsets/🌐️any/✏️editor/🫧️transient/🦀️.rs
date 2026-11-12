@@ -17,15 +17,23 @@ use semio_framework_tool_machine::ToolTransaction;
 use semio_framework_tool_machine::ToolTransactionState;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
-use std::collections::BTreeMap;
 
 //#region 🔖️State
 /// 🫧️ Every open gumball gesture of one FEM artifact instance, by owning window id.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::SnapshotProjection, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballTransient {
-    pub gestures: BTreeMap<String, FemGumballGesture>,
+    pub gestures: Vec<FemGumballWindowGesture>,
+}
+
+/// 🪟️ One window's in-flight gumball gesture, keyed by its owning window id; the transient keeps these ordered by window.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct FemGumballWindowGesture {
+    pub window: String,
+    pub gesture: FemGumballGesture,
 }
 
 /// 💾️ One window's in-flight gumball gesture.
@@ -80,18 +88,26 @@ impl FemGumballGesture {
 impl FemGumballTransient {
     /// 🪟️ This transient with `window`'s gesture replaced by `gesture` (`None` clears it).
     pub fn with_gesture(&self, window: &str, gesture: Option<FemGumballGesture>) -> Self {
-        let mut gestures = self.gestures.clone();
-        match gesture {
-            Some(gesture) => gestures.insert(window.to_string(), gesture),
-            None => gestures.remove(window),
-        };
+        let mut gestures: Vec<FemGumballWindowGesture> = self.gestures.iter().filter(|entry| entry.window != window).cloned().collect();
+        gestures.extend(gesture.map(|gesture| FemGumballWindowGesture { window: window.to_string(), gesture }));
+        gestures.sort_by(|left, right| left.window.cmp(&right.window));
         Self { gestures }
+    }
+
+    /// 🔎️ The gesture `window` holds, if any.
+    pub fn gesture(&self, window: &str) -> Option<&FemGumballGesture> {
+        self.gestures.iter().find(|entry| entry.window == window).map(|entry| &entry.gesture)
+    }
+
+    /// 🪟️ The windows that hold a gesture, in order.
+    pub fn windows(&self) -> impl Iterator<Item = &str> {
+        self.gestures.iter().map(|entry| entry.window.as_str())
     }
 
     /// 👁️ `document` with every open gesture's provisional entries applied — the preview every window of this
     /// instance paints, never history. An entry that does not decode or apply is skipped.
     pub fn preview<S, R: Clone, M: semio_framework_value::FromValue + protocol::ColdMutation<R>>(&self, document: &S, to_reference: impl FnOnce(&S) -> R, from_reference: impl FnOnce(R) -> Option<S>) -> Option<S> {
-        let entries: Vec<M> = self.gestures.values().flat_map(|gesture| &gesture.entries).filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).collect();
+        let entries: Vec<M> = self.gestures.iter().flat_map(|entry| &entry.gesture.entries).filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).collect();
         if entries.is_empty() {
             return None;
         }
@@ -120,18 +136,11 @@ pub fn fem_gumball_drive<T: GestureTool<Gesture = FemGumballGesture>>(
     authoring_seed: &str,
     base_revision: &str,
 ) -> Result<FemGumballDrive<T::Mutation>, semio_plugin::Fault> {
-    let drive = semio_framework_tool_machine::drive_gesture::<T>(transient.gestures.get(window), verb, phase, tick, authoring_seed, base_revision)
+    let drive = semio_framework_tool_machine::drive_gesture::<T>(transient.gesture(window), verb, phase, tick, authoring_seed, base_revision)
         .map_err(|refusal| semio_plugin::Fault::new(semio_plugin::FaultOrigin::App, refusal.code(), "the gumball tool refused the dispatch"))?;
     Ok(FemGumballDrive { committed: drive.committed, transient: drive.next.map(|gesture| transient.with_gesture(window, gesture)) })
 }
 //#endregion 🛠️Drive
-
-impl semio_framework_value_snapshot_projection::SnapshotProjection for FemGumballTransient {
-    type Output = Self;
-    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
-    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress)> { Self::Projection::begin(grant) }
-}
 
 //#region 🔖️Mutation
 semio_plugin::transient_root! {
@@ -145,8 +154,10 @@ semio_plugin::transient_root! {
     envelope: "fem.gumballtransient",
     extension: "femgumballtransient",
     retained: true,
-    fields: { gestures: BTreeMap<String, FemGumballGesture> },
+    fields: { gestures: Vec<FemGumballWindowGesture> },
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(FemGumballTransientMutation);
 
 impl semio_framework_pack_json::ArtifactCanonicalJsonTree for FemGumballTransientMutation {
     fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {

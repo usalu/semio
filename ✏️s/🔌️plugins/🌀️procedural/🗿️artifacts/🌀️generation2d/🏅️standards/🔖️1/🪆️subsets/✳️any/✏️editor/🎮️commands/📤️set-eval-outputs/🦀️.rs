@@ -14,9 +14,9 @@ pub struct SetEvalOutputs {
     pub outputs_json: String,
 }
 
-pub fn handle(payload: &SetEvalOutputs, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
-    session.set_eval_json(std::sync::Arc::new(payload.outputs_json.clone()), doc.retained_grant()?).map_err(|(error, _)| Fault::from(error.to_string()))?;
-    Ok(Emit::default())
+/// 🧮️ Publishing an evaluation replaces the session's shared original under the turn's original effect, which this marks-free fallback does not own, so it refuses.
+pub fn handle(_payload: &SetEvalOutputs, _doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
+    Err(Fault::from("generation2d-set-eval-outputs-requires-retained-route"))
 }
 
 //#region 🧪️Tests

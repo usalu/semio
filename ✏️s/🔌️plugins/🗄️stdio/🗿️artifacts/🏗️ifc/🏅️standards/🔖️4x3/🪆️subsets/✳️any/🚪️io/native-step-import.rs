@@ -20,11 +20,16 @@ impl Deserializer<IfcSnapshot> for TxtIntoIfc4x3Native {
         if bytes.len() > super::MAX_SOURCE_BYTES + 64 {
             return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::WorkLimit, "STEP UTF-8 artifact Pack exceeds source byte admission")));
         }
-        control
-            .receive_nested::<TxtSnapshot, IoResult<IfcSnapshot>>(|source, original| {
-                *source = Some(<TxtSnapshot as ArtifactPackReceiving>::receive_pack(bytes, &mut original.snapshot_decode()?)?);
-                Ok(reading::read(source.as_ref().unwrap(), &mut original.snapshot_decode()?).map(|value| IoOutcome { value, diagnostics: Vec::new() }).map_err(|error| IoError::from_value_error(error.cause)))
-            })
-            .map_err(IoError::from_value_error)?
+        let mut output = None;
+        let turn = control.receive_nested::<TxtSnapshot, IoResult<IfcSnapshot>, semio_os_kernel::NativeSnapshotFailure>(&mut output, &mut |source, published, _marker, _unwind, original| semio_os_kernel::native_snapshot_turn(|work| {
+            work.performed();
+            let mut pack = None;
+            <TxtSnapshot as ArtifactPackReceiving>::receive_pack(bytes, &mut pack, &mut original.snapshot_decode()?).result?;
+            *source = pack;
+            *published = Some(reading::read(source.as_ref().unwrap(), &mut original.snapshot_decode()?).map(|value| IoOutcome { value, diagnostics: Vec::new() }).map_err(|error| IoError::from_value_error(error.cause)));
+            Ok(())
+        }));
+        turn.result.map_err(|failure| IoError::from_value_error(ValueError::new(failure.kind(), failure.message().to_string())))?;
+        output.ok_or_else(|| IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated, "STEP import published no result")))?
     }
 }

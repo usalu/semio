@@ -289,7 +289,7 @@ impl Fem3dNumericalChild {
                 }
             }
             Fem3dNumericalStage::Nodes => {
-                if let Some(node) = doc.nodes.get(self.node_cursor) {
+                if let Some(node) = (*doc.nodes).get(self.node_cursor) {
                     self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.push_node(Node { id: node.id.as_str().to_owned(), pos: [node.x, node.y, node.z] }).map_err(|_| b"fem3d.numerical-node-slot".to_vec())?;
                     self.stage = Fem3dNumericalStage::NodeId;
                 } else {
@@ -297,7 +297,7 @@ impl Fem3dNumericalChild {
                 }
             }
             Fem3dNumericalStage::NodeId => {
-                let node = doc.nodes.get(self.node_cursor).ok_or_else(|| b"fem3d.numerical-node".to_vec())?;
+                let node = (*doc.nodes).get(self.node_cursor).ok_or_else(|| b"fem3d.numerical-node".to_vec())?;
                 self.analysis_node_ids.push(node.id.as_str().to_owned()).map_err(|_| b"fem3d.numerical-node-id-slot".to_vec())?;
                 self.node_cursor += 1;
                 self.stage = Fem3dNumericalStage::Nodes;
@@ -372,7 +372,7 @@ impl Fem3dNumericalChild {
             }
             Fem3dNumericalStage::SolidMaterial => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
-                let Some(material) = doc.materials.get(self.solid_material_cursor) else { return Err(b"fem3d.numerical-solid-material".to_vec()) };
+                let Some(material) = (*doc.materials).get(self.solid_material_cursor) else { return Err(b"fem3d.numerical-solid-material".to_vec()) };
                 if material.id.as_str() == solid.material_id.as_str() {
                     self.resolved_solid_material = self.solid_material_cursor;
                     self.solid_material_cursor = 0;
@@ -477,7 +477,7 @@ impl Fem3dNumericalChild {
         let material_id = match element {
             FemElement::Bar { material_id, .. } | FemElement::Frame { material_id, .. } => material_id,
         };
-        let Some(material) = doc.materials.get(self.material_cursor) else { return Err(b"fem3d.numerical-material".to_vec()) };
+        let Some(material) = (*doc.materials).get(self.material_cursor) else { return Err(b"fem3d.numerical-material".to_vec()) };
         if material.id.as_str() == material_id.as_str() {
             self.resolved_material = self.material_cursor;
             self.material_cursor = 0;
@@ -495,7 +495,7 @@ impl Fem3dNumericalChild {
             FemElement::Bar { start, end, .. } | FemElement::Frame { start, end, .. } => (start, end),
         };
         let target = if self.stage == Fem3dNumericalStage::ElementStart { start } else { end };
-        let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.numerical-element-node".to_vec()) };
+        let Some(node) = (*doc.nodes).get(self.lookup_cursor) else { return Err(b"fem3d.numerical-element-node".to_vec()) };
         if node.id.as_str() == target.as_str() {
             self.pending_element_nodes[usize::from(self.stage == Fem3dNumericalStage::ElementEnd)] = self.lookup_cursor;
             self.lookup_cursor = 0;
@@ -509,7 +509,7 @@ impl Fem3dNumericalChild {
     /// ⚙️ Runs the `element commit` stage of `step_model`.
     fn model_element_commit(&mut self, doc: &Fem3dSnapshot) -> Result<bool, Vec<u8>> {
         let element = doc.elements.get(self.element_cursor).ok_or_else(|| b"fem3d.numerical-element".to_vec())?;
-        let material = doc.materials.get(self.resolved_material).ok_or_else(|| b"fem3d.numerical-material".to_vec())?;
+        let material = (*doc.materials).get(self.resolved_material).ok_or_else(|| b"fem3d.numerical-material".to_vec())?;
         let section = doc.sections.get(self.resolved_section).ok_or_else(|| b"fem3d.numerical-section".to_vec())?;
         let built: Elements = match element {
             FemElement::Bar { id, start, end, .. } => Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }.into(),
@@ -519,8 +519,8 @@ impl Fem3dNumericalChild {
         };
         self.element_materials[self.element_cursor] = self.resolved_material;
         self.element_sections[self.element_cursor] = self.resolved_section;
-        let start = doc.nodes.get(self.pending_element_nodes[0]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
-        let end = doc.nodes.get(self.pending_element_nodes[1]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
+        let start = (*doc.nodes).get(self.pending_element_nodes[0]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
+        let end = (*doc.nodes).get(self.pending_element_nodes[1]).ok_or_else(|| b"fem3d.numerical-element-node".to_vec())?;
         let dx = end.x - start.x;
         let dy = end.y - start.y;
         let dz = end.z - start.z;
@@ -664,7 +664,7 @@ impl Fem3dNumericalChild {
             self.tet_cursor = 0;
             self.tet_phase = 0;
         } else {
-            let material = doc.materials.get(self.resolved_solid_material).ok_or_else(|| b"fem3d.numerical-solid-material".to_vec())?;
+            let material = (*doc.materials).get(self.resolved_solid_material).ok_or_else(|| b"fem3d.numerical-solid-material".to_vec())?;
             let indices = self.solid_tet_indices()?;
             let nodes = [
                 self.solid_node_ids.get(indices[0]).cloned().ok_or_else(|| b"fem3d.numerical-solid-node-id".to_vec())?,

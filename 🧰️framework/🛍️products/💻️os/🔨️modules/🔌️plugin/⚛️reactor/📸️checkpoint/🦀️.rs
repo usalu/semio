@@ -118,7 +118,7 @@ pub fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_os_ke
 pub struct RestoredDocumentLoad {
     pub instance: u32,
     pub archive: Box<store::DocumentArchivePack>,
-    pub admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
+    pub admission: semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission,
     pub admitted: bool,
 }
 
@@ -133,7 +133,7 @@ impl RestoredDocumentLoad {
     /// 🚦️ Advances the archive admission by one step under [`RESTORE_DOCUMENT_LOAD_OPERATION`] and answers whether the load began.
     pub async fn begin_step<PA: semio_plugin_reactor_app::PluginApp>(&mut self, runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         if !self.admitted {
-            self.admitted = semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, self.instance, RESTORE_DOCUMENT_LOAD_OPERATION, &mut *self.archive, &mut self.admission, cx).await?;
+            self.admitted = semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, self.instance, RESTORE_DOCUMENT_LOAD_OPERATION, &mut *self.archive, &mut self.admission, cx).await?;
         }
         Ok(self.admitted)
     }
@@ -158,7 +158,7 @@ pub async fn restore<PA: semio_plugin_reactor_app::PluginApp>(runtime: &semio_pl
         if !instance.document_pack.is_empty() {
             let (parent_pack, parent_spr) =
                 store::os_store::serialization::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
-            document_loads.push(RestoredDocumentLoad { instance: id, archive: Box::new(store::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }), admission: semio_framework_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false });
+            document_loads.push(RestoredDocumentLoad { instance: id, archive: Box::new(store::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }), admission: semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty(), admitted: false });
         }
     }
     Ok(RestoredCheckpoint { pack, document_loads, work })

@@ -48,19 +48,8 @@ fn measure(snapshot: &HtmlSnapshot, control: &mut SqliteSnapshotControl<'_>) -> 
 }
 
 impl ArtifactSqliteSnapshotHost for HtmlSnapshot {
-    fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure>{
-        semio_os_kernel::native_snapshot_turn(|work|work.take(native_owner.receive::<Self,Self,semio_os_kernel::NativeSnapshotFailure>(|slot,native_control,body|{
-            let result=(||->Result<Self,semio_os_kernel::NativeSnapshotFailure>{
-                let value=native::decode(payload,control,native_control)?;
-                body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
-                *slot = Some(value);
-                body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() })?;
-                slot.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"received snapshot slot").into())
-            })();
-            semio_framework_value::RetainedWorkOutcome{result,work:1}
-        })))
-    }
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<semio_os_kernel::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|_|Ok(native::encode(self,encoding,control,native_owner)?))}
+    fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<semio_os_kernel::os_store::serialization::SnapshotReceivingOutput<Self>>)->semio_os_kernel::os_store::serialization::SnapshotReceivingOutcome{native::decode(payload,control,native_owner,output)}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<semio_os_kernel::os_store::serialization::SnapshotReceivingOutput<semio_os_kernel::io_schema::IoPayload>>)->semio_os_kernel::os_store::serialization::SnapshotReceivingOutcome{native::encode(self,encoding,control,native_owner,output)}
     fn retire_sqlite_snapshot(self){native::retire(self)}
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         use semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;

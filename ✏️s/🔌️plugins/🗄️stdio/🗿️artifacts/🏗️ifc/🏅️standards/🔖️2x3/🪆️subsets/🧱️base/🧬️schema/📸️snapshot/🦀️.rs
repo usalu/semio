@@ -11,7 +11,8 @@
 //! `Ifc2x3Snapshot` the TYPE is this standard's own.
 
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_contract::part21::Part21Document;
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Preamble};
+use std::fmt::Write as _;
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from `4`'s `"stdio.ifc"` so the two
 /// standards' document codecs never collide in the shared `store::os_store::codec_registry::document_codec_registry`.
@@ -91,4 +92,31 @@ pub fn validate_ifc2x3_snapshot(snapshot: &Ifc2x3Snapshot) -> Result<(), String>
 
 
 //#endregion 🔖️Codec
-
+impl Part21Preamble for Ifc2x3EdmPreamble {
+    fn write_preamble(&self, out: &mut String, line_ending: &str) {
+        out.push_str("/******************************************************************************************");
+        out.push_str(line_ending);
+        for (label, value) in [
+            ("STEP Physical File produced by:", self.producer.as_str()),
+            ("Module:", self.module.as_str()),
+            ("Creation date:", self.creation_date.as_str()),
+            ("Host:", self.host.as_str()),
+            ("Database:", self.database.as_str()),
+            ("Database version:", self.database_version.as_str()),
+            ("Database creation date:", self.database_creation_date.as_str()),
+            ("Schema:", self.schema.as_str()),
+            ("Model:", self.model.as_str()),
+            ("Model creation date:", self.model_creation_date.as_str()),
+            ("Header model:", self.header_model.as_str()),
+            ("Header model creation date:", self.header_model_creation_date.as_str()),
+            ("EDMuser:", self.user.as_str()),
+            ("EDMgroup:", self.group.as_str()),
+            ("License ID and type:", self.license.as_str()),
+            ("EDMstepFileFactory options:", self.options.as_str()),
+        ] {
+            write!(out, "* {label:<31} {value}{line_ending}").expect("String write");
+        }
+        out.push_str("******************************************************************************************/");
+        out.push_str(line_ending);
+    }
+}

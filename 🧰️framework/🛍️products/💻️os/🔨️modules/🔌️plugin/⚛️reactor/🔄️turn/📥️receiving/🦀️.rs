@@ -1,5 +1,5 @@
 //! 📥️ Original response and intent inputs remain owned through deferred dispatch and paid source return.
-pub use semio_plugin_reactor_receiving_source::{ReceivingSource,begin,forgotten,retired};
+pub use semio_plugin_reactor_receiving_source::{ReceivingSource,begun,forgotten,retired_poll};
 use std::cell::{Cell, RefCell};
 use crate::{DIRTY_INTENT_INSTANCE_CAPACITY, DirtyIntentBatch, collect_original_publication_receipts, native_close_key, retain_refused_publication, route_exchange_output};
 use semio_framework::kernel::{Effect, Event};
@@ -9,8 +9,7 @@ use semio_framework::kernel::RequestOutcome;
 use semio_plugin_reactor_lifecycle::instance_lifetime;
 use semio_plugin_actor_host::requests;
 use semio_ui_contract as ui_contract;
-use semio_framework_job::{OriginalCallerSourceLoan, OriginalConstructionAdmission, OriginalConstructionFailure, OriginalTurnFailure, StepContext};
-use semio_framework_value::retained_clone::RetainedCloneClose;
+use semio_framework_job::{OriginalCallerSourceLoan, OriginalConstructionAdmission, OriginalTurnFailure, StepContext};
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::ManuallyDrop;
@@ -28,16 +27,13 @@ fn release_page(cx:&mut StepContext<'_>,release:impl FnOnce(&mut semio_framework
 }
 #[doc(hidden)]
 pub fn metadata(cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(true)}
-/// 🎟️ One resident birth frame for the Source owners an input constructs, retired with its failure and admission.
+/// 🎟️ One resident birth frame for the Source owners an input constructs, retired with its admission.
 #[doc(hidden)]
 #[derive(Default)]
-pub struct BirthFrame{pub admission:OriginalConstructionAdmission,pub failure:ManuallyDrop<Option<OriginalConstructionFailure>>,pub retirement:RetainedCloneClose}
+pub struct BirthFrame{pub admission:OriginalConstructionAdmission}
 impl BirthFrame{
- pub fn terminal_is_empty(&self)->bool{self.admission.terminal_is_empty()&&self.failure.is_none()&&self.retirement.is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.admission.terminal_is_empty()}
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let body=cx.retained_grant().maximum_copy_bytes;
-  if !self.retirement.is_empty(){let d=self.retirement.next_owner_demands::<()>(false,&None,body)?;retired(cx,d,|effect|self.retirement.step_granted(effect.grant().maximum_copy_bytes,effect))?;return Ok(false)}
-  if self.failure.is_some(){let d=self.retirement.next_owner_demands::<OriginalConstructionFailure>(true,&None,body)?;retired(cx,d,|effect|begin(&mut self.retirement,&mut self.failure,effect))?;return Ok(false)}
   if !self.admission.terminal_is_empty(){self.admission.close_step(cx)?;return Ok(false)}
   Ok(true)
  }
@@ -52,7 +48,7 @@ pub struct RetainedResponse{pub birth:BirthFrame,pub metadata:ManuallyDrop<Optio
 impl RetainedResponse{
  pub async fn step<PA:semio_plugin_reactor_app::PluginApp>(&mut self,runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,identity:&mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut StepContext<'_>)->Result<Option<semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>,OriginalTurnFailure>{
   if !self.witness.admit(cx)?||cx.should_yield(){return Ok(None)}
-  if self.finished{if let Some(source)=self.metadata.as_mut(){if !source.terminal_is_empty(){source.close_step(runtime,cx).await?;return Ok(None)}let d=semio_plugin_runtime_ops::ops_typed_operations::OriginalResponseActionSource::release_demand();retired(cx,d,|_|{self.metadata.take();Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()}))})?;return Ok(None)}}
+  if self.finished{if let Some(source)=self.metadata.as_mut(){if !source.terminal_is_empty(){source.close_step(runtime,cx).await?;return Ok(None)}let d=semio_plugin_runtime_ops::ops_typed_operations::OriginalResponseActionSource::release_demand();retired_poll(cx,d,|_|{self.metadata.take();semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})),work:1})})?;return Ok(None)}}
   if self.finished&&!self.birth.terminal_is_empty(){self.birth.close_step(cx)?;return Ok(None)}
   if self.finished&&self.output.is_some(){if !metadata(cx)?{return Ok(None)}return Ok(self.output.take())}
   if let Some(input)=self.input.as_mut(){
@@ -62,15 +58,15 @@ impl RetainedResponse{
   if !self.finished{
    if self.instance.is_none_or(|instance|native_close_key(runtime,instance).ok()!=self.key)||cx.is_cancelled(){self.finished=true;return Ok(None)}
    if self.request_result.is_some(){if !metadata(cx)?{return Ok(None)}REGISTRY.with(|registry|registry.resolve_original(self.request.unwrap(),&mut self.request_result));self.finished=true;return Ok(None)}
-   if self.metadata.is_none(){semio_plugin_runtime_ops::ops_typed_operations::OriginalResponseActionSource::admit(self.instance.unwrap(),cx,&mut self.birth.admission,&mut self.birth.failure,&mut self.metadata)?;return Ok(None)}
+   if self.metadata.is_none(){semio_plugin_runtime_ops::ops_typed_operations::OriginalResponseActionSource::admit(self.instance.unwrap(),cx,&mut self.birth.admission,&mut self.metadata)?;return Ok(None)}
    let(action,args,fault)=self.fields.as_mut().unwrap();
    match semio_plugin_runtime_ops::ops_typed_operations::plugin_dispatch_response_action(runtime,self.instance.unwrap(),action.as_deref().unwrap(),args,fault,self.metadata.as_mut().unwrap(),identity,cx).await{
     Ok(None)=>return Ok(None),Ok(Some(mut output))=>{if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){*self.failure=Some(retain_refused_publication(self.instance.unwrap(),output,refusal,cx));}else{*self.output=Some(output)}self.finished=true;return Ok(None)},Err(failure)=>{*self.failure=Some(failure);self.finished=true;return Ok(None)}
    }
   }
-  if let Some(owner)=self.request_closing.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(None)}if !metadata(cx)?{return Ok(None)}self.request_closing.take();return Ok(None)}
+  if let Some(owner)=self.request_closing.as_mut(){if !owner.terminal_is_empty(){retired_poll(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(None)}if !metadata(cx)?{return Ok(None)}self.request_closing.take();return Ok(None)}
   if self.request_result.is_some(){if !metadata(cx)?{return Ok(None)}let result=self.request_result.take().unwrap();match ControlledRetirement::new(result){Ok(owner)=>*self.request_closing=Some(owner),Err((failure,result))=>{*self.request_result=Some(result);return Err(failure.into())}}return Ok(None)}
-  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(None)}if !metadata(cx)?{return Ok(None)}self.closing.take();return Ok(None)}
+  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){retired_poll(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|effect|{let body=effect.grant().maximum_copy_bytes;owner.step(body,effect)})?;return Ok(None)}if !metadata(cx)?{return Ok(None)}self.closing.take();return Ok(None)}
   if self.fields.is_some(){if !metadata(cx)?{return Ok(None)}let fields=self.fields.take().unwrap();match ControlledRetirement::new(fields){Ok(owner)=>*self.closing=Some(owner),Err((failure,fields))=>{*self.fields=Some(fields);return Err(failure.into())}}return Ok(None)}
   if !self.birth.terminal_is_empty(){self.birth.close_step(cx)?;return Ok(None)}
   if !self.witness.close(cx)?{return Ok(None)}
@@ -109,7 +105,7 @@ pub(super) fn response_key_empty(key:instance_lifetime::NativeCloseKey)->bool{RE
 
 struct RetainedIntents{pub birth:BirthFrame,pub witness:ReceivingSource,pub batches:ManuallyDrop<ui_contract::UiFixedList<DirtyIntentBatch,DIRTY_INTENT_INSTANCE_CAPACITY>>,pub current:ManuallyDrop<Option<DirtyIntentBatch>>,pub value:ManuallyDrop<Option<ui_contract::UiValueRetirement>>,pub outputs:ManuallyDrop<[Option<(u32,semio_plugin_runtime_ops::ops_ingress::PluginExchangeOutput)>;DIRTY_INTENT_INSTANCE_CAPACITY]>,output_count:usize,current_key:Option<instance_lifetime::NativeCloseKey>,dirty_cursor:usize,pub intent_source:ManuallyDrop<Option<Box<semio_plugin_runtime_ops::ops_typed_operations::OriginalIntentActionSource>>>,intent_done:bool,pub failure:ManuallyDrop<Option<OriginalTurnFailure>>,pub closing:bool}
 impl RetainedIntents{
- async fn close_intent_source<PA:semio_plugin_reactor_app::PluginApp>(&mut self,runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,advance:bool,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let Some(source)=self.intent_source.as_mut()else{return Ok(true)};let intent=self.current.as_mut().and_then(|batch|batch.intents.get_mut(self.dirty_cursor)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original intent continuation lost its actual batch cell"))?;if !source.terminal_is_empty(){source.close_step(runtime,intent,cx).await?;return Ok(false)}let mut d=semio_plugin_runtime_ops::ops_typed_operations::OriginalIntentActionSource::release_demands();d.copy_bytes=std::mem::size_of::<(usize,bool)>();retired(cx,d,|_|{self.intent_source.take();if advance{self.dirty_cursor+=1;self.intent_done=false;}Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(false)}
+ async fn close_intent_source<PA:semio_plugin_reactor_app::PluginApp>(&mut self,runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,advance:bool,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let Some(source)=self.intent_source.as_mut()else{return Ok(true)};let intent=self.current.as_mut().and_then(|batch|batch.intents.get_mut(self.dirty_cursor)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original intent continuation lost its actual batch cell"))?;if !source.terminal_is_empty(){source.close_step(runtime,intent,cx).await?;return Ok(false)}let mut d=semio_plugin_runtime_ops::ops_typed_operations::OriginalIntentActionSource::release_demands();d.copy_bytes=std::mem::size_of::<(usize,bool)>();retired_poll(cx,d,|_|{self.intent_source.take();if advance{self.dirty_cursor+=1;self.intent_done=false;}semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1})})?;Ok(false)}
  async fn close_current<PA:semio_plugin_reactor_app::PluginApp>(&mut self,runtime:&semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if !self.close_intent_source(runtime,false,cx).await?{return Ok(false)}
   let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
@@ -128,7 +124,7 @@ impl RetainedIntents{
     if self.intent_done{self.close_intent_source(runtime,true,cx).await?;return Ok(false)}
     if self.dirty_cursor==self.current.as_ref().unwrap().intents.len(){if metadata(cx)?{self.closing=true;}return Ok(false)}
     let intent=self.current.as_mut().unwrap().intents.get_mut(self.dirty_cursor).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original intent batch cursor changed"))?;
-    if self.intent_source.is_none(){semio_plugin_runtime_ops::ops_typed_operations::OriginalIntentActionSource::admit(instance,intent,cx,&mut self.birth.admission,&mut self.birth.failure,&mut self.intent_source)?;return Ok(false)}
+    if self.intent_source.is_none(){semio_plugin_runtime_ops::ops_typed_operations::OriginalIntentActionSource::admit(instance,intent,cx,&mut self.birth.admission,&mut self.intent_source)?;return Ok(false)}
     match semio_plugin_runtime_ops::ops_typed_operations::plugin_dispatch_intent(runtime,instance,intent,self.intent_source.as_mut().unwrap(),identity,cx).await{Ok(None)=>return Ok(false),Ok(Some(mut output))=>{if let Err(refusal)=collect_original_publication_receipts(&mut output,cx){*self.failure=Some(retain_refused_publication(instance,output,refusal,cx));self.closing=true;}else{self.outputs[self.output_count]=Some((instance,output));self.output_count+=1;self.intent_done=true;}return Ok(false)},Err(failure)=>{*self.failure=Some(failure);self.closing=true;return Ok(false)}}
    }
    if !self.close_current(runtime,cx).await?{return Ok(false)}self.closing=self.failure.is_some()||cx.is_cancelled();return Ok(false)

@@ -67,7 +67,7 @@ fn measure(value: &IfcValue, depth: usize, nodes: &mut usize, edges: &mut usize,
         return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "literal IFC Pack projection exceeds value depth admission").into());
     }
     if let IfcValue::Binary(text) = value {
-        super::owned_graph::binary_head(text)?;
+        binary_head(text)?;
         for chunk in text.as_bytes()[1..].chunks(4096) {
             work(owner, chunk.len(),meter)?;
             if chunk.iter().any(|v| !v.is_ascii_digit() && !(b'A'..=b'F').contains(v)) {
@@ -281,4 +281,24 @@ impl FieldProjectionSource for Projection<'_> {
             _ => Err(projection_path_error()),
         }
     }
+}
+
+fn binary_head(text: &str) -> Result<(), ValueError> {
+    let invalid = || ValueError::literal(ValueRefusalKind::InvalidValue, "literal IFC Pack binary head is not canonical");
+    let bytes = text.as_bytes();
+    let Some(&unused) = bytes.first() else { return Err(invalid()) };
+    if !(b'0'..=b'3').contains(&unused) || (bytes.len() == 1 && unused != b'0') {
+        return Err(invalid());
+    }
+    if let Some(&first) = bytes.get(1) {
+        let digit = match first {
+            b'0'..=b'9' => first - b'0',
+            b'A'..=b'F' => first - b'A' + 10,
+            _ => return Err(invalid()),
+        };
+        if digit >= (16u8 >> (unused - b'0')) {
+            return Err(invalid());
+        }
+    }
+    Ok(())
 }

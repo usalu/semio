@@ -5,12 +5,12 @@ use crate::{editor::home::commands::copy_invite_link, editor::home::commands::cr
 use crate::{editor::home::commands::delete_virtual_file_system_node, editor::home::commands::go_home, editor::home::commands::navigate_virtual_file_system_node};
 use crate::{editor::home::config::home_retained_contract, editor::home::config::HomeConfig, editor::home::config::HomeConfigMutation};
 use crate::editor::home::transient::HomeTransient;
-use semio_framework_plugin::ArtifactView;
-use semio_framework_plugin::ConfigView;
-use semio_framework_plugin::DslValue;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
+use semio_plugin::ArtifactView;
+use semio_plugin::ConfigView;
+use semio_plugin::DslValue;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
 use crate::editor::home::{HOME_RETAINED_TOOL_IDS, HOME_RETAINED_RAW_BYTES, HOME_RETAINED_SCALAR_BYTES, HOME_RETAINED_WORK_ITEMS, HOME_RETAINED_PUBLICATION_CONTRACTS, home_retained_extent};
 use semio_framework_test_fixtures::fixture_text;
 
@@ -27,7 +27,7 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
     let contract = home_retained_contract();
     for (key, expected) in [
         ("rawBytes", HOME_RETAINED_RAW_BYTES),
-        ("checkpointBytes", semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES),
+        ("checkpointBytes", semio_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES),
         ("configValueBytes", crate::editor::home::config::HOME_CONFIG_VALUE_BYTES),
         ("configBaseBytes", crate::editor::home::config::HOME_CONFIG_BASE_BYTES),
         ("commandStepBytes", contract.max_output_bytes),
@@ -84,15 +84,15 @@ use semio_framework_artifact_space_space::{S_SPACE_SCHEMA, SpaceKind, SpaceVisib
 use semio_framework_os::{LocalStorageBackbonePort, OsBackbonePorts, OsSpaceDocument, create_backbone_document, load_os_space_document, seed_os_space_catalog_if_empty};
 use std::sync::Arc;
 
-fn empty_history() -> semio_framework_plugin::HistoryView {
-    semio_framework_plugin::HistoryView::empty()
+fn empty_history() -> semio_plugin::HistoryView {
+    semio_plugin::HistoryView::empty()
 }
 
-fn home_view(user_id: &str, locale: semio_ui_locale::Locale) -> semio_framework_plugin::ViewModel {
-    semio_framework_plugin::ViewModel {
+fn home_view(user_id: &str, locale: semio_ui_locale::Locale) -> semio_plugin::ViewModel {
+    semio_plugin::ViewModel {
         locale,
-        session_identity: Some(semio_framework_plugin::ViewSessionIdentity { user_id: user_id.into(), display_name: "Ada".into() }),
-        ..semio_framework_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native)
+        session_identity: Some(semio_plugin::ViewSessionIdentity { user_id: user_id.into(), display_name: "Ada".into() }),
+        ..semio_plugin::ViewModel::new(locale, semio_ui_locale::Terminology::Native)
     }
 }
 
@@ -168,7 +168,7 @@ async fn home_labels_resolve_native_english_by_default() {
     let transient = directory_with_one_folded_space().await;
     let view_state = home_view("u1", semio_ui_locale::Locale::En);
     let home_node = render_body(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &HomeConfig::default(), transient.directory(), &view_state).expect("English Home assembly");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
     assert!(json.contains("Updated"), "English column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
 }
@@ -178,7 +178,7 @@ async fn home_labels_resolve_native_german_locale() {
     let transient = directory_with_one_folded_space().await;
     let view_state = home_view("u1", semio_ui_locale::Locale::De);
     let home_node = render_body(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &HomeConfig::default(), transient.directory(), &view_state).expect("German Home assembly");
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
+    let json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
 }
@@ -192,15 +192,15 @@ async fn home_labels_resolve_native_german_locale() {
 async fn home_render_publishes_signed_out_and_changes_roles_with_the_identity() {
     let transient = directory_with_one_folded_space().await;
     let config = HomeConfig::default();
-    let render = |view: &semio_framework_plugin::ViewModel| render_body(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &config, transient.directory(), view);
-    let anonymous = render(&semio_framework_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("signed-out render");
-    let anonymous_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(anonymous).expect("signed-out projection");
+    let render = |view: &semio_plugin::ViewModel| render_body(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &config, transient.directory(), view);
+    let anonymous = render(&semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)).expect("signed-out render");
+    let anonymous_json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(anonymous).expect("signed-out projection");
     assert!(anonymous_json.contains("s-home-create-space"), "the signed-out landing window still publishes its own body: {anonymous_json}");
     assert!(!anonymous_json.contains("manageSpace"), "a signed-out visitor owns no space and gets no administration affordance: {anonymous_json}");
     let author = render(&home_view("u1", semio_ui_locale::Locale::En)).expect("author render");
-    let author_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(author).expect("author projection");
+    let author_json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(author).expect("author projection");
     let foreign = render(&home_view("u2", semio_ui_locale::Locale::En)).expect("foreign render");
-    let foreign_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(foreign).expect("foreign projection");
+    let foreign_json = semio_plugin::artifact_app_laws::project_and_retire_fixture_tree(foreign).expect("foreign projection");
     assert!(author_json.contains("manageSpace"));
     assert!(!foreign_json.contains("manageSpace"));
 }
@@ -212,13 +212,13 @@ async fn home_render_publishes_signed_out_and_changes_roles_with_the_identity() 
 /// same receipt and publishes no transient item at all.
 #[semio_framework_async_macros::async_test]
 async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
-    use semio_framework_plugin::app::TypedOperationResultLane;
-    use semio_framework_plugin::PluginApp;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HomeApp>, _>(async { semio_framework_plugin::App { definition: create_home_app().await, examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    use semio_plugin::app::TypedOperationResultLane;
+    use semio_plugin::PluginApp;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<HomeApp>, _>(async { semio_plugin::App { definition: create_home_app().await, examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity()).await;
     app.bind_instance_id(1).await;
     let view = home_view("u1", semio_ui_locale::Locale::En);
-    let meta = semio_framework_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };
+    let meta = semio_plugin::ActionMeta { expected_document_revision:None, actor: "local".into(), instance_id: 1, view_state: Some(view.clone()) };
     let page_json = semio_framework_pack_json::to_json_string(&{
         let events = [
             semio_framework_pack_json::json!({ "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-e2e", "body": {"kind": "space.created", "spaceId": "sp-e2e", "name": "Transient Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"}, "recordedAtMs": 1000 }),
@@ -232,22 +232,22 @@ async fn a_dispatched_page_publishes_one_transient_item_and_no_history_row() {
     });
     let args = DslValue::Object(vec![("pageJson".into(), DslValue::String(page_json))]);
     for (turn, expects_item) in [(1, true), (2, false)] {
-        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "applyDirectoryEventPage", Some(args.clone()), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("page {turn} admission: {fault:?}"));
-        let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.unwrap_or_else(|fault| panic!("page {turn} settles: {fault:?}"));
+        semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut app, "applyDirectoryEventPage", Some(args.clone()), &meta, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx(), semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|fault| panic!("page {turn} admission: {fault:?}"));
+        let settled = semio_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.unwrap_or_else(|fault| panic!("page {turn} settles: {fault:?}"));
         assert!(!settled.lanes.contains(&TypedOperationResultLane::Config) && !settled.lanes.contains(&TypedOperationResultLane::Artifact), "page {turn}: a directory page never writes a history lane: {:?}", settled.lanes);
         assert_eq!(settled.lanes.contains(&TypedOperationResultLane::Transient), expects_item, "page {turn}: {:?}", settled.lanes);
         let receipt = settled.events.iter().find(|event| event.kind == crate::editor::home::transient::DirectoryProjectionReceiptV1::SCHEMA).expect("the terminal receipt event");
         let receipt: crate::editor::home::transient::DirectoryProjectionReceiptV1 = semio_framework_value::FromValue::from_value(receipt.payload.clone()).expect("typed receipt");
         assert_eq!(receipt.through_seq_inclusive, 1);
     }
-    let json = semio_framework_plugin::artifact_app_laws::render_registered_fixture_app(&mut app, crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &view, scope.cx()).await.expect("render projection");
+    let json = semio_plugin::artifact_app_laws::render_registered_fixture_app(&mut app, crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &view, scope.cx()).await.expect("render projection");
     assert!(json.contains("Transient Fixture"), "the host-facing render lists the folded space: {json}");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");
 }
 //#endregion 🫧️DirectoryTransient
 
 //#region 💾️CatalogCommands
-use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep};
+use semio_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep};
 
 fn catalog_home() -> SHomeSnapshot {
     SHomeSnapshot { schema: "s.home".into(), catalog_generation: 4 }
@@ -321,7 +321,7 @@ async fn the_import_job_refuses_by_name_and_asks_the_host_for_a_missing_file() {
     assert!(refused_as(HomeCatalogWork::new("importSpace").advance(&import(Some("schema nothing-like-a-studio {{{")), &doc), "s.home.import-space.not-a-studio"));
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = HomeCatalogWork::new("importSpace").advance(&import(None), &doc) else { panic!("a text-less import asks the host") };
     assert!(emit.artifact_mutations.is_empty());
-    assert!(matches!(emit.effects.as_slice(), [semio_framework_plugin::Effect::RequestFileOpen { import_action, .. }] if import_action == "importSpace"));
+    assert!(matches!(emit.effects.as_slice(), [semio_plugin::Effect::RequestFileOpen { import_action, .. }] if import_action == "importSpace"));
     let config = HomeConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     assert!(matches!(import_space::handle(&import_space::ImportSpace { dsl: Some(studio_dsl("SH1 direct")) }, &doc, &cfg), Err(fault) if format!("{fault:?}").contains("s.home.import-space.requires-retained-job")), "the direct lane never writes the catalog");
@@ -409,7 +409,7 @@ async fn the_persist_job_validates_then_keeps_the_studio_in_its_folder_once() {
     let persist = |space_id: &str, folder_path: Option<&str>| HomeCommand::PersistLocally(persist_locally::PersistLocally { space_id: space_id.into(), folder_path: folder_path.map(str::to_owned) });
     let space_id = semio_s_space_core::create_and_register_ephemeral_studio("SH2 persist law", "u1", "Ada", &mut authoring).await.expect("observed studio fixture");
     let Ok(ArtifactCommandWorkStep::Complete(dialog)) = HomeCatalogWork::new("persistLocally").advance(&persist(&space_id, None), &doc) else { panic!("a folder-less persist opens the dialog") };
-    assert!(dialog.artifact_mutations.is_empty() && matches!(dialog.effects.as_slice(), [semio_framework_plugin::Effect::OpenDialog { dialog_id, .. }] if dialog_id == "persistLocally"));
+    assert!(dialog.artifact_mutations.is_empty() && matches!(dialog.effects.as_slice(), [semio_plugin::Effect::OpenDialog { dialog_id, .. }] if dialog_id == "persistLocally"));
     let folder = std::env::temp_dir().join(format!("sh2-persist-law-{space_id}"));
     let folder_path = folder.to_string_lossy().into_owned();
     let mut work = HomeCatalogWork::new("persistLocally");
@@ -435,7 +435,7 @@ fn a_folder_studio_without_a_folder_is_refused_by_name() {
     let doc = ArtifactView::new(&snapshot, &history);
     let config = HomeConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
-    let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
+    let identity = semio_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
     for folder_path in [None, Some(" ".to_owned())] {
         let created = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "SH2 folderless".into(), kind: "folder".into(), folder_path }, &doc, &cfg, &identity, &mut authoring);
         assert!(matches!(created, Err(fault) if fault.code.0.as_str() == "s.home.create-studio.folder-path-required"));
@@ -521,7 +521,7 @@ async fn the_host_rehydration_lists_the_kept_studio_once_under_its_name() {
     assert_eq!(listed(&space_id).len(), 1, "a repeated page re-lists nothing twice");
     let config = HomeConfig::default();
     let removal = delete_virtual_file_system_node::handle_with_row(&delete_virtual_file_system_node::DeleteVirtualFileSystemNode { node_id: format!("studio:{space_id}") }, &doc, &ConfigView { snapshot: &config, window: None }, None).expect("remove the kept studio from Home");
-    let [semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = removal.effects.as_slice() else { panic!("removing a kept studio unkeeps it: {:?}", removal.effects) };
+    let [semio_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = removal.effects.as_slice() else { panic!("removing a kept studio unkeeps it: {:?}", removal.effects) };
     assert_eq!(action_id, "os.local-catalog.retire");
     assert_eq!(args.get("documentId").and_then(DslValue::as_str), Some(space_id.as_str()));
 }
@@ -554,7 +554,7 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
     let mut work = HomeCatalogWork::new("importSpace");
     assert!(matches!(work.advance(&command, &doc), Ok(ArtifactCommandWorkStep::Progress { .. })));
     let Ok(ArtifactCommandWorkStep::Complete(emit)) = work.advance(&command, &doc) else { panic!("the import commits") };
-    let [semio_framework_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = emit.effects.as_slice() else { panic!("exactly one keep request: {:?}", emit.effects) };
+    let [semio_plugin::Effect::ReplayShellCommand { action_id, args: Some(args) }] = emit.effects.as_slice() else { panic!("exactly one keep request: {:?}", emit.effects) };
     assert_eq!(action_id, "os.local-catalog.admit");
     let field = |key: &str| args.get(key).and_then(DslValue::as_str).map(str::to_owned).unwrap_or_default();
     let imported = ::semio_framework_async::poll::resolve_ready(semio_s_space_core::list_all_space_catalog_entries()).into_iter().find(|entry| entry.name == name).expect("the import is listed");
@@ -569,4 +569,4 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
 }
 //#endregion 🗃️LocalCatalogLane
 
-semio_framework_plugin::history_edit_acceptance_law!("space", crate::editor::home::HomeApp, || semio_framework_plugin::App { definition: semio_framework_plugin::app::history_edit_acceptance::block_on_acceptance(crate::editor::home::create_home_app()), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_plugin::history_edit_acceptance_law!("space", crate::editor::home::HomeApp, || semio_plugin::App { definition: semio_plugin::app::history_edit_acceptance::block_on_acceptance(crate::editor::home::create_home_app()), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

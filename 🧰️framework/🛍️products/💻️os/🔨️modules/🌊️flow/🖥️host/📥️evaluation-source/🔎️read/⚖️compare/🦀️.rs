@@ -1,7 +1,7 @@
 //! ⚖️ Original canonical source comparison advances one funded scalar or frontier transition.
 use super::*;
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as Node,ArtifactCanonicalJsonText as Text,ArtifactCanonicalJsonTree as Canonical};
-use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value_persistent::list::{PagedList,PagedListReservationFailure,PagedListReservationOutcome,PagedListReleaseFailure,PagedListReleaseOutcome};
 
 #[derive(Clone,Copy,semio_framework_value::RetireOwned)]
 struct Frame{ordinal:usize,index:usize,count:usize,phase:u8,object:bool,chunks:[usize;2],offsets:[usize;2]}
@@ -28,10 +28,10 @@ impl SourceCompare{
   let b=b.next_byte(&mut frame.chunks[1],&mut frame.offsets[1]).map_err(|_|refusal("original baseline text chunk is absent"))?;
   Ok(if a!=b{Some(false)}else if a.is_none(){Some(true)}else{None})
  }
- pub(super) fn step(&mut self,a:&dyn Canonical,b:&dyn Canonical,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  self.progress=Default::default();if self.closing||self.result.is_some(){return Ok(Default::default())}let d=self.demands()?;if !admitted(d,grant){return Ok(Default::default())}
+ pub(super) fn step(&mut self,a:&dyn Canonical,b:&dyn Canonical,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneProgress,ValueError>{
+  let grant=effect.grant();self.progress=Default::default();if self.closing||self.result.is_some(){return Ok(Default::default())}let d=self.demands()?;if !admitted(d,grant){return Ok(Default::default())}
   let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};self.progress=p;
-  if (!self.started||self.frames.last().is_some_and(|frame|frame.phase==3))&&!self.frames.has_reserved_slot(){let step=self.frames.reserve_one(grant.maximum_capacity_bytes).map_err(|error|ValueError::from(error.refusal()))?;p.copied_bytes=0;p.retained_capacity_bytes=step.allocated_bytes;self.progress=p;return Ok(p)}
+  if (!self.started||self.frames.last().is_some_and(|frame|frame.phase==3))&&!self.frames.has_reserved_slot(){let step=match self.frames.reserve_one(effect).result.map_err(|error|match error{PagedListReservationFailure::Work(error)=>error,PagedListReservationFailure::Allocation{error,..}=>ValueError::from(error.refusal())})?{PagedListReservationOutcome::Ready(step)=>step,PagedListReservationOutcome::Denied=>return Ok(Default::default())};p.copied_bytes=0;p.retained_capacity_bytes=step.allocated_bytes;self.progress=p;return Ok(p)}
   if !self.started{self.frames.push_reserved(Frame::new(0)).unwrap_or_else(|_|unreachable!());self.started=true;return Ok(p)}
   if self.frames.is_empty(){self.result=Some(true);return Ok(p)}
   let left=self.at(a)?;let right=self.at(b)?;let frame=self.frames.last_mut().unwrap();
@@ -59,9 +59,9 @@ impl SourceCompare{
  }
  pub fn begin_close(&mut self){self.closing=true;}
  pub(super) fn terminal_is_empty(&self)->bool{self.closing&&self.frames.is_empty()&&self.frames.allocated_bytes()==0}
- pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  self.progress=Default::default();if !self.closing{return Err(refusal("original source comparison close was not requested"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.demands()?;if !admitted(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  let mut p=RetainedCloneProgress{copied_items:1,..Default::default()};if self.frames.is_empty(){let step=self.frames.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;p.released_bytes=step.released_allocation_bytes;}else{self.frames.pop();p.copied_bytes=d.copy_bytes;}self.progress=p;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
+ pub(super) fn close_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
+  let grant=effect.grant();self.progress=Default::default();if !self.closing{return Err(refusal("original source comparison close was not requested"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.demands()?;if !admitted(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  let mut p=RetainedCloneProgress{copied_items:1,..Default::default()};if self.frames.is_empty(){let step=match self.frames.release_empty_page(effect).result.map_err(|error|match error{PagedListReleaseFailure::Work(error)=>error,PagedListReleaseFailure::Release(error)=>ValueError::from(error)})?{PagedListReleaseOutcome::Ready(step)=>step,PagedListReleaseOutcome::Denied=>return Ok(RetainedCloneStep::Progress(Default::default()))};p.released_bytes=step.released_allocation_bytes;}else{self.frames.pop();p.copied_bytes=d.copy_bytes;}self.progress=p;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
  }
 }
 #[cfg(test)]

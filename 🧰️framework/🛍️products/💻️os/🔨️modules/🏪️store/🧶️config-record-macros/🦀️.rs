@@ -19,7 +19,7 @@ macro_rules! field_set_mutations {
         fields: { $($field:ident : $ty:ty => $variant:ident $kind:literal),+ $(,)? } $(,)?
     ) => {
         #[doc = concat!("🎚️ The set mutations of [`", stringify!($record), "`].")]
-        #[derive(Clone, Debug, PartialEq, $crate::__value::RetainedClone)]
+        #[derive(Clone, Debug, PartialEq, $crate::__value::RetainedClone, $crate::__value::RetireOwned)]
         pub enum $set {
             $($variant($ty)),+
         }
@@ -30,12 +30,6 @@ macro_rules! field_set_mutations {
                     $(Self::$variant(value) => Self::$variant(std::mem::replace(&mut post.$field, value))),+
                 })
             }
-        }
-
-        impl $crate::__value::retirement::RetireOwned for $set {
-            fn retirement(self)->Box<dyn $crate::__value::retirement::RetirementCursor>{match self{$(Self::$variant(original)=>$crate::__value::retirement::RetireOwned::retirement(original)),+}}
-            fn retirement_birth_bytes(&self)->Option<usize>{match self{$(Self::$variant(original)=>$crate::__value::retirement::RetireOwned::retirement_birth_bytes(original)),+}}
-            fn controlled_retirement_supported()->bool{true}
         }
 
         impl $crate::__value::ToValue for $set {

@@ -138,8 +138,5 @@ pub mod viewer {
 pub use crate::standards::v3_0::subsets::any::io::{ObjBuilderConstruction, ObjParts, ObjAnalyzerAnalysis, ObjBuilderFacets, ObjBuilder, ObjAnalyzer, ObjComposer};
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
-mod hoisted_receiving_0;
-#[cfg(test)]
 #[path = "🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod hoisted_snapshot_1;

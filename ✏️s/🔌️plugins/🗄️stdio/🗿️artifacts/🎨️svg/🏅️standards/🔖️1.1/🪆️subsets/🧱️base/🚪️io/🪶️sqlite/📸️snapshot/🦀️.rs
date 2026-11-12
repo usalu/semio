@@ -3,6 +3,7 @@
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};
+use semio_os_kernel as store;
 use semio_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl}, os_store::serialization::ArtifactSqliteSnapshotHost};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{project_xml_document, reconstruct_xml_document, XmlSqliteTables};
 
@@ -15,18 +16,19 @@ const TABLES: XmlSqliteTables = XmlSqliteTables {
 fn validate_root(doc: &SvgDocument) -> Result<(), ValueError> { doc.validate_attribute_owners().map_err(|detail|ValueError::new(ValueRefusalKind::InvalidValue,detail))?;match &doc.root { Some(SvgNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => Ok(()), _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"SVG snapshot requires an svg root element")) } }
 
 impl ArtifactSqliteSnapshotHost for SvgSnapshot {
-    fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure>{
-        native_owner.receive::<Self,Self,semio_os_kernel::NativeSnapshotFailure>(|slot,native_control,body|semio_os_kernel::native_snapshot_turn(|work|{work.performed();(||->Result<Self,ValueError>{
-            let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native::decode(payload,control,native_control)?,|value:Self|crate::schema::snapshot::retire_svg_document(value.doc));
+    fn decode_sqlite_snapshot_native(payload:&semio_os_kernel::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome{
+        let limits=control.limits();
+        store::space_history::io::sqlite::snapshot::settlement::decode_typed(control,native_owner,output,|native|{
+            let mut owner=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(native::decode(payload,limits,native)?,|value:Self|crate::schema::snapshot::retire_svg_document(value.doc));
             validate_root(&owner.as_mut().doc)?;
-            let value=owner.take();
-            body.admit_frontier(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: size_of::<Self>(), maximum_depth: 1, ..Default::default() })?;
-            *slot = Some(value);
-            body.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Self>(), ..Default::default() })?;
-            Ok(slot.take().expect("received snapshot slot"))
-        })().map_err(Into::into)}))
+            Ok(owner.take())
+        })
     }
-    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<semio_os_kernel::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{validate_root(&self.doc).map_err(semio_os_kernel::NativeSnapshotFailure::from)?;work.performed();native::encode(self,encoding,control,native_owner).map_err(Into::into)})}
+    fn encode_sqlite_snapshot_native(&self,encoding:semio_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<semio_os_kernel::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        if let Err(error)=validate_root(&self.doc){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+        let limits=control.limits();
+        store::space_history::io::sqlite::snapshot::settlement::encode_typed(control,native_owner,output,|native|native::encode(self,encoding,limits,native))
+    }
     fn retire_sqlite_snapshot(self){crate::schema::snapshot::retire_svg_document(self.doc)}
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(),ValueError> { native::preflight(self,encoding,control) }
     fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_os_kernel::io_schema::IoResult<()>{

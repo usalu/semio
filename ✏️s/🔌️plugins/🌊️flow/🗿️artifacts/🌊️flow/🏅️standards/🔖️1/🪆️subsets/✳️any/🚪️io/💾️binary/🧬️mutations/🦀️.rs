@@ -16,4 +16,6 @@ impl protocol::OpBinary for FlowMutation {
         Err(protocol::ProtocolError::Malformed { what: "flow-mutation", offset: 0, detail: "a flow has no parent-lane mutation; content edits are child-lane leaves".into() })
     }
 }
+
+semio_os_kernel::original_pack_value_operation_receiving!(FlowMutation);
 }

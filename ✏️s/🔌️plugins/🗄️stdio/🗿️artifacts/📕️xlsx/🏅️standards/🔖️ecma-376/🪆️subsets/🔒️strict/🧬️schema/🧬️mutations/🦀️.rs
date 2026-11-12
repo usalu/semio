@@ -92,6 +92,7 @@ pub enum XlsxStrictMutation {
     RemoveVmlPart(remove_vml_part::RemoveVmlPart),
     SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType),
 }
+dsl::original_pack_value_operation_receiving!(XlsxStrictMutation);
 
 /// 🧾️ Kebab-case spelling of every `XlsxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `xlsx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against

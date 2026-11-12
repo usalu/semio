@@ -28,9 +28,10 @@ semio_framework_value::artifact_retire_leaf!(Source);
 #[derive(Clone,Copy)]
 enum ValueKind{Slider,Number,Integer,Boolean,Vector,Point,Plane,MeshVertex,MeshEdge,CurvePoint,MeshPlane,BrepLine,BrepCircle,BrepEllipse,BrepPlane,BrepTranslation,SurfacePoint,SurfaceNormal,MeshTranslation}
 semio_framework_value::artifact_retire_leaf!(ValueKind);
+#[doc(hidden)]
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct State{source:Source,kind:ValueKind,quality:Quality,inputs:Option<ControlledRetirement<WidgetInputs>>,value:Option<GeometryValue>,extra:[Option<GeometryValue>;2],output:usize,key:String,outputs:Option<Outputs>,insertion:Option<Insert>,phase:u8,byte:usize,cancelled:bool,curve:Option<geometry_read::CurveEvaluation>,curve_close:Option<ControlledRetirement<geometry_read::CurveEvaluation>>,plane:Option<MeshPlaneProduction>,mesh:Option<HalfedgeMesh>,shape:Option<ShapeValue>,translation:Option<MeshTranslationProduction>,translation_close:Option<ControlledRetirement<MeshTranslationProduction>>}
+pub struct State{source:Source,kind:ValueKind,quality:Quality,inputs:Option<ControlledRetirement<WidgetInputs>>,value:Option<GeometryValue>,extra:[Option<GeometryValue>;2],output:usize,key:String,outputs:Option<Outputs>,insertion:Option<Insert>,phase:u8,byte:usize,cancelled:bool,curve:Option<geometry_read::CurveEvaluation>,curve_close:Option<ControlledRetirement<geometry_read::CurveEvaluation>>,plane:Option<MeshPlaneProduction>,mesh:Option<HalfedgeMesh>,shape:Option<ShapeValue>,translation:Option<MeshTranslationProduction>,translation_close:Option<ControlledRetirement<MeshTranslationProduction>>}
 
 /// 🧵️ Retains original inputs, output backing and insertion ownership through every denied turn.
 pub struct OriginalFixedOutputJob{state:ManuallyDrop<State>,transferred:bool}
@@ -172,7 +173,7 @@ fn analytic_plane(inputs:&WidgetInputs)->Result<Surface,ValueError>{
 fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yield()&&!cx.is_cancelled()&&grant.maximum_items>0&&grant.maximum_depth>0}
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
 impl WidgetJob for OriginalFixedOutputJob{fn cancel(&mut self){self.state.cancelled=true}fn step(&mut self,cx:&mut StepContext<'_>)->Result<Option<WidgetStep>,OriginalTurnFailure>{self.step_original(cx)}}
-impl RetireOwned for OriginalFixedOutputJob{fn retirement(mut self)->Box<dyn RetirementCursor>{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
+impl RetireOwned for OriginalFixedOutputJob{type RetirementCursor=<State as RetireOwned>::RetirementCursor;fn retirement_seed(mut self)->Self::RetirementCursor{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement_seed()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
 impl Drop for OriginalFixedOutputJob{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"math value job reached Drop before original paid output or retirement closure");if self.terminal_is_empty()&&!self.transferred{unsafe{ManuallyDrop::drop(&mut self.state)}}}}
 
 #[cfg(any(test, feature = "testkit"))]

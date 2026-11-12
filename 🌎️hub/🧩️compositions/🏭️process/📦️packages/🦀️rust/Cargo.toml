@@ -16,6 +16,7 @@ role = "hub"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-s-artifact-process-process3d = { workspace = true }
 semio-s-artifact-process-process3d-editor = { workspace = true }

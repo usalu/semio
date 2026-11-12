@@ -24,7 +24,7 @@ enum RunPhase {
 struct RunRemnant {
     pub(super) phase: RunPhase,
     pub(super) engine: Option<Box<ReconstructionEngine>>,
-    pub(super) scene: Option<Arc<RemodelingSnapshot>>,
+    pub(super) scene: Option<semio_framework_value::retirement::arc_custody::ArcLease<RemodelingSnapshot>>,
     pub(super) observations: Vec<EngineObservation>,
     pub(super) owed: VecDeque<Owed>,
 }
@@ -505,44 +505,45 @@ impl InteractiveJob for ReconstructionRunJob {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{work:1,result:(||{
-            self.closing = true;
+        self.closing = true;
+        let copy_bytes = self.next_close_copy_byte_demand()?;
+        let demand = semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: self.next_close_capacity_byte_demand(copy_bytes)?, release_bytes: self.next_close_release_byte_demand()?, depth: self.next_close_depth_demand()? };
+        semio_framework_job::close_original_effect_step(cx, demand, |effect| {
+            let grant = effect.grant();
             if grant.maximum_items == 0 || grant.maximum_depth == 0 {
-                return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
+                return settled(effect, Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())), false);
             }
-            if let Some(step) = close_outbox_turn(&mut self.outbox, grant)? {
-                return Ok(step);
+            match close_outbox_turn(&mut self.outbox, effect) {
+                Ok(Some(step)) => return settled(effect, Ok(step), false),
+                Err(error) => return settled(effect, Err(error), false),
+                Ok(None) => {}
             }
             if let Some(owner) = self.remnant.as_mut() {
-                let step = owner.step(grant);
+                let poll = owner.step(grant.maximum_copy_bytes, effect);
                 if owner.terminal_is_empty() {
                     self.remnant = None;
                 }
-                return Ok(match step {
-                    Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Complete { progress },
-                    Ok(RetainedCloneStep::Progress(progress)) => InteractiveJobCloseStep::Pending { progress },
-                    Err(error) => return Err(error),
-                });
+                return poll;
             }
             if matches!(self.phase, RunPhase::Settled) && self.engine.is_none() && self.scene.is_none() && self.observations.is_empty() && self.owed.is_empty() {
-                return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
+                return settled(effect, Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())), true);
             }
-            let remnant = RunRemnant { phase: std::mem::replace(&mut self.phase, RunPhase::Settled), engine: self.engine.take(), scene: self.scene.take(), observations: std::mem::take(&mut self.observations), owed: std::mem::take(&mut self.owed) };
-            Ok(match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
+            let remnant = RunRemnant { phase: std::mem::replace(&mut self.phase, RunPhase::Settled), engine: self.engine.take(), scene: self.scene.take().map(semio_framework_value::retirement::arc_custody::ArcLease::new), observations: std::mem::take(&mut self.observations), owed: std::mem::take(&mut self.owed) };
+            match semio_framework_value::retirement::controlled::ControlledRetirement::new(remnant) {
                 Ok(owner) => {
                     self.remnant = Some(owner);
-                    InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+                    settled(effect, Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), true)
                 }
                 Err((error, remnant)) => {
                     self.phase = remnant.phase;
                     self.engine = remnant.engine;
-                    self.scene = remnant.scene;
+                    self.scene = remnant.scene.and_then(|lease| lease.0);
                     self.observations = remnant.observations;
                     self.owed = remnant.owed;
-                    return Err(error)
+                    settled(effect, Err(error), false)
                 }
-            })
-        })()})
+            }
+        })
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

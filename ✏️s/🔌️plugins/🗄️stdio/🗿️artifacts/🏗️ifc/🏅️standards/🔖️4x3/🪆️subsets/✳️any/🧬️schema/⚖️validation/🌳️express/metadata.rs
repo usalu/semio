@@ -1,6 +1,6 @@
 //! 🧊 Borrowed complete declaration metadata: the retained released catalog projected once into immutable statics, so no request-time parser exists and lookups never allocate.
 use semio_s_artifact_stdio_ifc4x3_add2_catalog as ifc4x3_add2_catalog;
-use semio_s_artifact_stdio_ifc_declarations::{IfcAttributeDeclaration, IfcTypeExpression};
+use semio_s_artifact_stdio_ifc_declarations::{IfcAttributeDeclaration, IfcDetailsTypeMetadata, IfcTypeExpression, IfcTypeProjection};
 use semio_s_artifact_stdio_ifc_json_pack::Leaker;
 use std::sync::OnceLock;
 #[derive(Debug)]
@@ -17,6 +17,11 @@ pub struct StaticTypeExpression {
     pub unique: bool,
     pub optional: bool,
     pub item: Option<&'static StaticTypeExpression>,
+}
+impl IfcDetailsTypeMetadata for StaticTypeExpression {
+    fn projection(&'static self) -> IfcTypeProjection {
+        IfcTypeProjection { kind: self.kind, name: self.name, width: self.width, fixed: self.fixed, aggregate: self.aggregate, lower: self.lower, upper: self.upper, lower_expression: self.lower_expression, upper_expression: self.upper_expression, unique: self.unique, optional: self.optional, item: self.item.map(|item| item as &dyn IfcDetailsTypeMetadata) }
+    }
 }
 #[derive(Debug)]
 pub struct StaticAttribute {

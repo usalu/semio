@@ -21,19 +21,19 @@ pub use retiring::Fem2dSnapshotRetiring;
 pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).
-#[derive(Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dSnapshot {
     #[state(artifact)]
-    pub nodes: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_node::planar::FemNode>,
+    pub nodes: semio_framework_value::shared_issuance::SealedShared<semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_node::planar::FemNode>>,
     #[state(artifact)]
     pub elements: Vec<FemElement>,
     #[state(artifact)]
     pub regions: Vec<FemRegion>,
     #[state(artifact)]
-    pub materials: semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_material::planar::FemMaterial>,
+    pub materials: semio_framework_value::shared_issuance::SealedShared<semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_material::planar::FemMaterial>>,
     #[state(artifact)]
     pub sections: Vec<FemSection>,
     #[state(artifact)]

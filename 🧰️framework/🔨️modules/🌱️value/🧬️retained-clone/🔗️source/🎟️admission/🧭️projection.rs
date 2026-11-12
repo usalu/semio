@@ -25,6 +25,12 @@ impl<T:RetireOwned+Sync+'static> OriginalSourceProjection<T> for T{
  fn project_source<'reply,'source>(&'source self,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalProjectionReply<'reply,'source,T>)->Result<OriginalEffectReplyComplete<'reply,NonNull<T>,ValueError>,ValueError>{if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"source projection exceeded its original work"))))}Ok(reply.complete(Ok(self)))}
  fn recover_source_projection<'reply,'source>(&'source self,_:&mut RetainedAllocationEffect<'_>,reply:OriginalProjectionReply<'reply,'source,T>)->Result<OriginalEffectReplyComplete<'reply,NonNull<T>,ValueError>,ValueError>{Ok(reply.pending())}
 }
+/// 🔗️ A leased shared allocation projects its own payload as the original clone source.
+impl<T:RetireOwned+Sync+'static> OriginalSourceProjection<T> for crate::retirement::arc_custody::ArcLease<T>{
+ fn projection_work_demand(&self)->Result<u64,ValueError>{Ok(1)}
+ fn project_source<'reply,'source>(&'source self,effect:&mut RetainedAllocationEffect<'_>,reply:OriginalProjectionReply<'reply,'source,T>)->Result<OriginalEffectReplyComplete<'reply,NonNull<T>,ValueError>,ValueError>{if !effect.performed(1)?{return Ok(reply.complete(Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"Arc lease projection exceeded its original work"))))}Ok(reply.complete(self.get()))}
+ fn recover_source_projection<'reply,'source>(&'source self,_:&mut RetainedAllocationEffect<'_>,reply:OriginalProjectionReply<'reply,'source,T>)->Result<OriginalEffectReplyComplete<'reply,NonNull<T>,ValueError>,ValueError>{Ok(reply.pending())}
+}
 /// 🏠️ Retains the actual source and inner answer throughout the common recorded action.
 pub struct OriginalProjectionProducer<T:Sync+'static,A:OriginalSourceProjection<T>>{owner:ManuallyDrop<Option<SealedShared<A>>>,answer:ManuallyDrop<Option<Result<NonNull<T>,ValueError>>>}
 /// 🪪️ A context created only by its resident projection frame.

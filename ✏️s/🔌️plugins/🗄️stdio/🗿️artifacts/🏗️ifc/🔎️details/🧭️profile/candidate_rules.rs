@@ -32,7 +32,7 @@ pub trait IfcCandidateRules: Default + Send {
     fn begin_close(&mut self);
     fn terminal_is_empty(&self) -> bool;
     fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome;
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome;
 }
 impl IfcCandidateRules for () {
     fn demands(&self, _: &IfcSnapshot, _: &[IfcMutation]) -> Result<RetirementDemand, ValueError> { Ok(Default::default()) }
@@ -40,5 +40,5 @@ impl IfcCandidateRules for () {
     fn begin_close(&mut self) {}
     fn terminal_is_empty(&self) -> bool { true }
     fn close_demands(&self, _: usize) -> Result<RetirementDemand, ValueError> { Ok(Default::default()) }
-    fn close_step(&mut self, _: RetainedCloneGrant) -> RetainedWorkOutcome { RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 } }
+    fn close_step(&mut self, _: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> RetainedWorkOutcome { RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 } }
 }

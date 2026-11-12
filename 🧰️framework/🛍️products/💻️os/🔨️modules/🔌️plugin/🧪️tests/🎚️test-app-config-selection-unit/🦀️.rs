@@ -43,12 +43,14 @@ fn test_config_retirement_original_nullable_selection() {
 fn close_config_original<T:semio_framework_value::retirement::RetireOwned>(original:T,held:usize,body:usize,scope:&str) {
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
+    use semio_framework_value_testing_admission::{bank_run,EffectBank,Wallet};
+    let mut bank=EffectBank::new(Wallet::from_profile(&serde_json::json!({"items":1<<16,"copyBytes":1<<28,"capacityBytes":1<<28,"releaseBytes":1<<28,"depth":1<<16,"fuel":1<<16})));
     let(mut owner,heap)=observe_heap_allocations_on_this_thread(||ControlledRetirement::new(original).unwrap_or_else(|_|panic!("native config owner")));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut births=0;let mut released=0;let mut turns=0;
     while !owner.terminal_is_empty() {
         let((copy,capacity,release,depth),heap)=observe_heap_allocations_on_this_thread(||(owner.next_copy_byte_demand().unwrap(),owner.next_capacity_byte_demand(body).unwrap(),owner.next_release_byte_demand().unwrap(),owner.next_depth_demand().unwrap()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body.max(copy),maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:depth};
-        for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),(copy>0).then_some(RetainedCloneGrant{maximum_copy_bytes:copy.saturating_sub(1),..grant}),(capacity>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:capacity.saturating_sub(1),..grant}),(release>0).then_some(RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..grant}),(depth>0).then_some(RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||owner.step(denied));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if let Ok(step)=step{assert_eq!(step.progress(),Default::default());}}
-        let(step,heap)=observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);assert!(step.progress().copied_items>0||matches!(step,RetainedCloneStep::Complete(_)));
+        for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),(copy>0).then_some(RetainedCloneGrant{maximum_copy_bytes:copy.saturating_sub(1),..grant}),(capacity>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:capacity.saturating_sub(1),..grant}),(release>0).then_some(RetainedCloneGrant{maximum_release_bytes:release.saturating_sub(1),..grant}),(depth>0).then_some(RetainedCloneGrant{maximum_depth:depth.saturating_sub(1),..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||bank_run(&mut bank,denied,4,|effect|owner.step(body,effect)).0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if let semio_framework_value::RetainedWorkPoll::Complete(turn)=step{if let Ok(step)=turn.result{assert_eq!(step.progress(),Default::default());}}}
+        let(step,heap)=observe_heap_allocations_on_this_thread(||match bank_run(&mut bank,grant,4,|effect|owner.step(body,effect)).0{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.unwrap(),semio_framework_value::RetainedWorkPoll::Pending{..}=>panic!("funded config owner step stayed pending")});assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);assert!(step.progress().copied_items>0||matches!(step,RetainedCloneStep::Complete(_)));
     }
     assert_eq!(released,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
@@ -58,6 +60,8 @@ fn test_config_original_record_receiving_preserves_nullable_selection() {
     use replication::{OpBinary, OpBinaryReceiving, OpBinaryReceivingCursor};
     use semio_framework_value::RetainedCloneGrant;
     use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
+    use semio_framework_value_testing_admission::{bank_run,EffectBank,Wallet};
+    let mut bank=EffectBank::new(Wallet::from_profile(&serde_json::json!({"items":1<<16,"copyBytes":1<<28,"capacityBytes":1<<28,"releaseBytes":1<<28,"depth":1<<16,"fuel":1<<16})));
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🎚️test-app-config-selection-unit/🧫️fixtures/🔣️receiving.json")).unwrap();
     let turn = &fixture["turn"];
     let grant = RetainedCloneGrant { maximum_items: turn["items"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: turn["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: turn["depth"].as_u64().unwrap() as usize };
@@ -67,25 +71,25 @@ fn test_config_original_record_receiving_preserves_nullable_selection() {
         assert_eq!(&source[..2], &[1, 0]);
         let mut accept = |_| true;
         let mut native = NativeDecodeControl::new(1 << 24, &mut accept);
-        let (mut receiver, admitted) = TestConfigMutation::admit_receiving(&source, (0, source.len()), grant).unwrap().unwrap();
+        let (mut receiver, admitted) = TestConfigMutation::admit_receiving(&source, (0, source.len()), grant).result.unwrap().unwrap();
         assert!(admitted.fits(grant));
         let mut turns = 0;
         while !receiver.is_ready() {
             let denied = RetainedCloneGrant { maximum_items: 0, ..grant };
-            assert_eq!(receiver.step(&source, &mut native, grant.maximum_copy_bytes, denied).unwrap(), Default::default());
-            let progress = receiver.step(&source, &mut native, grant.maximum_copy_bytes, grant).unwrap();
+            assert_eq!(receiver.step(&source, &mut native, grant.maximum_copy_bytes, denied).result.unwrap(), Default::default());
+            let progress = receiver.step(&source, &mut native, grant.maximum_copy_bytes, grant).result.unwrap();
             assert!(progress.fits(grant));
             assert_eq!(progress.copied_items, 1);
             turns += 1;
             assert!(turns < 4096);
         }
         let mut output = None;
-        assert!(receiver.take_into(&mut output, grant).unwrap().fits(grant));
+        assert!(receiver.take_into(&mut output, grant).result.unwrap().fits(grant));
         assert_eq!(serde_json::to_value(output.as_ref().unwrap()).unwrap(), serde_json::to_value(&expected).unwrap());
         while !receiver.terminal_is_empty() {
             let demand = receiver.close_demands(grant.maximum_copy_bytes).unwrap();
             native.charge(demand.capacity_bytes).unwrap();
-            assert!(receiver.close_step(grant).unwrap().progress().fits(grant));
+            assert!(match bank_run(&mut bank,grant,4,|effect|receiver.close_step(effect)).0{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.unwrap(),semio_framework_value::RetainedWorkPoll::Pending{..}=>panic!("funded config receiver close stayed pending")}.progress().fits(grant));
             turns += 1;
             assert!(turns < 8192);
         }

@@ -7,6 +7,16 @@ use super::*;
 #[path="🧪️host-event/🦀️.rs"]
 mod host_event_birth_tests;
 
+/// 🫧️ The one transient mutation replaces the whole generation preview text, so its admitted payload moves into the new transient.
+fn transient_footprint(_: &Generation3dTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<Generation3dTransientMutation>()))
+}
+
+fn transient_transfer(mutation: Generation3dTransientMutation) -> Generation3dTransient {
+    let Generation3dTransientMutation::SetGenerationPreview(set) = mutation;
+    Generation3dTransient { generation_preview_text: set.preview_text }
+}
+
 impl ArtifactEditor for Generation3dPlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<ExampleSource> {
@@ -41,12 +51,12 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     type Command = Generation3dCommand;
 
-    fn document_store_owners_source_demands() -> Result<semio_framework_plugin::__value::RetirementDemand, semio_framework_plugin::__value::ValueError> {
-        semio_framework_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    fn document_store_owners_source_demands() -> Result<semio_plugin::__value::RetirementDemand, semio_plugin::__value::ValueError> {
+        semio_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
     }
 
-    fn build_document_store_owners(grant: semio_framework_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+    fn build_document_store_owners(grant: semio_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
@@ -54,23 +64,28 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     /// 🧠️ One retained `FlowEvalSession` per app instance — see [`Generation3dInstanceOperationOwner`].
-    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn semio_plugin::ArtifactInstanceOperationOwner> {
         Box::new(Generation3dInstanceOperationOwner::new())
     }
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+            transient_footprint,
+            transient_transfer,
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Generation3dTransient>::default()),
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Generation3dTransientMutation>::default()),
+        )))
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+        Some(semio_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
-    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(semio_framework_plugin::no_draft_store_disposer())
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_plugin::no_draft_store_disposer())
     }
 
-    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+    fn register_window_transient_owners(registry: &mut semio_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
         registry.register::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>()?;
         registry.register::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>()
     }
@@ -133,8 +148,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         registry.register(Generation3dDocumentIoJobFactory::new(&controller))
     }
 
-    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, _construction:&mut semio_framework_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
-        let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_plugin::ErasedToolJob>, _construction:&mut semio_plugin::__job::OriginalConstructionAdmission,cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+        let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !GENERATION3D_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str())
             && !GENERATION3D_FLOW_EVAL_TOOL_IDS.contains(&original.tool_id.as_str())
             && !GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&original.tool_id.as_str())
@@ -143,11 +158,11 @@ impl ArtifactEditor for Generation3dPlayApp {
             return Ok(false);
         }
         if original.command.command_id() != original.tool_id {
-            return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 3d command does not match its exact registered tool").into());
+            return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "the generation 3d command does not match its exact registered tool").into());
         }
         let tool_id = original.command.command_id();
         let contributions = GENERATION3D_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
-        semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation3dCommand::command_id, if contributions {
+        semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Generation3dCommand::command_id, if contributions {
                 GENERATION3D_CONTRIBUTIONS_RAW_BYTES
             } else if GENERATION3D_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
                 GENERATION3D_DOCUMENT_IO_RAW_BYTES
@@ -171,7 +186,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🧾️ BOTH factories' proofs, in registration order — `validate_tool_job_rows` matches this
     /// catalogue against the registered factories exactly, so a second factory that is registered
     /// and not proved (or proved and not registered) fails the app closed at boot.
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    fn bounded_first_step_tool_proofs() -> Vec<semio_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = generation3d_bounded_contributions_first_step_tool_proofs();
         proofs.extend(generation3d_flow_first_step_tool_proofs());
         proofs
@@ -181,31 +196,31 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(semio_s_artifact_procedural_3d_editor_config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Result<Generation3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Generation3dSnapshot,semio_plugin::Fault>>{Some(||{
         Ok(semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot())
     })}
 
-    fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_plugin::AppIo> {
         Some(::semio_framework_async::poll::resolve_ready(generation3d_io()))
     }
 
     /// 📤️ Exports the declared document without evaluating its flow graph.
-    fn export_media(port: &str, doc: &ArtifactView<'_, Generation3dSnapshot>) -> Result<semio_framework_plugin::Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, Generation3dSnapshot>) -> Result<semio_plugin::Media, MediaError> {
         if port != "artifact:out" {
             return Err(MediaError::NotImplemented);
         }
         let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
         let bytes = pack::snapshot::ArtifactPack::encode_pack(doc.snapshot);
-        Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
+        Ok(semio_plugin::Media { media_type, payload: semio_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
     /// 🪪️ Reads geometry from the explicitly supplied instance's retained evaluation session.
     fn export_media_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         port: &str,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
-        _transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>,
-    ) -> Result<semio_framework_plugin::Media, MediaError> {
+        _transient: &semio_plugin::TransientView<'_, Generation3dTransient>,
+    ) -> Result<semio_plugin::Media, MediaError> {
         if port != "geometry:out" {
             return Self::export_media(port, doc);
         }
@@ -214,18 +229,18 @@ impl ArtifactEditor for Generation3dPlayApp {
         }).map_err(|error| MediaError::Payload(port.into(), error.message))?.map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
         semio_s_artifact_procedural_3d_mesh_bridge::semio_mesh_from_mesh_data(&mesh)
             .map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
-        Ok(semio_framework_plugin::Media {
+        Ok(semio_plugin::Media {
             media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
-            payload: semio_framework_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: semio_framework_pack_json::to_json_string(&mesh) },
+            payload: semio_plugin::MediaPayload::Structured { schema: "3d.mesh".into(), json: semio_framework_pack_json::to_json_string(&mesh) },
         })
     }
 
     /// 🎞️ `"params:in"` — sets matching `InputSlider` widgets from a `{widgetId: number}` JSON object as ABSOLUTE
     /// `change-slider-value` leaves; unmatched keys, non-slider widgets and unchanged values are ignored.
-    fn import_media(port: &str, media: &semio_framework_plugin::Media, doc: &ArtifactView<'_, Generation3dSnapshot>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &semio_plugin::Media, doc: &ArtifactView<'_, Generation3dSnapshot>) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
             "params:in" => {
-                let semio_framework_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
+                let semio_plugin::MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "params:in importer only accepts a Structured JSON object payload".into()));
                 };
                 let parsed = semio_framework_pack_json::parse(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
@@ -474,13 +489,13 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 📨️ Every host event ends the window's open gumball gesture with zero trace under the reason the tool records: a blur
     /// `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an opened history edit
     /// `frozen` and a remote edit `baseMoved` — the typed `translateSelection{phase: "abort"}` of that window.
-    fn host_event_demands(event: &semio_framework_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
-        let fixed=match event{semio_framework_plugin::HostEvent::WindowBlurred{..}=>9,semio_framework_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_framework_plugin::HostEvent::UtilityChanged{..}|semio_framework_plugin::HostEvent::Retiring{..}=>12,semio_framework_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_framework_plugin::HostEvent::BaseMoved{..}=>14};let bytes=event.window_id().len().saturating_add(fixed);
+    fn host_event_demands(event: &semio_plugin::HostEvent) -> Option<semio_framework_value::RetirementDemand> {
+        let fixed=match event{semio_plugin::HostEvent::WindowBlurred{..}=>9,semio_plugin::HostEvent::PointerCaptureLost{..}=>16,semio_plugin::HostEvent::UtilityChanged{..}|semio_plugin::HostEvent::Retiring{..}=>12,semio_plugin::HostEvent::TimeTravelFrozen{..}=>11,semio_plugin::HostEvent::BaseMoved{..}=>14};let bytes=event.window_id().len().saturating_add(fixed);
         let header=std::mem::size_of::<Self::Command>();Some(semio_framework_value::RetirementDemand{copy_bytes:header.saturating_mul(2).saturating_add(bytes),capacity_bytes:header.saturating_add(bytes),depth:1,..Default::default()})
     }
 
-    fn host_event(event: &semio_framework_plugin::HostEvent) -> Option<Self::Command> {
-        use semio_framework_plugin::HostEvent;
+    fn host_event(event: &semio_plugin::HostEvent) -> Option<Self::Command> {
+        use semio_plugin::HostEvent;
         use semio_framework_tool_machine::ToolAbortReason;
         let reason = match event {
             HostEvent::WindowBlurred { .. } => ToolAbortReason::Blur,
@@ -509,7 +524,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
         interaction: &InteractionView<'_>,
-        view_state: Option<&semio_framework_plugin::ViewModel>,
+        view_state: Option<&semio_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -595,7 +610,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🚧️ A graph the live registry cannot serve is not slow work: a hop would recompute the identical
     /// `flow.extension-not-contributed` miss. Only `setContributions` can move it, and it owes every
     /// attached preview an evaluation itself.
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    fn pending_effects(owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_plugin::ArtifactPendingView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation3d_preview_windows(view);
         let servable = flow_eval_tick::may_rearm(&doc.snapshot.host_snapshot);
         let applied_edits = doc.provisional_generation();
@@ -620,7 +635,7 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     /// 🆓️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
-    fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_plugin::ViewModel) -> semio_plugin::UiAssemblyResult<semio_plugin::ComponentTree> {
         with_scratch_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default(), session, doc.tool_run()))
     }
 
@@ -628,15 +643,15 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// window body — the node graph paints the hovered node/port, the world previews paint the
     /// hovered/selected instances, and the inspection panel finally sees a real selection.
     fn render_with_request_context(
-        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_plugin::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>,
+        view_state: &semio_plugin::ViewModel,
+        transient: &semio_plugin::TransientView<'_, Generation3dTransient>,
         interaction: &InteractionView<'_>,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+    ) -> semio_plugin::OriginalRenderResult<semio_plugin::ComponentTree> {
         let preview_eval_text = transient
             .window::<edit_preview::transient::Generation3dPreviewWindowTransientOwner>()
             .or_else(|| transient.window::<generate_preview::transient::Generation3dGeneratePreviewWindowTransientOwner>())
@@ -654,16 +669,16 @@ impl ArtifactEditor for Generation3dPlayApp {
                 }
                 rendered
             })
-            .map_err(|original|semio_framework_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?;
+            .map_err(|original|semio_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?;
         rendered.map(Some).map_err(Into::into)
     }
 
-    fn window_engagements_with_request_context(_doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel, _transient: &semio_framework_plugin::TransientView<'_, Generation3dTransient>, interaction: &InteractionView<'_>) -> HashMap<String, semio_framework_plugin::WindowEngagement> {
+    fn window_engagements_with_request_context(_doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_plugin::ViewModel, _transient: &semio_plugin::TransientView<'_, Generation3dTransient>, interaction: &InteractionView<'_>) -> HashMap<String, semio_plugin::WindowEngagement> {
         let engagement = semio_s_artifact_procedural_3d_editor_selection::engagement(&semio_s_artifact_procedural_3d_editor_selection::ComponentSelection::from_interaction(interaction), view_state.locale == semio_ui_locale::Locale::De);
         HashMap::from([(edit_preview::GENERATION_3D_PLAY_WINDOW_PREVIEW.into(), engagement)])
     }
 
-    fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         let config = cfg.snapshot;
         let is_de = view_state.locale == semio_ui_locale::Locale::De;
         let measures = edit_preview::preview_window_measures(config, is_de, generation3d_action);
@@ -678,12 +693,12 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// through `context_menu_with_request_context` instead, so this delegate builds the same menu
     /// against an empty selection.
     fn context_menu(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        view_state: &semio_plugin::ViewModel,
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, cfg, view_state, &PreviewInteractionMarks::default(), registry)
     }
 
@@ -693,13 +708,13 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// (or vice versa) never reaches a menu row through it; `interaction` is the authoritative
     /// framework-owned `graph` selection, the same one `render_with_request_context` paints from.
     fn context_menu_with_request_context(
-        request: &semio_framework_plugin::ContextMenuRequest,
+        request: &semio_plugin::ContextMenuRequest,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
-        view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_plugin::ViewModel,
         interaction: &InteractionView<'_>,
-        registry: &semio_framework_plugin::AppActionRegistry,
-    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        registry: &semio_plugin::AppActionRegistry,
+    ) -> Vec<semio_plugin::ContextMenuItemSpec> {
         Self::context_menu_body(request, doc, cfg, view_state, &PreviewInteractionMarks::from_interaction(interaction), registry)
     }
 }

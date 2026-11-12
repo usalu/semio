@@ -10,7 +10,7 @@ pub struct Fem2dModelWindowConfig {
 }
 
 /// 🩹 Owned-field patch of [`Fem2dModelWindowConfig`]: exactly the fields an update sets. It is both the update payload and the sparse diff.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct Fem2dModelWindowConfigPatch {

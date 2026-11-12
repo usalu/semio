@@ -148,10 +148,12 @@ impl Session {
     pub fn cancel_tessellation_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,cx:&mut semio_framework_job::StepContext<'_>)->Result<(RetainedCloneStep,GeometryWorkProgress),GeometryWorkFailure>{
         Self::check_geometry_caller(identity,cx)?;
         if cx.should_yield(){return Ok((RetainedCloneStep::Progress(Default::default()),Default::default()))}
-        let mut spent=0;let result=self.cancel_tessellation_original_step(identity,handle,tolerance,1,cx.retained_grant(),&mut spent);
+        let mut spent=0;let grant=cx.retained_grant();
+        let result=match cx.with_original_effect(grant,|_,effect|self.cancel_tessellation_original_step(identity,handle,tolerance,1,effect,&mut spent)){Ok(Some((result,performed)))=>{cx.consume_work(performed);result},Ok(None)=>Ok((RetainedCloneStep::Progress(Default::default()),Default::default())),Err(error)=>Err(error)};
         Self::receive_geometry_work(result.map_err(|primary|GeometryWorkFailure::new(primary,spent)),cx)
     }
-    fn cancel_tessellation_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(RetainedCloneStep,GeometryWorkProgress),ValueError>{
+    fn cancel_tessellation_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,effect:&mut RetainedAllocationEffect<'_>,spent:&mut usize)->Result<(RetainedCloneStep,GeometryWorkProgress),ValueError>{
+        let grant=effect.grant();
         let demand=self.cancel_tessellation_demands(identity,handle,tolerance,grant.maximum_copy_bytes)?;
         let empty=GeometryWorkProgress::default();
         if units==0||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((RetainedCloneStep::Progress(Default::default()),empty));}
@@ -164,12 +166,12 @@ impl Session {
         }
         if registry.source_cancellation.as_ref().is_some_and(|target|target.done){*spent=0;return Ok((RetainedCloneStep::Complete(Default::default()),empty));}
         if let Some(closing)=&mut registry.admission_closing{
-            let step=closing.step(RetainedCloneGrant{maximum_items:grant.maximum_items.min(units).min(1),..grant})?;let retained=step.progress();if closing.terminal_is_empty(){registry.admission_closing=None;}
-            return Ok((RetainedCloneStep::Progress(retained),GeometryWorkProgress{retained,consumed_units:*spent}));
+            *spent=0;let mut single=effect.nested(RetainedCloneGrant{maximum_items:grant.maximum_items.min(units).min(1),..grant});let step=settled_step(closing.step(grant.maximum_copy_bytes,&mut single))?;let retained=step.progress();if closing.terminal_is_empty(){registry.admission_closing=None;}
+            return Ok((RetainedCloneStep::Progress(retained),GeometryWorkProgress{retained,consumed_units:0}));
         }
         if let Some(closing)=&mut registry.closing{
-            let step=closing.step(RetainedCloneGrant{maximum_items:grant.maximum_items.min(units).min(1),..grant})?;let retained=step.progress();if closing.terminal_is_empty(){registry.closing=None;}
-            return Ok((RetainedCloneStep::Progress(retained),GeometryWorkProgress{retained,consumed_units:*spent}));
+            *spent=0;let mut single=effect.nested(RetainedCloneGrant{maximum_items:grant.maximum_items.min(units).min(1),..grant});let step=settled_step(closing.step(grant.maximum_copy_bytes,&mut single))?;let retained=step.progress();if closing.terminal_is_empty(){registry.closing=None;}
+            return Ok((RetainedCloneStep::Progress(retained),GeometryWorkProgress{retained,consumed_units:0}));
         }
         let retained=RetainedCloneProgress{copied_items:1,..Default::default()};
         if registry.admission.as_ref().is_some_and(|admission|admission.matches(identity,handle,tolerance)){
@@ -198,7 +200,8 @@ impl Session {
     pub fn tessellation_demands(&self,identity:semio_os_flow::geometry::GeometryWorkIdentity,handle:&str,tolerance:f64,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let authority=self;if self.source_tessellation_cancelled(identity,handle,tolerance)?{return Ok(Default::default());}if let Some(demand)=authority.admission_demands(identity,handle,tolerance,copy)?{return Ok(demand);}let kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;let owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original().ok_or_else(ownership_busy)?;
         if let Some(validation)=registry.jobs.iter().find(|(key,row)|key.0==handle&&key.1==tolerance.to_bits()&&row.identity==identity&&row.source==handle.as_ptr()as usize&&row.length==handle.len()).and_then(|(_,row)|row.validation.as_ref()){return validation.funded_demands(kernel.tessellation_body());}
         let bytes=authority.cached_mesh_payload_bytes(handle,tolerance);Ok(semio_framework_value::RetirementDemand{copy_bytes:bytes,capacity_bytes:bytes,depth:1,..Default::default()})}
-    fn tessellate_admitted_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(TessellationStepOutcome,GeometryWorkProgress),ValueError>{
+    fn tessellate_admitted_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,effect:&mut RetainedAllocationEffect<'_>,spent:&mut usize)->Result<(TessellationStepOutcome,GeometryWorkProgress),ValueError>{
+        let grant=effect.grant();
         let kernel=self.kernel().try_lock().map_err(|_|ownership_busy())?;let mut owner=self.tessellation_jobs().try_lock().map_err(|_|ownership_busy())?;let registry=owner.original_mut().ok_or_else(ownership_busy)?;
         let slot=(0..registry.jobs.slot_count()).find(|slot|registry.jobs.slot_entry(*slot).is_some_and(|(key,row)|key.0==handle&&key.1==tolerance.to_bits()&&row.identity==identity&&row.source==handle.as_ptr()as usize&&row.length==handle.len())).ok_or_else(ownership_busy)?;
         let clock=registry.clock;let(key,row)=registry.jobs.slot_entry_mut(slot).ok_or_else(ownership_busy)?;
@@ -207,7 +210,7 @@ impl Session {
             let demand=validation.funded_demands(kernel.tessellation_body())?;
             let admitted=units!=0&&grant.maximum_items!=0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth;
             *spent=usize::from(admitted);
-            let(retained,consumed_units)=validation.step_funded(kernel.tessellation_body(),units,grant)?;
+            let(retained,consumed_units)=validation.step_funded(kernel.tessellation_body(),units,effect)?;
             let progress=validation.progress();if consumed_units!=0{row.last_step=clock;row.validation_units=progress.units_done;}
             return Ok((TessellationStepOutcome::Working{units_done:row.source_units.saturating_add(progress.units_done),units_total:row.source_units.saturating_add(progress.units_total),faces_done:0,faces_total:0,phase:"validating"},GeometryWorkProgress{retained,consumed_units}));
         }
@@ -228,10 +231,12 @@ impl Session {
         Self::check_geometry_caller(identity,cx)?;
         if cx.is_cancelled(){return Ok((semio_os_flow::geometry::GeometryStep::Cancelled,Default::default()))}
         if cx.should_yield(){return Ok((semio_os_flow::geometry::GeometryStep::Working{units_done:0,units_total:0,phase:"awaiting-caller"},Default::default()))}
-        let mut spent=0;let result=self.tessellate_original_step(identity,handle,tolerance,1,cx.retained_grant(),&mut spent);
+        let mut spent=0;let grant=cx.retained_grant();
+        let result=match cx.with_original_effect(grant,|_,effect|self.tessellate_original_step(identity,handle,tolerance,1,effect,&mut spent)){Ok(Some((result,performed)))=>{cx.consume_work(performed);result},Ok(None)=>Ok((semio_os_flow::geometry::GeometryStep::Working{units_done:0,units_total:0,phase:"awaiting-grant"},Default::default())),Err(error)=>Err(error)};
         Self::receive_geometry_work(result.map_err(|primary|GeometryWorkFailure::new(primary,spent)),cx)
     }
-    fn tessellate_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,grant:RetainedCloneGrant,spent:&mut usize)->Result<(semio_os_flow::geometry::GeometryStep,GeometryWorkProgress),ValueError> {
+    fn tessellate_original_step(&self,identity:GeometryWorkIdentity,handle:&str,tolerance:f64,units:usize,effect:&mut RetainedAllocationEffect<'_>,spent:&mut usize)->Result<(semio_os_flow::geometry::GeometryStep,GeometryWorkProgress),ValueError> {
+        let grant=effect.grant();
         use semio_os_flow::geometry::{GeometryStep,GeometryWorkProgress};
         let awaiting=||(GeometryStep::Working {units_done:0,units_total:0,phase:"awaiting-grant"},GeometryWorkProgress::default());
         if self.is_closed(){return Err(ownership_busy());}let authority=self;
@@ -241,7 +246,7 @@ impl Session {
         let fits=|bytes:usize|bytes<=grant.maximum_copy_bytes&&bytes<=grant.maximum_capacity_bytes;
         if !fits(authority.cached_mesh_payload_bytes(handle,tolerance)) {return Ok(awaiting());}
         let before=authority.tessellation_work_units(identity,handle,tolerance);let mut consumed_units=0;
-        let(outcome,validation_work)=authority.tessellate_admitted_step(identity,handle,tolerance,units,grant,spent)?;
+        let(outcome,validation_work)=authority.tessellate_admitted_step(identity,handle,tolerance,units,effect,spent)?;
         if let TessellationStepOutcome::Working{units_done,units_total,phase:"validating",..}=&outcome{return Ok((GeometryStep::Working{units_done:*units_done,units_total:*units_total,phase:"validating"},validation_work));}
         let step=match outcome {
             TessellationStepOutcome::Working {units_done,units_total,phase,..}=>{consumed_units=units_done.saturating_sub(before);GeometryStep::Working {units_done,units_total,phase}},

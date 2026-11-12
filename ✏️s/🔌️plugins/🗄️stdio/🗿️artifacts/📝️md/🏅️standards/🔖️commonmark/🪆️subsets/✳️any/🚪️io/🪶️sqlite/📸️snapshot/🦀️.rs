@@ -167,8 +167,8 @@ impl ArtifactSqliteSnapshotHost for MdSnapshot{
  }
 
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{validate_owned(self,dialect,database,control)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {decode_hook(payload,control,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {encode_hook(self,encoding,control,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {decode_hook(payload,control,native_control,output)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {encode_hook(self,encoding,control,native_owner,output)}
  fn retire_sqlite_snapshot(self){retire_hook(self)}
  
  
@@ -193,8 +193,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
  })();result.map(|()|store::io_schema::IoOutcome::clean(())).map_err(store::io_schema::IoError::from_value_error)
 }
 
-fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<MdSnapshot,semio_os_kernel::NativeSnapshotFailure>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::decode_owned(payload,control,native_control)}
-fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure>{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::encode_owned(value,encoding,control,native_owner)}
+fn decode_hook(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control:&mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<MdSnapshot>>)->store::os_store::serialization::SnapshotReceivingOutcome{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::decode_owned(payload,control,native_control,output)}
+fn encode_hook(value:&MdSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome{crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::encode_owned(value,encoding,control,native_owner,output)}
 fn retire_hook(value:MdSnapshot){crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::retire_owned(value)}
 
 

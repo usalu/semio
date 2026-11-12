@@ -40,6 +40,7 @@ pub enum SemioObjectMutation {
     CreateProperties(create_properties::CreateProperties),
     DeleteProperties(delete_properties::DeleteProperties),
 }
+dsl::original_pack_value_operation_receiving!(SemioObjectMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioObjectMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-object` mutation catalog (`../../🔣️oracle.json`) declares

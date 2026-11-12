@@ -15,7 +15,7 @@ impl TreeScratch{
  pub fn empty()->Self{Self{frames:PagedList::new(),depth:0}}
  fn push(&mut self,frame:Frame,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   if self.depth==self.frames.len(){
-   while !self.frames.has_reserved_slot(){let quote=self.frames.next_allocation_bytes().map_err(|_|invalid("value projection page quote"))?;let remaining=control.allocation_remaining_bytes();control.admit_allocation_bytes(quote)?;let progress=self.frames.reserve_one(remaining).map_err(|_|invalid("value projection page admission"))?;if progress.allocated_bytes!=quote{return Err(invalid("value projection page extent"))}}
+   while !self.frames.has_reserved_slot(){let quote=self.frames.next_allocation_bytes().map_err(|_|invalid("value projection page quote"))?;let remaining=control.allocation_remaining_bytes();control.admit_allocation_bytes(quote)?;let progress=self.frames.reserve_one_cold(remaining).map_err(|_|invalid("value projection page admission"))?;if progress.allocated_bytes!=quote{return Err(invalid("value projection page extent"))}}
    self.frames.push_reserved(frame).map_err(|_|invalid("value projection frame slot"))?;
   }else{self.frames[self.depth]=frame;}
   self.depth+=1;Ok(())

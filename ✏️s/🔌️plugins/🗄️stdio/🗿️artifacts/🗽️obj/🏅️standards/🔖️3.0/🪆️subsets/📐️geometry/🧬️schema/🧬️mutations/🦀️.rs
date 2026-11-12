@@ -140,6 +140,7 @@ pub enum ObjMutation {
     /// 🕳️ Replaces the whole retained unknown-statement list.
     SetUnknownStatements(set_unknown_statements::SetUnknownStatements),
 }
+dsl::original_pack_value_operation_receiving!(ObjMutation);
 
 /// 🏷️ Kebab-case spelling of every `ObjMutation` variant, in declaration order — the vocabulary the
 /// `obj-3-0-any` mutation catalog (`../../🔣️oracle.json`) declares and the exhaustive

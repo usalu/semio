@@ -74,6 +74,7 @@ pub enum SemioGraphMutation {
     AddEdgeProperty(add_edge_property::AddEdgeProperty),
     RemoveEdgeProperty(remove_edge_property::RemoveEdgeProperty),
 }
+dsl::original_pack_value_operation_receiving!(SemioGraphMutation);
 
 /// 🏷️ Kebab-case spelling of every `SemioGraphMutation` variant, in declaration order — the
 /// vocabulary the `semio-v1-graph` mutation catalog (`../../🔣️oracle.json`) declares and

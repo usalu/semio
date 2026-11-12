@@ -318,7 +318,7 @@ pub fn fem2d_continuum_report_json(snapshot_json: &str, include_eigen: bool) -> 
         let result = results.get(&case.id).ok_or_else(|| format!("missing solved case {}", case.id))?;
         let mut displacements = Vec::new();
         let mut reactions = Vec::new();
-        for node in &doc.nodes {
+        for node in doc.nodes.iter() {
             let value = result.displacements.iter().find(|value| value.node_id == *node.id).ok_or_else(|| format!("missing displacement {}", node.id.as_str()))?;
             displacements.push(array(&value.values[..2]));
             for dof in [semio_s_fem_model::Dof::Tx, semio_s_fem_model::Dof::Ty] {

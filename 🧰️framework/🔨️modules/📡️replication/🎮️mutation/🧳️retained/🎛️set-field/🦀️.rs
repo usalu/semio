@@ -366,6 +366,7 @@ macro_rules! retained_set_record{
 #[macro_export]
 macro_rules! retained_root_record{
  (state: $state:path, mutation: $mutation:path, diff: $diff:path, fields: {$($field:ident : $ty:ty),+ $(,)?})=>{
+  $crate::retained_empty_option_patch!($diff {$($field),+});
   $crate::retained_row_patch!(pub retained_root_fields for $diff => $state { $($field: $ty),+ });
   $crate::retained_patch_diff!($diff => $state);
   impl $crate::retained::set_field::RetainedSetField<$state,$diff,$mutation> for $mutation{
@@ -380,7 +381,7 @@ macro_rules! retained_root_record{
    fn source_discriminator()->usize{0}
    fn original_discriminator()->usize{0}
    fn patch_work_demand()->Result<u64,$crate::value::ValueError>{Ok(<$diff as $crate::RetainedRowPatch<$state>>::FIELD_COUNT as u64)}
-   fn patch(value:$state)->($diff,u64){($diff{$($field: ::core::option::Option::Some(value.$field)),+},<$diff as $crate::RetainedRowPatch<$state>>::FIELD_COUNT as u64)}
+   fn patch(value:$state)->($diff,u64){type RootPatch=$diff;(RootPatch{$($field: ::core::option::Option::Some(value.$field)),+},<$diff as $crate::RetainedRowPatch<$state>>::FIELD_COUNT as u64)}
    fn inverse_work_demand()->Result<u64,$crate::value::ValueError>{Ok(1)}
    fn inverse(value:$state)->($mutation,u64){(Self::Snapshot{transient:value},1)}
   }

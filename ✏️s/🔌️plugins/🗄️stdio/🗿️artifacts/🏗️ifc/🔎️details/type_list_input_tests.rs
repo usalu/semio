@@ -3,7 +3,7 @@ use super::*;
 fn contract()->serde_json::Value{serde_json::from_str(include_str!("🧪️tests/type-list-input.json")).unwrap()}
 #[test]
 fn original_cardinality_choice_plan_refuses_prior_preserve_layout_and_admits_replace(){
- use semio_framework_plugin::action_staging::*;
+ use semio_plugin::action_staging::*;
  let token=StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"list-original".into(),generation:"1".into(),revision:"0".repeat(64)};let status=StagedFormStatus{token:token.clone(),ready:false,commit_args:None,diagnostics:Vec::new(),diagnostic_offset:"0".into(),diagnostic_total:"0".into()};let mut binding=StagedFormBinding{token,layout:StagedFormLayout::Preserve,edits:vec![StagedFormBindingEdit::Choice{kind:StagedFormChoiceEditKind::Set,path:vec!["value".into(),"$ifcInputs".into(),"0".into(),"value".into()],options:vec![StagedFormBindingOption{key:"0".into(),value:DslValue::Object(vec![("kind".into(),DslValue::String("aggregate".into())),("value".into(),DslValue::Array(Vec::new()))])}]}]};let input=DslValue::String("0".into());assert!(binding.plan(&status,Some(&input)).is_err());binding.layout=StagedFormLayout::Replace;assert!(binding.plan(&status,Some(&input)).is_ok());
 }
 fn source(law:&serde_json::Value,name:&str)->Arc<IfcSnapshot>{let domain=law["domains"].as_array().unwrap().iter().find(|row|row["entity"]==name).unwrap();Arc::new(IfcSnapshot{entities:vec![IfcEntity{id:1,name:name.into(),args:vec![IfcValue::Unset],complex:domain["ancestors"].as_array().unwrap().iter().map(|name|IfcComplexType{name:name.as_str().unwrap().into(),args:Vec::new()}).collect()}],..Default::default()})}
@@ -26,7 +26,7 @@ fn original_list_receiving_denies_each_axis_before_child_shape_or_value_progress
 }
 #[test]
 fn original_list_guidance_keeps_cardinality_and_each_word_editable_without_defaults(){
- use semio_framework_plugin::action_staging::*;use semio_plugin_decl_staged_form::*;
+ use semio_plugin::action_staging::*;use semio_plugin_decl_staged_form::*;
  type Guidance=super::super::super::type_guidance::IfcTypeInputSourceWork<DetailsTestProfile>;
  if DetailsTestProfile::catalog().schema!="IFC4X3_ADD2"{return;}
  let law=contract();for row in law["cases"].as_array().unwrap(){let snapshot=source(&law,row["entity"].as_str().unwrap());let editing::SnapshotEditEvent::SetValue{path,value}=event(row)else{unreachable!()};let mut donor=Some(StagedFormRequest{token:StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"list-original".into(),generation:"1".into(),revision:"0".repeat(64)},locale:semio_ui_locale::Locale::De,args:DslValue::Object(vec![("path".into(),DslValue::String(path)),("value".into(),value)]),page:None});let mut caller=OriginalWorkFixture::new();let mut guide=Some(Guidance::default());let mut output=None;

@@ -223,7 +223,15 @@ pub fn docx_xml_parts_from_iter_controlled(
         while !output.has_reserved_slot() {
             let required = output.next_allocation_bytes()?;
             control.charge(required)?;
-            let progress = output.reserve_one(required).map_err(|error| semio_framework_value::ValueError::from(error.refusal()))?;
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: output.next_reserve_copy_byte_demand()?, maximum_capacity_bytes: required, maximum_release_bytes: 0, maximum_depth: output.next_reserve_depth_demand()? };
+            let denied = || semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit, "DOCX XML part controlled allocation was denied");
+            let Some((reserved, _)) = control.with_effect(grant, 1, |_, effect| (output.reserve_one(effect).result, effect.performed_work()))? else { return Err(denied()) };
+            let progress = match reserved {
+                Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Ready(progress)) => progress,
+                Ok(semio_framework_value_native_owned::list::PagedListReservationOutcome::Denied) => return Err(denied()),
+                Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Work(error)) => return Err(error),
+                Err(semio_framework_value_native_owned::list::PagedListReservationFailure::Allocation { error, .. }) => return Err(semio_framework_value::ValueError::from(error.refusal())),
+            };
             if !progress.progressed {
                 return Err(semio_framework_value::ValueError::new(
                     semio_framework_value::ValueRefusalKind::InvariantViolated,

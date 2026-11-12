@@ -71,6 +71,7 @@ pub enum Fem2dMutation {
     ReplaceCombination(semio_s_artifact_fem_2d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination),
     MoveSelection(semio_s_artifact_fem_2d_mesh::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection),
 }
+dsl::original_pack_value_operation_receiving!(Fem2dMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️LeafImports

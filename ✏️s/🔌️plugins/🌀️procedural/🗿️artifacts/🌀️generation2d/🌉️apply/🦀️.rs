@@ -39,6 +39,7 @@ pub enum Generation2dReplayDisplaced {
 }
 
 /// 🧊️ Retires one displaced replay owner at a cold boundary by paying every currency its own close quote names.
+#[cfg(any(test, feature = "testkit"))]
 pub(crate) fn generation2d_retire_displaced_cold(value: Generation2dReplayDisplaced) {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<Generation2dReplayDisplaced>(), maximum_release_bytes: 0, maximum_depth: 2 };

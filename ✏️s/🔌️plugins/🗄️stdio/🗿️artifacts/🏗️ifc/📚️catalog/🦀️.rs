@@ -18,6 +18,43 @@ pub struct IfcTypeExpression {
     pub optional: bool,
     pub item: Option<Box<IfcTypeExpression>>,
 }
+/// 🧬️ Immutable type nodes expose exact declaration identity without owned catalog copies.
+#[derive(Clone, Copy)]
+pub struct IfcTypeProjection {
+    pub kind: &'static str,
+    pub name: Option<&'static str>,
+    pub width: Option<i64>,
+    pub fixed: bool,
+    pub aggregate: Option<&'static str>,
+    pub lower: Option<i64>,
+    pub upper: Option<i64>,
+    pub lower_expression: Option<&'static str>,
+    pub upper_expression: Option<&'static str>,
+    pub unique: bool,
+    pub optional: bool,
+    pub item: Option<&'static dyn IfcDetailsTypeMetadata>,
+}
+pub trait IfcDetailsTypeMetadata: Sync {
+    fn projection(&'static self) -> IfcTypeProjection;
+}
+impl IfcDetailsTypeMetadata for IfcTypeExpression {
+    fn projection(&'static self) -> IfcTypeProjection {
+        IfcTypeProjection {
+            kind: &self.kind,
+            name: self.name.as_deref(),
+            width: self.width,
+            fixed: self.fixed,
+            aggregate: self.aggregate.as_deref(),
+            lower: self.lower,
+            upper: self.upper,
+            lower_expression: self.lower_expression.as_deref(),
+            upper_expression: self.upper_expression.as_deref(),
+            unique: self.unique,
+            optional: self.optional,
+            item: self.item.as_deref().map(|item| item as &dyn IfcDetailsTypeMetadata),
+        }
+    }
+}
 #[derive(Clone, Debug, PartialEq)]
 pub struct IfcAttributeDeclaration {
     pub name: String,

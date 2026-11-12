@@ -248,4 +248,3 @@ impl<A: Puzzle5dEditor> semio_plugin::retained_command::ArtifactCommandWork<Edit
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
 
-semio_plugin::retained_command::terminal_frame_bound!(Puzzle5dWindowCommandWork, Puzzle5dExportWork);

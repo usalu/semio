@@ -24,6 +24,7 @@ pub enum XmlMutation {
     SetAttribute(SetAttributeMutation),
     SetText(SetTextMutation),
 }
+dsl::original_pack_value_operation_receiving!(XmlMutation);
 
 
 

@@ -22,13 +22,6 @@ pub mod standards {
                         #[path = "."]
                         pub mod snapshot {
                             pub use semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any::io::sqlite::snapshot::*;
-                            #[path = "."]
-                            pub mod receiving {
-                                pub use semio_s_artifact_stdio_epw_snapshot::standards::energyplus::subsets::any::io::sqlite::snapshot::receiving::*;
-                                #[cfg(test)]
-                                #[path="../../../../🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
-                                mod tests;
-                            }
                         }
                     }
                     #[cfg(test)]

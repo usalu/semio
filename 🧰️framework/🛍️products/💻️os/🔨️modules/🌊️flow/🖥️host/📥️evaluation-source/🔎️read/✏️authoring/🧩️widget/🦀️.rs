@@ -1,12 +1,13 @@
 //! 🧩️ Original widget fields become owned authoring output through independently funded events.
 use super::super::*;
 use super::{text::FundedText,value::ValueCopy};
-use semio_framework_job::{admit_original_construction,OriginalConstructionDemand,OriginalTurnFailure,StepContext,close_original_retained_step};
+use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use semio_framework_artifact_flow_flow::{Widget,WidgetDescriptor,widget_id_for};
 use semio_framework_value_ordered::ordered::OrderedSet;
 use neural_engine::{Dictionary,OperatorInfo,BudgetedOwnedEntry,Value as NeuralValue};
+use super::storage::Construction;
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original widget authoring changed its retained fields")}
 fn fixed(bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}}
@@ -16,16 +17,16 @@ fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{cop
 pub(super) enum WidgetPlan<'a>{New(&'a WidgetDescriptor),Insert{widget:&'a Widget,input:bool,count:usize}}
 #[derive(semio_framework_value::RetireOwned)]
 struct Fields{id:Option<String>,text:Option<String>,aux:Option<String>,key:Option<String>,word:Option<String>,params:Option<Dictionary>,value:Option<NeuralValue>,inputs:Vec<String>,outputs:Vec<String>,output:Option<Widget>}
-pub(super) struct WidgetWork{fields:ManuallyDrop<Fields>,text:Option<FundedText>,value:Option<ValueCopy>,entry:Option<BudgetedOwnedEntry>,retirement:RetainedCloneClose,phase:u8,param:usize,port:usize,side:bool,number:[u8;32],number_len:usize,closing:bool}
+pub(super) struct WidgetWork{construction:Construction,fields:ManuallyDrop<Fields>,text:Option<FundedText>,value:Option<ValueCopy>,entry:Option<BudgetedOwnedEntry>,retirement:RetainedCloneClose,phase:u8,param:usize,port:usize,side:bool,number:[u8;32],number_len:usize,closing:bool}
 impl WidgetWork{
- pub(super) fn new()->Self{Self{fields:ManuallyDrop::new(Fields{id:None,text:None,aux:None,key:None,word:None,params:Some(Dictionary::new()),value:None,inputs:Vec::new(),outputs:Vec::new(),output:None}),text:None,value:None,entry:None,retirement:Default::default(),phase:0,param:0,port:0,side:true,number:[0;32],number_len:0,closing:false}}
+ pub(super) fn new()->Self{Self{construction:Default::default(),fields:ManuallyDrop::new(Fields{id:None,text:None,aux:None,key:None,word:None,params:Some(Dictionary::new()),value:None,inputs:Vec::new(),outputs:Vec::new(),output:None}),text:None,value:None,entry:None,retirement:Default::default(),phase:0,param:0,port:0,side:true,number:[0;32],number_len:0,closing:false}}
  fn paid(cx:&mut StepContext<'_>,bytes:usize)->Result<bool,OriginalTurnFailure>{let d=fixed(bytes);if cx.should_yield()||!retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}cx.consume_retained(progress(d))?;cx.consume_fuel(1);Ok(true)}
  fn copied(fields:&Fields,index:u8)->bool{match index{0=>fields.id.is_some(),1=>fields.text.is_some(),2=>fields.aux.is_some(),3=>fields.key.is_some(),_=>fields.word.is_some()}}
  fn copy_fields(fields:&mut Fields,cursor:&mut Option<FundedText>,source:&str,index:u8,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if Self::copied(fields,index)&&cursor.is_none(){return Ok(true)}
   if cursor.is_none(){if Self::paid(cx,size_of::<FundedText>())?{*cursor=Some(FundedText::new());}return Ok(false)}
   if !Self::copied(fields,index){let text=cursor.as_mut().unwrap();if text.ready(){let output=match index{0=>&mut fields.id,1=>&mut fields.text,2=>&mut fields.aux,3=>&mut fields.key,_=>&mut fields.word};text.take_into(output,cx)?;if output.is_some(){text.begin_close();}}else{text.advance(source,cx)?;}return Ok(false)}
-  let text=cursor.as_mut().unwrap();if !text.terminal_is_empty(){let d=text.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|text.close_step(grant))?;return Ok(false)}
+  let text=cursor.as_mut().unwrap();if !text.terminal_is_empty(){let d=text.close_demands(cx.retained_grant().maximum_copy_bytes)?;close_with_poll(cx,d,|body,effect|text.close_step(body,effect))?;return Ok(false)}
   if Self::paid(cx,size_of::<Option<FundedText>>())?{*cursor=None;return Ok(true)}Ok(false)
  }
  fn copy(&mut self,source:&str,index:u8,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{Self::copy_fields(&mut self.fields,&mut self.text,source,index,cx)}
@@ -71,9 +72,9 @@ impl WidgetWork{
     if Self::paid(cx,size_of::<Option<ValueCopy>>())?{self.value=None;self.phase=6}
    },
    6=>{if Self::paid(cx,size_of::<BudgetedOwnedEntry>())?{self.entry=Some(BudgetedOwnedEntry::new(self.fields.params.take().ok_or_else(invalid)?,self.fields.key.take().ok_or_else(invalid)?,self.fields.value.take().ok_or_else(invalid)?));self.phase=7;}},
-   7=>{let entry=self.entry.as_mut().unwrap();let grant=cx.retained_grant();let d=entry.next_demands(grant.maximum_copy_bytes)?;if cx.should_yield()||!retained_clone_grant_admits(grant,d){return Ok(None)}let Some((poll,_))=cx.with_original_effect(grant,|_,effect|entry.step(grant.maximum_copy_bytes,effect))?else{return Ok(None)};let p=entry.step_progress();match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>cx.consume_retained(p)?,semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(params)=>{if let Some(params)=params{self.fields.params=Some(params);entry.begin_close();self.phase=8}cx.consume_retained(p)?;},Err(failure)=>return Err(OriginalTurnFailure::debit_original(failure.into_value_error(),cx))}}},
+   7=>{let entry=self.entry.as_mut().unwrap();let grant=cx.retained_grant();let d=entry.next_demands(grant.maximum_copy_bytes)?;if cx.should_yield()||!retained_clone_grant_admits(grant,d){return Ok(None)}let Some((poll,_))=cx.with_original_effect(grant,|_,effect|entry.step(grant.maximum_copy_bytes,effect))?else{return Ok(None)};let p=entry.step_progress();match poll{semio_framework_value::RetainedWorkPoll::Pending{..}=>cx.consume_retained(p)?,semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(params)=>{if let Some(params)=params{self.fields.params=Some(params);self.phase=8}cx.consume_retained(p)?;},Err(failure)=>return Err(OriginalTurnFailure::debit_original(failure.into_value_error(),cx))}}},
    8=>{let entry=self.entry.as_mut().unwrap();if !entry.terminal_is_empty(){let d=entry.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;close_with_poll(cx,d,|body,effect|entry.close_step(body,effect))?;return Ok(None)}if Self::paid(cx,size_of::<Option<BudgetedOwnedEntry>>()+size_of::<usize>())?{self.entry=None;self.param+=1;self.phase=4}},
-   20=>{let count=Self::port_count(plan,info,self.side);let d=RetirementDemand{capacity_bytes:count.checked_mul(size_of::<String>()).ok_or_else(invalid)?,..fixed(size_of::<Vec<String>>())};let mut accepted=None;admit_original_construction(cx,&mut accepted,original(d),|_|{let result=(||{let rows=if self.side{&mut self.fields.inputs}else{&mut self.fields.outputs};rows.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original widget port roster allocation refused"))?;let actual=rows.capacity()*size_of::<String>();self.port=0;self.phase=21;Ok(((),RetainedCloneProgress{retained_capacity_bytes:actual,..progress(d)}))})();RetainedWorkOutcome{result,work:1}})?;},
+   20=>{let count=Self::port_count(plan,info,self.side);let d=RetirementDemand{capacity_bytes:count.checked_mul(size_of::<String>()).ok_or_else(invalid)?,..fixed(size_of::<Vec<String>>())};self.construction.run(cx,original(d),||(||{let rows=if self.side{&mut self.fields.inputs}else{&mut self.fields.outputs};rows.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original widget port roster allocation refused"))?;let actual=rows.capacity()*size_of::<String>();self.port=0;self.phase=21;Ok(((),RetainedCloneProgress{retained_capacity_bytes:actual,..progress(d)}))})())?;},
    21=>{let count=Self::port_count(plan,info,self.side);if self.port==count{if Self::paid(cx,size_of::<u8>()+size_of::<bool>())?{if self.side{self.side=false;self.phase=20}else{self.phase=30}}return Ok(None)}
     if Self::numeric(plan,info,self.side){if Self::paid(cx,size_of::<[u8;32]>()+size_of::<usize>())?{self.number(self.port);self.phase=22;}return Ok(None)}
     let source=match plan{WidgetPlan::Insert{widget:Widget::Neuron{input_ports,output_ports,..},..}=>if self.side{input_ports.get(self.port)}else{output_ports.get(self.port)}.map(String::as_str),WidgetPlan::New(WidgetDescriptor::Neuron{..})=>info.and_then(|info|info.inputs.get(self.port)).map(|channel|channel.name.as_str()),_=>None}.ok_or_else(invalid)?;
@@ -99,7 +100,7 @@ impl WidgetWork{
   }Ok(None)
  }
  pub(super) fn restore_output(&mut self,widget:Widget){assert_eq!(self.phase,32);self.fields.output=Some(widget);self.phase=31}
- pub(super) fn begin_close(&mut self){self.closing=true;if let Some(text)=self.text.as_mut(){text.begin_close()}if let Some(value)=self.value.as_mut(){value.begin_close()}if let Some(entry)=self.entry.as_mut(){entry.begin_close()}}
+ pub(super) fn begin_close(&mut self){self.closing=true;if let Some(text)=self.text.as_mut(){text.begin_close()}if let Some(value)=self.value.as_mut(){value.begin_close()}}
  pub(super) fn close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if let Some(text)=self.text.as_ref(){return if text.terminal_is_empty(){Ok(fixed(size_of::<Option<FundedText>>()))}else{text.close_demands(copy)}}if let Some(value)=self.value.as_ref(){return if value.terminal_is_empty(){Ok(fixed(size_of::<Option<ValueCopy>>()))}else{value.close_demands(copy)}}if let Some(entry)=self.entry.as_ref(){return if entry.terminal_is_empty(){Ok(fixed(size_of::<Option<BudgetedOwnedEntry>>()))}else{entry.next_close_demands(copy)}}if !self.retirement.is_empty(){return self.retirement.demands(copy)}
   macro_rules! owned{($field:ident,$ty:ty)=>{if self.fields.$field.is_some(){return self.retirement.next_owner_demands::<$ty>(true,&None,copy)}}}
   owned!(id,String);owned!(text,String);owned!(aux,String);owned!(key,String);owned!(word,String);owned!(params,Dictionary);owned!(value,NeuralValue);owned!(output,Widget);
@@ -107,7 +108,7 @@ impl WidgetWork{
  pub(super) fn close_step(&mut self,grant:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
   if !self.closing{return RetainedWorkOutcome{result:Err(invalid()),work:0}}
   macro_rules! cursor{($field:ident,$ty:ty,$c:ident=>$call:expr)=>{if let Some(cursor)=self.$field.as_mut(){if cursor.terminal_is_empty(){let d=fixed(size_of::<Option<$ty>>());if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.$field=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress(d))),work:1}}let $c=cursor;return $call}}}
-  cursor!(text,FundedText,c=>c.close_step(grant));cursor!(value,ValueCopy,c=>c.close_step(grant,effect));
+  cursor!(text,FundedText,c=>poll_outcome(c.close_step(grant.maximum_copy_bytes,effect)));cursor!(value,ValueCopy,c=>c.close_step(grant,effect));
   if let Some(entry)=self.entry.as_mut(){if entry.terminal_is_empty(){let d=fixed(size_of::<Option<BudgetedOwnedEntry>>());if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.entry=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress(d))),work:1}}return poll_outcome(entry.close_step(grant.maximum_copy_bytes,effect))}
   if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(grant.maximum_copy_bytes,effect))}
   macro_rules! owner{($field:ident)=>{if self.fields.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.fields.$field,effect);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}

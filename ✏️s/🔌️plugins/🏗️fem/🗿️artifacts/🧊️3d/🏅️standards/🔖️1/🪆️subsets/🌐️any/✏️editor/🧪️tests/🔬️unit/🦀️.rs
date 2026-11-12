@@ -140,7 +140,7 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
         let mutation = Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone(), index: None });
         assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
     }
-    for node in &boot.nodes {
+    for node in boot.nodes.iter() {
         let mutation = Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: node.clone(), index: None });
         assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
     }

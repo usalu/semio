@@ -118,7 +118,7 @@ impl Fem3dNumericalChild {
             FemElement::Bar { start, end, .. } | FemElement::Frame { start, end, .. } => (start, end),
         };
         let target = if self.load_triangle_cursor == 0 { start } else { end };
-        let Some(node) = doc.nodes.get(self.load_node_cursor) else { return Err((b"fem3d.numerical-member-load-node".to_vec()).into()) };
+        let Some(node) = (*doc.nodes).get(self.load_node_cursor) else { return Err((b"fem3d.numerical-member-load-node".to_vec()).into()) };
         if node.id.as_str() == target.as_str() {
             self.load_node_indices[self.load_triangle_cursor] = self.load_node_cursor;
             self.load_positions[self.load_triangle_cursor] = [node.x, node.y, node.z];
@@ -237,7 +237,7 @@ impl Fem3dNumericalChild {
             FemElement::Bar { start, end, .. } | FemElement::Frame { start, end, .. } => (start, end),
         };
         let target = if self.load_triangle_cursor == 0 { start } else { end };
-        let Some(node) = doc.nodes.get(self.load_node_cursor) else { return Err((b"fem3d.numerical-self-weight-node".to_vec()).into()) };
+        let Some(node) = (*doc.nodes).get(self.load_node_cursor) else { return Err((b"fem3d.numerical-self-weight-node".to_vec()).into()) };
         if node.id.as_str() == target.as_str() {
             self.load_node_indices[self.load_triangle_cursor] = self.load_node_cursor;
             self.load_positions[self.load_triangle_cursor] = [node.x, node.y, node.z];
@@ -261,7 +261,7 @@ impl Fem3dNumericalChild {
             self.load_node_cursor = 0;
             self.stage = Fem3dNumericalStage::ResolveSelfWeightMemberNode;
         } else {
-            let material = doc.materials.get(self.element_materials[self.load_element_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-material".to_vec())?;
+            let material = (*doc.materials).get(self.element_materials[self.load_element_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-material".to_vec())?;
             let section = doc.sections.get(self.element_sections[self.load_element_cursor]).ok_or_else(|| b"fem3d.numerical-self-weight-section".to_vec())?;
             let d = [self.load_positions[1][0] - self.load_positions[0][0], self.load_positions[1][1] - self.load_positions[0][1], self.load_positions[1][2] - self.load_positions[0][2]];
             let length = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
@@ -325,7 +325,7 @@ impl Fem3dNumericalChild {
             let b = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
             let c = [p3[0] - p0[0], p3[1] - p0[1], p3[2] - p0[2]];
             let volume = (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])).abs() / 6.0;
-            let material = doc.materials.get(self.solid_materials[meshed.solid_index]).ok_or_else(|| b"fem3d.numerical-self-weight-material".to_vec())?;
+            let material = (*doc.materials).get(self.solid_materials[meshed.solid_index]).ok_or_else(|| b"fem3d.numerical-self-weight-material".to_vec())?;
             self.apply_rhs_value(self.load_node_cursor, Dof::Tz.index(), -material.rho * volume * 9.81 / 4.0)?;
             self.load_vertex_cursor += 1;
             self.load_node_cursor = 0;

@@ -151,7 +151,8 @@ fn empty() -> GltfSnapshot {
     }
 }
 pub(super) fn receive(state: &mut Receiving, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> RetainedWorkOutcome<(), NativeSnapshotFailure> {
-    owner.receive::<Option<GltfSnapshot>, (), NativeSnapshotFailure>(|target, native, body| store::native_snapshot_turn(|work| {
+    let mut sink: Option<()> = None;
+    owner.receive::<Option<GltfSnapshot>, (), NativeSnapshotFailure>(&mut sink, &mut |target, _published, _marker, _unwind, native, body| store::native_snapshot_turn(|work| {
         work.performed();
         native.scoped_stage(|native| {
             native.begin_stage(0)?;

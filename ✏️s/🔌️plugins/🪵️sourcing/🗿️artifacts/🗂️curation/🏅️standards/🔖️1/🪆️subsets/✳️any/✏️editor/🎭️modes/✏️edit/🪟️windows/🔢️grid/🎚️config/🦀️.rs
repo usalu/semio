@@ -187,6 +187,8 @@ impl protocol::OpBinary for GridWindowConfigMutation {
     }
 }
 
+protocol::original_pack_value_operation_receiving!(GridWindowConfigMutation);
+
 pub struct GridWindowConfigOwner;
 
 impl semio_plugin::WindowConfigOwner for GridWindowConfigOwner {

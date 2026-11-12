@@ -30,7 +30,7 @@ pub struct Fem3dBounds {
 pub fn compute_fem3d_bounds(snapshot: &Fem3dSnapshot) -> Fem3dBounds {
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
-    for node in &snapshot.nodes {
+    for node in snapshot.nodes.iter() {
         min[0] = min[0].min(node.x);
         min[1] = min[1].min(node.y);
         min[2] = min[2].min(node.z);

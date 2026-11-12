@@ -46,12 +46,14 @@ fn admit_snapshot(value:&ZipSnapshot,control:&mut SqliteSnapshotControl<'_>,phas
  }
  census.control.checkpoint(phase,census.rows,census.rows)
 }
-pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<ZipSnapshot,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
- extent(control.limits())?;let limits=control.limits();
- let snapshot=work.take(store::decode_sqlite_snapshot_record_native(payload,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admit_record(record,limits,native)?;ZipSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control))?;admit_snapshot(&snapshot,control,SqliteSnapshotPhase::DecodeNative)?;Ok(snapshot)
-})}
-pub(super) fn encode(snapshot:&ZipSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {semio_os_kernel::native_snapshot_turn(|work|{
- admit_snapshot(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
- work.take(store::encode_sqlite_snapshot_record_native(encoding,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control,native_owner))})}
+pub(super) fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<ZipSnapshot>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+ if let Err(error)=extent(control.limits()){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+ let limits=control.limits();
+ store::decode_sqlite_snapshot_record_receiving(payload,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),&mut |record,snapshot_output,owner,control|semio_os_kernel::native_snapshot_turn(|work|work.measured(owner.native(),|native|{admit_record(record,limits,native)?;let snapshot=ZipSnapshot::__dsl_from_record_controlled(record,native)?;admit_snapshot(&snapshot,control,SqliteSnapshotPhase::DecodeNative)?;*snapshot_output=Some(snapshot);Ok::<(),ValueError>(())})),control,native_control,output)
+}
+pub(super) fn encode(snapshot:&ZipSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+ if let Err(error)=admit_snapshot(snapshot,control,SqliteSnapshotPhase::EncodeNative){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}
+ store::encode_sqlite_snapshot_record_native(encoding,"stdio.zip",ZipSnapshot::__dsl_spec_producer(),&mut |native|snapshot.__dsl_to_record_controlled(native),control,native_owner,output)
+}
 
 pub(super) fn preflight(snapshot:&ZipSnapshot,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit_snapshot(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;let mut bound=store::sqlite_snapshot::artifact::NativeEncodingBound::file_only(control)?;bound.add(4096)?;bound.repeated(snapshot.schema.len(),6)?;bound.repeated(snapshot.comment.len(),6)?;for entry in &snapshot.entries{bound.add(1024)?;bound.repeated(entry.name.len(),6)?;bound.repeated(entry.data.len(),2)?;let local=&entry.metadata.local;let central=&entry.metadata.central;bound.repeated(central.comment.len(),6)?;for bytes in[local.unicode_path_legacy_name.as_deref(),central.unicode_path_legacy_name.as_deref(),central.unicode_comment_legacy.as_deref()].into_iter().flatten(){bound.repeated(bytes.len(),16)?;}for field in local.extra_fields.iter().chain(&central.extra_fields){bound.add(128)?;bound.repeated(field.data.len(),2)?;}}bound.finish()}

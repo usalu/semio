@@ -217,7 +217,7 @@ fn dof_direction(dof: FemDof, value: f64) -> Option<[f64; 3]> {
 pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Result<Vec<Value>, protocol::wire::ScopedIdentityError> {
     let node_pos = |node: &semio_s_fem_node::volumetric::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
     let mut instances: Vec<Value> = Vec::new();
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         instances.push(instance(&node.id, FEM3D_GRANULARITY_NODE, "box", node_pos(node), [0.0, 0.0, 0.0, 1.0], [NODE_SIZE_3D, NODE_SIZE_3D, NODE_SIZE_3D], &node.id)?);
     }
     for element in &doc.elements {

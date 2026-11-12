@@ -1,10 +1,10 @@
 //! 🎬️ Format-neutral lifecycle for a truly incremental Stdio media serializer.
 
-use semio_framework_job::{InteractiveJobStep, OriginalJobReturnClaim, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
+use semio_framework_job::{OriginalConstructionDemand, InteractiveJobStep, OriginalJobReturnClaim, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_job_fault_publication::RetainedFaultPublication;
 use semio_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
 use semio_plugin::{
-    ArtifactApp, ArtifactMediaExportJobRequest, ArtifactReservedJob, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, ToolExecutionContract,
+    MediaConstruction, ArtifactApp, ArtifactMediaExportJobRequest, ArtifactReservedJob, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, ToolExecutionContract,
 };
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::{RetainedWorkOutcome,ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
@@ -63,7 +63,7 @@ pub struct IncrementalMediaExportJob<S: IncrementalMediaExportSpec> {
     snapshot: Option<Arc<S::Snapshot>>,
     snapshot_close: Option<ArtifactSnapshotCloseLease<S::Snapshot>>,
     cursor: Option<S::Cursor>,
-    page: Vec<u8>,
+    page: Option<Vec<u8>>,
     chunks: Option<ArtifactOutputChunks>,
     output_retirement:Option<Box<dyn ErasedSnapshotRetirement>>,
     fault: Option<Fault>,
@@ -79,19 +79,22 @@ pub struct IncrementalMediaExportJob<S: IncrementalMediaExportSpec> {
 }
 
 impl<S: IncrementalMediaExportSpec> IncrementalMediaExportJob<S> {
-    pub fn admit_original<A:ArtifactApp<Snapshot=S::Snapshot>>(request:&mut Option<ArtifactMediaExportJobRequest<A>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn admit_original<A:ArtifactApp<Snapshot=S::Snapshot>>(request:&mut Option<ArtifactMediaExportJobRequest<A>>,body:&mut Option<Box<dyn ArtifactReservedJob+Send>>,construction:&mut MediaConstruction,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         cx.original_source_parent()?;if cx.should_yield()||cx.is_cancelled(){return Ok(false)}let grant=cx.retained_grant();
         if body.is_none(){
-            let Some(original)=request.as_ref()else{return Ok(false)};let bytes=size_of::<Self>();
-            if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<bytes{return Ok(false)}
-            let layout=std::alloc::Layout::new::<Self>();let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"Stdio media concrete body allocation refused"))?;
-            let owner=Self{operation:original.operation,source_identity:original.source_identity,snapshot:None,snapshot_close:None,cursor:None,page:Vec::new(),chunks:None,output_retirement:None,fault:None,fault_publication:RetainedFaultPublication::new(),credit:None,completion:None,progress:0,pending_result:std::mem::ManuallyDrop::new(None),result_published:false,completed:false,closing:false,request_metadata:std::mem::ManuallyDrop::new(None),metadata_retirement:std::mem::ManuallyDrop::new(None)};
-            *body=Some(unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
+            let Some(original)=request.as_ref()else{return Ok(false)};let bytes=size_of::<Self>();let(operation,source_identity)=(original.operation,original.source_identity);
+            return construction.built(cx,body,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:bytes,release_bytes:0,depth:1},||{
+                let pointer=std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<Self>())}.cast::<Self>()).ok_or_else(||ValueError::literal(ValueRefusalKind::AllocationFailed,"Stdio media concrete body allocation refused"))?;
+                let owner=Self{operation,source_identity,snapshot:None,snapshot_close:None,cursor:None,page:None,chunks:None,output_retirement:None,fault:None,fault_publication:RetainedFaultPublication::new(),credit:None,completion:None,progress:0,pending_result:std::mem::ManuallyDrop::new(None),result_published:false,completed:false,closing:false,request_metadata:std::mem::ManuallyDrop::new(None),metadata_retirement:std::mem::ManuallyDrop::new(None)};
+                let boxed:Box<dyn ArtifactReservedJob+Send>=unsafe{pointer.as_ptr().write(owner);Box::from_raw(pointer.as_ptr())};
+                Ok((boxed,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,retained_capacity_bytes:bytes,..Default::default()}))
+            }).map(|_|false)
         }
+        if construction.settling(){construction.settle(cx)?;return Ok(false)}
         let original:&mut dyn std::any::Any=&mut **body.as_mut().unwrap();let original=original.downcast_mut::<Self>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Stdio media admission received another concrete body"))?;
         if original.snapshot.is_some(){if request.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Stdio media producer cannot overwrite its admitted source").into())}return Ok(true)}
-        if original.page.capacity()==0{let bytes=ArtifactOutputChunks::CHUNK_BYTES;if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(false)}original.page.try_reserve_exact(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"Stdio media page allocation refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:original.page.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-        if original.cursor.is_none(){let bytes=size_of::<S::Cursor>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}let input=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Stdio cursor lost its retained snapshot source"))?;original.cursor=Some(S::cursor(&input.snapshot));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+        if original.page.is_none(){let bytes=ArtifactOutputChunks::CHUNK_BYTES;return construction.built(cx,&mut original.page,OriginalConstructionDemand{items:1,copy_bytes:size_of::<Vec<u8>>(),capacity_bytes:bytes,release_bytes:0,depth:1},||{let mut page=Vec::new();page.try_reserve_exact(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"Stdio media page allocation refused"))?;let capacity=page.capacity();Ok((page,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Vec<u8>>(),retained_capacity_bytes:capacity,..Default::default()}))}).map(|_|false)}
+        if original.cursor.is_none(){let bytes=size_of::<S::Cursor>();let input=request.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Stdio cursor lost its retained snapshot source"))?;let snapshot=&input.snapshot;return construction.built(cx,&mut original.cursor,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},||Ok((S::cursor(snapshot),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))).map(|_|false)}
         let bytes=size_of::<ArtifactMediaExportJobRequest<A>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}let input=request.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Stdio producer lost its original receiving request"))?;
         original.snapshot=Some(input.snapshot);original.snapshot_close=Some(input.snapshot_close);original.chunks=Some(input.output_chunks);original.credit=Some(input.output_credit);original.completion=Some(input.completion);*original.request_metadata=Some((input.tool_id,input.parent_document_id,input.port));
         cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
@@ -99,14 +102,15 @@ impl<S: IncrementalMediaExportSpec> IncrementalMediaExportJob<S> {
 
     fn advance(&mut self) -> Result<bool, Fault> {
         let snapshot = self.snapshot.as_deref().ok_or_else(|| Fault::from("media.export.snapshot-missing"))?;
-        if self.page.len() == ArtifactOutputChunks::CHUNK_BYTES {
-            let page = std::mem::replace(&mut self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
+        let page_len = self.page.as_ref().map_or(0, Vec::len);
+        if page_len == ArtifactOutputChunks::CHUNK_BYTES {
+            let page = self.page.replace(Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES)).ok_or_else(|| Fault::from("media.export.page-missing"))?;
             self.credit.as_ref().ok_or_else(|| Fault::from("media.export.credit-missing"))?.credit(page.len())?;
             self.chunks.as_ref().ok_or_else(|| Fault::from("media.export.chunks-missing"))?.push(page)?;
             self.progress = self.progress.checked_add(1).ok_or_else(|| Fault::from("media.export.progress-overflow"))?;
             return Ok(false);
         }
-        let maximum_bytes = ArtifactOutputChunks::CHUNK_BYTES - self.page.len();
+        let maximum_bytes = ArtifactOutputChunks::CHUNK_BYTES - page_len;
         let advance = S::advance(self.cursor.as_mut().ok_or_else(|| Fault::from("media.export.cursor-missing"))?, snapshot, maximum_bytes)?;
         self.progress = self.progress.checked_add(1).ok_or_else(|| Fault::from("media.export.progress-overflow"))?;
         match advance {
@@ -115,12 +119,12 @@ impl<S: IncrementalMediaExportSpec> IncrementalMediaExportJob<S> {
                 if chunk.is_empty() || chunk.len() > maximum_bytes {
                     return Err(Fault::from("media.export.cursor-chunk-invalid"));
                 }
-                self.page.extend_from_slice(&chunk);
+                self.page.as_mut().ok_or_else(|| Fault::from("media.export.page-missing"))?.extend_from_slice(&chunk);
                 Ok(false)
             }
             IncrementalMediaAdvance::Complete => {
-                if !self.page.is_empty() {
-                    let page = std::mem::replace(&mut self.page, Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES));
+                if page_len != 0 {
+                    let page = self.page.replace(Vec::with_capacity(ArtifactOutputChunks::CHUNK_BYTES)).ok_or_else(|| Fault::from("media.export.page-missing"))?;
                     self.credit.as_ref().ok_or_else(|| Fault::from("media.export.credit-missing"))?.credit(page.len())?;
                     self.chunks.as_ref().ok_or_else(|| Fault::from("media.export.chunks-missing"))?.push(page)?;
                     return Ok(false);
@@ -164,7 +168,7 @@ impl<S: IncrementalMediaExportSpec> InteractiveJob for IncrementalMediaExportJob
         let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{self.begin_close();self.close_turn(effect)})?;
         Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
-    fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.page.capacity()==0&&self.chunks.is_none()&&self.output_retirement.is_none()&&self.fault.is_none()&&self.fault_publication.terminal_is_empty()&&self.completion.is_none()&&self.credit.is_none()&&self.snapshot.is_none()&&self.snapshot_close.is_none()&&self.request_metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
+    fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.page.is_none()&&self.chunks.is_none()&&self.output_retirement.is_none()&&self.fault.is_none()&&self.fault_publication.terminal_is_empty()&&self.completion.is_none()&&self.credit.is_none()&&self.snapshot.is_none()&&self.snapshot_close.is_none()&&self.request_metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
 }
 impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
     fn step_owned<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
@@ -206,7 +210,7 @@ impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
         if self.fault.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.fault);}
         if self.cursor.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.cursor);}
-        if self.page.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.page.capacity(),depth:1,..Default::default()});}
+        if let Some(page)=self.page.as_ref(){return Ok(RetirementDemand{release_bytes:page.capacity(),depth:1,..Default::default()});}
         if self.chunks.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.chunks);}
         if self.pending_result.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_result)}
         if self.completion.is_some(){return semio_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion);}
@@ -233,7 +237,7 @@ impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
         if !self.fault_publication.terminal_is_empty(){let turn=self.fault_publication.close_step(effect);return Poll::Complete(Turn{result:turn.result.map_err(Failure::from),work:turn.work});}
         if self.fault.is_some(){return admit(artifact_retirement_admit_owned(&mut self.fault,&mut self.output_retirement,effect));}
         if self.cursor.is_some(){return admit(artifact_retirement_admit_owned(&mut self.cursor,&mut self.output_retirement,effect));}
-        if self.page.capacity()!=0{let released=std::mem::take(&mut self.page).capacity();return done(Ok(RetainedCloneProgress{released_bytes:released,..item}),1);}
+        if let Some(page)=self.page.take(){let released=page.capacity();return done(Ok(RetainedCloneProgress{released_bytes:released,..item}),1);}
         if self.chunks.is_some(){return admit(artifact_retirement_admit_owned(&mut self.chunks,&mut self.output_retirement,effect));}
         if self.pending_result.is_some(){return admit(artifact_retirement_admit_owned(&mut self.pending_result,&mut self.output_retirement,effect));}
         if self.completion.is_some(){return admit(artifact_retirement_admit_owned(&mut self.completion,&mut self.output_retirement,effect));}

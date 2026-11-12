@@ -1,7 +1,7 @@
 //! 🧱️ IFC2x3 source representation geometry.
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::geometry;
-#[cfg(test)]use semio_plugin::{MeshWindowKit,WindowKit};
+use semio_plugin::{MeshWindowKit,WindowKit};
 #[path="../../../../../../../🚪️io/📐️geometry/🦀️.rs"]mod representation_surface;
 pub use representation_surface::{render,render_in_context,render_with,render_selected_in_context};
 pub const WINDOW_KIND_ID:&str=semio_plugin::MeshWindowKit::KIND_ID;

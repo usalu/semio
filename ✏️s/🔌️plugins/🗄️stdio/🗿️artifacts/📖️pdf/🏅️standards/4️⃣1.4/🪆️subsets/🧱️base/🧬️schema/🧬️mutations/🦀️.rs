@@ -33,6 +33,7 @@ pub enum PdfMutation {
     ResizePage(ResizePage),
     ReplacePageText(ReplacePageText),
 }
+dsl::original_pack_value_operation_receiving!(PdfMutation);
 
 //#endregion 🔖️Aggregate
 

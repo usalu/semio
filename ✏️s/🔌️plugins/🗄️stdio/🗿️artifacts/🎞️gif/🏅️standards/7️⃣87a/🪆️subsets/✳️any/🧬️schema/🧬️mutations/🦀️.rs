@@ -69,6 +69,7 @@ pub enum GifMutation {
     SetImagePixels(set_image_pixels::SetImagePixels),
     SetImageInterlace(set_image_interlace::SetImageInterlace),
 }
+dsl::original_pack_value_operation_receiving!(GifMutation);
 
 /// 🏷️ Wave 7 mutation-oracle catalog: the kebab-case spelling of every `GifMutation` variant, in
 /// declaration order — what `../../🔣️oracle.json`'s `mutationCatalogs[].kinds` and

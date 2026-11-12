@@ -1,10 +1,10 @@
 use crate::editor::csv::modes::edit::windows::main;
 use crate::{CsvField, CsvMutation, CsvRecord, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
-use semio_framework_plugin::ArtifactEditor;
-use semio_framework_plugin::Editor;
-use semio_framework_plugin::EditorApp;
-use semio_framework_plugin::Fault;
-use semio_framework_plugin::InteractiveJobClassification;
+use semio_plugin::ArtifactEditor;
+use semio_plugin::Editor;
+use semio_plugin::EditorApp;
+use semio_plugin::Fault;
+use semio_plugin::InteractiveJobClassification;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use crate::editor::csv::{grid_row_to_record_index, CSV_KIT_ACTION_ID, csv_example_snapshot, csv_command_from_action, csv_emit};
 use crate::apply_mutation;
@@ -13,7 +13,7 @@ use crate::editor::csv::*;
 #[semio_framework_async_macros::async_test]
 async fn create_csv_editor_builds_a_definition_for_the_editor_role() {
     let def = create_csv_editor();
-    assert_eq!(def.role, semio_framework_plugin::AppRole::Editor);
+    assert_eq!(def.role, semio_plugin::AppRole::Editor);
     assert_eq!(def.dialect, CSV_EDITOR_DIALECT.into());
 }
 
@@ -84,11 +84,11 @@ async fn the_editor_declares_the_example_pickers_verb() {
 /// `Migrated` classification and `OpBinary::TOOL_JOB_IDS` disagree — so constructing one is the proof.
 #[semio_framework_async_macros::async_test]
 async fn the_example_switch_joins_its_exact_retained_factory() {
-    use semio_framework_plugin::PluginApp;
-    let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_csv_editor());
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::VcsArtifactApp::<EditorApp<CsvEditor>>::with_registry(EditorApp::<CsvEditor>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
+    use semio_plugin::PluginApp;
+    let registry = semio_plugin::AppActionRegistry::from_definition(&create_csv_editor());
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::VcsArtifactApp::<EditorApp<CsvEditor>>::with_registry(EditorApp::<CsvEditor>::default(), registry, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy(), scope.cx()).expect("original caller paid app close");
     assert!(app.close_terminal_is_empty(), "registered fixture reaches its exact terminal-empty witness");
 }
 
@@ -108,7 +108,7 @@ async fn the_curated_example_carries_visible_content() {
 /// releases the terminal operation only after its acknowledgement.
 #[semio_framework_async_macros::async_test]
 async fn browser_archive_reload_round_trips_the_saved_csv_through_the_exact_stepped_wire() {
-    use semio_framework_plugin::PluginApp;
+    use semio_plugin::PluginApp;
 
     let (mut app, mut scope) = kit_fixture_holding(&csv_example_snapshot(crate::examples::demo::ID)).await;
     let saved_revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
@@ -168,7 +168,7 @@ async fn browser_archive_reload_round_trips_the_saved_csv_through_the_exact_step
             }
             protocol::AppCommand::PollDocumentArchiveLoad { seq, operation } => {
                 commands.push((seq, "pollDocumentArchiveLoad"));
-                let status = semio_framework_plugin::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut app, operation, &mut identity, scope.cx()).await).expect("archive poll");
+                let status = semio_plugin::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut app, operation, &mut identity, scope.cx()).await).expect("archive poll");
                 protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status }
             }
             protocol::AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => {
@@ -188,8 +188,8 @@ async fn browser_archive_reload_round_trips_the_saved_csv_through_the_exact_step
     assert_eq!(commands, expected);
     assert_eq!(app.snapshot().expect("reloaded CSV"), saved);
     assert_eq!(PluginApp::document_archive(&app).await.expect("reloaded document archive"), archive);
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut app, 9, &mut identity, scope.cx()).await).is_err(), "acknowledgement retires operation nine");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    assert!(semio_plugin::with_authoring_identity!(|identity| PluginApp::poll_document_archive_load(&mut app, 9, &mut identity, scope.cx()).await).is_err(), "acknowledgement retires operation nine");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 /// ⚖️ LAW: the shells' `{action, args}` pair resolves into the typed command, for every spelling of
@@ -205,26 +205,26 @@ async fn the_shell_action_pair_resolves_into_the_typed_command() {
 //#endregion 🎬️ExampleSwitchLaws
 
 //#region 🪟️KitVerbLaws
-type KitFixtureApp = semio_framework_plugin::VcsArtifactApp<EditorApp<CsvEditor>>;
+type KitFixtureApp = semio_plugin::VcsArtifactApp<EditorApp<CsvEditor>>;
 
 /// 🧪️ One registered fixture app holding `document`, loaded exactly as a host applies the example
 /// switch's `Effect::LoadDocument`.
-async fn kit_fixture_holding(document: &CsvSnapshot) -> (KitFixtureApp, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope) {
-    use semio_framework_plugin::PluginApp;
-    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<CsvEditor>, _>(async { semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
-    let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_CSV_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
+async fn kit_fixture_holding(document: &CsvSnapshot) -> (KitFixtureApp, semio_plugin::artifact_app_laws::OriginalFixtureScope) {
+    use semio_plugin::PluginApp;
+    let mut scope = semio_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let mut app = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::new_registered_app::<EditorApp<CsvEditor>, _>(async { semio_plugin::App { definition: create_csv_editor(), examples: Vec::new() } }, semio_os_kernel::ActorId(semio_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let semio_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_CSV_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity, scope.cx()).await).expect("the host loads the example document");
     (app, scope)
 }
 
 /// 🕹️ Dispatches `action` with typed renderer `args`, exactly as the editable cell sends them, and settles it through
 /// the host's bounded publication loop.
-async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: semio_framework_value::DslValue, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), Fault> {
-    use semio_framework_plugin::PluginApp;
-    let meta = semio_framework_plugin::artifact_app_laws::meta("local");
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_framework_plugin::Fault::from(format!("{failure:?}"))))?;
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
+async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: semio_framework_value::DslValue, cx: &mut semio_plugin::StepContext<'_>) -> Result<(), Fault> {
+    use semio_plugin::PluginApp;
+    let meta = semio_plugin::artifact_app_laws::meta("local");
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::dispatch_fixture_action(&mut *app, action, Some(args.clone()), &meta, &mut identity, cx, semio_s_artifact_stdio_contract::editing::fixture_mounted_owner_policy().close).await).map_err(|failure| failure.primary_fault().cloned().unwrap_or_else(|| semio_plugin::Fault::from(format!("{failure:?}"))))?;
+    semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity, cx).await).map(|_| ()).map_err(|failure| semio_plugin::Fault::from(format!("{failure:?}")))
 }
 
 /// ⚖️ LAW: `set-cell` — the verb the `TableWindowKit` mints for `🪟️main` — reaches the document through this
@@ -244,7 +244,7 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     dispatch_settled(&mut app, "set-cell", args, scope.cx()).await.expect("set-cell settles");
     let after = app.snapshot().expect("csv snapshot");
     assert_eq!(after.records[grid_row_to_record_index(after.has_header, 0)].fields[0].value, "Zeta");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(), scope.cx()).expect("original caller paid app close");
 }
 
 #[test]
@@ -260,13 +260,13 @@ fn set_cell_rejects_stale_revisions_and_addresses_without_mutation() {
 /// refused — while the shell lane keeps refusing the omission.
 #[semio_framework_async_macros::async_test]
 async fn an_agent_set_cell_without_a_revision_previews_against_the_document_revision_and_the_shell_lane_still_requires_it() {
-    let mut original_caller=semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let mut original_caller=semio_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("closed original coupled fixture caller");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let source = csv_example_snapshot(crate::examples::demo::ID);
     let (mut app, mut scope) = kit_fixture_holding(&source).await;
     let definition = create_csv_editor();
-    let view = semio_framework_plugin::ViewModel {
-        window_instances: definition.window_kinds.iter().enumerate().map(|(index, window)| semio_framework_plugin::ViewWindowInstance { id: format!("agent-preview-{index}"), window_kind_id: window.id.clone() }).collect(),
-        ..semio_framework_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
+    let view = semio_plugin::ViewModel {
+        window_instances: definition.window_kinds.iter().enumerate().map(|(index, window)| semio_plugin::ViewWindowInstance { id: format!("agent-preview-{index}"), window_kind_id: window.id.clone() }).collect(),
+        ..semio_plugin::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native)
     };
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     let address = |revision: Option<String>| {
@@ -276,12 +276,12 @@ async fn an_agent_set_cell_without_a_revision_previews_against_the_document_revi
                 .chain(revision.map(|revision| ("revision".to_string(), semio_framework_value::DslValue::String(revision)))),
         )
     };
-    let omitted = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(None), &view, &mut identity,cx).await).expect("the agent lane admits an omitted revision");
-    let bound = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some(revision)), &view, &mut identity,cx).await).expect("the rendered cell's revision");
+    let omitted = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(None), &view, &mut identity,cx).await).expect("the agent lane admits an omitted revision");
+    let bound = semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some(revision)), &view, &mut identity,cx).await).expect("the rendered cell's revision");
     assert!(omitted > 0 && omitted == bound, "omitted {omitted} vs bound {bound} document ops");
-    assert!(semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some("stale".into())), &view, &mut identity,cx).await).is_err(), "a stale token is refused on the agent lane too");
+    assert!(semio_plugin::with_authoring_identity!(|identity| semio_plugin::artifact_app_laws::agent_preview(&mut app, &definition, "set-cell", &address(Some("stale".into())), &view, &mut identity,cx).await).is_err(), "a stale token is refused on the agent lane too");
     assert!(dispatch_settled(&mut app, "set-cell", address(None), scope.cx()).await.is_err(), "the shell lane still requires the rendered cell's revision");
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(),cx);
+    semio_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy(),cx);
 
     }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original coupled fixture caller closes");result
 }
@@ -346,7 +346,7 @@ fn natural_file_route_exports_edited_csv_bytes_and_reopens_them() {
     assert_eq!(reopened.records[row].fields[0].value, "Natural Open Save");
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", CsvEditor, || semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() }, "../../..");
+semio_plugin::history_edit_acceptance_law!("stdio", CsvEditor, || semio_plugin::App { definition: create_csv_editor(), examples: Vec::new() }, "../../..");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_cell() {

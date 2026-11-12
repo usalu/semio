@@ -25,6 +25,7 @@ storyGlobs = ["../../../✏️s/🧑‍💻dev/🏗️fem/📖️stories/**/🧪
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value = { workspace = true }
 semio-framework-pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }

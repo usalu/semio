@@ -3,10 +3,10 @@ use super::*;
 #[cfg(test)]
 #[path = "chooser-tests.rs"]
 mod chooser_tests;
-use semio_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_plugin::{
-    AppOperationContext, ArtifactBoundedFirstStepProof, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
-    InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, ToolOperationSpec,
+    ArtifactBoundedFirstStepProof, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane,
+    InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory,
 };
 
 pub const PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: APPLY_TEMPLATE_ACTION, lanes: &[ArtifactToolPublicationLane::Artifact] }];
@@ -33,7 +33,7 @@ impl IfcTemplateToolJobFactory {
     }
 }
 pub fn execution_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(TEMPLATE_MAXIMUM_RAW_BYTES, 4096, MAXIMUM_IDENTITIES, TEMPLATE_MAXIMUM_RAW_BYTES, 7500)
+    ToolExecutionContract::bounded_first_step(TEMPLATE_MAXIMUM_RAW_BYTES, 4096, MAXIMUM_IDENTITIES as u64, TEMPLATE_MAXIMUM_RAW_BYTES, 7500)
 }
 impl ToolJobFactory for IfcTemplateToolJobFactory {
     type Payload = ArtifactRetainedCommandPayload<EditorApp<Ifc4x3AnyEditor>>;
@@ -50,21 +50,7 @@ impl ToolJobFactory for IfcTemplateToolJobFactory {
     fn execution_contract(&self) -> ToolExecutionContract {
         execution_contract()
     }
-    fn create_job(&mut self, _: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework_action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > TEMPLATE_MAXIMUM_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("Template application rejects oversized wire or a checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
+    semio_plugin::retained_command::retained_command_factory_admission!(maximum_raw_bytes: TEMPLATE_MAXIMUM_RAW_BYTES, checkpoint_resume: false);
 }
 impl ArtifactOwnedToolJobFactory for IfcTemplateToolJobFactory {
     type Owner = EditorApp<Ifc4x3AnyEditor>;
@@ -87,39 +73,13 @@ pub fn proof() -> ArtifactBoundedFirstStepProof {
     )
     .with_factory_type::<EditorApp<Ifc4x3AnyEditor>, IfcTemplateToolJobFactory>()
 }
-pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<Ifc4x3AnyEditor>>) -> Result<Option<ToolOperationSpec>, Fault> {
-    if request.tool_id != APPLY_TEMPLATE_ACTION {
-        return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Ifc4x3AnyEditor>(request);
+pub fn build(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Ifc4x3AnyEditor>>>, output: &mut Option<semio_plugin::ErasedToolJob>, cx: &mut semio_plugin::__job::StepContext<'_>) -> Result<bool, semio_plugin::__job::OriginalTurnFailure> {
+    let original = request.as_ref().ok_or_else(|| semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
+    if original.tool_id != APPLY_TEMPLATE_ACTION {
+        return semio_s_artifact_stdio_contract::editing::build_snapshot_edit_tool_job::<Ifc4x3AnyEditor>(request, output, cx);
     }
-    if !matches!(*request.command, Ifc4x3EditCommand::ApplyTemplate { .. }) {
-        return Err(Fault::from("Template tool received a different native command"));
+    if !matches!(*original.command, Ifc4x3EditCommand::ApplyTemplate { .. }) {
+        return Err(semio_plugin::__value::ValueError::literal(semio_plugin::__value::ValueRefusalKind::InvariantViolated, "Template tool received a different native command").into());
     }
-    let operation = AppOperationContext {
-        app_instance_id: request.app_instance_id,
-        parent_document_id: request.parent_document_id,
-        operation_id: request.operation.operation.0,
-        generation: request.operation.generation.0,
-        canonical_base_revision: request.canonical_base_revision,
-        retained: request.retained,
-        authoring_seed: request.authoring_seed,
-    };
-    let payload = ArtifactRetainedCommandPayload::new(
-        ArtifactRetainedCommandInputs {
-            command: *request.command,
-            snapshot: request.snapshot,
-            snapshot_read: request.snapshot_read,
-            config: request.config,
-            history: request.history,
-            interaction_state: request.interaction_state,
-            interaction_hover: request.interaction_hover,
-            context: Some(request.context),
-            operation,
-            completion: request.completion,
-        },
-        Ifc4x3AnyEditor::command_id,
-        TEMPLATE_MAXIMUM_RAW_BYTES,
-        TEMPLATE_WORK_CAPACITY.work_items(),
-        Box::new(IfcTemplateWork::default()),
-    );
-    Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    semio_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Ifc4x3AnyEditor::command_id, TEMPLATE_MAXIMUM_RAW_BYTES, TEMPLATE_WORK_CAPACITY.work_items(), false, |_| IfcTemplateWork::default())
 }

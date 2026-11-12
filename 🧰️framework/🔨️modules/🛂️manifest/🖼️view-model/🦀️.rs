@@ -506,5 +506,3 @@ mod ui_refresh_section_tests;
 #[path="🪟️selection/🦀️.rs"]
 mod original_window_selection;
 pub use original_window_selection::ViewModelWindowSelection;
-#[path="🔗️shared-source/🦀️.rs"]
-mod shared_view_source;

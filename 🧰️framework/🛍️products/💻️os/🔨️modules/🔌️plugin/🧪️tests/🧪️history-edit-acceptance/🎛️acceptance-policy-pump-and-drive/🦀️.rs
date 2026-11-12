@@ -34,7 +34,7 @@ where
     let loan=acceptance_policy().close;
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
         if input.terminal_is_empty(){return outcome}
-        cx.with_retained_loan(loan,|same|semio_framework_job::close_original_retained_step(same,input.selected_demand(loan.maximum_copy_bytes)?,|grant|semio_framework_value::RetainedWorkOutcome{result:input.step(grant),work:1})).expect("original acceptance action input paid retirement");
+        cx.with_retained_loan(loan,|same|semio_framework_job::close_original_effect_step(same,input.selected_demand(loan.maximum_copy_bytes)?,|effect|input.step(loan.maximum_copy_bytes,effect))).expect("original acceptance action input paid retirement");
     }
     panic!("original acceptance action input exceeded its supplied close turns")
 }

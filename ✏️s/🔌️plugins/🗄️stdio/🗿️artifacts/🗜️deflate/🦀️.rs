@@ -132,8 +132,5 @@ pub mod viewer {
 pub use crate::standards::v_rfc1950::subsets::any::io::{DeflateBuilderConstruction, DeflateParts, DeflateAnalyzerAnalysis, DeflateBuilderFacets, DeflateBuilder, DeflateAnalyzer, DeflateComposer};
 
 #[cfg(test)]
-#[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🫴️receiving/🧪️tests/🦀️.rs"]
-mod hoisted_receiving_0;
-#[cfg(test)]
 #[path = "🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod hoisted_snapshot_1;

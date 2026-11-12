@@ -534,7 +534,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
             self.state = Process3dMutationDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        let step = store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(self.diagnostic("process3d-envelope.mutation-retirement-fault", 0), &failure))?;
+        let step = store::os_store::owned_schema_decode::artifact_envelope_close_resume_with(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant.maximum_copy_bytes, effect), |failure| store::os_store::owned_schema_decode::artifact_envelope_failure_diagnostic(self.diagnostic("process3d-envelope.mutation-retirement-fault", 0), &failure))?;
         if self.retirement.is_none() {
             self.state = Process3dMutationDecodeState::Complete;
         }

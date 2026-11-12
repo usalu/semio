@@ -306,7 +306,7 @@ fn emit(source: &GltfSnapshot, out: &mut IfcSnapshot, context: graph::Context, p
     graph::proxy(out, context, faces, name, p)
 }
 pub(super) fn receive(source: &GltfSnapshot, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<IfcSnapshot, ValueError> {
-    owner.receive::<Receiving, IfcSnapshot>(|slot, native, body| {
+    decoded::<Receiving, IfcSnapshot>(owner, |slot, native, body| {
         native.scoped_stage(|native| {
             native.begin_stage(0)?;
             let mut p = Port { native, body };

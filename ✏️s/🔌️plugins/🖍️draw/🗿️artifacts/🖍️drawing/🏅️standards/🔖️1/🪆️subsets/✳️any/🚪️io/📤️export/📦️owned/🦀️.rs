@@ -1,7 +1,7 @@
 //! 📤️ One genuine captured document producer supplies original PNG, SVG and PDF bytes.
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentRasterJob, DocumentRasterRetirement, DocumentSceneViewport, DocumentVectorJob, DocumentVectorRetirement, DocumentScenePlan, DocumentSceneLimits, DocumentAlgorithmLimits};
-use semio_framework_plugin::Fault;
+use semio_plugin::Fault;
 use semio_framework_job::OriginalDomainFailure;
 use semio_os_kernel::io::io_mechanism::OwnedSerializerOutput;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};

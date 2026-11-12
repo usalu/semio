@@ -280,12 +280,12 @@ fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: &GisTerrainMutati
     Ok((post, inverse, retained_bytes))
 }
 
-impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for Gis3dOneItemPreparation<P, M>
+impl<P, M> Gis3dOneItemPreparation<P, M>
 where
     P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         self.last_work = 0;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
@@ -324,6 +324,26 @@ where
             _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())),
         }
     }
+}
+
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for Gis3dOneItemPreparation<P, M>
+where
+    P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
+{
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::OriginalReceivingPrimary> {
+        self.last_work = 0;
+        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if self.owners.refused.is_some() || self.owners.prepared.is_some() || self.phase >= 2 { return self.advance_step(grant).map_err(Into::into); }
+        if !receiving.prepare_work(1)? { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
+        let result = self.advance_step(grant);
+        receiving.commit_work(u128::from(self.last_work))?;
+        result.map_err(Into::into)
+    }
+    fn has_pending_receiving_recovery(&self) -> bool { false }
+    fn pending_receiving_demand(&self) -> Option<semio_framework_value::RetirementDemand> { None }
+    fn pending_receiving_recovery(&mut self) -> Option<semio_framework_value::native_decoding::construction::NativeRecoveryLoan<'_>> { None }
+    fn finish_receiving_recovery(&mut self, _control: &mut semio_framework_value::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneProgress, semio_framework_value::OriginalReceivingPrimary> { semio_framework_value::RetainedWorkOutcome { result: Ok(Default::default()), work: 0 } }
 
     fn last_turn_work(&self) -> u64 {
         self.last_work
@@ -343,8 +363,8 @@ where
     fn begin_close(&mut self) {
         self.owners.begin_close();
     }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        self.owners.close_step(grant.retained_grant())
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
+        self.owners.close_step(effect)
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }

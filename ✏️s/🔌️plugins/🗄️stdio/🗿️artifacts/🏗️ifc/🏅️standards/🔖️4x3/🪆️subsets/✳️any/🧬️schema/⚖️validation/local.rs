@@ -2,7 +2,7 @@
 use super::{machine::{MachineEnvironment, RetainedMachine}, overlay::PopulationOverlay, receive::PopulationReceiver, retained::*, NewMachine};
 use semio_s_artifact_stdio_ifc_details::{IfcCandidateRules, IfcCandidateRuleStep, IfcTypeCandidate};
 use semio_framework_job::{OriginalSourceBinding, OriginalTurnFailure, StepContext};
-use semio_framework_value::{RetainedWorkOutcome, RetirementDemand, ValueError};
+use semio_framework_value::{RetainedAllocationEffect, RetainedWorkOutcome, RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::size_of;
 #[derive(Clone, Copy)]
@@ -86,9 +86,8 @@ impl IfcCandidateRules for NativeCandidateRules {
                 if self.machine.terminal_is_empty() && self.receiver.terminal_is_empty() && self.overlay.terminal_is_empty() { true }
                 else {
                     let demand = self.close_demands(4096)?;
-                    cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |loan| {
-                        let result = if !self.machine.terminal_is_empty() { self.machine.close_step(loan) } else if !self.receiver.terminal_is_empty() { self.receiver.close_step(loan) } else { self.overlay.close_step(loan) };
-                        RetainedWorkOutcome { result, work: 1 }
+                    cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| {
+                        if !self.machine.terminal_is_empty() { self.machine.close_step(effect) } else if !self.receiver.terminal_is_empty() { self.receiver.close_step(effect) } else { self.overlay.close_step(effect) }
                     }))?;
                     false
                 }
@@ -115,18 +114,22 @@ impl IfcCandidateRules for NativeCandidateRules {
         if !self.overlay.terminal_is_empty() { return self.overlay.close_demands(body); }
         Ok(Self::metadata())
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
-        RetainedWorkOutcome { result: self.close_step_result(grant), work: 1 }
+    fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> RetainedWorkOutcome {
+        let result = self.close_step_result(effect);
+        RetainedWorkOutcome { result, work: effect.performed_work() }
     }
 }
 impl NativeCandidateRules {
-    fn close_step_result(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step_result(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> Result<RetainedCloneStep, ValueError> {
+        let grant = effect.grant();
         if !self.closing { return Err(refusal("express.local-not-closing")); }
-        if !self.machine.terminal_is_empty() { return self.machine.close_step(grant); }
-        if !self.receiver.terminal_is_empty() { return self.receiver.close_step(grant); }
-        if !self.overlay.terminal_is_empty() { return self.overlay.close_step(grant); }
+        if !self.machine.terminal_is_empty() { return self.machine.close_step(effect); }
+        if !self.receiver.terminal_is_empty() { return self.receiver.close_step(effect); }
+        if !self.overlay.terminal_is_empty() { return self.overlay.close_step(effect); }
         let demand = Self::metadata();
         if !fits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if effect.remaining_work_units()? < 1 { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !effect.performed(1)? { return Err(refusal("express.local-close-work")); }
         self.binding = None;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }

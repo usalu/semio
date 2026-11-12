@@ -167,11 +167,11 @@ impl CadComposedPanes {
             };
             let mut geometry = genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane)).cloned().unwrap_or_default();
             for child in snapshot.breps.iter().filter(|child| objects.iter().any(|object| object.solid_handle.as_ref() == Some(&child.child_id))) {
-                geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(semio_plugin::MeshData::default()));
+                geometry.owned_meshes.insert(child.child_id.clone(), semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::new(semio_plugin::MeshData::default())));
                 if let Ok(content) = children.typed_read::<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>("breps", &child.child_id) {
-                    geometry.owned_breps.insert(child.child_id.clone(), std::sync::Arc::new((*content).clone()));
+                    geometry.owned_breps.insert(child.child_id.clone(), semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::new((*content).clone())));
                     if let Ok(mesh) = semio_s_artifact_cad_cad_model::geometry::mesh_from_owned_brep(&content) {
-                        geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(mesh));
+                        geometry.owned_meshes.insert(child.child_id.clone(), semio_framework_value::retirement::arc_custody::ArcLease::new(std::sync::Arc::new(mesh)));
                     }
                 }
             }

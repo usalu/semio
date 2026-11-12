@@ -78,16 +78,7 @@ impl RetireOwned for CadReferenceIndex {
 }
 
 pub(crate) fn invalid(message: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
-pub(crate) fn close<T: RetireOwned>(value: T) {
-    let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|(error, _)| panic!("CAD native cold retirement refused: {error}"));
-    while !owner.terminal_is_empty() {
-        let copy = owner.next_copy_byte_demand().expect("CAD native cold copy demand");
-        let release = owner.next_release_byte_demand().expect("CAD native cold release demand");
-        let capacity = owner.next_capacity_byte_demand(if copy == 0 { release } else { copy }).expect("CAD native cold capacity demand");
-        let depth = owner.next_depth_demand().expect("CAD native cold depth demand");
-        owner.step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth }).expect("CAD native cold grant");
-    }
-}
+pub(crate) fn close<T: RetireOwned>(value: T) { drop(value) }
 
 impl semio_framework_dsl_record::BorrowedDslField for CadReferenceIndex {
     const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Map(semio_framework_dsl_record::borrowed_field_shape::<CadReferenceList>);

@@ -26,6 +26,7 @@ use crate::docs_maintenance_ladder::item;
 
 #[doc(hidden)]
 pub struct MediaExportPreparation<A:ArtifactApp>{
+ pub construction:semio_plugin_decl_app::media_contract::MediaConstruction,
  pub checkpoint:Option<super::native_checkpoint_export::NativeCheckpointExportSource<A>>,pub checkpoint_identity:Option<(usize,usize)>,
  pub canonical_revision:[u8;32],pub metadata:ManuallyDrop<Option<[Vec<u8>;7]>>,pub(crate) metadata_stage:usize,pub metadata_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;7]>>>,
  pub request_close:ManuallyDrop<Option<semio_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement<A>>>,pub parts:ManuallyDrop<Option<semio_plugin_document_media::media_export::MediaExportOwnedParts>>,pub(crate) parts_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_plugin_document_media::media_export::MediaExportOwnedParts>>>,pub handle:ManuallyDrop<Option<ArtifactMediaExportHandle>>,pub handle_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportHandle>>>,pub operation:Option<semio_framework_job::Operation>,pub(crate) body_ready:bool,pub(crate) operation_bound:bool,pub assembled:bool,pub published:bool,
@@ -46,6 +47,7 @@ impl<A:ArtifactApp> MediaExportPreparation<A>{
   let one=RetirementDemand{depth:1,..Default::default()};
   if let Some(job)=self.producer.as_ref(){return if job.terminal_is_empty(){Ok(one)}else{Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.max(1)})}}
   if let Some(job)=self.body.as_ref(){return if job.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(&**job),..one})}else{Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(body)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?.max(1)})}}
+  if !self.construction.terminal_is_empty(){return self.construction.close_demand(body)}
   if let Some(owner)=self.request_close.as_ref(){return if owner.terminal_is_empty(){Ok(one)}else{owner.retirement_demands(body)}}
   if self.request.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<semio_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..one})}
   if self.original_read.is_some()||self.original_read_close.is_some(){return semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.original_read,&self.original_read_close,body)}
@@ -62,7 +64,7 @@ impl<A:ArtifactApp> MediaExportPreparation<A>{
   Ok(one)
  }
  pub(crate) fn quoted_material_selected(&self)->bool{
-  if self.producer.is_some()||self.body.is_some(){return false}
+  if self.producer.is_some()||self.body.is_some()||!self.construction.terminal_is_empty(){return false}
   if let Some(owner)=self.request_close.as_ref(){return !owner.terminal_is_empty()}
   if self.request.is_some(){return false}
   if self.original_read.is_some()||self.original_read_close.is_some()||self.original_children.is_some()||self.original_children_close.is_some()||self.parts.is_some()||self.parts_close.is_some()||self.handle.is_some()||self.handle_close.is_some()||self.metadata.is_some()||self.metadata_close.is_some(){return true}
@@ -74,6 +76,7 @@ impl<A:ArtifactApp> MediaExportPreparation<A>{
   let item=RetainedCloneProgress{copied_items:1,..Default::default()};
   if let Some(job)=self.producer.as_mut(){if job.terminal_is_empty(){self.producer.take();return Ok(Some(item))}job.begin_close();return job.close_step(cx).map(|step|Some(step.progress()))}
   if let Some(job)=self.body.as_mut(){if job.terminal_is_empty(){let bytes=size_of_val(&**job);self.body.take();return Ok(Some(RetainedCloneProgress{released_bytes:bytes,..item}))}job.begin_close();return job.close_step(cx).map(|step|Some(step.progress()))}
+  if let Some(progress)=self.construction.close_step(cx)?{return Ok(Some(progress))}
   if let Some(owner)=self.request_close.as_mut(){if owner.terminal_is_empty(){self.request_close.take();return Ok(Some(item))}let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|owner.close_step(effect)))?;return Ok(Some(step.progress()))}
   if let Some(request)=self.request.take(){*self.request_close=Some(semio_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement::new(request));return Ok(Some(RetainedCloneProgress{copied_bytes:size_of::<semio_plugin_decl_app::media_contract::ArtifactMediaExportRequestRetirement<A>>(),..item}))}
   if self.original_read.is_some()||self.original_read_close.is_some(){let body=grant.maximum_copy_bytes;let demand=semio_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.original_read,&self.original_read_close,body)?;let step=cx.with_retained_loan(grant,|cx|semio_framework_job::close_original_effect_step(cx,demand,|effect|semio_plugin_ownership::bounded_ownership::plugin_typed_owner_original(&mut self.original_read,&mut self.original_read_close,effect)))?;return Ok(Some(step.progress()))}

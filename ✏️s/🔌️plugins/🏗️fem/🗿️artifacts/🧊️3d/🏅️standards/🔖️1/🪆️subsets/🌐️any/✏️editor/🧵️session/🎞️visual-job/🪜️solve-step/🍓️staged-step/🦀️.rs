@@ -113,7 +113,7 @@ impl Fem3dNumericalChild {
             semio_framework_job::close_original_retained_step(context, RetirementDemand { depth: 1, ..Default::default() }, |_| {
                 self.mesh = None;
                 self.stage = Fem3dNumericalStage::SolidMaterial;
-                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 }
+                semio_framework_value::RetainedWorkOutcome::<_, semio_framework_value::ValueError> { result: Ok(semio_framework_job::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 }
             })?;
             return Ok(false);
         }

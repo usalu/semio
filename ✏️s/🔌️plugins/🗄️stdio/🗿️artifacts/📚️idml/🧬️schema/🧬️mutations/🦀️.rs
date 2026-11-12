@@ -10,6 +10,7 @@ pub enum IdmlMutation {
     ReplacePackage { document: IdmlSnapshot },
     ReplacePart { path: String, bytes: Vec<u8> },
 }
+protocol::original_pack_value_operation_receiving!(IdmlMutation);
 
 const PACKAGE_SCHEMA: &str = include_str!("📦️replace-package/🧬️schema/🔣️.json");
 const PART_SCHEMA: &str = include_str!("📄️replace-part/🧬️schema/🔣️.json");

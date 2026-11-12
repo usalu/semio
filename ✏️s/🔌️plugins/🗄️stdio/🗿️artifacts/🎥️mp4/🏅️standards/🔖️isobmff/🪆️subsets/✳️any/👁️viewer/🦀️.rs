@@ -72,9 +72,9 @@ impl ArtifactViewer for Mp4Viewer {
         Some(semio_s_artifact_stdio_contract::media_export::playback_app_io::<crate::standards::isobmff::subsets::any::io::playback::Mp4PlaybackExport>())
     }
 
-    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    fn build_media_export_job(request:&mut Option<semio_plugin::ArtifactMediaExportJobRequest<semio_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_plugin::ArtifactReservedJob+Send>>,construction:&mut semio_plugin::MediaConstruction,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if request.as_ref().is_some_and(|source|source.port!=semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID||source.tool_id!=semio_s_artifact_stdio_contract::media_export::PLAYBACK_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Stdio media source requires its exact published output port").into())}
-        crate::standards::isobmff::subsets::any::io::playback::Mp4PlaybackExportJob::admit_original(request,body,cx)
+        crate::standards::isobmff::subsets::any::io::playback::Mp4PlaybackExportJob::admit_original(request,body,construction,cx)
     }
 
 

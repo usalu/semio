@@ -67,6 +67,8 @@ pub enum Puzzle2dWindowConfigMutation {
     Set(Puzzle2dWindowConfigMutationSet),
 }
 
+protocol::original_pack_value_operation_receiving!(Puzzle2dWindowConfigMutation);
+
 impl semio_plugin::WindowConfigApplyMutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
     fn exchange(self, post: &mut Puzzle2dWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
         let Self::Set(Puzzle2dWindowConfigMutationSet { mut patch }) = self;

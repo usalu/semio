@@ -37,6 +37,7 @@ pub enum DeflateMutation {
     /// 📦️ Replaces the decompressed payload wholesale.
     SetPayload(set_payload::SetPayload),
 }
+dsl::original_pack_value_operation_receiving!(DeflateMutation);
 //#endregion 🔖️Mutations
 
 //#region 🔖️Kinds

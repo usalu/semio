@@ -1090,7 +1090,7 @@ pub struct ScheduleGroup {
 }
 
 /// 🏷️ All property sets of one element: property set name → property name → value.
-pub type PropertySet = std::collections::BTreeMap<String, std::collections::BTreeMap<String, PropertyValue>>;
+pub type PropertySet = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, PropertyValue>>;
 
 /// 🗂️ All classifications of one element: classification system id → code in that system (one per system).
-pub type ClassificationSet = std::collections::BTreeMap<String, String>;
+pub type ClassificationSet = semio_framework_value::retained_clone::ordered_map::RetainedOrderedMap<String, String>;

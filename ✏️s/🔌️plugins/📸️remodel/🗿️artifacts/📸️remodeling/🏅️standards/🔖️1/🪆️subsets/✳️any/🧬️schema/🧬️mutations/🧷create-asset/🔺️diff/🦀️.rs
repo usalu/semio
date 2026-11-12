@@ -29,7 +29,7 @@ pub fn diff(payload: &crate::standards::v1::subsets::any::schema::mutations::cre
     let previous = base.assets.get(&payload.key);
     let mut content = Vec::new();
     let mut released = None;
-    if let Some(previous) = previous.filter(|previous| base.durable_artifacts.contains_key(&previous.child_id)) {
+    if let Some(previous) = previous.filter(|previous| base.durable_artifacts.get(&previous.child_id).is_some()) {
         content.push(RemodelingContentRow::Truncate { id: previous.child_id.clone(), from: 0 });
         released = Some(&previous.child_id);
     }

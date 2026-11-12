@@ -160,13 +160,14 @@ impl protocol::SemanticMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
 
 /// ♻️ The typed authority retires through its own owner, then the deferred first-party host view, each as its own bounded cursor turn.
 impl semio_framework_value::retirement::RetireOwned for Puzzle2dPlaySnapshot {
-    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
+    type RetirementCursor = semio_framework_value::retirement_fields_type!(semio_framework_value::retirement::arc_custody::ArcLease<Puzzle2dSnapshot>, Option<semio_framework_value::retirement::arc_custody::ArcLease<HostValue>>);
+    fn retirement_seed(self) -> Self::RetirementCursor {
         let Self { typed, value } = self;
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(typed), semio_framework_value::retirement::deferred(value.into_inner())])
+        semio_framework_value::retirement_fields_seed!(semio_framework_value::retirement::arc_custody::ArcLease::new(typed), value.into_inner().map(semio_framework_value::retirement::arc_custody::ArcLease::new))
     }
 
     fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.typed), semio_framework_value::retirement::deferred_birth_bytes::<Option<std::sync::Arc<HostValue>>>()])
+        Some(std::mem::size_of::<Self::RetirementCursor>())
     }
 
     fn controlled_retirement_supported() -> bool {

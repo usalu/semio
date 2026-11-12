@@ -117,6 +117,7 @@ pub enum SemioDocumentMutation {
     /// ✍️ Replaces the mime/bytes of the image with id `id`.
     SetImageBytes(set_image_bytes::SetImageBytes),
 }
+dsl::original_pack_value_operation_receiving!(SemioDocumentMutation);
 
 /// 🏷️ The declared mutation vocabulary of `stdio.semio.document`, in `SemioDocumentMutation`'s own
 /// declaration order and kebab-case spelling — the single source of truth for the binary op frame's

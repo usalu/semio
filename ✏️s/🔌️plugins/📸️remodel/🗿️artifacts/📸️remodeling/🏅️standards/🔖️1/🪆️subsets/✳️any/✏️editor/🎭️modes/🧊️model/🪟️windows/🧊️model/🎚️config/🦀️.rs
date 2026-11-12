@@ -158,12 +158,12 @@ impl protocol::OpText for RemodelingModelWindowConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
 }
 impl protocol::OpBinary for RemodelingModelWindowConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self))) }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        let value = protocol::os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "window config operation", offset: 0, detail: error.to_string() })?; semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| protocol::ProtocolError::Malformed { what: "window config operation", offset: 0, detail: error.to_string() })
     }
 }
+semio_os_kernel::original_pack_value_operation_receiving!(RemodelingModelWindowConfigMutation);
 
 impl semio_plugin::app::WindowConfigApplyMutation<RemodelingModelWindowConfig> for RemodelingModelWindowConfigMutation {
     fn exchange(self, post: &mut RemodelingModelWindowConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {

@@ -98,6 +98,7 @@ pub fn generation3d_document_io_contract() -> ToolExecutionContract {
 /// 📄️ Runs one import/export hop against the app instance's RETAINED owner — the export reads its
 /// retained preview, and a completed import re-arms every attached preview through the same
 /// per-window latch an example switch uses.
+#[derive(semio_framework_value::RetireOwned)]
 enum Generation3dDocumentRetirement {
     Projection(semio_framework_dsl_record::native_encoding::RetainedFieldProjection),
     Projected(semio_framework_dsl_record::FieldValue),
@@ -105,12 +106,6 @@ enum Generation3dDocumentRetirement {
     Text(store::semio_format::RetainedTextEnvelope),
     Envelope(semio_s_artifact_procedural_3d_io::document_io::Generation3dDocumentEnvelope),
     Export(semio_s_artifact_procedural_3d_io::Generation3dDocumentExport),
-}
-
-impl semio_framework_value::retirement::RetireOwned for Generation3dDocumentRetirement {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{match self{Self::Projection(value)=>value.retirement(),Self::Projected(value)=>value.retirement(),Self::Writer(value)=>value.retirement(),Self::Text(value)=>value.retirement(),Self::Envelope(value)=>value.retirement(),Self::Export(value)=>value.retirement()}}
-    fn retirement_birth_bytes(&self)->Option<usize>{match self{Self::Projection(value)=>value.retirement_birth_bytes(),Self::Projected(value)=>value.retirement_birth_bytes(),Self::Writer(value)=>value.retirement_birth_bytes(),Self::Text(value)=>value.retirement_birth_bytes(),Self::Envelope(value)=>value.retirement_birth_bytes(),Self::Export(value)=>value.retirement_birth_bytes()}}
-    fn controlled_retirement_supported()->bool{true}
 }
 
 pub struct Generation3dDocumentIoWork {
@@ -160,31 +155,50 @@ impl Generation3dDocumentIoWork {
         let stage=match self.phase{0|1 if self.source_demand.is_none()=>"document-measure",0|1=>"document-project",2=>"document-physical",3=>"document-envelope",4=>"document-base64",_=>"document-retirement"};
         cx.set_stage(stage);
         while !cx.should_yield(){
-            let mut accepted=|_|!cx.is_cancelled();
-            let mut control=match self.encoding.take(){Some(receipt)=>NativeEncodeControl::resume(receipt,&mut accepted),None=>{self.expand_admission=self.phase==0;Ok(NativeEncodeControl::new(GENERATION3D_DOCUMENT_SCAFFOLD_BYTES,&mut accepted))}}.map_err(|error|Fault::from(error.to_string()))?;
+            let cancelled=cx.is_cancelled();let mut accepted=|_|!cancelled;
+            let mut control=match self.encoding.take(){Some(receipt)=>NativeEncodeControl::resume(receipt,&mut accepted),None=>{self.expand_admission=self.phase==0;Ok(NativeEncodeControl::new(GENERATION3D_DOCUMENT_SCAFFOLD_BYTES,&mut accepted))}}.map_err(|(error,_)|Fault::from(error.to_string()))?;
             if self.retirement.is_some(){
-                let result=(||->Result<(),semio_framework_value::ValueError>{
+                let charged=(||->Result<(),semio_framework_value::ValueError>{
                     control.checkpoint()?;
-                    let mut grant=self.retirement_demands(8)?;grant.maximum_copy_bytes=8;
-                    control.charge(grant.maximum_capacity_bytes)?;
-                    let step=self.retirement.as_mut().unwrap().step(grant)?;
-                    if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){self.retirement.take();}
-                    Ok(())
+                    let grant=self.retirement_demands(8)?;
+                    control.charge(grant.maximum_capacity_bytes)
                 })();
-                self.encoding=Some(control.pause().map_err(|error|Fault::from(error.to_string()))?);
-                result.map_err(|error|Fault::from(error.to_string()))?;cx.consume_fuel(1);continue;
+                self.encoding=Some(control.pause().map_err(|(error,_)|Fault::from(error.to_string()))?);
+                charged.map_err(|error|Fault::from(error.to_string()))?;
+                let grant=cx.retained_grant();
+                let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|self.retirement.as_mut().unwrap().step(8,effect)).map_err(|failure|Fault::from(format!("{failure:?}")))?else{break};
+                cx.consume_work(performed);
+                if let semio_framework_value::RetainedWorkPoll::Complete(turn)=poll{
+                    let step=turn.result.map_err(|failure|Fault::from(failure.into_value_error().to_string()))?;
+                    cx.consume_retained(step.progress()).map_err(|failure|Fault::from(format!("{failure:?}")))?;
+                    if matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)){self.retirement.take();}
+                }
+                cx.consume_fuel(1);continue;
             }
             if self.phase==1&&self.source_demand.is_none(){
                 let measured=self.projection.as_mut().unwrap().measure_step(input.snapshot,1,GENERATION3D_DOCUMENT_SOURCE_ALLOCATION_BYTES,&mut control);
                 match measured{
                     Ok(Some(bytes))=>{
                         self.source_demand=Some(bytes);
-                        if self.expand_admission{control=match control.admit_capacity(bytes,GENERATION3D_DOCUMENT_OWNERSHIP_SOURCE_MULTIPLES,GENERATION3D_DOCUMENT_SCAFFOLD_BYTES){Ok(control)=>control,Err((control,error))=>{self.encoding=Some(control.pause().map_err(|error|Fault::from(error.to_string()))?);return Err(Fault::from(error.to_string()))}};self.expand_admission=false;}
+                        if self.expand_admission{control=match control.admit_capacity(bytes,GENERATION3D_DOCUMENT_OWNERSHIP_SOURCE_MULTIPLES,GENERATION3D_DOCUMENT_SCAFFOLD_BYTES){Ok(control)=>control,Err((control,error))=>{self.encoding=Some(control.pause().map_err(|(error,_)|Fault::from(error.to_string()))?);return Err(Fault::from(error.to_string()))}};self.expand_admission=false;}
                     },
                     Ok(None)=>{},
-                    Err(error)=>{self.encoding=Some(control.pause().map_err(|error|Fault::from(error.to_string()))?);return Err(Fault::from(error.to_string()))},
+                    Err(error)=>{self.encoding=Some(control.pause().map_err(|(error,_)|Fault::from(error.to_string()))?);return Err(Fault::from(error.to_string()))},
                 }
-                self.encoding=Some(control.pause().map_err(|error|Fault::from(error.to_string()))?);cx.consume_fuel(1);continue;
+                self.encoding=Some(control.pause().map_err(|(error,_)|Fault::from(error.to_string()))?);cx.consume_fuel(1);continue;
+            }
+            if self.phase==3{
+                let grant=cx.retained_grant();
+                let funded=cx.with_original_effect(grant,|_,effect|self.text.as_mut().unwrap().step(1,8,&mut control,effect));
+                self.encoding=Some(control.pause().map_err(|(error,_)|Fault::from(error.to_string()))?);
+                let Some((stepped,performed))=funded.map_err(|failure|Fault::from(format!("{failure:?}")))? else{break};
+                cx.consume_work(performed);
+                if let Some(text)=stepped.map_err(|error|Fault::from(error.to_string()))?{
+                    let row=semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.iter().find(|row|row.id=="txt").unwrap();
+                    self.envelope=Some(semio_s_artifact_procedural_3d_io::document_io::Generation3dDocumentEnvelope::new(row,text.into_bytes()));
+                    let retired=self.text.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Text(retired)).map_err(|error|Fault::from(error.to_string()))?;self.phase=4;
+                }
+                cx.consume_fuel(1);continue;
             }
             let result=(||->Result<(),semio_framework_value::ValueError>{
                 match self.phase{
@@ -201,11 +215,6 @@ impl Generation3dDocumentIoWork {
                         self.text=Some(store::semio_format::RetainedTextEnvelope::new("procedural.generation3d".into(),store::semio_format::Component::Dsl,1,body,cx.retained_grant()));
                         let retired=self.writer.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Writer(retired))?;self.phase=3;
                     },
-                    3=>if let Some(text)=self.text.as_mut().unwrap().step(1,8,&mut control)?{
-                        let row=semio_s_artifact_procedural_3d_io::document_io::EXPORT_FORMATS.iter().find(|row|row.id=="txt").unwrap();
-                        self.envelope=Some(semio_s_artifact_procedural_3d_io::document_io::Generation3dDocumentEnvelope::new(row,text.into_bytes()));
-                        let retired=self.text.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Text(retired))?;self.phase=4;
-                    },
                     4=>if let Some(export)=self.envelope.as_mut().unwrap().step(1,&mut control).map_err(|error|semio_framework_value::ValueError::new(error.kind,error.message))?{
                         self.candidate=Some(export);let retired=self.envelope.take().unwrap();self.park_retirement(Generation3dDocumentRetirement::Envelope(retired))?;self.phase=5;
                     },
@@ -213,7 +222,7 @@ impl Generation3dDocumentIoWork {
                 }
                 Ok(())
             })();
-            self.encoding=Some(control.pause().map_err(|error|Fault::from(error.to_string()))?);
+            self.encoding=Some(control.pause().map_err(|(error,_)|Fault::from(error.to_string()))?);
             result.map_err(|error|Fault::from(error.to_string()))?;
             cx.consume_fuel(1);
             if self.phase==5&&self.retirement.is_none(){
@@ -297,7 +306,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand={let d=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_value::RetirementDemand{copy_bytes:d.maximum_copy_bytes,capacity_bytes:d.maximum_capacity_bytes,release_bytes:d.maximum_release_bytes,depth:d.maximum_depth}};
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=(
+        let body=cx.retained_grant().maximum_copy_bytes;let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{let grant=effect.grant();let result=(
             ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
@@ -313,12 +322,14 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
             if let Some(value)=source{if let Err(error)=self.park_retirement(value){return Err(error)}}
             else{self.encoding.take();return Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()})}
         }
-        match self.retirement.as_mut().unwrap().step(grant){
-            Ok(RetainedCloneStep::Complete(progress))=>{self.retirement.take();Ok(InteractiveJobCloseStep::Pending{progress})},
-            Ok(RetainedCloneStep::Progress(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),
-            Err(error)=>Err(error),
+        match self.retirement.as_mut().unwrap().step(body,effect){
+            semio_framework_value::RetainedWorkPoll::Pending{..}=>Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()}),
+            semio_framework_value::RetainedWorkPoll::Complete(turn)=>match turn.result.map_err(|failure|failure.into_value_error())?{
+                RetainedCloneStep::Complete(progress)=>{self.retirement.take();Ok(InteractiveJobCloseStep::Pending{progress})},
+                RetainedCloneStep::Progress(progress)=>Ok(InteractiveJobCloseStep::Pending{progress}),
+            },
         }
-    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetirementPollExit::settle(effect,result.map_err(semio_framework_value::RetirementPollExit::from))})?;
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
@@ -404,4 +415,3 @@ pub(super) fn generation3d_flow_first_step_tool_proofs() -> Vec<semio_plugin::Ar
     proofs
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dDocumentIoWork);

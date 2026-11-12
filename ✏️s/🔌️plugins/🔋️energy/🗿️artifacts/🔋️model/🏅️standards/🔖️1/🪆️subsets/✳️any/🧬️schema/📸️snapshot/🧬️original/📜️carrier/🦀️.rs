@@ -3,7 +3,7 @@ use super::EnergyModelSnapshot;
 use crate::store::{PackDecodeOptions,PackEncodeOptions,PackError,pack_rt,semio_format::{Component,SemioEnvelope,split_text_preamble,unwrap_binary,wrap_binary,wrap_text}};
 use semio_framework_diagnostic::{Limits,TextError,TextSpan};
 use semio_framework_dsl_record::{BorrowedRecordSpecProducer,FieldSpec,FieldValue,JoinMode,ParseOptions,RecordLayout,RecordSpec,RecordValue,Shape,SourceMode};
-use semio_framework_value::{DslValue,ToValue,ValueError,ValueRefusalKind};
+use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind};
 use semio_s_artifact_energy_model_snapshot_bridge::{receive_stepped,retire_stepped};
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 
@@ -40,9 +40,10 @@ impl EnergyModelSnapshot{
 impl EnergyModelSnapshot{
  /// 🌱️ Constructs the canonical empty engine model as the real empty document; a refused construction is a typed failure, never a panic.
  pub fn empty()->Result<Self,ValueError>{Self::from_model(&crate::model::Model::default())}
- /// 📥️ Receives one document value into the native persistent owner in bounded paid steps.
- pub fn from_value(value:DslValue)->Result<Self,ValueError>{receive_stepped(value)}
 }
+
+/// 📥️ Receives one document value into the native persistent owner in bounded paid steps.
+impl FromValue for EnergyModelSnapshot{fn from_value(value:DslValue)->Result<Self,ValueError>{receive_stepped(value)}}
 
 impl EnergyModelSnapshot{
  /// ♻️ Retires this native owner in bounded paid steps.

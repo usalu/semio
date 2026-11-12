@@ -218,6 +218,7 @@ struct ModuleGeometryCommandWork {
 }
 
 impl ArtifactCommandWork<ModuleApp> for ModuleGeometryCommandWork {
+    fn terminal_frame_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
     fn tool_id(&self) -> &'static str { self.tool_id }
 
     fn extent(&self, command: &Command, snapshot: &ModuleRenderPayload, interaction: &InteractionState, _context: Option<&ArtifactOwnedToolJobContext<ModuleApp>>) -> Option<usize> {
@@ -574,4 +575,3 @@ mod tests;
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 
-semio_plugin::retained_command::terminal_frame_bound!(ModuleGeometryCommandWork);

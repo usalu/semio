@@ -119,7 +119,7 @@ fn create(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:O
     let request=payload.source_request()?;
     if let Some(request)=request.as_ref(){let revision=payload.source_revision_bytes()?;let operation=doc.operation()?;if operation.canonical_base_revision!=revision||source.is_none_or(|source|!source.admits(request,revision,operation.operation_id,operation.generation)){return Err(creation_fault("connected creation requires the original current-source read admission"))}}
     if let Some(kind) = &payload.neuron_kind {
-        if !semio_os_flow::flow_neuron_kind_info_map().contains_key(kind) && !matches!(kind.as_str(), semio_framework_artifact_flow_flow::neural::INPUT_KIND | semio_framework_artifact_flow_flow::neural::OUTPUT_KIND) {
+        if !semio_os_flow::flow_neuron_kind_info_map().get().contains_key(kind) && !matches!(kind.as_str(), semio_framework_artifact_flow_flow::neural::INPUT_KIND | semio_framework_artifact_flow_flow::neural::OUTPUT_KIND) {
             return Err(creation_fault(format!("unknown neuron kind: {kind}")));
         }
     }

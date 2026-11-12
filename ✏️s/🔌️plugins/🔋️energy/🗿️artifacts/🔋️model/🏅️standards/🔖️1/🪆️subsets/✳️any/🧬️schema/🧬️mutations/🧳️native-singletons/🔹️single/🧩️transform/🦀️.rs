@@ -1,27 +1,73 @@
 //! 🧩️ Authored fixed contextual fields retain their original payload and scalar source through native singleton publication.
 use super::*;
 use semio_framework_value::retained_clone::{RetainedCloneSource,StagedSourceAdmission};
+use crate::custody::Sourced;
+use semio_framework_value::RetirementDemand;
 /// 🧬️ The authored transformation reads only fixed original fields and retains the exact inverse selector.
 pub trait OriginalSingleTransform:SingleFieldPath{type Payload:Send+Sync+'static;type Context:NativeScalar;type Inverse:NativeScalar;fn context(p:&Self::Payload)->Self::Context;fn valid_payload(p:&Self::Payload)->bool;fn value(p:&Self::Payload,o:RetainedCloneRef<'_,EnergyModelSnapshot>)->Self::Scalar;fn inverse(c:Self::Context,v:Self::Scalar)->Self::Inverse;}
-pub struct TransformedSinglePreparation<S:OriginalSingleTransform>{input:Option<RetainedCloneBinding>,original:Option<RetainedCloneBinding>,body:Option<usize>,context:Option<S::Context>,source:ManuallyDrop<Option<RetainedCloneSource<S::Scalar>>>,admit:ManuallyDrop<Option<StagedSourceAdmission<S::Scalar,S::Scalar>>>,core:Option<Box<SingleFieldPreparation<S>>>,phase:u8,closing:bool}
-impl<S:OriginalSingleTransform> TransformedSinglePreparation<S>{fn source(&self)->Result<RetainedCloneRef<'_,S::Scalar>,ValueError>{Ok(self.source.as_ref().ok_or_else(invalid)?.borrow())}fn core(&self)->Result<&SingleFieldPreparation<S>,ValueError>{self.core.as_deref().ok_or_else(invalid)}fn core_mut(&mut self)->Result<&mut SingleFieldPreparation<S>,ValueError>{self.core.as_deref_mut().ok_or_else(invalid)}}
+pub struct TransformedSinglePreparation<S:OriginalSingleTransform>{input:Bound,body:Option<usize>,context:Held<S::Context>,source:Sourced<S::Scalar>,admit:Held<StagedSourceAdmission<S::Scalar,S::Scalar>>,core:Option<Box<SingleFieldPreparation<S>>>,phase:u8,closing:bool,flight:Flight}
+impl<S:OriginalSingleTransform> TransformedSinglePreparation<S>{
+ fn source(&self)->Result<RetainedCloneRef<'_,S::Scalar>,ValueError>{Ok(self.source.get().ok_or_else(invalid)?.borrow())}
+ fn core(&self)->Result<&SingleFieldPreparation<S>,ValueError>{self.core.as_deref().ok_or_else(invalid)}
+ fn core_mut(&mut self)->Result<&mut SingleFieldPreparation<S>,ValueError>{self.core.as_deref_mut().ok_or_else(invalid)}
+ fn begin_close(&mut self){self.closing=true;self.mark_close();}
+ fn input_extra()->usize{size_of::<usize>()+2*size_of::<Option<S::Context>>()+2*size_of::<S::Payload>()+1}
+ fn admit_extra()->usize{2*size_of::<S::Payload>()+4*size_of::<S::Scalar>()+2*size_of::<Option<RetainedCloneSource<S::Scalar>>>()+2*size_of::<Option<StagedSourceAdmission<S::Scalar,S::Scalar>>>()+1}
+ semio_s_artifact_energy_model_native_mutations::custody_impl!(core,admit,source,input,context);
+}
+semio_s_artifact_energy_model_native_mutations::std_cursor!([S:OriginalSingleTransform] TransformedSinglePreparation<S>,[],|s|s.begin_close());
 impl<S:OriginalSingleTransform> RowFieldPreparation for TransformedSinglePreparation<S>{
  type Input=S::Payload;type Inverse=S::Inverse;
- fn new()->Self{Self{input:None,original:None,body:None,context:None,source:ManuallyDrop::new(None),admit:ManuallyDrop::new(None),core:None,phase:0,closing:false}}
- fn check(&self,p:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>)->Result<(),ValueError>{if key.is_some(){return Err(invalid());}p.check_binding(&self.input)?;o.check_binding(&self.original)?;if let Some(c)=self.core.as_ref(){c.check(self.source()?,o)?;}Ok(())}
- fn demand(&self,p:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.phase>=99||self.body.is_some_and(|b|b!=body){return Err(invalid());}self.check(p,key,o)?;match self.phase{
- 0=>nested(scalar(o.binding_copy_bytes()+size_of::<usize>()),1),1=>nested(scalar(p.binding_copy_bytes()),2*size_of::<Option<S::Context>>()+2*size_of::<Self::Input>()+1),2=>Ok(scalar(2*size_of::<Self::Input>()+2)),3=>{let extra=2*size_of::<Self::Input>()+4*size_of::<S::Scalar>()+2*size_of::<Option<RetainedCloneSource<S::Scalar>>>()+2*size_of::<Option<StagedSourceAdmission<S::Scalar,S::Scalar>>>()+1;let d=match self.admit.as_ref(){Some(a)=>a.next_demand()?,None=>RetirementDemand{copy_bytes:2*size_of::<StagedSourceAdmission<S::Scalar,S::Scalar>>(),depth:1,..Default::default()}};Ok(RetirementDemand{copy_bytes:d.copy_bytes+extra,..d})},4=>Ok(birth::<SingleFieldPreparation<S>>()),5=>self.core()?.demand(self.source()?,o,body),_=>Err(invalid())}}
- fn advance(&mut self,p:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(p,key,o,body)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let mut r=receipt(d);match self.phase{
- 0=>{r=add(o.bind(&mut self.original,child(g,1+size_of::<usize>())).result?.ok_or_else(invalid)?,1+size_of::<usize>())?;self.body=Some(body);self.phase=1;},1=>{let extra=2*size_of::<Option<S::Context>>()+2*size_of::<Self::Input>()+1;r=add(p.bind(&mut self.input,child(g,extra)).result?.ok_or_else(invalid)?,extra)?;self.context=Some(S::context(p.get()));self.phase=2;},2=>{self.phase=if S::valid_payload(p.get()){3}else{99};},3=>{let extra=2*size_of::<Self::Input>()+4*size_of::<S::Scalar>()+2*size_of::<Option<RetainedCloneSource<S::Scalar>>>()+2*size_of::<Option<StagedSourceAdmission<S::Scalar,S::Scalar>>>()+1;if self.admit.is_none(){*self.admit=Some(StagedSourceAdmission::owned(S::value(p.get(),o)));}else{let a=self.admit.as_mut().ok_or_else(invalid)?;r=add(a.advance(&mut self.source,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,..g}).result.map_err(|e|tag(e,extra))?.progress(),extra)?;if a.terminal_is_empty(){self.admit.take();}}if self.source.is_some(){self.phase=4;}},4=>{self.core=Some(Box::new(SingleFieldPreparation::new()));self.phase=5;},5=>{let v=self.source.as_ref().ok_or_else(invalid)?.borrow();return self.core.as_mut().ok_or_else(invalid)?.advance(v,o,body,g);},_=>return Err(invalid())}semio_framework_value::retained_clone::admit_retained_clone_progress(g,r,"original contextual Energy singleton")?;Ok(if self.ready(){RetainedCloneStep::Complete(r)}else{RetainedCloneStep::Progress(r)})}
- fn ready(&self)->bool{!self.closing&&(self.phase==99||self.core.as_ref().is_some_and(|c|c.ready()))}fn outcome(&self)->Option<RowOutcome>{if self.phase==99{Some(RowOutcome::Invalid)}else{self.core.as_ref().and_then(|c|c.outcome())}}
- fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.core()?.take_demand()}fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{self.core_mut()?.take(g)}
- fn inverse_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{RowFieldPreparation::inverse_demand(self.core()?,b)}fn prepare_inverse(&mut self,b:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{RowFieldPreparation::prepare_inverse(self.core_mut()?,b,g)}fn inverse_ready(&self)->bool{self.core.as_ref().is_some_and(|c|RowFieldPreparation::inverse_ready(&**c))}
- fn take_inverse_demand(&self)->Result<RetirementDemand,ValueError>{nested(self.core()?.inverse_demand()?,2*size_of::<Self::Inverse>()+2*size_of::<S::Scalar>()+size_of::<S::Context>())}
- fn take_inverse(&mut self,g:RetainedCloneGrant)->Result<Option<(Self::Inverse,RetainedCloneProgress)>,ValueError>{let d=self.take_inverse_demand()?;if !retained_mutation_demand_fits(d,g){return Ok(None);}let extra=2*size_of::<Self::Inverse>()+2*size_of::<S::Scalar>()+size_of::<S::Context>();let c=self.context.ok_or_else(invalid)?;let(value,p)=self.core_mut()?.take_inverse(child(g,extra))?.ok_or_else(invalid)?;Ok(Some((S::inverse(c,value),add(p,extra)?)))}
- fn begin_close(&mut self){self.closing=true;if let Some(c)=self.core.as_mut(){c.begin_close();}}
- fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}let body=self.body.unwrap_or(body);if self.core.is_some(){return cursor_demand(&self.core,body);}if let Some(a)=self.admit.as_ref(){return a.close_demand();}if let Some(s)=self.source.as_ref(){return if s.terminal_is_empty(){Ok(scalar(2*size_of::<Option<RetainedCloneSource<S::Scalar>>>()))}else{s.next_close_demand(body)};}if self.context.is_some(){return Ok(scalar(2*size_of::<Option<S::Context>>()));}RetainedCloneBinding::close_demand(if self.input.is_some(){&self.input}else{&self.original},body)}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demand(self.body.unwrap_or(g.maximum_copy_bytes))?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let g=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes,..g};if self.core.is_some(){return close_cursor(&mut self.core,g).map(RetainedCloneStep::Progress);}if let Some(a)=self.admit.as_mut(){let mut returned=None;let turn=a.close_into(&mut returned,&mut self.source,g);if a.terminal_is_empty(){self.admit.take();}return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.source.as_mut(){if s.terminal_is_empty(){drop(self.source.take());return Ok(RetainedCloneStep::Progress(receipt(d)));}return s.close_step(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}if self.context.is_some(){self.context=None;return Ok(RetainedCloneStep::Progress(receipt(d)));}let p=RetainedCloneBinding::close_one(if self.input.is_some(){&mut self.input}else{&mut self.original},g).result?.progress();Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
- fn terminal_is_empty(&self)->bool{self.closing&&self.core.is_none()&&self.source.is_none()&&self.admit.is_none()&&self.input.is_none()&&self.original.is_none()&&self.context.is_none()}
+ fn new()->Self{Self{input:Default::default(),body:None,context:Default::default(),source:Default::default(),admit:Default::default(),core:None,phase:0,closing:false,flight:Default::default()}}
+ fn check(&self,p:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>)->Result<(),ValueError>{if key.is_some(){return Err(invalid());}p.check_binding(&self.input.0)?;if let Some(c)=self.core.as_ref(){c.check(self.source()?,o)?;}Ok(())}
+ fn quote(&self,p:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,m:u64)->Result<Quote,ValueError>{
+  if self.closing||self.phase>=99||self.body.is_some_and(|b|b!=body)||!self.flight.idle(){return Err(invalid());}RowFieldPreparation::check(self,p,key,o)?;
+  match self.phase{
+   0=>Ok((nested(scalar(p.binding_copy_bytes()+Self::input_extra()),1)?,p.binding_work_demand(&self.input.0)?)),
+   1=>Ok((scalar(2*size_of::<Self::Input>()+2),1)),
+   2=>{let extra=Self::admit_extra();match self.admit.get(){Some(a)=>{let d=a.next_demand()?;Ok((RetirementDemand{copy_bytes:d.copy_bytes+extra,..d},a.next_work_demand()?))},None=>Ok((RetirementDemand{copy_bytes:2*size_of::<StagedSourceAdmission<S::Scalar,S::Scalar>>()+extra,depth:1,..Default::default()},1))}},
+   3=>Ok((birth::<SingleFieldPreparation<S>>(),1)),
+   4=>self.core()?.quote(self.source()?,o,body,m),
+   _=>Err(invalid()),
+  }
+ }
+ fn advance_reply<'r>(&mut self,p:RetainedCloneRef<'_,Self::Input>,key:Option<RetainedCloneRef<'_,u32>>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,m:u64,effect:&mut RetainedAllocationEffect<'_>,reply:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{
+  let g=effect.grant();let base=effect.performed_work();let mut work:u128=0;
+  let result:Result<RetainedCloneStep,RetirementPollExit>=(||{
+   let mut units=0u64;
+   if !recover{
+    if !self.flight.idle(){return Err(invalid().into())}
+    let(d,u)=RowFieldPreparation::quote(self,p,key,o,body,m)?;
+    if u>m||effect.remaining_work_units()?<u||!retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()))}
+    units=u;
+   }
+   self.body=Some(body);let mut progress=RetainedCloneProgress::default();
+   match self.phase{
+    0=>{let extra=Self::input_extra();progress=add(bind(p,&mut self.input,&mut effect.nested(child(g,extra)),&mut work)?,extra)?;self.context.set(S::context(p.get()));self.phase=1;},
+    1=>{if S::valid_payload(p.get()){self.phase=2;}else{self.phase=99;}progress=receipt(scalar(1));},
+    2=>{if self.admit.is_none()&&self.source.get().is_none(){self.admit.set(StagedSourceAdmission::owned(S::value(p.get(),o)));progress=receipt(scalar(1));}else{let a=self.admit.get_mut().ok_or_else(invalid)?;let turn=if a.is_projecting(){a.project_owned(effect)}else{a.advance(self.source.slot(),effect)};work+=turn.work;progress=turn.result?.progress();if a.terminal_is_empty(){drop(self.admit.take());}}if self.source.get().is_some(){self.phase=3;}},
+    3=>{self.core=Some(Box::new(SingleFieldPreparation::new()));self.phase=4;progress=receipt(birth::<SingleFieldPreparation<S>>());},
+    4=>{let Self{core,source,flight,..}=self;let core=core.as_deref_mut().ok_or_else(invalid)?;let src=source.get().ok_or_else(invalid)?;let nested_body=body.saturating_sub(1);
+     let step=protocol::retained_routed!(*flight,effect,recover,1,body,m,None,work,|r| core.advance_reply(src.borrow(),o,nested_body,m,&mut effect.nested(child(g,1)),r,false),core.advance_reply(src.borrow(),o,nested_body,m,&mut effect.nested(child(g,1)),r,true));
+     progress=add(step?.progress(),1)?;},
+    _=>return Err(invalid().into()),
+   }
+   admit_retained_clone_progress(g,progress,"original contextual Energy singleton")?;
+   work=work.max(u128::from(units)).max(u128::from(effect.performed_work().saturating_sub(base)));
+   Ok(if RowFieldPreparation::ready(self){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+  })();conclude(effect,base,result,work,|step|step.progress(),reply)
+ }
+ fn ready(&self)->bool{!self.closing&&(self.phase==99||self.core.as_ref().is_some_and(|c|c.ready()))}
+ fn outcome(&self)->Option<RowOutcome>{if self.phase==99{Some(RowOutcome::Invalid)}else{self.core.as_ref().and_then(|c|c.outcome())}}
+ fn take_quote(&self)->Result<Quote,ValueError>{self.core()?.take_quote()}
+ fn take(&mut self,e:&mut RetainedAllocationEffect<'_>)->Result<Option<(EnergyModelDiff,RetainedCloneProgress)>,ValueError>{self.core_mut()?.take(e)}
+ fn inverse_quote(&self,b:usize,m:u64)->Result<Quote,ValueError>{RowFieldPreparation::inverse_quote(self.core()?,b,m)}
+ fn prepare_inverse_reply<'r>(&mut self,b:usize,m:u64,e:&mut RetainedAllocationEffect<'_>,r:Reply<'r>,recover:bool)->Result<Done<'r>,ValueError>{RowFieldPreparation::prepare_inverse_reply(self.core_mut()?,b,m,e,r,recover)}
+ fn inverse_ready(&self)->bool{self.core.as_ref().is_some_and(|c|RowFieldPreparation::inverse_ready(&**c))}
+ fn take_inverse_quote(&self)->Result<Quote,ValueError>{let(d,w)=self.core()?.inverse_quote()?;Ok((nested(d,2*size_of::<Self::Inverse>()+2*size_of::<S::Scalar>()+size_of::<S::Context>())?,w))}
+ fn take_inverse(&mut self,e:&mut RetainedAllocationEffect<'_>)->Result<Option<(Self::Inverse,RetainedCloneProgress)>,ValueError>{
+  let(d,_)=self.take_inverse_quote()?;if !retained_mutation_demand_fits(d,e.grant()){return Ok(None);}
+  let extra=2*size_of::<Self::Inverse>()+2*size_of::<S::Scalar>()+size_of::<S::Context>();let c=*self.context.get().ok_or_else(invalid)?;let g=e.grant();
+  let Some((value,p))=self.core_mut()?.take_inverse(&mut e.nested(child(g,extra)))? else{return Ok(None)};Ok(Some((S::inverse(c,value),add(p,extra)?)))
+ }
 }
-impl<S:OriginalSingleTransform> Drop for TransformedSinglePreparation<S>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"original contextual singleton retains source or candidate custody");if empty{unsafe{ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.admit);}}}}
-impl<S:SingleFieldPath> CursorClose for SingleFieldPreparation<S>{fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{Self::close_demand(self,b)}fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,g)}fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}}

@@ -71,18 +71,24 @@ impl semio_plugin::ArtifactInstanceOperationOwner for FlowInstanceOperationOwner
         }
         if self.scene_cache.pending()||(self.closing&&!self.scene_cache.terminal_is_empty()){
             let before=cx.retained_progress();let child=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-            cx.with_retained_loan(child,|same|{let turn=self.scene_cache.advance(same.retained_grant());semio_framework_job::receive_original_retained_work(same,turn)?;Ok::<_,semio_framework_job::OriginalTurnFailure>(())})?;
+            cx.with_retained_loan(child,|same|self.scene_cache.advance(same))?;
             let after=cx.retained_progress();let sub=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original scene cache receipt moved backwards"));
             return Ok(Step::Progress(RetainedCloneProgress{copied_items:sub(after.copied_items,before.copied_items)?,copied_bytes:sub(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:sub(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:sub(after.released_bytes,before.released_bytes)?}))
         }
         let Some(session)=self.eval_session.as_mut()else{return Ok(Step::Complete(Default::default()))};
         let child=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if !self.closing{return session.retirement_step(child).map(|step|match step{RetainedCloneStep::Progress(progress)=>Step::Progress(progress),RetainedCloneStep::Complete(progress)=>Step::Complete(progress)}).map_err(semio_plugin::PluginLifecycleFailure::from)}
+        if !self.closing{
+            let copy=session.next_retirement_copy_byte_demand()?;let demand=semio_framework_value::RetirementDemand{copy_bytes:copy,capacity_bytes:session.next_retirement_capacity_byte_demand(copy)?,release_bytes:session.next_retirement_release_byte_demand()?,depth:session.next_retirement_depth_demand()?};
+            return semio_plugin::app::original_lifecycle_effect_step(cx,child,demand,|_,effect|{let body=effect.grant().maximum_copy_bytes;Ok(match semio_plugin::app::plugin_settle_poll(session.retirement_step(body,effect))?{RetainedCloneStep::Progress(progress)=>(Step::Progress(progress),false),RetainedCloneStep::Complete(progress)=>(Step::Complete(progress),true)})})
+        }
         if session.terminal_is_empty(){self.eval_session=None;return Ok(Step::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-        let result=session.close_step(child)?;
-        let terminal=session.terminal_is_empty();
-        if terminal{self.eval_session=None;}
-        match result{semio_framework_job::InteractiveJobCloseStep::Blocked=>Ok(Step::Progress(Default::default())),semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>Ok(if self.eval_session.is_none(){Step::Complete(progress)}else{Step::Progress(progress)})}
+        let copy=session.next_close_copy_byte_demand()?;let demand=semio_framework_value::RetirementDemand{copy_bytes:copy,capacity_bytes:session.next_close_capacity_byte_demand(copy)?,release_bytes:session.next_close_release_byte_demand()?,depth:session.next_close_depth_demand()?};
+        let step=semio_plugin::app::original_lifecycle_effect_step(cx,child,demand,|_,effect|{
+            let progress=match session.close_step(effect)?{semio_framework_job::InteractiveJobCloseStep::Blocked=>Default::default(),semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>progress};
+            let terminal=session.terminal_is_empty();Ok((if terminal{Step::Complete(progress)}else{Step::Progress(progress)},terminal))
+        })?;
+        if matches!(step,Step::Complete(_)){self.eval_session=None;}
+        Ok(step)
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_plugin::PluginLifecycleStep,semio_plugin::PluginLifecycleFailure>{

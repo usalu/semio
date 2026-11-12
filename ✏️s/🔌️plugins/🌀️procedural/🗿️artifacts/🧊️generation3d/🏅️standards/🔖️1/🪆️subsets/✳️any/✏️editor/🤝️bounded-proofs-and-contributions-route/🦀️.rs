@@ -119,7 +119,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         Some(size_of::<Self>())
     }
 
-    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, EditorApp<Generation3dPlayApp>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Generation3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
         if self.consumed {
             return Err(Fault::from("generation3d-contributions-work-repeated"));
@@ -132,14 +132,29 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dContrib
         let cfg = ConfigView { snapshot: input.config, window: None };
         let windows = generation3d_preview_windows(input.context.and_then(|context| context.view_state.as_deref()));
         let _ = (&doc, &cfg);
+        set_contributions::register(payload)?;
         let mut emit = Emit::default();
+        let mut pending = false;
         self.instance_owner.with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
-            if owner.with_session(|session| set_contributions::install(payload, session, input.operation.retained))?? {
-                let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
-                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+            let grant = cx.retained_grant();
+            let invalidated = owner.with_session(|session| -> Result<Option<bool>, Fault> {
+                let Some((outcome, _)) = cx.with_original_effect(grant, |_, effect| set_contributions::invalidate(session, effect)).map_err(|error| Fault::from(error.to_string()))? else { return Ok(None) };
+                outcome
+            })??;
+            match invalidated {
+                None => pending = true,
+                Some(true) => {
+                    let servable = flow_eval_tick::may_rearm(&input.snapshot.host_snapshot);
+                    owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+                }
+                Some(false) => {}
             }
             Ok(())
         })?;
+        if pending {
+            self.consumed = false;
+            return Ok(ArtifactCommandWorkStep::Pending { stage: "contributions-invalidation", preview: b"" });
+        }
         Ok(ArtifactCommandWorkStep::Complete(emit))
     
         })();
@@ -214,4 +229,3 @@ pub(super) fn generation3d_bounded_contributions_first_step_tool_proofs() -> Vec
     proofs
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Generation3dContributionsWork);

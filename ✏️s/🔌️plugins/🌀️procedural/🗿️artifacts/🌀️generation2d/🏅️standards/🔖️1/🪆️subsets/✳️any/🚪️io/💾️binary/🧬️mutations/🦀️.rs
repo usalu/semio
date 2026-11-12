@@ -56,14 +56,18 @@ impl OpBinary for Generation2dOperationDsl {
 /// `OpBinary`, so this is a pure to/from-dsl forward.
 impl OpBinary for Generation2dMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        generation2d_operation_to_dsl(self).encode_op()
+        Ok(store::os_pack::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self)))
     }
 
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let parsed = Generation2dOperationDsl::decode_op(bytes)?;
-        generation2d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed { what: "generation2d mutation", offset: 0, detail: error.to_string() })
+        let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "generation2d mutation", offset: 0, detail };
+        let value = store::os_pack::pack_rt::decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+        semio_framework_value::FromValue::from_value(store::os_pack::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
     }
 }
+
+dsl::original_pack_value_operation_receiving!(Generation2dMutation);
+dsl::artifact_persisted_binary_operation!(Generation2dMutation);
 //#endregion 🔖️OpTextMirror
 
 /// 📦️ Encodes a `Generation2dMutation` to its binary state-patch form.

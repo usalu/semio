@@ -3,14 +3,14 @@ use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_plugin_actor_host::requests::SharedRequestReceiver;
 use semio_plugin_decl_views::tool_run_contract::ToolRunJobPort;
 use semio_os_kernel::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving;
-use semio_s_plugin_energy_engine_sim_retirement::energy_outcome;
 use semio_framework_value_native_owned::OriginalReceivingPrimary;
-use semio_framework_value::{RetainedWorkOutcome,RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{OriginalRetirementFailure,RetainedAllocationEffect,RetainedWorkOutcome,RetainedWorkPoll,RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_value_native_owned::native_decoding::{NativeConstructionStepFailure, NativeDecodeControl, NativeDecodeCloseControl};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl, NativeReceivingEffect, NativeReceivingEffectError, NativeReceivingEffectPhase, NativeReceivingEffectPoll};
 use semio_s_artifact_stdio_epw::EpwSnapshot;
 use semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::EpwRecord;
-use semio_framework_dsl_record::{BorrowedDslRecord,FieldValue,RecordValue,receiving::{DslOwnedReceivingField,OwnedFieldReceiving}};
+use semio_framework_dsl_record::{BorrowedDslRecord,FieldValue,RecordValue,receiving::{DslOwnedReceivingField,OwnedFieldReceiving,owned::OwnedAdvanceSelection}};
 type HeaderBinding=<EpwSnapshot as DslOwnedReceivingField>::Cursor;
 type RowBinding=<EpwRecord as DslOwnedReceivingField>::Cursor;
 type RowClose=ControlledRetirement<(Option<FieldValue>,EpwRecord)>;
@@ -104,7 +104,7 @@ impl LinkedWeather {
                 let wire=self.owned.wire.as_ref().unwrap();
                 let decoder=self.decoder.as_mut().unwrap();
                 let demand=decoder.demands(wire,4096)?;
-                receive(cx,demand,|native,grant|decoder.step(wire,native,4096,grant).result.map(RetainedCloneStep::Progress).map_err(|primary|{let progress=primary.progress;primary.primary.or(primary.quote_refusal).or(primary.allocation_refusal).unwrap_or_else(||ValueError::invariant("weather decode lost its primary refusal")).with_retained_progress(progress)}))?;
+                receive_effect(cx,demand,|native,effect|{let turn=decoder.step(wire,native,4096,effect);RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}})?;
                 if decoder.record_is_ready() { self.phase=4; }
             }
             4 => {
@@ -130,8 +130,8 @@ impl LinkedWeather {
             }
             11 => {
                 let binding=self.header_binding.as_mut().unwrap();
-                if !binding.is_ready(){let demand=binding.demands(&self.owned.header,4096)?;let source=&mut self.owned.header;receive(cx,demand,|native,grant|lift(binding.step(source,native,4096,grant),primary))?;}
-                else{let output=&mut self.owned.epw;receive(cx,metadata::<EpwSnapshot>(),|_,grant|lift(binding.take_into(output,grant),identity))?;if self.owned.epw.is_some(){self.phase=5;}}
+                if !binding.is_ready(){advance_binding::<EpwSnapshot,_>(cx,binding,&mut self.owned.header)?;}
+                else{let output=&mut self.owned.epw;effected(cx,metadata::<EpwSnapshot>(),|effect|binding.take_into(output,effect),identity)?;if self.owned.epw.is_some(){self.phase=5;}}
             }
             5 => {
                 let source=self.owned.epw.as_ref().unwrap();
@@ -167,8 +167,8 @@ impl LinkedWeather {
             }
             12 => {
                 let binding=self.row_binding.as_mut().unwrap();
-                if !binding.is_ready(){let demand=binding.demands(&self.owned.row_source,4096)?;let source=&mut self.owned.row_source;receive(cx,demand,|native,grant|lift(binding.step(source,native,4096,grant),primary))?;}
-                else{let output=&mut self.owned.row;receive(cx,metadata::<EpwRecord>(),|_,grant|lift(binding.take_into(output,grant),identity))?;if self.owned.row.is_some(){self.phase=13;}}
+                if !binding.is_ready(){advance_binding::<EpwRecord,_>(cx,binding,&mut self.owned.row_source)?;}
+                else{let output=&mut self.owned.row;effected(cx,metadata::<EpwRecord>(),|effect|binding.take_into(output,effect),identity)?;if self.owned.row.is_some(){self.phase=13;}}
             }
             13 => {
                 let demand=metadata::<(WeatherRecord,RowClose,Option<FieldValue>,EpwRecord)>();
@@ -182,12 +182,12 @@ impl LinkedWeather {
             }
             14 => {
                 let binding=self.row_binding.as_mut().unwrap();
-                if !binding.terminal_is_empty(){let demand=binding.close_demands(4096)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|energy_outcome(lift(binding.close_step(grant),identity)))?;}
+                if !binding.terminal_is_empty(){let demand=binding.close_demands(4096)?;effected(cx,demand,|effect|binding.close_step(effect),OriginalRetirementFailure::into_value_error)?;}
                 else{let demand=metadata::<Option<RowBinding>>();if funds(cx.retained_grant(),demand){self.row_binding=None;self.phase=15;paid(cx,demand.copy_bytes,0)?;}}
             }
             15 => {
                 let close=self.row_close.as_mut().unwrap();
-                if !close.terminal_is_empty(){let demand=close.selected_demand(4096)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|energy_outcome(close.step(grant)))?;}
+                if !close.terminal_is_empty(){let demand=close.selected_demand(4096)?;effected(cx,demand,|effect|close.step(4096,effect).map(|step|step.progress()),OriginalRetirementFailure::into_value_error)?;}
                 else{let demand=metadata::<Option<RowClose>>();if funds(cx.retained_grant(),demand){self.row_close=None;self.position+=1;self.phase=7;paid(cx,demand.copy_bytes,0)?;}}
             }
             8 => {
@@ -217,20 +217,17 @@ impl LinkedWeather {
 
     pub(super) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneProgress,OriginalTurnFailure> {
         let demand=self.close_demands()?;
-        if let Some(decoder)=self.decoder.as_mut().filter(|_|self.receiver.is_none()&&self.header_binding.is_none()&&self.row_binding.is_none()&&self.row_close.is_none()) {
-            if !decoder.terminal_is_empty() { return retire(cx,demand,|native,grant|decoder.close_step(native,grant).result); }
-        }
         let before=cx.retained_progress();
-        semio_framework_job::close_original_retained_step(cx,demand,|grant|energy_outcome((||{
-            if let Some(receiver)=self.receiver.as_mut() { if !receiver.terminal_is_empty(){return receiver.close_step(grant);}self.receiver=None; }
-            else if let Some(binding)=self.row_binding.as_mut(){if !binding.terminal_is_empty(){return binding.close_step(grant).result.map(RetainedCloneStep::Progress);}self.row_binding=None;}
-            else if let Some(binding)=self.header_binding.as_mut(){if !binding.terminal_is_empty(){return binding.close_step(grant).result.map(RetainedCloneStep::Progress);}self.header_binding=None;}
-            else if let Some(close)=self.row_close.as_mut(){if !close.terminal_is_empty(){return close.step(grant);}self.row_close=None;}
-            else if self.decoder.is_some() { self.decoder=None; }
-            else if let Some(close)=self.closing.as_mut() { if !close.terminal_is_empty(){return close.step(grant);}self.closing=None;self.closed=true; }
+        crate::sim_retirement::energy_effect_step(cx,demand,|effect|{
+            if let Some(receiver)=self.receiver.as_mut() { if !receiver.terminal_is_empty(){return receiver.close_step(effect);}self.receiver=None; }
+            else if let Some(binding)=self.row_binding.as_mut(){if !binding.terminal_is_empty(){return crate::settled_step(binding.close_step(effect).map(RetainedCloneStep::Progress));}self.row_binding=None;}
+            else if let Some(binding)=self.header_binding.as_mut(){if !binding.terminal_is_empty(){return crate::settled_step(binding.close_step(effect).map(RetainedCloneStep::Progress));}self.header_binding=None;}
+            else if let Some(close)=self.row_close.as_mut(){if !close.terminal_is_empty(){return crate::settled_step(close.step(4096,effect));}self.row_close=None;}
+            else if let Some(decoder)=self.decoder.as_mut() { if !decoder.terminal_is_empty(){return crate::settled_step(decoder.close_poll(4096,effect));}self.decoder=None; }
+            else if let Some(close)=self.closing.as_mut() { if !close.terminal_is_empty(){return crate::settled_step(close.step(4096,effect));}self.closing=None;self.closed=true; }
             else if !self.closed { let original=std::mem::replace(&mut *self.owned,Owned { wire:None,fault:None,epw:None,record:None,header:None,rows:Vec::new(),row_source:None,row:None,weather:None,port:None });match ControlledRetirement::new(original){Ok(close)=>self.closing=Some(close),Err((error,original))=>{*self.owned=original;return Err(error);}} }
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..Default::default() }));
-        })()))?;
+            crate::effect_move(effect,RetainedCloneProgress { copied_items:1,copied_bytes:demand.copy_bytes,..Default::default() })
+        })?;
         let after=cx.retained_progress();
         Ok(RetainedCloneProgress { copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes })
     }
@@ -240,17 +237,41 @@ impl LinkedWeather {
 }
 impl Drop for LinkedWeather { fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"linked weather requires original source closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owned)}}} }
 
+fn receiving_fault<E:NativeReceivingEffectError>(error:E)->ValueError{let progress=error.receiving_progress();error.cause().cloned().unwrap_or_else(||ValueError::invariant("native receiving failed without a typed cause")).with_retained_progress(progress)}
 fn receive(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneProgress,OriginalTurnFailure>{
- let result=cx.with_native_receiving::<_,NativeConstructionStepFailure<ValueError>>(|native|Ok(native.receive_construction_step(demand,|native,grant|energy_outcome(run(native,grant)))))?.result;
+ if cx.should_yield()||!funds(cx.retained_grant(),demand){return Ok(Default::default())}
+ let mut out=None;let mut done=None;
+ cx.with_native_receiving(&mut out,|native,grant|{done=Some(run(native,grant));Ok(())})?;
+ let Some(result)=done else{return Ok(Default::default())};
  let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};
- let reconciled=if let Some(grant)=cx.receiving_issued_grant(){cx.consume_receiving_retained(grant,progress)}else{Ok(())};
- cx.consume_fuel(progress.copied_items as u64);
- match(result,reconciled){(Ok(_),Ok(()))=>Ok(progress),(Err(error),Ok(()))=>Err(error.into()),(Ok(_),Err(error))=>Err(error.into()),(Err(error),Err(receipt))=>{let mut failure=OriginalTurnFailure::from(error);failure.context_refusal=Some(receipt);Err(failure)}}
+ semio_framework_job::receive_original_receiving_work(cx,RetainedWorkOutcome{result,work:u128::from(progress!=RetainedCloneProgress::default())})?;
+ Ok(progress)
 }
-fn retire(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut dyn NativeDecodeCloseControl,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneProgress,OriginalTurnFailure>{
- let grant=cx.retained_grant();if cx.retirement_should_yield()||!funds(grant,demand){return Ok(Default::default())}
- let result=cx.with_native_retirement(|native|run(native,grant));let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let reconciled=cx.consume_retained(progress);cx.consume_fuel(progress.copied_items as u64);
- match(result,reconciled){(Ok(_),Ok(()))=>Ok(progress),(Err(error),Ok(()))=>Err(error.into()),(Ok(_),Err(error))=>Err(error.into()),(Err(error),Err(receipt))=>{let mut failure=OriginalTurnFailure::from(error);failure.receipt_refusal=Some(receipt);Err(failure)}}
+fn receive_progress(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,u64,RetainedCloneGrant)->RetainedWorkPoll<RetainedCloneProgress,OriginalReceivingPrimary>)->Result<(),OriginalTurnFailure>{
+ if cx.should_yield()||!funds(cx.retained_grant(),demand){return Ok(())}
+ let maximum=cx.fuel_remaining();let mut out=None;let mut polled=None;
+ cx.with_native_receiving(&mut out,|native,grant|{polled=Some(run(native,maximum,grant));Ok(())})?;
+ match polled{Some(RetainedWorkPoll::Complete(turn))=>{semio_framework_job::receive_original_receiving_work(cx,RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress).map_err(primary),work:turn.work})?;Ok(())},Some(RetainedWorkPoll::Pending{work})=>{cx.consume_fuel(u64::try_from(work).unwrap_or(u64::MAX));Ok(())},None=>Ok(())}
+}
+fn receive_effect<E:NativeReceivingEffectError>(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome<RetainedCloneStep,E>)->Result<(),OriginalTurnFailure>{
+ if cx.should_yield()||!funds(cx.retained_grant(),demand){return Ok(())}
+ let maximum=cx.fuel_remaining();let mut out=None;let mut frame=NativeReceivingEffect::<E>::default();let mut done=None;
+ cx.with_native_receiving(&mut out,|native,_|{let polled=native.receive_effect(demand,maximum,&mut frame,run)?;if matches!(polled,NativeReceivingEffectPoll::Pending{work:0})&&frame.phase()==NativeReceivingEffectPhase::Granted{frame.cancel_unstarted(native)?}done=Some(polled);Ok(())})?;
+ match done{Some(NativeReceivingEffectPoll::Complete(turn))=>{semio_framework_job::receive_original_receiving_work(cx,RetainedWorkOutcome{result:turn.result.map_err(receiving_fault),work:turn.work})?;Ok(())},Some(NativeReceivingEffectPoll::Pending{work:0})|None=>Ok(()),Some(NativeReceivingEffectPoll::Pending{..})=>Err(ValueError::invariant("original weather receiving suspended past its turn").into())}
+}
+fn effected<E>(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<RetainedCloneProgress,E>,fault:fn(E)->ValueError)->Result<RetainedCloneProgress,OriginalTurnFailure>{
+ let grant=cx.retained_grant();if cx.should_yield()||!funds(grant,demand){return Ok(Default::default())}
+ let Some((poll,performed))=cx.with_original_effect(grant,|_,effect|run(effect))?else{return Ok(Default::default())};
+ cx.consume_work(performed);
+ match poll{RetainedWorkPoll::Pending{..}=>Ok(Default::default()),RetainedWorkPoll::Complete(turn)=>match turn.result{Ok(progress)=>{cx.consume_retained(progress)?;Ok(progress)},Err(error)=>Err(fault(error).into())}}
+}
+fn advance_binding<T:RetireOwned,B:OwnedFieldReceiving<T>>(cx:&mut StepContext<'_>,binding:&mut B,source:&mut Option<FieldValue>)->Result<(),OriginalTurnFailure>{
+ let demand=binding.demands(source,4096)?;
+ match binding.select_advance(source,4096,cx.fuel_remaining())?{
+  OwnedAdvanceSelection::Local{..}=>{effected(cx,demand,|effect|binding.advance_local(source,4096,effect),primary)?;},
+  OwnedAdvanceSelection::Nested=>receive_progress(cx,demand,|native,maximum,grant|match native.source_witness(){Ok(witness)=>binding.advance_nested(source,native,witness,4096,maximum,grant),Err(error)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:Err(error.into()),work:0})})?,
+ }
+ Ok(())
 }
 
 #[cfg(test)]
@@ -258,4 +279,3 @@ fn retire(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut d
 mod tests;
 fn identity(error:ValueError)->ValueError{error}
 fn primary(p:OriginalReceivingPrimary)->ValueError{let progress=p.progress;p.primary.or(p.quote_refusal).or(p.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"the linked weather receiver lost its refusal")).with_retained_progress(progress)}
-fn lift<E>(turn:RetainedWorkOutcome<RetainedCloneProgress,E>,fold:fn(E)->ValueError)->Result<RetainedCloneStep,ValueError>{turn.result.map(RetainedCloneStep::Progress).map_err(fold)}

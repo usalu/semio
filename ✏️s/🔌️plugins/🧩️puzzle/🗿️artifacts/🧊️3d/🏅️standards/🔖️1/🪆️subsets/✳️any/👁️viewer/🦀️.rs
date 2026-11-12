@@ -82,11 +82,11 @@ impl ArtifactViewer for Puzzle3dViewer {
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_plugin::NoPresenceRetirementFactory))
+        Some(semio_plugin::no_presence_local_root_retirement_factory())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(std::sync::Arc::new(semio_plugin::NoPresenceRetirementFactory))
+        Some(semio_plugin::no_presence_peer_retirement_factory())
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn semio_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {

@@ -38,6 +38,42 @@ pub use semio_s_artifact_stdio_html_io_registry::io_registry;
 
 pub use semio_s_artifact_stdio_html_inferences::examples;
 
+#[path = "."]
+pub mod editor {
+    #[path = "."]
+    pub mod html {
+        pub use semio_s_artifact_stdio_html_mutations::editor::html::*;
+        pub use semio_s_artifact_stdio_html_inferences::editor::html::presence;
+        pub use semio_s_artifact_stdio_html_inferences::editor::html::config;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod edit {
+                pub use semio_s_artifact_stdio_html_mutations::editor::html::modes::edit::*;
+                pub use semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows;
+            }
+        }
+    }
+}
+
+#[path = "."]
+pub mod viewer {
+    #[path = "."]
+    pub mod html {
+        pub use semio_s_artifact_stdio_html_mutations::viewer::html::*;
+        pub use semio_s_artifact_stdio_html_inferences::viewer::html::presence;
+        pub use semio_s_artifact_stdio_html_inferences::viewer::html::config;
+        #[path = "."]
+        pub mod modes {
+            #[path = "."]
+            pub mod view {
+                pub use semio_s_artifact_stdio_html_mutations::viewer::html::modes::view::*;
+                pub use semio_s_artifact_stdio_html_inferences::viewer::html::modes::view::windows;
+            }
+        }
+    }
+}
+
 
 
 

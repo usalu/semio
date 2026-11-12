@@ -95,8 +95,8 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn build_reserved_tool_job(request:&mut Option<ArtifactReservedToolJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         E::build_reserved_tool_job(request,body,construction,cx)
     }
-    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        E::build_media_export_job(request,body,cx)
+    fn build_media_export_job(request:&mut Option<ArtifactMediaExportJobRequest<Self>>,body:&mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob+Send>>,construction:&mut semio_plugin_decl_app::media_contract::MediaConstruction,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        E::build_media_export_job(request,body,construction,cx)
     }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {

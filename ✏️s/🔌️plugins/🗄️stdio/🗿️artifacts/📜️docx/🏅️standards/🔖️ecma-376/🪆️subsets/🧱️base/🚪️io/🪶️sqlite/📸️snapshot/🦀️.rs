@@ -54,12 +54,14 @@ impl Drop for Documents {
 struct Parts(Vec<DocxXmlPart>);
 
 impl ArtifactSqliteSnapshotHost for DocxSnapshot {
-    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<store::io_schema::IoPayload,semio_os_kernel::NativeSnapshotFailure> {
-        {semio_os_kernel::native_snapshot_turn(|work| { work.performed(); crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self, encoding, control,native_owner).map_err(Into::into) })}
+    fn encode_sqlite_snapshot_native(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        let limits=control.limits();
+        store::space_history::io::sqlite::snapshot::settlement::encode_typed(control,native_owner,output,|native|crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::encode(self,encoding,limits,native))
     }
 
-    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->semio_framework_value::RetainedWorkOutcome<Self,semio_os_kernel::NativeSnapshotFailure> {
-        {semio_os_kernel::native_snapshot_turn(|work| { work.performed(); crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload, control,native_control).map_err(Into::into) })}
+    fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_owner: &mut semio_os_kernel::NativeSnapshotDecodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<Self>>)->store::os_store::serialization::SnapshotReceivingOutcome {
+        let limits=control.limits();
+        store::space_history::io::sqlite::snapshot::settlement::decode_typed(control,native_owner,output,|native|crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::native::decode(payload,limits,native))
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: semio_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
@@ -81,11 +83,7 @@ impl ArtifactSqliteSnapshotHost for DocxSnapshot {
     
 
     fn retire_sqlite_snapshot(self) {
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
-        let (mut retirement, _) = semio_framework_value::retirement::admit_owned_retirement(self, grant).result.unwrap_or_else(|(error, _)| panic!("DOCX SQLite cold retirement refused: {error:?}"));
-        while !retirement.terminal_is_empty() {
-            if let Err(error) = retirement.close_step(grant).result { panic!("DOCX SQLite cold retirement grant: {error:?}"); }
-        }
+        drop(self);
     }
 
     

@@ -217,5 +217,3 @@ impl semio_plugin::retained_command::ArtifactCommandWork<EditorApp<Fem2dPlayApp>
     }
 }
 //#endregion 🧵️RetainedCommands
-
-semio_plugin::retained_command::terminal_frame_bound!(Fem2dRetainedWork);

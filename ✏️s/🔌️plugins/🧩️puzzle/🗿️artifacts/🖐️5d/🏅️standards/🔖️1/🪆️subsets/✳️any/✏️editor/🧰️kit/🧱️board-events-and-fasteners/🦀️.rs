@@ -805,4 +805,3 @@ impl Puzzle5dBoardEventsWork {
  }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Puzzle5dBoardEventsWork, Puzzle5dCreateFastenerWork);

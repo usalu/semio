@@ -25,6 +25,7 @@ use semio_plugin_instance_jobs::jobs_components::PendingReserved;
 use semio_plugin_window_kits::RegisteredDefinitionSource;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::RetainedCloneProgress;
+use semio_framework_value::RetainedCloneStep;
 use semio_framework_value::RetirementDemand;
 use store::ReferenceSpaceMember;
 use semio_framework_job::StepContext;
@@ -70,5 +71,7 @@ pub trait OriginalInstanceRegistration<A:OriginalArtifactAppBirth,M:ReferenceSpa
 
 /// 🚫️ A violated registration or assembly invariant, refused without panicking.
 pub fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
+/// 🪙️ Settles one pure state move as a complete effect poll that costs exactly one work unit.
+pub fn synchronous(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce()->Result<RetainedCloneStep,ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,OriginalTurnFailure>{semio_framework_job::close_original_effect_step(cx,demand,|_|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:run(),work:1}))}
 /// 🧱️ The one-item construction demand that prices a retained-clone demand.
 pub fn construction(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}

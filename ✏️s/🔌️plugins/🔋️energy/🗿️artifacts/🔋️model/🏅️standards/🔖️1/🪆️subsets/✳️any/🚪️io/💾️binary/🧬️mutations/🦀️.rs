@@ -24,12 +24,15 @@ pub fn decode_op(bytes: &[u8]) -> Result<EnergyModelMutation, protocol::Protocol
 mod native_codec {
 use crate::EnergyModelMutation;
 
+dsl::original_pack_value_operation_receiving!(EnergyModelMutation);
+
 impl protocol::OpBinary for EnergyModelMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_tagged_op(include_str!("📡️.protocol.semio"), self)
+        Ok(protocol::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(self)))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_tagged_op(include_str!("📡️.protocol.semio"), bytes)
+        let value = protocol::os_pack::pack_rt::decode_wire_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "artifact operation", offset: 0, detail: error.to_string() })?;
+        semio_framework_value::FromValue::from_value(value).map_err(|error: semio_framework_value::ValueError| protocol::ProtocolError::Malformed { what: "artifact operation", offset: 0, detail: error.to_string() })
     }
 }
 }

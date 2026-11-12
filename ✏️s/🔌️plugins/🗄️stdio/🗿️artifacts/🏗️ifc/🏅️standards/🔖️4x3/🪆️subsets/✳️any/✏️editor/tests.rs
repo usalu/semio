@@ -194,7 +194,7 @@ fn editor_uses_the_distinct_4x3_dialect() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("tests.json")).unwrap();
     assert_eq!(<Ifc4x3AnyEditor as ArtifactEditor>::DIALECT.standard.0, "4x3");
     assert_eq!(IFC4X3_DOCUMENT_SCHEMA, fixture["identities"]["document"].as_str().unwrap());
-    assert_eq!(Ifc4x3AnyEditor::initial_snapshot().schema, fixture["identities"]["graph"].as_str().unwrap());
+    assert_eq!(Ifc4x3AnyEditor::reference_birth().unwrap()().unwrap().schema, fixture["identities"]["graph"].as_str().unwrap());
     assert_eq!(create_ifc4x3_any_editor().role, semio_plugin::AppRole::Editor);
 }
 

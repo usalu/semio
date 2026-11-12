@@ -594,4 +594,3 @@ impl Puzzle5dRetargetFastenerWork {
     }
 }
 
-semio_plugin::retained_command::terminal_frame_bound!(Puzzle5dEditFastenerWork, Puzzle5dRetargetFastenerWork, Puzzle5dDeleteFastenerWork);

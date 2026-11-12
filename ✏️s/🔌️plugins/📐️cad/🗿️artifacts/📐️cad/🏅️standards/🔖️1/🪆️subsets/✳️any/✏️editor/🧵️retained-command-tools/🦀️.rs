@@ -270,5 +270,3 @@ impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory {
 }
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️PlayApp
-
-semio_plugin::retained_command::terminal_frame_bound!(CadRetainedCommandWork);

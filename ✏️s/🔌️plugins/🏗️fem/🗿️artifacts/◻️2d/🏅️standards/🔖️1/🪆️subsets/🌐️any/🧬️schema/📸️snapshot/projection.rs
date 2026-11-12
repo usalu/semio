@@ -25,7 +25,7 @@ impl FieldProjectionSource for Fem2dSnapshot {
                 let Some((&i, tail)) = path.split_first() else {
                     return Ok(V::List(self.nodes.len()));
                 };
-                let n = self.nodes.get(i).ok_or_else(projection_path_error)?;
+                let n = (*self.nodes).get(i).ok_or_else(projection_path_error)?;
                 flat(&[n.id.as_str()], &[n.x, n.y], tail, &[0, 1, 2])
             }
             1 => {
@@ -46,7 +46,7 @@ impl FieldProjectionSource for Fem2dSnapshot {
                 let Some((&i, tail)) = path.split_first() else {
                     return Ok(V::List(self.materials.len()));
                 };
-                let m = self.materials.get(i).ok_or_else(projection_path_error)?;
+                let m = (*self.materials).get(i).ok_or_else(projection_path_error)?;
                 flat(&[m.id.as_str(), m.name.as_str()], &[m.e, m.nu, m.rho], tail, &[0, 1, 2, 3, 4])
             }
             4 => DslField::projection_view(&self.sections, path),

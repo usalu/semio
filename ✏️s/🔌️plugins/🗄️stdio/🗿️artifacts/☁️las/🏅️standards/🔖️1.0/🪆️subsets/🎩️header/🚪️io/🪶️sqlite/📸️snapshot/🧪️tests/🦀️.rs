@@ -8,7 +8,6 @@ use semio_os_kernel::{sqlite_snapshot::ValueError, sqlite_snapshot::ValueRefusal
 use semio_os_kernel::sqlite_snapshot::artifact::NativeEncodingBound;
 #[allow(unused_imports)]
 use semio_os_kernel::{io_schema::IoError, io_schema::IoOutcome, sqlite_snapshot::SqliteRow, sqlite_snapshot::validate_sqlite_database_schema, sqlite_snapshot::artifact::Cell, sqlite_snapshot::artifact::RowWriter, sqlite_snapshot::artifact::FloatColumn, sqlite_snapshot::artifact::FloatRow};
-use crate::standards::v1_0::subsets::any::io::sqlite::snapshot::{receiving};
 use ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::standards::v1_0::subsets::any::io::sqlite::snapshot::*;
@@ -109,8 +108,6 @@ fn sqlite_snapshot_las_native_encoding_preflight_bounds_escaped_text_and_cancels
 
 #[path="🚦️cohort/🦀️.rs"]
 mod cohort;
-#[path="../🫴️receiving/🧪️tests/🦀️.rs"]
-mod receiving_laws;
 
 fn norm_complete_source(case:&serde_json::Value)->LasSnapshot{let mut source=snapshot();if case["id"]=="metadataRetainingEmpty"{source.vlrs.clear();source.points.clear();}source}
 fn norm_independent_complete_extent(source:&LasSnapshot)->serde_json::Value{

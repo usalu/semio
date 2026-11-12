@@ -57,6 +57,7 @@ pub enum PdfXMutation {
     InsertMediaAnnotation(InsertMediaAnnotation),
     RemoveMediaAnnotation(RemoveMediaAnnotation),
 }
+dsl::original_pack_value_operation_receiving!(PdfXMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Codecs

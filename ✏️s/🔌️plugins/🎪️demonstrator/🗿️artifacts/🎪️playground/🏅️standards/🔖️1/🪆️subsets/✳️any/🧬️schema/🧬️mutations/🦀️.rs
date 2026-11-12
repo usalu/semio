@@ -13,6 +13,7 @@ pub use super::change_schema::{ChangeSchema, KINDS};
 pub enum PlaygroundMutation {
     ChangeSchema(ChangeSchema),
 }
+dsl::original_pack_value_operation_receiving!(PlaygroundMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🧪️StructuralCorrespondence

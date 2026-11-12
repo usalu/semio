@@ -84,19 +84,22 @@ impl SessionConstructionCursor{
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneStep,OriginalTurnFailure>{
   self.validate(cx)?;self.begin_close();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let grant=cx.retained_grant();if cx.should_yield()||!fits(self.close_demand(grant.maximum_copy_bytes)?,grant){return Ok(ownership_progress())}
-  cx.consume_fuel(1);let progress=match self.close_event(grant){Ok(progress)=>progress,Err(error)=>return Err(OriginalTurnFailure::debit_original(error,cx))};cx.consume_retained(progress)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+  let progress=match self.close_event(grant,cx){Ok(progress)=>progress,Err(error)=>return Err(OriginalTurnFailure::debit_original(error,cx))};cx.consume_retained(progress)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
  }
- fn close_event(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  if let Some(ready)=self.ready.as_mut(){if ready.terminal_is_empty(){self.ready.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return ready.close_step(grant).map(|step|step.progress())}
-  if self.kernel.is_some(){let(value,progress)=take_shell(self.kernel.take().unwrap());self.raw_kernel=ManuallyDrop::new(Some(controlled(ManuallyDrop::into_inner(value.into_inner()))));return Ok(progress)}
-  if self.cache.is_some(){let(value,progress)=take_shell(self.cache.take().unwrap());self.raw_cache=ManuallyDrop::new(Some(controlled(ManuallyDrop::into_inner(value.into_inner()))));return Ok(progress)}
-  if self.claims.is_some(){let(value,progress)=take_shell(self.claims.take().unwrap());self.raw_claims=ManuallyDrop::new(Some(controlled(ManuallyDrop::into_inner(value.into_inner()))));return Ok(progress)}
-  if self.counter.is_some(){let(_,progress)=take_shell(self.counter.take().unwrap());return Ok(progress)}
-  if self.retirement.is_some(){let(value,progress)=take_shell(self.retirement.take().unwrap());assert!(value.into_inner().family.is_none());return Ok(progress)}
-  if let Some(owner)=self.raw_kernel.as_mut(){if owner.terminal_is_empty(){self.raw_kernel.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return owner.step(grant).map(|step|step.progress()).map_err(|error|error.with_retained_progress(owner.step_progress()))}
-  if let Some(owner)=self.raw_cache.as_mut(){if owner.terminal_is_empty(){self.raw_cache.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return owner.step(grant).map(|step|step.progress()).map_err(|error|error.with_retained_progress(owner.step_progress()))}
-  if let Some(owner)=self.raw_claims.as_mut(){if owner.terminal_is_empty(){self.raw_claims.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return owner.step(grant).map(|step|step.progress()).map_err(|error|error.with_retained_progress(owner.step_progress()))}
-  self.identity=None;self.done=true;Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+ fn close_effect(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,run:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneProgress,ValueError>{
+  match cx.with_original_effect(grant,|_,effect|run(effect))?{Some((result,performed))=>{cx.consume_work(performed);result.map(|step|step.progress())},None=>Ok(Default::default())}
+ }
+ fn close_event(&mut self,grant:RetainedCloneGrant,cx:&mut StepContext<'_>)->Result<RetainedCloneProgress,ValueError>{
+  if let Some(ready)=self.ready.as_mut(){if ready.terminal_is_empty(){cx.consume_fuel(1);self.ready.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return Self::close_effect(cx,grant,|effect|ready.close_step(effect))}
+  if self.kernel.is_some(){cx.consume_fuel(1);let(value,progress)=take_shell(self.kernel.take().unwrap());self.raw_kernel=ManuallyDrop::new(Some(controlled(ManuallyDrop::into_inner(value.into_inner()))));return Ok(progress)}
+  if self.cache.is_some(){cx.consume_fuel(1);let(value,progress)=take_shell(self.cache.take().unwrap());self.raw_cache=ManuallyDrop::new(Some(controlled(ManuallyDrop::into_inner(value.into_inner()))));return Ok(progress)}
+  if self.claims.is_some(){cx.consume_fuel(1);let(value,progress)=take_shell(self.claims.take().unwrap());self.raw_claims=ManuallyDrop::new(Some(controlled(ManuallyDrop::into_inner(value.into_inner()))));return Ok(progress)}
+  if self.counter.is_some(){cx.consume_fuel(1);let(_,progress)=take_shell(self.counter.take().unwrap());return Ok(progress)}
+  if self.retirement.is_some(){cx.consume_fuel(1);let(value,progress)=take_shell(self.retirement.take().unwrap());assert!(value.into_inner().family.is_none());return Ok(progress)}
+  if let Some(owner)=self.raw_kernel.as_mut(){if owner.terminal_is_empty(){cx.consume_fuel(1);self.raw_kernel.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return Self::close_effect(cx,grant,|effect|settled_step(owner.step(grant.maximum_copy_bytes,effect)).map_err(|error|error.with_retained_progress(owner.step_progress())))}
+  if let Some(owner)=self.raw_cache.as_mut(){if owner.terminal_is_empty(){cx.consume_fuel(1);self.raw_cache.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return Self::close_effect(cx,grant,|effect|settled_step(owner.step(grant.maximum_copy_bytes,effect)).map_err(|error|error.with_retained_progress(owner.step_progress())))}
+  if let Some(owner)=self.raw_claims.as_mut(){if owner.terminal_is_empty(){cx.consume_fuel(1);self.raw_claims.take();return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}return Self::close_effect(cx,grant,|effect|settled_step(owner.step(grant.maximum_copy_bytes,effect)).map_err(|error|error.with_retained_progress(owner.step_progress())))}
+  cx.consume_fuel(1);self.identity=None;self.done=true;Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
  }
 }
 impl Drop for SessionConstructionCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Session construction requires paid original closure before Drop")}}

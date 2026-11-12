@@ -3,14 +3,13 @@ use super::*;
 use semio_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_plugin::{EditorApp, Emit};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::RetainedAllocationEffect;
+use source_loan::{advance_cursor, closed_cursor, funded_turn, take_cursor, SnapshotLease};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
 
 pub type Source = wire::SnapshotSource;
-pub type SourceAdmission = semio_framework_value::retained_clone::RetainedCloneSourceAdmission<IfcSnapshot, Arc<IfcSnapshot>>;
-pub fn snapshot_of(owner: &Arc<IfcSnapshot>) -> &IfcSnapshot {
-    owner
-}
+pub type SourceAdmission = semio_framework_value::retained_clone::StagedSourceAdmission<IfcSnapshot, SnapshotLease>;
 pub fn missing_root_argument(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot,address:&pointer::PathAdmission)->Option<pointer::NativeAddress>{
     let editing::SnapshotEditEvent::InsertValue{path,..}=event else{return None;};
     if address.field_count()!=4||!address.field_is(path,2,"args"){return None;}
@@ -114,7 +113,7 @@ pub struct IfcDetailsWork<E: editing::SnapshotEditingEditor, C: IfcDetailsProfil
     pub garbage: Option<Vec<IfcValue>>,
     pub pending: Option<Vec<IfcMutation>>,
     pub semantic_emit: Option<Emit<IfcMutation, E::ConfigMutation, E::DraftMutation>>,
-    pub unborn: Option<Arc<IfcSnapshot>>,
+    pub unborn: Option<SnapshotLease>,
     pub retirement: RetainedCloneClose,
     pub control: ReductionControl,
     pub position: Option<usize>,
@@ -138,6 +137,8 @@ pub struct IfcDetailsWork<E: editing::SnapshotEditingEditor, C: IfcDetailsProfil
     pub publication: wire::IfcPublication,
     pub complete: bool,
     pub closing: bool,
+    pub recover: bool,
+    pub fuel: u64,
     pub marker: std::marker::PhantomData<fn() -> (E, C)>,
 }
 
@@ -187,6 +188,8 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
             publication: Default::default(),
             complete: false,
             closing: false,
+            recover: false,
+            fuel: 1,
             marker: std::marker::PhantomData,
         }
     }
@@ -312,10 +315,10 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
             return self.retirement.next_owner_demands::<Emit<IfcMutation, E::ConfigMutation, E::DraftMutation>>(true, &None, body);
         }
         if let Some(admission) = self.source_admission.as_ref() {
-            return if admission.phase() == "ready" { admission.next_demand() } else { admission.next_return_demand() };
+            return admission.close_demand();
         }
         if self.unborn.is_some() {
-            return self.retirement.next_owner_demands::<Arc<IfcSnapshot>>(true, &None, body);
+            return self.retirement.next_owner_demands::<SnapshotLease>(true, &None, body);
         }
         if let Some(source) = self.source.as_ref().filter(|source| !source.terminal_is_empty()) {
             return source.next_close_demand(body);
@@ -419,7 +422,7 @@ where
             return if self.admission.complete(){Ok(self.address.demands())}else{self.admission.demands()};
         }
         if !self.prepared && self.original_event.as_ref().or_else(|| E::snapshot_edit_event(input.command)).is_some_and(|event| !matches!(event, editing::SnapshotEditEvent::ReplaceSource { .. })) {
-            let demand = Source::borrowed_constructor_demand::<Arc<IfcSnapshot>>();
+            let demand = Source::borrowed_constructor_demand::<SnapshotLease>();
             return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<Arc<IfcSnapshot>>()+4*std::mem::size_of::<Option<usize>>()+std::mem::size_of::<usize>()+insertion_metadata_bytes(), capacity_bytes: demand.capacity_bytes, depth: demand.depth, ..Default::default() });
         }
         if !self.enumeration.complete(){return self.enumeration.demands(self.source.as_ref(),input.snapshot,body);}
@@ -434,15 +437,15 @@ where
                 return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<IfcValue>()+if self.original_event.as_ref().is_some_and(|event|missing_root_argument(event,input.snapshot,&self.address).is_some()){insertion_metadata_bytes()}else{0}, depth: 1, ..Default::default() });
             }
             if let Some(column) = self.header_column {
-                return self.header_cursor.advance_demands(source.borrow().project(column, |snapshot| header_values(snapshot, column)), body.min(4096));
+                return self.header_cursor.advance_demands(source.borrow().project(column, |snapshot| header_values(snapshot, column)), body.min(4096), self.fuel);
             }
             let position = self.position.expect("retained entity position");
             let entity = source.borrow().project(position, |snapshot| &snapshot.entities[position]);
-            if self.part.is_some(){return if self.parts.is_some(){Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<IfcValue>()+2*std::mem::size_of::<Vec<IfcValue>>()+insertion_metadata_bytes(),depth:1,..Default::default()})}else{self.parts_cursor.advance_demands(entity.project(0,|entity|&entity.complex),body.min(4096))};}
+            if self.part.is_some(){return if self.parts.is_some(){Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<IfcValue>()+2*std::mem::size_of::<Vec<IfcValue>>()+insertion_metadata_bytes(),depth:1,..Default::default()})}else{self.parts_cursor.advance_demands(entity.project(0,|entity|&entity.complex),body.min(4096),self.fuel)};}
             if let Some(index) = self.argument {
-                return self.value_cursor.advance_demands(entity.project(index, |entity| &entity.args[index]), body.min(4096));
+                return self.value_cursor.advance_demands(entity.project(index, |entity| &entity.args[index]), body.min(4096), self.fuel);
             }
-            return self.cursor.advance_demands(entity, body.min(4096));
+            return self.cursor.advance_demands(entity, body.min(4096), self.fuel);
         }
         if self.pending.is_none() && (self.argument.is_some() || self.header_column.is_some()) {
             if self.value_edit_done {
@@ -461,6 +464,7 @@ where
         if cx.is_cancelled() {
             return Err(ValueError::literal(ValueRefusalKind::Canceled, "IFC edit preparation cancelled before publication").into());
         }
+        self.fuel = cx.fuel_remaining();
         if cx.should_yield() {
             return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-prepare", preview: b"" });
         }
@@ -490,24 +494,26 @@ where
                     return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-source", preview: b"" });
                 }
                 if self.source_admission.is_none() && self.source.is_none() {
-                    self.source_admission = Some(Source::admission_borrowed(Arc::clone(owner), snapshot_of));
+                    self.source_admission = Some(SourceAdmission::borrowed(SnapshotLease::new(Arc::clone(owner))));
                     cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias_bytes + metadata, ..Default::default() })?;
                     cx.consume_fuel(1);
                     return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-source", preview: b"" });
                 }
                 if let Some(admission) = self.source_admission.as_mut() {
-                    let step_grant = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - alias_bytes, ..grant };
-                    if !semio_framework_value::retained_clone::retained_clone_grant_admits(step_grant, admission.next_demand()?) {
-                        return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-source", preview: b"" });
+                    if admission.terminal_is_empty() {
+                        if self.source.is_none() {
+                            return Err(Fault::from("IFC source admission published no source").into());
+                        }
+                        self.source_admission = None;
+                        cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias_bytes, ..Default::default() })?;
+                        cx.consume_fuel(1);
+                    } else {
+                        let source = &mut self.source;
+                        if funded_turn(cx, |effect| admission.advance(source, effect))?.is_none() {
+                            return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-source", preview: b"" });
+                        }
                     }
-                    let turn = if admission.phase() == "ready" { admission.take_output(&mut self.source, step_grant) } else { admission.advance(step_grant) };
-                    cx.consume_fuel(turn.work);
-                    let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
-                    cx.consume_retained(step.progress())?;
-                    if self.source.is_none() {
-                        return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-source", preview: b"" });
-                    }
-                    self.source_admission = None;
+                    return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-source", preview: b"" });
                 }
                 self.position=position;self.header_column=header.map(|(column,_)|column);self.prefix=header.map_or(0,|(_,prefix)|prefix);
                 if let Some(address)=address{let entity=&input.snapshot.entities[address.position];let args=address.part.and_then(|part|entity.complex.get(part)).map_or(entity.args.as_slice(),|part|part.args.as_slice());self.argument=(args.get(address.argument).is_some()||insertion.is_some()).then_some(address.argument);self.part=address.part;self.prefix=address.prefix;}
@@ -588,52 +594,34 @@ where
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
                     return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-copy", preview: b"" });
                 }
-                let missing = || Fault::from("IFC retained edit copy payload is missing");
-                let progress = if self.header_column.is_some() {
-                    let turn = self.header_cursor.take(grant);
-                    cx.consume_fuel(turn.work);
-                    let (values, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
-                    self.header_values = Some(values);
-                    progress
+                let taken = if self.header_column.is_some() {
+                    take_cursor(cx, &mut self.header_cursor, &mut self.header_values)?
                 } else if self.part.is_some() {
-                    let turn = self.parts_cursor.take(grant);
-                    cx.consume_fuel(turn.work);
-                    let (parts, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
-                    self.parts = Some(parts);
-                    progress
+                    take_cursor(cx, &mut self.parts_cursor, &mut self.parts)?
                 } else if self.argument.is_some() {
-                    let turn = self.value_cursor.take(grant);
-                    cx.consume_fuel(turn.work);
-                    let (value, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
-                    self.value = Some(value);
-                    progress
+                    take_cursor(cx, &mut self.value_cursor, &mut self.value)?
                 } else {
-                    let turn = self.cursor.take(grant);
-                    cx.consume_fuel(turn.work);
-                    let (entity, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
-                    self.entity = Some(entity);
-                    progress
+                    take_cursor(cx, &mut self.cursor, &mut self.entity)?
                 };
-                cx.consume_retained(progress)?;
+                if !taken {
+                    return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-copy", preview: b"" });
+                }
                 return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-copy", preview: b"" });
             }
             let body = grant.maximum_copy_bytes.min(4096);
-            let turn = if let Some(column) = self.header_column {
-                self.header_cursor.advance(source.borrow().project(column, |snapshot| header_values(snapshot, column)), body, grant)
+            if let Some(column) = self.header_column {
+                advance_cursor(cx, &mut self.header_cursor, source.borrow().project(column, |snapshot| header_values(snapshot, column)), body, &mut self.recover)?;
             } else {
                 let position = self.position.expect("retained entity position");
                 let entity = source.borrow().project(position, |snapshot| &snapshot.entities[position]);
                 if self.part.is_some() {
-                    self.parts_cursor.advance(entity.project(0, |entity| &entity.complex), body, grant)
+                    advance_cursor(cx, &mut self.parts_cursor, entity.project(0, |entity| &entity.complex), body, &mut self.recover)?;
                 } else if let Some(index) = self.argument {
-                    self.value_cursor.advance(entity.project(index, |entity| &entity.args[index]), body, grant)
+                    advance_cursor(cx, &mut self.value_cursor, entity.project(index, |entity| &entity.args[index]), body, &mut self.recover)?;
                 } else {
-                    self.cursor.advance(entity, body, grant)
+                    advance_cursor(cx, &mut self.cursor, entity, body, &mut self.recover)?;
                 }
-            };
-            cx.consume_fuel(turn.work);
-            let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
-            cx.consume_retained(step.progress())?;
+            }
             return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-copy", preview: b"" });
         }
         if self.complete {
@@ -760,10 +748,6 @@ where
         self.domain.begin_close();
         self.entity_removal.begin_close();
         self.constituent_roster.begin_close();
-        self.cursor.begin_close();
-        self.value_cursor.begin_close();
-        self.header_cursor.begin_close();
-        self.parts_cursor.begin_close();
         self.value_edit.begin_close();
     }
     fn terminal_is_empty(&self) -> bool {
@@ -816,84 +800,95 @@ where
             return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() });
         }
         let demand = self.close_demand(cx.retained_grant().maximum_copy_bytes.min(4096))?;
-        semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-            let grant = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.min(4096), ..grant };
-            if !self.rules.terminal_is_empty(){return self.rules.close_step(grant);}
-            if !self.command_wire.terminal_is_empty(){return self.command_wire.close_step(grant);}
-            if !self.admission.terminal_is_empty() {
-                return self.admission.close_step(grant);
+        closed_in(cx, demand, |effect| {
+            let grant = RetainedCloneGrant { maximum_copy_bytes: effect.grant().maximum_copy_bytes.min(4096), ..effect.grant() };
+            if !self.rules.terminal_is_empty() {
+                return self.rules.close_step(effect);
             }
-            if !self.enumeration.terminal_is_empty(){return self.enumeration.close_step(grant);}
-            if !self.domain.terminal_is_empty(){return self.domain.close_step(grant);}
-            if !self.entity_removal.terminal_is_empty(){return self.entity_removal.close_step(grant);}
-            if !self.constituent_roster.terminal_is_empty(){return self.constituent_roster.close_step(grant);}
-            if !self.reference.terminal_is_empty(){return self.reference.close_step(grant);}
-            if !self.address.terminal_is_empty(){return self.address.close_step(grant);}
+            if !self.command_wire.terminal_is_empty() {
+                return self.command_wire.close_step(effect);
+            }
+            if !self.admission.terminal_is_empty() {
+                return self.admission.close_step(effect);
+            }
+            if !self.enumeration.terminal_is_empty() {
+                return self.enumeration.close_step(effect);
+            }
+            if !self.domain.terminal_is_empty() {
+                return charged(effect, self.domain.close_step(grant));
+            }
+            if !self.entity_removal.terminal_is_empty() {
+                return charged(effect, self.entity_removal.close_step(grant));
+            }
+            if !self.constituent_roster.terminal_is_empty() {
+                return self.constituent_roster.close_step(effect);
+            }
+            if !self.reference.terminal_is_empty() {
+                return charged(effect, self.reference.close_step(grant));
+            }
+            if !self.address.terminal_is_empty() {
+                return charged(effect, self.address.close_step(grant));
+            }
             if self.publication.codec_live() {
-                return self.publication.close_codec(grant);
+                return self.publication.close_codec(effect);
             }
             if !self.cursor.terminal_is_empty() {
-                return self.cursor.close_step(grant);
+                return closed_cursor(effect, &mut self.cursor, 4096, &mut self.recover);
             }
             if !self.value_cursor.terminal_is_empty() {
-                return self.value_cursor.close_step(grant);
+                return closed_cursor(effect, &mut self.value_cursor, 4096, &mut self.recover);
             }
             if !self.header_cursor.terminal_is_empty() {
-                return self.header_cursor.close_step(grant);
+                return closed_cursor(effect, &mut self.header_cursor, 4096, &mut self.recover);
             }
-            if !self.parts_cursor.terminal_is_empty(){return self.parts_cursor.close_step(grant);}
+            if !self.parts_cursor.terminal_is_empty() {
+                return closed_cursor(effect, &mut self.parts_cursor, 4096, &mut self.recover);
+            }
             if !self.value_edit.terminal_is_empty() {
-                return self.value_edit.close_step(grant);
+                return self.value_edit.close_step(effect);
             }
             if !self.retirement.is_empty() {
-                return self.retirement.step_granted(grant);
+                return settled(self.retirement.step_granted(4096, effect));
             }
             if self.value.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.value, grant), "IFC argument retirement omitted its owner");
+                return owned_step(self.retirement.begin_granted(&mut self.value, effect), "IFC argument retirement omitted its owner");
             }
             if self.original_event.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.original_event, grant), "IFC original event retirement omitted its owner");
+                return owned_step(self.retirement.begin_granted(&mut self.original_event, effect), "IFC original event retirement omitted its owner");
             }
             if self.header_values.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.header_values, grant), "IFC header retirement omitted its owner");
+                return owned_step(self.retirement.begin_granted(&mut self.header_values, effect), "IFC header retirement omitted its owner");
             }
-            if self.parts.is_some(){return owned_step(self.retirement.begin_granted(&mut self.parts, grant), "IFC constituent retirement omitted its owner");}
+            if self.parts.is_some() {
+                return owned_step(self.retirement.begin_granted(&mut self.parts, effect), "IFC constituent retirement omitted its owner");
+            }
             if self.entity.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.entity, grant), "IFC entity retirement omitted its owner");
+                return owned_step(self.retirement.begin_granted(&mut self.entity, effect), "IFC entity retirement omitted its owner");
             }
             if self.garbage.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.garbage, grant), "IFC displaced values omitted their owner");
+                return owned_step(self.retirement.begin_granted(&mut self.garbage, effect), "IFC displaced values omitted their owner");
             }
             if self.pending.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.pending, grant), "IFC pending mutations omitted their owner");
+                return owned_step(self.retirement.begin_granted(&mut self.pending, effect), "IFC pending mutations omitted their owner");
             }
             if self.semantic_emit.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.semantic_emit, grant), "IFC semantic emission omitted its owner");
+                return owned_step(self.retirement.begin_granted(&mut self.semantic_emit, effect), "IFC semantic emission omitted its owner");
             }
             if let Some(admission) = self.source_admission.as_mut() {
-                let turn = if admission.phase() == "ready" {
-                    admission.take_output(&mut self.source, grant)
-                } else {
-                    let mut inputs = None;
-                    let turn = admission.return_inputs(&mut inputs, grant);
-                    if let Some((owner, ())) = inputs {
-                        self.unborn = Some(owner);
-                    }
-                    turn
-                };
-                if admission.terminal_is_empty() || self.source.is_some() {
+                let turn = admission.close_into(&mut self.unborn, &mut self.source, 4096, effect);
+                if admission.terminal_is_empty() {
                     self.source_admission = None;
                 }
                 return turn;
             }
             if self.unborn.is_some() {
-                return owned_step(self.retirement.begin_granted(&mut self.unborn, grant), "IFC refused source omitted its original owner");
+                return owned_step(self.retirement.begin_granted(&mut self.unborn, effect), "IFC refused source omitted its original owner");
             }
             if let Some(source) = self.source.as_mut().filter(|source| !source.terminal_is_empty()) {
-                return source.close_step(grant);
+                return settled(source.close_step(4096, effect));
             }
             if let Some(source) = self.publication.view.source.as_mut().filter(|source| !source.terminal_is_empty()) {
-                return source.close_step(grant);
+                return settled(source.close_step(4096, effect));
             }
             idle_step(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
         })

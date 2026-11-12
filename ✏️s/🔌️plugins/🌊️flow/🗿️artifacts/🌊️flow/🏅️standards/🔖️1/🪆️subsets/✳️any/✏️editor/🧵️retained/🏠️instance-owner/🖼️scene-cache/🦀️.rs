@@ -1,7 +1,8 @@
 //! 🖼️ Original evaluation scenes retain one immutable child root and one outgoing owner.
 use super::super::*;
 use semio_plugin::ArtifactView;
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+use crate::retained::{close_with_effect,poll_outcome,begin_close_owner};
+use semio_framework_value::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext};
 use std::mem::{size_of,ManuallyDrop};
@@ -43,9 +44,13 @@ impl FlowSceneCache{
   if self.closing{owner!(scene,Scene);owner!(children,Children);if self.key.is_some()||self.instance.is_some(){return Ok(Self::fixed(size_of::<Option<Key>>()+size_of::<Option<u32>>()))}}
   Ok(Default::default())
  }
- pub(super) fn advance(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g)}
-  macro_rules! owner{($field:ident)=>{if self.owners.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.owners.$field,g);return RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))),work:turn.work}}}}
+ /// 🧹️ Funds one close step of the outgoing owners inside the lifecycle turn's own effect.
+ pub(super) fn advance(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
+  let d=self.demands(cx.retained_grant().maximum_copy_bytes)?;cx.with_original_retirement(|cx|close_with_effect(cx,d,|g,effect|self.advance_granted(g,effect)))?;Ok(())
+ }
+ fn advance_granted(&mut self,g:RetainedCloneGrant,effect:&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
+  if !self.retirement.is_empty(){return poll_outcome(self.retirement.step_granted(g.maximum_copy_bytes,effect))}
+  macro_rules! owner{($field:ident)=>{if self.owners.$field.is_some(){return begin_close_owner(&mut self.retirement,&mut self.owners.$field,effect)}}}
   owner!(outgoing_scene);owner!(outgoing_children);
   if self.closing{owner!(scene);owner!(children);if self.key.is_some()||self.instance.is_some(){let demand=Self::fixed(size_of::<Option<Key>>()+size_of::<Option<u32>>());if !retained_clone_grant_admits(g,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}self.key=None;self.instance=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}}}
   RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}

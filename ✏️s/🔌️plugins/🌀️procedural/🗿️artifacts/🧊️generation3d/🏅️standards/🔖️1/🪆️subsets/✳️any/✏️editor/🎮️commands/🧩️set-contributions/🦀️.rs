@@ -38,20 +38,24 @@ pub struct SetContributions {
 /// The key is [`semio_os_flow::flow_extension_registry_generation`], not "this was the
 /// last page": a re-push of an unchanged closure leaves the generation where it was and owes nothing,
 /// while ANY later contribution change re-evaluates (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub fn install(payload: &SetContributions, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<bool, Fault> {
+pub fn register(payload: &SetContributions) -> Result<(), Fault> {
     let page = u32::try_from(payload.page).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
     let page_count = u32::try_from(payload.page_count).map_err(|_| Fault::from("flow.contributions-page-address-invalid"))?;
-    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)?;
-    Ok(session.invalidate_for_flow_extension_registry(semio_os_flow::flow_extension_registry_generation(), grant).map_err(|error| Fault::from(error.to_string()))?.0)
+    semio_os_flow::sync_host_flow_extension_contributions_page(page, page_count, &payload.json).map_err(Fault::from)
+}
+
+/// 🧩️ Invalidates the session's evaluations under the caller's original effect; `None` means the effect was not admitted and the session is unchanged.
+pub fn invalidate(session: &mut FlowEvalSession, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<bool>, Fault> {
+    Ok(session.invalidate_for_flow_extension_registry(semio_os_flow::flow_extension_registry_generation(), effect).map_err(|error| Fault::from(error.to_string()))?.map(|(changed, _)| changed))
 }
 
 /// 🧩️ The `app_commands!` row. Its `handle(payload, doc, cfg, ctx)` signature is framework-fixed and
 /// carries no attached-window roster, exactly as it carries no `interaction` for
-/// `delete_selection` — so it installs the page and invalidates the session, and the SERVED route
+/// `delete_selection` — so it installs the page only, and the SERVED route
 /// (`Generation3dContributionsWork::step`, which is handed the shell's trusted `ViewModel`) is the
 /// one that owes the attached previews an evaluation. Reached only by the marks-free
 /// `handle`/`dispatch` fallbacks, which own no preview window anyway.
-pub fn handle(payload: &SetContributions, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
-    install(payload, session, doc.retained_grant()?)?;
+pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {
+    register(payload)?;
     Ok(Emit::default())
 }

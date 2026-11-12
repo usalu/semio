@@ -7,7 +7,7 @@ mod set_camera;
 pub use set_camera::SetCamera;
 //#endregion 🧬️Leaves
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = GisTerrainWindowConfig, diff = GisTerrainWindowConfigDiff, schema = "gis.gisterrainwindowcfg", reference = GisTerrainWindowConfig, reference_diff = GisTerrainWindowConfigDiff)]

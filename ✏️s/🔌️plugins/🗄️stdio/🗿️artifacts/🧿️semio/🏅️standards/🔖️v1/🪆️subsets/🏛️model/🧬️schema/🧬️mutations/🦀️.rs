@@ -88,6 +88,7 @@ pub enum SemioModelMutation {
     RotateElements(rotate_elements::RotateElements),
     ScaleElements(scale_elements::ScaleElements),
 }
+dsl::original_pack_value_operation_receiving!(SemioModelMutation);
 
 /// 🏷️ This subset's DECLARED mutation vocabulary, kebab-case, in enum declaration order — the one
 /// list the repository test platform's completeness gate measures `🏛️mutate-semio-model` against

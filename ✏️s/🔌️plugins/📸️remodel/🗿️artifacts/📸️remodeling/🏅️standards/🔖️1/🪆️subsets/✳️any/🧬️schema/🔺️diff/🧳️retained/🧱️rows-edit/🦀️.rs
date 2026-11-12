@@ -2,7 +2,7 @@
 use super::{RemodelingNoPatch, RemodelingRow};
 use protocol::RetainedKeyedRow;
 use semio_framework_value::retained_clone::{retained_clone_grant_admits, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementOutcome, RetainedWorkOutcome, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{OriginalRetirementFailure, OriginalRetirementPoll, RetainedAllocationEffect, RetainedWorkOutcome, RetainedWorkPoll, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind};
 use std::{
     cmp::Ordering,
     mem::{size_of, ManuallyDrop},
@@ -173,19 +173,22 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
         let work = if self.settling() { self.settlement_work(4096)? } else { self.local_work() };
         Ok(if work <= maximum_work_units { work } else { 0 })
     }
-    fn settle(&mut self, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
+    fn settle(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            let body = effect.grant().maximum_copy_bytes;
+            return self.retirement.step_granted(body, effect);
         }
         if self.row.is_some() {
-            let turn = self.retirement.begin_granted(&mut self.row, grant);
-            return RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into), work: turn.work };
+            let turn = self.retirement.begin_granted(&mut self.row, effect);
+            return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into), work: turn.work });
         }
-        let turn = self.retirement.begin_granted(&mut self.removed, grant);
-        RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into), work: turn.work }
+        let turn = self.retirement.begin_granted(&mut self.removed, effect);
+        RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into), work: turn.work })
     }
-    pub(crate) fn advance(&mut self, maximum_work_units: u64, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
+    pub(crate) fn advance(&mut self, maximum_work_units: u64, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let grant = effect.grant();
         let mut work = 0;
+        let mut pending = None;
         let result: Result<_, OriginalRetirementFailure> = (|| {
             let selected = self.work_demand(maximum_work_units)?;
             if selected == 0 {
@@ -196,12 +199,19 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
                 return Ok(RetainedCloneStep::Progress(Default::default()));
             }
             if self.settling() {
-                let turn = self.settle(grant);
-                work = turn.work;
-                return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
+                match self.settle(effect) {
+                    RetainedWorkPoll::Pending { work: owed } => {
+                        pending = Some(owed);
+                        return Ok(RetainedCloneStep::Progress(Default::default()));
+                    }
+                    RetainedWorkPoll::Complete(turn) => {
+                        work = turn.work;
+                        return turn.result.map(|step| RetainedCloneStep::Progress(step.progress()));
+                    }
+                }
             }
             let mut state = self.state;
-            work = selected;
+            work = u128::from(selected);
             let mut copied_bytes = demand.copy_bytes;
             if self.compare_turn() {
                 let current = self.input.as_ref().ok_or_else(invalid)?[state.cursor].retained_key().as_bytes();
@@ -341,7 +351,10 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
                 RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() })
             })
         })();
-        RetainedWorkOutcome { result, work }
+        match pending {
+            Some(owed) => RetainedWorkPoll::Pending { work: owed },
+            None => RetainedWorkPoll::Complete(RetainedWorkOutcome { result, work }),
+        }
     }
     pub(crate) fn status(&self) -> RowEditStatus {
         match self.state.phase {
@@ -397,23 +410,25 @@ impl<E: RetireOwned + RetainedKeyedRow> OwnedRowEdit<E> {
             self.settlement_work(body)
         }
     }
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> OriginalRetirementOutcome {
-        let demand = match self.close_demand(grant.maximum_copy_bytes) {
+    pub(crate) fn close_step(&mut self, effect: &mut RetainedAllocationEffect<'_>) -> OriginalRetirementPoll {
+        let grant = effect.grant();
+        let body = grant.maximum_copy_bytes;
+        let demand = match self.close_demand(body) {
             Ok(demand) => demand,
-            Err(error) => return RetainedWorkOutcome { result: Err(error.into()), work: 0 },
+            Err(error) => return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Err(error.into()), work: 0 }),
         };
         if !retained_clone_grant_admits(grant, demand) {
-            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 };
+            return RetainedWorkPoll::Complete(RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 });
         }
-        let turn = if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant)
+        let poll = if !self.retirement.is_empty() {
+            self.retirement.step_granted(body, effect)
         } else if self.input.is_some() {
-            let turn = self.retirement.begin_granted(&mut self.input, grant);
-            RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into), work: turn.work }
+            let turn = self.retirement.begin_granted(&mut self.input, effect);
+            RetainedWorkPoll::Complete(RetainedWorkOutcome { result: turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(Into::into), work: turn.work })
         } else {
-            self.settle(grant)
+            self.settle(effect)
         };
-        RetainedWorkOutcome { result: turn.result.map(|step| if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }), work: turn.work }
+        poll.map(|step| if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.input.is_none() && self.row.is_none() && self.removed.is_none() && self.retirement.is_empty()

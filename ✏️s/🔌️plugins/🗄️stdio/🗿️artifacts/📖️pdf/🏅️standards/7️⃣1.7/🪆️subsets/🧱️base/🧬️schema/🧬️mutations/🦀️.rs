@@ -210,6 +210,7 @@ pub enum PdfMutation {
     RemoveCatalogEntry(RemoveCatalogEntry),
     ReplacePage(ReplacePage),
 }
+dsl::original_pack_value_operation_receiving!(PdfMutation);
 //#endregion 🔖️Aggregate
 
 //#region 🔖️Edit

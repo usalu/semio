@@ -16,6 +16,16 @@ fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_f
 #[derive(Default, Clone, Copy)]
 pub struct Generation3dViewer;
 
+/// 🫧️ The one transient mutation replaces the whole preview evaluation text, so its admitted payload moves into the new transient.
+fn transient_footprint(_: &Generation3dViewTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<Generation3dViewTransientMutation>()))
+}
+
+fn transient_transfer(mutation: Generation3dViewTransientMutation) -> Generation3dViewTransient {
+    let Generation3dViewTransientMutation::SetPreviewEval(set) = mutation;
+    Generation3dViewTransient { preview_eval_text: set.eval_text }
+}
+
 impl semio_plugin::ArtifactViewer for Generation3dViewer {
     /// 📣️ The localized notices of the viewer's refusal codes (design §20.12): the document-level ones.
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
@@ -44,7 +54,12 @@ impl semio_plugin::ArtifactViewer for Generation3dViewer {
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-        Some(semio_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+        Some(std::sync::Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(
+            transient_footprint,
+            transient_transfer,
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Generation3dViewTransient>::default()),
+            std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<Generation3dViewTransientMutation>::default()),
+        )))
     }
 
     /// 🎛️ The viewer's `setCamera`/`setShowMode`/`setLodMode`/sun tools all publish onto the CONFIG

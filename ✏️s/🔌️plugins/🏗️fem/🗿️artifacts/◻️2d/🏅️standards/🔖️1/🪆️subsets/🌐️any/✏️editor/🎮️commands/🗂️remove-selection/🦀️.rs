@@ -105,11 +105,11 @@ pub fn remove_ids(doc: &ArtifactView<'_, Fem2dSnapshot>, ids: &[String]) -> Resu
 /// 🗂️ Filters stale selections and repeated ids while preserving the framework selection order.
 pub fn resolve_selection_ids(doc: &Fem2dSnapshot, ids: &[String]) -> Vec<String> {
     let mut live = HashSet::new();
-    for row in &doc.nodes { live.insert(("node", "", row.id.as_str())); }
+    for row in doc.nodes.iter() { live.insert(("node", "", row.id.as_str())); }
     for row in &doc.elements { live.insert(("element", "", element_id(row))); }
     for row in &doc.regions { live.insert(("region", "", row.id.as_str())); }
     for row in &doc.supports { live.insert(("support", "", row.id.as_str())); }
-    for row in &doc.materials { live.insert(("material", "", row.id.as_str())); }
+    for row in doc.materials.iter() { live.insert(("material", "", row.id.as_str())); }
     for row in &doc.sections { live.insert(("section", "", row.id.as_str())); }
     for row in &doc.combinations { live.insert(("combination", "", row.id.as_str())); }
     for case in &doc.load_cases {

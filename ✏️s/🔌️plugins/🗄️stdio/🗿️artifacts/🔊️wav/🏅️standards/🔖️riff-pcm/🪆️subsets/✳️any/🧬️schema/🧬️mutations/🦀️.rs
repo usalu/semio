@@ -40,6 +40,7 @@ pub enum WavMutation {
     /// 🧷️ Sets the RIFF alignment bytes the `fmt ` and `data` chunks carry after an odd payload.
     SetPadBytes(set_pad_bytes::SetPadBytes),
 }
+dsl::original_pack_value_operation_receiving!(WavMutation);
 
 /// 🦠️ Kebab-case spelling of every `WavMutation` variant — the exhaustive vocabulary the mutation
 /// oracle catalog (`../../🔣️oracle.json`) is measured against. Order matches the enum.

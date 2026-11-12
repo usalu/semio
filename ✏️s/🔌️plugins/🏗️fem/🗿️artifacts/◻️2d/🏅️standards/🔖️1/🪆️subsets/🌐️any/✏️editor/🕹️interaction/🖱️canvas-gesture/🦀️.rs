@@ -204,7 +204,7 @@ pub fn fem2d_marquee_hits(doc: &Fem2dSnapshot, camera: &Viewport2d, method: &str
         }
     };
 
-    for node in &doc.nodes {
+    for node in doc.nodes.iter() {
         let probe = layer_at((node.x, node.y));
         if entity_in_marquee(&polygon, enclosing, probe, None) {
             push((FEM2D_GRANULARITY_NODE, super::fem2d_entity_target_id(FEM2D_GRANULARITY_NODE, &node.id)?));

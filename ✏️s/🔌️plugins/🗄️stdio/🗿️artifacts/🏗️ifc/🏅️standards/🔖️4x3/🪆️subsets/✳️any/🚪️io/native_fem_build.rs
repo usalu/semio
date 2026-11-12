@@ -24,7 +24,7 @@ enum V<'a> {
     T(&'a str, &'a V<'a>),
 }
 fn value(source: &V<'_>, owner: &mut Owner<'_, '_>) -> Result<IfcValue, ValueError> {
-    owner.receive_nested::<IfcValue, IfcValue>(|slot, original| {
+    decoded_nested::<IfcValue, IfcValue>(owner, |slot, original| {
         work(original, size_of::<IfcValue>())?;
         *slot = Some(match source {
             V::U => IfcValue::Unset,
@@ -59,7 +59,7 @@ fn value(source: &V<'_>, owner: &mut Owner<'_, '_>) -> Result<IfcValue, ValueErr
     })
 }
 fn values(source: &[V<'_>], owner: &mut Owner<'_, '_>) -> Result<Vec<IfcValue>, ValueError> {
-    owner.receive_nested::<Vec<IfcValue>, Vec<IfcValue>>(|slot, original| {
+    decoded_nested::<Vec<IfcValue>, Vec<IfcValue>>(owner, |slot, original| {
         *slot = Some(vector(source.len(), original)?);
         for v in source {
             work(original, size_of::<IfcValue>())?;
@@ -74,7 +74,7 @@ fn add(snapshot: &mut IfcSnapshot, name: &str, args: &[V<'_>], owner: &mut Owner
     }
     work(owner, size_of::<IfcEntity>())?;
     let id = snapshot.entities.len() as u64 + 1;
-    let entity = owner.receive_nested::<IfcEntity, IfcEntity>(|slot, original| {
+    let entity = decoded_nested::<IfcEntity, IfcEntity>(owner, |slot, original| {
         work(original, size_of::<IfcEntity>())?;
         *slot = Some(IfcEntity { id, name: String::new(), args: Vec::new(), complex: Vec::new() });
         let row = slot.as_mut().unwrap();
@@ -97,7 +97,7 @@ fn guid(id: u64, bytes: &mut [u8; 22]) -> &str {
     std::str::from_utf8(bytes).expect("decimal IFC GUID")
 }
 fn root(snapshot: &mut IfcSnapshot, kind: &str, name: &str, tail: &[V<'_>], owner: &mut Owner<'_, '_>) -> Result<u64, ValueError> {
-    owner.receive_nested::<Vec<IfcValue>, u64>(|slot, original| {
+    decoded_nested::<Vec<IfcValue>, u64>(owner, |slot, original| {
         let id = snapshot.entities.len() as u64 + 1;
         let mut bytes = [0; 22];
         *slot = Some(vector(4 + tail.len(), original)?);
@@ -114,7 +114,7 @@ fn root(snapshot: &mut IfcSnapshot, kind: &str, name: &str, tail: &[V<'_>], owne
             return Err(invalid("analytical graph exceeded its admitted backing"));
         }
         work(original, size_of::<IfcEntity>())?;
-        let entity = original.receive_nested::<IfcEntity, IfcEntity>(|row, child| {
+        let entity = decoded_nested::<IfcEntity, IfcEntity>(original, |row, child| {
             work(child, size_of::<IfcEntity>())?;
             *row = Some(IfcEntity { id, name: String::new(), args: Vec::new(), complex: Vec::new() });
             row.as_mut().unwrap().name = copy(kind, child)?;
@@ -144,14 +144,24 @@ struct Build {
     incident: Vec<bool>,
     load_cases: Option<Vec<IfcValue>>,
 }
+fn rank(source: &Fem3dSnapshot, index: &FemIdentityIndex, kind: FemIdentityKind, id: &str, owner: &mut Owner<'_, '_>) -> Result<usize, ValueError> {
+    let mut found = None;
+    settled(index.lookup(source, kind, id, &mut found, owner))?;
+    found.ok_or_else(|| invalid("FEM identity lookup published no rank"))
+}
+fn identities(source: &Fem3dSnapshot, owner: &mut Owner<'_, '_>) -> Result<FemIdentityIndex, ValueError> {
+    let mut index = None;
+    settled(FemIdentityIndex::receive(source, &mut index, owner))?;
+    index.ok_or_else(|| invalid("FEM identity index published no namespace"))
+}
 fn node(source: &Fem3dSnapshot, index: &FemIdentityIndex, id: &str, owner: &mut Owner<'_, '_>) -> Result<usize, ValueError> {
-    index.lookup(source, FemIdentityKind::Node, id, owner)
+    rank(source, index, FemIdentityKind::Node, id, owner)
 }
 fn material(source: &Fem3dSnapshot, index: &FemIdentityIndex, id: &str, owner: &mut Owner<'_, '_>) -> Result<usize, ValueError> {
-    index.lookup(source, FemIdentityKind::Material, id, owner)
+    rank(source, index, FemIdentityKind::Material, id, owner)
 }
 fn section(source: &Fem3dSnapshot, index: &FemIdentityIndex, id: &str, owner: &mut Owner<'_, '_>) -> Result<usize, ValueError> {
-    index.lookup(source, FemIdentityKind::Section, id, owner)
+    rank(source, index, FemIdentityKind::Section, id, owner)
 }
 fn support(rows: &[(usize, usize)], node: usize, owner: &mut Owner<'_, '_>) -> Result<Option<usize>, ValueError> {
     let (mut lo, mut hi) = (0, rows.len());
@@ -186,13 +196,13 @@ fn admission(source: &Fem3dSnapshot, owner: &mut Owner<'_, '_>) -> Result<usize,
 
 /// 📤️ Builds an ADD2 analytical graph with funded values, identities, collections and failure retirement.
 pub(super) fn receive(source: &Fem3dSnapshot, owner: &mut Owner<'_, '_>) -> Result<IfcSnapshot, ValueError> {
-    owner.scoped_stage(|owner| owner.receive_nested::<Build, IfcSnapshot>(|slot, original| {
+    scoped(owner, |owner| decoded_nested::<Build, IfcSnapshot>(owner, |slot, original| {
         original.native().begin_stage(0)?;
         let extent = admission(source, original)?;
         work(original, size_of::<Build>())?;
         *slot = Some(Build::default());
         let frame = slot.as_mut().unwrap();
-        frame.identity = Some(FemIdentityIndex::receive(source, original)?);
+        frame.identity = Some(identities(source, original)?);
         frame.support_nodes = vector(source.supports.len(), original)?;
         let identity = frame.identity.as_ref().unwrap();
         frame.incident = vector(source.nodes.len(), original)?;
@@ -340,8 +350,8 @@ pub(super) fn receive(source: &Fem3dSnapshot, owner: &mut Owner<'_, '_>) -> Resu
             let ei = node(source, identity, end, original)?;
             let mi = material(source, identity, mat, original)?;
             let pi = section(source, identity, sec, original)?;
-            let s = source.nodes.get(si).ok_or_else(|| invalid("analytical start row is absent"))?;
-            let t = source.nodes.get(ei).ok_or_else(|| invalid("analytical end row is absent"))?;
+            let s = source.nodes.get().get(si).ok_or_else(|| invalid("analytical start row is absent"))?;
+            let t = source.nodes.get().get(ei).ok_or_else(|| invalid("analytical end row is absent"))?;
             let z = axis([s.x, s.y, s.z], [t.x, t.y, t.z])?;
             let direction = add(graph, "IFCDIRECTION", &[V::A(&[V::R(z[0]), V::R(z[1]), V::R(z[2])])], original)?;
             let edge = add(graph, "IFCEDGE", &[V::Ref(frame.nodes[si].1), V::Ref(frame.nodes[ei].1)], original)?;
@@ -361,7 +371,7 @@ pub(super) fn receive(source: &Fem3dSnapshot, owner: &mut Owner<'_, '_>) -> Resu
             work(original, size_of::<IfcValue>() + size_of::<Vec<IfcValue>>())?;
             graph.entities.last_mut().unwrap().args[7] = IfcValue::Aggregate(frame.load_cases.take().unwrap());
         }
-        original.receive_nested::<Vec<IfcValue>, ()>(|objects, child| {
+        decoded_nested::<Vec<IfcValue>, ()>(original, |objects, child| {
             *objects = Some(vector(frame.nodes.len() + frame.members.len(), child)?);
             for id in frame.nodes.iter().map(|v| v.0).chain(frame.members.iter().copied()) {
                 work(child, size_of::<IfcValue>())?;
@@ -378,7 +388,7 @@ fn root_with_objects(graph: &mut IfcSnapshot, analysis: u64, objects: &mut Optio
     if graph.entities.len() == graph.entities.capacity() {
         return Err(invalid("analytical graph exceeded its admitted backing"));
     }
-    owner.receive_nested::<IfcEntity, ()>(|slot, original| {
+    decoded_nested::<IfcEntity, ()>(owner, |slot, original| {
         let id = graph.entities.len() as u64 + 1;
         work(original, size_of::<IfcEntity>())?;
         *slot = Some(IfcEntity { id, name: String::new(), args: Vec::new(), complex: Vec::new() });

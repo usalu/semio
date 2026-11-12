@@ -2,7 +2,6 @@
 use super::*;
 use semio_framework_pack_json::{JsonGrammarCursor,JsonReadLimits,JsonSourceCursor,JsonMemberPolicy,Value,Number};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation;
-use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[path="🎟️context/🦀️.rs"] mod original_context;
 pub use original_context::EvaluationRequestContextInput;
@@ -37,17 +36,16 @@ pub struct EvaluationInvokeCursor {
     operation:u64,generation:u64,pointer:usize,length:usize,
     parser:Option<JsonGrammarCursor<Value>>,continuation:Option<NativeDecodeContinuation>,
     root:Option<Value>,request:Option<EvaluateRequest>,reply_pending:Option<neural_engine::PendingExtensionEval>,active:Option<Box<dyn ErasedSnapshotRetirement>>,
-    field:usize,result_field:usize,result_required:u8,required:u8,decoded:bool,normal_context_posted:bool,normal_progress:RetainedCloneProgress,work:u64,
+    field:usize,result_field:usize,result_required:u8,required:u8,decoded:bool,normal_context_posted:bool,normal_progress:RetainedCloneProgress,
     pub slot:Option<usize>,lookup:Option<EvaluationSlotLookup>,insertion:Option<EvaluationOriginalInsertion>,insertion_registry:Option<neural_engine::SharedRegistry>,round_units:u64,
     suppressed_wire:Option<EvaluationWire>,ready_wire:Option<EvaluationWire>,ready_complete:bool,ready_faulted:bool,ready_external:bool,wait_terminal:bool,fault:Option<EvaluationFailure>,close_failure:Option<original_failure::EvaluationCloseFailure>,fault_place:Option<semio_framework_job::OriginalDomainReservation<EvaluationFailure>>,close_failure_place:Option<semio_framework_job::OriginalDomainReservation<original_failure::EvaluationCloseFailure>>,response:Option<EvaluationOutput>,response_failed:bool,context:Option<EvaluationRequestContext>,context_prepared:bool,closing:bool,
 }
 impl EvaluationInvokeCursor {
     pub fn new(operation:u64,generation:u64,request:&[u8])->Self {
-        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,required:0,decoded:false,normal_context_posted:false,normal_progress:Default::default(),work:0,slot:None,lookup:None,insertion:None,insertion_registry:None,round_units:0,suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,close_failure:None,fault_place:None,close_failure_place:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
+        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,required:0,decoded:false,normal_context_posted:false,normal_progress:Default::default(),slot:None,lookup:None,insertion:None,insertion_registry:None,round_units:0,suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,close_failure:None,fault_place:None,close_failure_place:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
     }
     /// 🧾️ Reports whether this exact last step already posted its original context receipt.
     pub fn normal_context_posted(&self)->bool{self.normal_context_posted}
-    pub fn take_work(&mut self)->u64{std::mem::take(&mut self.work)+self.context.as_mut().map_or(0,EvaluationRequestContext::take_work)+self.response.as_mut().map_or(0,EvaluationOutput::take_work)}
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_progress}
     pub fn matches(&self,operation:u64,generation:u64,request:&[u8])->bool{self.operation==operation&&self.generation==generation&&self.pointer==request.as_ptr()as usize&&self.length==request.len()}
     pub fn begin_close(&mut self){self.closing=true;}
@@ -71,27 +69,29 @@ impl EvaluationInvokeCursor {
         if let Some(slot)=self.slot{let jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((key,owner))=jobs.jobs.slot_entry(slot){if key.0!=registry.owner_identity(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original invocation close found another registry owner"));}if !owner.close_fields_terminal(false,false){return owner.retirement_demands(copy,false,false);}}return Ok(RetirementDemand{depth:1,..Default::default()});}
         self.retirement_demands(copy)
     }
-    pub fn close_step_with_registry(&mut self,registry:&neural_engine::SharedRegistry,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
+    pub fn close_step_with_registry(&mut self,registry:&neural_engine::SharedRegistry,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+        let grant=effect.grant();
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(slot)=self.slot{let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((key,owner))=jobs.jobs.slot_entry_mut(slot){if key.0!=registry.owner_identity(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original invocation close found another registry owner").into());}if !owner.close_fields_terminal(false,false){owner.cancel();return owner.close_step(grant,false,false);}}self.slot=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-        self.close_step(grant)
+        if let Some(slot)=self.slot{let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((key,owner))=jobs.jobs.slot_entry_mut(slot){if key.0!=registry.owner_identity(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original invocation close found another registry owner").into());}if !owner.close_fields_terminal(false,false){owner.cancel();return owner.close_step(body,effect,false,false);}}self.slot=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+        self.close_step(body,effect)
     }
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
+    pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,RetirementPollExit>{
+        let grant=effect.grant();
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(context)=&mut self.context{let step=context.close_step(grant)?;if context.terminal_is_empty(){self.context=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.active.is_some(){return evaluation_child_close(&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.root.is_some(){return evaluation_admit_original(&mut self.root,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.suppressed_wire.is_some(){return evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if let Some(place)=self.close_failure_place.as_mut(){let step=place.close_step(grant).result?;if place.terminal_is_empty(){self.close_failure_place=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if let Some(place)=self.fault_place.as_mut(){let step=place.close_step(grant).result?;if place.terminal_is_empty(){self.fault_place=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.close_failure.is_some(){return evaluation_admit_original(&mut self.close_failure,&mut self.active,grant,&mut self.work).map_err(Into::into);}if self.fault.is_some(){return evaluation_admit_original(&mut self.fault,&mut self.active,grant,&mut self.work).map_err(Into::into);}
-        if let Some(response)=&mut self.response{let step=response.close_step(grant)?;if response.terminal_is_empty(){self.response=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(context)=&mut self.context{let step=context.close_step(body,effect)?;if context.terminal_is_empty(){self.context=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.active.is_some(){return evaluation_child_close(&mut self.active,body,effect);}
+        if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,effect);}
+        if self.root.is_some(){return evaluation_admit_original(&mut self.root,&mut self.active,effect);}
+        if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,effect);}
+        if self.suppressed_wire.is_some(){return evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,effect);}
+        if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,effect);}
+        if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,effect);}
+        if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,effect);}
+        if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,effect);}
+        if let Some(place)=self.close_failure_place.as_mut(){let step=RetirementPollExit::resume(place.close_step(body,effect))?;if place.terminal_is_empty(){self.close_failure_place=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(place)=self.fault_place.as_mut(){let step=RetirementPollExit::resume(place.close_step(body,effect))?;if place.terminal_is_empty(){self.fault_place=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.close_failure.is_some(){return evaluation_admit_original(&mut self.close_failure,&mut self.active,effect);}if self.fault.is_some(){return evaluation_admit_original(&mut self.fault,&mut self.active,effect);}
+        if let Some(response)=&mut self.response{let step=response.close_step(body,effect)?;if response.terminal_is_empty(){self.response=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if self.continuation.is_some()||self.slot.is_some()||self.lookup.is_some(){
             if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original invocation metadata requires admitted depth").into());}
             if self.continuation.is_some(){self.continuation=None;}else if self.lookup.is_some(){self.lookup=None;}else{self.slot=None;}
@@ -174,29 +174,29 @@ impl EvaluationInvokeCursor {
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok((None,empty));}
         if let Some(input)=context_input.as_ref(){self.wait_terminal=input.wait_terminal;}
         if self.ready_wire.is_some()&&!cancelled&&!self.closing{
-            if self.active.is_some()||self.request.is_some()||self.reply_pending.is_some(){let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant,&mut self.work)}else if self.request.is_some(){evaluation_admit_original(&mut self.request,&mut self.active,grant,&mut self.work)}else{evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant,&mut self.work)}?;return Ok((None,step.progress()));}
+            if self.active.is_some()||self.request.is_some()||self.reply_pending.is_some(){let step=evaluation_effect_step(cx,grant,|effect|if self.active.is_some(){evaluation_child_close(&mut self.active,grant.maximum_copy_bytes,effect)}else if self.request.is_some(){evaluation_admit_original(&mut self.request,&mut self.active,effect)}else{evaluation_admit_original(&mut self.reply_pending,&mut self.active,effect)})?;return Ok((None,step.progress()));}
             self.slot=None;return Ok((Some(EvaluationReply{retirement_posted:false,external_pending:self.ready_external,pending_source:None,wire:self.ready_wire.take(),complete:self.ready_complete,faulted:self.ready_faulted,retirement_progress:Default::default(),returned_request:None,refusal:None}),RetainedCloneProgress{copied_items:1,..empty}));
         }
-        if self.suppressed_wire.is_some()||(!self.closing&&self.active.is_some()){let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant,&mut self.work)}else{evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,grant,&mut self.work)}?;return Ok((None,step.progress()));}
+        if self.suppressed_wire.is_some()||(!self.closing&&self.active.is_some()){let step=evaluation_effect_step(cx,grant,|effect|if self.active.is_some(){evaluation_child_close(&mut self.active,grant.maximum_copy_bytes,effect)}else{evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,effect)})?;return Ok((None,step.progress()));}
         if cancelled&&!self.closing{if let Some(slot)=self.slot{let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((_,owner))=jobs.jobs.slot_entry_mut(slot){owner.cancel();}}self.fail(EvaluationFailure::Literal("original invocation cancelled"));}
         if let Some(response)=&mut self.response{
-            if self.response_failed{let step=response.close_step(grant)?;if response.terminal_is_empty(){self.response=None;self.response_failed=false;}return Ok((None,step.progress()));}
-            let result=response.step(1,0,grant);let receipt=response.normal_step_progress();
+            if self.response_failed{let step=evaluation_effect_step(cx,grant,|effect|response.close_step(grant.maximum_copy_bytes,effect))?;if response.terminal_is_empty(){self.response=None;self.response_failed=false;}return Ok((None,step.progress()));}
+            let result=evaluation_effect(cx,grant,|effect|response.step(1,0,effect))?.unwrap_or(Ok((None,empty)));let receipt=response.normal_step_progress();
             return match result{Ok((Some(reply),_))=>{assert!(response.terminal_is_empty());self.response=None;self.slot=None;Ok((Some(reply),receipt))},Ok((None,_))=>Ok((None,receipt)),Err(fault)=>{self.response_failed=true;self.fail(fault);Ok((None,receipt))}};
         }
         if self.closing{
-            if self.fault.is_some(){if let Some(slot)=self.slot{let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((_,owner))=jobs.jobs.slot_entry_mut(slot){owner.cancel();let step=owner.close_step(grant,false,false)?;if owner.close_fields_terminal(false,false){self.slot=None;}return Ok((None,step.progress()));}self.slot=None;return Ok((None,RetainedCloneProgress{copied_items:1,..empty}));}}
-            if self.fault.is_some()&&self.context.is_some(){let context=self.context.as_mut().unwrap();let step=context.close_step(grant)?;if context.terminal_is_empty(){self.context=None;}return Ok((None,step.progress()));}
+            if self.fault.is_some(){if let Some(slot)=self.slot{let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((_,owner))=jobs.jobs.slot_entry_mut(slot){owner.cancel();let step=evaluation_effect_step(cx,grant,|effect|owner.close_step(grant.maximum_copy_bytes,effect,false,false))?;if owner.close_fields_terminal(false,false){self.slot=None;}return Ok((None,step.progress()));}self.slot=None;return Ok((None,RetainedCloneProgress{copied_items:1,..empty}));}}
+            if self.fault.is_some()&&self.context.is_some(){let context=self.context.as_mut().unwrap();let step=evaluation_effect_step(cx,grant,|effect|context.close_step(grant.maximum_copy_bytes,effect))?;if context.terminal_is_empty(){self.context=None;}return Ok((None,step.progress()));}
             if self.active.is_some()||self.parser.is_some()||self.root.is_some()||self.continuation.is_some()||self.lookup.is_some(){
-                let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant,&mut self.work)}else if self.parser.is_some(){evaluation_admit_original(&mut self.parser,&mut self.active,grant,&mut self.work)}else if self.root.is_some(){evaluation_admit_original(&mut self.root,&mut self.active,grant,&mut self.work)}else{if self.continuation.is_some(){self.continuation=None;}else{self.lookup=None;}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))};
-                return step.map(|step|(None,step.progress())).map_err(Into::into);
+                let step=if self.active.is_some()||self.parser.is_some()||self.root.is_some(){evaluation_effect_step(cx,grant,|effect|if self.active.is_some(){evaluation_child_close(&mut self.active,grant.maximum_copy_bytes,effect)}else if self.parser.is_some(){evaluation_admit_original(&mut self.parser,&mut self.active,effect)}else{evaluation_admit_original(&mut self.root,&mut self.active,effect)})?}else{if self.continuation.is_some(){self.continuation=None;}else{self.lookup=None;}RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty})};
+                return Ok((None,step.progress()));
             }
             if self.fault.is_some()||self.fault_place.is_some(){
-                if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
+                if self.ready_wire.is_some(){return evaluation_effect_step(cx,grant,|effect|evaluation_admit_original(&mut self.ready_wire,&mut self.active,effect)).map(|step|(None,step.progress()));}
+                if self.request.is_some(){return evaluation_effect_step(cx,grant,|effect|evaluation_admit_original(&mut self.request,&mut self.active,effect)).map(|step|(None,step.progress()));}
+                if self.insertion.is_some(){return evaluation_effect_step(cx,grant,|effect|evaluation_admit_original(&mut self.insertion,&mut self.active,effect)).map(|step|(None,step.progress()));}
+                if self.insertion_registry.is_some(){return evaluation_effect_step(cx,grant,|effect|evaluation_admit_original(&mut self.insertion_registry,&mut self.active,effect)).map(|step|(None,step.progress()));}
+                if self.reply_pending.is_some(){return evaluation_effect_step(cx,grant,|effect|evaluation_admit_original(&mut self.reply_pending,&mut self.active,effect)).map(|step|(None,step.progress()));}
                 let before=cx.retained_progress();let admitted=match original_failure::admit_evaluation_failure(&mut self.fault,&mut self.fault_place,cx){Ok(failure)=>failure,Err(failure)=>Some(failure)};
                 self.normal_context_posted=true;let after=cx.retained_progress();let receipt=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
                 return Ok((admitted.map(|original|EvaluationReply{retirement_posted:true,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:receipt,returned_request:None,refusal:Some(EvaluationFailure::Original(original))}),receipt));
@@ -230,10 +230,13 @@ impl EvaluationInvokeCursor {
         }
         if self.root.is_some(){let result=self.decode_field(grant);return match result{Ok(receipt)=>Ok((None,receipt)),Err(fault)=>{self.fail(fault);Ok((None,RetainedCloneProgress{copied_items:1,..empty}))}};}
         if self.parser.is_none(){let source=JsonSourceCursor::<_,Value>::new(request,JsonMemberPolicy::Reject,JsonReadLimits{maximum_bytes:request.len()as u64,maximum_allocation_bytes:grant.maximum_capacity_bytes,maximum_depth:grant.maximum_depth,maximum_items:request.len()as u64})?;self.parser=Some(source.into_grammar().1);return Ok((None,RetainedCloneProgress{copied_items:1,..empty}));}
-        let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();
-        let mut control=match self.continuation.take(){Some(original)=>NativeDecodeControl::resume(original,&mut callback)?,None=>NativeDecodeControl::new_retained(&mut callback)};
-        let mut source=JsonSourceCursor::from_grammar(request,self.parser.take().unwrap());
-        let result=source.step(1,&mut control,grant);let receipt=source.normal_step_progress();self.parser=Some(source.into_grammar().1);self.continuation=Some(control.pause().map_err(|error|error.with_retained_progress(receipt))?);
+        let Some(stepped)=evaluation_effect_cx(cx,grant,|cx,effect|->Result<(Result<Option<Value>,semio_framework_pack_json::JsonError>,RetainedCloneProgress),ValueError>{
+            let mut callback=|_|!cx.should_yield()&&!cx.is_cancelled();
+            let mut control=evaluation_resume_decoding(&mut self.continuation,&mut callback)?;
+            let mut source=JsonSourceCursor::from_grammar(request,self.parser.take().unwrap());
+            let result=source.step(1,&mut control,effect);let receipt=source.normal_step_progress();self.parser=Some(source.into_grammar().1);evaluation_pause_decoding(control,&mut self.continuation).map_err(|error|error.with_retained_progress(receipt))?;Ok((result,receipt))
+        })? else{return Ok((None,empty))};
+        let (result,receipt)=stepped?;
         match result{Ok(Some(original))=>self.root=Some(original),Ok(None)=>{},Err(fault)=>self.fail(fault.into())};Ok((None,receipt))
     }
 }
@@ -361,7 +364,7 @@ pub fn evaluate_invoke_json(owner:&mut ExtensionEvaluationResources,request:&[u8
     let pending=owner.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner);
     let cursor=pending.as_mut().unwrap();let before_fuel=cx.fuel_remaining();let result=cursor.step(owner.registry.as_ref().expect("admitted original registry"),request,cx);
     let (reply,receipt,refusal)=match result{Ok((reply,receipt))=>{let refusal=if cursor.normal_context_posted{None}else{cx.consume_retained(receipt).err().map(Into::into)};(reply,receipt,refusal)},Err(closure)=>{let receipt=cursor.normal_step_progress();let receipt_refusal=if cursor.normal_context_posted{None}else{cx.consume_retained(receipt).err()};assert!(cursor.close_failure.is_none());cursor.close_failure=Some(original_failure::EvaluationCloseFailure{initial:cursor.fault.take(),closure,receipt_refusal});cursor.begin_close();(None,receipt,None)}};
-    let work=cursor.take_work();if cx.fuel_remaining()==before_fuel{cx.consume_fuel(work.max(receipt.copied_items as u64))}else{cx.consume_fuel(work)}let mut reply=reply;let refusal=match reply.as_mut().and_then(|reply|reply.refusal.take()){Some(EvaluationFailure::Original(original))=>Some(original),Some(original)=>{cursor.fail(original);refusal},None=>refusal};let payload=reply.and_then(|reply|reply.wire).map(|wire|wire.to_vec_owner());
+    if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items as u64)}let mut reply=reply;let refusal=match reply.as_mut().and_then(|reply|reply.refusal.take()){Some(EvaluationFailure::Original(original))=>Some(original),Some(original)=>{cursor.fail(original);refusal},None=>refusal};let payload=reply.and_then(|reply|reply.wire).map(|wire|wire.to_vec_owner());
     if payload.is_some(){assert!(cursor.terminal_is_empty());*pending=None;}else if refusal.is_some()&&cursor.terminal_is_empty(){*pending=None;}
     Ok(semio_plugin::ExtensionInvokeStep{payload,retained_progress:receipt,refusal})
 }

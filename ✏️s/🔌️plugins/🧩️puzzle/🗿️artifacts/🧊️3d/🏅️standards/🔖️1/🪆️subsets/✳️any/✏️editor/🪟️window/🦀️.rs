@@ -272,10 +272,11 @@ macro_rules! mutation_wire {
             fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
         }
         impl protocol::OpBinary for $mutation {
-            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
+            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(store::pack_rt::encode_pack_value(&semio_framework_value::ToValue::to_value(self))) }
             fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-                semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+                let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "puzzle3d-window-mutation", offset: 0, detail };
+                let value = store::pack_rt::decode_pack_value(bytes).map_err(|error| malformed(error.to_string()))?;
+                semio_framework_value::FromValue::from_value(store::pack_rt::renormalize_whole_number_floats(value)).map_err(|error| malformed(error.to_string()))
             }
         }
     };
@@ -512,6 +513,7 @@ impl protocol::ColdDiffAlgebra<Puzzle3dWindowConfig> for Puzzle3dWindowConfigDif
 
 json_store!(Puzzle3dWindowTransient, "puzzle3dwindowtransient", "s.puzzle.puzzle3d.windowtransient");
 mutation_wire!(Puzzle3dWindowConfigMutation);
+semio_os_kernel::original_pack_value_operation_receiving!(Puzzle3dWindowConfigMutation);
 mutation_wire!(Puzzle3dWindowTransientMutation);
 /// 🕳️ Tri-state decode of every `Option<Option<T>>` diff slot: a missing key is the unchanged slot (`None`) and a PRESENT
 /// `null` is the clear `Some(None)`, never the unchanged slot the blanket `Option<T>` decode would fold it into.

@@ -1,8 +1,11 @@
 //! 🔤️ Borrowed type tokens are compared and copied through bounded original byte events.
 use super::{ports::PortTypes,compare::TextCompare};
-use semio_framework_job::{admit_original_construction,OriginalConstructionDemand,OriginalTurnFailure,StepContext};
+use semio_framework_job::{OriginalConstructionDemand,OriginalTurnFailure,StepContext};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneClose,retained_clone_grant_admits};
+use semio_framework_value::{RetainedAllocationEffect,OriginalRetirementPoll,RetirementPollExit};
+use semio_os_flow_host_source::{close_with_effect,close_with_poll,poll_outcome};
+use super::storage::Construction;
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original port type text changed its retained frontier")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
@@ -42,15 +45,15 @@ impl TypeCompatibility{
   if self.compare.reset(cx)?{if self.matched.take().unwrap(){self.done=Some(true)}else{self.b=None}}Ok(self.done)
  }
 }
-pub(super) struct TypeTextWork{binding:Option<[usize;6]>,cursor:Segments,part:Option<Address>,output:ManuallyDrop<Option<String>>,retirement:RetainedCloneClose,total:usize,parts:usize,offset:usize,phase:u8,closing:bool}
+pub(super) struct TypeTextWork{construction:Construction,binding:Option<[usize;6]>,cursor:Segments,part:Option<Address>,output:ManuallyDrop<Option<String>>,retirement:RetainedCloneClose,total:usize,parts:usize,offset:usize,phase:u8,closing:bool}
 impl TypeTextWork{
- pub(super) fn new()->Self{Self{binding:None,cursor:Segments::new(),part:None,output:ManuallyDrop::new(None),retirement:Default::default(),total:0,parts:0,offset:0,phase:0,closing:false}}
+ pub(super) fn new()->Self{Self{construction:Default::default(),binding:None,cursor:Segments::new(),part:None,output:ManuallyDrop::new(None),retirement:Default::default(),total:0,parts:0,offset:0,phase:0,closing:false}}
  pub(super) fn next_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{let _=copy;Ok(RetirementDemand{capacity_bytes:if self.phase==2{self.total}else{0},..fixed(256)})}
  pub(super) fn step(&mut self,input:TextInput<'_>,cx:&mut StepContext<'_>)->Result<Option<String>,OriginalTurnFailure>{
   if self.closing||self.binding.is_some_and(|b|b!=input.binding()){return Err(invalid().into())}match self.phase{
    0=>if paid(cx,size_of::<Self>())?{self.binding=Some(input.binding());self.phase=1},
    1=>match self.cursor.step(input,cx)?{Segment::Working=>{},Segment::Part(a)=>{let separator=usize::from(input.split()&&self.parts!=0);self.total=self.total.checked_add(a.end-a.start).and_then(|n|n.checked_add(separator)).ok_or_else(invalid)?;self.parts+=1},Segment::End=>{self.phase=2}},
-   2=>{let d=self.next_demands(cx.retained_grant().maximum_copy_bytes)?;let mut accepted=None;admit_original_construction(cx,&mut accepted,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},|_|{let result=(||{let mut output=String::new();output.try_reserve_exact(self.total).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original port diagnostic text allocation refused"))?;let actual=output.capacity();*self.output=Some(output);self.phase=3;Ok(((),RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})();RetainedWorkOutcome{result,work:1}})?;},
+   2=>{let d=self.next_demands(cx.retained_grant().maximum_copy_bytes)?;self.construction.run(cx,OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},||(||{let mut output=String::new();output.try_reserve_exact(self.total).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original port diagnostic text allocation refused"))?;let actual=output.capacity();*self.output=Some(output);self.phase=3;Ok(((),RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})())?;},
    3=>if self.cursor.reset(cx)?{self.parts=0;self.phase=4},
    4=>{if self.part.is_none(){match self.cursor.step(input,cx)?{Segment::Working=>{},Segment::Part(a)=>{self.part=Some(a);self.offset=0;self.phase=5},Segment::End=>self.phase=6}return Ok(None)}return Err(invalid().into())},
    5=>{let part=self.part.ok_or_else(invalid)?.text(input)?;let mut end=(self.offset+64).min(part.len());while !part.is_char_boundary(end){end-=1}let count=end-self.offset;let separator=usize::from(input.split()&&self.parts!=0&&self.offset==0);if paid(cx,count+separator+2*size_of::<usize>())?{let output=self.output.as_mut().ok_or_else(invalid)?;if separator!=0{output.push(',')}output.push_str(&part[self.offset..end]);self.offset=end;if end==part.len(){self.part=None;self.parts+=1;self.phase=4}}},
