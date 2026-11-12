@@ -6807,6 +6807,803 @@
         }
       ]
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "dome",
+          "kind": "loft",
+          "bone": "trunk",
+          "material": "spines",
+          "role": "body",
+          "tone": 0.35,
+          "region": "spines-dome",
+          "sections": [
+            {
+              "at": [-0.036, 0.0067, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0302, 0.0067, 0],
+              "rx": 0.014,
+              "ry": 0.0418,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0127, 0.0115, 0],
+              "rx": 0.031,
+              "ry": 0.0623,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0183, 0.0111, 0],
+              "rx": 0.0406,
+              "ry": 0.0712,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0532, 0.0121, 0],
+              "rx": 0.0445,
+              "ry": 0.0746,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0882, 0.0144, 0],
+              "rx": 0.045,
+              "ry": 0.075,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.1231, 0.0122, 0],
+              "rx": 0.0383,
+              "ry": 0.0691,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.1464, 0.0082, 0],
+              "rx": 0.0265,
+              "ry": 0.0575,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.1551, 0.0053, 0],
+              "rx": 0.0041,
+              "ry": 0.0226,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.158, 0.0053, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "belly",
+          "kind": "loft",
+          "bone": "trunk",
+          "material": "belly-fur",
+          "role": "body",
+          "tone": 0.25,
+          "regions": ["belly-fur", "limbs-fur", "paws-skin"],
+          "sections": [
+            {
+              "at": [0.0238, -0.0407, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.0275, -0.0407, 0],
+              "rx": 0.011,
+              "ry": 0.0492,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.0387, -0.0426, 0],
+              "rx": 0.0146,
+              "ry": 0.055,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.0586, -0.045, 0],
+              "rx": 0.0143,
+              "ry": 0.0546,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.081, -0.0459, 0],
+              "rx": 0.014,
+              "ry": 0.0541,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.1034, -0.0445, 0],
+              "rx": 0.0138,
+              "ry": 0.0538,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.1259, -0.0417, 0],
+              "rx": 0.013,
+              "ry": 0.0525,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.1408, -0.0359, 0],
+              "rx": 0.0098,
+              "ry": 0.0468,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.1464, -0.0319, 0],
+              "rx": 0.004,
+              "ry": 0.0238,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            },
+            {
+              "at": [0.1483, -0.0319, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.4
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "neck",
+          "kind": "loft",
+          "bone": "neck",
+          "material": "face-fur",
+          "role": "body",
+          "tone": 0.45,
+          "region": "face-fur",
+          "sections": [
+            {
+              "at": [-0.0325, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0302, 0, 0],
+              "rx": 0.0133,
+              "ry": 0.0234,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0235, 0, 0],
+              "rx": 0.0216,
+              "ry": 0.0283,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0115, 0, 0],
+              "rx": 0.0245,
+              "ry": 0.0298,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.002, 0, 0],
+              "rx": 0.0249,
+              "ry": 0.03,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0155, 0, 0],
+              "rx": 0.0239,
+              "ry": 0.0295,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.029, 0, 0],
+              "rx": 0.0215,
+              "ry": 0.0283,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.038, 0, 0],
+              "rx": 0.016,
+              "ry": 0.0251,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0414, 0, 0],
+              "rx": 0.0083,
+              "ry": 0.0193,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0425, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "head",
+          "kind": "loft",
+          "bone": "head",
+          "material": "face-fur",
+          "role": "body",
+          "tone": 0.45,
+          "regions": ["face-fur", "nose"],
+          "sections": [
+            {
+              "at": [-0.0248, 0.005, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0221, 0.005, 0],
+              "rx": 0.0147,
+              "ry": 0.0231,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0141, 0.0025, 0],
+              "rx": 0.0238,
+              "ry": 0.028,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0001, 0.0025, 0],
+              "rx": 0.0275,
+              "ry": 0.0297,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0161, 0.0035, 0],
+              "rx": 0.0282,
+              "ry": 0.03,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.032, 0.0037, 0],
+              "rx": 0.0252,
+              "ry": 0.0287,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.048, -0.0014, 0],
+              "rx": 0.0156,
+              "ry": 0.0237,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0587, -0.0049, 0],
+              "rx": 0.007,
+              "ry": 0.0172,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0627, -0.0046, 0],
+              "rx": 0.004,
+              "ry": 0.0107,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.064, -0.0046, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "nose",
+          "kind": "ellipsoid",
+          "bone": "head",
+          "material": "bare-skin",
+          "role": "body",
+          "tone": 0.1,
+          "regions": ["nose"],
+          "radii": [0.007, 0.007, 0.008],
+          "transform": {
+            "translation": [0.0594, -0.0045, 0],
+            "rotation": [0, 0, 0.173648, 0.984808]
+          }
+        },
+        {
+          "id": "skirt-front-near",
+          "kind": "loft",
+          "bone": "coat-fn",
+          "material": "spines",
+          "role": "body",
+          "tone": 0.3,
+          "region": "spines-skirt",
+          "sections": [
+            {
+              "at": [-0.015, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0122, 0, 0],
+              "rx": 0.0204,
+              "ry": 0.0273,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0038, 0, 0],
+              "rx": 0.0215,
+              "ry": 0.0279,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.011, 0, 0],
+              "rx": 0.0235,
+              "ry": 0.0289,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0278, 0, 0],
+              "rx": 0.0257,
+              "ry": 0.03,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0445, 0, 0],
+              "rx": 0.0163,
+              "ry": 0.025,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0613, 0, 0],
+              "rx": 0.0151,
+              "ry": 0.0243,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0724, 0, 0],
+              "rx": 0.004,
+              "ry": 0.011,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0766, 0, 0],
+              "rx": 0.004,
+              "ry": 0.0063,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.078, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "skirt-rear-near",
+          "kind": "loft",
+          "bone": "coat-rn",
+          "material": "spines",
+          "role": "body",
+          "tone": 0.3,
+          "region": "spines-skirt",
+          "sections": [
+            {
+              "at": [-0.015, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0122, 0, 0],
+              "rx": 0.0204,
+              "ry": 0.0273,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0038, 0, 0],
+              "rx": 0.0215,
+              "ry": 0.0279,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.011, 0, 0],
+              "rx": 0.0235,
+              "ry": 0.0289,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0278, 0, 0],
+              "rx": 0.0257,
+              "ry": 0.03,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0445, 0, 0],
+              "rx": 0.0163,
+              "ry": 0.025,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0613, 0, 0],
+              "rx": 0.0151,
+              "ry": 0.0243,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0724, 0, 0],
+              "rx": 0.004,
+              "ry": 0.011,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0766, 0, 0],
+              "rx": 0.004,
+              "ry": 0.0063,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.078, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "near-fore",
+          "kind": "capsule",
+          "bone": "fore-n",
+          "material": "belly-fur",
+          "role": "body",
+          "tone": 0.5,
+          "region": "limbs-fur",
+          "p0": [0, 0, -0.035],
+          "p1": [0.028, 0, -0.035],
+          "r0": 0.014,
+          "r1": 0.012
+        },
+        {
+          "id": "near-forepaw",
+          "kind": "ellipsoid",
+          "bone": "forepaw-n",
+          "material": "bare-skin",
+          "role": "body",
+          "tone": 0.5,
+          "region": "paws-skin",
+          "radii": [0.0175, 0.0075, 0.0135],
+          "transform": {
+            "translation": [0.0175, 0.0, -0.035]
+          }
+        },
+        {
+          "id": "near-hind",
+          "kind": "capsule",
+          "bone": "hind-n",
+          "material": "belly-fur",
+          "role": "body",
+          "tone": 0.5,
+          "region": "limbs-fur",
+          "p0": [0, 0, -0.042],
+          "p1": [0.033, 0, -0.042],
+          "r0": 0.014,
+          "r1": 0.012
+        },
+        {
+          "id": "near-hindpaw",
+          "kind": "ellipsoid",
+          "bone": "hindpaw-n",
+          "material": "bare-skin",
+          "role": "body",
+          "tone": 0.5,
+          "region": "paws-skin",
+          "radii": [0.02, 0.0075, 0.0135],
+          "transform": {
+            "translation": [0.02, 0.0, -0.042]
+          }
+        },
+        {
+          "id": "skirt-front-far",
+          "kind": "loft",
+          "bone": "coat-ff",
+          "material": "spines",
+          "role": "body",
+          "tone": 0.5,
+          "region": "spines-skirt",
+          "sections": [
+            {
+              "at": [-0.015, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0122, 0, 0],
+              "rx": 0.0204,
+              "ry": 0.0273,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0038, 0, 0],
+              "rx": 0.0215,
+              "ry": 0.0279,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.011, 0, 0],
+              "rx": 0.0235,
+              "ry": 0.0289,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0278, 0, 0],
+              "rx": 0.0257,
+              "ry": 0.03,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0445, 0, 0],
+              "rx": 0.0163,
+              "ry": 0.025,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0613, 0, 0],
+              "rx": 0.0151,
+              "ry": 0.0243,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0724, 0, 0],
+              "rx": 0.004,
+              "ry": 0.011,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0766, 0, 0],
+              "rx": 0.004,
+              "ry": 0.0063,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.078, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "skirt-rear-far",
+          "kind": "loft",
+          "bone": "coat-rf",
+          "material": "spines",
+          "role": "body",
+          "tone": 0.5,
+          "region": "spines-skirt",
+          "sections": [
+            {
+              "at": [-0.015, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0122, 0, 0],
+              "rx": 0.0204,
+              "ry": 0.0273,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [-0.0038, 0, 0],
+              "rx": 0.0215,
+              "ry": 0.0279,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.011, 0, 0],
+              "rx": 0.0235,
+              "ry": 0.0289,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0278, 0, 0],
+              "rx": 0.0257,
+              "ry": 0.03,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0445, 0, 0],
+              "rx": 0.0163,
+              "ry": 0.025,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0613, 0, 0],
+              "rx": 0.0151,
+              "ry": 0.0243,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0724, 0, 0],
+              "rx": 0.004,
+              "ry": 0.011,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.0766, 0, 0],
+              "rx": 0.004,
+              "ry": 0.0063,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            },
+            {
+              "at": [0.078, 0, 0],
+              "rx": 0.004,
+              "ry": 0.004,
+              "rotation": [0.5, 0.5, 0.5, 0.5],
+              "exponent": 2.2
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "far-fore",
+          "kind": "capsule",
+          "bone": "fore-f",
+          "material": "belly-fur",
+          "role": "body",
+          "tone": 0.5,
+          "region": "limbs-fur",
+          "p0": [0, 0, 0.035],
+          "p1": [0.028, 0, 0.035],
+          "r0": 0.014,
+          "r1": 0.012
+        },
+        {
+          "id": "far-forepaw",
+          "kind": "ellipsoid",
+          "bone": "forepaw-f",
+          "material": "bare-skin",
+          "role": "body",
+          "tone": 0.5,
+          "region": "paws-skin",
+          "radii": [0.0175, 0.0075, 0.0135],
+          "transform": {
+            "translation": [0.0175, 0.0, 0.035]
+          }
+        },
+        {
+          "id": "far-hind",
+          "kind": "capsule",
+          "bone": "hind-f",
+          "material": "belly-fur",
+          "role": "body",
+          "tone": 0.5,
+          "region": "limbs-fur",
+          "p0": [0, 0, 0.042],
+          "p1": [0.033, 0, 0.042],
+          "r0": 0.014,
+          "r1": 0.012
+        },
+        {
+          "id": "far-hindpaw",
+          "kind": "ellipsoid",
+          "bone": "hindpaw-f",
+          "material": "bare-skin",
+          "role": "body",
+          "tone": 0.5,
+          "region": "paws-skin",
+          "radii": [0.02, 0.0075, 0.0135],
+          "transform": {
+            "translation": [0.02, 0.0, 0.042]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The spine coat is a dome loft 0.15 m wide and 0.096 m high over a 0.11 m wide belly loft; the four skirts hang as lofts on the four coat bones, 0.04 m off the midline; head and neck are 0.06 m wide lofts with a small nose ellipsoid.",
+          "de": "Das Stachelkleid ist ein Kuppel-Loft von 0,15 m Breite und 0,096 m Höhe über einem 0,11 m breiten Bauch-Loft; die vier Säume hängen als Lofts an den vier Kleidbones, 0,04 m neben der Mittellinie; Kopf und Hals sind 0,06 m breite Lofts mit einer kleinen Nasen-Ellipsoide."
+        },
+        {
+          "en": "The limbs are drawn only in the front view; the elevation hides them under the spine skirt, whose lower edge is at -0.073 m. Legs are short capsules on their bones and flat paw ellipsoids ending at -0.072 m so that the volume height (0.136 m) follows the elevation and dimensions (0.128 m, +6 %); the front view draws the paws down to -0.105 m, which the volume deliberately does not follow.",
+          "de": "Die Gliedmassen sind nur in der Vorderansicht gezeichnet; die Ansicht verbirgt sie unter dem Stachelsaum, dessen Unterkante bei -0,073 m liegt. Die Beine sind kurze Kapseln auf ihren Bones, die Pfoten flache Ellipsoide bis -0,072 m, sodass die Höhe des Volumens (0,136 m) der Ansicht und den Abmessungen (0,128 m, +6 %) folgt; die Vorderansicht zeichnet die Pfoten bis -0,105 m, dem das Volumen bewusst nicht folgt."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "foraging",
       "defaultClip": "forage-walk",
@@ -6820,7 +7617,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

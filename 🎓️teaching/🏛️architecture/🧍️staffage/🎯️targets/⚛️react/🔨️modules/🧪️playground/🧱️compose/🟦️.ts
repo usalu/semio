@@ -7,12 +7,12 @@
  * @see ../🟦️.tsx — the page that draws the parts and downloads the result
  * @see https://www.w3.org/TR/SVG2/struct.html#SVGElement — nested `svg` elements with x, y, width, height and viewBox
  */
-import { mmPerMetre } from "@teaching/staffage";
-import type { Language, Viewpoint } from "@teaching/staffage";
+import { SVG_NAMESPACE, mmPerMetre } from "@teaching/staffage";
+import type { Language, PlanarViewpoint } from "@teaching/staffage";
 import type { Background } from "../../💾️persistence/🟦️.ts";
 
 /** 📍️ Where a placement projects on the line in a viewpoint, from its one 3D position (x along the line, z sideways, the asset's left +): the horizontal position along the paper in metres, the lift above the ground line in metres (plan only: paper up is +z), and the nearness that orders overlapping figures (larger is nearer and painted later). The side elevation looks along z (smaller z is nearer), the front elevation along -x (larger x is nearer), the plan has no overlap order. */
-export function linePosition(viewpoint: Viewpoint, placement: { readonly xM: number; readonly zM: number }, lengthM: number): { readonly horizontalM: number; readonly liftM: number; readonly nearness: number } {
+export function linePosition(viewpoint: PlanarViewpoint, placement: { readonly xM: number; readonly zM: number }, lengthM: number): { readonly horizontalM: number; readonly liftM: number; readonly nearness: number } {
   if (viewpoint === "front") return { horizontalM: lengthM / 2 + placement.zM, liftM: 0, nearness: placement.xM };
   if (viewpoint === "plan") return { horizontalM: placement.xM, liftM: placement.zM, nearness: 0 };
   return { horizontalM: placement.xM, liftM: 0, nearness: -placement.zM };
@@ -51,7 +51,7 @@ const fixed = (value: number): string => String(Number(value.toFixed(3)));
 /** 🧲️ Rounds a position to the grid of `stepM` metres. */
 export const snap = (xM: number, stepM = 0.05): number => Math.round(xM / stepM) * stepM;
 
-/** 📍️ Where a part's nested `svg` sits on the paper: left and top in millimetres. */
+/** 📐️ Where a part's nested `svg` sits on the paper: left and top in millimetres. */
 export function partOffsetMm(part: Pick<ComposedPart, "xM" | "originXMm" | "originYMm" | "liftM">, scale: number, groundMm: number, marginMm = MARGIN_MM): { readonly xMm: number; readonly yMm: number } {
   const k = mmPerMetre({ denominator: scale });
   return { xMm: marginMm + part.xM * k - part.originXMm, yMm: groundMm - part.originYMm - (part.liftM ?? 0) * k };
@@ -60,7 +60,7 @@ export function partOffsetMm(part: Pick<ComposedPart, "xM" | "originXMm" | "orig
 /** 🏞️ The paper height above the ground line that holds the tallest part. */
 export const aboveGroundMm = (parts: readonly ComposedPart[], scale = 100): number => Math.max(0, ...parts.map((part) => part.originYMm + (part.liftM ?? 0) * mmPerMetre({ denominator: scale })));
 
-/** 🏞️ The paper height below the ground line that holds the lowest part (a plan figure sideways of the line). */
+/** 📤️ The paper height below the ground line that holds the lowest part (a plan figure sideways of the line). */
 export const belowGroundMm = (parts: readonly ComposedPart[], scale = 100): number => Math.max(0, ...parts.map((part) => part.heightMm - part.originYMm - (part.liftM ?? 0) * mmPerMetre({ denominator: scale })));
 
 /** 🔧️ The inner content of an SVG document: everything between its root tags. */
@@ -99,7 +99,7 @@ export function composeSvg(parts: readonly ComposedPart[], options: ComposeOptio
     })
     .join("");
   const assets = [...new Set(parts.map((part) => part.asset))];
-  const meta = `<metadata><staffage xmlns="https://semio.tech/staffage/v1" scale="1:${fixed(options.scale)}" view="${escapeXml(options.view)}" viewpoint="${escapeXml(options.viewpoint)}" length-m="${fixed(options.lengthM)}" mm-per-metre="${fixed(k)}" language="${options.language}" assets="${escapeXml(assets.join(" "))}"/></metadata>`;
+  const meta = `<metadata><staffage xmlns="${SVG_NAMESPACE}" scale="1:${fixed(options.scale)}" view="${escapeXml(options.view)}" viewpoint="${escapeXml(options.viewpoint)}" length-m="${fixed(options.lengthM)}" mm-per-metre="${fixed(k)}" language="${options.language}" assets="${escapeXml(assets.join(" "))}"/></metadata>`;
   const background = options.background === "transparent" ? "" : `<rect id="background" width="${fixed(widthMm)}" height="${fixed(heightMm)}" fill="${palette.fill}"/>`;
   const ground = `<line id="ground" x1="${fixed(margin)}" y1="${fixed(groundMm)}" x2="${fixed(margin + options.lengthM * k)}" y2="${fixed(groundMm)}" stroke="${palette.ink}" stroke-width="0.5"/>`;
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${fixed(widthMm)}mm" height="${fixed(heightMm)}mm" viewBox="0 0 ${fixed(widthMm)} ${fixed(heightMm)}"><title>${escapeXml(options.title)} 1:${fixed(options.scale)}</title>${meta}${background}${body}${ground}${scaleBar(options, groundMm, palette.ink)}</svg>\n`;

@@ -8,13 +8,14 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { VIEWPOINTS, type Asset, type Viewpoint } from "../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type Asset, type Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DrawingScene } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { DIMENSION_GAP_MM } from "../../🔨️modules/🎨️depiction/🏷️annotations/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 
 type Case = { name: string; box: [number, number, number, number]; items: [number, number][][] };
 type Verdict = Record<string, { intersects: boolean; distance: number }>;
@@ -44,7 +45,7 @@ function measure(cases: Case[]): Verdict {
   try {
     const file = join(directory, "cases.json");
     writeFileSync(file, JSON.stringify(cases));
-    return JSON.parse(python(ORACLE, ["shapely"], [file])) as Verdict;
+    return JSON.parse(python(ORACLE, "geometry", [file])) as Verdict;
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -54,7 +55,7 @@ const authored = (asset: Asset): number[] => Object.values(asset.representations
 
 describe("dimension clearance", () => {
   it("keeps the dimension of the retractable bollard at 1:500 and the street lamp at 1:200 clear in all views", () => {
-    const cases = VIEWPOINTS.flatMap((viewpoint) => [caseOf(assets.get("retractable-bollard")!, 500, viewpoint), caseOf(assets.get("street-lamp")!, 200, viewpoint)]);
+    const cases = PLANAR_VIEWPOINTS.flatMap((viewpoint) => [caseOf(assets.get("retractable-bollard")!, 500, viewpoint), caseOf(assets.get("street-lamp")!, 200, viewpoint)]);
     const verdict = measure(cases);
     for (const { name, items } of cases) {
       expect(items.length, name).toBeGreaterThan(0);
@@ -64,7 +65,7 @@ describe("dimension clearance", () => {
   });
 
   it("keeps it clear at every authored scale of both assets", () => {
-    const cases = ["retractable-bollard", "street-lamp"].flatMap((id) => authored(assets.get(id)!).flatMap((denominator) => VIEWPOINTS.map((viewpoint) => caseOf(assets.get(id)!, denominator, viewpoint))));
+    const cases = ["retractable-bollard", "street-lamp"].flatMap((id) => authored(assets.get(id)!).flatMap((denominator) => PLANAR_VIEWPOINTS.map((viewpoint) => caseOf(assets.get(id)!, denominator, viewpoint))));
     const verdict = measure(cases);
     for (const { name } of cases) {
       expect(verdict[name]!.intersects, name).toBe(false);

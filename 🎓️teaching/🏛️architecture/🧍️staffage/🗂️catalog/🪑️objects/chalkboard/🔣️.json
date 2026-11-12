@@ -515,10 +515,6 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "x": -2,
-              "y": 0,
-              "w": 2,
-              "h": 1.2,
               "region": "leaf",
               "material": "aluminium-frame",
               "cx": -1.7,
@@ -534,10 +530,6 @@
               "filled": true,
               "tone": 0.2,
               "kind": "ellipse",
-              "x": -2,
-              "y": 0,
-              "w": 2,
-              "h": 1.2,
               "region": "leaf",
               "material": "aluminium-frame",
               "cx": -0.3,
@@ -2021,6 +2013,271 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "frame-ring",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "aluminium-frame",
+          "role": "body",
+          "tone": 0.75,
+          "region": "frame",
+          "profile": [[-2.0, 0.06], [2.0, 0.06], [2.0, 1.26], [-2.0, 1.26]],
+          "plane": "xy",
+          "from": -0.005,
+          "to": 0.04,
+          "holes": [
+            [[-1.965, 0.095], [-0.015, 0.095], [-0.015, 1.225], [-1.965, 1.225]],
+            [[0.015, 0.095], [1.965, 0.095], [1.965, 1.225], [0.015, 1.225]]
+          ]
+        },
+        {
+          "id": "face-left",
+          "kind": "box",
+          "bone": "frame",
+          "material": "enamel-board",
+          "role": "body",
+          "tone": 0.3,
+          "region": "board-face",
+          "size": [1.954, 1.134, 0.03],
+          "transform": {
+            "translation": [-0.99, 0.66, 0.015]
+          }
+        },
+        {
+          "id": "face-right",
+          "kind": "box",
+          "bone": "frame",
+          "material": "enamel-board",
+          "role": "body",
+          "tone": 0.3,
+          "region": "board-face",
+          "size": [1.954, 1.134, 0.03],
+          "transform": {
+            "translation": [0.99, 0.66, 0.015]
+          }
+        },
+        {
+          "id": "top-rail",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium-frame",
+          "role": "body",
+          "tone": 0.5,
+          "region": "frame",
+          "maxDenominator": 100,
+          "size": [3.976, 0.048, 0.005],
+          "transform": {
+            "translation": [0.0, 1.224, -0.0025]
+          }
+        },
+        {
+          "id": "leaf-frame",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "aluminium-frame",
+          "role": "body",
+          "tone": 0.85,
+          "region": "leaf",
+          "profile": [[-2.0, 0.0], [0.0, 0.0], [0.0, 1.2], [-2.0, 1.2]],
+          "plane": "xy",
+          "from": -0.04,
+          "to": -0.005,
+          "holes": [
+            [[-1.965, 0.035], [-0.035, 0.035], [-0.035, 1.165], [-1.965, 1.165]]
+          ]
+        },
+        {
+          "id": "leaf-face",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "enamel-board",
+          "role": "body",
+          "tone": 0.24,
+          "region": "leaf",
+          "size": [1.934, 1.134, 0.02],
+          "transform": {
+            "translation": [-1.0, 0.6, -0.022]
+          }
+        },
+        {
+          "id": "leaf-top-rail",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "aluminium-frame",
+          "role": "body",
+          "tone": 0.55,
+          "region": "leaf",
+          "maxDenominator": 100,
+          "size": [1.976, 0.043, 0.027],
+          "transform": {
+            "translation": [-1.0, 1.1665, -0.0225]
+          }
+        },
+        {
+          "id": "leaf-grip-a",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "aluminium-frame",
+          "role": "detail",
+          "tone": 0.4,
+          "region": "leaf",
+          "maxDenominator": 50,
+          "size": [0.12, 0.02, 0.0025],
+          "cornerRadius": 0.001,
+          "transform": {
+            "translation": [-1.54, 0.058, -0.04125]
+          }
+        },
+        {
+          "id": "leaf-grip-b",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "aluminium-frame",
+          "role": "detail",
+          "tone": 0.4,
+          "region": "leaf",
+          "maxDenominator": 50,
+          "size": [0.12, 0.02, 0.0025],
+          "cornerRadius": 0.001,
+          "transform": {
+            "translation": [-0.34, 0.058, -0.04125]
+          }
+        },
+        {
+          "id": "hanger-a",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "aluminium-frame",
+          "role": "body",
+          "tone": 0.2,
+          "region": "leaf",
+          "maxDenominator": 50,
+          "profile": [[0.0, 0.0], [0.0, 0.022], [0.0035, 0.022], [0.0035, 0.0]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [-1.7, 1.166, -0.0415]
+          }
+        },
+        {
+          "id": "hanger-b",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "aluminium-frame",
+          "role": "body",
+          "tone": 0.2,
+          "region": "leaf",
+          "maxDenominator": 50,
+          "profile": [[0.0, 0.0], [0.0, 0.022], [0.0035, 0.022], [0.0035, 0.0]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [-0.3, 1.166, -0.0415]
+          }
+        },
+        {
+          "id": "tray",
+          "kind": "extrude",
+          "bone": "tray",
+          "material": "aluminium-frame",
+          "role": "body",
+          "tone": 0.65,
+          "region": "tray",
+          "profile": [[0.0, -0.04], [0.0, 0.04], [0.06, 0.04], [0.06, 0.032], [0.022, 0.032], [0.022, -0.032], [0.06, -0.032], [0.06, -0.04]],
+          "plane": "yz",
+          "from": -2,
+          "to": 2
+        },
+        {
+          "id": "chalk-a",
+          "kind": "capsule",
+          "bone": "tray",
+          "material": "chalk",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "tray",
+          "maxDenominator": 50,
+          "p0": [-1.293, 0.029, -0.012],
+          "p1": [-1.217, 0.029, -0.012],
+          "r0": 0.007,
+          "r1": 0.007
+        },
+        {
+          "id": "chalk-b",
+          "kind": "capsule",
+          "bone": "tray",
+          "material": "chalk",
+          "role": "detail",
+          "tone": 0.85,
+          "region": "tray",
+          "maxDenominator": 50,
+          "p0": [-1.143, 0.029, 0.006],
+          "p1": [-1.087, 0.029, 0.006],
+          "r0": 0.007,
+          "r1": 0.007
+        },
+        {
+          "id": "chalk-c",
+          "kind": "capsule",
+          "bone": "tray",
+          "material": "chalk",
+          "role": "detail",
+          "tone": 0.8,
+          "region": "tray",
+          "maxDenominator": 50,
+          "p0": [-1.043, 0.029, -0.003],
+          "p1": [-0.977, 0.029, -0.003],
+          "r0": 0.007,
+          "r1": 0.007
+        },
+        {
+          "id": "sponge",
+          "kind": "box",
+          "bone": "tray",
+          "material": "sponge",
+          "role": "detail",
+          "tone": 0.6,
+          "region": "tray",
+          "maxDenominator": 50,
+          "size": [0.14, 0.036, 0.05],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.97, 0.04, 0.0]
+          }
+        },
+        {
+          "id": "ruler",
+          "kind": "box",
+          "bone": "tray",
+          "material": "chalk",
+          "role": "detail",
+          "tone": 0.55,
+          "region": "tray",
+          "maxDenominator": 50,
+          "size": [0.9, 0.012, 0.04],
+          "transform": {
+            "translation": [-0.25, 0.028, 0.004]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The frame is one aluminium ring with two window openings, 45 mm deep and set to the back (z -0.005 to 0.04); the sliding leaf hangs in front of it (z -0.04 to -0.005), so the leaf passes the centre post in every pose. The authored front and plan views draw the frame the full 80 mm deep, which would make the leaf collide with the frame.",
+          "de": "Der Rahmen ist ein einziger Aluminiumring mit zwei Fensteröffnungen, 45 mm tief und nach hinten gesetzt (z -0,005 bis 0,04); der Schiebeflügel hängt davor (z -0,04 bis -0,005) und passiert so in jeder Pose den Mittelpfosten. Die gezeichnete Vorder- und Draufsicht zeigt den Rahmen in voller Tiefe von 80 mm, wodurch der Flügel mit dem Rahmen kollidieren würde."
+        },
+        {
+          "en": "The writing surfaces are 30 mm thick enamel panels recessed into the frame; the MDF core of the layer build-up is not modelled separately.",
+          "de": "Die Schreibflächen sind 30 mm dicke Emailtafeln, in den Rahmen eingelassen; der MDF-Kern des Schichtaufbaus wird nicht gesondert modelliert."
+        },
+        {
+          "en": "The tray is a trough (extrusion of a U profile along the board) with chalk sticks as capsules, a sponge and a ruler lying in it; they are shown to 1:50 only. The hanger wheels and the grips stand 1.5 to 3 mm proud of the leaf front.",
+          "de": "Die Ablage ist eine Rinne (Extrusion eines U-Profils entlang der Tafel) mit Kreidestücken als Kapseln, einem Schwamm und einem Lineal; sie erscheinen nur bis 1:50. Die Laufrollen und Griffe stehen 1,5 bis 3 mm vor der Flügelfront."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "leaf-left",
       "defaultClip": "slide-leaf",
@@ -2034,7 +2291,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

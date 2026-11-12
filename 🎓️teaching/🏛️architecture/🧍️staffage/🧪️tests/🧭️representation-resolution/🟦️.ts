@@ -11,9 +11,10 @@ import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️dep
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, RepresentationError, resolutionText, resolveRepresentation, resolveSymbol } from "../../🔨️modules/🖨️representation/🟦️.ts";
 import { viewportMm } from "../../🔨️modules/📐️units/🟦️.ts";
+import { withUnavailableScale } from "../🧰️support/🧰️.ts";
 import { UNCHECKED_PROFILE, defaultShapes, rolesAssetWith, unchecked } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
 
-const asset = (JSON.parse(readFileSync(new URL("../../🧫️fixtures/👤️sample-figure/🔣️.json", import.meta.url), "utf8")) as AssetDocument).asset;
+const asset = withUnavailableScale((JSON.parse(readFileSync(new URL("../../🧫️fixtures/👤️sample-figure/🔣️.json", import.meta.url), "utf8")) as AssetDocument).asset, 500);
 const resolve = (denominator: number) => resolveRepresentation(asset, { denominator }, UNCHECKED_PROFILE);
 const sceneAt = (denominator: number, zoom = 1) => {
   const state = evaluate(asset, { kind: "pose", pose: "stand" }, { kind: "scale", scale: { denominator } });

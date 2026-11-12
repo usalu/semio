@@ -3059,6 +3059,352 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "mullion-cap",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.08,
+          "region": "mullion",
+          "size": [0.05, 3.3, 0.002],
+          "transform": {
+            "translation": [0.025, 1.65, -0.074]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [1.35, 0, 0]
+          }
+        },
+        {
+          "id": "mullion-outer",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "region": "mullion",
+          "size": [0.05, 3.3, 0.033],
+          "transform": {
+            "translation": [0.025, 1.65, -0.0565]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [1.35, 0, 0]
+          }
+        },
+        {
+          "id": "mullion-break",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.85,
+          "region": "mullion",
+          "size": [0.05, 3.3, 0.03],
+          "transform": {
+            "translation": [0.025, 1.65, -0.025]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [1.35, 0, 0]
+          }
+        },
+        {
+          "id": "mullion-inner",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "region": "mullion",
+          "size": [0.05, 3.3, 0.085],
+          "transform": {
+            "translation": [0.025, 1.65, 0.0325]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [1.35, 0, 0]
+          }
+        },
+        {
+          "id": "transom-cap",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.08,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.002],
+          "transform": {
+            "translation": [0.7, 0.025, -0.074]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.85, 0]
+          }
+        },
+        {
+          "id": "transom-outer",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.033],
+          "transform": {
+            "translation": [0.7, 0.025, -0.0565]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.85, 0]
+          }
+        },
+        {
+          "id": "transom-break",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.85,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.03],
+          "transform": {
+            "translation": [0.7, 0.025, -0.025]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.85, 0]
+          }
+        },
+        {
+          "id": "transom-inner",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.085],
+          "transform": {
+            "translation": [0.7, 0.025, 0.0325]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.85, 0]
+          }
+        },
+        {
+          "id": "transom-head-cap",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.08,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.002],
+          "transform": {
+            "translation": [0.7, 3.275, -0.074]
+          }
+        },
+        {
+          "id": "transom-head-outer",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.033],
+          "transform": {
+            "translation": [0.7, 3.275, -0.0565]
+          }
+        },
+        {
+          "id": "transom-head-break",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.85,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.03],
+          "transform": {
+            "translation": [0.7, 3.275, -0.025]
+          }
+        },
+        {
+          "id": "transom-head-inner",
+          "kind": "box",
+          "bone": "frame",
+          "material": "aluminium",
+          "role": "body",
+          "tone": 0.4,
+          "region": "transom",
+          "size": [1.3, 0.05, 0.085],
+          "transform": {
+            "translation": [0.7, 3.275, 0.0325]
+          }
+        },
+        {
+          "id": "pane-out-edge",
+          "kind": "extrude",
+          "bone": "igu",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.15,
+          "region": "glass-edge",
+          "profile": [[0, 0], [1.3, 0], [1.3, 2.35], [0, 2.35]],
+          "plane": "xy",
+          "from": -0.036,
+          "to": -0.03,
+          "holes": [
+            [[0.065, 0.065], [0.065, 2.285], [1.235, 2.285], [1.235, 0.065]]
+          ]
+        },
+        {
+          "id": "pane-out-centre",
+          "kind": "box",
+          "bone": "igu",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.15,
+          "region": "glass-centre",
+          "size": [1.17, 2.22, 0.006],
+          "transform": {
+            "translation": [0.65, 1.175, -0.033]
+          }
+        },
+        {
+          "id": "cavity-edge",
+          "kind": "extrude",
+          "bone": "igu",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.4,
+          "region": "glass-edge",
+          "profile": [[0, 0], [1.3, 0], [1.3, 2.35], [0, 2.35]],
+          "plane": "xy",
+          "from": -0.03,
+          "to": -0.014,
+          "holes": [
+            [[0.065, 0.065], [0.065, 2.285], [1.235, 2.285], [1.235, 0.065]]
+          ]
+        },
+        {
+          "id": "cavity-centre",
+          "kind": "box",
+          "bone": "igu",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.08,
+          "region": "glass-centre",
+          "size": [1.17, 2.22, 0.016],
+          "transform": {
+            "translation": [0.65, 1.175, -0.022]
+          }
+        },
+        {
+          "id": "pane-in-edge",
+          "kind": "extrude",
+          "bone": "igu",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.15,
+          "region": "glass-edge",
+          "profile": [[0, 0], [1.3, 0], [1.3, 2.35], [0, 2.35]],
+          "plane": "xy",
+          "from": -0.014,
+          "to": -0.008,
+          "holes": [
+            [[0.065, 0.065], [0.065, 2.285], [1.235, 2.285], [1.235, 0.065]]
+          ]
+        },
+        {
+          "id": "pane-in-centre",
+          "kind": "box",
+          "bone": "igu",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.15,
+          "region": "glass-centre",
+          "size": [1.17, 2.22, 0.006],
+          "transform": {
+            "translation": [0.65, 1.175, -0.011]
+          }
+        },
+        {
+          "id": "spandrel-enamel",
+          "kind": "box",
+          "bone": "spandrel",
+          "material": "spandrel-glass",
+          "role": "body",
+          "tone": 0.65,
+          "region": "spandrel",
+          "size": [1.3, 0.8, 0.006],
+          "transform": {
+            "translation": [0.65, 0.4, -0.067]
+          }
+        },
+        {
+          "id": "spandrel-air",
+          "kind": "box",
+          "bone": "spandrel",
+          "material": "wool",
+          "role": "body",
+          "tone": 0.5,
+          "region": "spandrel",
+          "size": [1.3, 0.8, 0.02],
+          "transform": {
+            "translation": [0.65, 0.4, -0.054]
+          }
+        },
+        {
+          "id": "spandrel-wool",
+          "kind": "box",
+          "bone": "spandrel",
+          "material": "wool",
+          "role": "body",
+          "tone": 0.9,
+          "region": "spandrel",
+          "size": [1.3, 0.8, 0.1],
+          "transform": {
+            "translation": [0.65, 0.4, 0.006]
+          }
+        },
+        {
+          "id": "spandrel-pan",
+          "kind": "box",
+          "bone": "spandrel",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "spandrel",
+          "size": [1.3, 0.8, 0.0015],
+          "transform": {
+            "translation": [0.65, 0.4, 0.05675]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Mullions and transoms are split through their 150 mm depth into the layers the thermal view needs: a 2 mm outer cap, the 33 mm outer part, the 30 mm thermal break and the 85 mm inner part (exterior is -z as in the front view); each is one solid per member kind with a repeat for the two mullions and for the base and mid transoms.",
+          "de": "Pfosten und Riegel sind über ihre 150 mm Tiefe in die Schichten geteilt, die die thermische Ansicht braucht: eine 2 mm Aussenkappe, der 33 mm Aussenteil, die 30 mm thermische Trennung und der 85 mm Innenteil (aussen ist -z wie in der Vorderansicht); je Profilart ein Körper mit Wiederholung für die zwei Pfosten und für den unteren und mittleren Riegel."
+        },
+        {
+          "en": "The insulated glass unit is built layer by layer (outer pane 6, cavity 16, inner pane 6 mm; the catalog gives the cavity the glass material), each as a centre box (region glass-centre) and a 65 mm edge-zone frame (extrude with hole, region glass-edge); the spandrel panel stacks enamel 6, an air layer 20 mm (material wool as the catalog layers say), wool 100 and the steel pan 1.5 mm.",
+          "de": "Die Isolierglaseinheit ist Schicht für Schicht aufgebaut (Aussenscheibe 6, Zwischenraum 16, Innenscheibe 6 mm; der Katalog gibt dem Zwischenraum das Glasmaterial), jede als Mittelquader (Region glass-centre) und als 65 mm Randzonenrahmen (Extrusion mit Loch, Region glass-edge); das Brüstungspaneel stapelt Emaille 6, eine 20 mm Luftschicht (Material Wolle, wie die Katalogschichten sagen), Wolle 100 und die Stahlwanne 1,5 mm."
+        },
+        {
+          "en": "The cradle bone is a load point without volume; reflexes and the spandrel box outline are 2D texture and not modelled.",
+          "de": "Der Knochen des Gondelwagens ist ein Lastpunkt ohne Volumen; Reflexe und die Kastenkontur der Brüstung sind 2D-Textur und nicht modelliert."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "dead-load",
       "defaultClip": "shadow-rise",
@@ -3072,7 +3418,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

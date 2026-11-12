@@ -53,9 +53,9 @@ class B3ExchangeContract(unittest.TestCase):
         for count in CASES["segments"]:
             mesh = self.api.mesh(CASES["tag"], count, self.model)
             vertices, faces = np.asarray(mesh["vertices"], dtype=float), np.asarray(mesh["faces"], dtype=int)
-            self.assertEqual(mesh["vertex_count"], 2 * count + 2)
-            self.assertEqual(mesh["triangle_count"], 4 * count)
-            self.assertEqual(vertices.shape, (2 * count + 2, 3))
+            self.assertEqual(mesh["vertex_count"], 2 * count)
+            self.assertEqual(mesh["triangle_count"], 4 * count - 4)
+            self.assertEqual(vertices.shape, (2 * count, 3))
             self.assertTrue(np.isfinite(vertices).all())
             angles = 2 * np.pi * np.arange(count) / count
             expected = np.array(CASES["axis"]) + CASES["radius"] * np.column_stack((np.cos(angles), np.sin(angles)))
@@ -68,7 +68,7 @@ class B3ExchangeContract(unittest.TestCase):
             self.assertAlmostEqual(signed, expected_volume, places=7)
             edges = np.sort(np.concatenate((faces[:, [0, 1]], faces[:, [1, 2]], faces[:, [2, 0]])), axis=1)
             self.assertTrue(np.all(np.unique(edges, axis=0, return_counts=True)[1] == 2))
-        semantic = self.api.ids_check(model=self.model, source="ifc")
+        semantic = self.api.ids_check(model=self.model, source="semantic")
         mesh = self.api.ids_check(model=self.model, source="mesh")
         self.assertIn(CASES["tag"], semantic["applicable"])
         self.assertIn(CASES["tag"], semantic["passed_tags"])
@@ -89,7 +89,7 @@ class B3ExchangeContract(unittest.TestCase):
         tree = ast.parse(Path(module.__file__).read_text(encoding="utf-8"))
         beat = next(node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef) and node.name == "_beat_properties")
         call = next(node for node in ast.walk(beat) if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-                    and node.func.attr == "_name" and "material" in ast.dump(node.args[0]))
+                    and node.func.attr == "_text" and "material" in ast.dump(node.args[0]))
         element = self.api.element(CASES["tag"], self.model)
         expected = element
         for field in CASES["material_label_path"]:
@@ -98,7 +98,7 @@ class B3ExchangeContract(unittest.TestCase):
                         {"f": SimpleNamespace(element=element)})
         for language in CASES["languages"]:
             with self.subTest(language=language), patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": language}):
-                actual = scene._name(scene.__new__(scene), argument)
+                actual = scene._text(scene.__new__(scene), argument)
                 self.assertEqual(actual, expected[language])
 
 

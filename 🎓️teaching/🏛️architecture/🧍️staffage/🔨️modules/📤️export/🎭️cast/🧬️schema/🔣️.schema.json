@@ -32,7 +32,7 @@
       "properties": {
         "version": { "const": 1 },
         "asset": { "type": "object", "additionalProperties": false, "required": ["id", "category", "revision"], "properties": { "id": { "$ref": "#/$defs/Slug" }, "category": { "$ref": "#/$defs/Slug" }, "revision": { "$ref": "#/$defs/Revision" } } },
-        "view": { "type": "object", "additionalProperties": false, "required": ["style", "viewpoint", "theme", "mirror"], "properties": { "style": { "enum": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"] }, "viewpoint": { "enum": ["elevation", "front", "plan"] }, "theme": { "enum": ["dark", "light"] }, "mirror": { "type": "boolean" } } },
+        "view": { "type": "object", "additionalProperties": false, "required": ["style", "viewpoint", "theme", "mirror"], "properties": { "style": { "enum": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"] }, "viewpoint": { "enum": ["elevation", "front", "plan", "axonometric"] }, "theme": { "enum": ["dark", "light"] }, "mirror": { "type": "boolean" } } },
         "scale": { "type": "object", "additionalProperties": false, "required": ["denominator"], "properties": { "denominator": { "enum": [500, 200, 100, 50] } } },
         "state": { "type": "object", "additionalProperties": false, "required": ["kind", "id"], "properties": { "kind": { "enum": ["pose", "clip"] }, "id": { "$ref": "#/$defs/Slug" } } },
         "clock": {
@@ -122,7 +122,7 @@
         "cast": { "$ref": "#/$defs/Slug" },
         "asset": { "$ref": "#/$defs/Slug" },
         "view": { "enum": ["dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments"] },
-        "viewpoint": { "enum": ["elevation", "front", "plan"] },
+        "viewpoint": { "enum": ["elevation", "front", "plan", "axonometric"] },
         "section": { "type": "object" },
         "frames": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[0-9]{4}\\.svg$" } },
         "fps": { "type": "number", "exclusiveMinimum": 0 },
@@ -152,7 +152,7 @@
         "transportAgeS": { "description": "Transport layers of a clip only. The longest life of a parcel and of its pathline in seconds; the frames sample the absolute time from this many seconds on, so every frame of the loop already shows the developed field and the loop never restarts from empty air; a looping clip also makes the field periodic with the clip duration, so the seam has no jump (the period is derived, never authored). Absent: parcels live 30 s and the frames start at time 0.", "type": "number", "exclusiveMinimum": 0 },
         "transportStrokeMm": { "description": "Transport layers only. Paper width of a pathline in millimetres at the cast scale; absent: 0.08 mm, a hairline for print that vanishes when the figure plays at a few hundred pixels.", "type": "number", "exclusiveMinimum": 0 },
         "transportTrailS": { "description": "Transport layers only. Seconds of each pathline's recent travel that stay visible: the line fades towards its tail, so a jet reads as a dispersing puff instead of a bundle anchored at the nozzle; absent: the whole path from emission to now at constant opacity.", "type": "number", "exclusiveMinimum": 0 },
-        "viewpoint": { "enum": ["elevation", "front", "plan"] },
+        "viewpoint": { "enum": ["elevation", "front", "plan", "axonometric"] },
         "scale": { "description": "The authored scale variant, required, no default: a preset denominator at which the asset holds an authored representation (the exporter refuses unavailable and derived scales).", "enum": [500, 200, 100, 50] },
         "fps": { "description": "Frames per second of a clip or timeline; required for both, forbidden for a still pose. A schedule of more than 600 frames is thinned to 600 evenly spaced samples, so the exported index fps may be fractional; play such a cast with a rate in the scene.", "type": "integer", "minimum": 1, "maximum": 120 },
         "environment": { "$ref": "#/$defs/Slug" },

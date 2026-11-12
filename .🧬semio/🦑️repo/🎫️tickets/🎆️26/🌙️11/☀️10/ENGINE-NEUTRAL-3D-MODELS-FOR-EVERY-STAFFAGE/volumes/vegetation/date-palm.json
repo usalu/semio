@@ -1,0 +1,2440 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "root-bulb",
+    "kind": "loft",
+    "bone": "root-plate",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0,
+       -0.00999,
+       0
+      ],
+      "rx": 0.69996,
+      "ry": 0.60973,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.16667,
+       -0.00274,
+       0
+      ],
+      "rx": 0.62857,
+      "ry": 0.41685,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.33333,
+       -0.00041,
+       0
+      ],
+      "rx": 0.55714,
+      "ry": 0.3401,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.5,
+       -0.00041,
+       0
+      ],
+      "rx": 0.52002,
+      "ry": 0.3401,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "stem-1",
+    "kind": "loft",
+    "bone": "stem-1",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.32,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.28736,
+      "ry": 0.27,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.75,
+       0,
+       0
+      ],
+      "rx": 0.28077,
+      "ry": 0.26375,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.5,
+       0,
+       0
+      ],
+      "rx": 0.27418,
+      "ry": 0.2575,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       2.25,
+       0,
+       0
+      ],
+      "rx": 0.26759,
+      "ry": 0.25125,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       3,
+       0,
+       0
+      ],
+      "rx": 0.261,
+      "ry": 0.245,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "stem-2",
+    "kind": "loft",
+    "bone": "stem-2",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.32,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       1e-05,
+       0.00035,
+       0
+      ],
+      "rx": 0.261,
+      "ry": 0.24498,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       0.67512,
+       0.00096,
+       0
+      ],
+      "rx": 0.25665,
+      "ry": 0.24126,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       1.35023,
+       0.00159,
+       0
+      ],
+      "rx": 0.2523,
+      "ry": 0.23753,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       2.02535,
+       0.00221,
+       0
+      ],
+      "rx": 0.24795,
+      "ry": 0.23381,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       2.6985,
+       -0.10973,
+       0
+      ],
+      "rx": 0.2436,
+      "ry": 0.11751,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "stem-3",
+    "kind": "loft",
+    "bone": "stem-3",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.32,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0.00041,
+       0.0029,
+       0
+      ],
+      "rx": 0.2436,
+      "ry": 0.22992,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.60041,
+       0.0029,
+       0
+      ],
+      "rx": 0.2407,
+      "ry": 0.22744,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.20041,
+       0.0029,
+       0
+      ],
+      "rx": 0.2378,
+      "ry": 0.22496,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.80041,
+       0.0029,
+       0
+      ],
+      "rx": 0.2349,
+      "ry": 0.22248,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       2.40041,
+       0.0029,
+       0
+      ],
+      "rx": 0.232,
+      "ry": 0.22,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "crown-shaft",
+    "kind": "loft",
+    "bone": "crown",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.4,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0.00041,
+       0.0029,
+       0
+      ],
+      "rx": 0.32399,
+      "ry": 0.22284,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.25708,
+       0.0029,
+       0
+      ],
+      "rx": 0.3369,
+      "ry": 0.21696,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.51374,
+       0.0029,
+       0
+      ],
+      "rx": 0.3138,
+      "ry": 0.18632,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.77041,
+       0.0029,
+       0
+      ],
+      "rx": 0.15092,
+      "ry": 0.16769,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l1a-blade",
+    "kind": "loft",
+    "bone": "fr-l1a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.29498,
+       0,
+       0
+      ],
+      "rx": 0.08264,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.98325,
+       0,
+       0
+      ],
+      "rx": 0.16032,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.67152,
+       0,
+       0
+      ],
+      "rx": 0.21564,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9665,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l1a-rachis",
+    "kind": "capsule",
+    "bone": "fr-l1a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9665,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-l1b-blade",
+    "kind": "loft",
+    "bone": "fr-l1b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.26393,
+       0,
+       0
+      ],
+      "rx": 0.22015,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.87975,
+       0,
+       0
+      ],
+      "rx": 0.15862,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.49557,
+       0,
+       0
+      ],
+      "rx": 0.05922,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7595,
+       0,
+       0
+      ],
+      "rx": 0.01495,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l1b-rachis",
+    "kind": "capsule",
+    "bone": "fr-l1b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7595,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-l2a-blade",
+    "kind": "loft",
+    "bone": "fr-l2a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.285,
+       0,
+       0
+      ],
+      "rx": 0.08263,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.95,
+       0,
+       0
+      ],
+      "rx": 0.1603,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.615,
+       0,
+       0
+      ],
+      "rx": 0.21562,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l2a-rachis",
+    "kind": "capsule",
+    "bone": "fr-l2a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-l2b-blade",
+    "kind": "loft",
+    "bone": "fr-l2b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.22495,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.255,
+       0,
+       0
+      ],
+      "rx": 0.22013,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.85,
+       0,
+       0
+      ],
+      "rx": 0.15861,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.445,
+       0,
+       0
+      ],
+      "rx": 0.05925,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7,
+       0,
+       0
+      ],
+      "rx": 0.01505,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l2b-rachis",
+    "kind": "capsule",
+    "bone": "fr-l2b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-l3a-blade",
+    "kind": "loft",
+    "bone": "fr-l3a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05005,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.285,
+       0,
+       0
+      ],
+      "rx": 0.08268,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.95,
+       0,
+       0
+      ],
+      "rx": 0.16032,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.615,
+       0,
+       0
+      ],
+      "rx": 0.21559,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9,
+       0,
+       0
+      ],
+      "rx": 0.22495,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l3a-rachis",
+    "kind": "capsule",
+    "bone": "fr-l3a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-l3b-blade",
+    "kind": "loft",
+    "bone": "fr-l3b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.255,
+       0,
+       0
+      ],
+      "rx": 0.22018,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.85,
+       0,
+       0
+      ],
+      "rx": 0.15866,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.445,
+       0,
+       0
+      ],
+      "rx": 0.05923,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7,
+       0,
+       0
+      ],
+      "rx": 0.01495,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l3b-rachis",
+    "kind": "capsule",
+    "bone": "fr-l3b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-l4a-blade",
+    "kind": "loft",
+    "bone": "fr-l4a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.04995,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.285,
+       0,
+       0
+      ],
+      "rx": 0.08264,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.95,
+       0,
+       0
+      ],
+      "rx": 0.16036,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.615,
+       0,
+       0
+      ],
+      "rx": 0.21567,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9,
+       0,
+       0
+      ],
+      "rx": 0.22505,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l4a-rachis",
+    "kind": "capsule",
+    "bone": "fr-l4a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-l4b-blade",
+    "kind": "loft",
+    "bone": "fr-l4b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.255,
+       0,
+       0
+      ],
+      "rx": 0.22016,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.85,
+       0,
+       0
+      ],
+      "rx": 0.15862,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.445,
+       0,
+       0
+      ],
+      "rx": 0.05924,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7,
+       0,
+       0
+      ],
+      "rx": 0.015,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-l4b-rachis",
+    "kind": "capsule",
+    "bone": "fr-l4b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r1a-blade",
+    "kind": "loft",
+    "bone": "fr-r1a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.29498,
+       0,
+       0
+      ],
+      "rx": 0.08264,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.98325,
+       0,
+       0
+      ],
+      "rx": 0.16032,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.67152,
+       0,
+       0
+      ],
+      "rx": 0.21564,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9665,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r1a-rachis",
+    "kind": "capsule",
+    "bone": "fr-r1a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9665,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r1b-blade",
+    "kind": "loft",
+    "bone": "fr-r1b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.26393,
+       0,
+       0
+      ],
+      "rx": 0.22015,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.87975,
+       0,
+       0
+      ],
+      "rx": 0.15862,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.49557,
+       0,
+       0
+      ],
+      "rx": 0.05922,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7595,
+       0,
+       0
+      ],
+      "rx": 0.01495,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r1b-rachis",
+    "kind": "capsule",
+    "bone": "fr-r1b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7595,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r2a-blade",
+    "kind": "loft",
+    "bone": "fr-r2a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.285,
+       0,
+       0
+      ],
+      "rx": 0.08262,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.95,
+       0,
+       0
+      ],
+      "rx": 0.16026,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.615,
+       0,
+       0
+      ],
+      "rx": 0.2156,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r2a-rachis",
+    "kind": "capsule",
+    "bone": "fr-r2a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r2b-blade",
+    "kind": "loft",
+    "bone": "fr-r2b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.255,
+       0,
+       0
+      ],
+      "rx": 0.22016,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.85,
+       0,
+       0
+      ],
+      "rx": 0.15865,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.445,
+       0,
+       0
+      ],
+      "rx": 0.05928,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7,
+       0,
+       0
+      ],
+      "rx": 0.01505,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r2b-rachis",
+    "kind": "capsule",
+    "bone": "fr-r2b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r3a-blade",
+    "kind": "loft",
+    "bone": "fr-r3a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.285,
+       0,
+       0
+      ],
+      "rx": 0.08263,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.95,
+       0,
+       0
+      ],
+      "rx": 0.16029,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.615,
+       0,
+       0
+      ],
+      "rx": 0.21559,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9,
+       0,
+       0
+      ],
+      "rx": 0.22495,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r3a-rachis",
+    "kind": "capsule",
+    "bone": "fr-r3a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r3b-blade",
+    "kind": "loft",
+    "bone": "fr-r3b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.22505,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.255,
+       0,
+       0
+      ],
+      "rx": 0.22021,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.85,
+       0,
+       0
+      ],
+      "rx": 0.15867,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.445,
+       0,
+       0
+      ],
+      "rx": 0.05926,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7,
+       0,
+       0
+      ],
+      "rx": 0.015,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r3b-rachis",
+    "kind": "capsule",
+    "bone": "fr-r3b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r4a-blade",
+    "kind": "loft",
+    "bone": "fr-r4a",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.285,
+       0,
+       0
+      ],
+      "rx": 0.08265,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.95,
+       0,
+       0
+      ],
+      "rx": 0.16034,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.615,
+       0,
+       0
+      ],
+      "rx": 0.21567,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.9,
+       0,
+       0
+      ],
+      "rx": 0.22505,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r4a-rachis",
+    "kind": "capsule",
+    "bone": "fr-r4a",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.9,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "fr-r4b-blade",
+    "kind": "loft",
+    "bone": "fr-r4b",
+    "material": "palm-frond",
+    "role": "body",
+    "tone": 0.5,
+    "region": "fronds",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.225,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.255,
+       0,
+       0
+      ],
+      "rx": 0.22016,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.85,
+       0,
+       0
+      ],
+      "rx": 0.15862,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.445,
+       0,
+       0
+      ],
+      "rx": 0.05924,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.7,
+       0,
+       0
+      ],
+      "rx": 0.015,
+      "ry": 0.02,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "fr-r4b-rachis",
+    "kind": "capsule",
+    "bone": "fr-r4b",
+    "material": "palm-frond",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fronds",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.7,
+     0,
+     0
+    ],
+    "r0": 0.035,
+    "r1": 0.015
+   },
+   {
+    "id": "bunch-l",
+    "kind": "ellipsoid",
+    "bone": "bunch-l",
+    "material": "date-fruit",
+    "role": "body",
+    "tone": 0.6,
+    "region": "fruit",
+    "radii": [
+     0.45251,
+     0.64624,
+     0.35
+    ],
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.86603,
+      0.5
+     ],
+     "translation": [
+      0.78705,
+      0.05615,
+      0.65
+     ]
+    }
+   },
+   {
+    "id": "bunch-l-stalk",
+    "kind": "capsule",
+    "bone": "bunch-l",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.32,
+    "region": "stem-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.53606,
+     -0.00911,
+     0.65
+    ],
+    "r0": 0.04,
+    "r1": 0.03
+   },
+   {
+    "id": "bunch-r",
+    "kind": "ellipsoid",
+    "bone": "bunch-r",
+    "material": "date-fruit",
+    "role": "body",
+    "tone": 0.6,
+    "region": "fruit",
+    "radii": [
+     0.44248,
+     0.66178,
+     0.35
+    ],
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.5,
+      0.86603
+     ],
+     "translation": [
+      0.80451,
+      -0.03804,
+      -0.65
+     ]
+    }
+   },
+   {
+    "id": "bunch-r-stalk",
+    "kind": "capsule",
+    "bone": "bunch-r",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.32,
+    "region": "stem-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.55107,
+     0.023,
+     -0.65
+    ],
+    "r0": 0.04,
+    "r1": 0.03
+   },
+   {
+    "id": "skirt-w1",
+    "kind": "capsule",
+    "bone": "stem-3",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.25,
+    "region": "stem-bark",
+    "p0": [
+     2.3376,
+     0.0695,
+     0
+    ],
+    "p1": [
+     1.88133,
+     0.67111,
+     0
+    ],
+    "r0": 0.07,
+    "r1": 0.045,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      1,
+      0,
+      0
+     ],
+     "rotationRad": 0.7854,
+     "origin": [
+      -5.99959,
+      -0.00012,
+      0
+     ]
+    }
+   },
+   {
+    "id": "skirt-w2",
+    "kind": "capsule",
+    "bone": "stem-3",
+    "material": "palm-stem-bark",
+    "role": "body",
+    "tone": 0.25,
+    "region": "stem-bark",
+    "p0": [
+     2.0269,
+     0.0865,
+     0
+    ],
+    "p1": [
+     1.48244,
+     0.5931,
+     0
+    ],
+    "r0": 0.07,
+    "r1": 0.045,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      1,
+      0,
+      0
+     ],
+     "rotationRad": 0.7854,
+     "origin": [
+      -5.99959,
+      -0.00012,
+      0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The crown is a rosette: the eight authored frond chains (four per side, each in two bones, inner and outer part) are drawn in the sagittal plane only, but the asset's depth of 7 m and the biology need fronds all round. Each frond part is therefore one flat blade loft plus a rachis capsule, repeated 6 times at 30 degree steps about the crown axis, so left and right chains together give 48 fronds in 12 directions and the repeats follow the sway of their bone.",
+    "de": "Die Krone ist eine Rosette: die acht gezeichneten Wedelketten (vier je Seite, je in zwei Knochen, Innen- und Außenteil) sind nur in der Längsebene gezeichnet, die Tiefe von 7 m und die Biologie verlangen aber Wedel ringsum. Jeder Wedelteil ist deshalb ein flacher Fiederloft plus eine Rhachis-Kapsel, sechsmal in 30-Grad-Schritten um die Kronenachse wiederholt, sodass linke und rechte Ketten zusammen 48 Wedel in 12 Richtungen ergeben und die Wiederholungen dem Schwanken ihres Knochens folgen."
+   },
+   {
+    "en": "The trunk is round: its lofts use the elevation half width in x and 0.58 times the front half width in z (the front outline of the bole is about twice as wide as the elevation), the crown shaft the elevation width; dead frond bases (skirt) are two rings of eight inclined capsules; the date bunches are ellipsoids on their own bones with a stalk capsule.",
+    "de": "Der Stamm ist rund: seine Lofts nehmen die Halbbreite der Ansicht in x und das 0,58-fache der Halbbreite der Front in z (der Front-Umriss des Schafts ist etwa doppelt so breit wie in der Ansicht), der Kronenschaft die Breite der Ansicht; tote Wedelbasen (Rock) sind zwei Ringe aus acht geneigten Kapseln; die Dattelbüschel sind Ellipsoide an eigenen Knochen mit Stielkapsel."
+   }
+  ]
+ }
+}

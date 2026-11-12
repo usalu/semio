@@ -8,16 +8,27 @@
  * @see ../../../../🔨️modules/📤️export/🗜️zip/🟦️.ts — ZIP and PNG text chunks
  */
 import * as library from "@teaching/staffage";
-import { modelScene, withPngText, writeDxf, writePdf, writeSvg, writeZip } from "@teaching/staffage";
-import type { Asset, DrawingScene, EvaluationQuery, JobControl, ModelScene, Text } from "@teaching/staffage";
+import { SVG_NAMESPACE, modelScene, withPngText, writeDxf, writePdf, writeSvg, writeZip } from "@teaching/staffage";
+import type { ExportFormat as SchemaExportFormat } from "@teaching/staffage";
+import type { Asset, DrawingScene, EvaluationQuery, JobControl, ModelScene, Slug, Text, View } from "@teaching/staffage";
 import { VIEWPOINT_PHRASES } from "../🔭️viewpoints/🟦️.ts";
+import { ensureViewpoint } from "../🧮️pipeline/🦥️lazy/🟦️.ts";
 import { allViews, depictionOptions, evaluateState, queryAt, sceneOf, structureOf, thermalOf } from "../🧮️pipeline/🟦️.ts";
 import type { DepictionRequest } from "../🧮️pipeline/🟦️.ts";
 import { browserRasteriser, browserRecorder, canRasterise, recorderMimes } from "./🖼️raster/🟦️.ts";
 import type { Rasteriser, Recorder } from "./🖼️raster/🟦️.ts";
 
-/** 📤️ The formats the archive exports. */
-export type ExportFormat = "svg" | "pdf" | "dxf" | "dwg" | "png-sequence" | "mp4" | "webm";
+/** 🗂️ The formats the archive exports: the schema's `ExportFormat` without `component`, which is the embed snippet and no file. */
+export type ExportFormat = Exclude<SchemaExportFormat, "component">;
+
+/** 🧊️ The 3D formats: made by the lazily loaded model pipeline, independent of the viewpoint. */
+export const SPATIAL_EXPORT_FORMATS = ["glb", "fbx", "model", "model-zip"] as const;
+
+/** 🖨️ One of {@link SPATIAL_EXPORT_FORMATS}. */
+export type SpatialExportFormat = (typeof SPATIAL_EXPORT_FORMATS)[number];
+
+/** ❓️ Whether a format is a 3D format. */
+export const isSpatialExport = (format: ExportFormat): format is SpatialExportFormat => (SPATIAL_EXPORT_FORMATS as readonly string[]).includes(format);
 
 /** 🎛️ What to export: the depiction request plus sheet, frame and raster settings. */
 export type ExportOptions = DepictionRequest & {
@@ -25,6 +36,8 @@ export type ExportOptions = DepictionRequest & {
   readonly fps?: number;
   readonly durationS?: number;
   readonly pixelsPerMm?: number;
+  readonly pose?: Slug;
+  readonly clip?: Slug;
 };
 
 /** 🧰️ Replaceable host capabilities (tests, workers, native shells). */
@@ -42,11 +55,11 @@ export type ExportResult =
 /** 🔎️ What one format can do in this runtime. */
 export type FormatCapability = { readonly available: boolean; readonly reason?: Text; readonly codec?: string; readonly alpha?: boolean };
 
-/** 🔎️ The probed capabilities of every format. */
+/** 📥️ The probed capabilities of every format. */
 export type ExportCapabilities = Readonly<Record<ExportFormat, FormatCapability>>;
 
-const EXTENSION: Record<ExportFormat, string> = { svg: "svg", pdf: "pdf", dxf: "dxf", dwg: "dwg", "png-sequence": "zip", mp4: "mp4", webm: "webm" };
-const MIME: Record<ExportFormat, string> = { svg: "image/svg+xml", pdf: "application/pdf", dxf: "image/vnd.dxf", dwg: "image/vnd.dwg", "png-sequence": "application/zip", mp4: "video/mp4", webm: "video/webm" };
+const EXTENSION: Record<ExportFormat, string> = { svg: "svg", pdf: "pdf", dxf: "dxf", dwg: "dwg", "png-sequence": "zip", mp4: "mp4", webm: "webm", glb: "glb", fbx: "fbx", model: "json", "model-zip": "zip" };
+const MIME: Record<ExportFormat, string> = { svg: "image/svg+xml", pdf: "application/pdf", dxf: "image/vnd.dxf", dwg: "image/vnd.dwg", "png-sequence": "application/zip", mp4: "video/mp4", webm: "video/webm", glb: "model/gltf-binary", fbx: "application/octet-stream", model: "application/json", "model-zip": "application/zip" };
 const MAX_SIDE_PX = 8192;
 const VIDEO_SIDE_PX = 1280;
 const DEFAULT_FPS = 30;
@@ -65,7 +78,7 @@ function dwgWriter(host?: ExportHost): DwgWriter | null {
   return typeof candidate === "function" ? (candidate as DwgWriter) : null;
 }
 
-/** 🔎️ Probes the real support of every format in this runtime; DWG is probed by encoding an empty drawing. */
+/** ⏱️ Probes the real support of every format in this runtime; DWG is probed by encoding an empty drawing. */
 export async function exportCapabilities(host?: ExportHost): Promise<ExportCapabilities> {
   const raster = host?.rasterise !== undefined || canRasterise();
   const mp4 = recorderMimes("mp4");
@@ -87,6 +100,10 @@ export async function exportCapabilities(host?: ExportHost): Promise<ExportCapab
     dxf: { available: true },
     dwg: dwgReason === undefined ? { available: true } : { available: false, reason: dwgReason },
     "png-sequence": raster ? { available: true, alpha: true } : { available: false, reason: NO_CANVAS },
+    glb: { available: true },
+    fbx: { available: true },
+    model: { available: true },
+    "model-zip": { available: true },
     mp4: raster && (recorder || mp4.length > 0) ? { available: true, codec: mp4[0] ?? "host recorder", alpha: false } : { available: false, reason: raster ? NO_RECORDER("MP4") : NO_CANVAS },
     webm: raster && (recorder || webm.length > 0) ? { available: true, codec: webm[0] ?? "host recorder", alpha: false } : { available: false, reason: raster ? NO_RECORDER("WebM") : NO_CANVAS },
   };
@@ -98,8 +115,12 @@ function timeTag(seconds: number): string {
   return `t${seconds.toFixed(2).replace(".", "p")}`;
 }
 
-/** 🏷️ The export file name: `<asset>_<pose | clip-t…>_<viewpoint>_<representation>_1-<denominator>.<ext>`, so the outputs of the three viewpoints never collide. */
+/** 🏷️ The file name of a 3D download: `<asset>_<pose|clip|bundle>_model_<representation|all>_1-<denominator>.<ext>`, the word `model` standing where a drawing names its viewpoint; a GLB and a model JSON hold every representation (`all`), an FBX the one it was made in. */
+export const spatialFilename = (asset: Asset, format: SpatialExportFormat, what: Slug, representation: View | "all", denominator: number): string => `${slug(asset.id)}_${slug(format === "model-zip" ? "bundle" : what)}_model_${representation}_1-${denominator}.${EXTENSION[format]}`;
+
+/** 📏️ The export file name: `<asset>_<pose | clip-t…>_<viewpoint>_<representation>_1-<denominator>.<ext>`, so the outputs of the three viewpoints never collide; a 3D format is named by {@link spatialFilename}. */
 export function exportFilename(asset: Asset, query: EvaluationQuery, request: DepictionRequest, format: ExportFormat, sheet: "single" | "all-views" = "single"): string {
+  if (isSpatialExport(format)) return spatialFilename(asset, format, query.kind === "pose" ? query.pose : query.kind === "clip" ? query.clip : "transition", format === "fbx" ? request.view : "all", request.scale.denominator);
   const what = query.kind === "pose" ? query.pose : query.kind === "clip" ? (format === "png-sequence" || format === "mp4" || format === "webm" ? query.clip : `${query.clip}-${timeTag(query.timeS)}`) : `${query.from}-to-${query.to}`;
   const view = sheet === "all-views" && format === "pdf" ? "all-views" : request.view;
   return `${slug(asset.id)}_${slug(what)}_${request.viewpoint}_${view}_1-${request.scale.denominator}.${EXTENSION[format]}`;
@@ -121,7 +142,7 @@ function svgWithMetadata(scene: DrawingScene): string {
   const markup = writeSvg(scene);
   if (markup.includes("<metadata")) return markup;
   const entries = Object.entries(metadataText(scene)).map(([key, value]) => `<staffage:${key.toLowerCase()}>${escapeXml(value)}</staffage:${key.toLowerCase()}>`).join("");
-  const block = `<metadata xmlns:staffage="https://semio.tech/staffage/v1">${entries}</metadata>`;
+  const block = `<metadata xmlns:staffage="${SVG_NAMESPACE}">${entries}</metadata>`;
   return markup.replace(/(<svg\b[^>]*>)/u, `$1${block}`);
 }
 
@@ -138,7 +159,7 @@ function check(control?: JobControl): void {
   if (control?.signal?.aborted) throw new DOMException("Export cancelled", "AbortError");
 }
 
-const isAbort = (error: unknown): boolean => error instanceof DOMException && error.name === "AbortError";
+const isAbort = (error: unknown): boolean => typeof error === "object" && error !== null && (error as { readonly name?: unknown }).name === "AbortError";
 
 function rasterSize(scene: DrawingScene, pixelsPerMm: number, maxSide: number): { widthPx: number; heightPx: number; svgScale: number } {
   const fit = Math.min(1, maxSide / Math.max(scene.widthMm * pixelsPerMm, scene.heightMm * pixelsPerMm));
@@ -164,13 +185,15 @@ function clipDuration(asset: Asset, query: EvaluationQuery, options: ExportOptio
   return null;
 }
 
-/** 📤️ Exports one figure (or its clip) in `format`; shares the memoised evaluator with every on-screen figure. */
+/** 🧠️ Exports one figure (or its clip) in `format`; shares the memoised evaluator with every on-screen figure. */
 export async function exportFigure(asset: Asset, query: EvaluationQuery, options: ExportOptions, format: ExportFormat, control?: JobControl, host?: ExportHost): Promise<ExportResult> {
   try {
     check(control);
+    const label = (en: string, de: string): Text => ({ en, de });
+    if (isSpatialExport(format)) return await exportSpatialFigure(asset, query, options, format, control);
+    await ensureViewpoint(options.viewpoint);
     const sheet = options.sheet ?? "single";
     const state = evaluateState(asset, query, depictionOptions(options).representation);
-    const label = (en: string, de: string): Text => ({ en, de });
 
     if (format === "svg") {
       const scene = sceneOf(state, depictionOptions(options));
@@ -245,8 +268,20 @@ export async function exportFigure(asset: Asset, query: EvaluationQuery, options
     return done(format, exportFilename(asset, query, options, format), recorded.bytes, { frames: count, fps, widthPx: even.widthPx, heightPx: even.heightPx, codec: recorded.mime, alpha: false, metadataEmbedded: false, notes });
   } catch (error) {
     if (isAbort(error)) return { status: "cancelled", format };
+    if ((error instanceof Error && error.name === "ModelRequestError" && "reason" in error)) return { status: "unavailable", format, reason: (error as Error & { reason: Text }).reason };
     throw error;
   }
+}
+
+/** 📁️ One 3D download: the pose of a GLB, the clip of an FBX, the pose or clip of a model JSON (each named by the options, else by the current query, else the asset's default), or the bundle of every model; made by the lazily loaded pipeline. */
+async function exportSpatialFigure(asset: Asset, query: EvaluationQuery, options: ExportOptions, format: SpatialExportFormat, control: JobControl | undefined): Promise<ExportResult> {
+  const { exportSpatial } = await import("../🧊️spatial/📤️exports/🟦️.ts");
+  const pose = options.pose ?? (query.kind === "pose" ? query.pose : asset.presentation.defaultPose);
+  const clip = options.clip ?? (query.kind === "clip" ? query.clip : asset.presentation.defaultClip);
+  const request = { scale: options.scale.denominator, view: options.view, ...(options.environment === undefined ? {} : { environment: options.environment }), ...(options.thermalQuantity === undefined ? {} : { thermalQuantity: options.thermalQuantity }), ...(options.forceQuantity === undefined ? {} : { forceQuantity: options.forceQuantity }), ...(options.range === undefined ? {} : { range: options.range }), ...(options.theme === undefined ? {} : { theme: options.theme }) };
+  const which = format === "glb" ? { pose } : format === "fbx" ? { clip } : format === "model" ? (options.clip !== undefined || (options.pose === undefined && query.kind === "clip") ? { clip } : { pose }) : {};
+  const made = await exportSpatial(asset, format, { ...request, ...which }, { ...(control?.signal === undefined ? {} : { signal: control.signal }), progress: (d, t, l) => control?.progress?.(Math.round((d / Math.max(t, 1)) * 100), 100, l) });
+  return { status: "done", format, filename: made.filename, mime: made.mime, bytes: made.bytes, blob: new Blob([made.bytes as BlobPart], { type: made.mime }), details: { metadataEmbedded: format !== "fbx", notes: made.notes } };
 }
 
 /** 💾️ Hands a finished export to the browser as a download. */

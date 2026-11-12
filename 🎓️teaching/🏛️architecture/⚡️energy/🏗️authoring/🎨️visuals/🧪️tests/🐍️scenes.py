@@ -16,6 +16,11 @@ CASES = json.loads(Path(__file__).with_name("🔣️scenes.json").read_text(enco
 
 
 class SceneScaleTest(unittest.TestCase):
+    def setUp(self):
+        language = mock.patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": CASES["language"]})
+        language.start()
+        self.addCleanup(language.stop)
+
     def test_physics_uses_canonical_architecture(self):
         shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
         physics = importlib.import_module(BASE + "🧲️physics.🎬️clip.🧲️fundamentals.🐍️")

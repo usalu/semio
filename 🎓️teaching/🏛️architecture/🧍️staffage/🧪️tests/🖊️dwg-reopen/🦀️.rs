@@ -77,3 +77,37 @@ fn a_dwg_states_its_view_in_its_layers_and_its_note_and_is_byte_deterministic() 
     assert!((notes[0].0 - 0.25).abs() < 1e-9);
     assert_eq!(notes[0].1, "staffage standing-adult relaxed light-line front 1:100 physical");
 }
+
+#[test]
+fn a_very_long_polyline_and_a_very_long_text_are_read_back_by_acadrust() {
+    let points: Vec<Value> = (0..20_000).map(|i| serde_json::json!({"x": f64::from(i) * 0.001, "y": (f64::from(i) * 0.01).sin()})).collect();
+    let text: String = (0..3000).map(|i| char::from_u32(0x41 + (i % 26) as u32).unwrap()).chain("·m²€".chars()).collect();
+    let scene = serde_json::json!({"units": "m", "layers": [{"name": "LONG", "aci": 4, "lineweight": 35, "polylines": [{"closed": false, "points": points}], "texts": [{"at": {"x": 1.5, "y": -2.5}, "heightM": 0.25, "text": text}]}]});
+    let bytes = staffage_dwg::encode_json(scene.to_string().as_bytes()).expect("encodes");
+    let document = read(&bytes);
+    let lines: Vec<_> = document.entities().filter_map(|entity| match entity { EntityType::LwPolyline(line) => Some(line), _ => None }).collect();
+    assert_eq!(lines.len(), 1);
+    assert_eq!(lines[0].vertices.len(), 20_000);
+    for (index, vertex) in lines[0].vertices.iter().enumerate() {
+        assert_eq!(vertex.location.x, index as f64 * 0.001);
+        assert_eq!(vertex.location.y, (index as f64 * 0.01).sin());
+    }
+    let texts: Vec<_> = document.entities().filter_map(|entity| match entity { EntityType::Text(item) => Some(item), _ => None }).collect();
+    assert_eq!(texts.len(), 1);
+    assert_eq!(texts[0].value, text);
+}
+
+#[test]
+fn layers_may_repeat_and_layer_zero_is_the_standard_layer() {
+    let scene = br#"{"units":"m","layers":[
+        {"name":"A","aci":1,"lineweight":13,"polylines":[{"closed":false,"points":[{"x":0,"y":0},{"x":1,"y":1}]}],"texts":[]},
+        {"name":"a","aci":1,"lineweight":13,"polylines":[{"closed":false,"points":[{"x":2,"y":0},{"x":3,"y":1}]}],"texts":[]},
+        {"name":"0","aci":3,"lineweight":70,"polylines":[{"closed":true,"points":[{"x":0,"y":0},{"x":1,"y":0},{"x":1,"y":1}]}],"texts":[]}]}"#;
+    let document = read(&staffage_dwg::encode_json(scene).expect("encodes"));
+    assert_eq!(document.layers.iter().count(), 2);
+    assert_eq!(u64::from(document.layers.get("0").unwrap().color.index().unwrap()), 3);
+    assert_eq!(i64::from(document.layers.get("0").unwrap().line_weight.value()), 70);
+    assert_eq!(document.entities().filter(|entity| matches!(entity, EntityType::LwPolyline(line) if line.common.layer == "A")).count(), 2);
+    assert!(staffage_dwg::encode_json(br#"{"units":"m","layers":[{"name":"A","aci":1,"lineweight":13,"polylines":[],"texts":[]},{"name":"a","aci":2,"lineweight":13,"polylines":[],"texts":[]}]}"#).is_err());
+    assert!(staffage_dwg::encode_json(br#"{"units":"m","layers":[{"name":"A|B","aci":1,"lineweight":13,"polylines":[],"texts":[]}]}"#).is_err());
+}

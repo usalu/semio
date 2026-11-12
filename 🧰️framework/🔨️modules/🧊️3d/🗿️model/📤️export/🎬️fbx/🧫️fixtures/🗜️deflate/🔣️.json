@@ -1,0 +1,97 @@
+{
+ "rows": [
+  {
+   "name": "empty",
+   "spec": {
+    "kind": "repeat",
+    "pattern": [],
+    "count": 0
+   },
+   "inputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "inputLength": 0,
+   "zlibLength": 8,
+   "zlibSha256": "aca503def43dc086a5aaa5c3d6f86bcbbc2aa6a80007ddea4a81bce2b376fceb"
+  },
+  {
+   "name": "single-byte",
+   "spec": {
+    "kind": "repeat",
+    "pattern": [
+     7
+    ],
+    "count": 1
+   },
+   "inputSha256": "ca358758f6d27e6cf45272937977a748fd88391db679ceda7dc7bf1f005ee879",
+   "inputLength": 1,
+   "zlibLength": 9,
+   "zlibSha256": "7bab40b0545897ad40082f5d8c07a3a080ce6be33accaf94daf7ba2036ca2a49"
+  },
+  {
+   "name": "zeros-4096",
+   "spec": {
+    "kind": "repeat",
+    "pattern": [
+     0
+    ],
+    "count": 4096
+   },
+   "inputSha256": "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+   "inputLength": 4096,
+   "zlibLength": 26,
+   "zlibSha256": "969cac362349ff9166032b1a7fb6118a534a2c60712e4c1ae2ae2d070febae62"
+  },
+  {
+   "name": "text-repeat",
+   "spec": {
+    "kind": "repeat",
+    "pattern": [
+     115,
+     101,
+     109,
+     105,
+     111,
+     32,
+     109,
+     111,
+     100,
+     101,
+     108,
+     32,
+     102,
+     98,
+     120,
+     32
+    ],
+    "count": 300
+   },
+   "inputSha256": "50f9390344652049e77666671434055da3327da3bf28c31b65c6d85fe246ae05",
+   "inputLength": 4800,
+   "zlibLength": 50,
+   "zlibSha256": "1a282beafe36caae642a2b089df2d93e1bf159050829c13afd146d5c1e3089db"
+  },
+  {
+   "name": "lcg-noise-3000",
+   "spec": {
+    "kind": "lcg",
+    "seed": 12345,
+    "length": 3000
+   },
+   "inputSha256": "75fe167f7710a81ef249b6bbf40d8291dc1a4913ab72a74ec56187b542b6ef82",
+   "inputLength": 3000,
+   "zlibLength": 3056,
+   "zlibSha256": "8d4cc8a8e33726f1af52adc5511d709bf1ddeea17b735e052affe9a6e361e1dc"
+  },
+  {
+   "name": "float-ramp",
+   "spec": {
+    "kind": "float64-ramp",
+    "count": 2000,
+    "step": 0.125
+   },
+   "inputSha256": "1a64a7162d55f078337d9708453d2aa600c78095a97fdeef20fe3ed27d294aeb",
+   "inputLength": 16000,
+   "zlibLength": 2721,
+   "zlibSha256": "7dedb53a4289557361a8be3ef92b321feba383b5f16ff99b1a7f549445c4e0c1"
+  }
+ ]
+}

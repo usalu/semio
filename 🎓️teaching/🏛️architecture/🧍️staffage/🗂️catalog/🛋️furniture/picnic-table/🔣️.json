@@ -512,6 +512,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -546,6 +547,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -641,6 +643,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -675,6 +678,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1020,6 +1024,7 @@
               "h": 0.05,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1055,6 +1060,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1185,6 +1191,7 @@
               "h": 0.05,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1220,6 +1227,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1614,6 +1622,7 @@
               "h": 0.04,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1649,6 +1658,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1806,6 +1816,7 @@
               "h": 0.04,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -1841,6 +1852,7 @@
               "closed": true,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -2269,6 +2281,7 @@
               "d": "M -0.06 0 L -0.06 0.03 Q -0.06 0.04 -0.05 0.04 L 0.29 0.04 Q 0.3 0.04 0.3 0.03 L 0.3 0 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -2286,6 +2299,7 @@
               "d": "M 0.3 0 L 0.3 -0.03 Q 0.3 -0.04 0.29 -0.04 L -0.05 -0.04 Q -0.06 -0.04 -0.06 -0.03 L -0.06 0 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -2504,6 +2518,7 @@
               "d": "M -0.06 0 L -0.06 0.03 Q -0.06 0.04 -0.05 0.04 L 0.29 0.04 Q 0.3 0.04 0.3 0.03 L 0.3 0 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -2521,6 +2536,7 @@
               "d": "M 0.3 0 L 0.3 -0.03 Q 0.3 -0.04 0.29 -0.04 L -0.05 -0.04 Q -0.06 -0.04 -0.06 -0.03 L -0.06 0 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.85,
                 "z1": 0.85
               }
@@ -3966,6 +3982,175 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "leg-l",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.55,
+          "region": "a-frame",
+          "profile": [[-0.25, 0.71], [-0.19, 0.71], [-0.66, 0.0], [-0.708, 0.0], [-0.72, 0.012]],
+          "plane": "xy",
+          "from": 0.7775,
+          "to": 0.8225,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.6]
+          }
+        },
+        {
+          "id": "leg-r",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.55,
+          "region": "a-frame",
+          "profile": [[0.19, 0.71], [0.25, 0.71], [0.72, 0.012], [0.708, 0.0], [0.66, 0.0]],
+          "plane": "xy",
+          "from": 0.7775,
+          "to": 0.8225,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.6]
+          }
+        },
+        {
+          "id": "top-beam",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.5,
+          "region": "a-frame",
+          "size": [0.6, 0.045, 0.045],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [0.0, 0.6875, 0.8]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.6]
+          }
+        },
+        {
+          "id": "beam",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.5,
+          "region": "a-frame",
+          "size": [0.96, 0.045, 0.045],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [0.0, 0.3775, 0.8]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.6]
+          }
+        },
+        {
+          "id": "hinge-l",
+          "kind": "box",
+          "bone": "frame",
+          "material": "steel-galvanised",
+          "role": "body",
+          "tone": 0.2,
+          "region": "hinges",
+          "size": [0.08, 0.1, 0.11],
+          "transform": {
+            "translation": [-0.46, 0.39, 0.725]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.45]
+          }
+        },
+        {
+          "id": "hinge-r",
+          "kind": "box",
+          "bone": "frame",
+          "material": "steel-galvanised",
+          "role": "body",
+          "tone": 0.2,
+          "region": "hinges",
+          "size": [0.08, 0.1, 0.11],
+          "transform": {
+            "translation": [0.46, 0.39, 0.725]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -1.45]
+          }
+        },
+        {
+          "id": "top-plank",
+          "kind": "box",
+          "bone": "top",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.7,
+          "region": "table-top",
+          "size": [0.138, 0.04, 1.8],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.069, 0.02, 0.0]
+          },
+          "repeat": {
+            "count": 5,
+            "translation": [0.14, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "bench-r",
+          "kind": "box",
+          "bone": "bench-r",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.7,
+          "region": "bench-seats",
+          "size": [0.36, 0.04, 1.7],
+          "cornerRadius": 0.01,
+          "transform": {
+            "translation": [0.12, 0.02, 0.0]
+          }
+        },
+        {
+          "id": "bench-l",
+          "kind": "box",
+          "bone": "bench-l",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.7,
+          "region": "bench-seats",
+          "size": [0.36, 0.04, 1.7],
+          "cornerRadius": 0.01,
+          "transform": {
+            "translation": [0.12, -0.02, 0.0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Both A-frames (z = +-0.8) are two splayed legs, a top beam and a cross beam of 45 mm boards; each leg is the drawn parallelogram extruded 45 mm, left and right pair via repeat 1.6 m apart, so the four legs stand at real lateral positions.",
+          "de": "Beide A-Rahmen (z = +-0,8) bestehen aus zwei gespreizten Beinen, einem oberen und einem unteren Querbalken aus 45-mm-Brettern; jedes Bein ist das gezeichnete Parallelogramm, 45 mm stark extrudiert, das Paar links und rechts liegt per repeat 1,6 m auseinander, sodass die vier Beine an echten seitlichen Positionen stehen."
+        },
+        {
+          "en": "The 0.70 by 1.80 m top is five 138 mm planks with 2 mm gaps (the plan draws the plank joints as texture lines); the 0.36 m benches are single 40 mm boards on their own revolute bones hinged at x = +-0.46 so they fold down with the hinge pose.",
+          "de": "Die 0,70 mal 1,80 m grosse Tischplatte besteht aus fuenf 138-mm-Bohlen mit 2 mm Fugen (der Grundriss zeichnet die Bohlenstoesse als Texturlinien); die 0,36 m breiten Baenke sind einzelne 40-mm-Bretter auf eigenen Drehknochen mit Scharnier bei x = +-0,46 und klappen mit der Scharnierpose nach unten."
+        },
+        {
+          "en": "Hinge blocks are drawn 8 mm clear of the A-frame beams in the front view; they are extended to z = 0.78 so that they seat on the frame. The screw heads drawn inside the hinge blocks are hidden and not modelled.",
+          "de": "Scharnierbloecke sind in der Vorderansicht 8 mm vom A-Rahmen-Balken entfernt gezeichnet; sie sind bis z = 0,78 verlaengert, damit sie auf dem Rahmen aufsitzen. Die im Scharnierblock gezeichneten Schraubenkoepfe sind verdeckt und nicht modelliert."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "deployed",
       "defaultClip": "fold-benches",
@@ -3979,7 +4164,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

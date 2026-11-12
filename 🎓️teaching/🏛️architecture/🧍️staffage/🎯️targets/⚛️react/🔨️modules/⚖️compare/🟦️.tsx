@@ -8,8 +8,8 @@
  * @see ../🧍️figure/🟦️.tsx — the figure
  */
 import { useEffect, useMemo, useState, type ReactElement } from "react";
-import { SCALE_PRESETS, VIEWPOINTS, VIEWS, formatNumber } from "@teaching/staffage";
-import type { Asset, ItemValue, View, Viewpoint } from "@teaching/staffage";
+import { SCALE_PRESETS, PLANAR_VIEWPOINTS, VIEWS, formatNumber } from "@teaching/staffage";
+import type { Asset, ItemValue, View, PlanarViewpoint } from "@teaching/staffage";
 import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { StaffageClock } from "../⏱️clock/🟦️.ts";
 import { useArchive, useRows } from "../🧭️context/🟦️.tsx";
@@ -87,7 +87,7 @@ function ComparePaneCard(props: PaneProps): ReactElement {
         <div className="grid gap-double sm:grid-cols-2">
           <SelectField label={t("compare.asset")} value={pane.asset} onChange={(next) => onChange({ asset: next, view: pane.view, viewpoint: pane.viewpoint, selection: null })} options={options.map((candidate) => ({ value: candidate.entry.id, label: candidate.entry.title[language] }))} />
           <SelectField label={t("compare.view")} value={pane.view} onChange={(next: View) => onChange({ ...pane, view: next })} options={VIEWS.map((candidate) => ({ value: candidate, label: VIEW_NAMES[candidate][language] }))} />
-          <SelectField label={viewpointWord("viewpoints.label", language)} value={pane.viewpoint} onChange={(next: Viewpoint) => onChange({ ...pane, viewpoint: next })} options={VIEWPOINTS.map((candidate) => ({ value: candidate, label: VIEWPOINT_NAMES[candidate][language] }))} />
+          <SelectField label={viewpointWord("viewpoints.label", language)} value={pane.viewpoint} onChange={(next: PlanarViewpoint) => onChange({ ...pane, viewpoint: next })} options={PLANAR_VIEWPOINTS.map((candidate) => ({ value: candidate, label: VIEWPOINT_NAMES[candidate][language] }))} />
           <SelectField
             label={t("compare.pick")}
             value={selectionKey(pane.selection)}
@@ -101,7 +101,7 @@ function ComparePaneCard(props: PaneProps): ReactElement {
   );
 }
 
-/** ⚖️ The comparison page. */
+/** 🔭️ The comparison page. */
 export function ComparePage(props: { readonly view: PaneView }): ReactElement {
   const { view } = props;
   const { t, language, catalog, reducedMotion } = useArchive();

@@ -2521,6 +2521,303 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "housing",
+          "kind": "box",
+          "bone": "hob",
+          "material": "steel-enamel",
+          "role": "body",
+          "tone": 0.4,
+          "region": "plate",
+          "size": [0.28, 0.031, 0.5],
+          "cornerRadius": 0.002,
+          "transform": {
+            "translation": [0.0, 0.0155, 0.0]
+          }
+        },
+        {
+          "id": "plate",
+          "kind": "extrude",
+          "bone": "hob",
+          "material": "steel-enamel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "plate",
+          "profile": [
+            [0.25, -0.15],
+            [0.25259, -0.14966],
+            [0.255, -0.14866],
+            [0.25707, -0.14707],
+            [0.25866, -0.145],
+            [0.25966, -0.14259],
+            [0.26, -0.14],
+            [0.26, 0.14],
+            [0.25966, 0.14259],
+            [0.25866, 0.145],
+            [0.25707, 0.14707],
+            [0.255, 0.14866],
+            [0.25259, 0.14966],
+            [0.25, 0.15],
+            [-0.25, 0.15],
+            [-0.25259, 0.14966],
+            [-0.255, 0.14866],
+            [-0.25707, 0.14707],
+            [-0.25866, 0.145],
+            [-0.25966, 0.14259],
+            [-0.26, 0.14],
+            [-0.26, -0.14],
+            [-0.25966, -0.14259],
+            [-0.25866, -0.145],
+            [-0.25707, -0.14707],
+            [-0.255, -0.14866],
+            [-0.25259, -0.14966],
+            [-0.25, -0.15]
+          ],
+          "plane": "zx",
+          "from": 0.03,
+          "to": 0.04
+        },
+        {
+          "id": "vent-rise",
+          "kind": "capsule",
+          "bone": "hob",
+          "material": "steel-enamel",
+          "role": "detail",
+          "tone": 0.3,
+          "maxDenominator": 50,
+          "p0": [-0.1, 0.006, -0.2503],
+          "p1": [-0.08, 0.016, -0.2503],
+          "r0": 0.0007,
+          "r1": 0.0007,
+          "repeat": {
+            "count": 5,
+            "translation": [0.04, 0, 0]
+          }
+        },
+        {
+          "id": "vent-fall",
+          "kind": "capsule",
+          "bone": "hob",
+          "material": "steel-enamel",
+          "role": "detail",
+          "tone": 0.3,
+          "maxDenominator": 50,
+          "p0": [-0.08, 0.016, -0.2503],
+          "p1": [-0.06, 0.006, -0.2503],
+          "r0": 0.0007,
+          "r1": 0.0007,
+          "repeat": {
+            "count": 5,
+            "translation": [0.04, 0, 0]
+          }
+        },
+        {
+          "id": "knob",
+          "kind": "revolve",
+          "bone": "knob",
+          "material": "bakelite",
+          "role": "body",
+          "tone": 0.6,
+          "region": "knob",
+          "profile": [[0, 0.011], [0.009, 0.011]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, -0.259]
+        },
+        {
+          "id": "knob-pointer",
+          "kind": "box",
+          "bone": "knob",
+          "material": "bakelite",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "knob",
+          "maxDenominator": 50,
+          "size": [0.0024, 0.011, 0.0005],
+          "transform": {
+            "translation": [0.0, 0.0055, -0.25925]
+          }
+        },
+        {
+          "id": "burner-ring",
+          "kind": "revolve",
+          "bone": "burner",
+          "material": "brass",
+          "role": "body",
+          "tone": 0.5,
+          "region": "burner",
+          "profile": [[0, 0.052], [0.007, 0.046]],
+          "axis": [0, 1, 0],
+          "origin": [0, 0, 0.03]
+        },
+        {
+          "id": "burner-cap",
+          "kind": "revolve",
+          "bone": "burner",
+          "material": "brass",
+          "role": "body",
+          "tone": 0.55,
+          "region": "burner",
+          "profile": [[0.007, 0.02], [0.018, 0.016]],
+          "axis": [0, 1, 0],
+          "origin": [0, 0, 0.03]
+        },
+        {
+          "id": "flame-ring",
+          "kind": "loft",
+          "bone": "flame-body",
+          "material": "flame",
+          "role": "body",
+          "tone": 0.92,
+          "region": "flame",
+          "sections": [
+            {
+              "at": [-0.03, 0, 0.03],
+              "rx": 0.008,
+              "ry": 0.008,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [-0.03, 0.009, 0.03],
+              "rx": 0.0072,
+              "ry": 0.0072,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [-0.03, 0.015, 0.03],
+              "rx": 0.004,
+              "ry": 0.004,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [-0.03, 0.02, 0.03],
+              "rx": 0.0008,
+              "ry": 0.0008,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true,
+          "repeat": {
+            "count": 12,
+            "rotationAxis": [0, 1, 0],
+            "rotationRad": 0.5236,
+            "origin": [0, 0, 0.03]
+          }
+        },
+        {
+          "id": "flame-centre",
+          "kind": "loft",
+          "bone": "flame-tip",
+          "material": "flame",
+          "role": "body",
+          "tone": 0.97,
+          "region": "flame",
+          "sections": [
+            {
+              "at": [0, -0.015, 0.03],
+              "rx": 0.009,
+              "ry": 0.009,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [0, -0.003, 0.03],
+              "rx": 0.008,
+              "ry": 0.008,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [0, 0.005, 0.03],
+              "rx": 0.004,
+              "ry": 0.004,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [0, 0.012, 0.03],
+              "rx": 0.0008,
+              "ry": 0.0008,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "trivet-rail",
+          "kind": "extrude",
+          "bone": "trivet",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.45,
+          "region": "trivet",
+          "profile": [[-0.037, -0.135], [0.097, -0.135], [0.097, 0.135], [-0.037, 0.135]],
+          "plane": "zx",
+          "from": 0.038,
+          "to": 0.048,
+          "holes": [
+            [[-0.025, -0.123], [0.085, -0.123], [0.085, 0.123], [-0.025, 0.123]]
+          ]
+        },
+        {
+          "id": "trivet-legs-front",
+          "kind": "box",
+          "bone": "trivet",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.45,
+          "region": "trivet",
+          "size": [0.014, 0.04, 0.014],
+          "transform": {
+            "translation": [-0.12, 0.02, -0.03]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.24, 0, 0]
+          }
+        },
+        {
+          "id": "trivet-legs-back",
+          "kind": "box",
+          "bone": "trivet",
+          "material": "cast-iron",
+          "role": "body",
+          "tone": 0.45,
+          "region": "trivet",
+          "size": [0.014, 0.04, 0.014],
+          "transform": {
+            "translation": [-0.12, 0.02, 0.09]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.24, 0, 0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The hob is a single-burner cooktop of 0.3 m by 0.52 m facing -z: a 0.28 m by 0.5 m housing under a 10 mm enamel plate that overhangs it, the burner (brass ring and cap, centred at x 0, z 0.03) and a four-rail trivet standing on four legs (front legs z -0.03, back legs z 0.09) from plan and front view.",
+          "de": "Die Kochmulde ist ein Einbrenner-Kochfeld von 0,3 m mal 0,52 m, nach -z gerichtet: ein Gehäuse von 0,28 m mal 0,5 m unter einer 10 mm starken Emailplatte, die darüber hinausragt, der Brenner (Messingring und -kappe, zentriert bei x 0, z 0,03) und ein vierschieniger Pfannenträger auf vier Beinen (vordere Beine z -0,03, hintere Beine z 0,09) nach Grundriss und Ansicht."
+        },
+        {
+          "en": "The three 2D views disagree about the knob: the elevation shows it end-on on the front panel at y 0.019 (matching the revolute bone about w), the plan a circle at z -0.2 and the front view a block on the plate at y 0.04..0.052. The physically sensible reading of the elevation is kept: a bakelite knob on the front panel (z -0.25..-0.259) at x 0.105; the plan and front drawings of it are not followed.",
+          "de": "Die drei 2D-Ansichten widersprechen sich beim Knebel: der Aufriss zeigt ihn stirnseitig an der Frontblende bei y 0,019 (passend zum Drehknochen um w), der Grundriss einen Kreis bei z -0,2 und die Ansicht einen Block auf der Platte bei y 0,04..0,052. Beibehalten ist die physikalisch sinnvolle Lesart des Aufrisses: ein Bakelitknebel an der Frontblende (z -0,25..-0,259) bei x 0,105; Grundriss und Ansicht des Knebels werden nicht gefolgt."
+        },
+        {
+          "en": "The flame is a ring of twelve teardrop tongues (one solid, repeated about the burner axis by 30 degrees) on the flame-body bone plus a taller centre tongue on the flame-tip bone; the prismatic flame bone slides both into the housing when the burner is off, where the housing hides them. Vent ribs, knob pointer and burner ports (not modelled) are fine detail; the vent zigzag is two ribs with repeat.",
+          "de": "Die Flamme ist ein Kranz aus zwölf tropfenförmigen Zungen (ein Körper, um die Brennerachse in 30-Grad-Schritten wiederholt) am Knochen Flammenkörper plus eine höhere Mittelzunge am Knochen Flammenspitze; der translatorische Flammenknochen schiebt beide bei ausgeschaltetem Brenner ins Gehäuse, wo es sie verdeckt. Lüftungsrippen, Knebelzeiger und Brenneröffnungen (nicht modelliert) sind feine Details; der Lüftungs-Zickzack besteht aus zwei Rippen mit repeat."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "high",
       "defaultClip": "flicker",
@@ -2534,7 +2831,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

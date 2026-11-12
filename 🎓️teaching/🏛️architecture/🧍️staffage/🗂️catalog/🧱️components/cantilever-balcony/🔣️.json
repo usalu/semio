@@ -3390,6 +3390,235 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "wall-core",
+          "kind": "box",
+          "bone": "slab",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.6,
+          "region": "wall-face",
+          "size": [0.18, 1.1, 1],
+          "transform": {
+            "translation": [-0.21, 0.65, 0]
+          }
+        },
+        {
+          "id": "break-core",
+          "kind": "box",
+          "bone": "slab",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.6,
+          "region": "thermal-break",
+          "size": [0.18, 0.2, 1],
+          "transform": {
+            "translation": [-0.21, 0, 0]
+          }
+        },
+        {
+          "id": "wall-insulation",
+          "kind": "box",
+          "bone": "slab",
+          "material": "mineral-wool",
+          "role": "body",
+          "tone": 0.9,
+          "region": "wall-face",
+          "size": [0.1, 1.1, 1],
+          "transform": {
+            "translation": [-0.07, 0.65, 0]
+          }
+        },
+        {
+          "id": "wall-render",
+          "kind": "box",
+          "bone": "slab",
+          "material": "render",
+          "role": "body",
+          "tone": 0.55,
+          "region": "wall-face",
+          "size": [0.02, 1.1, 1],
+          "transform": {
+            "translation": [-0.01, 0.65, 0]
+          }
+        },
+        {
+          "id": "thermal-break-block",
+          "kind": "box",
+          "bone": "slab",
+          "material": "break-module",
+          "role": "body",
+          "tone": 0.3,
+          "region": "thermal-break",
+          "size": [0.12, 0.2, 1],
+          "transform": {
+            "translation": [-0.06, 0, 0]
+          }
+        },
+        {
+          "id": "slab",
+          "kind": "box",
+          "bone": "slab",
+          "material": "concrete",
+          "role": "body",
+          "tone": 0.72,
+          "regions": ["slab-top", "slab-soffit", "slab-edge"],
+          "size": [1.5, 0.2, 1],
+          "transform": {
+            "translation": [0.75, 0, 0]
+          }
+        },
+        {
+          "id": "base-plate",
+          "kind": "box",
+          "bone": "railing",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "railing-steel",
+          "size": [0.012, 0.1, 0.1],
+          "transform": {
+            "translation": [0.006, 0, 0.44]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.88]
+          }
+        },
+        {
+          "id": "post",
+          "kind": "box",
+          "bone": "railing",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.45,
+          "region": "railing-steel",
+          "size": [1.028, 0.05, 0.05],
+          "transform": {
+            "translation": [0.526, 0, 0.44]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.88]
+          }
+        },
+        {
+          "id": "handrail",
+          "kind": "capsule",
+          "bone": "railing",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "railing-steel",
+          "p0": [1.07, 0, -0.47],
+          "p1": [1.07, 0, 0.47],
+          "r0": 0.03,
+          "r1": 0.03
+        },
+        {
+          "id": "mid-rail",
+          "kind": "capsule",
+          "bone": "railing",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "railing-steel",
+          "p0": [0.55, 0, -0.42],
+          "p1": [0.55, 0, 0.42],
+          "r0": 0.02,
+          "r1": 0.02
+        },
+        {
+          "id": "bolt-a-l",
+          "kind": "extrude",
+          "bone": "railing",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "railing-steel",
+          "maxDenominator": 50,
+          "profile": [[0.0465, 0.405], [0.04075, 0.41496], [0.02925, 0.41496], [0.0235, 0.405], [0.02925, 0.39504], [0.04075, 0.39504]],
+          "plane": "yz",
+          "from": 0.012,
+          "to": 0.024,
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.07]
+          }
+        },
+        {
+          "id": "bolt-a-r",
+          "kind": "extrude",
+          "bone": "railing",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "railing-steel",
+          "maxDenominator": 50,
+          "profile": [[0.0465, -0.475], [0.04075, -0.46504], [0.02925, -0.46504], [0.0235, -0.475], [0.02925, -0.48496], [0.04075, -0.48496]],
+          "plane": "yz",
+          "from": 0.012,
+          "to": 0.024,
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.07]
+          }
+        },
+        {
+          "id": "bolt-b-l",
+          "kind": "extrude",
+          "bone": "railing",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "railing-steel",
+          "maxDenominator": 50,
+          "profile": [[-0.0235, 0.405], [-0.02925, 0.41496], [-0.04075, 0.41496], [-0.0465, 0.405], [-0.04075, 0.39504], [-0.02925, 0.39504]],
+          "plane": "yz",
+          "from": 0.012,
+          "to": 0.024,
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.07]
+          }
+        },
+        {
+          "id": "bolt-b-r",
+          "kind": "extrude",
+          "bone": "railing",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "railing-steel",
+          "maxDenominator": 50,
+          "profile": [[-0.0235, -0.475], [-0.02925, -0.46504], [-0.04075, -0.46504], [-0.0465, -0.475], [-0.04075, -0.48496], [-0.02925, -0.48496]],
+          "plane": "yz",
+          "from": 0.012,
+          "to": 0.024,
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.07]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The wall strip next to the slab is split in its thermal layers: concrete core 180 mm, mineral wool 100 mm and render 20 mm above the slab; at slab level the core is the break concrete and the 120 mm break module replaces wool and render, so each layer is its own solid with the region the thermal view colours.",
+          "de": "Der Wandstreifen neben der Platte ist in seine thermischen Schichten geteilt: Betonkern 180 mm, Mineralwolle 100 mm und Putz 20 mm über der Platte; auf Plattenhöhe ist der Kern der Trennbeton und das 120 mm Dämmmodul ersetzt Wolle und Putz, sodass jede Schicht ein eigener Körper mit der Region der thermischen Ansicht ist."
+        },
+        {
+          "en": "The slab is one 1500 x 200 mm box carrying the three face regions top, soffit and edge; the railing (bone rotated 90 degrees, so u is up and v points back) has two 50 mm square posts, a 60 mm handrail tube and a 40 mm mid rail tube (capsules whose round ends end at the slab edge lines) on 100 x 100 x 12 mm base plates with four hexagon bolt heads each.",
+          "de": "Die Platte ist ein Quader 1500 x 200 mm mit den drei Flächenregionen Oberseite, Unterseite und Stirn; das Geländer (Knochen um 90 Grad gedreht, also u nach oben und v nach hinten) hat zwei Pfosten 50 mm quadratisch, ein Handlaufrohr 60 mm und ein Zwischenrohr 40 mm (Kapseln, deren runde Enden an den Plattenkanten enden) auf Fussplatten 100 x 100 x 12 mm mit je vier Sechskantschrauben."
+        },
+        {
+          "en": "Reinforcement bars, the drip groove, the slab arris line and wall rebar markers are hidden or subtractive 2D details and are not modelled; the load carrier bone is a load point without volume.",
+          "de": "Bewehrungsstäbe, Tropfnase, Kantenlinie und Wandbewehrungsmarken sind verdeckte oder abtragende 2D-Details und nicht modelliert; der Lastträgerknochen ist ein Lastpunkt ohne Volumen."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "distributed-live-load",
       "defaultClip": "loading-ramp",
@@ -3403,7 +3632,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

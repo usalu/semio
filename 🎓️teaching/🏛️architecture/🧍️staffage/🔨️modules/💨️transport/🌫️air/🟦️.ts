@@ -8,6 +8,7 @@
  * @see https://doi.org/10.1175/1520-0450(1996)035<0601:NEFCVP>2.0.CO;2 — Buck 1981/1996 saturation vapour pressure
  * @see https://coolprop.org/fluid_properties/HumidAir.html — CoolProp humid air (the third-party oracle)
  */
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🌍️ Standard gravity (m/s², CODATA conventional). */
 export const GRAVITY_MS2 = 9.80665;
@@ -25,7 +26,7 @@ export const R_DRY_AIR = 287.05;
 export const EPSILON = 0.622;
 
 /** 💧️ Saturation vapour pressure over liquid water (Pa) at a temperature in °C. */
-export const saturationPressurePa = (tC: number): number => 611.21 * Math.exp(((18.678 - tC / 234.5) * tC) / (257.14 + tC));
+export const saturationPressurePa = (tC: number): number => 611.21 * portable.fastExp(((18.678 - tC / 234.5) * tC) / (257.14 + tC));
 
 /** 💧️ Humidity ratio (kg/kg dry air) of a vapour pressure at a total pressure. */
 export const humidityRatio = (vapourPa: number, pressurePa: number): number => (EPSILON * vapourPa) / (pressurePa - vapourPa);

@@ -1,0 +1,2497 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "caudex",
+    "kind": "loft",
+    "bone": "caudex",
+    "material": "agave-caudex",
+    "role": "body",
+    "tone": 0.3,
+    "region": "caudex",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.104,
+      "ry": 0.088,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.105,
+       0,
+       0
+      ],
+      "rx": 0.125,
+      "ry": 0.10725,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.21,
+       0,
+       0
+      ],
+      "rx": 0.12,
+      "ry": 0.1045,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.315,
+       0,
+       0
+      ],
+      "rx": 0.115,
+      "ry": 0.10175,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.42,
+       0,
+       0
+      ],
+      "rx": 0.088,
+      "ry": 0.0792,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r1-a",
+    "kind": "loft",
+    "bone": "leaf-r1-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1608,
+       0,
+       0
+      ],
+      "rx": 0.07843,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3216,
+       0,
+       0
+      ],
+      "rx": 0.09184,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4824,
+       0,
+       0
+      ],
+      "rx": 0.10158,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.6432,
+       0,
+       0
+      ],
+      "rx": 0.10621,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.804,
+       0.00947,
+       0
+      ],
+      "rx": 0.09055,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.9648,
+       0.01809,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r1-b",
+    "kind": "loft",
+    "bone": "leaf-r1-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       -0.119,
+       0.02238,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -0.0075,
+       -0.00266,
+       0
+      ],
+      "rx": 0.09034,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.104,
+       0,
+       0
+      ],
+      "rx": 0.09618,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2155,
+       0,
+       0
+      ],
+      "rx": 0.08283,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.327,
+       0,
+       0
+      ],
+      "rx": 0.06487,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4385,
+       0,
+       0
+      ],
+      "rx": 0.04836,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.55,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r2-a",
+    "kind": "loft",
+    "bone": "leaf-r2-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.15017,
+       0,
+       0
+      ],
+      "rx": 0.07846,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.30033,
+       0,
+       0
+      ],
+      "rx": 0.09201,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4505,
+       0,
+       0
+      ],
+      "rx": 0.10074,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.60067,
+       0,
+       0
+      ],
+      "rx": 0.10525,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.75083,
+       0.00376,
+       0
+      ],
+      "rx": 0.09941,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.901,
+       0.05272,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r2-b",
+    "kind": "loft",
+    "bone": "leaf-r2-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       -0.1037,
+       0.05802,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.00025,
+       -0.00589,
+       0
+      ],
+      "rx": 0.10095,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1042,
+       0,
+       0
+      ],
+      "rx": 0.09596,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.20815,
+       0,
+       0
+      ],
+      "rx": 0.08132,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3121,
+       0,
+       0
+      ],
+      "rx": 0.06438,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.41605,
+       0,
+       0
+      ],
+      "rx": 0.04834,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.52,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r3-a",
+    "kind": "loft",
+    "bone": "leaf-r3-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1498,
+       0,
+       0
+      ],
+      "rx": 0.07881,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2996,
+       0,
+       0
+      ],
+      "rx": 0.09245,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4494,
+       0,
+       0
+      ],
+      "rx": 0.10066,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.5992,
+       0,
+       0
+      ],
+      "rx": 0.10491,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.749,
+       0.00301,
+       0
+      ],
+      "rx": 0.10007,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.8988,
+       0.05422,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r3-b",
+    "kind": "loft",
+    "bone": "leaf-r3-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       -0.1016,
+       0.05991,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -0.00133,
+       -0.00575,
+       0
+      ],
+      "rx": 0.10041,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.09893,
+       0,
+       0
+      ],
+      "rx": 0.09533,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1992,
+       0,
+       0
+      ],
+      "rx": 0.08067,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.29947,
+       0,
+       0
+      ],
+      "rx": 0.06377,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.39973,
+       0,
+       0
+      ],
+      "rx": 0.04774,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.5,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r4-a",
+    "kind": "loft",
+    "bone": "leaf-r4-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1448,
+       0,
+       0
+      ],
+      "rx": 0.07947,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2896,
+       0,
+       0
+      ],
+      "rx": 0.09341,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4344,
+       -1e-05,
+       0
+      ],
+      "rx": 0.09998,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.5792,
+       0,
+       0
+      ],
+      "rx": 0.10373,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.724,
+       0.00062,
+       0
+      ],
+      "rx": 0.10291,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.8688,
+       0.06388,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r4-b",
+    "kind": "loft",
+    "bone": "leaf-r4-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       -0.0911,
+       0.07047,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -0.00092,
+       -0.00088,
+       0
+      ],
+      "rx": 0.09646,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.08927,
+       0,
+       0
+      ],
+      "rx": 0.09304,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.17945,
+       0,
+       0
+      ],
+      "rx": 0.07852,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.26963,
+       0,
+       0
+      ],
+      "rx": 0.06253,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.35982,
+       0,
+       0
+      ],
+      "rx": 0.04664,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.45,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-r5",
+    "kind": "loft",
+    "bone": "leaf-r5",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05252,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.16667,
+       0,
+       0
+      ],
+      "rx": 0.08947,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.33333,
+       0,
+       0
+      ],
+      "rx": 0.10099,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.5,
+       0,
+       0
+      ],
+      "rx": 0.0939,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.66667,
+       0,
+       0
+      ],
+      "rx": 0.08946,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.83333,
+       0,
+       0
+      ],
+      "rx": 0.0714,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l1-a",
+    "kind": "loft",
+    "bone": "leaf-l1-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1555,
+       0,
+       0
+      ],
+      "rx": 0.07852,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.311,
+       0,
+       0
+      ],
+      "rx": 0.09175,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4665,
+       0,
+       0
+      ],
+      "rx": 0.10184,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.622,
+       0,
+       0
+      ],
+      "rx": 0.10652,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.7775,
+       -0.00724,
+       0
+      ],
+      "rx": 0.09221,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.933,
+       -0.01979,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l1-b",
+    "kind": "loft",
+    "bone": "leaf-l1-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       -0.1172,
+       -0.02418,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -0.00933,
+       0.00024,
+       0
+      ],
+      "rx": 0.08727,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.09853,
+       0,
+       0
+      ],
+      "rx": 0.09577,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2064,
+       0,
+       0
+      ],
+      "rx": 0.08328,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.31427,
+       0,
+       0
+      ],
+      "rx": 0.06507,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.42213,
+       0,
+       0
+      ],
+      "rx": 0.0484,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.53,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l2-a",
+    "kind": "loft",
+    "bone": "leaf-l2-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.14682,
+       0,
+       0
+      ],
+      "rx": 0.07855,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.29363,
+       0,
+       0
+      ],
+      "rx": 0.09209,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.44045,
+       0,
+       0
+      ],
+      "rx": 0.10114,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.58727,
+       0,
+       0
+      ],
+      "rx": 0.10555,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.73408,
+       -0.0067,
+       0
+      ],
+      "rx": 0.09559,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.8809,
+       -0.04993,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l2-b",
+    "kind": "loft",
+    "bone": "leaf-l2-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaves-spreading",
+    "sections": [
+     {
+      "at": [
+       -0.1038,
+       -0.05523,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -0.00317,
+       0.00981,
+       0
+      ],
+      "rx": 0.10332,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.09747,
+       0,
+       0
+      ],
+      "rx": 0.09666,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1981,
+       0,
+       0
+      ],
+      "rx": 0.08175,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.29873,
+       0,
+       0
+      ],
+      "rx": 0.06411,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.39937,
+       0,
+       0
+      ],
+      "rx": 0.04819,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.5,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l3-a",
+    "kind": "loft",
+    "bone": "leaf-l3-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.15345,
+       0,
+       0
+      ],
+      "rx": 0.07867,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3069,
+       0,
+       0
+      ],
+      "rx": 0.09239,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.46035,
+       0,
+       0
+      ],
+      "rx": 0.10057,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.6138,
+       0,
+       0
+      ],
+      "rx": 0.10478,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.76725,
+       -0.00252,
+       0
+      ],
+      "rx": 0.10086,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.9207,
+       -0.05362,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l3-b",
+    "kind": "loft",
+    "bone": "leaf-l3-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       -0.1034,
+       -0.05911,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.0005,
+       0.00472,
+       0
+      ],
+      "rx": 0.09994,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1044,
+       0,
+       0
+      ],
+      "rx": 0.09523,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2083,
+       0,
+       0
+      ],
+      "rx": 0.08068,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3122,
+       0,
+       0
+      ],
+      "rx": 0.064,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4161,
+       0,
+       0
+      ],
+      "rx": 0.04792,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.52,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l4-a",
+    "kind": "loft",
+    "bone": "leaf-l4-a",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05251,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.13787,
+       0,
+       0
+      ],
+      "rx": 0.07902,
+      "ry": 0.0185,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.27573,
+       0,
+       0
+      ],
+      "rx": 0.09281,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4136,
+       0,
+       0
+      ],
+      "rx": 0.10023,
+      "ry": 0.0155,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.55147,
+       0,
+       0
+      ],
+      "rx": 0.1042,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.68933,
+       -0.00105,
+       0
+      ],
+      "rx": 0.10271,
+      "ry": 0.0125,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.8272,
+       -0.06558,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.0055,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l4-b",
+    "kind": "loft",
+    "bone": "leaf-l4-b",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       -0.0895,
+       -0.07167,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.00042,
+       0.00075,
+       0
+      ],
+      "rx": 0.097,
+      "ry": 0.0095,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.09033,
+       0,
+       0
+      ],
+      "rx": 0.09411,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.18025,
+       -1e-05,
+       0
+      ],
+      "rx": 0.0796,
+      "ry": 0.0065,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.27017,
+       0,
+       0
+      ],
+      "rx": 0.06343,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.36008,
+       0,
+       0
+      ],
+      "rx": 0.04735,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.45,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-l5",
+    "kind": "loft",
+    "bone": "leaf-l5",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.05252,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.15833,
+       0,
+       0
+      ],
+      "rx": 0.08947,
+      "ry": 0.017,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.31667,
+       0,
+       0
+      ],
+      "rx": 0.101,
+      "ry": 0.014,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.475,
+       0,
+       0
+      ],
+      "rx": 0.0939,
+      "ry": 0.011,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.63333,
+       0,
+       0
+      ],
+      "rx": 0.08947,
+      "ry": 0.008,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.79167,
+       0,
+       0
+      ],
+      "rx": 0.0714,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.95,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leaf-s",
+    "kind": "loft",
+    "bone": "leaf-s",
+    "material": "agave-leaf",
+    "role": "body",
+    "tone": 0.35,
+    "region": "leaves-erect",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.0425,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1643,
+       0,
+       0
+      ],
+      "rx": 0.0727,
+      "ry": 0.0184,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3286,
+       0,
+       0
+      ],
+      "rx": 0.0887,
+      "ry": 0.0168,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.4929,
+       0,
+       0
+      ],
+      "rx": 0.0891,
+      "ry": 0.0152,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.6571,
+       0,
+       0
+      ],
+      "rx": 0.085,
+      "ry": 0.0136,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.8214,
+       0,
+       0
+      ],
+      "rx": 0.0759,
+      "ry": 0.012,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.9857,
+       0,
+       0
+      ],
+      "rx": 0.0571,
+      "ry": 0.0085,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.15,
+       0,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.005,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Agave: the caudex is a short loft; every leaf bone carries one rigid lanceolate blade, a loft along the bone whose width, along the bone normal v, follows the authored outline (a flat outline in bone-local coordinates, the same in all three views), whose thickness along w runs from the authored base half thickness (0.02 m) to the tip, with a sharp tapering end. Because every blade is built in its bone frame, the spread of the default pose (abduction and twist of the leaf bones) produces the 3D rosette, so the bounding box is judged in that pose.",
+    "de": "Agave: der Wurzelstock ist ein kurzer Loft; jeder Blattknochen trägt ein starres lanzettliches Blatt, einen Loft entlang des Knochens, dessen Breite entlang der Knochennormalen v dem gezeichneten Umriss folgt (ein flacher Umriss in Knochenkoordinaten, in allen drei Ansichten gleich) und dessen Dicke entlang w von der gezeichneten halben Basisdicke (0,02 m) zur Spitze abnimmt, mit spitz zulaufendem Ende. Da jedes Blatt in seinem Knochenrahmen gebaut ist, ergibt die Auffächerung der Standardpose (Abduktion und Verdrehung der Blattknochen) die räumliche Rosette, daher wird die Bounding Box in dieser Pose beurteilt."
+   }
+  ]
+ }
+}

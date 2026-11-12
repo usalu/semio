@@ -1,0 +1,193 @@
+{
+ "schema": "semio.model.operation-vector/v1",
+ "description": "Inputs and expectations of the progress and cancellation law: every potentially long-running function polls cancelled() at a bounded interval inside its hot loops, stops at the first positive answer with a cancellation error and produces no result. `minimumPolls` is the least number of polls an uncancelled run of the case must make (so checks happen inside the loops, not only at coarse points); `cancelAtPolls` are the poll numbers at which the case is cancelled, each must stop exactly there.",
+ "interval": 2048,
+ "quality": {
+  "chordM": 0.0001,
+  "minSegments": 256,
+  "maxSegments": 256
+ },
+ "document": {
+  "id": "dense",
+  "material": "paper",
+  "node": "root",
+  "solid": {
+   "kind": "ellipsoid",
+   "id": "dense-ellipsoid",
+   "radii": [
+    1,
+    1,
+    1
+   ]
+  }
+ },
+ "polygon": {
+  "sides": 800,
+  "radius": 1,
+  "formula": "point k = [radius cos(2 pi k / sides), radius sin(2 pi k / sides)]",
+  "extrude": {
+   "plane": "xy",
+   "from": 0,
+   "to": 1
+  }
+ },
+ "bytes": {
+  "length": 150000,
+  "generator": "minstd",
+  "seed": 7,
+  "multiplier": 48271,
+  "modulus": 2147483647,
+  "alphabet": 16,
+  "formula": "x = (x * multiplier) mod modulus, byte = x mod alphabet"
+ },
+ "raster": {
+  "width": 512,
+  "height": 512,
+  "preset": "axonometric"
+ },
+ "cases": [
+  {
+   "function": "validateModel",
+   "input": "polygon-document",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "tessellateSolid",
+   "input": "dense-document",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "tessellate",
+   "input": "dense-document",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "triangulatePolygon",
+   "input": "polygon",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "featureEdges",
+   "input": "dense-resolved",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "encodeGlb",
+   "input": "dense-resolved",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "encodeFbx",
+   "input": "dense-resolved",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "deflateZlib",
+   "input": "bytes",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "inflateZlib",
+   "input": "bytes-zlib",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "readFbx",
+   "input": "dense-fbx",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "sceneOf",
+   "input": "dense-resolved",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "SoftwareBackend.render",
+   "input": "dense-scene",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  },
+  {
+   "function": "pick",
+   "input": "dense-scene",
+   "minimumPolls": 20,
+   "cancelAtPolls": [
+    1,
+    2,
+    5,
+    20
+   ]
+  }
+ ]
+}

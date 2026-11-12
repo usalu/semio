@@ -1,0 +1,2685 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "root-flare",
+    "kind": "loft",
+    "bone": "root-plate",
+    "material": "lime-bark",
+    "role": "body",
+    "tone": 0.36,
+    "region": "trunk-bark",
+    "sections": [
+     {
+      "at": [
+       0,
+       0.00002,
+       0
+      ],
+      "rx": 0.61994,
+      "ry": 0.60174,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.16667,
+       0.00429,
+       0
+      ],
+      "rx": 0.52605,
+      "ry": 0.40959,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.33333,
+       -0.00275,
+       0
+      ],
+      "rx": 0.43209,
+      "ry": 0.32034,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.5,
+       0.00045,
+       0
+      ],
+      "rx": 0.33989,
+      "ry": 0.29719,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "trunk",
+    "kind": "loft",
+    "bone": "trunk",
+    "material": "lime-bark",
+    "role": "body",
+    "tone": 0.36,
+    "region": "trunk-bark",
+    "sections": [
+     {
+      "at": [
+       0,
+       0.00045,
+       0
+      ],
+      "rx": 0.33989,
+      "ry": 0.29718,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.6,
+       0.00281,
+       0
+      ],
+      "rx": 0.31976,
+      "ry": 0.2823,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.2,
+       -0.006,
+       0
+      ],
+      "rx": 0.29962,
+      "ry": 0.274,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.8,
+       0.005,
+       0
+      ],
+      "rx": 0.27949,
+      "ry": 0.268,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       2.4,
+       -0.003,
+       0
+      ],
+      "rx": 0.25968,
+      "ry": 0.262,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "ld1",
+    "kind": "loft",
+    "bone": "ld1",
+    "material": "lime-bark",
+    "role": "body",
+    "tone": 0.36,
+    "region": "trunk-bark",
+    "sections": [
+     {
+      "at": [
+       -0.00003,
+       -0.003,
+       0
+      ],
+      "rx": 0.25967,
+      "ry": 0.262,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       0.825,
+       -0.004,
+       0
+      ],
+      "rx": 0.24583,
+      "ry": 0.24744,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       1.64989,
+       -0.01924,
+       0
+      ],
+      "rx": 0.23199,
+      "ry": 0.22426,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       2.47494,
+       -0.01771,
+       0
+      ],
+      "rx": 0.21815,
+      "ry": 0.20321,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       3.29987,
+       -0.0294,
+       0
+      ],
+      "rx": 0.20431,
+      "ry": 0.20606,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "ld2",
+    "kind": "loft",
+    "bone": "ld2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "sections": [
+     {
+      "at": [
+       0.00016,
+       -0.0019,
+       0
+      ],
+      "rx": 0.19685,
+      "ry": 0.17994,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       0.85026,
+       -0.00004,
+       0
+      ],
+      "rx": 0.17784,
+      "ry": 0.16153,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       1.70038,
+       0.00006,
+       0
+      ],
+      "rx": 0.15882,
+      "ry": 0.14103,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       2.55051,
+       0.00008,
+       0
+      ],
+      "rx": 0.13981,
+      "ry": 0.1265,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       3.40063,
+       0.00084,
+       0
+      ],
+      "rx": 0.1208,
+      "ry": 0.10962,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "ld3",
+    "kind": "loft",
+    "bone": "ld3",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "sections": [
+     {
+      "at": [
+       0.00066,
+       0.00078,
+       0
+      ],
+      "rx": 0.11795,
+      "ry": 0.11015,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       0.75076,
+       -0.00007,
+       0
+      ],
+      "rx": 0.10851,
+      "ry": 0.09548,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       1.50087,
+       -0.00004,
+       0
+      ],
+      "rx": 0.09907,
+      "ry": 0.08198,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       2.25099,
+       -0.00001,
+       0
+      ],
+      "rx": 0.08963,
+      "ry": 0.06413,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       3.0011,
+       -0.00023,
+       0
+      ],
+      "rx": 0.0802,
+      "ry": 0.04874,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "ld4",
+    "kind": "loft",
+    "bone": "ld4",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "sections": [
+     {
+      "at": [
+       0.0011,
+       0,
+       0
+      ],
+      "rx": 0.02216,
+      "ry": 0.01481,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.46777,
+       0,
+       0
+      ],
+      "rx": 0.0582,
+      "ry": 0.039,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.93443,
+       0,
+       0
+      ],
+      "rx": 0.04254,
+      "ry": 0.03297,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.4011,
+       0,
+       0
+      ],
+      "rx": 0.0077,
+      "ry": 0.0077,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "lw1a",
+    "kind": "capsule",
+    "bone": "lw1a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     2.2,
+     0,
+     1.26812
+    ],
+    "r0": 0.12096,
+    "r1": 0.07258
+   },
+   {
+    "id": "lw1b",
+    "kind": "capsule",
+    "bone": "lw1b",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     1.26812
+    ],
+    "p1": [
+     1.8,
+     0,
+     2.30568
+    ],
+    "r0": 0.07944,
+    "r1": 0.04767
+   },
+   {
+    "id": "le1a",
+    "kind": "capsule",
+    "bone": "le1a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     2.2,
+     0,
+     -1.36651
+    ],
+    "r0": 0.12082,
+    "r1": 0.07249
+   },
+   {
+    "id": "le1b",
+    "kind": "capsule",
+    "bone": "le1b",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -1.36651
+    ],
+    "p1": [
+     1.8,
+     0,
+     -2.48456
+    ],
+    "r0": 0.07842,
+    "r1": 0.04705
+   },
+   {
+    "id": "lw2a",
+    "kind": "capsule",
+    "bone": "lw2a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3,
+     0,
+     1.58673
+    ],
+    "r0": 0.09278,
+    "r1": 0.05567
+   },
+   {
+    "id": "le2a",
+    "kind": "capsule",
+    "bone": "le2a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3,
+     0,
+     -1.48895
+    ],
+    "r0": 0.09141,
+    "r1": 0.05485
+   },
+   {
+    "id": "lw3a",
+    "kind": "capsule",
+    "bone": "lw3a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     2.6,
+     0,
+     1.40264
+    ],
+    "r0": 0.06876,
+    "r1": 0.04126
+   },
+   {
+    "id": "le3a",
+    "kind": "capsule",
+    "bone": "le3a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     2.4,
+     0,
+     -1.30358
+    ],
+    "r0": 0.06953,
+    "r1": 0.04172
+   },
+   {
+    "id": "lw4a",
+    "kind": "capsule",
+    "bone": "lw4a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.8,
+     0,
+     0
+    ],
+    "r0": 0.04899,
+    "r1": 0.0294
+   },
+   {
+    "id": "le4a",
+    "kind": "capsule",
+    "bone": "le4a",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.8,
+     0,
+     0
+    ],
+    "r0": 0.04908,
+    "r1": 0.02945
+   },
+   {
+    "id": "epi-e",
+    "kind": "capsule",
+    "bone": "epi-e",
+    "material": "lime-twig",
+    "role": "body",
+    "tone": 0.38,
+    "region": "epicormic-stem",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.3,
+     0,
+     0.5868
+    ],
+    "r0": 0.07,
+    "r1": 0.04
+   },
+   {
+    "id": "epi-w",
+    "kind": "capsule",
+    "bone": "epi-w",
+    "material": "lime-twig",
+    "role": "body",
+    "tone": 0.38,
+    "region": "epicormic-stem",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.9,
+     0,
+     -0.4884
+    ],
+    "r0": 0.06,
+    "r1": 0.035
+   },
+   {
+    "id": "crown-core-low",
+    "kind": "loft",
+    "bone": "fol-core-low",
+    "material": "lime-leaf-shade",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaf-shade",
+    "sections": [
+     {
+      "at": [
+       -1.53574,
+       -0.22086,
+       0.21426
+      ],
+      "rx": 0.09805,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       -0.95838,
+       -0.13541,
+       0.00794
+      ],
+      "rx": 1.59955,
+      "ry": 1.48743,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       -0.38049,
+       0.01032,
+       0.05516
+      ],
+      "rx": 2.01273,
+      "ry": 2.00144,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       0.19535,
+       -0.07782,
+       -0.10441
+      ],
+      "rx": 2.21537,
+      "ry": 2.03532,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       0.77202,
+       -0.07262,
+       0.12402
+      ],
+      "rx": 2.25129,
+      "ry": 2.15971,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       1.34885,
+       -0.04817,
+       -0.08403
+      ],
+      "rx": 1.91239,
+      "ry": 2.00896,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       1.92507,
+       -0.09316,
+       0.13569
+      ],
+      "rx": 1.50061,
+      "ry": 1.36384,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       2.50387,
+       0.15639,
+       -0.37361
+      ],
+      "rx": 0.05637,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "crown-core-high",
+    "kind": "loft",
+    "bone": "fol-core-high",
+    "material": "lime-leaf-shade",
+    "role": "body",
+    "tone": 0.45,
+    "region": "leaf-shade",
+    "sections": [
+     {
+      "at": [
+       -1.23975,
+       0.12515,
+       0.13788
+      ],
+      "rx": 0.08999,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       -0.65853,
+       -0.04889,
+       0.03233
+      ],
+      "rx": 1.2956,
+      "ry": 1.13551,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       -0.08286,
+       0.09518,
+       0.02201
+      ],
+      "rx": 1.50221,
+      "ry": 1.50661,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       0.49541,
+       0.09013,
+       -0.05566
+      ],
+      "rx": 1.7278,
+      "ry": 1.6568,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       1.07408,
+       0.06231,
+       0.09847
+      ],
+      "rx": 1.69171,
+      "ry": 1.66841,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       1.65218,
+       0.0676,
+       -0.0577
+      ],
+      "rx": 1.43095,
+      "ry": 1.50875,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       2.23151,
+       0.00167,
+       0.12033
+      ],
+      "rx": 1.13123,
+      "ry": 1.11762,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     },
+     {
+      "at": [
+       2.80673,
+       0.17142,
+       0
+      ],
+      "rx": 0.004,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70708,
+       0.00617,
+       0.70708,
+       -0.00617
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "crown-top",
+    "kind": "loft",
+    "bone": "fol-top",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "sections": [
+     {
+      "at": [
+       -1.87525,
+       -0.06017,
+       0.00482
+      ],
+      "rx": 0.06509,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -1.44107,
+       -0.08683,
+       -0.01522
+      ],
+      "rx": 0.9747,
+      "ry": 0.95381,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -1.00689,
+       -0.07989,
+       0.02972
+      ],
+      "rx": 1.30852,
+      "ry": 1.23277,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -0.57271,
+       -0.10275,
+       0.00809
+      ],
+      "rx": 1.33262,
+      "ry": 1.37548,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       -0.13854,
+       -0.11076,
+       -0.02002
+      ],
+      "rx": 1.39211,
+      "ry": 1.3675,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.29564,
+       -0.13396,
+       0.02301
+      ],
+      "rx": 1.19809,
+      "ry": 1.22666,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.72982,
+       -0.12659,
+       0.01396
+      ],
+      "rx": 0.94423,
+      "ry": 0.94693,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.164,
+       -0.17012,
+       0.00574
+      ],
+      "rx": 0.01099,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "lobe-r1-0",
+    "kind": "ellipsoid",
+    "bone": "fol-e1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     2.00513,
+     1.33207,
+     1.26708
+    ],
+    "transform": {
+     "rotation": [
+      0.04851,
+      0.6938,
+      -0.05012,
+      0.71679
+     ],
+     "translation": [
+      0.49619,
+      0.08269,
+      0.00389
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1-0-twig",
+    "kind": "capsule",
+    "bone": "fol-e1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -2.48456
+    ],
+    "p1": [
+     0.44058,
+     -0.31304,
+     0.00389
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r1-180",
+    "kind": "ellipsoid",
+    "bone": "fol-w1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.88199,
+     1.329,
+     1.18241
+    ],
+    "transform": {
+     "rotation": [
+      -0.70088,
+      -0.04901,
+      0.70986,
+      -0.04964
+     ],
+     "translation": [
+      0.61058,
+      -0.2015,
+      -0.0212
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1-180-twig",
+    "kind": "capsule",
+    "bone": "fol-w1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     2.30568
+    ],
+    "p1": [
+     0.55509,
+     0.19332,
+     -0.0212
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r1l-90",
+    "kind": "ellipsoid",
+    "bone": "fol-e1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.92784,
+     1.33563,
+     1.2031
+    ],
+    "transform": {
+     "rotation": [
+      0.04866,
+      0.6958,
+      -0.04999,
+      0.71484
+     ],
+     "translation": [
+      -1.25191,
+      0.39845,
+      2.59899
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1l-90-twig",
+    "kind": "capsule",
+    "bone": "fol-e1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -2.48456
+    ],
+    "p1": [
+     -1.30768,
+     0.00166,
+     2.59899
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r1l-270",
+    "kind": "ellipsoid",
+    "bone": "fol-w1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.90602,
+     1.33738,
+     1.22162
+    ],
+    "transform": {
+     "rotation": [
+      -0.69844,
+      -0.04884,
+      0.71226,
+      -0.04981
+     ],
+     "translation": [
+      -1.22444,
+      -0.51156,
+      -2.60692
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1l-270-twig",
+    "kind": "capsule",
+    "bone": "fol-w1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     2.30568
+    ],
+    "p1": [
+     -1.28028,
+     -0.11425,
+     -2.60692
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r1d-45",
+    "kind": "ellipsoid",
+    "bone": "fol-e1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.68055,
+     1.28524,
+     1.05208
+    ],
+    "transform": {
+     "rotation": [
+      -0.0492,
+      -0.70359,
+      -0.04945,
+      0.70717
+     ],
+     "translation": [
+      -0.2178,
+      0.29736,
+      1.56192
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1d-45-twig",
+    "kind": "capsule",
+    "bone": "fol-e1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -2.48456
+    ],
+    "p1": [
+     -0.27147,
+     -0.08446,
+     1.56192
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r1d-135",
+    "kind": "ellipsoid",
+    "bone": "fol-w1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.65294,
+     1.27392,
+     1.06542
+    ],
+    "transform": {
+     "rotation": [
+      -0.70232,
+      -0.04911,
+      0.70843,
+      -0.04954
+     ],
+     "translation": [
+      -0.17316,
+      -0.39946,
+      1.58857
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1d-135-twig",
+    "kind": "capsule",
+    "bone": "fol-w1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     2.30568
+    ],
+    "p1": [
+     -0.22635,
+     -0.02101,
+     1.58857
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r1d-225",
+    "kind": "ellipsoid",
+    "bone": "fol-w1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.66722,
+     1.27667,
+     1.04188
+    ],
+    "transform": {
+     "rotation": [
+      -0.70293,
+      -0.04915,
+      0.70783,
+      -0.0495
+     ],
+     "translation": [
+      -0.17141,
+      -0.40441,
+      -1.56582
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1d-225-twig",
+    "kind": "capsule",
+    "bone": "fol-w1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     2.30568
+    ],
+    "p1": [
+     -0.22471,
+     -0.02513,
+     -1.56582
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r1d-315",
+    "kind": "ellipsoid",
+    "bone": "fol-e1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.67622,
+     1.28266,
+     1.06965
+    ],
+    "transform": {
+     "rotation": [
+      -0.04866,
+      -0.69591,
+      -0.04998,
+      0.71473
+     ],
+     "translation": [
+      -0.2382,
+      0.29504,
+      -1.56316
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1d-315-twig",
+    "kind": "capsule",
+    "bone": "fol-e1",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -2.48456
+    ],
+    "p1": [
+     -0.29175,
+     -0.08601,
+     -1.56316
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2-0",
+    "kind": "ellipsoid",
+    "bone": "fol-e2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.86629,
+     1.49633,
+     1.23196
+    ],
+    "transform": {
+     "rotation": [
+      0.26473,
+      0.65524,
+      -0.26504,
+      0.656
+     ],
+     "translation": [
+      0.72734,
+      -0.87609,
+      -0.02777
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2-0-twig",
+    "kind": "capsule",
+    "bone": "fol-e2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -1.48895
+    ],
+    "p1": [
+     0.41551,
+     -1.199,
+     -0.02777
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2-180",
+    "kind": "ellipsoid",
+    "bone": "fol-w2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.73025,
+     1.48609,
+     1.1375
+    ],
+    "transform": {
+     "rotation": [
+      0.63917,
+      0.26475,
+      0.6671,
+      -0.27632
+     ],
+     "translation": [
+      0.8768,
+      0.91174,
+      -0.07154
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2-180-twig",
+    "kind": "capsule",
+    "bone": "fol-w2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     1.58673
+    ],
+    "p1": [
+     0.56155,
+     1.22699,
+     -0.07154
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2l-90",
+    "kind": "ellipsoid",
+    "bone": "fol-e2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.69273,
+     1.50009,
+     1.07692
+    ],
+    "transform": {
+     "rotation": [
+      0.2648,
+      0.6554,
+      -0.26497,
+      0.65583
+     ],
+     "translation": [
+      -0.56022,
+      0.4272,
+      2.64685
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2l-90-twig",
+    "kind": "capsule",
+    "bone": "fol-e2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -1.48895
+    ],
+    "p1": [
+     -0.87284,
+     0.10347,
+     2.64685
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2l-270",
+    "kind": "ellipsoid",
+    "bone": "fol-w2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.90568,
+     1.49794,
+     1.19773
+    ],
+    "transform": {
+     "rotation": [
+      -0.64754,
+      -0.26822,
+      0.65897,
+      -0.27295
+     ],
+     "translation": [
+      -0.37666,
+      -0.42152,
+      -2.61823
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2l-270-twig",
+    "kind": "capsule",
+    "bone": "fol-w2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     1.58673
+    ],
+    "p1": [
+     -0.69442,
+     -0.10376,
+     -2.61823
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2d-45",
+    "kind": "ellipsoid",
+    "bone": "fol-e2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.54947,
+     1.41986,
+     1.02426
+    ],
+    "transform": {
+     "rotation": [
+      0.26254,
+      0.64981,
+      -0.26721,
+      0.66137
+     ],
+     "translation": [
+      0.17779,
+      -0.13872,
+      1.45107
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2d-45-twig",
+    "kind": "capsule",
+    "bone": "fol-e2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -1.48895
+    ],
+    "p1": [
+     -0.1181,
+     -0.44513,
+     1.45107
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2d-135",
+    "kind": "ellipsoid",
+    "bone": "fol-w2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.69928,
+     1.4114,
+     1.06667
+    ],
+    "transform": {
+     "rotation": [
+      -0.64737,
+      -0.26815,
+      0.65914,
+      -0.27302
+     ],
+     "translation": [
+      0.36392,
+      0.17027,
+      1.40967
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2d-135-twig",
+    "kind": "capsule",
+    "bone": "fol-w2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     1.58673
+    ],
+    "p1": [
+     0.06452,
+     0.46967,
+     1.40967
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2d-225",
+    "kind": "ellipsoid",
+    "bone": "fol-w2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.6484,
+     1.42248,
+     1.07202
+    ],
+    "transform": {
+     "rotation": [
+      -0.64215,
+      -0.26599,
+      0.66422,
+      -0.27513
+     ],
+     "translation": [
+      0.35243,
+      0.15193,
+      -1.39677
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2d-225-twig",
+    "kind": "capsule",
+    "bone": "fol-w2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     1.58673
+    ],
+    "p1": [
+     0.05068,
+     0.45368,
+     -1.39677
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r2d-315",
+    "kind": "ellipsoid",
+    "bone": "fol-e2",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.69173,
+     1.42154,
+     1.09211
+    ],
+    "transform": {
+     "rotation": [
+      -0.26295,
+      -0.65084,
+      -0.2668,
+      0.66037
+     ],
+     "translation": [
+      0.20482,
+      -0.14846,
+      -1.44959
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2d-315-twig",
+    "kind": "capsule",
+    "bone": "fol-e2",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -1.48895
+    ],
+    "p1": [
+     -0.09143,
+     -0.45523,
+     -1.44959
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r3-0",
+    "kind": "ellipsoid",
+    "bone": "fol-e3",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.66065,
+     1.4366,
+     1.06366
+    ],
+    "transform": {
+     "rotation": [
+      0.30832,
+      0.63215,
+      -0.31162,
+      0.63891
+     ],
+     "translation": [
+      0.53466,
+      -0.49132,
+      0.00871
+     ]
+    }
+   },
+   {
+    "id": "lobe-r3-0-twig",
+    "kind": "capsule",
+    "bone": "fol-e3",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -1.30358
+    ],
+    "p1": [
+     0.19504,
+     -0.75665,
+     0.00871
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r3-180",
+    "kind": "ellipsoid",
+    "bone": "fol-w3",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.70416,
+     1.44076,
+     1.06228
+    ],
+    "transform": {
+     "rotation": [
+      0.63323,
+      0.30885,
+      0.63785,
+      -0.3111
+     ],
+     "translation": [
+      0.6291,
+      0.39863,
+      -0.02267
+     ]
+    }
+   },
+   {
+    "id": "lobe-r3-180-twig",
+    "kind": "capsule",
+    "bone": "fol-w3",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     1.40264
+    ],
+    "p1": [
+     0.28849,
+     0.66473,
+     -0.02267
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r3l-90",
+    "kind": "ellipsoid",
+    "bone": "fol-e3",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.70785,
+     1.43822,
+     1.07374
+    ],
+    "transform": {
+     "rotation": [
+      0.30747,
+      0.63041,
+      -0.31246,
+      0.64064
+     ],
+     "translation": [
+      -0.19787,
+      0.5035,
+      1.81219
+     ]
+    }
+   },
+   {
+    "id": "lobe-r3l-90-twig",
+    "kind": "capsule",
+    "bone": "fol-e3",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -1.30358
+    ],
+    "p1": [
+     -0.53787,
+     0.23787,
+     1.81219
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r3l-270",
+    "kind": "ellipsoid",
+    "bone": "fol-w3",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.50789,
+     1.43618,
+     0.97353
+    ],
+    "transform": {
+     "rotation": [
+      -0.63,
+      -0.30727,
+      0.64104,
+      -0.31265
+     ],
+     "translation": [
+      -0.13068,
+      -0.63771,
+      -1.91584
+     ]
+    }
+   },
+   {
+    "id": "lobe-r3l-270-twig",
+    "kind": "capsule",
+    "bone": "fol-w3",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     1.40264
+    ],
+    "p1": [
+     -0.4702,
+     -0.37245,
+     -1.91584
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r4-0",
+    "kind": "ellipsoid",
+    "bone": "fol-e4",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.24333,
+     1.227,
+     0.79551
+    ],
+    "transform": {
+     "rotation": [
+      -0.32612,
+      -0.62648,
+      -0.32689,
+      0.62794
+     ],
+     "translation": [
+      0.087,
+      -0.4327,
+      -0.01518
+     ]
+    }
+   },
+   {
+    "id": "lobe-r4-0-twig",
+    "kind": "capsule",
+    "bone": "fol-e4",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     -0.21453,
+     -0.64383,
+     -0.01518
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r4-180",
+    "kind": "ellipsoid",
+    "bone": "fol-w4",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.15212,
+     1.22714,
+     0.773
+    ],
+    "transform": {
+     "rotation": [
+      0.6234,
+      0.32452,
+      0.631,
+      -0.32848
+     ],
+     "translation": [
+      0.21655,
+      0.35518,
+      -0.01194
+     ]
+    }
+   },
+   {
+    "id": "lobe-r4-180-twig",
+    "kind": "capsule",
+    "bone": "fol-w4",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     -0.08501,
+     0.56634,
+     -0.01194
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r4-90",
+    "kind": "ellipsoid",
+    "bone": "fol-e4",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.34233,
+     1.23887,
+     0.86282
+    ],
+    "transform": {
+     "rotation": [
+      -0.32637,
+      -0.62695,
+      -0.32664,
+      0.62748
+     ],
+     "translation": [
+      -0.267,
+      0.0621,
+      0.99637
+     ]
+    }
+   },
+   {
+    "id": "lobe-r4-90-twig",
+    "kind": "capsule",
+    "bone": "fol-e4",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     -0.57145,
+     -0.15107,
+     0.99637
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-r4-270",
+    "kind": "ellipsoid",
+    "bone": "fol-w4",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "radii": [
+     1.27168,
+     1.22011,
+     0.81642
+    ],
+    "transform": {
+     "rotation": [
+      -0.62186,
+      -0.32372,
+      0.63252,
+      -0.32927
+     ],
+     "translation": [
+      -0.18908,
+      -0.20479,
+      -0.97548
+     ]
+    }
+   },
+   {
+    "id": "lobe-r4-270-twig",
+    "kind": "capsule",
+    "bone": "fol-w4",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     -0.48891,
+     0.00515,
+     -0.97548
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-epi-e",
+    "kind": "ellipsoid",
+    "bone": "fol-epi-e",
+    "material": "lime-leaf-epicormic",
+    "role": "body",
+    "tone": 0.5,
+    "region": "leaf-epicormic",
+    "radii": [
+     0.54256,
+     0.55298,
+     0.34608
+    ],
+    "transform": {
+     "rotation": [
+      0.32608,
+      0.62639,
+      -0.32693,
+      0.62803
+     ],
+     "translation": [
+      0.01001,
+      0.01028,
+      -0.02537
+     ]
+    }
+   },
+   {
+    "id": "lobe-epi-e-twig",
+    "kind": "capsule",
+    "bone": "fol-epi-e",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     0.5868
+    ],
+    "p1": [
+     -0.12588,
+     -0.08487,
+     -0.02537
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-epi-w",
+    "kind": "ellipsoid",
+    "bone": "fol-epi-w",
+    "material": "lime-leaf-epicormic",
+    "role": "body",
+    "tone": 0.5,
+    "region": "leaf-epicormic",
+    "radii": [
+     0.48412,
+     0.46994,
+     0.31662
+    ],
+    "transform": {
+     "rotation": [
+      -0.63124,
+      -0.30788,
+      0.63982,
+      -0.31206
+     ],
+     "translation": [
+      0.05494,
+      0.10675,
+      0.00735
+     ]
+    }
+   },
+   {
+    "id": "lobe-epi-w-twig",
+    "kind": "capsule",
+    "bone": "fol-epi-w",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -0.4884
+    ],
+    "p1": [
+     -0.05616,
+     0.19355,
+     0.00735
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "lobe-epi-s",
+    "kind": "ellipsoid",
+    "bone": "fol-epi-w",
+    "material": "lime-leaf-epicormic",
+    "role": "body",
+    "tone": 0.5,
+    "region": "leaf-epicormic",
+    "radii": [
+     0.44297,
+     0.44976,
+     0.28881
+    ],
+    "transform": {
+     "rotation": [
+      -0.63001,
+      -0.30727,
+      0.64103,
+      -0.31265
+     ],
+     "translation": [
+      -0.39164,
+      -0.21194,
+      0.80336
+     ]
+    }
+   },
+   {
+    "id": "lobe-epi-s-twig",
+    "kind": "capsule",
+    "bone": "fol-epi-w",
+    "material": "lime-bark-young",
+    "role": "body",
+    "tone": 0.38,
+    "region": "limb-bark",
+    "p0": [
+     0,
+     0,
+     -0.4884
+    ],
+    "p1": [
+     -0.49796,
+     -0.12887,
+     0.80336
+    ],
+    "r0": 0.05,
+    "r1": 0.03
+   },
+   {
+    "id": "crown-fill-1",
+    "kind": "loft",
+    "bone": "fol-e1",
+    "material": "lime-leaf-sun",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-sun",
+    "sections": [
+     {
+      "at": [
+       -3.65015,
+       0.50665,
+       2.4553
+      ],
+      "rx": 0.89004,
+      "ry": 1.03348,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -3.55601,
+       1.17645,
+       2.4553
+      ],
+      "rx": 1.44808,
+      "ry": 1.68145,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -3.46188,
+       1.84625,
+       2.4553
+      ],
+      "rx": 1.74037,
+      "ry": 2.02085,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -3.36774,
+       2.51605,
+       2.4553
+      ],
+      "rx": 1.89422,
+      "ry": 2.19949,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -3.27361,
+       3.18585,
+       2.4553
+      ],
+      "rx": 1.9428,
+      "ry": 2.2559,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -3.17948,
+       3.85565,
+       2.4553
+      ],
+      "rx": 1.89422,
+      "ry": 2.19949,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -3.08534,
+       4.52544,
+       2.4553
+      ],
+      "rx": 1.74037,
+      "ry": 2.02085,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -2.99121,
+       5.19524,
+       2.4553
+      ],
+      "rx": 1.44808,
+      "ry": 1.68145,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     },
+     {
+      "at": [
+       -2.89707,
+       5.86504,
+       2.4553
+      ],
+      "rx": 0.89004,
+      "ry": 1.03348,
+      "exponent": 2.6,
+      "rotation": [
+       0.53366,
+       0.4639,
+       0.53366,
+       -0.4639
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true,
+    "weights": [
+     {
+      "bone": "fol-e1",
+      "weight": 0.5
+     },
+     {
+      "bone": "fol-e2",
+      "weight": 0.5
+     }
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The crown is built like the authored drawing: cores, top and the four tiers of lobes (up to eight per tier around the stem). Every lobe is one oriented ellipsoid fitted to its plan outline at the height of its front outline and bound to the tier bone that carries it; a thin twig runs from that bone's origin on the limb to the lobe centre, so lobes at all azimuths hang on a branch and follow sway clips.",
+    "de": "Die Krone ist wie die Zeichnung aufgebaut: Kerne, Spitze und vier Etagen aus Laublappen (bis zu acht je Etage um den Stamm). Jeder Lappen ist ein ausgerichtetes Ellipsoid, an den Umriss der Draufsicht angepasst und in der Höhe seines Front-Umrisses, an den tragenden Etagenknochen gebunden; ein dünner Zweig führt vom Ursprung des Knochens am Ast zur Lappenmitte, damit Lappen in jeder Richtung an einem Ast hängen und Schwankungsclips folgen."
+   },
+   {
+    "en": "Cores and top are lofts read from the elevation and front outlines; the plan crown fill is one blended blob weighted between the two bones of the east side so it does not detach when they sway differently.",
+    "de": "Kerne und Spitze sind Lofts aus den Umrissen von Ansicht und Front; die Kronenfüllung der Draufsicht ist ein Blob, gewichtet zwischen den beiden Knochen der Ostseite, damit er sich bei unterschiedlichem Schwanken nicht löst."
+   },
+   {
+    "en": "Trunk and leaders are lofts with sections read from the elevation and front outlines; the lower limbs are tapered capsules whose lateral drift follows the front outline; the upper bones continue the drift of their parent. Epicormic shoots are small capsules with their own leaf lobes.",
+    "de": "Stamm und Stammverlängerungen sind Lofts mit Querschnitten aus den Umrissen von Ansicht und Front; die unteren Äste sind verjüngte Kapseln, deren Seitendrift dem Front-Umriss folgt, die oberen Knochen setzen die Drift ihres Elternknochens fort. Wasserreiser sind kleine Kapseln mit eigenen Laublappen."
+   }
+  ]
+ }
+}

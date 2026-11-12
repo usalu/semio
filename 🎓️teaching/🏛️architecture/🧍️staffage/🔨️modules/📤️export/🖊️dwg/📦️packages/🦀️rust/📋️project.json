@@ -1,0 +1,49 @@
+{
+  "name": "@teaching/staffage-dwg-rs",
+  "$schema": "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "sourceRoot": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖊️dwg/📦️packages/🦀️rust",
+  "targets": {
+    "wasm": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": [
+        "default",
+        "cargoToolchain"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖊️dwg/staffage_dwg.wasm"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖊️dwg/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts wasm"
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "testEnv",
+        "cargoToolchain",
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🖊️dwg-reopen/**/*",
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🖊️dwg-format/**/*",
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/📐️model-scene/🔣️.json",
+        "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/📑️sheet-model-scene/🔣️.json"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🖊️dwg/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts test"
+      }
+    }
+  }
+}

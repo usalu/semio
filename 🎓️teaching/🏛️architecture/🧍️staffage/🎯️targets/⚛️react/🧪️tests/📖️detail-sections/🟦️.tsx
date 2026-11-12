@@ -84,7 +84,7 @@ describe("🏷️ source tags and provenance", () => {
 });
 
 describe("📤️ export panel", () => {
-  const capabilities: ExportCapabilities = { svg: { available: true }, pdf: { available: true }, dxf: { available: true }, dwg: { available: false, reason: { en: "The DWG writer (Rust, WebAssembly) is not available in this build.", de: "Der DWG-Schreiber fehlt." } }, "png-sequence": { available: true }, mp4: { available: true, codec: "video/mp4" }, webm: { available: false, reason: { en: "This browser's MediaRecorder cannot produce WebM.", de: "Der MediaRecorder kann kein WebM." } } };
+  const capabilities: ExportCapabilities = { svg: { available: true }, pdf: { available: true }, dxf: { available: true }, dwg: { available: false, reason: { en: "The DWG writer (Rust, WebAssembly) is not available in this build.", de: "Der DWG-Schreiber fehlt." } }, "png-sequence": { available: true }, mp4: { available: true, codec: "video/mp4" }, webm: { available: false, reason: { en: "This browser's MediaRecorder cannot produce WebM.", de: "Der MediaRecorder kann kein WebM." } }, glb: { available: true }, fbx: { available: true }, model: { available: true }, "model-zip": { available: true } };
   const request = { view: "dark-line", viewpoint: "elevation", scale: { denominator: 100 }, language: "en" } as const;
   const query = { kind: "clip", clip: "walk", timeS: 0 } as const;
   it("shows DWG as unavailable, WebM as unsupported and SVG as available", () => {

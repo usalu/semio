@@ -1,0 +1,237 @@
+{
+  "description": "Language-agnostic vectors of the rig as a neutral node tree: `joints` are the hand-computed mechanism joints of the sample figure (angles in radians = degrees x pi/180; the pelvis, the rig root, is free because the evaluated root placement moves it; every other bone is revolute about its own +Z axis, the staffage lateral axis); `variants` patch the sample figure and name the joint the mapping must give: a bone that a pose spreads is spherical about its own bone axis +X with the twist limits (default a half turn each way) and an unrestricted swing, a bone whose joint limits twist is spherical, a prismatic joint slides along its axis in the parent frame (cos(axisDeg), sin(axisDeg), 0), a fixed joint is fixed; `clips` give per clip the sampling count the clip fps imposes, ceil(duration x fps) + 1.",
+  "joints": {
+    "pelvis": {
+      "type": "free",
+      "axis": [
+        0,
+        1,
+        0
+      ]
+    },
+    "torso": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -0.5235987755982988,
+      "max": 0.7853981633974483
+    },
+    "head": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -0.7853981633974483,
+      "max": 0.7853981633974483
+    },
+    "arm-l": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -1.0471975511965976,
+      "max": 2.9670597283903604
+    },
+    "arm-r": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -1.0471975511965976,
+      "max": 2.9670597283903604
+    },
+    "thigh-l": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -0.5235987755982988,
+      "max": 1.7453292519943295
+    },
+    "thigh-r": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -0.5235987755982988,
+      "max": 1.7453292519943295
+    },
+    "shank-l": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -2.443460952792061,
+      "max": 0
+    },
+    "shank-r": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -2.443460952792061,
+      "max": 0
+    },
+    "foot-l": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -0.8726646259971648,
+      "max": 0.6981317007977318
+    },
+    "foot-r": {
+      "type": "revolute",
+      "axis": [
+        0,
+        0,
+        1
+      ],
+      "min": -0.8726646259971648,
+      "max": 0.6981317007977318
+    }
+  },
+  "variants": [
+    {
+      "name": "a pose spreads the left arm by 40 degrees",
+      "pose": "stand",
+      "poseBones": {
+        "arm-l": {
+          "abductionDeg": 40
+        }
+      },
+      "jointPatch": null,
+      "bone": "arm-l",
+      "expected": {
+        "type": "spherical",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "max": 3.141592653589793,
+        "twistMin": -3.141592653589793,
+        "twistMax": 3.141592653589793
+      }
+    },
+    {
+      "name": "the head joint limits its twist to 60 degrees and a pose twists it by 30",
+      "pose": "stand",
+      "poseBones": {
+        "head": {
+          "twistDeg": 30
+        }
+      },
+      "jointPatch": {
+        "head": {
+          "type": "revolute",
+          "minDeg": -45,
+          "maxDeg": 45,
+          "twistMinDeg": -60,
+          "twistMaxDeg": 60
+        }
+      },
+      "bone": "head",
+      "expected": {
+        "type": "spherical",
+        "axis": [
+          1,
+          0,
+          0
+        ],
+        "max": 3.141592653589793,
+        "twistMin": -1.0471975511965976,
+        "twistMax": 1.0471975511965976
+      }
+    },
+    {
+      "name": "a foot that slides 0 to 0.1 m along the up axis of its parent",
+      "pose": "stand",
+      "poseBones": {
+        "foot-l": {
+          "dy": 0.05
+        }
+      },
+      "jointPatch": {
+        "foot-l": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 0.1
+        }
+      },
+      "bone": "foot-l",
+      "expected": {
+        "type": "prismatic",
+        "axis": [
+          6.123233995736766e-17,
+          1,
+          0
+        ],
+        "min": 0,
+        "max": 0.1
+      }
+    },
+    {
+      "name": "a head that is fixed",
+      "pose": "stand",
+      "poseBones": {},
+      "jointPatch": {
+        "head": {
+          "type": "fixed"
+        }
+      },
+      "bone": "head",
+      "expected": {
+        "type": "fixed",
+        "axis": [
+          0,
+          0,
+          1
+        ]
+      }
+    }
+  ],
+  "clips": {
+    "walk": {
+      "fps": 30,
+      "durationS": 1,
+      "keys": 31
+    },
+    "idle-breathing": {
+      "fps": 30,
+      "durationS": 4,
+      "keys": 121
+    },
+    "bag-swing": {
+      "fps": 30,
+      "durationS": 2,
+      "keys": 61
+    }
+  },
+  "tolerances": {
+    "poseWorldM": 1e-09,
+    "clipKeyWorldM": 1e-09,
+    "clipBetweenKeysM": 0.006,
+    "clipBetweenKeysRad": 0.02
+  }
+}

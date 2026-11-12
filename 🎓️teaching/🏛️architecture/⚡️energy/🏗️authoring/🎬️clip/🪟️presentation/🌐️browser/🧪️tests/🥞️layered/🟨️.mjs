@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 import {createRequire} from "node:module";
+import {browserLaunchOptions} from "../../🧰️tools.mjs";
 
 const root=process.cwd(),here=path.dirname(fileURLToPath(import.meta.url));
 const output=path.resolve(process.argv[2]??"");
@@ -36,7 +37,7 @@ overlayStyle={{display:'grid',gridTemplateColumns:'repeat(3,minmax(0,1fr))',grid
 renderCard={(pane,state)=><OverviewCard as='button' slot='oracle' icon={null} title={pane.label} titleAdornment={teaching?<span data-presentation-card-fullscreen='' data-layered-zoom='' className='inline-flex'><CatalogIcon icon='maximize-2' size='small'/></span>:undefined} onClick={state.open} className='h-full' {...(teaching?{footerRight:<OverviewCardOpenChip slot='oracle' icon={null}>{label}</OverviewCardOpenChip>}:{footerLeft:<OverviewCardOpenChip slot='oracle'>{label}</OverviewCardOpenChip>})}>{pane.label}</OverviewCard>}/>}
 window.layeredOracle={render(ids,label,teaching=true){flushSync(()=>root.render(null));flushSync(()=>root.render(<App ids={ids} label={label} teaching={teaching}/>))}};`;
 const bundle=await build({stdin:{contents:entry,resolveDir:root,loader:"tsx"},bundle:true,write:false,format:"iife",platform:"browser",alias:{"@semio-tech/framework-transient":path.join(root,"🧰️framework/🔨️modules/🫧️transient/🟦️.ts"),"@semio-tech/framework-interaction":path.join(root,"🧰️framework/🔨️modules/🕹️interaction/🟦️.ts")},define:{"process.env.NODE_ENV":'"production"'},logLevel:"silent"});
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch(browserLaunchOptions);
 try{
   const page=await browser.newPage({viewport:{width:1600,height:900},colorScheme:"dark",reducedMotion:"reduce"});
   await page.clock.install();
@@ -62,9 +63,9 @@ try{
   const initialBorders=await borderStatus();assert(initialBorders.length>0);assert(initialBorders.some(Boolean));
   await page.clock.runFor(1200);await page.evaluate(()=>document.fonts.ready);
   assert((await borderStatus()).every(pending=>!pending));
-  await page.evaluate(()=>document.querySelector('[data-shared-border-root]').dispatchEvent(new PointerEvent('pointerover',{bubbles:true})));
+  await page.evaluate(()=>document.querySelector('[data-window-silhouette]').dispatchEvent(new PointerEvent('pointerover',{bubbles:true})));
   assert((await borderStatus()).some(Boolean));
-  await page.clock.runFor(100);assert((await borderStatus()).every(pending=>!pending));
+  for(let attempt=0;attempt<50&&!(await borderStatus()).every(pending=>!pending);attempt++){await page.clock.runFor(100);await page.waitForTimeout(20)}assert((await borderStatus()).every(pending=>!pending));
   result.defaultChip=await measure();
   for(const card of result.defaultChip.cards){assert(card.chip.x<card.rect.x+card.rect.width/2);assert.deepEqual(card.icons,[fixture.sharedDefault.icon])}
   console.log('PASS layered-shared-default-chevron-left');
@@ -79,10 +80,11 @@ try{
     const target=ids.at(-1),chip=page.locator('[data-layered-card="'+target+'"] [data-presentation-card-fullscreen]');await chip.hover();await page.clock.runFor(650);
     const hover=await measure(),pane=hover.panes.find(p=>p.id===target);assert(hover.cards.find(c=>c.id===target).revealed);assert(pane.inert);assert(!pane.opened);
     for(const key of ['x','y','width','height'])assert(Math.abs(pane.rect[key]-hover.rect[key])<fixture.geometryTolerance,target+' hover '+key);
-    assert.equal(hover.veil.kind,"clear");assert.equal(hover.veil.visibility,"hidden");
-    await chip.click();await page.clock.runFor(650);const opened=await measure();assert(opened.panes.find(p=>p.id===target).opened);assert(!opened.panes.find(p=>p.id===target).inert);
+    assert.equal(hover.veil.kind,"whole");assert.equal(hover.veil.visibility,"visible");
+    await page.mouse.down();await page.clock.runFor(650);const pressed=await measure();assert.equal(pressed.veil.kind,"clear");assert.equal(pressed.veil.visibility,"hidden");
+    await page.mouse.up();await page.clock.runFor(650);const opened=await measure();assert(opened.panes.find(p=>p.id===target).opened);assert(!opened.panes.find(p=>p.id===target).inert);
     await page.keyboard.press('Escape');await page.clock.runFor(650);const returned=await measure();assert(!returned.panes.some(p=>p.opened));
-    result.samples.push({scenario:scenario.id,language,resting,panned,hover,opened,returned});
+    result.samples.push({scenario:scenario.id,language,resting,panned,hover,pressed,opened,returned});
     await page.screenshot({path:path.join(output,scenario.id+'-'+language+'.png')});console.log('PASS layered-'+scenario.id+'-'+language);
   }
   assert.deepEqual(errors,[]);result.errors=errors;await fs.writeFile(path.join(output,"oracle.json"),JSON.stringify(result,null,2));

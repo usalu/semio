@@ -36,7 +36,7 @@ _SOURCES = _WORKSPACE / "🎓️teaching/🏛️architecture/🧍️staffage"
 _EXPORTER = _SOURCES / "🔨️modules/📤️export/🎭️cast/🟦️.ts"
 _MANIFEST = Path(__file__).with_name("🔣️.json")
 _INDEX = "🔣️.json"
-_VIEWPOINTS = ("elevation", "front", "plan")
+_VIEWPOINTS = ("elevation", "front", "plan", "axonometric")
 _VIEWS = ("dark-line", "dark-solid", "light-line", "light-solid", "thermal", "forces", "moments")
 _THEMES = ("dark", "light")
 _SCALES = (500, 200, 100, 50)
@@ -713,7 +713,7 @@ def _drawn(cast: str, rate: float | None) -> dict:
 
 
 def _index(folder: Path) -> dict:
-    """🧾 Read the index of a rendered cast once per process; `viewpoint` says which view was drawn (`elevation`, `front` or `plan`)."""
+    """🧾 Read the index of a rendered cast once per process; `viewpoint` says which view was drawn (`elevation`, `front`, `plan` or `axonometric`)."""
     if folder not in _INDEXES:
         index = json.loads((folder / _INDEX).read_text(encoding="utf-8"))
         if index.get("viewpoint") not in _VIEWPOINTS:

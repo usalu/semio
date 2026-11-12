@@ -24,6 +24,7 @@ import { DimensionsSection } from "./📐️dimensions/🟦️.tsx";
 import { comparisonOf } from "../⚖️compare/🧮️panes/🟦️.ts";
 import { ExportPanel } from "./📤️export-panel/🟦️.tsx";
 import { ModelSection } from "./🧬️model/🟦️.tsx";
+import { isDrawn } from "../🔭️viewpoints/🟦️.ts";
 import { ProvenanceSection } from "./📚️provenance/🟦️.tsx";
 
 function Timeline(props: { readonly asset: Asset; readonly frame: ViewerFrame | null; readonly viewer: ViewerState; readonly onSeek: (timeS: number) => void }): ReactElement | null {
@@ -35,7 +36,7 @@ function Timeline(props: { readonly asset: Asset; readonly frame: ViewerFrame | 
   return <ClipTimeline asset={asset} clip={clip} timeS={clock?.timeS ?? viewer.timeS ?? 0} onSeek={(timeS) => { frame?.clock.pause(); frame?.clock.seek(timeS); props.onSeek(timeS); }} />;
 }
 
-/** 🔬️ The asset page. */
+/** 🔭️ The asset page. */
 export function AssetPage(props: { readonly row: Row; readonly view: PaneView }): ReactElement {
   const { row, view } = props;
   const { t, language, store, catalog } = useArchive();
@@ -58,7 +59,13 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
   const asset = row.asset;
   const title = row.entry.title[language];
   const category = manifest?.categories.find((entry) => entry.id === row.entry.category)?.title[language] ?? row.entry.category;
-  const query: EvaluationQuery = frame?.scene.metadata.query ?? { kind: "pose", pose: asset?.presentation.defaultPose ?? "" };
+  const selected: EvaluationQuery | undefined =
+    asset === undefined
+      ? undefined
+      : viewer.selection?.kind === "pose"
+        ? { kind: "pose", pose: viewer.selection.pose }
+        : { kind: "clip", clip: viewer.selection?.kind === "clip" ? viewer.selection.clip : asset.presentation.defaultClip, timeS: frame?.clock.timeS ?? viewer.timeS ?? 0 };
+  const query: EvaluationQuery = (isDrawn(viewer.viewpoint) ? frame?.scene.metadata.query : undefined) ?? selected ?? { kind: "pose", pose: asset?.presentation.defaultPose ?? "" };
   const share = async (): Promise<void> => {
     const href = `${window.location.origin}${window.location.pathname}${active ? window.location.hash : formatAddress(route)}`;
     try {
@@ -109,7 +116,7 @@ export function AssetPage(props: { readonly row: Row; readonly view: PaneView })
           <DimensionsSection asset={asset} row={row} />
           <ModelSection asset={asset} state={frame?.state ?? null} thermal={frame?.thermal ?? null} structure={frame?.structure ?? null} environment={frame?.environment ?? asset.thermal.environment} language={language} />
           <ProvenanceSection asset={asset} />
-          <ExportPanel asset={asset} query={query} language={language} options={{ sheet: viewer.sheet, fps: viewer.fps, durationS: viewer.durationS }} onOptions={(settings) => change({ sheet: settings.sheet, fps: settings.fps, durationS: settings.durationS })} request={{ view: viewer.view, viewpoint: viewer.viewpoint, scale: { denominator: viewer.scale }, language, theme: viewer.theme === "auto" ? (document.documentElement.classList.contains("dark") ? "dark" : "light") : viewer.theme, thermalQuantity: viewer.thermalQuantity, forceQuantity: viewer.forceQuantity, range: viewer.range, patterns: viewer.patterns, diagrams: viewer.diagrams, ...(Object.keys(viewer.environment).length > 0 ? { environment: frame?.environment ?? { ...asset.thermal.environment, ...viewer.environment } } : {}) }} />
+          <ExportPanel asset={asset} query={query} language={language} options={{ sheet: viewer.sheet, fps: viewer.fps, durationS: viewer.durationS }} onOptions={(settings) => change({ sheet: settings.sheet, fps: settings.fps, durationS: settings.durationS })} viewpoint={viewer.viewpoint} request={{ view: viewer.view, viewpoint: isDrawn(viewer.viewpoint) ? viewer.viewpoint : "elevation", scale: { denominator: viewer.scale }, language, theme: viewer.theme === "auto" ? (document.documentElement.classList.contains("dark") ? "dark" : "light") : viewer.theme, thermalQuantity: viewer.thermalQuantity, forceQuantity: viewer.forceQuantity, range: viewer.range, patterns: viewer.patterns, diagrams: viewer.diagrams, ...(Object.keys(viewer.environment).length > 0 ? { environment: frame?.environment ?? { ...asset.thermal.environment, ...viewer.environment } } : {}) }} />
         </>
       )}
     </PageFrame>

@@ -8,7 +8,7 @@
  * @see ../🖨️representation/🟦️.ts — scale resolution
  * @see ../🗂️catalog/🟦️.ts — the availability rules `validateAsset` enforces
  */
-import { VIEWPOINTS, type Alternative, type Asset, type Slug, type Text, type UnavailableCause, type Viewpoint } from "../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type Alternative, type Asset, type Slug, type Text, type UnavailableCause, type Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DepictionOptions, DrawingScene, Fidelity, EvaluatedState, EvaluationQuery, RepresentationResolution, RepresentationSelector, View } from "../🔗️contracts/🟦️.ts";
 import { type Analysis, depict, resolveDepiction } from "../🎨️depiction/🟦️.ts";
 import { ViewMissingError } from "../🎨️depiction/🔭️views/🟦️.ts";
@@ -37,7 +37,7 @@ export type AlternativeOffer = { readonly alternative: Alternative; readonly fid
 /** 🚫️ The codes of {@link DrawingUnavailable}: the scale is not drawable, the profile rejects the drawing, the representation lacks that viewpoint, the symbol does not exist, the symbol is not offered at that scale. */
 export const UNAVAILABLE_CODES = ["scale-unavailable", "scale-unsuitable", "view-missing", "symbol-unknown", "symbol-scale"] as const;
 
-/** 🚫️ A viewpoint that has no drawing for the request, with the reason; never a substituted or blank drawing. */
+/** 👁️ A viewpoint that has no drawing for the request, with the reason; never a substituted or blank drawing. */
 export type DrawingUnavailable = {
   readonly kind: "unavailable";
   readonly code: (typeof UNAVAILABLE_CODES)[number];
@@ -51,7 +51,7 @@ export type DrawingUnavailable = {
   readonly alternatives: readonly AlternativeOffer[];
 };
 
-/** 🔭️ The three viewpoints of one evaluated state. `state` is `null` only when no representation could be selected. */
+/** 📷️ The three viewpoints of one evaluated state. `state` is `null` only when no representation could be selected. */
 export type MultiView = { readonly state: EvaluatedState | null; readonly analysis: Analysis; readonly views: Readonly<Record<Viewpoint, ResolvedDrawing | DrawingUnavailable>> };
 
 const text = (en: string, de: string): Text => ({ en, de });
@@ -68,28 +68,28 @@ function selectorOf(source: DrawingSource): RepresentationSelector {
   return source.kind === "symbol" ? { kind: "symbol", symbol: source.symbol } : { kind: "scale", scale: { denominator: source.denominator } };
 }
 
-function allUnavailable(mode: View, unavailable: Omit<DrawingUnavailable, "viewpoint" | "mode">): MultiView {
-  return { state: null, analysis: {}, views: Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, { ...unavailable, viewpoint, mode }])) as Record<Viewpoint, DrawingUnavailable> };
+function allUnavailable(mode: View, unavailable: Omit<DrawingUnavailable, "viewpoint" | "mode">, viewpoints: readonly Viewpoint[]): MultiView {
+  return { state: null, analysis: {}, views: Object.fromEntries(viewpoints.map((viewpoint) => [viewpoint, { ...unavailable, viewpoint, mode }])) as Record<Viewpoint, DrawingUnavailable> };
 }
 
-function probe(asset: Asset, source: DrawingSource, mode: View, options: DrawOptions): { readonly resolution: Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }> } | { readonly refusal: MultiView } {
+function probe(asset: Asset, source: DrawingSource, mode: View, options: DrawOptions, viewpoints: readonly Viewpoint[]): { readonly resolution: Extract<RepresentationResolution, { readonly kind: "authored" | "symbol" }> } | { readonly refusal: MultiView } {
   if (source.kind === "symbol") {
     const symbol = asset.symbols.find((candidate) => candidate.id === source.symbol);
-    if (symbol === undefined) return { refusal: allUnavailable(mode, { kind: "unavailable", code: "symbol-unknown", requested: source.denominator, cause: "no-such-symbol", reason: text(`Asset "${asset.id}" has no symbol "${source.symbol}".`, `Asset "${asset.id}" hat kein Symbol "${source.symbol}".`), limitingFeature: null, limitingSizeM: null, alternatives: [] }) };
-    if (!(symbol.denominators as readonly number[]).includes(source.denominator)) return { refusal: allUnavailable(mode, { kind: "unavailable", code: "symbol-scale", requested: source.denominator, cause: "symbol-not-offered", reason: text(`Symbol "${symbol.id}" is offered at 1:${symbol.denominators.join(", 1:")}, not at 1:${source.denominator}.`, `Symbol "${symbol.id}" wird bei 1:${symbol.denominators.join(", 1:")} angeboten, nicht bei 1:${source.denominator}.`), limitingFeature: null, limitingSizeM: null, alternatives: [] }) };
+    if (symbol === undefined) return { refusal: allUnavailable(mode, { kind: "unavailable", code: "symbol-unknown", requested: source.denominator, cause: "no-such-symbol", reason: text(`Asset "${asset.id}" has no symbol "${source.symbol}".`, `Asset "${asset.id}" hat kein Symbol "${source.symbol}".`), limitingFeature: null, limitingSizeM: null, alternatives: [] }, viewpoints) };
+    if (!(symbol.denominators as readonly number[]).includes(source.denominator)) return { refusal: allUnavailable(mode, { kind: "unavailable", code: "symbol-scale", requested: source.denominator, cause: "symbol-not-offered", reason: text(`Symbol "${symbol.id}" is offered at 1:${symbol.denominators.join(", 1:")}, not at 1:${source.denominator}.`, `Symbol "${symbol.id}" wird bei 1:${symbol.denominators.join(", 1:")} angeboten, nicht bei 1:${source.denominator}.`), limitingFeature: null, limitingSizeM: null, alternatives: [] }, viewpoints) };
   }
   try {
     return { resolution: resolveDepiction(asset, { ...options, view: mode, viewpoint: "elevation", scale: { denominator: source.denominator }, representation: selectorOf(source) } as DepictionOptions) };
   } catch (error) {
     if (!(error instanceof RepresentationError)) throw error;
     const r = error.resolution;
-    if (r.kind === "unavailable") return { refusal: allUnavailable(mode, { kind: "unavailable", code: "scale-unavailable", requested: r.requested, cause: r.cause, reason: r.reason, limitingFeature: r.limitingFeature, limitingSizeM: r.limitingSizeM, alternatives: offers(asset, r.alternatives) }) };
-    return { refusal: allUnavailable(mode, { kind: "unavailable", code: "scale-unsuitable", requested: r.requested, cause: "unsuitable-for-profile", reason: text(`The 1:${r.denominator} drawing violates the print profile "${r.profile}": ${r.suitability.violations.slice(0, 3).map((v) => `${v.check} ${v.measuredMm.toFixed(3)} mm < ${v.requiredMm} mm`).join("; ")}.`, `Die Zeichnung 1:${r.denominator} verletzt das Druckprofil "${r.profile}": ${r.suitability.violations.slice(0, 3).map((v) => `${v.check} ${v.measuredMm.toFixed(3)} mm < ${v.requiredMm} mm`).join("; ")}.`), limitingFeature: null, limitingSizeM: null, alternatives: offers(asset, r.alternatives) }) };
+    if (r.kind === "unavailable") return { refusal: allUnavailable(mode, { kind: "unavailable", code: "scale-unavailable", requested: r.requested, cause: r.cause, reason: r.reason, limitingFeature: r.limitingFeature, limitingSizeM: r.limitingSizeM, alternatives: offers(asset, r.alternatives) }, viewpoints) };
+    return { refusal: allUnavailable(mode, { kind: "unavailable", code: "scale-unsuitable", requested: r.requested, cause: "unsuitable-for-profile", reason: text(`The 1:${r.denominator} drawing violates the print profile "${r.profile}": ${r.suitability.violations.slice(0, 3).map((v) => `${v.check} ${v.measuredMm.toFixed(3)} mm < ${v.requiredMm} mm`).join("; ")}.`, `Die Zeichnung 1:${r.denominator} verletzt das Druckprofil "${r.profile}": ${r.suitability.violations.slice(0, 3).map((v) => `${v.check} ${v.measuredMm.toFixed(3)} mm < ${v.requiredMm} mm`).join("; ")}.`), limitingFeature: null, limitingSizeM: null, alternatives: offers(asset, r.alternatives) }, viewpoints) };
   }
 }
 
 function run(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoint[], source: DrawingSource, mode: View, options: DrawOptions): MultiView {
-  const picked = probe(asset, source, mode, options);
+  const picked = probe(asset, source, mode, options, viewpoints);
   if ("refusal" in picked) return picked.refusal;
   const representation = selectorOf(source);
   const state = evaluate(asset, query, representation);
@@ -112,9 +112,14 @@ function run(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoin
   return { state, analysis, views };
 }
 
-/** 🔭️ The three viewpoints of the asset at the query from one evaluated state and one analysis solve; each is a drawing or a typed unavailability. Throws only for programmer errors (unknown pose or clip, malformed asset). */
+/** 🎥️ The three viewpoints of the asset at the query from one evaluated state and one analysis solve; each is a drawing or a typed unavailability. Throws only for programmer errors (unknown pose or clip, malformed asset). */
 export function resolveViews(asset: Asset, query: EvaluationQuery, source: DrawingSource, mode: View, options: DrawOptions): MultiView {
-  return run(asset, query, VIEWPOINTS, source, mode, options);
+  return run(asset, query, PLANAR_VIEWPOINTS, source, mode, options);
+}
+
+/** 🧊️ The axonometric view of the asset at the query together with any of the planar viewpoints, from one evaluated state and one analysis solve (the four-cell multiview sheet is composed from this): as {@link resolveViews}, for `viewpoints` chosen freely. `options.axonometric` picks the camera of the axonometric view. */
+export function resolveViewpoints(asset: Asset, query: EvaluationQuery, viewpoints: readonly Viewpoint[], source: DrawingSource, mode: View, options: DrawOptions): MultiView {
+  return run(asset, query, viewpoints, source, mode, options);
 }
 
 /** 🖼️ One viewpoint of the asset at the query, through the same single-state path as {@link resolveViews}: `resolveDrawing(asset, query, viewpoint, source, mode, options)`. */

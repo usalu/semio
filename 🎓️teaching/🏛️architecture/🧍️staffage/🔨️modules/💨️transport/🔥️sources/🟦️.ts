@@ -16,6 +16,7 @@ import type { EmitterState, EvaluatedState, EvaluationQuery, ThermalField, Vec3 
 import type { Ambient } from "../🌬️ambient/🟦️.ts";
 import { CP_DRY_AIR, enthalpy, latentHeat, moistDensity, ratioOfSpecific, saturationRatio, specificHumidity, volumePerDryKg } from "../🌫️air/🟦️.ts";
 import { breathPatternAt, emitterOwner, exhaledAir, exhaledVolumeM3, respirationState, routeShares } from "../🫁️respiration/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** ⏱️ Integration steps per second of the global step grid (h = 1/120 s). */
 export const STEPS_PER_S = 120;
@@ -58,8 +59,8 @@ function anchorWorld(world: World, state: EvaluatedState, emitter: Emitter, anch
   if (rises !== null) return { at, direction: { x: 0, y: rises, z: 0 } };
   const frame = state.bones[placed.anchor.bone]?.frame;
   const a = (emitter.directionDeg * Math.PI) / 180;
-  const c = Math.cos(a);
-  const s = Math.sin(a);
+  const c = portable.cos(a);
+  const s = portable.sin(a);
   if (frame === undefined) return { at, direction: { x: c, y: s, z: 0 } };
   return { at, direction: { x: c * frame.u.x + s * frame.v.x, y: c * frame.u.y + s * frame.v.y, z: c * frame.u.z + s * frame.v.z } };
 }

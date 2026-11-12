@@ -1,0 +1,638 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "run-1",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "concrete",
+    "role": "body",
+    "tone": 0.6,
+    "regions": [
+     "ramp-surface",
+     "ramp-side"
+    ],
+    "profile": [
+     [
+      1.5,
+      0
+     ],
+     [
+      5.1,
+      0.3
+     ],
+     [
+      5.1,
+      0
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.7,
+    "to": 0.7
+   },
+   {
+    "id": "landing-1",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "concrete",
+    "role": "body",
+    "tone": 0.6,
+    "regions": [
+     "ramp-surface",
+     "ramp-side"
+    ],
+    "profile": [
+     [
+      5.1,
+      0
+     ],
+     [
+      5.1,
+      0.3
+     ],
+     [
+      6.6,
+      0.3
+     ],
+     [
+      6.6,
+      0
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.7,
+    "to": 0.7
+   },
+   {
+    "id": "run-2",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "concrete",
+    "role": "body",
+    "tone": 0.6,
+    "regions": [
+     "ramp-surface",
+     "ramp-side"
+    ],
+    "profile": [
+     [
+      6.6,
+      0
+     ],
+     [
+      6.6,
+      0.3
+     ],
+     [
+      10.2,
+      0.6
+     ],
+     [
+      10.2,
+      0
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.7,
+    "to": 0.7
+   },
+   {
+    "id": "landing-2",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "concrete",
+    "role": "body",
+    "tone": 0.6,
+    "regions": [
+     "ramp-surface",
+     "ramp-side"
+    ],
+    "profile": [
+     [
+      10.2,
+      0
+     ],
+     [
+      10.2,
+      0.6
+     ],
+     [
+      11.7,
+      0.6
+     ],
+     [
+      11.7,
+      0
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.7,
+    "to": 0.7
+   },
+   {
+    "id": "kerb",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "concrete",
+    "role": "body",
+    "tone": 0.45,
+    "region": "kerb",
+    "profile": [
+     [
+      1.5,
+      0
+     ],
+     [
+      5.1,
+      0.3
+     ],
+     [
+      6.6,
+      0.3
+     ],
+     [
+      10.2,
+      0.6
+     ],
+     [
+      10.2,
+      0.7
+     ],
+     [
+      6.6,
+      0.4
+     ],
+     [
+      5.1,
+      0.4
+     ],
+     [
+      1.5,
+      0.1
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.6,
+    "to": 0.7,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "rail-0",
+    "kind": "capsule",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     0,
+     0.85,
+     0.65
+    ],
+    "p1": [
+     0.3,
+     0.85,
+     0.65
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "rail-1",
+    "kind": "capsule",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     0.3,
+     0.85,
+     0.65
+    ],
+    "p1": [
+     3.9,
+     1.15,
+     0.65
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "rail-2",
+    "kind": "capsule",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     3.9,
+     1.15,
+     0.65
+    ],
+    "p1": [
+     5.4,
+     1.15,
+     0.65
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "rail-3",
+    "kind": "capsule",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     5.4,
+     1.15,
+     0.65
+    ],
+    "p1": [
+     9,
+     1.45,
+     0.65
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "rail-4",
+    "kind": "capsule",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     9,
+     1.45,
+     0.65
+    ],
+    "p1": [
+     9.3,
+     1.45,
+     0.65
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "rail-return-start",
+    "kind": "capsule",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     0,
+     0.85,
+     0.65
+    ],
+    "p1": [
+     0,
+     0.75,
+     0.65
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "rail-return-end",
+    "kind": "capsule",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     9.3,
+     1.45,
+     0.65
+    ],
+    "p1": [
+     9.3,
+     1.35,
+     0.65
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.3
+     ]
+    }
+   },
+   {
+    "id": "plate-a",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "handrail-steel",
+    "size": [
+     0.12,
+     0.02,
+     0.1
+    ],
+    "transform": {
+     "translation": [
+      0.3,
+      0.11,
+      0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   },
+   {
+    "id": "post-a",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "size": [
+     0.05,
+     0.709,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.3,
+      0.4745,
+      0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   },
+   {
+    "id": "plate-a-r",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "handrail-steel",
+    "size": [
+     0.12,
+     0.02,
+     0.1
+    ],
+    "transform": {
+     "translation": [
+      0.3,
+      0.11,
+      -0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   },
+   {
+    "id": "post-a-r",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "size": [
+     0.05,
+     0.709,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.3,
+      0.4745,
+      -0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   },
+   {
+    "id": "plate-b",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "handrail-steel",
+    "size": [
+     0.12,
+     0.02,
+     0.1
+    ],
+    "transform": {
+     "translation": [
+      5.4,
+      0.41,
+      0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   },
+   {
+    "id": "post-b",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "size": [
+     0.05,
+     0.709,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      5.4,
+      0.7745,
+      0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   },
+   {
+    "id": "plate-b-r",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "handrail-steel",
+    "size": [
+     0.12,
+     0.02,
+     0.1
+    ],
+    "transform": {
+     "translation": [
+      5.4,
+      0.41,
+      -0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   },
+   {
+    "id": "post-b-r",
+    "kind": "box",
+    "bone": "handrail",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "size": [
+     0.05,
+     0.709,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      5.4,
+      0.7745,
+      -0.65
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      1.8,
+      0.15,
+      0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The ramp body is four solid concrete extrudes of the elevation outline, split at the expansion joints into run 1, landing 1, run 2 and landing 2, all carrying the regions ramp-surface and ramp-side; the 2D draws it filled and its mass of 12.8 t matches a solid body.",
+    "de": "Der Rampenkörper besteht aus vier massiven Beton-Extrusionen des Ansichtsumrisses, an den Dehnfugen geteilt in Lauf 1, Podest 1, Lauf 2 und Podest 2, alle mit den Regionen Rampenoberfläche und Rampenseite; die 2D-Ansicht zeichnet ihn gefüllt und seine Masse von 12,8 t entspricht einem Vollkörper."
+   },
+   {
+    "en": "The two 100 mm kerbs follow the slope as one extrude each (one solid with repeat across the 1.3 m), the two handrails are chains of 42.4 mm tube capsules whose round joints form the elbows, with returns at both ends; posts and 120 x 20 x 100 mm base plates stand on the kerb in two regular groups of three per side (one solid each with a repeat that follows the slope).",
+    "de": "Die beiden 100 mm Bordsteine folgen der Neigung als je eine Extrusion (ein Körper mit Wiederholung über die 1,3 m), die beiden Handläufe sind Ketten aus Rohrkapseln 42,4 mm, deren runde Gelenke die Knicke bilden, mit Rückführungen an beiden Enden; Pfosten und Fussplatten 120 x 20 x 100 mm stehen auf dem Bord in zwei regelmässigen Dreiergruppen je Seite (je ein Körper mit einer der Neigung folgenden Wiederholung)."
+   },
+   {
+    "en": "The handrail bone starts at x = 1.2 m, so the overall length 10.5 m is measured from the handrail start to the ramp end at 11.7 m; the 2D elevation draws the ramp from x = 1.5 m; the chair carrier bone is a load point without volume.",
+    "de": "Der Handlauf-Knochen beginnt bei x = 1,2 m, die Gesamtlänge 10,5 m wird daher vom Handlaufbeginn bis zum Rampenende bei 11,7 m gemessen; die 2D-Ansicht zeichnet die Rampe ab x = 1,5 m; der Rollstuhl-Lastträgerknochen ist ein Lastpunkt ohne Volumen."
+   }
+  ]
+ }
+}

@@ -378,6 +378,500 @@
         }
       ]
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "head",
+          "kind": "ellipsoid",
+          "bone": "head",
+          "material": "skin",
+          "role": "body",
+          "tone": 0.85,
+          "region": "head",
+          "radii": [
+            0.115,
+            0.095,
+            0.085
+          ],
+          "transform": {
+            "translation": [
+              0.1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "hair",
+          "kind": "revolve",
+          "bone": "head",
+          "material": "hair",
+          "role": "body",
+          "tone": 0.2,
+          "region": "head",
+          "profile": [
+            [
+              0.1,
+              0.1007
+            ],
+            [
+              0.16095,
+              0.0872
+            ],
+            [
+              0.2056,
+              0.0504
+            ],
+            [
+              0.22005,
+              0.01749
+            ],
+            [
+              0.2219,
+              0
+            ]
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "lateralScale": 0.895
+        },
+        {
+          "id": "neck",
+          "kind": "capsule",
+          "bone": "head",
+          "material": "skin",
+          "role": "body",
+          "tone": 0.85,
+          "region": "head",
+          "p0": [
+            -0.06,
+            0,
+            0
+          ],
+          "p1": [
+            0.06,
+            0,
+            0
+          ],
+          "r0": 0.0485,
+          "r1": 0.0485,
+          "weights": [
+            {
+              "bone": "head",
+              "weight": 0.7
+            },
+            {
+              "bone": "torso",
+              "weight": 0.3
+            }
+          ]
+        },
+        {
+          "id": "nose",
+          "kind": "ellipsoid",
+          "bone": "head",
+          "material": "skin",
+          "role": "detail",
+          "tone": 0.85,
+          "region": "head",
+          "radii": [
+            0.016,
+            0.01,
+            0.012
+          ],
+          "transform": {
+            "translation": [
+              0.1,
+              -0.092,
+              0
+            ]
+          },
+          "maxDenominator": 50
+        },
+        {
+          "id": "torso",
+          "kind": "loft",
+          "bone": "torso",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.45,
+          "region": "torso",
+          "sections": [
+            {
+              "at": [
+                0,
+                0,
+                0
+              ],
+              "rx": 0.16,
+              "ry": 0.1261,
+              "exponent": 2.4,
+              "rotation": [0, 0.7071067811865476, 0, 0.7071067811865476]
+            },
+            {
+              "at": [
+                0.22,
+                0,
+                0
+              ],
+              "rx": 0.18,
+              "ry": 0.14,
+              "exponent": 2.4,
+              "rotation": [0, 0.7071067811865476, 0, 0.7071067811865476]
+            },
+            {
+              "at": [
+                0.45,
+                0,
+                0
+              ],
+              "rx": 0.19,
+              "ry": 0.1552,
+              "exponent": 2.2,
+              "rotation": [0, 0.7071067811865476, 0, 0.7071067811865476]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "buttons",
+          "kind": "ellipsoid",
+          "bone": "torso",
+          "material": "cotton-clothing",
+          "role": "detail",
+          "tone": 0.7,
+          "region": "torso",
+          "radii": [
+            0.008,
+            0.004,
+            0.008
+          ],
+          "transform": {
+            "translation": [
+              0.15,
+              -0.138,
+              0
+            ]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [
+              0.08,
+              0,
+              0
+            ]
+          },
+          "maxDenominator": 50
+        },
+        {
+          "id": "pelvis",
+          "kind": "ellipsoid",
+          "bone": "pelvis",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.3,
+          "region": "torso",
+          "radii": [
+            0.12,
+            0.1358,
+            0.17
+          ],
+          "transform": {
+            "translation": [
+              -0.02,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "id": "arm-l",
+          "kind": "capsule",
+          "bone": "arm-l",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.5,
+          "region": "arms",
+          "p0": [
+            0,
+            0,
+            0.225
+          ],
+          "p1": [
+            0.6,
+            0,
+            0.225
+          ],
+          "r0": 0.04365,
+          "r1": 0.03395
+        },
+        {
+          "id": "thigh-l",
+          "kind": "capsule",
+          "bone": "thigh-l",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.3,
+          "region": "legs",
+          "p0": [
+            0,
+            0,
+            0.09
+          ],
+          "p1": [
+            0.45,
+            0,
+            0.09
+          ],
+          "r0": 0.08245,
+          "r1": 0.06305
+        },
+        {
+          "id": "shank-l",
+          "kind": "capsule",
+          "bone": "shank-l",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.3,
+          "region": "legs",
+          "p0": [
+            0,
+            0,
+            0.09
+          ],
+          "p1": [
+            0.43,
+            0,
+            0.09
+          ],
+          "r0": 0.0582,
+          "r1": 0.0388
+        },
+        {
+          "id": "shoe-l",
+          "kind": "extrude",
+          "bone": "foot-l",
+          "material": "leather-shoe",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "profile": [
+            [
+              -0.06,
+              -0.065
+            ],
+            [
+              0.2,
+              -0.065
+            ],
+            [
+              0.21,
+              -0.055
+            ],
+            [
+              0.21,
+              -0.045
+            ],
+            [
+              0.14,
+              -0.02
+            ],
+            [
+              0.03,
+              -0.01
+            ],
+            [
+              -0.04,
+              -0.01
+            ],
+            [
+              -0.06,
+              -0.03
+            ]
+          ],
+          "plane": "xy",
+          "from": 0.045,
+          "to": 0.135
+        },
+        {
+          "id": "sole-l",
+          "kind": "box",
+          "bone": "foot-l",
+          "material": "leather-shoe",
+          "role": "detail",
+          "tone": 0.08,
+          "region": "feet",
+          "size": [
+            0.27,
+            0.015,
+            0.09
+          ],
+          "cornerRadius": 0.005,
+          "transform": {
+            "translation": [
+              0.075,
+              -0.0725,
+              0.09
+            ]
+          }
+        },
+        {
+          "id": "arm-r",
+          "kind": "capsule",
+          "bone": "arm-r",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.5,
+          "region": "arms",
+          "p0": [
+            0,
+            0,
+            -0.225
+          ],
+          "p1": [
+            0.6,
+            0,
+            -0.225
+          ],
+          "r0": 0.04365,
+          "r1": 0.03395
+        },
+        {
+          "id": "thigh-r",
+          "kind": "capsule",
+          "bone": "thigh-r",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.3,
+          "region": "legs",
+          "p0": [
+            0,
+            0,
+            -0.09
+          ],
+          "p1": [
+            0.45,
+            0,
+            -0.09
+          ],
+          "r0": 0.08245,
+          "r1": 0.06305
+        },
+        {
+          "id": "shank-r",
+          "kind": "capsule",
+          "bone": "shank-r",
+          "material": "cotton-clothing",
+          "role": "body",
+          "tone": 0.3,
+          "region": "legs",
+          "p0": [
+            0,
+            0,
+            -0.09
+          ],
+          "p1": [
+            0.43,
+            0,
+            -0.09
+          ],
+          "r0": 0.0582,
+          "r1": 0.0388
+        },
+        {
+          "id": "shoe-r",
+          "kind": "extrude",
+          "bone": "foot-r",
+          "material": "leather-shoe",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "profile": [
+            [
+              -0.06,
+              -0.065
+            ],
+            [
+              0.2,
+              -0.065
+            ],
+            [
+              0.21,
+              -0.055
+            ],
+            [
+              0.21,
+              -0.045
+            ],
+            [
+              0.14,
+              -0.02
+            ],
+            [
+              0.03,
+              -0.01
+            ],
+            [
+              -0.04,
+              -0.01
+            ],
+            [
+              -0.06,
+              -0.03
+            ]
+          ],
+          "plane": "xy",
+          "from": -0.135,
+          "to": -0.045
+        },
+        {
+          "id": "sole-r",
+          "kind": "box",
+          "bone": "foot-r",
+          "material": "leather-shoe",
+          "role": "detail",
+          "tone": 0.08,
+          "region": "feet",
+          "size": [
+            0.27,
+            0.015,
+            0.09
+          ],
+          "cornerRadius": 0.005,
+          "transform": {
+            "translation": [
+              0.075,
+              -0.0725,
+              -0.09
+            ]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Every solid is read off the authored side, front and plan shapes of the test figure: the capsules and the ellipsoids repeat the elevation radii, the lateral positions come from the plan, so the three silhouettes of the volume agree with the three drawings.",
+          "de": "Jeder Körper ist den gezeichneten Seiten-, Vorder- und Grundrissformen der Testfigur entnommen: die Kapseln und Ellipsoide wiederholen die Radien der Seitenansicht, die seitlichen Lagen stammen aus dem Grundriss, sodass die drei Silhouetten des Volumens mit den drei Zeichnungen übereinstimmen."
+        },
+        {
+          "en": "The torso is a loft of three superelliptic sections (hip, waist, shoulder), the hair a revolve about the head axis, the shoe an extrusion of its side profile and the sole a rounded box; the neck is blended 70 % to the head and 30 % to the torso.",
+          "de": "Der Rumpf ist ein Loft aus drei superelliptischen Schnitten (Hüfte, Taille, Schulter), das Haar ein Rotationskörper um die Kopfachse, der Schuh eine Extrusion seines Seitenprofils und die Sohle ein abgerundeter Quader; der Hals ist zu 70 % an den Kopf und zu 30 % an den Rumpf gebunden."
+        },
+        {
+          "en": "Nose and the three coat buttons exist only at 1:50 (maxDenominator 50); the buttons are one solid repeated three times along the torso.",
+          "de": "Nase und die drei Mantelknöpfe existieren nur im Maßstab 1:50 (maxDenominator 50); die Knöpfe sind ein Körper, der dreimal entlang des Rumpfes wiederholt wird."
+        }
+      ]
+    },
     "anchors": [
       {
         "id": "contact-l",
@@ -4244,7 +4738,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

@@ -7,12 +7,13 @@
  */
 import type { Asset, EnvironmentPreset } from "../../🧬️schema/🟦️.ts";
 import type { Cast, CastProvenance, CastScenario, Revision } from "../📤️export/🎭️cast/🧬️schema/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const PRIMES = Array.from({ length: 311 }, (_, n) => n + 2)
   .filter((n, _, all) => all.every((d) => d >= n || n % d !== 0))
   .slice(0, 64);
 const fraction = (value: number): number => Math.floor((value - Math.floor(value)) * 2 ** 32);
-const ROUND = PRIMES.map((prime) => fraction(Math.cbrt(prime)));
+const ROUND = PRIMES.map((prime) => fraction(portable.cbrt(prime)));
 const START = PRIMES.slice(0, 8).map((prime) => fraction(Math.sqrt(prime)));
 const rotate = (word: number, bits: number): number => (word >>> bits) | (word << (32 - bits));
 

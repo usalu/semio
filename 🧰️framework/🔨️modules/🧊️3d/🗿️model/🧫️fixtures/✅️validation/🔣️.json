@@ -1,0 +1,1789 @@
+{
+ "base": {
+  "version": "semio.model/v1",
+  "id": "valid",
+  "title": {
+   "en": "valid",
+   "de": "valid"
+  },
+  "nodes": [
+   {
+    "id": "root",
+    "parent": null,
+    "translation": [
+     0,
+     0,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "id": "arm",
+    "parent": "root",
+    "translation": [
+     0,
+     1,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "revolute",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "min": -1,
+     "max": 1
+    }
+   }
+  ],
+  "solids": [
+   {
+    "id": "b",
+    "kind": "box",
+    "node": "root",
+    "material": "skin",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "weights": [
+     {
+      "node": "arm",
+      "weight": 1
+     }
+    ]
+   },
+   {
+    "id": "l",
+    "kind": "loft",
+    "node": "root",
+    "material": "skin",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.2,
+      "ry": 0.2
+     },
+     {
+      "at": [
+       0,
+       0,
+       1
+      ],
+      "rx": 0.2,
+      "ry": 0.2
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   }
+  ],
+  "meshes": [
+   {
+    "id": "m",
+    "primitives": [
+     {
+      "mode": "triangles",
+      "material": "skin",
+      "positions": [
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       1,
+       0
+      ],
+      "indices": [
+       0,
+       1,
+       2,
+       0,
+       2,
+       1
+      ],
+      "solids": [
+       {
+        "id": "a",
+        "first": 0,
+        "count": 3
+       },
+       {
+        "id": "b",
+        "first": 3,
+        "count": 3
+       }
+      ]
+     },
+     {
+      "mode": "lines",
+      "material": "skin",
+      "positions": [
+       0,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0,
+       1,
+       0
+      ],
+      "indices": [
+       0,
+       1,
+       1,
+       2
+      ],
+      "solids": [
+       {
+        "id": "a",
+        "first": 0,
+        "count": 2
+       },
+       {
+        "id": "b",
+        "first": 2,
+        "count": 2
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "skins": [],
+  "materials": [
+   {
+    "id": "skin",
+    "title": {
+     "en": "Skin",
+     "de": "Haut"
+    },
+    "baseColor": [
+     0.8,
+     0.7,
+     0.6,
+     1
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emissive": [
+     0,
+     0,
+     0
+    ],
+    "alphaMode": "opaque",
+    "doubleSided": false,
+    "unlit": false
+   }
+  ],
+  "variants": [
+   {
+    "id": "plain",
+    "title": {
+     "en": "Plain",
+     "de": "Schlicht"
+    },
+    "bindings": {
+     "skin": "skin"
+    }
+   }
+  ],
+  "poses": [
+   {
+    "id": "rest",
+    "title": {
+     "en": "Rest",
+     "de": "Ruhe"
+    },
+    "nodes": {
+     "arm": {
+      "rotation": [
+       0,
+       0,
+       0.04997916927067833,
+       0.9987502603949663
+      ]
+     }
+    }
+   }
+  ],
+  "animations": [
+   {
+    "id": "idle",
+    "title": {
+     "en": "Idle",
+     "de": "Leerlauf"
+    },
+    "durationS": 1,
+    "loop": true,
+    "channels": [
+     {
+      "target": {
+       "node": "arm",
+       "path": "rotation"
+      },
+      "interpolation": "linear",
+      "times": [
+       0,
+       1
+      ],
+      "values": [
+       0,
+       0,
+       0.0,
+       1.0,
+       0,
+       0,
+       0.24740395925452294,
+       0.9689124217106447
+      ]
+     }
+    ],
+    "events": []
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "valid",
+   "ops": [],
+   "expectCodes": [],
+   "schemaValid": true
+  },
+  {
+   "name": "bad-version",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/version",
+     "value": "semio.model/v2"
+    }
+   ],
+   "expectCodes": [
+    "bad-version"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "bad-slug",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/variants/0/id",
+     "value": "Plain Look"
+    }
+   ],
+   "expectCodes": [
+    "bad-slug"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "duplicate-id",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1/id",
+     "value": "b"
+    }
+   ],
+   "expectCodes": [
+    "duplicate-id"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "unknown-parent",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/nodes/1/parent",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unknown-parent"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "parent-after-child",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/nodes/0/parent",
+     "value": "arm"
+    }
+   ],
+   "expectCodes": [
+    "parent-order"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "non-unit-quaternion",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/nodes/1/rotation",
+     "value": [
+      0,
+      0,
+      0,
+      2
+     ]
+    }
+   ],
+   "expectCodes": [
+    "non-unit-quaternion"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "zero-scale",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/nodes/1/scale",
+     "value": [
+      1,
+      0,
+      1
+     ]
+    }
+   ],
+   "expectCodes": [
+    "zero-scale"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "joint-axis-zero",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/nodes/1/joint/axis",
+     "value": [
+      0,
+      0,
+      0
+     ]
+    }
+   ],
+   "expectCodes": [
+    "joint-axis"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "joint-limits-inverted",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/nodes/1/joint/min",
+     "value": 2
+    }
+   ],
+   "expectCodes": [
+    "joint-limits"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "solid-unknown-node",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/0/node",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unknown-node"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "solid-unknown-material",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/0/material",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unknown-material"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "weights-too-many",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/0/weights",
+     "value": [
+      {
+       "node": "arm",
+       "weight": 1
+      },
+      {
+       "node": "arm",
+       "weight": 1
+      },
+      {
+       "node": "arm",
+       "weight": 1
+      },
+      {
+       "node": "arm",
+       "weight": 1
+      },
+      {
+       "node": "arm",
+       "weight": 1
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-weights"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "weights-zero-sum",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/0/weights",
+     "value": [
+      {
+       "node": "arm",
+       "weight": 0
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-weights"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "box-negative-size",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/0/size",
+     "value": [
+      1,
+      -1,
+      1
+     ]
+    }
+   ],
+   "expectCodes": [
+    "invalid-dimension"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "box-corner-radius-too-large",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/0/cornerRadius",
+     "value": 0.9
+    }
+   ],
+   "expectCodes": [
+    "invalid-dimension"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "loft-single-section",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1/sections",
+     "value": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.2,
+       "ry": 0.2
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "invalid-dimension"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "extrude-bowtie",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-closed-loop-valid",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        0
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1
+     }
+    }
+   ],
+   "expectCodes": [],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-spike",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        2,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-vertex-touches-edge",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        2,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        2,
+        2
+       ],
+       [
+        0,
+        2
+       ],
+       [
+        1,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-collinear-points-valid",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.5,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        0.5
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1
+     }
+    }
+   ],
+   "expectCodes": [],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-hole-valid",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "holes": [
+       [
+        [
+         0.25,
+         0.25
+        ],
+        [
+         0.25,
+         0.75
+        ],
+        [
+         0.75,
+         0.75
+        ],
+        [
+         0.75,
+         0.25
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "expectCodes": [],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-hole-crossing-outline",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "holes": [
+       [
+        [
+         0.5,
+         0.5
+        ],
+        [
+         1.5,
+         0.5
+        ],
+        [
+         1.5,
+         0.9
+        ],
+        [
+         0.5,
+         0.9
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "bad-holes"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-hole-outside",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "holes": [
+       [
+        [
+         2,
+         2
+        ],
+        [
+         3,
+         2
+        ],
+        [
+         3,
+         3
+        ],
+        [
+         2,
+         3
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "bad-holes"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-hole-touches-outline",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "holes": [
+       [
+        [
+         0,
+         0.5
+        ],
+        [
+         0.5,
+         0.3
+        ],
+        [
+         0.5,
+         0.7
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "bad-holes"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-holes-overlap",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "holes": [
+       [
+        [
+         0.2,
+         0.2
+        ],
+        [
+         0.6,
+         0.2
+        ],
+        [
+         0.6,
+         0.6
+        ],
+        [
+         0.2,
+         0.6
+        ]
+       ],
+       [
+        [
+         0.4,
+         0.4
+        ],
+        [
+         0.8,
+         0.4
+        ],
+        [
+         0.8,
+         0.8
+        ],
+        [
+         0.4,
+         0.8
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "bad-holes"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-hole-in-hole",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "holes": [
+       [
+        [
+         0.1,
+         0.1
+        ],
+        [
+         0.9,
+         0.1
+        ],
+        [
+         0.9,
+         0.9
+        ],
+        [
+         0.1,
+         0.9
+        ]
+       ],
+       [
+        [
+         0.4,
+         0.4
+        ],
+        [
+         0.6,
+         0.4
+        ],
+        [
+         0.6,
+         0.6
+        ],
+        [
+         0.4,
+         0.6
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "bad-holes"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "extrude-hole-bowtie",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "holes": [
+       [
+        [
+         0.3,
+         0.3
+        ],
+        [
+         0.7,
+         0.7
+        ],
+        [
+         0.7,
+         0.3
+        ],
+        [
+         0.3,
+         0.7
+        ]
+       ]
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "revolve-closed-loop-valid",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0.4,
+        0.4
+       ],
+       [
+        0.6,
+        0.4
+       ],
+       [
+        0.6,
+        0.6
+       ],
+       [
+        0.4,
+        0.6
+       ],
+       [
+        0.4,
+        0.4
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "expectCodes": [],
+   "schemaValid": true
+  },
+  {
+   "name": "revolve-axis-touch-valid",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0.5
+       ],
+       [
+        2,
+        0
+       ],
+       [
+        3,
+        0.5
+       ],
+       [
+        4,
+        0
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "expectCodes": [],
+   "schemaValid": true
+  },
+  {
+   "name": "revolve-crossing",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0.1
+       ],
+       [
+        2,
+        0.5
+       ],
+       [
+        2,
+        0.2
+       ],
+       [
+        0,
+        0.6
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "revolve-closed-loop-bowtie",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0.4,
+        0.4
+       ],
+       [
+        0.6,
+        0.6
+       ],
+       [
+        0.6,
+        0.4
+       ],
+       [
+        0.4,
+        0.6
+       ],
+       [
+        0.4,
+        0.4
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "revolve-fold-back",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0.3
+       ],
+       [
+        1,
+        0.3
+       ],
+       [
+        0.5,
+        0.3
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "revolve-crosses-end-disc",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/1",
+     "value": {
+      "id": "l",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        1,
+        0.5
+       ],
+       [
+        2,
+        0.5
+       ],
+       [
+        2,
+        0.2
+       ],
+       [
+        0.5,
+        0.2
+       ],
+       [
+        0.5,
+        0.3
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    }
+   ],
+   "expectCodes": [
+    "self-intersection"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "solids-gap",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/meshes/0/primitives/0/solids",
+     "value": [
+      {
+       "id": "a",
+       "first": 0,
+       "count": 3
+      },
+      {
+       "id": "b",
+       "first": 4,
+       "count": 2
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-solids"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "solids-short",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/meshes/0/primitives/0/solids",
+     "value": [
+      {
+       "id": "a",
+       "first": 0,
+       "count": 3
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-solids"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "solids-partial-triangle",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/meshes/0/primitives/0/solids",
+     "value": [
+      {
+       "id": "a",
+       "first": 0,
+       "count": 2
+      },
+      {
+       "id": "b",
+       "first": 2,
+       "count": 4
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-solids"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "solids-partial-line",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/meshes/0/primitives/1/solids",
+     "value": [
+      {
+       "id": "a",
+       "first": 0,
+       "count": 3
+      },
+      {
+       "id": "b",
+       "first": 3,
+       "count": 1
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-solids"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "solids-bad-id",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/meshes/0/primitives/0/solids/0/id",
+     "value": "Not A Slug"
+    }
+   ],
+   "expectCodes": [
+    "bad-solids"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "solids-zero-count",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/meshes/0/primitives/0/solids",
+     "value": [
+      {
+       "id": "a",
+       "first": 0,
+       "count": 0
+      },
+      {
+       "id": "b",
+       "first": 0,
+       "count": 6
+      }
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-solids"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "repeat-zero",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/solids/0/repeat",
+     "value": {
+      "count": 0
+     }
+    }
+   ],
+   "expectCodes": [
+    "bad-repeat"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "channel-values-mismatch",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/animations/0/channels/0/values",
+     "value": [
+      0,
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-channel"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "channel-times-not-increasing",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/animations/0/channels/0/times",
+     "value": [
+      1,
+      0
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-times"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "channel-beyond-duration",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/animations/0/channels/0/times",
+     "value": [
+      0,
+      3
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-times"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "duration-zero",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/animations/0/durationS",
+     "value": 0
+    }
+   ],
+   "expectCodes": [
+    "bad-duration"
+   ],
+   "schemaValid": false
+  },
+  {
+   "name": "pose-unknown-node",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/poses/0/nodes",
+     "value": {
+      "ghost": {}
+     }
+    }
+   ],
+   "expectCodes": [
+    "unknown-node"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "variant-unknown-material",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/variants/0/bindings",
+     "value": {
+      "skin": "ghost"
+     }
+    }
+   ],
+   "expectCodes": [
+    "unknown-material"
+   ],
+   "schemaValid": true
+  },
+  {
+   "name": "color-out-of-range",
+   "ops": [
+    {
+     "op": "set",
+     "path": "/materials/0/baseColor",
+     "value": [
+      2,
+      0,
+      0,
+      1
+     ]
+    }
+   ],
+   "expectCodes": [
+    "bad-color"
+   ],
+   "schemaValid": true
+  }
+ ]
+}

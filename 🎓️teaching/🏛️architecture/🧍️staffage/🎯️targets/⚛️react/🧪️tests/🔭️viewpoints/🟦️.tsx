@@ -3,8 +3,8 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { useState, type ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { VIEWPOINTS, mmPerMetre } from "@teaching/staffage";
-import type { Asset, Language, Viewpoint } from "@teaching/staffage";
+import { PLANAR_VIEWPOINTS, mmPerMetre } from "@teaching/staffage";
+import type { Asset, Language, PlanarViewpoint } from "@teaching/staffage";
 import { defineStaffageElement, exportFilename, StaffageClock, StaffageFigure } from "@teaching/staffage-react";
 import { ArchiveProvider } from "../../🔨️modules/🧭️context/🟦️.tsx";
 import { translator } from "../../🔨️modules/🌐️i18n/🟦️.ts";
@@ -15,7 +15,7 @@ import { depictionOptions, evaluateState, figureFrame, sceneOf } from "../../�
 import { PlacedFigure } from "../../🔨️modules/📍️placed/🟦️.tsx";
 import { ACROSS_VIEWS, comparisonOf, sameAssetAcrossViewpoints } from "../../🔨️modules/⚖️compare/🧮️panes/🟦️.ts";
 import { DEFAULT_VIEWER, addressProblems, compareFromParams, compareToParams, playgroundFromParams, playgroundToParams, viewerFromParams, viewerToParams, type ViewerState } from "../../🔨️modules/🗺️routing/🟦️.ts";
-import { SHEET_ORDER, VIEWPOINT_NAMES, resolveViewpoint, sheetOf, threeViewLayout } from "../../🔨️modules/🔭️viewpoints/🟦️.ts";
+import { SHEET_ORDER, VIEWPOINT_NAMES, resolveViewpoint, sheetOf, threeViewLayout, type ViewpointChoice } from "../../🔨️modules/🔭️viewpoints/🟦️.ts";
 import { ViewpointSelector } from "../../🔨️modules/🔭️viewpoints/🎚️selector/🟦️.tsx";
 import { ThreeViewSheet } from "../../🔨️modules/🔭️viewpoints/🪟️sheet/🟦️.tsx";
 import { Viewer } from "../../🔨️modules/🎛️viewer/🟦️.tsx";
@@ -41,7 +41,7 @@ afterEach(() => {
 
 describe("🎚️ selector", () => {
   function Harness(props: { readonly language: Language; readonly seen: string[] }): ReactElement {
-    const [value, setValue] = useState<"elevation" | "front" | "plan" | "all">("elevation");
+    const [value, setValue] = useState<ViewpointChoice>("elevation");
     return wrap(<ViewpointSelector value={value} language={props.language} onChange={(choice) => { props.seen.push(choice); setValue(choice); }} />, props.language);
   }
 
@@ -149,14 +149,14 @@ describe("📐️ the three-view layout", () => {
 
   it("draws the real walker with one millimetres-per-metre in all three scenes", () => {
     const k = mmPerMetre({ denominator: 50 });
-    const scenes = VIEWPOINTS.map((viewpoint) => figureFrame(walker, pose, { view: "dark-line", viewpoint, scale: { denominator: 50 }, language: "en" }).scene);
+    const scenes = PLANAR_VIEWPOINTS.map((viewpoint) => figureFrame(walker, pose, { view: "dark-line", viewpoint, scale: { denominator: 50 }, language: "en" }).scene);
     expect(scenes.map((scene) => scene.metadata.mmPerMetre)).toEqual([k, k, k]);
-    expect(scenes.map((scene) => scene.metadata.viewpoint)).toEqual([...VIEWPOINTS]);
+    expect(scenes.map((scene) => scene.metadata.viewpoint)).toEqual([...PLANAR_VIEWPOINTS]);
   });
 
   it("projects the three viewpoints of one instant from one evaluated state", () => {
     const state = evaluateState(walker, { kind: "clip", clip: "walk", timeS: 0.4 });
-    const scenes = VIEWPOINTS.map((viewpoint) => sceneOf(state, depictionOptions({ view: "dark-line", viewpoint, scale: { denominator: 100 }, language: "en" })));
+    const scenes = PLANAR_VIEWPOINTS.map((viewpoint) => sceneOf(state, depictionOptions({ view: "dark-line", viewpoint, scale: { denominator: 100 }, language: "en" })));
     expect(new Set(scenes.map((scene) => scene.metadata.timeS)).size).toBe(1);
     expect(new Set(scenes.map((scene) => JSON.stringify(scene.metadata.query))).size).toBe(1);
   });
@@ -205,7 +205,7 @@ describe("🚫️ unavailability is explicit", () => {
   });
 
   it("says why every viewpoint is unavailable at a scale the asset does not draw", () => {
-    for (const viewpoint of VIEWPOINTS) {
+    for (const viewpoint of PLANAR_VIEWPOINTS) {
       const resolution = resolveViewpoint(walker, viewpoint, 500, "de");
       expect(resolution.available).toBe(false);
       if (!resolution.available) {
@@ -257,7 +257,7 @@ describe("🔗️ the address", () => {
 
   it("offers a same-asset comparison across the three viewpoints in one representation", () => {
     const panes = sameAssetAcrossViewpoints("a-one", "forces", { kind: "pose", pose: "stand" });
-    expect(panes.map((pane) => pane.viewpoint)).toEqual([...VIEWPOINTS]);
+    expect(panes.map((pane) => pane.viewpoint)).toEqual([...PLANAR_VIEWPOINTS]);
     expect(new Set(panes.map((pane) => pane.view)).size).toBe(1);
     expect(ACROSS_VIEWS.length).toBeGreaterThan(0);
   });
@@ -272,7 +272,7 @@ describe("🧪️ playground", () => {
   });
 
   it("mirrors a placed figure only in the side elevation", () => {
-    const place = (viewpoint: Viewpoint) => {
+    const place = (viewpoint: PlanarViewpoint) => {
       const clock = new StaffageClock({ fps: 12, playing: false, reducedMotion: true });
       const { container, unmount } = render(<PlacedFigure asset={walker} selection={{ kind: "pose", pose: walker.presentation.defaultPose }} clock={clock} view="dark-line" viewpoint={viewpoint} scale={100} language="en" pxPerMm={3} xPx={50} groundPx={100} mirrored />);
       const transform = container.querySelector<HTMLElement>("[data-placed]")!.style.transform;
@@ -301,7 +301,7 @@ describe("🧩️ custom element", () => {
   };
 
   it("draws the viewpoint named by the attribute", async () => {
-    for (const viewpoint of VIEWPOINTS) {
+    for (const viewpoint of PLANAR_VIEWPOINTS) {
       const element = make({ viewpoint });
       document.body.append(element);
       await flush();
@@ -337,7 +337,7 @@ describe("🧩️ custom element", () => {
 describe("🗃️ caches and file names", () => {
   it("keys scenes by viewpoint, representation, time and scale, and reuses an identical request", () => {
     const state = evaluateState(walker, { kind: "clip", clip: "walk", timeS: 0.2 });
-    const options = (patch: Partial<{ view: "dark-line" | "thermal"; viewpoint: Viewpoint; denominator: number }>) => depictionOptions({ view: patch.view ?? "dark-line", viewpoint: patch.viewpoint ?? "elevation", scale: { denominator: patch.denominator ?? 100 }, language: "en" });
+    const options = (patch: Partial<{ view: "dark-line" | "thermal"; viewpoint: PlanarViewpoint; denominator: number }>) => depictionOptions({ view: patch.view ?? "dark-line", viewpoint: patch.viewpoint ?? "elevation", scale: { denominator: patch.denominator ?? 100 }, language: "en" });
     const base = sceneOf(state, options({}));
     expect(sceneOf(state, options({}))).toBe(base);
     expect(sceneOf(state, options({ viewpoint: "plan" }))).not.toBe(base);
@@ -349,14 +349,14 @@ describe("🗃️ caches and file names", () => {
   });
 
   it("puts the viewpoint into every file name so the three outputs never collide", () => {
-    const names = VIEWPOINTS.flatMap((viewpoint) => (["svg", "pdf", "dxf", "png-sequence"] as const).map((format) => exportFilename(walker, pose, { view: "dark-line", viewpoint, scale: { denominator: 100 }, language: "en" }, format)));
+    const names = PLANAR_VIEWPOINTS.flatMap((viewpoint) => (["svg", "pdf", "dxf", "png-sequence"] as const).map((format) => exportFilename(walker, pose, { view: "dark-line", viewpoint, scale: { denominator: 100 }, language: "en" }, format)));
     expect(new Set(names).size).toBe(names.length);
-    for (const viewpoint of VIEWPOINTS) expect(names.filter((name) => name.includes(`_${viewpoint}_`))).toHaveLength(4);
+    for (const viewpoint of PLANAR_VIEWPOINTS) expect(names.filter((name) => name.includes(`_${viewpoint}_`))).toHaveLength(4);
   });
 
   it("names the viewpoints with the approved terms", () => {
-    expect(VIEWPOINTS.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].en)).toEqual(["Side elevation", "Front elevation", "Plan (top view)"]);
-    expect(VIEWPOINTS.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].de)).toEqual(["Seitenansicht", "Vorderansicht", "Draufsicht"]);
+    expect(PLANAR_VIEWPOINTS.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].en)).toEqual(["Side elevation", "Front elevation", "Plan (top view)"]);
+    expect(PLANAR_VIEWPOINTS.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].de)).toEqual(["Seitenansicht", "Vorderansicht", "Draufsicht"]);
     expect(VIEWPOINT_NAMES.all).toEqual({ en: "Three views", de: "Drei Ansichten" });
   });
 });

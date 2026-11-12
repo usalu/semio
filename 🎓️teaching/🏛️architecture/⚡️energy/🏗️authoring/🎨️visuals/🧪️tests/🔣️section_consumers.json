@@ -1,4 +1,5 @@
 {
+  "language": "de",
   "material": {"fill_opacity": 1, "stroke_width": 0, "stroke_opacity": 0},
   "ventilation": ["❓️need", "⚙️mechanical", "📦️volume", "🪟️natural"],
   "scales": [0.6, 1.0, 1.4],

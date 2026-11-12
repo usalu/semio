@@ -10,6 +10,7 @@
  */
 import type { Language } from "../../🧬️schema/🟦️.ts";
 import type { DrawingScale } from "../🔗️contracts/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🖨️ The four standard drawing scale denominators, smallest scale first. */
 export const SCALE_PRESETS = [500, 200, 100, 50] as const;
@@ -77,7 +78,7 @@ const PREFIXES: Readonly<Record<QuantityUnit, readonly (readonly [number, string
 /** 🔢️ Decimal digits that keep `significant` digits of a magnitude, never negative. */
 export function decimalsFor(magnitude: number, significant: number): number {
   if (magnitude === 0 || !Number.isFinite(magnitude)) return Math.max(0, significant - 1);
-  return Math.max(0, significant - 1 - Math.floor(Math.log10(magnitude)));
+  return Math.max(0, significant - 1 - Math.floor(portable.log10(magnitude)));
 }
 
 /** 🔠️ Fixed-point text with language decimal separator (`.` English, `,` German) and no negative zero. */

@@ -1,0 +1,18 @@
+import { Author } from "../../veg-lib.ts";
+const a = new Author("small-leaved-lime");
+a.loftFromViews("root-flare", "root-plate", { elev: "stem", front: "stem", range: [0, 0.5], n: 4, exp: 2.1, pinch: 1 });
+a.loftFromViews("trunk", "trunk", { elev: "stem", front: "stem", range: [0.5, 2.9], n: 5, exp: 2.1, pinch: 1 });
+a.loftFromViews("ld1", "ld1", { elev: "stem", front: "stem", range: [2.9, 6.2], n: 5, exp: 2.1, pinch: 1 });
+a.loftFromViews("ld2", "ld2", { elev: "wood-ld2", front: "wood-ld2", range: [6.2, 9.6], n: 5, exp: 2.1, pinch: 1 });
+a.loftFromViews("ld3", "ld3", { elev: "wood-ld3", front: "wood-ld3", range: [9.6, 12.6], n: 5, exp: 2.1, pinch: 1 });
+a.loftFromViews("ld4", "ld4", { elev: "wood-ld4", front: "wood-ld4", range: [12.6, 14.0], n: 4, exp: 2.1, pinch: 0.3 });
+const limb = a.meta("wood-lw1a");
+a.limbs(["lw1a", "lw1b", "le1a", "le1b", "lw2a", "le2a", "lw3a", "le3a", "lw4a", "le4a"].map((bone) => ({ bone, meta: a.meta(`wood-${bone}`) })));
+a.limbs([{ bone: "epi-e", meta: a.meta("wood-epi-e"), r0: 0.07, r1: 0.04 }, { bone: "epi-w", meta: a.meta("wood-epi-w"), r0: 0.06, r1: 0.035 }]);
+a.lobeTiers({ twig: 0.05, twigMeta: limb, coreRe: /^(core|top)/ });
+const fillOpts = { elevIds: a.idsIn("elevation", /^leaf/), frontIds: a.idsIn("front", /^leaf/), shrink: 0.8 };
+a.fill("crown-fill-1", "fol-e1", "crown-fill-1", { ...fillOpts, extra: { weights: [{ bone: "fol-e1", weight: 0.5 }, { bone: "fol-e2", weight: 0.5 }] } });
+a.note("The crown is built like the authored drawing: cores, top and the four tiers of lobes (up to eight per tier around the stem). Every lobe is one oriented ellipsoid fitted to its plan outline at the height of its front outline and bound to the tier bone that carries it; a thin twig runs from that bone's origin on the limb to the lobe centre, so lobes at all azimuths hang on a branch and follow sway clips.", "Die Krone ist wie die Zeichnung aufgebaut: Kerne, Spitze und vier Etagen aus Laublappen (bis zu acht je Etage um den Stamm). Jeder Lappen ist ein ausgerichtetes Ellipsoid, an den Umriss der Draufsicht angepasst und in der Höhe seines Front-Umrisses, an den tragenden Etagenknochen gebunden; ein dünner Zweig führt vom Ursprung des Knochens am Ast zur Lappenmitte, damit Lappen in jeder Richtung an einem Ast hängen und Schwankungsclips folgen.");
+a.note("Cores and top are lofts read from the elevation and front outlines; the plan crown fill is one blended blob weighted between the two bones of the east side so it does not detach when they sway differently.", "Kerne und Spitze sind Lofts aus den Umrissen von Ansicht und Front; die Kronenfüllung der Draufsicht ist ein Blob, gewichtet zwischen den beiden Knochen der Ostseite, damit er sich bei unterschiedlichem Schwanken nicht löst.");
+a.note("Trunk and leaders are lofts with sections read from the elevation and front outlines; the lower limbs are tapered capsules whose lateral drift follows the front outline; the upper bones continue the drift of their parent. Epicormic shoots are small capsules with their own leaf lobes.", "Stamm und Stammverlängerungen sind Lofts mit Querschnitten aus den Umrissen von Ansicht und Front; die unteren Äste sind verjüngte Kapseln, deren Seitendrift dem Front-Umriss folgt, die oberen Knochen setzen die Drift ihres Elternknochens fort. Wasserreiser sind kleine Kapseln mit eigenen Laublappen.");
+a.save();

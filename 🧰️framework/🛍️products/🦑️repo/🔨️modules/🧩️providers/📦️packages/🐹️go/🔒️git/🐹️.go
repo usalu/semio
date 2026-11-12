@@ -196,7 +196,7 @@ func GetGitDiffLines(baseCheckpoint, headCheckpoint string, paths []string) (map
 		if strings.HasPrefix(line, "diff --git ") {
 			currentFile = gitDiffNewPath(line)
 			if result[currentFile] == nil {
-				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
+				result[currentFile] = &model.DiffLines{Added: []int{}, Removed: []int{}}
 			}
 		} else if strings.HasPrefix(line, "+++ b/") || strings.HasPrefix(line, "+++ \"b/") {
 			currentFile = strings.TrimPrefix(gitPathField(strings.TrimSuffix(line[len("+++ "):], "\t")), "b/")

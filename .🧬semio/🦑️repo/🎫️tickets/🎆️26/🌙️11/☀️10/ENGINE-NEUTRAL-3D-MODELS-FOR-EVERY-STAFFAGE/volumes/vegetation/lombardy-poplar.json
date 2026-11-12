@@ -1,0 +1,1991 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "root-flare",
+    "kind": "loft",
+    "bone": "root-plate",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.28,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0,
+       -0.00997,
+       0
+      ],
+      "rx": 0.61989,
+      "ry": 0.60938,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1,
+       -0.0011,
+       0
+      ],
+      "rx": 0.51251,
+      "ry": 0.36695,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2,
+       -0.00014,
+       0
+      ],
+      "rx": 0.40502,
+      "ry": 0.30859,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3,
+       0,
+       0
+      ],
+      "rx": 0.28555,
+      "ry": 0.28555,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "trunk-1",
+    "kind": "loft",
+    "bone": "trunk-1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.28,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0
+      ],
+      "rx": 0.29998,
+      "ry": 0.28,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.2,
+       0,
+       0
+      ],
+      "rx": 0.29192,
+      "ry": 0.26915,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       2.4,
+       0,
+       0
+      ],
+      "rx": 0.28386,
+      "ry": 0.25507,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       3.6,
+       0,
+       0
+      ],
+      "rx": 0.2758,
+      "ry": 0.2404,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       4.8,
+       0,
+       0
+      ],
+      "rx": 0.26774,
+      "ry": 0.22618,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       6,
+       0,
+       0
+      ],
+      "rx": 0.215,
+      "ry": 0.215,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "trunk-2",
+    "kind": "loft",
+    "bone": "trunk-2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.28,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0.00001,
+       0.00077,
+       0
+      ],
+      "rx": 0.25952,
+      "ry": 0.21462,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       1.20018,
+       -0.00034,
+       0
+      ],
+      "rx": 0.24743,
+      "ry": 0.20371,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       2.40034,
+       -0.00145,
+       0
+      ],
+      "rx": 0.23533,
+      "ry": 0.1928,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       3.6005,
+       -0.00256,
+       0
+      ],
+      "rx": 0.22324,
+      "ry": 0.18189,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       4.80067,
+       -0.00366,
+       0
+      ],
+      "rx": 0.21115,
+      "ry": 0.17098,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     },
+     {
+      "at": [
+       5.99947,
+       -0.08266,
+       0
+      ],
+      "rx": 0.08218,
+      "ry": 0.08218,
+      "exponent": 2.1,
+      "rotation": [
+       0.70708,
+       -0.00617,
+       0.70708,
+       0.00617
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "trunk-3",
+    "kind": "loft",
+    "bone": "trunk-3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.28,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0.00091,
+       -0.0047,
+       0
+      ],
+      "rx": 0.19922,
+      "ry": 0.15959,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       1.20091,
+       -0.0047,
+       0
+      ],
+      "rx": 0.18914,
+      "ry": 0.14967,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       2.40091,
+       -0.0047,
+       0
+      ],
+      "rx": 0.17906,
+      "ry": 0.13975,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       3.60091,
+       -0.0047,
+       0
+      ],
+      "rx": 0.16899,
+      "ry": 0.12983,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       4.80091,
+       -0.0047,
+       0
+      ],
+      "rx": 0.15891,
+      "ry": 0.11992,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       6.00091,
+       -0.0047,
+       0
+      ],
+      "rx": 0.11,
+      "ry": 0.11,
+      "exponent": 2.1,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "trunk-4",
+    "kind": "loft",
+    "bone": "trunk-4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "stem-bark",
+    "sections": [
+     {
+      "at": [
+       0.00088,
+       -0.00428,
+       0
+      ],
+      "rx": 0.0444,
+      "ry": 0.03279,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       1.26093,
+       -0.00336,
+       0
+      ],
+      "rx": 0.12986,
+      "ry": 0.09144,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       2.52099,
+       -0.00245,
+       0
+      ],
+      "rx": 0.11173,
+      "ry": 0.07358,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       3.78104,
+       -0.00153,
+       0
+      ],
+      "rx": 0.09359,
+      "ry": 0.05572,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       5.0411,
+       -0.00062,
+       0
+      ],
+      "rx": 0.07545,
+      "ry": 0.03786,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       6.30116,
+       0.00024,
+       0
+      ],
+      "rx": 0.00599,
+      "ry": 0.00599,
+      "exponent": 2.1,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "br-l1",
+    "kind": "capsule",
+    "bone": "br-l1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3.4,
+     0,
+     0.92475
+    ],
+    "r0": 0.08458,
+    "r1": 0.05075
+   },
+   {
+    "id": "br-r1",
+    "kind": "capsule",
+    "bone": "br-r1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3.4,
+     0,
+     -0.92545
+    ],
+    "r0": 0.08458,
+    "r1": 0.05075
+   },
+   {
+    "id": "br-l2",
+    "kind": "capsule",
+    "bone": "br-l2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3.4,
+     0,
+     0.92473
+    ],
+    "r0": 0.08461,
+    "r1": 0.05077
+   },
+   {
+    "id": "br-r2",
+    "kind": "capsule",
+    "bone": "br-r2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3.4,
+     0,
+     -0.92545
+    ],
+    "r0": 0.08458,
+    "r1": 0.05075
+   },
+   {
+    "id": "br-l3",
+    "kind": "capsule",
+    "bone": "br-l3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3.2,
+     0,
+     0.93035
+    ],
+    "r0": 0.07525,
+    "r1": 0.04515
+   },
+   {
+    "id": "br-r3",
+    "kind": "capsule",
+    "bone": "br-r3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3.2,
+     0,
+     -0.93116
+    ],
+    "r0": 0.07507,
+    "r1": 0.04504
+   },
+   {
+    "id": "br-l4",
+    "kind": "capsule",
+    "bone": "br-l4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3,
+     0,
+     0.93606
+    ],
+    "r0": 0.06574,
+    "r1": 0.03944
+   },
+   {
+    "id": "br-r4",
+    "kind": "capsule",
+    "bone": "br-r4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     3,
+     0,
+     -0.93674
+    ],
+    "r0": 0.06577,
+    "r1": 0.03946
+   },
+   {
+    "id": "lobe-l1",
+    "kind": "ellipsoid",
+    "bone": "fol-l1",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.41525,
+     3.2705,
+     1.34245
+    ],
+    "transform": {
+     "rotation": [
+      0.63545,
+      0.25715,
+      -0.558,
+      0.46768
+     ],
+     "translation": [
+      1.19372,
+      -0.1584,
+      -0.06841
+     ]
+    }
+   },
+   {
+    "id": "lobe-l1-twig",
+    "kind": "capsule",
+    "bone": "fol-l1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.92475
+    ],
+    "p1": [
+     0.32742,
+     0.30222,
+     -0.06841
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-r1",
+    "kind": "ellipsoid",
+    "bone": "fol-r1",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.44437,
+     3.26107,
+     1.29665
+    ],
+    "transform": {
+     "rotation": [
+      -0.23551,
+      -0.58162,
+      -0.50003,
+      0.59684
+     ],
+     "translation": [
+      1.38544,
+      0.17913,
+      -0.0515
+     ]
+    }
+   },
+   {
+    "id": "lobe-r1-twig",
+    "kind": "capsule",
+    "bone": "fol-r1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.92545
+    ],
+    "p1": [
+     0.52163,
+     -0.28017,
+     -0.0515
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ll1",
+    "kind": "ellipsoid",
+    "bone": "fol-l1",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.46634,
+     3.15533,
+     1.23536
+    ],
+    "transform": {
+     "rotation": [
+      0.63884,
+      0.25853,
+      -0.55534,
+      0.46545
+     ],
+     "translation": [
+      1.32427,
+      -0.71975,
+      0.59378
+     ]
+    }
+   },
+   {
+    "id": "lobe-ll1-twig",
+    "kind": "capsule",
+    "bone": "fol-l1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.92475
+    ],
+    "p1": [
+     0.48847,
+     -0.27535,
+     0.59378
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rl1",
+    "kind": "ellipsoid",
+    "bone": "fol-r1",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.46869,
+     3.13594,
+     1.23348
+    ],
+    "transform": {
+     "rotation": [
+      -0.25832,
+      -0.63796,
+      -0.46588,
+      0.55608
+     ],
+     "translation": [
+      0.77122,
+      0.35093,
+      -0.69419
+     ]
+    }
+   },
+   {
+    "id": "lobe-rl1-twig",
+    "kind": "capsule",
+    "bone": "fol-r1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.92545
+    ],
+    "p1": [
+     -0.05944,
+     -0.09074,
+     -0.69419
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ld1",
+    "kind": "ellipsoid",
+    "bone": "fol-l1",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.22102,
+     2.99894,
+     1.11596
+    ],
+    "transform": {
+     "rotation": [
+      0.59236,
+      0.23972,
+      -0.58951,
+      0.49409
+     ],
+     "translation": [
+      1.53611,
+      -1.09207,
+      -0.44126
+     ]
+    }
+   },
+   {
+    "id": "lobe-ld1-twig",
+    "kind": "capsule",
+    "bone": "fol-l1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.92475
+    ],
+    "p1": [
+     0.74174,
+     -0.66969,
+     -0.44126
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rd1",
+    "kind": "ellipsoid",
+    "bone": "fol-r1",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.23255,
+     3.00499,
+     1.10497
+    ],
+    "transform": {
+     "rotation": [
+      -0.26511,
+      -0.65472,
+      -0.45458,
+      0.54259
+     ],
+     "translation": [
+      0.42582,
+      0.36017,
+      0.40755
+     ]
+    }
+   },
+   {
+    "id": "lobe-rd1-twig",
+    "kind": "capsule",
+    "bone": "fol-r1",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.92545
+    ],
+    "p1": [
+     -0.37015,
+     -0.06306,
+     0.40755
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-l2",
+    "kind": "ellipsoid",
+    "bone": "fol-l2",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.42329,
+     3.16868,
+     1.33634
+    ],
+    "transform": {
+     "rotation": [
+      0.61882,
+      0.24704,
+      -0.56923,
+      0.48167
+     ],
+     "translation": [
+      1.23931,
+      -0.19628,
+      0.01586
+     ]
+    }
+   },
+   {
+    "id": "lobe-l2-twig",
+    "kind": "capsule",
+    "bone": "fol-l2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.92473
+    ],
+    "p1": [
+     0.39998,
+     0.25,
+     0.01586
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-r2",
+    "kind": "ellipsoid",
+    "bone": "fol-r2",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.42671,
+     3.18731,
+     1.31337
+    ],
+    "transform": {
+     "rotation": [
+      0.24665,
+      0.61353,
+      -0.48319,
+      0.57383
+     ],
+     "translation": [
+      1.26029,
+      0.21835,
+      -0.02831
+     ]
+    }
+   },
+   {
+    "id": "lobe-r2-twig",
+    "kind": "capsule",
+    "bone": "fol-r2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.92545
+    ],
+    "p1": [
+     0.41602,
+     -0.23055,
+     -0.02831
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ll2",
+    "kind": "ellipsoid",
+    "bone": "fol-l2",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.47835,
+     3.07582,
+     1.22372
+    ],
+    "transform": {
+     "rotation": [
+      0.65154,
+      0.26011,
+      -0.544,
+      0.46032
+     ],
+     "translation": [
+      1.38186,
+      -0.7931,
+      0.58011
+     ]
+    }
+   },
+   {
+    "id": "lobe-ll2-twig",
+    "kind": "capsule",
+    "bone": "fol-l2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.92473
+    ],
+    "p1": [
+     0.56712,
+     -0.3599,
+     0.58011
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rl2",
+    "kind": "ellipsoid",
+    "bone": "fol-r2",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.47471,
+     3.07806,
+     1.22686
+    ],
+    "transform": {
+     "rotation": [
+      0.25182,
+      0.62637,
+      -0.47518,
+      0.56432
+     ],
+     "translation": [
+      0.64269,
+      0.32841,
+      -0.5884
+     ]
+    }
+   },
+   {
+    "id": "lobe-rl2-twig",
+    "kind": "capsule",
+    "bone": "fol-r2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.92545
+    ],
+    "p1": [
+     -0.17264,
+     -0.10511,
+     -0.5884
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ld2",
+    "kind": "ellipsoid",
+    "bone": "fol-l2",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.2424,
+     2.92576,
+     1.09618
+    ],
+    "transform": {
+     "rotation": [
+      0.63596,
+      0.25389,
+      -0.55632,
+      0.47075
+     ],
+     "translation": [
+      1.61131,
+      -1.11331,
+      -0.44732
+     ]
+    }
+   },
+   {
+    "id": "lobe-ld2-twig",
+    "kind": "capsule",
+    "bone": "fol-l2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.92473
+    ],
+    "p1": [
+     0.83632,
+     -0.70124,
+     -0.44732
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rd2",
+    "kind": "ellipsoid",
+    "bone": "fol-r2",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.22238,
+     2.94824,
+     1.11372
+    ],
+    "transform": {
+     "rotation": [
+      -0.24968,
+      -0.62106,
+      -0.47853,
+      0.5683
+     ],
+     "translation": [
+      0.30867,
+      0.39986,
+      0.40491
+     ]
+    }
+   },
+   {
+    "id": "lobe-rd2-twig",
+    "kind": "capsule",
+    "bone": "fol-r2",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.92545
+    ],
+    "p1": [
+     -0.47227,
+     -0.01537,
+     0.40491
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-l3",
+    "kind": "ellipsoid",
+    "bone": "fol-l3",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.41735,
+     3.2282,
+     1.34142
+    ],
+    "transform": {
+     "rotation": [
+      0.54328,
+      0.23008,
+      -0.60892,
+      0.53021
+     ],
+     "translation": [
+      0.87986,
+      -0.08152,
+      0.01022
+     ]
+    }
+   },
+   {
+    "id": "lobe-l3-twig",
+    "kind": "capsule",
+    "bone": "fol-l3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.93035
+    ],
+    "p1": [
+     0.00942,
+     0.34303,
+     0.01022
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-r3",
+    "kind": "ellipsoid",
+    "bone": "fol-r3",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.4149,
+     3.10476,
+     1.3232
+    ],
+    "transform": {
+     "rotation": [
+      0.23774,
+      0.56274,
+      -0.50993,
+      0.60562
+     ],
+     "translation": [
+      0.74641,
+      0.14443,
+      -0.00369
+     ]
+    }
+   },
+   {
+    "id": "lobe-r3-twig",
+    "kind": "capsule",
+    "bone": "fol-r3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.93116
+    ],
+    "p1": [
+     -0.0835,
+     -0.27843,
+     -0.00369
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ll3",
+    "kind": "ellipsoid",
+    "bone": "fol-l3",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.48071,
+     3.12354,
+     1.22325
+    ],
+    "transform": {
+     "rotation": [
+      0.63472,
+      0.26881,
+      0.54638,
+      -0.47575
+     ],
+     "translation": [
+      1.13938,
+      -0.68675,
+      0.55309
+     ]
+    }
+   },
+   {
+    "id": "lobe-ll3-twig",
+    "kind": "capsule",
+    "bone": "fol-l3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.93035
+    ],
+    "p1": [
+     0.29715,
+     -0.27597,
+     0.55309
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rl3",
+    "kind": "ellipsoid",
+    "bone": "fol-r3",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.47958,
+     3.03727,
+     1.22535
+    ],
+    "transform": {
+     "rotation": [
+      0.27021,
+      0.63958,
+      -0.46353,
+      0.55051
+     ],
+     "translation": [
+      0.22478,
+      0.25618,
+      -0.5737
+     ]
+    }
+   },
+   {
+    "id": "lobe-rl3-twig",
+    "kind": "capsule",
+    "bone": "fol-r3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.93116
+    ],
+    "p1": [
+     -0.58709,
+     -0.15749,
+     -0.5737
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ld3",
+    "kind": "ellipsoid",
+    "bone": "fol-l3",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.52,
+    "region": "leaf-crown",
+    "radii": [
+     1.23076,
+     2.95145,
+     1.10563
+    ],
+    "transform": {
+     "rotation": [
+      0.63493,
+      0.26889,
+      -0.54622,
+      0.47561
+     ],
+     "translation": [
+      1.35118,
+      -1.03324,
+      -0.48592
+     ]
+    }
+   },
+   {
+    "id": "lobe-ld3-twig",
+    "kind": "capsule",
+    "bone": "fol-l3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.93035
+    ],
+    "p1": [
+     0.55536,
+     -0.64509,
+     -0.48592
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rd3",
+    "kind": "ellipsoid",
+    "bone": "fol-r3",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.56,
+    "region": "leaf-crown",
+    "radii": [
+     1.23591,
+     2.8431,
+     1.10319
+    ],
+    "transform": {
+     "rotation": [
+      0.26998,
+      0.63905,
+      -0.46389,
+      0.55094
+     ],
+     "translation": [
+      -0.17671,
+      0.32634,
+      0.4732
+     ]
+    }
+   },
+   {
+    "id": "lobe-rd3-twig",
+    "kind": "capsule",
+    "bone": "fol-r3",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.93116
+    ],
+    "p1": [
+     -0.93668,
+     -0.06088,
+     0.4732
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-l4",
+    "kind": "ellipsoid",
+    "bone": "fol-l4",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.54,
+    "region": "leaf-crown",
+    "radii": [
+     1.4235,
+     3.07862,
+     1.33272
+    ],
+    "transform": {
+     "rotation": [
+      0.61588,
+      0.2708,
+      -0.55183,
+      0.49279
+     ],
+     "translation": [
+      -0.29136,
+      0.4258,
+      0.0163
+     ]
+    }
+   },
+   {
+    "id": "lobe-l4-twig",
+    "kind": "capsule",
+    "bone": "fol-l4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.93606
+    ],
+    "p1": [
+     -1.13179,
+     0.80881,
+     0.0163
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-r4",
+    "kind": "ellipsoid",
+    "bone": "fol-r4",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.58,
+    "region": "leaf-crown",
+    "radii": [
+     1.40198,
+     3.12369,
+     1.33919
+    ],
+    "transform": {
+     "rotation": [
+      0.2755,
+      0.62757,
+      -0.48535,
+      0.54286
+     ],
+     "translation": [
+      -0.49156,
+      -0.5454,
+      0.02694
+     ]
+    }
+   },
+   {
+    "id": "lobe-r4-twig",
+    "kind": "capsule",
+    "bone": "fol-r4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.93674
+    ],
+    "p1": [
+     -1.34429,
+     -0.93401,
+     0.02694
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ll4",
+    "kind": "ellipsoid",
+    "bone": "fol-l4",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.54,
+    "region": "leaf-crown",
+    "radii": [
+     1.47764,
+     2.9732,
+     1.22533
+    ],
+    "transform": {
+     "rotation": [
+      0.63949,
+      0.28118,
+      0.53371,
+      -0.4766
+     ],
+     "translation": [
+      -0.0513,
+      -0.13589,
+      0.58603
+     ]
+    }
+   },
+   {
+    "id": "lobe-ll4-twig",
+    "kind": "capsule",
+    "bone": "fol-l4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.93606
+    ],
+    "p1": [
+     -0.86295,
+     0.234,
+     0.58603
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rl4",
+    "kind": "ellipsoid",
+    "bone": "fol-r4",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.58,
+    "region": "leaf-crown",
+    "radii": [
+     1.48412,
+     3.0243,
+     1.21998
+    ],
+    "transform": {
+     "rotation": [
+      0.28249,
+      0.6435,
+      -0.47417,
+      0.53035
+     ],
+     "translation": [
+      -1.04589,
+      -0.38538,
+      -0.60543
+     ]
+    }
+   },
+   {
+    "id": "lobe-rl4-twig",
+    "kind": "capsule",
+    "bone": "fol-r4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.93674
+    ],
+    "p1": [
+     -1.87149,
+     -0.76163,
+     -0.60543
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-ld4",
+    "kind": "ellipsoid",
+    "bone": "fol-l4",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.54,
+    "region": "leaf-crown",
+    "radii": [
+     1.23095,
+     2.78996,
+     1.10666
+    ],
+    "transform": {
+     "rotation": [
+      0.62734,
+      0.27584,
+      0.5432,
+      -0.48507
+     ],
+     "translation": [
+      0.18364,
+      -0.44232,
+      -0.47431
+     ]
+    }
+   },
+   {
+    "id": "lobe-ld4-twig",
+    "kind": "capsule",
+    "bone": "fol-l4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     0.93606
+    ],
+    "p1": [
+     -0.57798,
+     -0.09522,
+     -0.47431
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "lobe-rd4",
+    "kind": "ellipsoid",
+    "bone": "fol-r4",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.58,
+    "region": "leaf-crown",
+    "radii": [
+     1.21607,
+     2.86641,
+     1.11779
+    ],
+    "transform": {
+     "rotation": [
+      0.24252,
+      0.55246,
+      -0.53153,
+      0.59451
+     ],
+     "translation": [
+      -1.42307,
+      -0.28042,
+      0.41455
+     ]
+    }
+   },
+   {
+    "id": "lobe-rd4-twig",
+    "kind": "capsule",
+    "bone": "fol-r4",
+    "material": "poplar-bark",
+    "role": "body",
+    "tone": 0.3,
+    "region": "branch-bark",
+    "p0": [
+     0,
+     0,
+     -0.93674
+    ],
+    "p1": [
+     -2.20557,
+     -0.63702,
+     0.41455
+    ],
+    "r0": 0.04,
+    "r1": 0.024
+   },
+   {
+    "id": "crown-top",
+    "kind": "loft",
+    "bone": "fol-top",
+    "material": "poplar-leaf",
+    "role": "body",
+    "tone": 0.6,
+    "region": "leaf-crown",
+    "sections": [
+     {
+      "at": [
+       -0.46856,
+       0.24374,
+       0.00487
+      ],
+      "rx": 0.06745,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       0.26888,
+       0.02417,
+       -0.01266
+      ],
+      "rx": 0.75482,
+      "ry": 0.42415,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       1.00804,
+       0.0019,
+       0.03159
+      ],
+      "rx": 0.99427,
+      "ry": 0.75857,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       1.74726,
+       -0.0126,
+       -0.01252
+      ],
+      "rx": 1.05966,
+      "ry": 1.03206,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       2.48667,
+       -0.00625,
+       0.00817
+      ],
+      "rx": 1.03667,
+      "ry": 0.95583,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       3.22605,
+       -0.0039,
+       0.00808
+      ],
+      "rx": 1.02596,
+      "ry": 0.84736,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       3.96551,
+       0.00874,
+       -0.01614
+      ],
+      "rx": 0.76979,
+      "ry": 0.80608,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     },
+     {
+      "at": [
+       4.70273,
+       -0.2359,
+       -0.06852
+      ],
+      "rx": 0.13378,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       0.7071,
+       -0.00309,
+       0.7071,
+       0.00309
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The fastigiate crown is the authored set of tall foliage lobes: for each of the eight branch bones up to six lobes arranged around the branch, each one an oriented ellipsoid fitted to its plan outline and as tall as its front outline, bound to the foliage bone of its branch with a thin twig from the bone origin; the leader top is a loft.",
+    "de": "Die Säulenkrone ist der gezeichnete Satz hoher Laublappen: je Astknochen bis zu sechs Lappen rund um den Ast, jeder ein ausgerichtetes Ellipsoid, an den Umriss der Draufsicht angepasst und so hoch wie sein Front-Umriss, am Laubknochen des Asts mit einem dünnen Zweig ab dem Knochenursprung gebunden; die Wipfelspitze ist ein Loft."
+   },
+   {
+    "en": "The trunk is four lofts (one per bone, 6 m each) read from the elevation and front outlines; the branches are steeply rising tapered capsules with the lateral drift of the front view.",
+    "de": "Der Stamm besteht aus vier Lofts (je Knochen 6 m) nach den Umrissen von Ansicht und Front; die Äste sind steil aufsteigende verjüngte Kapseln mit der Seitendrift der Front."
+   }
+  ]
+ }
+}

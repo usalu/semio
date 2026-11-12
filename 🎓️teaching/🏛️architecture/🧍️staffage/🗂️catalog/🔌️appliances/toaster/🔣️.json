@@ -1987,6 +1987,429 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "casing",
+          "kind": "loft",
+          "bone": "base",
+          "material": "chrome-steel",
+          "role": "body",
+          "tone": 0.82,
+          "region": "casing",
+          "sections": [
+            {
+              "at": [0, 0.012, 0],
+              "rx": 0.078,
+              "ry": 0.138,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.0125, 0],
+              "rx": 0.0806,
+              "ry": 0.14143,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.014, 0],
+              "rx": 0.0829,
+              "ry": 0.14463,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.0165, 0],
+              "rx": 0.08454,
+              "ry": 0.14737,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.0195, 0],
+              "rx": 0.085,
+              "ry": 0.14912,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.024, 0],
+              "rx": 0.085,
+              "ry": 0.15,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.15, 0],
+              "rx": 0.085,
+              "ry": 0.15,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.1545, 0],
+              "rx": 0.085,
+              "ry": 0.14975,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.1595, 0],
+              "rx": 0.085,
+              "ry": 0.14886,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.1655, 0],
+              "rx": 0.085,
+              "ry": 0.14687,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.171, 0],
+              "rx": 0.08442,
+              "ry": 0.144,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.177, 0],
+              "rx": 0.08205,
+              "ry": 0.13933,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.1815, 0],
+              "rx": 0.07861,
+              "ry": 0.13414,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.185, 0],
+              "rx": 0.07409,
+              "ry": 0.12802,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.1872, 0],
+              "rx": 0.06888,
+              "ry": 0.12135,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.188, 0],
+              "rx": 0.063,
+              "ry": 0.114,
+              "exponent": 9,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "top-plate",
+          "kind": "loft",
+          "bone": "base",
+          "material": "mica-steel",
+          "role": "body",
+          "tone": 0.55,
+          "region": "top-plate",
+          "sections": [
+            {
+              "at": [0, 0.172, 0],
+              "rx": 0.071,
+              "ry": 0.128,
+              "exponent": 12,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0, 0.1885, 0],
+              "rx": 0.057,
+              "ry": 0.114,
+              "exponent": 12,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "slot-1",
+          "kind": "extrude",
+          "bone": "base",
+          "material": "mica-steel",
+          "role": "body",
+          "tone": 0.12,
+          "region": "top-plate",
+          "profile": [
+            [0.0385, -0.06],
+            [0.0408, -0.05954],
+            [0.04274, -0.05824],
+            [0.04404, -0.0563],
+            [0.0445, -0.054],
+            [0.0445, 0.054],
+            [0.04404, 0.0563],
+            [0.04274, 0.05824],
+            [0.0408, 0.05954],
+            [0.0385, 0.06],
+            [0.0215, 0.06],
+            [0.0192, 0.05954],
+            [0.01726, 0.05824],
+            [0.01596, 0.0563],
+            [0.0155, 0.054],
+            [0.0155, -0.054],
+            [0.01596, -0.0563],
+            [0.01726, -0.05824],
+            [0.0192, -0.05954],
+            [0.0215, -0.06]
+          ],
+          "plane": "zx",
+          "from": 0.1888,
+          "to": 0.1892
+        },
+        {
+          "id": "slot-2",
+          "kind": "extrude",
+          "bone": "base",
+          "material": "mica-steel",
+          "role": "body",
+          "tone": 0.12,
+          "region": "top-plate",
+          "profile": [
+            [-0.0215, -0.06],
+            [-0.0192, -0.05954],
+            [-0.01726, -0.05824],
+            [-0.01596, -0.0563],
+            [-0.0155, -0.054],
+            [-0.0155, 0.054],
+            [-0.01596, 0.0563],
+            [-0.01726, 0.05824],
+            [-0.0192, 0.05954],
+            [-0.0215, 0.06],
+            [-0.0385, 0.06],
+            [-0.0408, 0.05954],
+            [-0.04274, 0.05824],
+            [-0.04404, 0.0563],
+            [-0.0445, 0.054],
+            [-0.0445, -0.054],
+            [-0.04404, -0.0563],
+            [-0.04274, -0.05824],
+            [-0.0408, -0.05954],
+            [-0.0385, -0.06]
+          ],
+          "plane": "zx",
+          "from": 0.1888,
+          "to": 0.1892
+        },
+        {
+          "id": "slice-rear",
+          "kind": "extrude",
+          "bone": "slices",
+          "material": "bread-crust",
+          "role": "body",
+          "tone": 0.7,
+          "region": "bread",
+          "profile": [
+            [-0.049, 0.085],
+            [0.049, 0.085],
+            [0.049, 0.168],
+            [0.05303, 0.17105],
+            [0.05549, 0.1757],
+            [0.05607, 0.18125],
+            [0.05444, 0.18696],
+            [0.05031, 0.19212],
+            [0.04335, 0.196],
+            [0.03274, 0.1985],
+            [0.01752, 0.2],
+            [0.0, 0.2005],
+            [-0.01752, 0.2],
+            [-0.03274, 0.1985],
+            [-0.04335, 0.196],
+            [-0.05031, 0.19212],
+            [-0.05444, 0.18696],
+            [-0.05607, 0.18125],
+            [-0.05549, 0.1757],
+            [-0.05303, 0.17105],
+            [-0.049, 0.168]
+          ],
+          "plane": "xy",
+          "from": 0.0235,
+          "to": 0.0365
+        },
+        {
+          "id": "slice-front",
+          "kind": "extrude",
+          "bone": "slices",
+          "material": "bread-crust",
+          "role": "body",
+          "tone": 0.78,
+          "region": "bread",
+          "profile": [
+            [-0.052, 0.085],
+            [0.052, 0.085],
+            [0.052, 0.168],
+            [0.05628, 0.17105],
+            [0.05889, 0.1757],
+            [0.0595, 0.18125],
+            [0.05778, 0.18696],
+            [0.05339, 0.19212],
+            [0.046, 0.196],
+            [0.03474, 0.1985],
+            [0.01859, 0.2],
+            [0.0, 0.2005],
+            [-0.01859, 0.2],
+            [-0.03474, 0.1985],
+            [-0.046, 0.196],
+            [-0.05339, 0.19212],
+            [-0.05778, 0.18696],
+            [-0.0595, 0.18125],
+            [-0.05889, 0.1757],
+            [-0.05628, 0.17105],
+            [-0.052, 0.168]
+          ],
+          "plane": "xy",
+          "from": -0.0365,
+          "to": -0.0235
+        },
+        {
+          "id": "foot-l",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "rubber-foot",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "profile": [[0, 0.021], [0.0075, 0.025], [0.012, 0.024]],
+          "axis": [0, 1, 0],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [-0.1, 0, 0.06]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.2, 0, 0]
+          }
+        },
+        {
+          "id": "foot-r",
+          "kind": "revolve",
+          "bone": "base",
+          "material": "rubber-foot",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "profile": [[0, 0.021], [0.0075, 0.025], [0.012, 0.024]],
+          "axis": [0, 1, 0],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [-0.1, 0, -0.06]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.2, 0, 0]
+          }
+        },
+        {
+          "id": "lever-track",
+          "kind": "box",
+          "bone": "base",
+          "material": "chrome-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "casing",
+          "maxDenominator": 100,
+          "size": [0.012, 0.11, 0.0016],
+          "cornerRadius": 0.0006,
+          "transform": {
+            "translation": [0.1, 0.107, -0.0852]
+          }
+        },
+        {
+          "id": "lever",
+          "kind": "box",
+          "bone": "lever",
+          "material": "pp-black",
+          "role": "body",
+          "tone": 0.2,
+          "region": "control",
+          "maxDenominator": 100,
+          "size": [0.03, 0.024, 0.004],
+          "cornerRadius": 0.0019,
+          "transform": {
+            "translation": [0, 0, -0.0865]
+          }
+        },
+        {
+          "id": "cancel-button",
+          "kind": "box",
+          "bone": "base",
+          "material": "pp-black",
+          "role": "body",
+          "tone": 0.2,
+          "region": "control",
+          "maxDenominator": 50,
+          "size": [0.024, 0.014, 0.003],
+          "cornerRadius": 0.0014,
+          "transform": {
+            "translation": [-0.028, 0.127, -0.0865]
+          }
+        },
+        {
+          "id": "dial",
+          "kind": "revolve",
+          "bone": "dial",
+          "material": "pp-black",
+          "role": "body",
+          "tone": 0.25,
+          "region": "control",
+          "maxDenominator": 100,
+          "profile": [[-0.085, 0.015], [-0.0865, 0.015], [-0.0875, 0.0138], [-0.088, 0.011]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0]
+        },
+        {
+          "id": "dial-pointer",
+          "kind": "box",
+          "bone": "dial",
+          "material": "pp-black",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "control",
+          "maxDenominator": 50,
+          "size": [0.002, 0.012, 0.0012],
+          "transform": {
+            "translation": [0, 0.006, -0.0874]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The chrome casing is one 16-section superelliptic loft along the height; its radii follow the elevation shoulder (36 mm) and the front shoulder (22 mm) and its exponent 9 reproduces the 22 mm plan corner radius.",
+          "de": "Das Chromgehäuse ist ein Loft aus 16 superelliptischen Schnitten entlang der Höhe; die Radien folgen der Schulter der Seitenansicht (36 mm) und der Vorderansicht (22 mm), der Exponent 9 bildet den 22-mm-Eckradius des Grundrisses nach."
+        },
+        {
+          "en": "The two slices are extrusions of their dome outline across the 13 mm slot width, bound to the carriage bone so they lift with every pose; slot-1 and slot-2 are dark 0.4 mm plates on the top plate, the cavities are not cut.",
+          "de": "Die beiden Brotscheiben sind Extrusionen ihrer Kuppelkontur über die 13 mm Schlitzbreite und am Schlittenknochen befestigt, sodass sie in jeder Pose mitfahren; slot-1 und slot-2 sind dunkle 0,4 mm dicke Platten auf der Deckplatte, die Hohlräume werden nicht geschnitten."
+        },
+        {
+          "en": "Lever, lever track, cancel button and dial sit on the right (-z) side face; the front and plan drawings do not show them, so they stand at most 3 mm proud to keep the depth at 0.173 m against 0.17 m. Four rubber feet are two solids repeated along x.",
+          "de": "Hebel, Hebelschiene, Abbruchtaste und Drehknopf sitzen auf der rechten Seitenfläche (-z); Vorderansicht und Grundriss zeigen sie nicht, daher stehen sie höchstens 3 mm vor und halten die Tiefe bei 0,173 m gegenüber 0,17 m. Vier Gummifüße sind zwei Körper, entlang x wiederholt."
+        },
+        {
+          "en": "Hairline details without material (crumb edge, seam, tray slot, highlight, dial pointer line) are not modelled except the pointer, which is a 1.2 mm ridge.",
+          "de": "Haarliniendetails ohne Material (Krümelkante, Naht, Schalenschlitz, Glanzlicht) werden nicht modelliert, der Zeiger ist ein 1,2 mm hoher Steg."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "toasting",
       "defaultClip": "toast-cycle",
@@ -2000,7 +2423,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

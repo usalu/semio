@@ -6,7 +6,7 @@
 #
 # Summary: Windows-native bootstrap for the compose monorepo. Invoke from a fresh clone with Windows PowerShell 5.1 or PowerShell 7:
 # `powershell -NoProfile -ExecutionPolicy Bypass -File "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🔵️.ps1" setup`
-# `repo ./📜️script.ts setup native rust` installs only Rust and its C++ linker.
+# `repo ./📜️script.ts setup native rust` installs only Rust and its C++ linker; `repo ./📜️script.ts setup native node` (`… 🔵️.ps1 node`) installs only the pinned Node.js.
 # Saved as UTF-8 with BOM: Windows PowerShell 5.1
 # decodes a BOM-less script with the ANSI code page and would turn every emoji path literal below into a different path.
 #
@@ -15,7 +15,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("setup", "rust")]
+    [ValidateSet("setup", "rust", "node")]
     [string]$Command = "setup",
     [switch]$SkipMachineInstall,
     [switch]$SkipGlobalCliInstall,
@@ -444,7 +444,7 @@ function Install-RustProfile {
     Ensure-RustToolchain -repoRoot $repoRoot
 }
 
-function Install-PinnedToolchain {
+function Install-PinnedNode {
     param([string]$RepoRoot)
 
     $manifest = Get-Content -LiteralPath (Join-Path $RepoRoot "package.json") -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -469,6 +469,16 @@ function Install-PinnedToolchain {
         $nodeFound = Get-FirstCommandPath @("node.exe")
         if ($nodeFound -and (Get-InstalledVersion "node.exe") -eq $node.version) { $paths += (Split-Path -Parent $nodeFound) }
     }
+
+    return $paths
+}
+
+function Install-PinnedToolchain {
+    param([string]$RepoRoot)
+
+    $paths = @()
+
+    $paths += Install-PinnedNode -RepoRoot $RepoRoot
 
     $uv = Get-PinnedAsset -Tool "uv"
     $installedUv = Get-InstalledVersion "uv.exe"
@@ -582,6 +592,14 @@ Set-Location $repoRoot
 $script:PinsFile = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🔩️native\🥾️bootstrap\🧬️schema\🔣️.json"
 $script:LauncherInstall = Join-Path $repoRoot "🧰️framework\🛍️products\🦑️repo\🔨️modules\🚀️launcher\📥️install\🔵️.ps1"
 $script:LauncherBin = Join-Path $env:LOCALAPPDATA "semio\launcher\bin"
+if ($Command -eq "node") {
+    $env:SEMIO_WORKSPACE_ROOT = $repoRoot
+    Refresh-CurrentProcessPath
+    Set-UserPathPriority -PreferredEntries @(Install-PinnedNode -RepoRoot $repoRoot)
+    Refresh-CurrentProcessPath
+    Write-Step "Pinned Node.js is ready."
+    exit 0
+}
 if ($Command -eq "rust") {
     $env:SEMIO_WORKSPACE_ROOT = $repoRoot
     Refresh-CurrentProcessPath

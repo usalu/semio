@@ -7,7 +7,7 @@
  * @see ../../🗂️catalog/🟦️.ts — issue `representation-copied`
  * @see ../../🧮️evaluation/🟦️.ts — `flattenGeometry`
  */
-import { VIEWPOINTS, type AuthoredRepresentation, type Shape, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type AuthoredRepresentation, type Shape, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
 import { flattenGeometry } from "../../🧮️evaluation/🟦️.ts";
 
 /** 🔗️ How two representations relate: `identical` (same shapes), `subset` (all shapes of `coarse` occur identically in `fine`), `scaled` (equal up to a common factor) or `distinct`. */
@@ -41,7 +41,7 @@ function scaled(shape: Shape, factor: number): Shape {
 type Placed = { readonly shape: Shape; readonly viewpoint: Viewpoint };
 
 function placed(rep: AuthoredRepresentation): Placed[] {
-  return VIEWPOINTS.flatMap((viewpoint) => rep.geometry[viewpoint].map((shape) => ({ shape, viewpoint })));
+  return PLANAR_VIEWPOINTS.flatMap((viewpoint) => rep.geometry[viewpoint].map((shape) => ({ shape, viewpoint })));
 }
 
 function signature({ shape, viewpoint }: Placed, factor: number): string {

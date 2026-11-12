@@ -37,7 +37,7 @@ export interface RepositoryToolingProviderV1 {
   cargoTargetDirectory(repoRoot: string, env?: NodeJS.ProcessEnv): string;
   repoMetaDirectory(repoRoot: string): string;
   testArtifactEnvironment(repoRoot: string, route: string, env?: NodeJS.ProcessEnv): NodeJS.ProcessEnv;
-  runVitest(bundleRoot: string, segments: string[], config: string): Promise<void>;
+  runVitest(bundleRoot: string, segments: string[], config: string, share?: "job" | "grant"): Promise<void>;
   runCommand(invocation: ScriptInvocation, command: string, args: string[], cwd: string, label: string, policy: RepositoryCommandPolicyV1, options?: RepositoryCommandOptionsV1): Promise<void>;
   runTestCommand(command: string, args: string[], options?: RepositoryTestCommandOptionsV1 & Partial<{ invocation: ScriptInvocation; control: CompilerAdmissionControl }>): Promise<void>;
   runMutationBridgeScript(packageRoot: string, binary: string, collector?: RepositoryMutationCollectorV1): Promise<void>;
@@ -82,7 +82,7 @@ export function getRepoMetaDir(repoRoot: string): string { return sync().repoMet
 /** 🧾️ Resolves caller-owned test output or a neutral cache route. */
 export function repoTestArtifactEnvironment(repoRoot: string, route: string, env?: NodeJS.ProcessEnv): NodeJS.ProcessEnv { return sync().testArtifactEnvironment(repoRoot, route, env); }
 /** 📦️ Runs the declared Vitest policy of a bundle through its owned process. */
-export async function runVitest(bundleRoot: string, segments: string[], config: string): Promise<void> { return (await provider()).runVitest(bundleRoot, segments, config); }
+export async function runVitest(bundleRoot: string, segments: string[], config: string, share?: "job" | "grant"): Promise<void> { return (await provider()).runVitest(bundleRoot, segments, config, share); }
 /** 📶️ Executes preparation and command under the inherited signal, phase and awaited publication. */
 export async function runRepositoryCommand(invocation: ScriptInvocation, command: string, args: string[], cwd: string, label: string, policy: RepositoryCommandPolicyV1, options: RepositoryCommandOptionsV1 = {}): Promise<void> { return (await provider()).runCommand(invocation, command, args, cwd, label, policy, options); }
 /** 💰️ Runs a budgeted test command; a Cargo command carries its actual owner custody. */

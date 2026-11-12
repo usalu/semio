@@ -1,0 +1,37 @@
+# Components: authored 3D volumes
+
+Scope: the 18 assets of the `components` category. Sources: `volumes/components/<slug>.json` (explicit data) with the generator `volumes/components/<slug>.py` next to it (helpers `authoring_components_lib.py`); splice with `authoring-components-run.sh <slug> [pose ...]`; checks `volume-check.ts`, `authoring-components-validate.ts` (Ajv schema + `validateAsset` volume rules + pose evaluation), table `authoring-components-summary.py`. Tool output only under `🗑️generated/authoring-components/`.
+
+Bounding box error is per axis x (widthM) / y (heightM) / z (depthM) in percent; IoU per view elevation / front / plan at 1:50 at rest. Validator issues = Ajv conformance (`ok`) plus owned `validateAsset` volume rules (count). Poses checked: the default pose plus one or more others (all rigid chains stay one connected cluster of solid boxes, extents sane, nothing below ground).
+
+| slug | solids | bbox err % x/y/z | IoU e / f / p | validator issues | poses checked | gates | remarks |
+|---|---|---|---|---|---|---|---|
+| cantilever-balcony | 14 | +0.0/+0.0/+0.0 | 1.0 / 1 / 1 | 0 (schema ok) | self-weight, point-load-tip | pass | Wall strip split into core, break core, wool, render and break module; railing on its 90-degree bone. No 2D conflicts. |
+| curtain-wall-bay | 22 | +0.0/+0.0/+0.0 | 1 / 1 / 1 | 0 (schema ok) | dead-load, cradle-at-mid | pass | Mullions/transoms in cap, outer, break, inner; IGU and spandrel layer by layer using the catalog layer materials (cavity = glass, spandrel air layer = wool as in the catalog). |
+| etics-brick-wall-12 | 5 | +0.0/+0.0/+0.4 | 1 / 1.0 / 0.998 | 0 (schema ok) | winter-night, winter-sun | pass | Four layer boxes + repeated bed joints (2 mm proud, depth 1.004 m, +0.4 %). |
+| etics-brick-wall-30 | 5 | +0.0/+0.0/+0.4 | 1 / 1.0 / 0.998 | 0 (schema ok) | winter-night, winter-sun | pass | Same as -12 with 300 mm wool. |
+| external-venetian-blind | 32 | +0.0/+0.0/+0.0 | 0.898 / 1.0 / 1 | 0 (schema ok) | lowered-horizontal, retracted | pass | Elevation 0.898: lamellae are 0.5 mm arched sheets (2D draws 12 mm bars) and the C guide rails are drawn only as open polylines. Box is an open-section shell, slats vanish into it when retracted. |
+| glass-balustrade | 7 | +2.0/+0.0/+0.0 | 0.998 / 1.0 / 0.999 | 0 (schema ok) | self-weight-unloaded, crowd-impact-point | pass | x +2.0 % from clamp-bolt heads (3 mm). 2D inconsistency: bolts are circles in elevation but squares in front; modelled across the shoe. |
+| glulam-beam | 3 | +0.0/+0.0/+0.0 | 1 / 1.0 / 1 | 0 (schema ok) | self-weight, point-load-midspan | pass | One rounded box (6 mm) plus two bearing plates; glue lines and finger joints are texture. |
+| masonry-wall-with-lintel | 16 | +0.0/+0.0/+0.0 | 1 / 1 / 0.904 | 0 (schema ok) | dead-load, beam-over-opening | pass | Plan 0.904 (passes): the 2D plan is a section at window height (piers and sill only) whereas the volume projects lintel and wall above it. Layers as four extrudes with the window pocket as hole, lintel and sill with their own layers. |
+| panel-radiator | 18 | +0.0/+0.0/+0.0 | 0.468 / 0.997 / 1 | 0 (schema ok) | off, night, rated | MISS | GATE MISSED elevation 0.468 (recall 0.997, precision 0.469). The 1:50 elevation draws only the two 22 mm water panels as closed shapes and leaves the 56 mm convector gap empty, but the front view and the 1:100 body (and its seam lines) are closed; the physical body has side covers. With the 1:100 elevation the same volume scores 0.962; without the end caps 0.922 at 1:50. Two 2D conflicts: panel height 585 vs 565 mm (front), valve head centre 85 vs 70 mm. |
+| sectional-garage-door | 41 | +0.1/+0.4/+0.0 | 0.32 / 0.978 / 0.941 | 0 (schema ok) | closed, half-open, open | MISS | GATE MISSED elevation 0.320 (recall 1.000). The guide rails, ceiling hangers and end bar are drawn in elevation only as open polylines (zero area), so the physical rails count as unmatched area; without rails, hangers, end bar and bearing plates elevation is 0.948 and front 0.957. bbox y +0.4 % (bottom roller 11 mm below floor). Added bearing plates (not in 2D) to keep the spring attached; quarter-circle rail as ten-segment repeat. |
+| sliding-door | 18 | -0.0/+0.0/+2.0 | 1 / 1.0 / 1 | 0 (schema ok) | closed, half-open, open | pass | z +2.0 % from 2 mm screw heads. 2D conflicts: hanger positions (plan at stiles, elevation at v=+-0.16), frame layers sum 58 mm vs 50 mm drawn. Open pose overlaps the east jamb by 50 mm (joint travel 1 m). |
+| solid-brick-wall-1960 | 4 | +0.0/+0.0/+0.4 | 1 / 1.0 / 0.997 | 0 (schema ok) | winter-night, winter-sun | pass | Three layer boxes + bed joints, no insulation layer. |
+| spiral-stair | 34 | +0.0/+0.4/+0.0 | 0.687 / 0.732 / 1.0 | 0 (schema ok) | self-weight, walker-on-tread-8 | MISS | GATE MISSED elevation 0.687, front 0.732 (recall 1.000). The 15 balusters and the helical handrail are drawn only as open polylines in elevation and front; without them all three views score 1.000. Handrail radius 14 mm assumed. Treads are hollow pans (plate + lip ring) on their own bones. |
+| stair-flight | 7 | +0.0/-0.0/+0.5 | 1 / 0.998 / 0.999 | 0 (schema ok) | self-weight, point-load-tread | pass | z +0.5 % from 3 mm screw heads; treads and gussets are one solid each with repeat 12. |
+| steel-column | 17 | +0.0/+0.0/+0.0 | 0.991 / 0.999 / 1 | 0 (schema ok) | axial-self-weight, eccentric-load, lateral-wind | pass | Web thickness 8 mm assumed (2D draws none); splice cover plates added from the 2D splice line. |
+| tied-canopy | 16 | +0.0/+0.0/+0.0 | 1 / 1 / 1 | 0 (schema ok) | self-weight, wind-uplift | pass | 2D conflict: anchor plate height 240 mm in elevation vs 200 mm in front (200 used). Wall layers 300/180/20 with pads in holes of the wool and render extrudes. |
+| tilt-window | 12 | +0.0/+0.0/+0.0 | 1 / 1 / 1 | 0 (schema ok) | closed, tilted-open, fully-tilted | pass | No head rail (not drawn in any view). Hinge pin axis differs between 2D views (modelled along w). IGU layer by layer with edge-zone frames. |
+| wheelchair-ramp | 20 | +0.2/+0.0/+0.0 | 0.998 / 1.0 / 1 | 0 (schema ok) | self-weight, wheelchair-on-run-2 | pass | x +0.2 % (handrail end sphere at x=1.2). Ramp split at expansion joints into four solid extrudes; posts/plates by repeat following the slope. |
+
+## Not meeting a gate
+
+Missed IoU gates (bounding box passes everywhere): panel-radiator, sectional-garage-door, spiral-stair. In all three the 2D elevation (or front) draws a physical part only as open polylines or leaves a cavity empty, so the physically right solid cannot match the closed-shape silhouette; the bodies were not distorted. Evidence (volume without the disputed parts) is in `🗑️generated/authoring-components/*-evidence.json`.
+
+## Tool and schema notes
+
+- Loft: kernel tessellates sections in the plane of `rotation`, the schema text says perpendicular to the tangent. No loft is used here; see `authoring-requests.md`.
+- The validator accepts revolve profiles only as simple open polylines, so closed loops (torus rings, C-sections) cannot be revolved; C-sections are extrudes (the garage door arc rail is ten straight segments with a rotating repeat), cylinders are open two-point revolves.
+- `repeat` with `rotationAxis`/`rotationRad`/`translation` is used for helices (spiral stair handrail and balusters) and arcs.
+- Splicing used only `volume-insert.py`; no other asset byte changed (the script verifies this).

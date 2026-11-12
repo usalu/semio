@@ -10,10 +10,11 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { Asset, AuthoredRepresentation, Shape, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, Shape, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 import { VIEWS, authoredScales, catalog, consistency, extentOf, sweep, toleranceM, type Extent } from "./🧰️.ts";
 
 type Part = Partial<Extent>;
@@ -26,9 +27,9 @@ type Vectors = {
   dimensions: { heightM: number; widthM: number; depthM: number };
   bones: Record<string, unknown>;
   poses: Record<string, Pose>;
-  shapes: Record<Viewpoint, Shape[]>;
+  shapes: Record<PlanarViewpoint, Shape[]>;
   cases: { name: string; pose: string; extents: Record<string, Part>; views?: Record<string, Part>; heightsM?: Record<string, number>; offsetsM?: { name: string; of: string; edge: keyof Extent; from: string; fromEdge: keyof Extent; valueM: number }[] }[];
-  consistency: { pose: string; cases: { name: string; patch: { view: Viewpoint; shape: string; set: Record<string, number> }[]; failing: string[] }[] };
+  consistency: { pose: string; cases: { name: string; patch: { view: PlanarViewpoint; shape: string; set: Record<string, number> }[]; failing: string[] }[] };
   catalog: { complete: string[]; scales: number[] };
   extentToleranceM: number;
 };
@@ -37,7 +38,7 @@ const vectors = fixture<Vectors>("🧊️three-views");
 const sample = fixture<{ asset: Asset }>("👤️sample-figure").asset;
 const select = (denominator: number) => ({ kind: "scale", scale: { denominator } }) as const;
 
-const synthetic = (shapes: Record<Viewpoint, Shape[]>, dimensions = vectors.dimensions): Asset => {
+const synthetic = (shapes: Record<PlanarViewpoint, Shape[]>, dimensions = vectors.dimensions): Asset => {
   const authored = sample.representations[String(vectors.scale) as keyof Asset["representations"]] as AuthoredRepresentation;
   const representation: AuthoredRepresentation = { ...authored, geometry: shapes };
   return { ...sample, dimensions: { ...sample.dimensions, ...dimensions }, representations: { ...sample.representations, [String(vectors.scale)]: representation } };
@@ -63,7 +64,7 @@ describe("🧊️ the vectors of the three views", () => {
       const state = stateOf(asset, vectors.poses[c.pose]!.pose);
       const extents = extentsOf(state);
       for (const [key, part] of Object.entries(c.extents)) expectPart(key, extents[key]!, part);
-      for (const [view, part] of Object.entries(c.views ?? {})) expectPart(view, extentOf(state.shapes[view as Viewpoint])!, part);
+      for (const [view, part] of Object.entries(c.views ?? {})) expectPart(view, extentOf(state.shapes[view as PlanarViewpoint])!, part);
       for (const [key, height] of Object.entries(c.heightsM ?? {})) expect(Math.abs(extents[key]!.maxY - extents[key]!.minY - height), `${key} height`).toBeLessThanOrEqual(vectors.extentToleranceM);
       for (const offset of c.offsetsM ?? []) expect(Math.abs(extents[offset.of]![offset.edge] - extents[offset.from]![offset.fromEdge] - offset.valueM), offset.name).toBeLessThanOrEqual(vectors.extentToleranceM);
     });
@@ -90,8 +91,8 @@ describe("🧊️ the consistency rules", () => {
 
   for (const c of vectors.consistency.cases)
     it(c.name, () => {
-      const shapes = Object.fromEntries(VIEWS.map((view) => [view, vectors.shapes[view].map((shape) => ({ ...shape, ...Object.assign({}, ...c.patch.filter((p) => p.view === view && p.shape === shape.id).map((p) => p.set)) }))])) as Record<Viewpoint, Shape[]>;
-      const trimmed = Object.fromEntries(VIEWS.map((view) => [view, shapes[view].filter((shape) => shape.id === "block" || shape.role === "ground")])) as Record<Viewpoint, Shape[]>;
+      const shapes = Object.fromEntries(VIEWS.map((view) => [view, vectors.shapes[view].map((shape) => ({ ...shape, ...Object.assign({}, ...c.patch.filter((p) => p.view === view && p.shape === shape.id).map((p) => p.set)) }))])) as Record<PlanarViewpoint, Shape[]>;
+      const trimmed = Object.fromEntries(VIEWS.map((view) => [view, shapes[view].filter((shape) => shape.id === "block" || shape.role === "ground")])) as Record<PlanarViewpoint, Shape[]>;
       const findings = consistency(synthetic(trimmed), vectors.scale);
       expect(findings.map((finding) => finding.check).sort(), findings.map((finding) => finding.message).join("\n")).toEqual(c.failing);
     });
@@ -139,7 +140,7 @@ describe("🧊️ a third-party library recomputes the extents", () => {
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify({ fixture: fixtureInput, rings }));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️three-views/🐍️.py"), ["shapely"], [input])) as { fixture: Record<string, Record<string, Extent>>; rings: Record<string, Extent | null> };
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️three-views/🐍️.py"), "geometry", [input])) as { fixture: Record<string, Record<string, Extent>>; rings: Record<string, Extent | null> };
       for (const [key, extents] of Object.entries(ours))
         for (const [name, extent] of Object.entries(extents)) for (const edge of ["minX", "maxX", "minY", "maxY"] as const) expect(Math.abs(reference.fixture[key]![name]![edge] - extent[edge]), `${key} ${name} ${edge}`).toBeLessThanOrEqual(vectors.extentToleranceM);
       for (const c of vectors.cases) for (const [name, part] of Object.entries(c.extents)) expectPart(`${c.name} ${name} (shapely)`, reference.fixture[c.pose]![name]!, part);

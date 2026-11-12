@@ -14,7 +14,8 @@ import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦�
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { solveFrames, solveRig } from "../../🔨️modules/🦴️rig/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 import { catalog, extentOf, type Extent } from "../🧊️three-views/🧰️.ts";
 requireTool("uv");
 
@@ -138,7 +139,7 @@ describe("🧊️ a third-party library recomputes the displacements and extents
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify({ rig: sample.rig.bones.map((bone) => ({ id: bone.id, parent: bone.parent, x: bone.x, y: bone.y, angleDeg: bone.angleDeg, lengthM: bone.lengthM })), cases }));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️lateral-spread/🐍️.py"), ["shapely", "numpy"], [input])) as Record<string, { bones: Record<string, { origin: number[]; tip: number[] }>; extents: Record<string, Extent> }>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️lateral-spread/🐍️.py"), "geometry", [input])) as Record<string, { bones: Record<string, { origin: number[]; tip: number[] }>; extents: Record<string, Extent> }>;
       for (const [pose, got] of Object.entries(ours)) {
         for (const [bone, spread] of Object.entries(got.spread))
           for (let i = 0; i < 3; i++) {

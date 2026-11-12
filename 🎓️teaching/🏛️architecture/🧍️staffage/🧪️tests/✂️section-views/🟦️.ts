@@ -17,7 +17,8 @@ import { sectionOf, viewpointCaption } from "../../🔨️modules/🎨️depicti
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { exportCast } from "../../🔨️modules/📤️export/🎭️cast/🟦️.ts";
 import type { CastIndex } from "../../🔨️modules/📤️export/🎭️cast/🧬️schema/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, python, withScratch } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, withScratch } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 
 type Pair = readonly [number, number];
 type PathItem = Extract<DrawingItem, { kind: "path" }>;
@@ -29,6 +30,7 @@ type Vectors = {
   markers: ({ id: string; viewpoint: "front" | "plan"; plane: number; k: number } & Placed)[];
   captions: { viewpoint: Viewpoint; label: string | null; en: string; de: string }[];
   catalog: Record<string, Partial<Record<"front" | "plan", number>>>;
+  elevationCatalog: Record<string, Record<string, number>>;
 };
 
 const vectors = fixture<Vectors>("✂️section-views");
@@ -62,7 +64,7 @@ function pointsOf(item: PathItem, scene: DrawingScene): Pair[] {
 
 describe("section marker", () => {
   it("is reproduced by shapely from the hand-computed vectors", () => {
-    const placed = JSON.parse(python(ORACLE, ["shapely"], [FIXTURE])) as Record<string, Placed>;
+    const placed = JSON.parse(python(ORACLE, "geometry", [FIXTURE])) as Record<string, Placed>;
     for (const marker of vectors.markers) {
       const got = placed[marker.id]!;
       near(got.line.flat(), marker.line.flat(), vectors.toleranceMm, `${marker.id} line`);
@@ -76,7 +78,7 @@ describe("section marker", () => {
     const scenes = [100, 50].map((denominator) => ({ denominator, scene: sceneOf(asset, denominator, "elevation") }));
     const placedAt = (denominator: number): Record<string, Placed> => {
       const bounds = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator } }).bounds;
-      return JSON.parse(python(ORACLE, ["shapely"], [FIXTURE, JSON.stringify(bounds)])) as Record<string, Placed>;
+      return JSON.parse(python(ORACLE, "geometry", [FIXTURE, JSON.stringify(bounds)])) as Record<string, Placed>;
     };
     const first = placedAt(100);
     const second = placedAt(50);
@@ -95,6 +97,20 @@ describe("section marker", () => {
         const letters = scene.layers.flatMap((layer) => layer.items).filter((item) => item.kind === "text" && item.id.startsWith(`section:${viewpoint}:letter`));
         expect(letters.map((letter) => (letter.kind === "text" ? letter.text : ""))).toEqual(viewpoint === "front" ? ["A", "A"] : ["B", "B"]);
       }
+  });
+
+  it("is drawn by the plan at the lateral plane of an elevation section at 1:100 and 1:50, the arrows pointing to the far side", () => {
+    const asset = assets.get("cooking-pot")!;
+    for (const denominator of [100, 50]) {
+      const scene = sceneOf(asset, denominator, "plan");
+      const bounds = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "scale", scale: { denominator } }).bounds;
+      const want = (JSON.parse(python(ORACLE, "geometry", [FIXTURE, JSON.stringify(bounds)])) as Record<string, Placed>)[`elevation-${denominator}`]!;
+      const [line] = itemsOf(scene, "section:elevation:line");
+      near(pointsOf(line!, scene).flat(), want.line.flat(), 1e-3, `elevation ${denominator} line`);
+      want.ends.forEach((end, i) => near(pointsOf(itemsOf(scene, `section:elevation:end-${i}`)[0]!, scene).flat(), end.flat(), 1e-3, `elevation ${denominator} end ${i}`));
+      want.tips.forEach((tip, i) => expect(Math.abs(Math.min(...pointsOf(itemsOf(scene, `section:elevation:arrow-${i}`)[0]!, scene).map((p) => p[1])) - tip[1]), `elevation ${denominator} tip ${i}`).toBeLessThanOrEqual(1e-3));
+      expect(scene.layers.flatMap((layer) => layer.items).filter((item) => item.kind === "text" && item.id.startsWith("section:elevation:letter")).map((letter) => (letter.kind === "text" ? letter.text : ""))).toEqual(["A", "A"]);
+    }
   });
 
   it("is absent at 1:200, in a textless depiction and in the front and plan views", () => {
@@ -140,6 +156,18 @@ describe("section catalog", () => {
     });
 });
 
+describe("elevation section catalog", () => {
+  for (const [id, scales] of Object.entries(vectors.elevationCatalog))
+    it(`${id} declares its elevation section at 1:${Object.keys(scales).join(", 1:")} and at no other scale`, () => {
+      const asset = assets.get(id)!;
+      for (const rep of Object.values(asset.representations).filter((candidate): candidate is AuthoredRepresentation => candidate.status === "authored")) {
+        const plane = scales[String(rep.denominator)];
+        expect(sectionOf(rep, "elevation")?.plane, `1:${rep.denominator}`).toBe(plane);
+        expect(rep.sections?.front === undefined || id === "retractable-bollard", `1:${rep.denominator} front`).toBe(true);
+      }
+    });
+});
+
 describe("section validation", () => {
   it("reports a plane outside the asset in English and German", () => {
     const asset = assets.get("sliding-door")!;
@@ -150,8 +178,17 @@ describe("section validation", () => {
     expect(issue!.message.de).toContain("außerhalb der Ausdehnung");
   });
 
+  it("reports a lateral plane outside the asset for an elevation section", () => {
+    const asset = assets.get("cooking-pot")!;
+    const representations = Object.fromEntries(Object.entries(asset.representations).map(([key, rep]) => [key, rep.status === "authored" ? { ...rep, sections: { elevation: { plane: 9, label: { en: "A-A", de: "A-A" } } } } : rep]));
+    const issue = validateAsset({ ...asset, representations } as Asset).find((candidate) => candidate.code === "section-plane-outside");
+    expect(issue).toBeDefined();
+    expect(issue!.message.en).toContain("side section");
+    expect(issue!.message.de).toContain("Seitenansicht");
+  });
+
   it("accepts the declared planes", () => {
-    for (const id of Object.keys(vectors.catalog)) expect(validateAsset(assets.get(id)!).filter((issue) => issue.code === "section-plane-outside"), id).toEqual([]);
+    for (const id of [...Object.keys(vectors.catalog), ...Object.keys(vectors.elevationCatalog)]) expect(validateAsset(assets.get(id)!).filter((issue) => issue.code === "section-plane-outside"), id).toEqual([]);
   });
 });
 

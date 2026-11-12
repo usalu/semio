@@ -16,7 +16,8 @@ import { areaWeighted, environmentAt, historyPlan, solveThermalAt, thermalSessio
 import { DEFAULT_TURBULENCE, solveTransport } from "../../🔨️modules/💨️transport/🟦️.ts";
 import { ambientAt } from "../../🔨️modules/💨️transport/🌬️ambient/🟦️.ts";
 import { SCENARIOS, scenario } from "../../🧫️fixtures/💨️transport/🟦️.ts";
-import { STAFFAGE_ROOT, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 import { catalog } from "../🧊️three-views/🧰️.ts";
 
 const VIEWPOINTS: readonly Viewpoint[] = ["elevation", "front", "plan"];
@@ -349,7 +350,7 @@ describe("🌐️ numpy reference", () => {
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify({ drift, projection: { k, points }, ranges }));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🌐️thermal-multiview/🐍️.py"), ["numpy"], [input])) as { drift: number[][][]; projection: Record<Viewpoint, number[][]>; ranges: number[][] };
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🌐️thermal-multiview/🐍️.py"), "geometry", [input])) as { drift: number[][][]; projection: Record<Viewpoint, number[][]>; ranges: number[][] };
       drift.forEach((d, i) => d.observed.forEach((p, j) => (expect(p[0]).toBeCloseTo(reference.drift[i]![j]![0]!, 4), expect(p[1]).toBeCloseTo(reference.drift[i]![j]![1]!, 4))));
       for (const viewpoint of VIEWPOINTS) {
         const scene = scenesByView[viewpoint];

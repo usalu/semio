@@ -8,6 +8,21 @@ Feature: The polygon union never silently returns nothing
     When their union is built
     Then its area and its number of rings equal the shapely union
 
+  Scenario: A long thin leaf whose boundary has runs of closely spaced vertices
+    Given the 19 sweep polygons of an agave leaf in the frost-sag pose at 1:100, which made the exact slab union fail by a hair
+    When their union is built
+    Then its area equals the union of the independent library polygon-clipping, and the straight vertices dropped from its boundary never collapse a curve
+
+  Scenario: Slivers thinner than the resolution of the union
+    Given the strokes of a herring gull in the landing clip and of a seated worker in the settle-back clip, which contain quads only 20 to 40 nanometres wide
+    When their union is built
+    Then it neither fails nor changes the area beyond the independent library polygon-clipping, and a lone sliver gives an empty union
+
+  Scenario: Edges that coincide to within a few nanometres
+    Given strips of a swing chain and a vacuum nozzle that lie edge to edge with offsets of 7 to 70 nanometres, and a whisker stroke flattened into steps of nanometres
+    When their union is built
+    Then it is one ring of the area polygon-clipping finds
+
   Scenario: Duplicate points do not matter
     Given a square with a doubled corner and a closing point
     Then its union is the square

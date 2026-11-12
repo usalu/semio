@@ -10,14 +10,15 @@ import type { Legend } from "../../🔗️contracts/🟦️.ts";
 import type { Canvas, Ctx } from "../🧱️canvas/🟦️.ts";
 import { mix, wrap } from "../🖍️palette/🟦️.ts";
 import { commandsOf } from "../📐️geometry/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const BAR_STEPS = 24;
 /** 📐️ The shortest paper span between the extension lines that still holds the value between them; shorter spans lift the value above the upper extension line on a leader. */
 export const DIMENSION_FIT_MM = 3;
 const DIMENSION_LEADER_MM = 3.2;
-/** 📐️ The clear paper distance between the drawn content and the start of the extension lines (ISO 129-1: a visible gap to the object). */
+/** 📤️ The clear paper distance between the drawn content and the start of the extension lines (ISO 129-1: a visible gap to the object). */
 export const DIMENSION_GAP_MM = 1.5;
-/** 📐️ The paper distance from the right edge of the drawn content to the dimension line, so line, ticks and leader stand clear of the drawing at every scale. */
+/** 🦴️ The paper distance from the right edge of the drawn content to the dimension line, so line, ticks and leader stand clear of the drawing at every scale. */
 export const DIMENSION_OFFSET_MM = 6;
 const MIN_TICK_GAP_MM = 6;
 const LEGEND_BAR_MM = 50;
@@ -30,24 +31,25 @@ export function scaleBarMetres(denominator: number): number {
   if (preset !== undefined) return preset;
   const k = 1000 / denominator;
   const candidates = [-3, -2, -1, 0, 1, 2, 3].flatMap((e) => [1, 2, 5].map((m) => m * 10 ** e));
-  return candidates.reduce((best, m) => (Math.abs(Math.log((m * k) / 12)) < Math.abs(Math.log((best * k) / 12)) ? m : best));
+  return candidates.reduce((best, m) => (Math.abs(portable.log((m * k) / 12)) < Math.abs(portable.log((best * k) / 12)) ? m : best));
 }
 
 function segmentsFor(metres: number): number {
-  const mantissa = metres / 10 ** Math.floor(Math.log10(metres));
+  const mantissa = metres / 10 ** Math.floor(portable.log10(metres));
   return Math.abs(mantissa - 2) < 1e-9 ? 4 : 5;
 }
 
-/** 📐️ The extent in metres a dimension measures, y up. */
+/** 🔭️ The extent in metres a dimension measures, y up. */
 export type DimensionExtent = { readonly minX: number; readonly maxX: number; readonly minY: number; readonly maxY: number };
 
 const DIMENSION_QUANTITIES = {
   elevation: { quantity: "height", label: { en: "Overall height", de: "Gesamthöhe" } },
   front: { quantity: "height", label: { en: "Overall height", de: "Gesamthöhe" } },
   plan: { quantity: "depth", label: { en: "Overall depth", de: "Gesamttiefe" } },
+  axonometric: { quantity: "height", label: { en: "Overall height", de: "Gesamthöhe" } },
 } as const;
 
-/** 📐️ The vertical overall dimension right of the content: extension lines, oblique ticks, the value in metres (between the extension lines, or on a leader above them when the span is shorter than {@link DIMENSION_FIT_MM}). It measures the drawn vertical extent of the viewpoint (height in elevations, depth in the plan). */
+/** 🪜️ The vertical overall dimension right of the content: extension lines, oblique ticks, the value in metres (between the extension lines, or on a leader above them when the span is shorter than {@link DIMENSION_FIT_MM}). It measures the drawn vertical extent of the viewpoint (height in elevations, depth in the plan; in the axonometric view the true height along the vertical axis, which is true to scale). */
 export function dimensionLine(canvas: Canvas, ctx: Ctx, extent: DimensionExtent, contentMaxX: number = extent.maxX * ctx.k): void {
   const { k, language, colours, options } = ctx;
   const box = canvas.box;
@@ -78,7 +80,7 @@ export function dimensionLine(canvas: Canvas, ctx: Ctx, extent: DimensionExtent,
   canvas.text("annotations", "dimension:text", { x: x + 1.6, y: lead + ANNOTATION_TEXT_MM * 0.35 }, value, ANNOTATION_TEXT_MM, colours.ink);
 }
 
-/** 📏️ The alternating-block scale bar with `0` and length labels; returns the height it used. */
+/** 🔄️ The alternating-block scale bar with `0` and length labels; returns the height it used. */
 export function scaleBar(canvas: Canvas, ctx: Ctx, x: number, y: number): number {
   const { k, language, colours, options } = ctx;
   const metres = scaleBarMetres(options.scale.denominator);

@@ -5,13 +5,25 @@
  * @see ../🔗️contracts/🟦️.ts — `Point`
  */
 import type { Point } from "../🔗️contracts/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const EPS = 1e-9;
+
+const THIN_M = 1e-6;
+
+const NEAR_M = 1e-5;
+
+const SAME_M = 3e-7;
 
 const area = (ring: readonly Point[]): number => ring.reduce((sum, p, i) => sum + (p.x * ring[(i + 1) % ring.length]!.y - ring[(i + 1) % ring.length]!.x * p.y), 0) / 2;
 
 /** 📐️ The signed area of a ring (counter-clockwise positive). */
 export const ringArea = area;
+
+const perimeter = (ring: readonly Point[]): number => ring.reduce((sum, p, i) => sum + portable.hypot(p.x - ring[(i + 1) % ring.length]!.x, p.y - ring[(i + 1) % ring.length]!.y), 0);
+
+/** 🪡️ Whether a ring has an area that survives the resolution of the chaining (nodes closer than 0.1 micrometre are one node): at least {@link EPS} square metres and a mean width `2 · area / perimeter` of at least a micrometre; a sliver of a few tens of nanometres (the stroke of a segment whose radius is zero) has no boundary the union could keep apart. */
+const solid = (ring: readonly Point[]): boolean => Math.abs(area(ring)) > EPS && (2 * Math.abs(area(ring))) / perimeter(ring) >= THIN_M;
 
 const key = (p: Point): string => `${Math.round(p.x / 1e-7)},${Math.round(p.y / 1e-7)}`;
 
@@ -25,17 +37,31 @@ function inside(ring: readonly Point[], p: Point): boolean {
   return hit;
 }
 
+/** 📏️ Whether a point lies within `NEAR_M` (10 micrometres) of the boundary of a ring: the polygons of one drawing that repeat each other with differences of a micrometre (a stroke drawn twice from two nearly equal frames) are one polygon, not two whose edges cross in slivers. */
+function nearBoundary(ring: readonly Point[], p: Point): boolean {
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i]!;
+    const b = ring[(i + 1) % ring.length]!;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const length2 = dx * dx + dy * dy;
+    const t = length2 === 0 ? 0 : Math.min(1, Math.max(0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / length2));
+    if (portable.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y) <= NEAR_M) return true;
+  }
+  return false;
+}
+
 function onEdge(ring: readonly Point[], p: Point): { readonly dx: number; readonly dy: number } | undefined {
   for (let i = 0; i < ring.length; i++) {
     const a = ring[i]!;
     const b = ring[(i + 1) % ring.length]!;
     const dx = b.x - a.x;
     const dy = b.y - a.y;
-    const length = Math.hypot(dx, dy);
+    const length = portable.hypot(dx, dy);
     if (length < EPS) continue;
     const t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / (length * length);
     if (t < -EPS || t > 1 + EPS) continue;
-    if (Math.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y) < 1e-8) return { dx, dy };
+    if (portable.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y) < SAME_M) return { dx, dy };
   }
   return undefined;
 }
@@ -49,7 +75,7 @@ function chainPieces(kept: readonly { readonly from: Point; readonly to: Point }
     const cy = Math.round(p.y / cell);
     for (let dx = -1; dx <= 1; dx++)
       for (let dy = -1; dy <= 1; dy++)
-        for (const id of grid.get(`${cx + dx},${cy + dy}`) ?? []) if (Math.hypot(nodes[id]!.x - p.x, nodes[id]!.y - p.y) < cell) return id;
+        for (const id of grid.get(`${cx + dx},${cy + dy}`) ?? []) if (portable.hypot(nodes[id]!.x - p.x, nodes[id]!.y - p.y) < cell) return id;
     nodes.push(p);
     grid.set(`${cx},${cy}`, [...(grid.get(`${cx},${cy}`) ?? []), nodes.length - 1]);
     return nodes.length - 1;
@@ -59,8 +85,8 @@ function chainPieces(kept: readonly { readonly from: Point; readonly to: Point }
   edges.forEach((edge, i) => starts.set(edge.from, [...(starts.get(edge.from) ?? []), i]));
   const used = new Set<number>();
   const rings: Point[][] = [];
-  const heading = (i: number): number => Math.atan2(edges[i]!.piece.to.y - edges[i]!.piece.from.y, edges[i]!.piece.to.x - edges[i]!.piece.from.x);
-  const turn = (a: number, b: number): number => Math.atan2(Math.sin(heading(b) - heading(a)), Math.cos(heading(b) - heading(a)));
+  const heading = (i: number): number => portable.atan2(edges[i]!.piece.to.y - edges[i]!.piece.from.y, edges[i]!.piece.to.x - edges[i]!.piece.from.x);
+  const turn = (a: number, b: number): number => portable.atan2(portable.sin(heading(b) - heading(a)), portable.cos(heading(b) - heading(a)));
   let closed = true;
   edges.forEach((_, i) => {
     if (used.has(i)) return;
@@ -70,7 +96,7 @@ function chainPieces(kept: readonly { readonly from: Point; readonly to: Point }
       used.add(current);
       ring.push(nodes[edges[current]!.from]!);
       const from: number = current;
-      const options = (starts.get(edges[from]!.to) ?? []).filter((candidate) => !used.has(candidate) || candidate === i);
+      const options: number[] = (starts.get(edges[from]!.to) ?? []).filter((candidate) => !used.has(candidate) || candidate === i);
       current = options.sort((p, q) => turn(from, p) - turn(from, q))[0];
       if (current === i) break;
     }
@@ -80,12 +106,21 @@ function chainPieces(kept: readonly { readonly from: Point; readonly to: Point }
   return { rings, closed };
 }
 
+/** ✂️ Removes the vertices that lie on the straight line of their kept predecessor and their successor (within a nanometre) and do not turn back; a run of closely spaced vertices on a curve is measured against the last kept vertex, so it is never collapsed into its chord. */
 const dropCollinear = (rings: readonly (readonly Point[])[]): Point[][] =>
-  rings.map((ring) => ring.filter((p, i) => {
-    const before = ring[(i + ring.length - 1) % ring.length]!;
-    const after = ring[(i + 1) % ring.length]!;
-    return Math.abs((p.x - before.x) * (after.y - p.y) - (p.y - before.y) * (after.x - p.x)) > 1e-12 || (p.x - before.x) * (after.x - p.x) + (p.y - before.y) * (after.y - p.y) < 0;
-  }));
+  rings.map((ring) => {
+    const straight = (a: Point, p: Point, b: Point): boolean => {
+      const length = portable.hypot(b.x - a.x, b.y - a.y);
+      return length > 0 && Math.abs((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x)) / length < 1e-9 && (p.x - a.x) * (b.x - p.x) + (p.y - a.y) * (b.y - p.y) >= 0;
+    };
+    const kept: Point[] = [];
+    ring.forEach((p, i) => {
+      const before = kept.length > 0 ? kept[kept.length - 1]! : ring[ring.length - 1]!;
+      if (!straight(before, p, ring[(i + 1) % ring.length]!)) kept.push(p);
+    });
+    while (kept.length > 3 && straight(kept[kept.length - 1]!, kept[0]!, kept[1]!)) kept.shift();
+    return kept;
+  });
 
 /** 🧩️ The edge-splitting union of polygons that already passed the input checks: every edge is cut at the crossings with the other polygons and the pieces no other polygon covers are chained into rings. */
 function primaryUnion(polygons: Point[][]): Point[][] {
@@ -101,7 +136,7 @@ function primaryUnion(polygons: Point[][]): Point[][] {
       const cuts = new Set<number>([0, 1]);
       polygons.forEach((other, index) => {
         const box = boxes[index]!;
-        if (index === owner || box.maxX < Math.min(a.x, b.x) - 1e-8 || box.minX > Math.max(a.x, b.x) + 1e-8 || box.maxY < Math.min(a.y, b.y) - 1e-8 || box.minY > Math.max(a.y, b.y) + 1e-8) return;
+        if (index === owner || box.maxX < Math.min(a.x, b.x) - SAME_M || box.minX > Math.max(a.x, b.x) + SAME_M || box.maxY < Math.min(a.y, b.y) - SAME_M || box.minY > Math.max(a.y, b.y) + SAME_M) return;
         other.forEach((c, k) => {
           const d = other[(k + 1) % other.length]!;
           const ex = d.x - c.x;
@@ -109,8 +144,8 @@ function primaryUnion(polygons: Point[][]): Point[][] {
           const denominator = dx * ey - dy * ex;
           const along = (q: Point): number => ((q.x - a.x) * dx + (q.y - a.y) * dy) / length2;
           const distance = (q: Point): number => Math.abs((q.x - a.x) * dy - (q.y - a.y) * dx) / Math.sqrt(length2);
-          if (Math.abs(denominator) < EPS * Math.sqrt(length2) * Math.hypot(ex, ey)) {
-            for (const q of [c, d]) if (distance(q) < 1e-8) cuts.add(along(q));
+          if (Math.abs(denominator) < EPS * Math.sqrt(length2) * portable.hypot(ex, ey)) {
+            for (const q of [c, d]) if (distance(q) < SAME_M) cuts.add(along(q));
             return;
           }
           const t = ((c.x - a.x) * ey - (c.y - a.y) * ex) / denominator;
@@ -131,7 +166,7 @@ function primaryUnion(polygons: Point[][]): Point[][] {
     const direction = { x: piece.to.x - piece.from.x, y: piece.to.y - piece.from.y };
     for (let index = 0; index < polygons.length; index++) {
       const box = boxes[index]!;
-      if (index === piece.owner || mid.x < box.minX - 1e-8 || mid.x > box.maxX + 1e-8 || mid.y < box.minY - 1e-8 || mid.y > box.maxY + 1e-8) continue;
+      if (index === piece.owner || mid.x < box.minX - SAME_M || mid.x > box.maxX + SAME_M || mid.y < box.minY - SAME_M || mid.y > box.maxY + SAME_M) continue;
       const edge = onEdge(polygons[index]!, mid);
       if (edge !== undefined) {
         if (edge.dx * direction.x + edge.dy * direction.y < 0) return false;
@@ -147,11 +182,13 @@ function primaryUnion(polygons: Point[][]): Point[][] {
 /** 🚫️ Thrown when the union of polygons that do have area cannot be built: the caller gets a named error, never an empty result. */
 export class PolygonUnionError extends Error {
   readonly polygons: number;
+  readonly input: readonly (readonly Point[])[];
 
-  constructor(polygons: number, detail: string) {
+  constructor(polygons: number, detail: string, input: readonly (readonly Point[])[] = []) {
     super(`the union of ${polygons} polygon(s) with area cannot be built: ${detail}`);
     this.name = "PolygonUnionError";
     this.polygons = polygons;
+    this.input = input;
   }
 }
 
@@ -225,12 +262,15 @@ function slabUnion(polygons: readonly (readonly Point[])[]): { readonly rings: P
 
 const totalArea = (rings: readonly (readonly Point[])[]): number => rings.reduce((sum, ring) => sum + area(ring), 0);
 
-/** 🧩️ The union of simple polygons (each at least three points, any orientation) as the rings of its boundary; polygons without area are ignored (an empty result then means no polygon had area) and a single polygon is returned as it is (counter-clockwise, collinear points removed). Consecutive duplicate points are removed first. The fast edge-splitting union is checked against what a union can be (not smaller than its largest polygon, not larger than the sum); when it fails the check, the exact slab union takes over, and if that cannot close a boundary either a {@link PolygonUnionError} is thrown: polygons with area never silently produce nothing. */
+/** 🧹️ The ring without the vertices that lie within {@link SAME_M} of the last kept one: a curve flattened into steps of nanometres (the stroke of a path of a hair-thin leaf) has no vertex the union could tell apart from its neighbour. */
+const distinct = (ring: readonly Point[]): Point[] => ring.reduce<Point[]>((kept, p) => (kept.length === 0 || portable.hypot(p.x - kept[kept.length - 1]!.x, p.y - kept[kept.length - 1]!.y) > SAME_M ? [...kept, p] : kept), []);
+
+/** 🌟️ The union of simple polygons (each at least three points, any orientation) as the rings of its boundary; polygons without area, or slivers thinner than a micrometre, are ignored (an empty result then means no polygon had area) and a single polygon is returned as it is (counter-clockwise, collinear points removed). Consecutive duplicate points are removed first, and a polygon that lies inside another one up to 10 micrometres is dropped. The fast edge-splitting union is checked against what a union can be (not smaller than its largest polygon, not larger than the sum); when it fails the check, the exact slab union takes over, and if that cannot close a boundary either a {@link PolygonUnionError} is thrown: polygons with area never silently produce nothing. */
 export function unionPolygons(input: readonly (readonly Point[])[]): Point[][] {
-  const clean = input.map((ring) => ring.filter((p, i) => i === 0 || Math.hypot(p.x - ring[i - 1]!.x, p.y - ring[i - 1]!.y) > 1e-9)).map((ring) => (ring.length > 1 && Math.hypot(ring[0]!.x - ring[ring.length - 1]!.x, ring[0]!.y - ring[ring.length - 1]!.y) <= 1e-9 ? ring.slice(0, -1) : ring));
-  const all = clean.filter((ring) => ring.length >= 3 && Math.abs(area(ring)) > EPS).map((ring) => (area(ring) < 0 ? [...ring].reverse() : [...ring]));
+  const clean = input.map(distinct).map((ring) => (ring.length > 1 && portable.hypot(ring[0]!.x - ring[ring.length - 1]!.x, ring[0]!.y - ring[ring.length - 1]!.y) <= SAME_M ? ring.slice(0, -1) : ring));
+  const all = clean.filter((ring) => ring.length >= 3 && solid(ring)).map((ring) => (area(ring) < 0 ? [...ring].reverse() : [...ring]));
   const polygons: Point[][] = [];
-  for (const ring of [...all].sort((p, q) => area(q) - area(p))) if (!polygons.some((big) => ring.every((p) => onEdge(big, p) !== undefined || inside(big, p)))) polygons.push(ring);
+  for (const ring of [...all].sort((p, q) => area(q) - area(p))) if (!polygons.some((big) => ring.every((p, i) => [p, { x: (p.x + ring[(i + 1) % ring.length]!.x) / 2, y: (p.y + ring[(i + 1) % ring.length]!.y) / 2 }].every((q) => inside(big, q) || nearBoundary(big, q))))) polygons.push(ring);
   if (polygons.length === 0) return [];
   const largest = Math.max(...polygons.map(area));
   const upper = polygons.reduce((sum, ring) => sum + area(ring), 0);
@@ -242,5 +282,5 @@ export function unionPolygons(input: readonly (readonly Point[])[]): Point[][] {
   if (coherent(fast)) return fast;
   const exact = slabUnion(polygons);
   if (exact.rings.length > 0 && Math.abs(totalArea(exact.rings) - exact.area) <= 1e-4 * exact.area + 1e-9) return exact.rings;
-  throw new PolygonUnionError(polygons.length, "neither the edge-splitting nor the slab union closed a boundary of the expected area");
+  throw new PolygonUnionError(polygons.length, "neither the edge-splitting nor the slab union closed a boundary of the expected area", polygons);
 }

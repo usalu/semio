@@ -1,0 +1,86 @@
+{
+ "tolerance": 0.0001,
+ "pose": "bent",
+ "cases": [
+  {
+   "name": "head-front",
+   "origin": [
+    -0.300623,
+    2.759642,
+    5
+   ],
+   "direction": [
+    0,
+    0,
+    -1
+   ],
+   "node": "head",
+   "solid": "head",
+   "distance": 4.7
+  },
+  {
+   "name": "limb-side",
+   "origin": [
+    5,
+    0.4,
+    0
+   ],
+   "direction": [
+    -1,
+    0,
+    0
+   ],
+   "node": "skinned",
+   "solid": "limb",
+   "distance": 5.027384
+  },
+  {
+   "name": "pad-down",
+   "origin": [
+    0.4,
+    4,
+    0.1
+   ],
+   "direction": [
+    0,
+    -1,
+    0
+   ],
+   "node": "root",
+   "solid": "pad",
+   "distance": 4
+  },
+  {
+   "name": "miss",
+   "origin": [
+    8,
+    8,
+    8
+   ],
+   "direction": [
+    0,
+    1,
+    0
+   ],
+   "node": null,
+   "solid": null,
+   "distance": null
+  },
+  {
+   "name": "glass-front",
+   "origin": [
+    0,
+    1,
+    5
+   ],
+   "direction": [
+    0,
+    0,
+    -1
+   ],
+   "node": "halo-b",
+   "solid": "b",
+   "distance": 3.975
+  }
+ ]
+}

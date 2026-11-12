@@ -1,20 +1,20 @@
-/** 🗜️ PNG-sequence ZIP reopened with unzip and python's zipfile. */
+/** 🗜️ PNG-sequence ZIP reopened with python's zipfile (central directory, CRC-32 of every member, stored entries). */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { frameName, frameSchedule, writePngSequenceZip } from "../../🔨️modules/📤️export/🎞️frames/🟦️.ts";
 import { parseArguments, runExport } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
-import { requireTool, python, STAFFAGE_ROOT, tool, withScratch } from "../🧰️support/🧰️.ts";
-requireTool("rsvg-convert");
+import { requireTool, STAFFAGE_ROOT, withScratch } from "../🧰️support/🧰️.ts";
+import { oracleToolPort, python } from "../🧰️support/🐍️.ts";
+requireTool("uv");
 
 type Report = { bad: string | null; names: string[]; stored: boolean; manifest: { fps: number; frameCount: number; asset: string; view: string; viewpoint: string; scale: { denominator: number }; frames: { index: number; timeS: number; file: string }[] }; signatures: string[] };
-const reopen = (file: string): Report => JSON.parse(python(`${STAFFAGE_ROOT}/🧪️tests/🗜️zip-reopen/🐍️.py`, [], [file])) as Report;
+const reopen = (file: string): Report => JSON.parse(python(`${STAFFAGE_ROOT}/🧪️tests/🗜️zip-reopen/🐍️.py`, null, [file])) as Report;
 
 describe("🗜️ PNG sequence ZIP", () => {
-  it("is a valid stored ZIP with manifest.json and every frame (skipped without rsvg-convert)", async () => {
+  it("is a valid stored ZIP with manifest.json and every frame", async () => {
     await withScratch(async (out) => {
-      const [file] = await runExport(parseArguments(["--asset", "walking-commuter", "--clip", "walk-cycle", "--view", "dark-line", "--viewpoint", "plan", "--scale", "100", "--fps", "12", "--format", "png-sequence", "--out", out, "--lang", "en", "--px-per-mm", "2"]));
-      expect(tool("unzip", ["-t", file!])).toContain("No errors detected");
+      const [file] = await runExport(parseArguments(["--asset", "walking-commuter", "--clip", "walk-cycle", "--view", "dark-line", "--viewpoint", "plan", "--scale", "100", "--fps", "12", "--format", "png-sequence", "--out", out, "--lang", "en", "--px-per-mm", "2"]), oracleToolPort);
       const report = reopen(file!);
       expect(report.bad).toBeNull();
       expect(report.stored).toBe(true);

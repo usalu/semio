@@ -1,0 +1,1990 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "main-beam",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     1.24757,
+     0,
+     0
+    ],
+    "r0": 0.03,
+    "r1": 0.03,
+    "lateralScale": 0.6666666666666667,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.03208,
+      0.99949
+     ],
+     "translation": [
+      0.55,
+      0.32,
+      0
+     ]
+    }
+   },
+   {
+    "id": "head-riser",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     1.79,
+     0.39,
+     0
+    ],
+    "p1": [
+     1.866,
+     0.628,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.016
+   },
+   {
+    "id": "seat-tube",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.55,
+     0.32,
+     0
+    ],
+    "p1": [
+     0.3,
+     0.99,
+     0
+    ],
+    "r0": 0.017,
+    "r1": 0.017
+   },
+   {
+    "id": "seat-post",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0.296,
+     0.975,
+     0
+    ],
+    "p1": [
+     0.31,
+     1.05,
+     0
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "bb-shell",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.55,
+     0.32,
+     -0.05
+    ],
+    "p1": [
+     0.55,
+     0.32,
+     0.05
+    ],
+    "r0": 0.03,
+    "r1": 0.03
+   },
+   {
+    "id": "chainstay-l",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.0,
+     0.33,
+     0.045
+    ],
+    "p1": [
+     0.55,
+     0.32,
+     0.045
+    ],
+    "r0": 0.018,
+    "r1": 0.018
+   },
+   {
+    "id": "seatstay-l",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.0,
+     0.33,
+     0.045
+    ],
+    "p1": [
+     0.34,
+     0.86,
+     0.02
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "rack-support-l",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     -0.02,
+     0.33,
+     0.045
+    ],
+    "p1": [
+     -0.22,
+     0.79,
+     0.14
+    ],
+    "r0": 0.008,
+    "r1": 0.008
+   },
+   {
+    "id": "chainstay-r",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.0,
+     0.33,
+     -0.045
+    ],
+    "p1": [
+     0.55,
+     0.32,
+     -0.045
+    ],
+    "r0": 0.018,
+    "r1": 0.018
+   },
+   {
+    "id": "seatstay-r",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.0,
+     0.33,
+     -0.045
+    ],
+    "p1": [
+     0.34,
+     0.86,
+     -0.02
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "rack-support-r",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     -0.02,
+     0.33,
+     -0.045
+    ],
+    "p1": [
+     -0.22,
+     0.79,
+     -0.14
+    ],
+    "r0": 0.008,
+    "r1": 0.008
+   },
+   {
+    "id": "rear-rack",
+    "kind": "box",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "size": [
+     0.57315,
+     0.02,
+     0.3
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.05241,
+      0.99863
+     ],
+     "translation": [
+      0.015,
+      0.83,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "rear-light",
+    "kind": "box",
+    "bone": "frame",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "fenders",
+    "size": [
+     0.04,
+     0.06,
+     0.06
+    ],
+    "cornerRadius": 0.008,
+    "transform": {
+     "translation": [
+      -0.28,
+      0.81,
+      0
+     ]
+    }
+   },
+   {
+    "id": "rear-fender",
+    "kind": "extrude",
+    "bone": "frame",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fenders",
+    "profile": [
+     [
+      0.32446,
+      0.4813
+     ],
+     [
+      0.29176,
+      0.53747
+     ],
+     [
+      0.24944,
+      0.5868
+     ],
+     [
+      0.19889,
+      0.62767
+     ],
+     [
+      0.1418,
+      0.65872
+     ],
+     [
+      0.08003,
+      0.67894
+     ],
+     [
+      0.01562,
+      0.68766
+     ],
+     [
+      -0.04931,
+      0.68459
+     ],
+     [
+      -0.11261,
+      0.66983
+     ],
+     [
+      -0.17219,
+      0.64387
+     ],
+     [
+      -0.22611,
+      0.60756
+     ],
+     [
+      -0.27256,
+      0.56211
+     ],
+     [
+      -0.31004,
+      0.509
+     ],
+     [
+      -0.29878,
+      0.5025
+     ],
+     [
+      -0.26267,
+      0.55368
+     ],
+     [
+      -0.21789,
+      0.59748
+     ],
+     [
+      -0.16594,
+      0.63247
+     ],
+     [
+      -0.10852,
+      0.65749
+     ],
+     [
+      -0.04752,
+      0.67171
+     ],
+     [
+      0.01505,
+      0.67467
+     ],
+     [
+      0.07712,
+      0.66627
+     ],
+     [
+      0.13665,
+      0.64678
+     ],
+     [
+      0.19167,
+      0.61686
+     ],
+     [
+      0.24038,
+      0.57747
+     ],
+     [
+      0.28116,
+      0.52993
+     ],
+     [
+      0.31268,
+      0.4758
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.04,
+    "to": 0.04
+   },
+   {
+    "id": "rear-fender-stay",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fenders",
+    "maxDenominator": 100,
+    "p0": [
+     0.0,
+     0.69,
+     0
+    ],
+    "p1": [
+     0.0,
+     0.84,
+     0
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "saddle",
+    "kind": "loft",
+    "bone": "frame",
+    "material": "plastic",
+    "role": "body",
+    "tone": 0.15,
+    "region": "touch-parts",
+    "sections": [
+     {
+      "at": [
+       0.158,
+       1.062,
+       0
+      ],
+      "rx": 0.085,
+      "ry": 0.02,
+      "exponent": 2.4,
+      "rotation": [
+       0.70683,
+       0.01989,
+       0.70683,
+       -0.01989
+      ]
+     },
+     {
+      "at": [
+       0.3,
+       1.07,
+       0
+      ],
+      "rx": 0.09,
+      "ry": 0.028,
+      "exponent": 2.4,
+      "rotation": [
+       0.70659,
+       -0.02714,
+       0.70659,
+       0.02714
+      ]
+     },
+     {
+      "at": [
+       0.43,
+       1.06,
+       0
+      ],
+      "rx": 0.02,
+      "ry": 0.022,
+      "exponent": 2.4,
+      "rotation": [
+       0.70659,
+       -0.02714,
+       0.70659,
+       0.02714
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "battery-case",
+    "kind": "loft",
+    "bone": "battery",
+    "material": "battery-case",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "battery-pack",
+    "sections": [
+     {
+      "at": [
+       0.137,
+       -0.19,
+       0.0
+      ],
+      "rx": 0.06,
+      "ry": 0.028,
+      "exponent": 6,
+      "rotation": [
+       -0.40176,
+       -0.58188,
+       -0.40176,
+       0.58188
+      ]
+     },
+     {
+      "at": [
+       -0.007,
+       0.19,
+       0.0
+      ],
+      "rx": 0.06,
+      "ry": 0.028,
+      "exponent": 6,
+      "rotation": [
+       -0.40176,
+       -0.58188,
+       -0.40176,
+       0.58188
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "motor-housing",
+    "kind": "box",
+    "bone": "motor",
+    "material": "motor-case",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "drive-motor",
+    "size": [
+     0.14,
+     0.14,
+     0.14
+    ],
+    "cornerRadius": 0.03,
+    "transform": {
+     "translation": [
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "steer-rod",
+    "kind": "capsule",
+    "bone": "frame",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0.732,
+     0.62,
+     0
+    ],
+    "p1": [
+     1.858,
+     0.62,
+     0
+    ],
+    "r0": 0.01,
+    "r1": 0.01
+   },
+   {
+    "id": "crank-axle",
+    "kind": "capsule",
+    "bone": "crank",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0,
+     0,
+     -0.1
+    ],
+    "p1": [
+     0,
+     0,
+     0.1
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "arm-n",
+    "kind": "capsule",
+    "bone": "crank",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0,
+     0,
+     -0.1
+    ],
+    "p1": [
+     0.17,
+     0,
+     -0.1
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "arm-f",
+    "kind": "capsule",
+    "bone": "crank",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0,
+     0,
+     0.1
+    ],
+    "p1": [
+     -0.17,
+     0,
+     0.1
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "chainring",
+    "kind": "revolve",
+    "bone": "crank",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.3,
+    "profile": [
+     [
+      -0.085,
+      0.095
+     ],
+     [
+      -0.08,
+      0.095
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "pedal-a",
+    "kind": "box",
+    "bone": "crank",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "frame",
+    "size": [
+     0.1,
+     0.024,
+     0.09
+    ],
+    "cornerRadius": 0.006,
+    "transform": {
+     "translation": [
+      0.17,
+      0,
+      -0.145
+     ]
+    }
+   },
+   {
+    "id": "pedal-b",
+    "kind": "box",
+    "bone": "crank",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "frame",
+    "size": [
+     0.06,
+     0.02,
+     0.09
+    ],
+    "cornerRadius": 0.006,
+    "transform": {
+     "translation": [
+      -0.16,
+      0,
+      0.145
+     ]
+    }
+   },
+   {
+    "id": "stand-pivot",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0,
+     0,
+     -0.12
+    ],
+    "p1": [
+     0,
+     0,
+     0.12
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "stand-leg-l",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0,
+     0,
+     0.12
+    ],
+    "p1": [
+     0.343,
+     0,
+     0.12
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "stand-leg-r",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame",
+    "p0": [
+     0,
+     0,
+     -0.12
+    ],
+    "p1": [
+     0.343,
+     0,
+     -0.12
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "stand-foot",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.15,
+    "p0": [
+     0.343,
+     0,
+     -0.15
+    ],
+    "p1": [
+     0.343,
+     0,
+     0.15
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "bar-stem",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     -0.013,
+     0.0,
+     0.0
+    ],
+    "p1": [
+     0.44,
+     0.0,
+     0.0
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "bar-cross",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.44,
+     0.0,
+     -0.213
+    ],
+    "p1": [
+     0.44,
+     0.0,
+     0.213
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "handlebar-l",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "plastic",
+    "role": "body",
+    "tone": 0.3,
+    "region": "touch-parts",
+    "p0": [
+     0.44,
+     0.0,
+     0.213
+    ],
+    "p1": [
+     0.5,
+     0.137,
+     0.255
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "grip-l",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "plastic",
+    "role": "body",
+    "tone": 0.15,
+    "region": "touch-parts",
+    "p0": [
+     0.48,
+     0.14,
+     0.255
+    ],
+    "p1": [
+     0.48,
+     0.14,
+     0.305
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "brake-lever-l",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 50,
+    "p0": [
+     0.43,
+     0.028,
+     0.235
+    ],
+    "p1": [
+     0.47,
+     0.1,
+     0.255
+    ],
+    "r0": 0.005,
+    "r1": 0.005
+   },
+   {
+    "id": "handlebar-r",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "plastic",
+    "role": "body",
+    "tone": 0.3,
+    "region": "touch-parts",
+    "p0": [
+     0.44,
+     0.0,
+     -0.213
+    ],
+    "p1": [
+     0.5,
+     0.137,
+     -0.255
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "grip-r",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "plastic",
+    "role": "body",
+    "tone": 0.15,
+    "region": "touch-parts",
+    "p0": [
+     0.48,
+     0.14,
+     -0.255
+    ],
+    "p1": [
+     0.48,
+     0.14,
+     -0.305
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "brake-lever-r",
+    "kind": "capsule",
+    "bone": "bar",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 50,
+    "p0": [
+     0.43,
+     0.028,
+     -0.235
+    ],
+    "p1": [
+     0.47,
+     0.1,
+     -0.255
+    ],
+    "r0": 0.005,
+    "r1": 0.005
+   },
+   {
+    "id": "fork-leg-l",
+    "kind": "capsule",
+    "bone": "fork",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     -0.00052,
+     0.00278,
+     0.06
+    ],
+    "p1": [
+     0.44241,
+     -9e-05,
+     0.06
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "fork-leg-r",
+    "kind": "capsule",
+    "bone": "fork",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     -0.00052,
+     0.00278,
+     -0.06
+    ],
+    "p1": [
+     0.44241,
+     -9e-05,
+     -0.06
+    ],
+    "r0": 0.012,
+    "r1": 0.012
+   },
+   {
+    "id": "fork-crown",
+    "kind": "capsule",
+    "bone": "fork",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.0,
+     0.0,
+     -0.07
+    ],
+    "p1": [
+     0.0,
+     0.0,
+     0.07
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "steerer",
+    "kind": "capsule",
+    "bone": "fork",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "frame",
+    "p0": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p1": [
+     0.01604,
+     -0.04736,
+     0.0
+    ],
+    "r0": 0.016,
+    "r1": 0.016
+   },
+   {
+    "id": "head-lamp",
+    "kind": "ellipsoid",
+    "bone": "fork",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.9,
+    "radii": [
+     0.04,
+     0.03,
+     0.04
+    ],
+    "transform": {
+     "translation": [
+      0.05653,
+      0.08249,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "head-lamp-bracket",
+    "kind": "capsule",
+    "bone": "fork",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.5,
+    "maxDenominator": 100,
+    "p0": [
+     0.01696,
+     0.02475,
+     0.0
+    ],
+    "p1": [
+     0.04522,
+     0.06599,
+     0.0
+    ],
+    "r0": 0.008,
+    "r1": 0.008
+   },
+   {
+    "id": "front-fender",
+    "kind": "extrude",
+    "bone": "fork",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fenders",
+    "profile": [
+     [
+      0.46476,
+      0.28905
+     ],
+     [
+      0.41421,
+      0.28854
+     ],
+     [
+      0.36452,
+      0.27926
+     ],
+     [
+      0.31719,
+      0.26149
+     ],
+     [
+      0.27367,
+      0.23577
+     ],
+     [
+      0.23528,
+      0.20289
+     ],
+     [
+      0.20318,
+      0.16383
+     ],
+     [
+      0.17835,
+      0.1198
+     ],
+     [
+      0.16154,
+      0.07213
+     ],
+     [
+      0.15327,
+      0.02226
+     ],
+     [
+      0.15378,
+      -0.02829
+     ],
+     [
+      0.16306,
+      -0.07798
+     ],
+     [
+      0.18083,
+      -0.1253
+     ],
+     [
+      0.19256,
+      -0.11969
+     ],
+     [
+      0.17559,
+      -0.07449
+     ],
+     [
+      0.16672,
+      -0.02702
+     ],
+     [
+      0.16623,
+      0.02126
+     ],
+     [
+      0.17413,
+      0.06889
+     ],
+     [
+      0.19019,
+      0.11443
+     ],
+     [
+      0.21391,
+      0.15649
+     ],
+     [
+      0.24457,
+      0.19379
+     ],
+     [
+      0.28124,
+      0.2252
+     ],
+     [
+      0.32281,
+      0.24976
+     ],
+     [
+      0.36801,
+      0.26673
+     ],
+     [
+      0.41547,
+      0.2756
+     ],
+     [
+      0.46376,
+      0.27609
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.04,
+    "to": 0.04
+   },
+   {
+    "id": "front-fender-stay",
+    "kind": "capsule",
+    "bone": "fork",
+    "material": "plastic",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "fenders",
+    "maxDenominator": 100,
+    "p0": [
+     0.02215,
+     -0.00306,
+     0.0
+    ],
+    "p1": [
+     0.15506,
+     -0.02139,
+     0.0
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "r-tyre",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "p0": [
+     0.303,
+     0,
+     0.0
+    ],
+    "p1": [
+     0.29927,
+     0.0474,
+     0.0
+    ],
+    "r0": 0.027,
+    "r1": 0.027,
+    "repeat": {
+     "count": 40,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.15708
+    }
+   },
+   {
+    "id": "r-rim",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.6,
+    "p0": [
+     0.27,
+     0,
+     0.0
+    ],
+    "p1": [
+     0.2659,
+     0.04689,
+     0.0
+    ],
+    "r0": 0.01,
+    "r1": 0.01,
+    "repeat": {
+     "count": 36,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.17453
+    }
+   },
+   {
+    "id": "r-hub",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.45,
+    "profile": [
+     [
+      -0.035,
+      0.03
+     ],
+     [
+      0.035,
+      0.03
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "r-axle",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.45,
+    "profile": [
+     [
+      -0.065,
+      0.01
+     ],
+     [
+      0.065,
+      0.01
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "r-disc",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "steel-disc",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "brakes",
+    "profile": [
+     [
+      0.036,
+      0.08
+     ],
+     [
+      0.04,
+      0.08
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "r-spoke-l",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.6,
+    "maxDenominator": 100,
+    "p0": [
+     0.04,
+     0.0,
+     0.035
+    ],
+    "p1": [
+     0.27,
+     0.0,
+     0.0
+    ],
+    "r0": 0.0017,
+    "r1": 0.0017,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "r-spoke-r",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.6,
+    "maxDenominator": 100,
+    "p0": [
+     0.03696,
+     0.01531,
+     -0.035
+    ],
+    "p1": [
+     0.24945,
+     0.10332,
+     0.0
+    ],
+    "r0": 0.0017,
+    "r1": 0.0017,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "f-tyre",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "p0": [
+     0.228,
+     0,
+     0.0
+    ],
+    "p1": [
+     0.22519,
+     0.03567,
+     0.0
+    ],
+    "r0": 0.027,
+    "r1": 0.027,
+    "repeat": {
+     "count": 40,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.15708
+    }
+   },
+   {
+    "id": "f-rim",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.6,
+    "p0": [
+     0.193,
+     0,
+     0.0
+    ],
+    "p1": [
+     0.19007,
+     0.03351,
+     0.0
+    ],
+    "r0": 0.01,
+    "r1": 0.01,
+    "repeat": {
+     "count": 36,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.17453
+    }
+   },
+   {
+    "id": "f-hub",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.45,
+    "profile": [
+     [
+      -0.035,
+      0.03
+     ],
+     [
+      0.035,
+      0.03
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "f-axle",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.45,
+    "profile": [
+     [
+      -0.065,
+      0.01
+     ],
+     [
+      0.065,
+      0.01
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "f-disc",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "steel-disc",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "brakes",
+    "profile": [
+     [
+      0.036,
+      0.08
+     ],
+     [
+      0.04,
+      0.08
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "f-spoke-l",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.6,
+    "maxDenominator": 100,
+    "p0": [
+     0.04,
+     0.0,
+     0.035
+    ],
+    "p1": [
+     0.193,
+     0.0,
+     0.0
+    ],
+    "r0": 0.0017,
+    "r1": 0.0017,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "f-spoke-r",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "alloy-rim",
+    "role": "detail",
+    "tone": 0.6,
+    "maxDenominator": 100,
+    "p0": [
+     0.03696,
+     0.01531,
+     -0.035
+    ],
+    "p1": [
+     0.17831,
+     0.07386,
+     0.0
+    ],
+    "r0": 0.0017,
+    "r1": 0.0017,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "box-wall-l",
+    "kind": "extrude",
+    "bone": "box",
+    "material": "plywood",
+    "role": "body",
+    "tone": 0.7,
+    "region": "box-wood",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.83,
+      0.0
+     ],
+     [
+      0.889,
+      0.111
+     ],
+     [
+      1.0,
+      0.17
+     ],
+     [
+      1.0,
+      0.65
+     ],
+     [
+      0.0,
+      0.65
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.295,
+    "to": 0.325
+   },
+   {
+    "id": "box-wall-r",
+    "kind": "extrude",
+    "bone": "box",
+    "material": "plywood",
+    "role": "body",
+    "tone": 0.7,
+    "region": "box-wood",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.83,
+      0.0
+     ],
+     [
+      0.889,
+      0.111
+     ],
+     [
+      1.0,
+      0.17
+     ],
+     [
+      1.0,
+      0.65
+     ],
+     [
+      0.0,
+      0.65
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.325,
+    "to": -0.295
+   },
+   {
+    "id": "box-floor",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "body",
+    "tone": 0.7,
+    "region": "box-wood",
+    "size": [
+     0.83,
+     0.03,
+     0.59
+    ],
+    "transform": {
+     "translation": [
+      0.415,
+      0.015,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "box-rear-wall",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "body",
+    "tone": 0.7,
+    "region": "box-wood",
+    "size": [
+     0.03,
+     0.65,
+     0.59
+    ],
+    "transform": {
+     "translation": [
+      0.015,
+      0.325,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "box-front-wall",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "body",
+    "tone": 0.7,
+    "region": "box-wood",
+    "size": [
+     0.03,
+     0.46,
+     0.59
+    ],
+    "transform": {
+     "translation": [
+      0.985,
+      0.42,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "box-nose-a",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "body",
+    "tone": 0.7,
+    "region": "box-wood",
+    "size": [
+     0.12571,
+     0.03,
+     0.59
+    ],
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.5151,
+      0.85713
+     ],
+     "translation": [
+      0.8595,
+      0.0555,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "box-nose-b",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "body",
+    "tone": 0.7,
+    "region": "box-wood",
+    "size": [
+     0.12571,
+     0.03,
+     0.59
+    ],
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.24185,
+      0.97031
+     ],
+     "translation": [
+      0.9445,
+      0.1405,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "box-rim-side",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "box-wood",
+    "maxDenominator": 100,
+    "size": [
+     0.94,
+     0.02,
+     0.03
+    ],
+    "transform": {
+     "translation": [
+      0.48,
+      0.64,
+      0.31
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -0.62
+     ]
+    }
+   },
+   {
+    "id": "box-rim-end",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "box-wood",
+    "maxDenominator": 100,
+    "size": [
+     0.03,
+     0.02,
+     0.59
+    ],
+    "transform": {
+     "translation": [
+      0.055,
+      0.64,
+      0.0
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.89,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "box-plank",
+    "kind": "box",
+    "bone": "box",
+    "material": "plywood",
+    "role": "detail",
+    "tone": 0.45,
+    "maxDenominator": 50,
+    "size": [
+     0.002,
+     0.012,
+     0.59
+    ],
+    "transform": {
+     "translation": [
+      -0.001,
+      0.3,
+      0.0
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0.2,
+      0
+     ]
+    }
+   },
+   {
+    "id": "crate-lower",
+    "kind": "box",
+    "bone": "crate",
+    "material": "plastic",
+    "role": "body",
+    "tone": 0.55,
+    "region": "cargo",
+    "size": [
+     0.5,
+     0.28,
+     0.52
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      0.25,
+      0.14,
+      0
+     ]
+    }
+   },
+   {
+    "id": "crate-upper",
+    "kind": "box",
+    "bone": "crate",
+    "material": "plastic",
+    "role": "body",
+    "tone": 0.62,
+    "region": "cargo",
+    "size": [
+     0.46,
+     0.28,
+     0.5
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      0.25,
+      0.42,
+      0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The wheel-base frame is a set of tube capsules along the drawn tube lines; the main beam is a flat capsule (0.03 m high, 0.02 m wide, built on the u axis and tilted so that the lateral stretch acts along w), seat and chain stays pair up with the plan offsets (0.045 m, converging to 0.02 m).",
+    "de": "Der Radstandsrahmen besteht aus Rohrkapseln entlang der gezeichneten Rohrlinien; der Hauptträger ist eine flache Kapsel (0,03 m hoch, 0,02 m breit, auf der u-Achse gebaut und gekippt, damit die Querstreckung entlang w wirkt), Sitz- und Kettenstreben paaren sich mit den Grundrissabständen (0,045 m, zusammenlaufend auf 0,02 m)."
+   },
+   {
+    "en": "The cargo box is hollow: two 30 mm side walls (extrude of the side outline with the bevelled nose), floor, end walls, two nose panels and an inner rim; the crates are two stacked rounded boxes on the crate bone so they travel with the load-box clip; the long steering rod runs inside the box at y = 0.62 m as drawn.",
+    "de": "Die Transportbox ist hohl: zwei 30 mm starke Seitenwände (Extrusion des Seitenumrisses mit abgeschrägter Nase), Boden, Stirnwände, zwei Nasenplatten und ein innerer Rand; die Kisten sind zwei gestapelte, abgerundete Quader am Kistenknochen, sodass sie mit dem Beladeclip mitfahren; die lange Lenkstange verläuft wie gezeichnet bei y = 0,62 m im Inneren der Box."
+   },
+   {
+    "en": "Tyres and rims are capsule rings (one solid each with repeat about the axle); the rear wheel (R 0.33 m) and the small front wheel (R 0.255 m) each have a hub, a disc brake rotor, an axle and 16 dished spokes in two sets; the front wheel hangs on the fork bone.",
+    "de": "Reifen und Felgen sind Kapselringe (je ein Körper mit repeat um die Achse); das Hinterrad (R 0,33 m) und das kleine Vorderrad (R 0,255 m) haben je eine Nabe, eine Scheibenbremse, eine Achse und 16 gedishte Speichen in zwei Sätzen; das Vorderrad hängt am Gabelknochen."
+   }
+  ]
+ }
+}

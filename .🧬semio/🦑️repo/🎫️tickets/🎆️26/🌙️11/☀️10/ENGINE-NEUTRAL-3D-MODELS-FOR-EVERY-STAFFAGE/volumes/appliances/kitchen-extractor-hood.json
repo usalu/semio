@@ -1,0 +1,453 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "canopy",
+    "kind": "extrude",
+    "bone": "canopy",
+    "material": "stainless-steel",
+    "role": "body",
+    "tone": 0.55,
+    "region": "canopy",
+    "profile": [
+     [
+      0,
+      0.02
+     ],
+     [
+      0.5,
+      0.02
+     ],
+     [
+      0.5,
+      0.06
+     ],
+     [
+      0.4,
+      0.2
+     ],
+     [
+      0,
+      0.2
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.45,
+    "to": 0.45
+   },
+   {
+    "id": "filter",
+    "kind": "extrude",
+    "bone": "canopy",
+    "material": "filter-mesh",
+    "role": "body",
+    "tone": 0.7,
+    "region": "filter",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      -0.43,
+      0.02
+     ],
+     [
+      0.43,
+      0.02
+     ],
+     [
+      0.43,
+      0.48
+     ],
+     [
+      -0.43,
+      0.48
+     ]
+    ],
+    "plane": "zx",
+    "from": 0,
+    "to": 0.02,
+    "holes": [
+     [
+      [
+       -0.17,
+       0.1
+      ],
+      [
+       -0.17402,
+       0.115
+      ],
+      [
+       -0.185,
+       0.12598
+      ],
+      [
+       -0.2,
+       0.13
+      ],
+      [
+       -0.215,
+       0.12598
+      ],
+      [
+       -0.22598,
+       0.115
+      ],
+      [
+       -0.23,
+       0.1
+      ],
+      [
+       -0.22598,
+       0.085
+      ],
+      [
+       -0.215,
+       0.07402
+      ],
+      [
+       -0.2,
+       0.07
+      ],
+      [
+       -0.185,
+       0.07402
+      ],
+      [
+       -0.17402,
+       0.085
+      ]
+     ],
+     [
+      [
+       0.23,
+       0.1
+      ],
+      [
+       0.22598,
+       0.115
+      ],
+      [
+       0.215,
+       0.12598
+      ],
+      [
+       0.2,
+       0.13
+      ],
+      [
+       0.185,
+       0.12598
+      ],
+      [
+       0.17402,
+       0.115
+      ],
+      [
+       0.17,
+       0.1
+      ],
+      [
+       0.17402,
+       0.085
+      ],
+      [
+       0.185,
+       0.07402
+      ],
+      [
+       0.2,
+       0.07
+      ],
+      [
+       0.215,
+       0.07402
+      ],
+      [
+       0.22598,
+       0.085
+      ]
+     ],
+     [
+      [
+       -0.17,
+       0.37
+      ],
+      [
+       -0.17402,
+       0.385
+      ],
+      [
+       -0.185,
+       0.39598
+      ],
+      [
+       -0.2,
+       0.4
+      ],
+      [
+       -0.215,
+       0.39598
+      ],
+      [
+       -0.22598,
+       0.385
+      ],
+      [
+       -0.23,
+       0.37
+      ],
+      [
+       -0.22598,
+       0.355
+      ],
+      [
+       -0.215,
+       0.34402
+      ],
+      [
+       -0.2,
+       0.34
+      ],
+      [
+       -0.185,
+       0.34402
+      ],
+      [
+       -0.17402,
+       0.355
+      ]
+     ],
+     [
+      [
+       0.23,
+       0.37
+      ],
+      [
+       0.22598,
+       0.385
+      ],
+      [
+       0.215,
+       0.39598
+      ],
+      [
+       0.2,
+       0.4
+      ],
+      [
+       0.185,
+       0.39598
+      ],
+      [
+       0.17402,
+       0.385
+      ],
+      [
+       0.17,
+       0.37
+      ],
+      [
+       0.17402,
+       0.355
+      ],
+      [
+       0.185,
+       0.34402
+      ],
+      [
+       0.2,
+       0.34
+      ],
+      [
+       0.215,
+       0.34402
+      ],
+      [
+       0.22598,
+       0.355
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "lamp-l",
+    "kind": "revolve",
+    "bone": "canopy",
+    "material": "lamp-diffuser",
+    "role": "detail",
+    "tone": 0.95,
+    "region": "lamps",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.028
+     ],
+     [
+      0.0015,
+      0.029
+     ],
+     [
+      0.012,
+      0.029
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.1,
+      0,
+      -0.2
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.27,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "lamp-r",
+    "kind": "revolve",
+    "bone": "canopy",
+    "material": "lamp-diffuser",
+    "role": "detail",
+    "tone": 0.95,
+    "region": "lamps",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.028
+     ],
+     [
+      0.0015,
+      0.029
+     ],
+     [
+      0.012,
+      0.029
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.1,
+      0,
+      0.2
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.27,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "chimney-lower",
+    "kind": "box",
+    "bone": "chimney",
+    "material": "stainless-steel",
+    "role": "body",
+    "tone": 0.6,
+    "region": "chimney",
+    "size": [
+     0.3,
+     0.35,
+     0.3
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      0.15,
+      0.175,
+      0
+     ]
+    }
+   },
+   {
+    "id": "chimney-upper",
+    "kind": "box",
+    "bone": "chimney-top",
+    "material": "stainless-steel",
+    "role": "body",
+    "tone": 0.65,
+    "region": "chimney",
+    "size": [
+     0.28,
+     0.35,
+     0.28
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      0.14,
+      0.175,
+      0
+     ]
+    }
+   },
+   {
+    "id": "collar",
+    "kind": "box",
+    "bone": "chimney-top",
+    "material": "stainless-steel",
+    "role": "body",
+    "tone": 0.45,
+    "region": "chimney",
+    "maxDenominator": 100,
+    "size": [
+     0.2,
+     0.015,
+     0.2
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      0.14,
+      0.3575,
+      0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The canopy is the extrusion of its elevation profile (flat back at the wall, 140 mm sloped front panel) across the 0.9 m width drawn in front and plan; the chimney sections and the collar are square boxes of their plan footprints.",
+    "de": "Die Haube ist die Extrusion ihres Seitenprofils (flache Rückwand an der Wand, 140 mm geneigte Frontblende) über die in Vorderansicht und Grundriss gezeichnete Breite von 0,9 m; die Kaminteile und der Kragen sind quadratische Quader ihrer Grundrissflächen."
+   },
+   {
+    "en": "The grease filter is an extrusion of the filter outline with four round openings in which the four lamp discs sit: the two views draw lamps at two x positions and at two z positions, read as a 2 x 2 grid (two repeated pairs).",
+    "de": "Der Fettfilter ist eine Extrusion der Filterkontur mit vier runden Öffnungen, in denen die vier Lampenscheiben sitzen: die beiden Ansichten zeigen Lampen an zwei x-Lagen und an zwei z-Lagen, gelesen als Raster 2 x 2 (zwei wiederholte Paare)."
+   },
+   {
+    "en": "The canopy is modelled as a solid body (not a hollow shell); hairline details (panel edge, lip, seam) are not modelled.",
+    "de": "Die Haube ist als Vollkörper modelliert (keine Hohlschale); Haarliniendetails (Blendenkante, Lippe, Naht) werden nicht modelliert."
+   }
+  ]
+ }
+}

@@ -20,6 +20,7 @@
     { "arguments": [], "expected": "setup" },
     { "arguments": ["setup"], "expected": "setup" },
     { "arguments": ["rust"], "expected": "rust" },
+    { "arguments": ["node"], "expected": "node" },
     { "arguments": ["unknown"], "expected": null },
     { "arguments": ["rust", "setup"], "expected": null }
   ],

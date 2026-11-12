@@ -1,0 +1,52 @@
+# Tooling gap: uv, ffmpeg, rsvg-convert, qpdf, repo MCP, test-only dependencies
+
+Status: uv fixed end to end (see section 0); ffmpeg, rsvg-convert, qpdf, poppler tools still unresolved; full-suite re-run was killed (exit 143 at about 1280 s, apparently by something external), so no full before/after count.
+
+## 0. Update: uv resolved (supersedes the "Done/ran" notes in section 2)
+
+- Correction: `repo tools setup uv ffmpeg` had failed ("Unknown build tool: uv"); the right form is `repo tools setup toolchains uv`. That provisioned uv 0.11.6 (pinned, sha-verified download) into `.cache/b/t/m/native/uv/0.11.6/darwin-arm64-4b69a4e366ec38cd/uv`.
+- Catalog defect found and fixed in `🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json` (uv entry): (1) `locate` had no `provisioned` step, so the registry reported `uv missing` although setup had installed it; added the same `provisioned` locator as cargo-nextest. (2) `tools exec --light uv -- --version` was admitted as a 6144 MB `dependencies` job and waited minutes under memory pressure; added a `capacity.rules` entry (`uv --version` is a `tool-query`, as for `go`). `repo tools list` now shows `uv provisioned`, `repo tools exec --light uv -- --version` answers in 3 s.
+- Test helper `🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🧰️.ts`: `tool`, `requireTool` and `python` now resolve `ffmpeg` and `uv` through `repo tools exec --light <tool> --` (a `REPO_TOOLS` set plus `resolved`); `python()` reads stdout only, because the registry prints capacity progress on stderr and the oracles parse JSON from stdout.
+- Result: `volume-schema` (library package, `repo tools exec --light vitest -- run --config ../../🧪️tests/🎚️config/🟦️.ts volume-schema`): before 87 passed, 1 failed (shapely oracle, uv missing); after 90 passed, 0 failed (the shapely oracle now executes for real). The shapely vectors that were only hand-labelled are now verified.
+- Not done: the full library suite (`vitest-full.txt`) was terminated with exit 143 after about 1280 s, so I cannot give the failing-file count. Expected effect: the 15 `requireTool("uv")` files and the other `python(...)` oracles should now load; ffmpeg, rsvg-convert, qpdf, pdftoppm/pdfinfo/pdftotext, ffprobe, unzip files still fail. Note the `frame-timing` test has its own ffmpeg routing copy and still needs ffmpeg and ffprobe on the machine.
+- Generated logs kept in `T/🗑️generated/tooling/` (setup-uv.txt, setup-uv2.txt, vitest-after*.txt, vitest-full.txt); delete when the ticket closes.
+
+## 1. How tools are declared
+
+- Catalog: `🧰️framework/🔨️modules/🏃️process/🧰️tools/🔣️.json` (32 tools; id, pin, `provision`, `locate` chain, `allowedCallers`, probe). `repo tools list|verify|setup|exec` read it.
+- `uv` is pinned (0.11.6, rows with sha256 for darwin arm64/x64, linux x64/arm64, win32 x64/arm64 in `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json`, `Pins.assets`). Its `locate` chain is env `SEMIO_TOOL_UV`, then PATH directories `~/.local/bin`, `~/.cargo/bin`; the bootstrap installer (`🐚️.sh` `ensure_uv`) copies it to `~/.local/bin` (user space, no profile edit). `repo tools list` on this host: `uv missing`.
+- `ffmpeg` is declared with `pin.state: system` and no download: `provision.hints` say `brew install ffmpeg` / apt / winget. So it can never be provisioned zero-touch by the repo. Also `missing` here.
+- `rsvg-convert`, `qpdf`, `pdftoppm`, `pdfinfo`, `pdftotext`, `ffprobe`, `unzip` are NOT in the catalog.
+
+## 2. How the staffage tests look for them
+
+`🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🧰️.ts`: `requireTool(name)` probes `repo tools exec --light ffmpeg` only for ffmpeg; everything else is spawned from PATH (`uv`, `qpdf`, `rsvg-convert`, `ffprobe`); `tool()`/`python()` spawn `uv` directly. `🧪️tests/🎞️frame-timing` has its own copy of the ffmpeg routing. Product code also calls `rsvg-convert` (`🔨️modules/🎨️depiction/🖨️preview`, `🔨️modules/📤️export/🎬️cli:157`, whose `REPO_TOOLS` set holds only ffmpeg); out of scope for me (modules are reserved).
+
+Per tool:
+- uv: (a)+(b). Declared and pinned, not set up here; tests bypass the registry (spawn `uv`). Fix once set up: route `tool("uv")`/`python()` through `repo tools exec --light uv --` (not changed yet, because setup did not complete and I could not verify the resolved path).
+- ffmpeg: (c) variant. Declared as system-only, no pin; zero-touch is impossible without adding per-platform pinned archives with digests (no official single source: macOS/Linux/Windows static builds come from three different vendors). I did not add unverifiable digests.
+- rsvg-convert, qpdf (and poppler tools, ffprobe, unzip): not declared. librsvg and poppler publish no official prebuilt binaries; qpdf has release assets for Linux/Windows only. A pinned-per-platform entry cannot be written honestly without fetching and hashing binaries by hand, which the task forbids. Realistic options for the dev: (1) replace these oracles by pinned PyPI wheels run through `uv --with` (pikepdf bundles qpdf, pymupdf renders SVG/PDF and extracts text/boxes, imageio-ffmpeg/av bundle ffmpeg+ffprobe), same pattern as the shapely oracles; or (2) catalog entries with vendor archives and digests, accepting the digest fetching. Left to the human dev.
+
+What I ran: `repo tools list`, `repo tools verify` (starts the build-source admission, long), `repo tools setup uv ffmpeg` (queued behind the capacity gate for over 25 min: "not enough free memory (need 2048 MB ... floor)" while other agents' projects held 10 to 14 GB). Output: `T/🗑️generated/tooling/setup-uv.txt`. That process may still be running or may have been left queued; check `repo tools list` for uv. `ffmpeg` setup will report it cannot be provisioned (system pin).
+
+## 3. repo MCP
+
+- `.mcp.json` runs `repo mcp`. `~/.local/bin/repo` is the Go launcher (Mach-O, 6.5 MB, prints "repo mcp needs the full native command, this is the launcher only. Install it once: repo run repo-mcp:install"). By design (launcher README) the launcher is stage 0; `repo run repo-mcp:install` then replaces it with the full native command.
+- Why the guard refuses (`🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts`, `InstallScript`): the destination may be replaced only if it is (1) a symlink resolving to `${XDG_DATA_HOME:-~/.local/share}/semio/launcher/bin/repo` (the documented single copy made by `🚀️launcher/📥️install/🐚️.sh` plus `ln -sf`), or (2) already the same digest, or (3) recorded in the install receipt. Here `~/.local/share/semio/launcher/bin/repo` does not exist and `~/.local/bin/repo` is a regular file copy (written 18:06 by something other than the installer; the receipt directory `~/.local/share/semio/repo` is empty). So no rule matches. This is an environment deviation, not a code defect, and I did not change the guard or the file.
+- Verified: the built native binary answers MCP `initialize` over stdio: `SEMIO_REPO_MCP_CLIENT=client .🧬semio/🦑️repo/⚡️cache/🗃️bin/prototype/repo/repo mcp` returned the `initialize` result (serverInfo repo 1.0.0, `tools=6`). Its log also says `build tools unavailable: mcp: catalogue has no subcommand service status` and `buildTools=0`: the build tools (run, test, ...) are not exposed by this prototype binary; likely a stale binary versus the catalogue, worth rebuilding.
+- Options for the dev (none applied): (A) `rm ~/.local/bin/repo`, run `🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh`, then `ln -sf ~/.local/share/semio/launcher/bin/repo ~/.local/bin/repo`, then `repo run repo-mcp:install` (replaces the link with the native command, adds the receipt). This is the intended zero-touch path. (B) Point `.mcp.json` at the native binary in `.🧬semio/🦑️repo/⚡️cache/🗃️bin/<mode>/repo/repo`: not portable (mode, `.exe` on Windows), so I did not. (C) Make the launcher's `mcp` verb delegate to that built binary when present: a product change in the launcher, not made.
+
+## 4. Test-only dependencies: gltf-validator and assimpjs
+
+- Mechanism: root `package.json` `devDependencies` + `bun.lock` (`repo dependencies lock/sync --all`), and the `🔒️dependencies.json` inventory (ratchet, regenerated by `repo run workspace:verify-dependencies-freeze-write-baseline`), which classifies each package from the oracle registries `**/🔮️oracles/🔣️.json` (schema `🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json`). A test-only package that is in no registry is reported as "declared as a test dependency but no oracle or probe registers it".
+- State found: both packages are in `package.json` devDependencies (lines 193, 249, before the `dependencies` block at line 401) and in `bun.lock` with integrity hashes (assimpjs 0.0.10 and gltf-validator 2.0.0-dev.3.10 both resolved; so the lock was already consistent, a fresh checkout resolves both through `repo dependencies ensure`). Missing: oracle registration and `🔒️dependencies.json` entries for both.
+- Done: new `🧰️framework/🔨️modules/🧊️3d/🗿️model/🔮️oracles/🔣️.json` with oracles `gltf-validator-glb` (Khronos validator, Apache-2.0) and `assimpjs-fbx` (Assimp via WASM, MIT), `testOnly`, `productionReachable: false`; two entries (`test-oracle`, not production reachable) added in `🔒️dependencies.json` at their sorted positions.
+- Reachability: the only importers are `🗿️model/📤️export/🧊️glb/🧪️tests/**`, `🎬️fbx/🧪️tests/**` (grep over the tree, excluding node_modules and tickets); no runtime module imports either.
+- NOT verified: `repo show projects` and `repo run workspace:verify-dependencies-freeze` (it was admitted once at ~110 s but the graph service failed with "unexpected failure (reference a05042fa)" under memory pressure; no verdict). The baseline JSON and the registry file are syntactically valid JSON and follow the existing entry shape, but the drift check has not been seen passing. Also note `@gltf-transform/core` and `three` are used by the same GLB test but `@gltf-transform/*` is declared only in `✏️s/package.json`: whoever owns that test should confirm it resolves from the model package.
+
+## Left for the human dev
+
+1. Free host memory, then run `repo tools setup uv`, then `repo run workspace:verify-dependencies-freeze` and `repo show projects`.
+2. Decide the strategy for ffmpeg, rsvg-convert, qpdf and poppler (wheels via uv versus vendor archives); after uv is provisioned, route `🧪️tests/🧰️support/🧰️.ts` `tool()`/`python()` through `repo tools exec`.
+3. Decide MCP option A, B or C.
+4. Staffage re-run before/after: not done.

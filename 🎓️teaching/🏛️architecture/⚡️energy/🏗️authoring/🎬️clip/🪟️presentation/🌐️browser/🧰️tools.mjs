@@ -1,3 +1,6 @@
+/** 🖥️ Launch options of the owned headless browser: its GPU runs inside the browser process, because the separate GPU process of the pinned headless shell delivers no animation frames on current macOS hosts and every paint barrier would wait forever. */
+export const browserLaunchOptions = {headless:true,args:["--in-process-gpu"]};
+
 /** 🎛️ Disable incidental transitions only in deterministic presentation capture. */
 export const presentationTransitionStyle = "*,*::before,*::after{transition:none!important}";
 

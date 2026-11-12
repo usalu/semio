@@ -1,0 +1,1114 @@
+{
+ "tolerance": 0.00001,
+ "cameras": [
+  {
+   "name": "front-1",
+   "preset": "front",
+   "aspect": 1,
+   "camera": {
+    "yaw": 0,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    0.3,
+    1.1,
+    5.8
+   ],
+   "view": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    -0.3,
+    -1.1,
+    -5.8,
+    1
+   ],
+   "projection": [
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     0.925,
+     -0.15,
+     5.8
+    ],
+    "direction": [
+     0,
+     0,
+     -1
+    ]
+   }
+  },
+  {
+   "name": "front-1.6",
+   "preset": "front",
+   "aspect": 1.6,
+   "camera": {
+    "yaw": 0,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    0.3,
+    1.1,
+    5.8
+   ],
+   "view": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    -0.3,
+    -1.1,
+    -5.8,
+    1
+   ],
+   "projection": [
+    0.25,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     1.3,
+     -0.15,
+     5.8
+    ],
+    "direction": [
+     0,
+     0,
+     -1
+    ]
+   }
+  },
+  {
+   "name": "elevation-1",
+   "preset": "elevation",
+   "aspect": 1,
+   "camera": {
+    "yaw": -1.570796,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    -5.7,
+    1.1,
+    -0.2
+   ],
+   "view": [
+    0,
+    0,
+    -1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0.2,
+    -1.1,
+    -5.7,
+    1
+   ],
+   "projection": [
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     -5.7,
+     -0.15,
+     0.425
+    ],
+    "direction": [
+     1,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "name": "elevation-1.6",
+   "preset": "elevation",
+   "aspect": 1.6,
+   "camera": {
+    "yaw": -1.570796,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    -5.7,
+    1.1,
+    -0.2
+   ],
+   "view": [
+    0,
+    0,
+    -1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0.2,
+    -1.1,
+    -5.7,
+    1
+   ],
+   "projection": [
+    0.25,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     -5.7,
+     -0.15,
+     0.8
+    ],
+    "direction": [
+     1,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "name": "plan-1",
+   "preset": "plan",
+   "aspect": 1,
+   "camera": {
+    "yaw": -1.570796,
+    "pitch": 1.570796,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    0.3,
+    7.1,
+    -0.2
+   ],
+   "view": [
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0.2,
+    -0.3,
+    -7.1,
+    1
+   ],
+   "projection": [
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     -0.95,
+     7.1,
+     0.425
+    ],
+    "direction": [
+     0,
+     -1,
+     0
+    ]
+   }
+  },
+  {
+   "name": "plan-1.6",
+   "preset": "plan",
+   "aspect": 1.6,
+   "camera": {
+    "yaw": -1.570796,
+    "pitch": 1.570796,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    0.3,
+    7.1,
+    -0.2
+   ],
+   "view": [
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0.2,
+    -0.3,
+    -7.1,
+    1
+   ],
+   "projection": [
+    0.25,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     -0.95,
+     7.1,
+     0.8
+    ],
+    "direction": [
+     0,
+     -1,
+     0
+    ]
+   }
+  },
+  {
+   "name": "axonometric-1",
+   "preset": "axonometric",
+   "aspect": 1,
+   "camera": {
+    "yaw": -0.785398,
+    "pitch": 0.61548,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    -3.164102,
+    4.564102,
+    3.264102
+   ],
+   "view": [
+    0.707107,
+    0.408248,
+    -0.57735,
+    0,
+    0,
+    0.816497,
+    0.57735,
+    0,
+    0.707107,
+    -0.408248,
+    0.57735,
+    0,
+    -0.070711,
+    -1.10227,
+    -6.34641,
+    1
+   ],
+   "projection": [
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     -3.23247,
+     3.543481,
+     4.216354
+    ],
+    "direction": [
+     0.57735,
+     -0.57735,
+     -0.57735
+    ]
+   }
+  },
+  {
+   "name": "axonometric-1.6",
+   "preset": "axonometric",
+   "aspect": 1.6,
+   "camera": {
+    "yaw": -0.785398,
+    "pitch": 0.61548,
+    "projection": "orthographic",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    -3.164102,
+    4.564102,
+    3.264102
+   ],
+   "view": [
+    0.707107,
+    0.408248,
+    -0.57735,
+    0,
+    0,
+    0.816497,
+    0.57735,
+    0,
+    0.707107,
+    -0.408248,
+    0.57735,
+    0,
+    -0.070711,
+    -1.10227,
+    -6.34641,
+    1
+   ],
+   "projection": [
+    0.25,
+    0,
+    0,
+    0,
+    0,
+    0.4,
+    0,
+    0,
+    0,
+    0,
+    -0.25,
+    0,
+    0,
+    0,
+    -1.5,
+    1
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     -2.967305,
+     3.543481,
+     4.481519
+    ],
+    "direction": [
+     0.57735,
+     -0.57735,
+     -0.57735
+    ]
+   }
+  },
+  {
+   "name": "perspective-1",
+   "preset": "perspective",
+   "aspect": 1,
+   "camera": {
+    "yaw": 0.523599,
+    "pitch": 0.35,
+    "projection": "perspective",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    3.118118,
+    3.157387,
+    4.681124
+   ],
+   "view": [
+    0.866025,
+    -0.171449,
+    0.469686,
+    0,
+    0,
+    0.939373,
+    0.342898,
+    0,
+    -0.5,
+    -0.296958,
+    0.813521,
+    0,
+    -0.359808,
+    -1.041267,
+    -6.355389,
+    1
+   ],
+   "projection": [
+    2.739512,
+    0,
+    0,
+    0,
+    0,
+    2.739512,
+    0,
+    0,
+    0,
+    0,
+    -1.5,
+    -1,
+    0,
+    0,
+    -5,
+    0
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     3.118118,
+     3.157387,
+     4.681124
+    ],
+    "direction": [
+     -0.352108,
+     -0.503961,
+     -0.788697
+    ]
+   }
+  },
+  {
+   "name": "perspective-1.6",
+   "preset": "perspective",
+   "aspect": 1.6,
+   "camera": {
+    "yaw": 0.523599,
+    "pitch": 0.35,
+    "projection": "perspective",
+    "target": [
+     0.3,
+     1.1,
+     -0.2
+    ],
+    "distance": 6,
+    "fovY": 0.7,
+    "orthoHeight": 5,
+    "extent": 2
+   },
+   "eye": [
+    3.118118,
+    3.157387,
+    4.681124
+   ],
+   "view": [
+    0.866025,
+    -0.171449,
+    0.469686,
+    0,
+    0,
+    0.939373,
+    0.342898,
+    0,
+    -0.5,
+    -0.296958,
+    0.813521,
+    0,
+    -0.359808,
+    -1.041267,
+    -6.355389,
+    1
+   ],
+   "projection": [
+    1.712195,
+    0,
+    0,
+    0,
+    0,
+    2.739512,
+    0,
+    0,
+    0,
+    0,
+    -1.5,
+    -1,
+    0,
+    0,
+    -5,
+    0
+   ],
+   "ray": {
+    "ndc": [
+     0.25,
+     -0.5
+    ],
+    "origin": [
+     3.118118,
+     3.157387,
+     4.681124
+    ],
+    "direction": [
+     -0.303758,
+     -0.500848,
+     -0.810483
+    ]
+   }
+  }
+ ],
+ "fits": [
+  {
+   "name": "front-1",
+   "preset": "front",
+   "aspect": 1,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": 0,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 2.2,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "front-1.6",
+   "preset": "front",
+   "aspect": 1.6,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": 0,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 2.2,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "elevation-1",
+   "preset": "elevation",
+   "aspect": 1,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": -1.570796,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 2.2,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "elevation-1.6",
+   "preset": "elevation",
+   "aspect": 1.6,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": -1.570796,
+    "pitch": 0,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 2.2,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "plan-1",
+   "preset": "plan",
+   "aspect": 1,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": -1.570796,
+    "pitch": 1.570796,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 2.2,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "plan-1.6",
+   "preset": "plan",
+   "aspect": 1.6,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": -1.570796,
+    "pitch": 1.570796,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 2.2,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "axonometric-1",
+   "preset": "axonometric",
+   "aspect": 1,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": -0.785398,
+    "pitch": 0.61548,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 3.592585,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "axonometric-1.6",
+   "preset": "axonometric",
+   "aspect": 1.6,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": -0.785398,
+    "pitch": 0.61548,
+    "projection": "orthographic",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 3.464103,
+    "fovY": 0.6,
+    "orthoHeight": 3.592585,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "perspective-1",
+   "preset": "perspective",
+   "aspect": 1,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": 0.523599,
+    "pitch": 0.35,
+    "projection": "perspective",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 5.946376,
+    "fovY": 0.6,
+    "orthoHeight": 2,
+    "extent": 1.732051
+   }
+  },
+  {
+   "name": "perspective-1.6",
+   "preset": "perspective",
+   "aspect": 1.6,
+   "bounds": {
+    "min": [
+     -1,
+     0,
+     -1
+    ],
+    "max": [
+     1,
+     2,
+     1
+    ]
+   },
+   "margin": 1.1,
+   "fitted": {
+    "yaw": 0.523599,
+    "pitch": 0.35,
+    "projection": "perspective",
+    "target": [
+     0,
+     1,
+     0
+    ],
+    "distance": 5.946376,
+    "fovY": 0.6,
+    "orthoHeight": 2,
+    "extent": 1.732051
+   }
+  }
+ ],
+ "presets": {
+  "front": {
+   "yaw": 0,
+   "pitch": 0,
+   "projection": "orthographic"
+  },
+  "elevation": {
+   "yaw": -1.570796,
+   "pitch": 0,
+   "projection": "orthographic"
+  },
+  "plan": {
+   "yaw": -1.570796,
+   "pitch": 1.570796,
+   "projection": "orthographic"
+  },
+  "axonometric": {
+   "yaw": -0.785398,
+   "pitch": 0.61548,
+   "projection": "orthographic"
+  },
+  "perspective": {
+   "yaw": 0.523599,
+   "pitch": 0.35,
+   "projection": "perspective"
+  }
+ }
+}

@@ -301,7 +301,8 @@
               "filled": false,
               "kind": "path",
               "d": "M -0.0400 0.2120 L -0.0400 0.3220 M -0.0100 0.2120 L -0.0100 0.3220 M 0.0200 0.2120 L 0.0200 0.3220 M 0.0500 0.2120 L 0.0500 0.3220 M 0.0800 0.2120 L 0.0800 0.3220",
-              "region": "cpu-grille"
+              "region": "cpu-grille",
+              "tone": 0.3
             },
             {
               "id": "psu-slits",
@@ -311,7 +312,8 @@
               "filled": false,
               "kind": "path",
               "d": "M -0.2250 0.3420 L -0.1990 0.3420 M -0.2250 0.3510 L -0.1990 0.3510 M -0.2250 0.3600 L -0.1990 0.3600 M -0.2250 0.3690 L -0.1990 0.3690 M -0.2250 0.3780 L -0.1990 0.3780 M -0.2250 0.3870 L -0.1990 0.3870 M -0.2250 0.3960 L -0.1990 0.3960 M -0.2250 0.4050 L -0.1990 0.4050 M -0.2250 0.4140 L -0.1990 0.4140 M -0.2250 0.4230 L -0.1990 0.4230 M -0.2250 0.4320 L -0.1990 0.4320",
-              "region": "psu-vent"
+              "region": "psu-vent",
+              "tone": 0.3
             },
             {
               "id": "intake-slits",
@@ -321,7 +323,8 @@
               "filled": false,
               "kind": "path",
               "d": "M 0.2000 0.0620 L 0.2250 0.0620 M 0.2000 0.0920 L 0.2250 0.0920 M 0.2000 0.1220 L 0.2250 0.1220 M 0.2000 0.1520 L 0.2250 0.1520 M 0.2000 0.1820 L 0.2250 0.1820 M 0.2000 0.2120 L 0.2250 0.2120 M 0.2000 0.2420 L 0.2250 0.2420 M 0.2000 0.2720 L 0.2250 0.2720 M 0.2000 0.3020 L 0.2250 0.3020 M 0.2000 0.3320 L 0.2250 0.3320 M 0.2000 0.3620 L 0.2250 0.3620 M 0.2000 0.3920 L 0.2250 0.3920",
-              "region": "front-bezel"
+              "region": "front-bezel",
+              "tone": 0.3
             },
             {
               "id": "fan-ring",
@@ -334,7 +337,8 @@
               "cy": 0.2,
               "rx": 0.003,
               "ry": 0.05,
-              "region": "rear-panel"
+              "region": "rear-panel",
+              "tone": 0.3
             }
           ],
           "front": [
@@ -437,7 +441,8 @@
               "filled": false,
               "kind": "path",
               "d": "M -0.0850 0.0620 L 0.0850 0.0620 M -0.0850 0.0920 L 0.0850 0.0920 M -0.0850 0.1220 L 0.0850 0.1220 M -0.0850 0.1520 L 0.0850 0.1520 M -0.0850 0.1820 L 0.0850 0.1820 M -0.0850 0.2120 L 0.0850 0.2120 M -0.0850 0.2420 L 0.0850 0.2420 M -0.0850 0.2720 L 0.0850 0.2720 M -0.0850 0.3020 L 0.0850 0.3020 M -0.0850 0.3320 L 0.0850 0.3320 M -0.0850 0.3620 L 0.0850 0.3620 M -0.0850 0.3920 L 0.0850 0.3920",
-              "region": "front-bezel"
+              "region": "front-bezel",
+              "tone": 0.3
             },
             {
               "id": "drive-bay",
@@ -540,7 +545,8 @@
               "filled": false,
               "kind": "path",
               "d": "M -0.1950 -0.0750 L -0.1950 0.0750 M -0.1800 -0.0750 L -0.1800 0.0750 M -0.1650 -0.0750 L -0.1650 0.0750 M -0.1500 -0.0750 L -0.1500 0.0750 M -0.1350 -0.0750 L -0.1350 0.0750 M -0.1200 -0.0750 L -0.1200 0.0750",
-              "region": "psu-vent"
+              "region": "psu-vent",
+              "tone": 0.3
             },
             {
               "id": "cpu-edge",
@@ -721,7 +727,8 @@
               "filled": false,
               "kind": "path",
               "d": "M -0.0400 0.2120 L -0.0400 0.3220 M 0.0000 0.2120 L 0.0000 0.3220 M 0.0400 0.2120 L 0.0400 0.3220 M 0.0800 0.2120 L 0.0800 0.3220",
-              "region": "cpu-grille"
+              "region": "cpu-grille",
+              "tone": 0.3
             }
           ],
           "front": [
@@ -1826,7 +1833,6 @@
           "operatingKey": "power",
           "volumeFlowM3S": 0.016,
           "temperatureRiseK": 7.8,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "ashrae-tc99-2021"
         },
@@ -1870,6 +1876,203 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "foot-l",
+          "kind": "box",
+          "bone": "case",
+          "material": "rubber-foot",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "size": [0.04, 0.012, 0.03],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [-0.18, 0.006, 0.075]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.36, 0, 0]
+          }
+        },
+        {
+          "id": "foot-r",
+          "kind": "box",
+          "bone": "case",
+          "material": "rubber-foot",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "size": [0.04, 0.012, 0.03],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [-0.18, 0.006, -0.075]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.36, 0, 0]
+          }
+        },
+        {
+          "id": "case-side",
+          "kind": "box",
+          "bone": "case",
+          "material": "chassis-steel",
+          "role": "body",
+          "tone": 0.55,
+          "region": "side-panel",
+          "size": [0.413, 0.438, 0.2],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [-0.0065, 0.231, 0]
+          }
+        },
+        {
+          "id": "rear-panel",
+          "kind": "box",
+          "bone": "case",
+          "material": "chassis-steel",
+          "role": "body",
+          "tone": 0.5,
+          "region": "rear-panel",
+          "size": [0.012, 0.438, 0.2],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [-0.219, 0.231, 0]
+          }
+        },
+        {
+          "id": "front-bezel",
+          "kind": "box",
+          "bone": "case",
+          "material": "bezel-abs",
+          "role": "body",
+          "tone": 0.18,
+          "region": "front-bezel",
+          "size": [0.025, 0.438, 0.2],
+          "cornerRadius": 0.005,
+          "transform": {
+            "translation": [0.2125, 0.231, 0]
+          }
+        },
+        {
+          "id": "psu-vent-rear",
+          "kind": "box",
+          "bone": "case",
+          "material": "chassis-steel",
+          "role": "body",
+          "tone": 0.38,
+          "region": "psu-vent",
+          "maxDenominator": 100,
+          "size": [0.0265, 0.108, 0.17],
+          "cornerRadius": 0.002,
+          "transform": {
+            "translation": [-0.21275, 0.384, 0]
+          }
+        },
+        {
+          "id": "psu-vent-top",
+          "kind": "box",
+          "bone": "case",
+          "material": "chassis-steel",
+          "role": "body",
+          "tone": 0.38,
+          "region": "psu-vent",
+          "maxDenominator": 100,
+          "size": [0.09, 0.0016, 0.17],
+          "transform": {
+            "translation": [-0.155, 0.4492, 0]
+          }
+        },
+        {
+          "id": "cpu-grille",
+          "kind": "box",
+          "bone": "case",
+          "material": "chassis-steel",
+          "role": "body",
+          "tone": 0.38,
+          "region": "cpu-grille",
+          "maxDenominator": 100,
+          "size": [0.17, 0.13, 0.0016],
+          "cornerRadius": 0.0006,
+          "transform": {
+            "translation": [0.015, 0.267, 0.1008]
+          }
+        },
+        {
+          "id": "fan-grille",
+          "kind": "revolve",
+          "bone": "case",
+          "material": "chassis-steel",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "rear-panel",
+          "maxDenominator": 50,
+          "profile": [[-0.2258, 0.05], [-0.2245, 0.05]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0.2, 0]
+        },
+        {
+          "id": "intake-mesh",
+          "kind": "box",
+          "bone": "case",
+          "material": "bezel-abs",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "front-bezel",
+          "maxDenominator": 100,
+          "size": [0.002, 0.34, 0.17],
+          "transform": {
+            "translation": [0.226, 0.22, 0]
+          }
+        },
+        {
+          "id": "drive-bay",
+          "kind": "box",
+          "bone": "case",
+          "material": "bezel-abs",
+          "role": "detail",
+          "tone": 0.4,
+          "region": "front-bezel",
+          "maxDenominator": 50,
+          "size": [0.002, 0.03, 0.14],
+          "transform": {
+            "translation": [0.226, 0.41, 0]
+          }
+        },
+        {
+          "id": "power-button",
+          "kind": "box",
+          "bone": "case",
+          "material": "bezel-abs",
+          "role": "detail",
+          "tone": 0.7,
+          "region": "front-bezel",
+          "maxDenominator": 50,
+          "size": [0.003, 0.012, 0.012],
+          "cornerRadius": 0.0015,
+          "transform": {
+            "translation": [0.2265, 0.036, 0.056]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The chassis is four boxes along x (rear panel 12 mm, steel body, 25 mm ABS bezel); the vent plates, intake mesh and drive bay are thin plates 0.8 to 2 mm proud of their faces.",
+          "de": "Das Chassis besteht aus drei Quadern entlang x (Rückwand 12 mm, Stahlkörper, 25-mm-ABS-Blende); Lüftungsplatten, Ansauggitter und Laufwerksschacht sind dünne Platten, die 0,8 bis 2 mm vor ihren Flächen stehen."
+        },
+        {
+          "en": "The CPU grille sits on the left (+z) side panel, as the plan view shows its edge at z = +0.092 to +0.1; the elevation draws it although it is seen from the right, the only inconsistency of the 2D shapes. The PSU vent is a rear plate and a top plate (the elevation and the plan draw different extents of the same region).",
+          "de": "Das CPU-Gitter sitzt an der linken (+z) Seitenwand, wie der Grundriss seine Kante bei z = +0,092 bis +0,1 zeigt; die Seitenansicht zeichnet es, obwohl sie von rechts blickt, die einzige Unstimmigkeit der 2D-Formen. Der Netzteilschlitz ist eine Rück- und eine Deckelplatte (Seitenansicht und Grundriss zeichnen verschiedene Ausdehnungen derselben Region)."
+        },
+        {
+          "en": "Four rubber feet are two solids repeated along x; slit lines and the unmaterialled fan ring are reduced to a thin rear fan plate, drawn at 1:50 only.",
+          "de": "Vier Gummifüße sind zwei entlang x wiederholte Körper; Schlitzlinien und der materiallose Lüfterring sind auf eine dünne Lüfterplatte an der Rückseite reduziert, nur im Maßstab 1:50."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "typical",
       "defaultClip": "power-up",
@@ -1883,7 +2086,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

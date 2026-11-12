@@ -426,7 +426,7 @@
             "synchronous": 2,
             "cacheSpill": 0,
             "pageBytes": 4096,
-            "inventoryEntryLimit": 131072,
+            "inventoryEntryLimit": 1048576,
             "writerShards": 64
           }
         }

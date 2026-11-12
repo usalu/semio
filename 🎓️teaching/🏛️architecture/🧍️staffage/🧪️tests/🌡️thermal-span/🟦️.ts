@@ -102,7 +102,7 @@ describe("🌡️ thermal span range", () => {
 });
 
 describe("🌡️ thermalSpanK in the cast manifest", () => {
-  const cast = (extra: Record<string, unknown>) => ({ version: 1, casts: { span: { asset: "laptop", pose: "open", view: "thermal", environment: "indoor-heated-winter", theme: "dark", viewpoint: "elevation", ...extra } } });
+  const cast = (extra: Record<string, unknown>) => ({ version: 1, casts: { span: { asset: "laptop", pose: "open", view: "thermal", environment: "indoor-heated-winter", theme: "dark", viewpoint: "elevation", scale: 50, ...extra } } });
 
   it("accepts a positive span in ajv and in the twin", () => {
     const manifest = cast({ thermalSpanK: 25 });

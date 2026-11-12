@@ -10,6 +10,7 @@
 import type { Text } from "../../../🧬️schema/🟦️.ts";
 import type { DisplayRange, Legend } from "../../🔗️contracts/🟦️.ts";
 import { STRUCTURAL_COLORS } from "../../🏗️structure/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🌗️ The two drawing themes of the line and solid views. */
 export type Theme = "dark" | "light";
@@ -41,7 +42,7 @@ export function mix(a: string, b: string, t: number): string {
 
 /** 💡️ Relative luminance of a `#rrggbb` colour. */
 export function luminance(hex: string): number {
-  const lin = (c: number): number => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const lin = (c: number): number => ((c /= 255) <= 0.03928 ? c / 12.92 : portable.pow(((c + 0.055) / 1.055), 2.4));
   const [r, g, b] = parse(hex);
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }

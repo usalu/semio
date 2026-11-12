@@ -75,6 +75,9 @@ export const staffageHostDocument: SemioHostHtmlSpec = {
   ],
 };
 
+/** 🧊️ The modules of the 3D model pipeline: the volume module, the GLB, FBX, model and bundle exporters of the library and the neutral model kernel with its viewer. The archive reaches them only through dynamic imports (the viewer chunk and the lazy exporters), but the library's barrel re-exports them, so a release build declares them free of import-time side effects: Rollup then drops what the entry does not use and the 2D-only path never downloads them. */
+export const staffageModelPipeline = (id: string): boolean => /\/(?:🧊volume|📤export\/(?:🧊glb|🎬fbx|🗿model|🗜zip\/📦models)|🧊3d\/🗿model)\//u.test(id.replaceAll("\\", "/").replaceAll("\uFE0F", ""));
+
 /** 🪪️ Vite: a release document names the manifest, both appearance colours, and a sealed policy, then writes `robots.txt`, `manifest.webmanifest` and `_headers`. */
 function staffageReleaseDocumentVitePlugin(): OwnedBuildPlugin {
   let outDir = resolve(bundleRoot, "dist");
@@ -138,7 +141,10 @@ export default defineOwnedBuildConfigFactory(({ mode }) => ({
     uiReactBuildPlugin(),
     staffageReleaseDocumentVitePlugin(),
   ],
-  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))), outDir: resolve(bundleRoot, "dist", readBuildMode(mode)) }),
+  build: (() => {
+    const built = semioViteBuild(undefined, buildModePolicy(readBuildMode(mode)));
+    return playgroundStaticSiteBuildOptions({ ...built, outDir: resolve(bundleRoot, "dist", readBuildMode(mode)), rollupOptions: { ...built.rollupOptions, treeshake: built.rollupOptions.treeshake === true ? { moduleSideEffects: (id: string) => !staffageModelPipeline(id) } : built.rollupOptions.treeshake } });
+  })(),
   define: { "import.meta.vitest": "undefined" },
   server: {
     fs: { allow: [repoRoot] },

@@ -9,20 +9,20 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { Asset, AuthoredRepresentation, Shape, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, Shape, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import { prepare, sourceOf } from "../../🔨️modules/🎨️depiction/🧩️shapes/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
-requireTool("uv");
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 
 type Vectors = {
   scale: number;
   paperMmPerM: number;
   toleranceM: number;
-  shapes: Record<Viewpoint, Shape[]>;
+  shapes: Record<PlanarViewpoint, Shape[]>;
   worldAngleDeg: Record<string, Record<string, number>>;
   spread: { pose: string; abductionDeg: number; bone: string; expectedTipZ: number };
-  cases: { name: string; pose: string; order: Partial<Record<Viewpoint, string[]>> }[];
+  cases: { name: string; pose: string; order: Partial<Record<PlanarViewpoint, string[]>> }[];
 };
 
 const vectors = fixture<Vectors>("🧊️depth-order");
@@ -36,7 +36,7 @@ const patched: Asset = {
 };
 
 const stateOf = (pose: string) => evaluate(patched, { kind: "pose", pose }, { kind: "scale", scale: { denominator: vectors.scale } });
-const paintOrder = (pose: string, viewpoint: Viewpoint): string[] => {
+const paintOrder = (pose: string, viewpoint: PlanarViewpoint): string[] => {
   const state = stateOf(pose);
   return prepare(state, viewpoint, sourceOf(state), vectors.paperMmPerM).map((drawn) => drawn.shape.id);
 };
@@ -44,7 +44,7 @@ const paintOrder = (pose: string, viewpoint: Viewpoint): string[] => {
 describe("🧊️ depth ordering of a view", () => {
   for (const c of vectors.cases)
     it(c.name, () => {
-      for (const [view, order] of Object.entries(c.order)) expect(paintOrder(c.pose, view as Viewpoint), `${c.pose} ${view}`).toEqual(order);
+      for (const [view, order] of Object.entries(c.order)) expect(paintOrder(c.pose, view as PlanarViewpoint), `${c.pose} ${view}`).toEqual(order);
     });
 
   it("spreads the thigh by the pose offset", () => {
@@ -52,12 +52,13 @@ describe("🧊️ depth ordering of a view", () => {
   });
 
   it("equals the paint orders that shapely derives", { timeout: 300_000 }, () => {
+    requireTool("uv");
     const directory = mkdtempSync(join(tmpdir(), "staffage-depth-"));
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify({ shapes: vectors.shapes, worldAngleDeg: vectors.worldAngleDeg, toleranceM: vectors.toleranceM, cases: vectors.cases }));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️depth-order/🐍️.py"), ["shapely"], [input])) as Record<string, Record<"front" | "plan", string[]>>;
-      for (const [pose, views] of Object.entries(reference)) for (const [view, order] of Object.entries(views)) expect(paintOrder(pose, view as Viewpoint), `${pose} ${view}`).toEqual(order);
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️depth-order/🐍️.py"), "geometry", [input])) as Record<string, Record<"front" | "plan", string[]>>;
+      for (const [pose, views] of Object.entries(reference)) for (const [view, order] of Object.entries(views)) expect(paintOrder(pose, view as PlanarViewpoint), `${pose} ${view}`).toEqual(order);
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

@@ -50,7 +50,7 @@
     },
     "BootstrapCommand": {
       "type": "string",
-      "enum": ["setup", "rust"]
+      "enum": ["setup", "rust", "node"]
     },
     "MsvcPreparation": {
       "type": "object",

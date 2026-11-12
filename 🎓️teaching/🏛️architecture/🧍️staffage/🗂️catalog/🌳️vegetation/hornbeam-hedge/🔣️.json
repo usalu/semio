@@ -2671,6 +2671,357 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "block-1",
+          "kind": "box",
+          "bone": "block-1",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.5,
+          "region": "leaf-face",
+          "size": [0.64, 1.53125, 0.7],
+          "cornerRadius": 0.1,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.75563, 0, 0]
+          }
+        },
+        {
+          "id": "core-1",
+          "kind": "box",
+          "bone": "block-1",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.4,
+          "region": "leaf-core",
+          "size": [0.44, 1, 0.4],
+          "cornerRadius": 0.08,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.7, 0, 0]
+          }
+        },
+        {
+          "id": "stem-1-a",
+          "kind": "capsule",
+          "bone": "stem-1",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, 0.04625, -0.06],
+          "p1": [0.42, 0.04625, -0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "stem-1-b",
+          "kind": "capsule",
+          "bone": "stem-1",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, -0.04625, 0.06],
+          "p1": [0.42, -0.04625, 0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "block-2",
+          "kind": "box",
+          "bone": "block-2",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.46,
+          "region": "leaf-face",
+          "size": [0.64, 1.54078, 0.6814],
+          "cornerRadius": 0.1,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.76039, 0, 0]
+          }
+        },
+        {
+          "id": "core-2",
+          "kind": "box",
+          "bone": "block-2",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.4,
+          "region": "leaf-core",
+          "size": [0.44, 1, 0.4],
+          "cornerRadius": 0.08,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.7, 0, 0]
+          }
+        },
+        {
+          "id": "stem-2-a",
+          "kind": "capsule",
+          "bone": "stem-2",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, 0.04625, -0.06],
+          "p1": [0.42, 0.04625, -0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "stem-2-b",
+          "kind": "capsule",
+          "bone": "stem-2",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, -0.04625, 0.06],
+          "p1": [0.42, -0.04625, 0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "block-3",
+          "kind": "box",
+          "bone": "block-3",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.5,
+          "region": "leaf-face",
+          "size": [0.64, 1.52922, 0.7],
+          "cornerRadius": 0.1,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.75461, 0, 0]
+          }
+        },
+        {
+          "id": "core-3",
+          "kind": "box",
+          "bone": "block-3",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.4,
+          "region": "leaf-core",
+          "size": [0.44, 1, 0.4],
+          "cornerRadius": 0.08,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.7, 0, 0]
+          }
+        },
+        {
+          "id": "stem-3-a",
+          "kind": "capsule",
+          "bone": "stem-3",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, 0.04625, -0.06],
+          "p1": [0.42, 0.04625, -0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "stem-3-b",
+          "kind": "capsule",
+          "bone": "stem-3",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, -0.04625, 0.06],
+          "p1": [0.42, -0.04625, 0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "block-4",
+          "kind": "box",
+          "bone": "block-4",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.46,
+          "region": "leaf-face",
+          "size": [0.64, 1.54109, 0.6814],
+          "cornerRadius": 0.1,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.76055, 0, 0]
+          }
+        },
+        {
+          "id": "core-4",
+          "kind": "box",
+          "bone": "block-4",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.4,
+          "region": "leaf-core",
+          "size": [0.44, 1, 0.4],
+          "cornerRadius": 0.08,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.7, 0, 0]
+          }
+        },
+        {
+          "id": "stem-4-a",
+          "kind": "capsule",
+          "bone": "stem-4",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, 0.04625, -0.06],
+          "p1": [0.42, 0.04625, -0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "stem-4-b",
+          "kind": "capsule",
+          "bone": "stem-4",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, -0.04625, 0.06],
+          "p1": [0.42, -0.04625, 0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "block-5",
+          "kind": "box",
+          "bone": "block-5",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.5,
+          "region": "leaf-face",
+          "size": [0.64, 1.53563, 0.7],
+          "cornerRadius": 0.1,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.75781, 0, 0]
+          }
+        },
+        {
+          "id": "core-5",
+          "kind": "box",
+          "bone": "block-5",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.4,
+          "region": "leaf-core",
+          "size": [0.44, 1, 0.4],
+          "cornerRadius": 0.08,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.7, 0, 0]
+          }
+        },
+        {
+          "id": "stem-5-a",
+          "kind": "capsule",
+          "bone": "stem-5",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, 0.04625, -0.06],
+          "p1": [0.42, 0.04625, -0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "stem-5-b",
+          "kind": "capsule",
+          "bone": "stem-5",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, -0.04625, 0.06],
+          "p1": [0.42, -0.04625, 0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "block-6",
+          "kind": "box",
+          "bone": "block-6",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.46,
+          "region": "leaf-face",
+          "size": [0.64, 1.53391, 0.672],
+          "cornerRadius": 0.1,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.75695, 0, 0]
+          }
+        },
+        {
+          "id": "core-6",
+          "kind": "box",
+          "bone": "block-6",
+          "material": "hornbeam-leaf",
+          "role": "body",
+          "tone": 0.4,
+          "region": "leaf-core",
+          "size": [0.44, 1, 0.4],
+          "cornerRadius": 0.08,
+          "transform": {
+            "rotation": [0, 0, -0.70711, 0.70711],
+            "translation": [0.7, 0, 0]
+          }
+        },
+        {
+          "id": "stem-6-a",
+          "kind": "capsule",
+          "bone": "stem-6",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, 0.04625, -0.06],
+          "p1": [0.42, 0.04625, -0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        },
+        {
+          "id": "stem-6-b",
+          "kind": "capsule",
+          "bone": "stem-6",
+          "material": "hornbeam-bark",
+          "role": "body",
+          "tone": 0.35,
+          "region": "stem-bark",
+          "p0": [0, -0.04625, 0.06],
+          "p1": [0.42, -0.04625, 0.06],
+          "r0": 0.045,
+          "r1": 0.04
+        }
+      ],
+      "decisions": [
+        {
+          "en": "A trimmed hornbeam hedge of six rounded blocks, each a box with 0.1 m corner radius bound to its own block bone and as wide as its elevation outline (0.64 m, overlapping its neighbours by 0.14 m) and as deep as the front outline (0.7 m); a smaller denser core box per block carries the leaf-core thermal region.",
+          "de": "Eine geschnittene Hainbuchenhecke aus sechs gerundeten Blöcken, je eine Box mit 0,1 m Eckenradius am eigenen Blockknochen, so breit wie ihr Umriss in der Ansicht (0,64 m, 0,14 m Überlappung mit den Nachbarn) und so tief wie der Front-Umriss (0,7 m); eine kleinere dichtere Kernbox je Block trägt die thermische Region Blattkern."
+        },
+        {
+          "en": "Two stems per block stand as thin capsules at the lateral positions +-0.06 m (the front view draws none; the pairs are offset in depth so they read as two stems).",
+          "de": "Zwei Stämme je Block stehen als dünne Kapseln bei +-0,06 m Seitenlage (die Front zeichnet keine; die Paare sind in der Tiefe versetzt, damit sie als zwei Stämme lesbar sind)."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "calm",
       "defaultClip": "wind-sway",
@@ -2684,7 +3035,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored",
     "representations": {

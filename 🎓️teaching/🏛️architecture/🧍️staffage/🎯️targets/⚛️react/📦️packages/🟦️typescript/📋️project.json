@@ -5,6 +5,7 @@
     "default": [
       "{projectRoot}/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/**/*",

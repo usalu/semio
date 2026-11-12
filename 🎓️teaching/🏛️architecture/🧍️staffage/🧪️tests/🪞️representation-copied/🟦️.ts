@@ -7,9 +7,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import type { Asset, AssetDocument, AuthoredRepresentation, Shape } from "../../🧬️schema/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
+import { withUnavailableScale } from "../🧰️support/🧰️.ts";
 import { compareRepresentations } from "../../🔨️modules/🖨️representation/🟦️.ts";
 
-const original = (JSON.parse(readFileSync(new URL("../../🧫️fixtures/👤️sample-figure/🔣️.json", import.meta.url), "utf8")) as AssetDocument).asset;
+const original = withUnavailableScale((JSON.parse(readFileSync(new URL("../../🧫️fixtures/👤️sample-figure/🔣️.json", import.meta.url), "utf8")) as AssetDocument).asset, 500);
 const codes = (asset: Asset): string[] => validateAsset(asset, {}).map((issue) => issue.code);
 const edit = (change: (asset: any) => void): Asset => {
   const copy: any = structuredClone(original);

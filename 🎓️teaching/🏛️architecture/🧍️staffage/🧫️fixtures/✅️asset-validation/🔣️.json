@@ -1020,6 +1020,11 @@
       "expectCodes": [
         "symbol-bone"
       ]
+    },
+    {
+      "name": "extruded solid without sweep",
+      "patch": [{ "op": "replace", "path": "/representations/50/geometry/front/id=torso/solid", "value": { "kind": "extruded", "z0": -0.1, "z1": 0.1 } }],
+      "expectCodes": ["solid-sweep"]
     }
   ],
   "manifest": {
@@ -1205,7 +1210,11 @@
           "png-sequence",
           "mp4",
           "webm",
-          "component"
+          "component",
+          "glb",
+          "fbx",
+          "model",
+          "model-zip"
         ],
         "distinction": {
           "en": "Engine fixture",
@@ -1310,7 +1319,11 @@
               "png-sequence",
               "mp4",
               "webm",
-              "component"
+              "component",
+              "glb",
+              "fbx",
+              "model",
+              "model-zip"
             ],
             "distinction": {
               "en": "Engine fixture",
@@ -1375,7 +1388,11 @@
               "png-sequence",
               "mp4",
               "webm",
-              "component"
+              "component",
+              "glb",
+              "fbx",
+              "model",
+              "model-zip"
             ],
             "distinction": {
               "en": "Engine fixture",

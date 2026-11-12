@@ -1,0 +1,279 @@
+{
+ "schema": "semio.model.follow-vector/v1",
+ "description": "A walker whose root translates from [1, 0, 1] to [5, 0.5, 3] in 2 s (linear). Travel keeps the sampled root translation; in-place subtracts the horizontal change against the rest translation [1, 0, 1], keeping y. Follow tracks a node's world translation or the centre of the posed bounds with the exponential smoothing target += (point - target) * (1 - exp(-dt / tau)); the first frame, a seek and a mode change snap.",
+ "document": {
+  "version": "semio.model/v1",
+  "id": "walker",
+  "title": {
+   "en": "walker",
+   "de": "Läufer"
+  },
+  "nodes": [
+   {
+    "id": "root",
+    "parent": null,
+    "translation": [
+     1,
+     0,
+     1
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "id": "body",
+    "parent": "root",
+    "translation": [
+     0,
+     1,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "mesh": "cube"
+   }
+  ],
+  "solids": [],
+  "meshes": [
+   {
+    "id": "cube",
+    "primitives": [
+     {
+      "mode": "triangles",
+      "material": "m",
+      "positions": [
+       -0.5,
+       -0.5,
+       -0.5,
+       0.5,
+       -0.5,
+       -0.5,
+       -0.5,
+       0.5,
+       -0.5,
+       0.5,
+       0.5,
+       -0.5,
+       -0.5,
+       -0.5,
+       0.5,
+       0.5,
+       -0.5,
+       0.5,
+       -0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5,
+       0.5
+      ],
+      "indices": [
+       0,
+       2,
+       1,
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       5,
+       7,
+       6,
+       0,
+       1,
+       4,
+       1,
+       5,
+       4,
+       2,
+       6,
+       3,
+       3,
+       6,
+       7,
+       0,
+       4,
+       2,
+       2,
+       4,
+       6,
+       1,
+       3,
+       5,
+       3,
+       7,
+       5
+      ]
+     }
+    ]
+   }
+  ],
+  "skins": [],
+  "materials": [
+   {
+    "id": "m",
+    "title": {
+     "en": "m",
+     "de": "m"
+    },
+    "baseColor": [
+     0.8,
+     0.8,
+     0.8,
+     1
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emissive": [
+     0,
+     0,
+     0
+    ],
+    "alphaMode": "opaque",
+    "doubleSided": false,
+    "unlit": false
+   }
+  ],
+  "variants": [],
+  "poses": [],
+  "animations": [
+   {
+    "id": "drive",
+    "title": {
+     "en": "drive",
+     "de": "Fahren"
+    },
+    "durationS": 2,
+    "loop": false,
+    "events": [],
+    "channels": [
+     {
+      "target": {
+       "node": "root",
+       "path": "translation"
+      },
+      "interpolation": "linear",
+      "times": [
+       0,
+       2
+      ],
+      "values": [
+       1,
+       0,
+       1,
+       5,
+       0.5,
+       3
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "times": [
+  0,
+  0.5,
+  1,
+  2
+ ],
+ "smoothing": {
+  "smoothingS": 0.25,
+  "steps": [
+   {
+    "timeS": 0,
+    "dtS": 0
+   },
+   {
+    "timeS": 0.5,
+    "dtS": 0.5
+   },
+   {
+    "timeS": 1,
+    "dtS": 0.5
+   },
+   {
+    "timeS": 1.1,
+    "dtS": 0.1
+   },
+   {
+    "timeS": 2,
+    "dtS": 0.9
+   }
+  ]
+ },
+ "expected": {
+  "travelRoot": [
+   [
+    1,
+    0,
+    1
+   ],
+   [
+    2,
+    0.125,
+    1.5
+   ],
+   [
+    3,
+    0.25,
+    2
+   ],
+   [
+    5,
+    0.5,
+    3
+   ]
+  ],
+  "inPlaceRoot": [
+   [
+    1,
+    0,
+    1
+   ],
+   [
+    1,
+    0.125,
+    1
+   ],
+   [
+    1,
+    0.25,
+    1
+   ],
+   [
+    1,
+    0.5,
+    1
+   ]
+  ],
+  "bodyOffset": [
+   0,
+   1,
+   0
+  ],
+  "boundsCentreOffset": [
+   0,
+   1,
+   0
+  ]
+ }
+}

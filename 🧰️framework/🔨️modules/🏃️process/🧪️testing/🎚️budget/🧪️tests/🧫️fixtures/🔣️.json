@@ -112,6 +112,18 @@
         "rank": 0,
         "coverage": null
       }
+    },
+    {
+      "segments": [],
+      "environment": {},
+      "minimum": "exhaustive",
+      "expected": {
+        "level": "exhaustive",
+        "rest": [],
+        "budgetMs": 1800000,
+        "rank": 3,
+        "coverage": null
+      }
     }
   ],
   "processSuites": [

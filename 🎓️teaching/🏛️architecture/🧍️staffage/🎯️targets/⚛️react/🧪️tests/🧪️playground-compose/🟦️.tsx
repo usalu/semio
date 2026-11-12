@@ -1,38 +1,33 @@
 /** 🧪️ The playground composition puts every figure at its true paper offset; the event reducer keeps placements clamped and persisted.
- * Independent checks: jsdom's XML parser reads the document, `rsvg-convert` rasterises it at one pixel per millimetre and `pngjs` finds where the drawn rectangles really landed.
+ * Independent checks: jsdom's XML parser reads the document and svgelements (the pinned geometry oracle of the library tests) applies its nested viewports, so the bounding boxes show where the drawn rectangles really landed.
  * @see ./🥒️.feature — the scenarios */
-import { execFileSync } from "node:child_process";
-import { PNG } from "pngjs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { VIEWS, mmPerMetre } from "@teaching/staffage";
 import { composeSvg, partOffsetMm, snap, type ComposedPart } from "../../🔨️modules/🧪️playground/🧱️compose/🟦️.ts";
 import { ArchiveStore, INITIAL_STATE, memoryStorage, reduce, type Placement } from "../../🔨️modules/💾️persistence/🟦️.ts";
 import { playgroundFromParams, playgroundToParams } from "../../🔨️modules/🗺️routing/🟦️.ts";
+import { svgShapeBoxes } from "../../../../🧪️tests/🧰️support/🐍️.ts";
 
 const block = (x: number, w: number): string => `<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="40mm" viewBox="0 0 20 40"><rect x="${x}" y="0" width="${w}" height="40" fill="#000000"/></svg>`;
 const part = (id: string, xM: number, markup: string, mirrored = false): ComposedPart => ({ id, asset: id, title: id, xM, mirrored, markup, widthMm: 20, heightMm: 40, originXMm: 10, originYMm: 40 });
 const options = (scale: number) => ({ scale, view: "light-line", viewpoint: "elevation", lengthM: 10, background: "transparent" as const, language: "en" as const, title: "Playground" });
 
-const hasRsvg = ((): boolean => {
+/** 📏️ The left and right edge of the one black rectangle of a composition in millimetres (svgelements reports CSS pixels of 1/96 inch). */
+function blockSpan(svg: string): { readonly first: number; readonly last: number } {
+  const directory = mkdtempSync(join(tmpdir(), "staffage-compose-"));
   try {
-    execFileSync("rsvg-convert", ["--version"]);
-    return true;
-  } catch {
-    return false;
+    const file = join(directory, "composition.svg");
+    writeFileSync(file, svg);
+    const drawn = svgShapeBoxes(file).filter((box) => box.fill.toLowerCase() === "#000000");
+    expect(drawn).toHaveLength(1);
+    const pxPerMm = 96 / 25.4;
+    return { first: drawn[0]!.minX / pxPerMm, last: drawn[0]!.maxX / pxPerMm };
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
-})();
-
-function rowSpan(svg: string, y: number): { readonly first: number; readonly last: number } {
-  const png = PNG.sync.read(execFileSync("rsvg-convert", ["-d", "25.4", "-p", "25.4", "-f", "png"], { input: svg, maxBuffer: 1 << 26 }));
-  let first = -1;
-  let last = -1;
-  for (let x = 0; x < png.width; x++) {
-    if (png.data[(y * png.width + x) * 4 + 3]! > 128) {
-      if (first < 0) first = x;
-      last = x;
-    }
-  }
-  return { first, last };
 }
 
 describe("🧪️ composition", () => {
@@ -61,12 +56,15 @@ describe("🧪️ composition", () => {
     expect(meta.getAttribute("view")).toBe("light-line");
   });
 
-  it.skipIf(!hasRsvg)("rasterises with rsvg-convert so the drawn pixels land at the computed millimetres, mirrored ones reflected about their ground point", () => {
-    const upright = composeSvg([part("a", 2, block(0, 5))], options(100));
-    expect(rowSpan(upright, 20)).toEqual({ first: 18, last: 22 });
-    const mirrored = composeSvg([part("a", 2, block(0, 5), true)], options(100));
-    expect(rowSpan(mirrored, 20)).toEqual({ first: 33, last: 37 });
-    expect(rowSpan(composeSvg([part("a", 3, block(0, 20))], options(50)), 20)).toEqual({ first: 58, last: 77 });
+  it("places the drawn rectangle (svgelements) at the computed millimetres, mirrored ones reflected about their ground point", () => {
+    const lands = (svg: string, first: number, last: number): void => {
+      const span = blockSpan(svg);
+      expect(span.first).toBeCloseTo(first, 3);
+      expect(span.last).toBeCloseTo(last, 3);
+    };
+    lands(composeSvg([part("a", 2, block(0, 5))], options(100)), 18, 23);
+    lands(composeSvg([part("a", 2, block(0, 5), true)], options(100)), 33, 38);
+    lands(composeSvg([part("a", 3, block(0, 20))], options(50)), 58, 78);
   });
 
   it("snaps positions to the grid", () => {

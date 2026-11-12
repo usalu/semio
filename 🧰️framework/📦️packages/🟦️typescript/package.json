@@ -220,7 +220,7 @@
     "./kernel/testing/fixtures": "./🎠️kernel/🧪️testing/🧫️fixtures/🟦️.ts",
     "./modules/identity/installation": "./🪪️identity/📁️installation/🟨️.mjs",
     "./modules/test/schema.json": "./🧪️test/🧬️schema/🔣️json/🟦️.ts",
-    "./shell/generated": "./🐚️shell/🤖️generated/🟦️.ts",
+    "./shell/generated": "./🐚️shell/🪞️generated/🟦️.ts",
     "./value/testing/fixtures": "./🌱️value/🧪️testing/🧫️fixtures/🟦️.ts",
     "./hash/testing/fixtures/blake3.json": "./🔏️hash/🧪️testing/🧫️fixtures/🧮️blake3/🔣️json/🟦️.ts",
     "./identity/installation/schema.json": "./🪪️identity/📁️installation/🧬️schema/🔣️json/🟦️.ts",

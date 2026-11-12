@@ -1,0 +1,461 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "sump-tray",
+    "kind": "box",
+    "bone": "casing",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "casing",
+    "maxDenominator": 50,
+    "size": [
+     0.48,
+     0.02,
+     0.38
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.01,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "side-panel-front",
+    "kind": "box",
+    "bone": "casing",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "casing",
+    "size": [
+     0.5,
+     0.6,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.3,
+      0.195
+     ]
+    }
+   },
+   {
+    "id": "side-panel-rear",
+    "kind": "box",
+    "bone": "casing",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "casing",
+    "size": [
+     0.5,
+     0.6,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.3,
+      -0.195
+     ]
+    }
+   },
+   {
+    "id": "roof",
+    "kind": "extrude",
+    "bone": "casing",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "casing",
+    "profile": [
+     [
+      -0.2,
+      -0.25
+     ],
+     [
+      -0.2,
+      0.25
+     ],
+     [
+      0.2,
+      0.25
+     ],
+     [
+      0.2,
+      -0.25
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.18,
+       -0.2
+      ],
+      [
+       -0.18,
+       0.2
+      ],
+      [
+       0.18,
+       0.2
+      ],
+      [
+       0.18,
+       -0.2
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.58,
+    "to": 0.6
+   },
+   {
+    "id": "end-wall-left",
+    "kind": "extrude",
+    "bone": "casing",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "casing",
+    "profile": [
+     [
+      0.02,
+      -0.19
+     ],
+     [
+      0.58,
+      -0.19
+     ],
+     [
+      0.58,
+      0.19
+     ],
+     [
+      0.02,
+      0.19
+     ]
+    ],
+    "holes": [
+     [
+      [
+       0.09,
+       -0.17
+      ],
+      [
+       0.47,
+       -0.17
+      ],
+      [
+       0.47,
+       0.17
+      ],
+      [
+       0.09,
+       0.17
+      ]
+     ]
+    ],
+    "plane": "yz",
+    "from": -0.25,
+    "to": -0.24
+   },
+   {
+    "id": "end-wall-right",
+    "kind": "extrude",
+    "bone": "casing",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "casing",
+    "profile": [
+     [
+      0.02,
+      -0.19
+     ],
+     [
+      0.58,
+      -0.19
+     ],
+     [
+      0.58,
+      0.19
+     ],
+     [
+      0.02,
+      0.19
+     ]
+    ],
+    "holes": [
+     [
+      [
+       0.09,
+       -0.17
+      ],
+      [
+       0.47,
+       -0.17
+      ],
+      [
+       0.47,
+       0.17
+      ],
+      [
+       0.09,
+       0.17
+      ]
+     ]
+    ],
+    "plane": "yz",
+    "from": 0.24,
+    "to": 0.25
+   },
+   {
+    "id": "water",
+    "kind": "box",
+    "bone": "water",
+    "material": "water",
+    "role": "body",
+    "tone": 0.45,
+    "region": "sump",
+    "size": [
+     0.44,
+     0.05,
+     0.38
+    ],
+    "cornerRadius": 0.003,
+    "transform": {
+     "translation": [
+      0.0,
+      0.025,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "pad",
+    "kind": "box",
+    "bone": "pad",
+    "material": "cellulose",
+    "role": "body",
+    "tone": 0.7,
+    "region": "pad",
+    "size": [
+     0.4,
+     0.4,
+     0.36
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.2,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "trough-floor",
+    "kind": "box",
+    "bone": "trough",
+    "material": "pp-plastic",
+    "role": "body",
+    "tone": 0.4,
+    "region": "trough",
+    "size": [
+     0.42,
+     0.005,
+     0.38
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.0025,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "trough-walls",
+    "kind": "extrude",
+    "bone": "trough",
+    "material": "pp-plastic",
+    "role": "body",
+    "tone": 0.4,
+    "region": "trough",
+    "profile": [
+     [
+      -0.19,
+      -0.21
+     ],
+     [
+      -0.19,
+      0.21
+     ],
+     [
+      0.19,
+      0.21
+     ],
+     [
+      0.19,
+      -0.21
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.185,
+       -0.205
+      ],
+      [
+       -0.185,
+       0.205
+      ],
+      [
+       0.185,
+       0.205
+      ],
+      [
+       0.185,
+       -0.205
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.005,
+    "to": 0.05
+   },
+   {
+    "id": "film",
+    "kind": "box",
+    "bone": "pad",
+    "material": "water",
+    "role": "body",
+    "tone": 0.85,
+    "region": "pad",
+    "maxDenominator": 50,
+    "size": [
+     0.38,
+     0.008,
+     0.34
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.409,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "drop-row-1",
+    "kind": "ellipsoid",
+    "bone": "drip",
+    "material": "water",
+    "role": "body",
+    "tone": 0.85,
+    "region": "pad",
+    "maxDenominator": 100,
+    "radii": [
+     0.01,
+     0.013,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      -0.1,
+      0.0,
+      -0.1
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      0.1,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "drop-row-2",
+    "kind": "ellipsoid",
+    "bone": "drip",
+    "material": "water",
+    "role": "body",
+    "tone": 0.85,
+    "region": "pad",
+    "maxDenominator": 50,
+    "radii": [
+     0.01,
+     0.013,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      -0.1,
+      0.0,
+      0.0
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      0.1,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "drop-row-3",
+    "kind": "ellipsoid",
+    "bone": "drip",
+    "material": "water",
+    "role": "body",
+    "tone": 0.85,
+    "region": "pad",
+    "maxDenominator": 50,
+    "radii": [
+     0.01,
+     0.013,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      -0.1,
+      0.0,
+      0.1
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      0.1,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The casing is a shell of two side panels, a roof ring and two end walls with a window onto the pad; the roof ring leaves the distribution trough and the drops visible from above and the windows show the pad from the ends, while the silhouettes still equal the drawn full rectangles.",
+    "de": "Das Gehaeuse ist eine Huelle aus zwei Seitenwaenden, einem Dachrahmen und zwei Stirnwaenden mit Fenster zum Pad; der Dachrahmen laesst Verteilrinne und Tropfen von oben sehen, die Fenster das Pad von den Enden, die Silhouetten entsprechen dennoch den gezeichneten vollen Rechtecken."
+   },
+   {
+    "en": "The trough is a tray (floor and 5 mm walls) holding a 8 mm water film; the 3 by 3 drops are ellipsoids on the prismatic drip bone written as three rows with repeat, so they fall through the pad together and stay on the pad axis.",
+    "de": "Die Rinne ist eine Wanne (Boden und 5 mm Waende) mit 8 mm Wasserfilm; die 3 mal 3 Tropfen sind Ellipsoide auf dem Schubknochen drip in drei Reihen mit repeat, sie fallen gemeinsam durch das Pad und bleiben auf der Padachse."
+   },
+   {
+    "en": "The pad is one cellulose block of 400 mm by 400 mm by 360 mm; the sump water is a rounded box in the tray. The pad stands 10 mm above the water, the drawing's own gap.",
+    "de": "Das Pad ist ein Zellulose-Block 400 mm mal 400 mm mal 360 mm; das Sumpfwasser ist ein abgerundeter Kasten in der Wanne. Das Pad steht 10 mm ueber dem Wasser, wie in der Zeichnung."
+   }
+  ]
+ }
+}

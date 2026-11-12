@@ -13,6 +13,7 @@
  * @see https://doi.org/10.1007/0-306-47025-X_36 — Meijster, Roerdink & Hesselink, linear-time exact distance transforms
  */
 import { type Ring, type Vec, pointInside } from "../../🎨️depiction/📐️geometry/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** ✏️ One drawn shape on paper: its rings (closed polygons or open polylines, y up or down alike), whether the rings are closed and the pen of its outline. */
 export type PaperShape = { readonly id: string; readonly rings: readonly Ring[]; readonly closed: boolean; readonly penMm: number };
@@ -46,7 +47,7 @@ function segmentDistance(p: Vec, q: Vec, r: Vec, s: Vec): { readonly d: number; 
   };
   for (const [x, a, b, flip] of [[p, r, s, false], [q, r, s, false], [r, p, q, true], [s, p, q, true]] as const) {
     const c = onSegment(x, a, b);
-    candidates.push(flip ? { d: Math.hypot(x.x - c.x, x.y - c.y), a: c, b: x } : { d: Math.hypot(x.x - c.x, x.y - c.y), a: x, b: c });
+    candidates.push(flip ? { d: portable.hypot(x.x - c.x, x.y - c.y), a: c, b: x } : { d: portable.hypot(x.x - c.x, x.y - c.y), a: x, b: c });
   }
   return candidates.reduce((best, c) => (c.d < best.d ? c : best));
 }
@@ -390,7 +391,7 @@ function lineVisible(rings: readonly Ring[], covers: readonly Cover[]): boolean 
     for (let i = 0; i + 1 < ring.length; i++) {
       const a = ring[i]!;
       const b = ring[i + 1]!;
-      const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 0.01));
+      const steps = Math.max(1, Math.ceil(portable.hypot(b.x - a.x, b.y - a.y) / 0.01));
       for (let k = 0; k <= steps; k++) if (!hidden({ x: a.x + ((b.x - a.x) * k) / steps, y: a.y + ((b.y - a.y) * k) / steps })) return true;
     }
   return false;
@@ -551,7 +552,7 @@ function segmentDistanceToPoint(px: number, py: number, a: Vec, b: Vec): number 
   const dy = b.y - a.y;
   const l2 = dx * dx + dy * dy;
   const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / l2));
-  return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
+  return portable.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
 }
 
 /** 🥖️ The narrowest negative space of a drawing: the inked area is the union of the filled shapes and the strokes with their pens, the white space is its complement. A white region is a sliver where it is

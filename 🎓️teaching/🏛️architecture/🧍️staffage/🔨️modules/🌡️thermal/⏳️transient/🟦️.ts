@@ -7,9 +7,10 @@
  *
  * @see ../../../🧬️schema/🟦️.ts — ThermalRegion.heatCapacityJM2K
  */
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 📉️ Relaxes `current` towards `target` over `dtS` with time constant `tauS`. */
-export const relax = (current: number, target: number, dtS: number, tauS: number): number => (tauS <= 1e-9 ? target : target + (current - target) * Math.exp(-dtS / tauS));
+export const relax = (current: number, target: number, dtS: number, tauS: number): number => (tauS <= 1e-9 ? target : target + (current - target) * portable.fastExp(-dtS / tauS));
 
 /** 📜️ A history plan: the absolute time the integration starts at (in the steady state of the inputs of that time), the step of its grid and the strictly increasing times it steps through, ending at the requested time. */
 export type HistoryPlan = { readonly startS: number; readonly stepS: number; readonly times: readonly number[] };
@@ -22,7 +23,7 @@ export function historyPlan(timeS: number, tauMaxS: number, options: { readonly 
   const window = options.windowS ?? Math.min(options.maxWindowS ?? 10800, 7 * tauMaxS);
   const base = options.minStepS ?? 0.5;
   const maxSteps = options.maxSteps ?? 180;
-  const stepS = base * 2 ** Math.max(0, Math.ceil(Math.log2(Math.max(1e-9, (2 * window) / maxSteps / base))));
+  const stepS = base * 2 ** Math.max(0, Math.ceil(portable.log2(Math.max(1e-9, (2 * window) / maxSteps / base))));
   const epochS = Math.max(1, Math.ceil(window / stepS)) * stepS;
   const startS = Math.max(0, (Math.floor((timeS + 1e-9) / epochS) - 1) * epochS);
   const times: number[] = [];

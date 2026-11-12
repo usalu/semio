@@ -142,6 +142,7 @@ download_go() {
     fi
   else
     python3 - "$url" "$partial/$archive" "$schemes" <<'PY' || fail "The Go download failed: $url" "Der Go-Download ist fehlgeschlagen: $url"
+import os
 import ssl
 import sys
 import time
@@ -164,7 +165,7 @@ class HttpsRedirects(urllib.request.HTTPRedirectHandler):
             raise urllib.error.URLError("redirect left https")
         return super().redirect_request(request, response, code, message, headers, newurl)
 
-context = ssl.create_default_context()
+context = ssl.create_default_context(cafile=os.environ.get("SSL_CERT_FILE") or None)
 context.minimum_version = ssl.TLSVersion.TLSv1_2
 opener = urllib.request.build_opener(HttpsRedirects, urllib.request.HTTPSHandler(context=context))
 temporary = dest + ".partial"

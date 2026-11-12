@@ -529,7 +529,7 @@
         {
           "kind": "path",
           "directories": [
-            "~/.local/node/bin"
+            "~/.local/bin"
           ]
         }
       ],
@@ -1106,6 +1106,17 @@
           "name": "SEMIO_TOOL_UV"
         },
         {
+          "kind": "provisioned",
+          "partition": "tools",
+          "segments": [
+            "native",
+            "uv",
+            "{version}",
+            "{host}-{sha256:16}"
+          ],
+          "executable": "uv"
+        },
+        {
           "kind": "path",
           "directories": [
             "~/.local/bin",
@@ -1136,13 +1147,132 @@
       "capacity": {
         "mode": "admit",
         "operation": "dependencies",
-        "kind": "build"
+        "kind": "build",
+        "rules": [
+          {
+            "command": "uv",
+            "argumentsPrefix": [
+              "--version"
+            ],
+            "operation": "tool-query",
+            "kind": "script"
+          },
+          {
+            "command": "uv",
+            "argumentsPrefix": [
+              "python"
+            ],
+            "operation": "tool-query",
+            "kind": "script"
+          },
+          {
+            "command": "uv",
+            "argumentsPrefix": [
+              "run"
+            ],
+            "operation": "tool-query",
+            "kind": "script"
+          },
+          {
+            "command": "uv",
+            "argumentsPrefix": [
+              "pip"
+            ],
+            "operation": "tool-query",
+            "kind": "script"
+          }
+        ]
       },
       "probe": {
         "arguments": [
           "--version"
         ],
         "pattern": "^uv ([0-9]+\\.[0-9]+\\.[0-9]+)"
+      }
+    },
+    {
+      "id": "micromamba",
+      "kind": "package-manager",
+      "summary": {
+        "en": "Pinned conda-forge installer for the native libraries (cairo, pkgconf) the Python course environment builds pycairo against where no wheel exists.",
+        "de": "Gepinnter conda-forge-Installer für die nativen Bibliotheken (cairo, pkgconf), gegen die die Python-Kursumgebung pycairo baut, wo es kein Wheel gibt."
+      },
+      "capabilities": [
+        "install"
+      ],
+      "commands": [
+        "micromamba"
+      ],
+      "platforms": [
+        "darwin"
+      ],
+      "pin": {
+        "state": "pinned",
+        "version": {
+          "file": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🔣️.json",
+          "format": "json",
+          "pointer": "/micromamba/version"
+        },
+        "digests": {
+          "file": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🔣️.json",
+          "pointer": "/micromamba/assets",
+          "where": {},
+          "platform": "platform",
+          "architecture": "architecture",
+          "sha256": "sha256",
+          "name": "name",
+          "bytes": "bytes"
+        }
+      },
+      "provision": {
+        "kind": "bootstrap-asset",
+        "command": "repo tools exec --light bun -- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🟦️.ts",
+        "installer": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🟦️.ts"
+      },
+      "locate": [
+        {
+          "kind": "environment",
+          "name": "SEMIO_TOOL_MICROMAMBA"
+        },
+        {
+          "kind": "provisioned",
+          "partition": "tools",
+          "segments": [
+            "native",
+            "micromamba",
+            "{version}",
+            "{host}-{sha256:16}"
+          ],
+          "executable": "micromamba"
+        }
+      ],
+      "adapter": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/🟦️.ts",
+      "adapterScope": [
+        "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/🧱️native/**"
+      ],
+      "allowedCallers": [
+        "🎓️teaching/**",
+        "**/🧪️tests/**"
+      ],
+      "environment": {
+        "mode": "inherit",
+        "pass": [
+          "MAMBA_*",
+          "CONDA_*"
+        ],
+        "deny": [],
+        "set": {}
+      },
+      "capacity": {
+        "mode": "admit",
+        "operation": "command",
+        "kind": "build"
+      },
+      "probe": {
+        "arguments": [
+          "--version"
+        ],
+        "pattern": "^([0-9]+\\.[0-9]+\\.[0-9]+)"
       }
     },
     {

@@ -1,28 +1,18 @@
-/** 🎞️ Frame schedule exactness and the encoded videos re-read with ffprobe/ffmpeg. */
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+/** 🎞️ Frame schedule exactness and the encoded videos re-read with PyAV (the ffprobe facts) and the pinned ffmpeg of the imageio-ffmpeg wheel. */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { frameSchedule } from "../../🔨️modules/📤️export/🎞️frames/🟦️.ts";
 import { encodeClip, videoCapabilities, type VideoFrame } from "../../🔨️modules/📤️export/🎥️video/🟦️.ts";
-import { parseArguments, runExport, type ToolPort } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
-import { requireTool, tool, toolBytes, withScratch } from "../🧰️support/🧰️.ts";
-
-type Probe = { streams: { pix_fmt: string; r_frame_rate: string; nb_read_frames: string; tags?: Record<string, string>; codec_name: string; width: number; height: number }[]; format: { duration: string }; packets?: { pts_time: string }[] };
-const probe = (file: string, extra: readonly string[] = []): Probe => JSON.parse(tool("ffprobe", ["-v", "error", ...extra, "-count_frames", "-show_streams", "-show_format", "-show_packets", "-of", "json", file])) as Probe;
-
-const execute = promisify(execFile);
-const tinyTools: ToolPort = { run: async (name, args, signal) => {
-  const [command, argv] = name === "ffmpeg" ? ["repo", ["tools", "exec", "--light", name, "--", ...args]] : [name, [...args]];
-  const { stdout, stderr } = await execute(command!, argv as string[], { encoding: "utf8", ...(signal ? { signal } : {}) });
-  return stdout + stderr;
-} };
+import { parseArguments, runExport } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
+import { ToolMissingError, repoToolPort, type ToolPort } from "../../🔨️modules/📤️export/🔌️tools/🟦️.ts";
+import { requireTool, withScratch } from "../🧰️support/🧰️.ts";
+import { ffmpegBytes, ffmpegExecutable, oracleToolPort, probeVideo, type VideoReport } from "../🧰️support/🐍️.ts";
 
 const CLI = (format: string, out: string): string[] => ["--asset", "walking-commuter", "--clip", "walk-cycle", "--view", "dark-solid", "--viewpoint", "elevation", "--scale", "50", "--fps", "12", "--format", format, "--out", out, "--lang", "en", "--px-per-mm", "4"];
 
-function spacing(file: Probe): number[] {
-  const times = file.packets!.map((packet) => Number(packet.pts_time)).sort((a, b) => a - b);
+function spacing(file: VideoReport): number[] {
+  const times = [...file.packetTimesS].sort((a, b) => a - b);
   return times.slice(1).map((time, index) => time - times[index]!);
 }
 
@@ -39,40 +29,38 @@ describe("🎞️ frame schedule", () => {
   });
 });
 
-requireTool("ffmpeg");
-requireTool("ffprobe");
+requireTool("uv");
+ffmpegExecutable();
 
 describe("🎬️ encoded clips", () => {
   it("MP4 from the CLI: 12 fps constant, scheduled frame count, yuv420p", async () => {
     await withScratch(async (out) => {
-      const [file] = await runExport(parseArguments(CLI("mp4", out)), tinyTools);
+      const [file] = await runExport(parseArguments(CLI("mp4", out)), oracleToolPort);
       const expected = 14;
-      const info = probe(file!);
-      const video = info.streams[0]!;
-      expect(video.codec_name).toBe("h264");
-      expect(video.pix_fmt).toBe("yuv420p");
-      expect(video.r_frame_rate).toBe("12/1");
-      expect(Number(video.nb_read_frames)).toBe(expected);
-      expect(Math.abs(Number(info.format.duration) - expected / 12)).toBeLessThanOrEqual(1 / 12);
-      for (const gap of spacing(info)) expect(gap).toBeCloseTo(1 / 12, 4);
+      const video = probeVideo(file!);
+      expect(video.codec).toBe("h264");
+      expect(video.pixelFormat).toBe("yuv420p");
+      expect(video.rFrameRate).toBe("12/1");
+      expect(video.framesRead).toBe(expected);
+      expect(Math.abs(video.durationS - expected / 12)).toBeLessThanOrEqual(1 / 12);
+      for (const gap of spacing(video)) expect(gap).toBeCloseTo(1 / 12, 4);
     });
   });
 
   it("WebM from the CLI: VP9 with the alpha tag and independently decoded transparent RGBA", async () => {
     await withScratch(async (out) => {
-      const [file] = await runExport(parseArguments(CLI("webm", out)), tinyTools);
-      const info = probe(file!);
-      const video = info.streams[0]!;
-      expect(video.codec_name).toBe("vp9");
-      expect(video.r_frame_rate).toBe("12/1");
-      expect(video.tags?.alpha_mode ?? video.tags?.ALPHA_MODE).toBe("1");
-      expect(Number(video.nb_read_frames)).toBe(14);
-      const decoded = toolBytes("ffmpeg", ["-v", "error", "-c:v", "libvpx-vp9", "-i", file!, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgba", "pipe:1"]);
+      const [file] = await runExport(parseArguments(CLI("webm", out)), oracleToolPort);
+      const video = probeVideo(file!);
+      expect(video.codec).toBe("vp9");
+      expect(video.rFrameRate).toBe("12/1");
+      expect(video.tags.alpha_mode ?? video.tags.ALPHA_MODE).toBe("1");
+      expect(video.framesRead).toBe(14);
+      const decoded = ffmpegBytes(["-v", "error", "-c:v", "libvpx-vp9", "-i", file!, "-frames:v", "1", "-f", "rawvideo", "-pix_fmt", "rgba", "pipe:1"]);
       expect(decoded.length).toBe(video.width * video.height * 4);
       const alpha = decoded.filter((_, index) => index % 4 === 3);
       expect(alpha.some(value => value === 0)).toBe(true);
       expect(alpha.some(value => value === 255)).toBe(true);
-      for (const gap of spacing(info)) expect(Math.abs(gap - 1 / 12)).toBeLessThan(0.001);
+      for (const gap of spacing(video)) expect(Math.abs(gap - 1 / 12)).toBeLessThan(0.001);
     });
   });
 
@@ -86,12 +74,43 @@ describe("🎬️ encoded clips", () => {
     await withScratch((directory) => {
       const file = join(directory, "first-party.mp4");
       writeFileSync(file, clip.bytes);
-      const info = probe(file);
-      expect(info.streams[0]!.r_frame_rate).toBe("10/1");
-      expect(Number(info.streams[0]!.nb_read_frames)).toBe(5);
-      tool("ffmpeg", ["-v", "error", "-i", file, "-f", "null", "-"]);
+      const video = probeVideo(file);
+      expect(video.rFrameRate).toBe("10/1");
+      expect(video.framesRead).toBe(5);
+      ffmpegBytes(["-v", "error", "-i", file, "-f", "null", "-"]);
       expect(readFileSync(file).length).toBe(clip.bytes.length);
     });
+  });
+});
+
+describe("🎬️ missing tools", () => {
+  const missing = (tool: string): ToolPort => ({ run: async (name, args, signal) => (name === tool ? Promise.reject(new ToolMissingError(tool)) : oracleToolPort.run(name, args, signal)) });
+
+  it("names ffmpeg and stops the video export with a bilingual reason", async () => {
+    await withScratch(async (out) => {
+      const failure = await runExport(parseArguments(CLI("mp4", out)), missing("ffmpeg")).then(() => null, (error: unknown) => error);
+      expect(failure).toBeInstanceOf(ToolMissingError);
+      const { tool, reason } = failure as ToolMissingError;
+      expect(tool).toBe("ffmpeg");
+      expect(reason.en).toMatch(/"ffmpeg" is not available/u);
+      expect(reason.de).toMatch(/"ffmpeg" ist nicht verfügbar/u);
+    });
+  });
+
+  it("names rsvg-convert and stops the raster export with a bilingual reason", async () => {
+    await withScratch(async (out) => {
+      const failure = await runExport(parseArguments(CLI("mp4", out)), missing("rsvg-convert")).then(() => null, (error: unknown) => error);
+      expect(failure).toBeInstanceOf(ToolMissingError);
+      expect((failure as ToolMissingError).reason.de).toMatch(/librsvg/u);
+    });
+  });
+
+  it("turns a program that is not on the PATH into the same named error and keeps cancellation of a running one", async () => {
+    await expect(repoToolPort.run("staffage-no-such-tool-xyz", [])).rejects.toBeInstanceOf(ToolMissingError);
+    const controller = new AbortController();
+    const running = repoToolPort.run(process.execPath, ["-e", "setTimeout(() => {}, 60000)"], controller.signal);
+    setTimeout(() => controller.abort(), 200);
+    await expect(running).rejects.toMatchObject({ name: "AbortError" });
   });
 });
 

@@ -1,0 +1,235 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "rear",
+    "kind": "box",
+    "bone": "rear",
+    "material": "beech-timber",
+    "role": "body",
+    "tone": 0.55,
+    "region": "frame-timber",
+    "size": [
+     1.02,
+     0.045,
+     0.045
+    ],
+    "cornerRadius": 0.0045,
+    "transform": {
+     "translation": [
+      0.535,
+      0.0,
+      0.27
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -0.54
+     ]
+    }
+   },
+   {
+    "id": "front",
+    "kind": "box",
+    "bone": "front",
+    "material": "beech-timber",
+    "role": "body",
+    "tone": 0.55,
+    "region": "frame-timber",
+    "size": [
+     0.701,
+     0.045,
+     0.045
+    ],
+    "cornerRadius": 0.0045,
+    "transform": {
+     "translation": [
+      0.3755,
+      0.0,
+      0.235
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -0.47
+     ]
+    }
+   },
+   {
+    "id": "seat",
+    "kind": "box",
+    "bone": "seat",
+    "material": "beech-timber",
+    "role": "body",
+    "tone": 0.55,
+    "region": "frame-timber",
+    "size": [
+     0.495,
+     0.045,
+     0.045
+    ],
+    "cornerRadius": 0.0045,
+    "transform": {
+     "translation": [
+      0.2475,
+      0.0,
+      0.18
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -0.36
+     ]
+    }
+   },
+   {
+    "id": "bolt",
+    "kind": "revolve",
+    "bone": "rear",
+    "material": "steel-hardware",
+    "role": "body",
+    "tone": 0.2,
+    "region": "frame-timber",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0125
+     ],
+     [
+      0.035,
+      0.0125
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.726,
+     0.0,
+     0.2575
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -0.55
+     ]
+    }
+   },
+   {
+    "id": "top-rail",
+    "kind": "capsule",
+    "bone": "rear",
+    "material": "beech-timber",
+    "role": "body",
+    "tone": 0.4,
+    "region": "frame-timber",
+    "maxDenominator": 100,
+    "p0": [
+     1.045,
+     0.0,
+     -0.27
+    ],
+    "p1": [
+     1.045,
+     0.0,
+     0.27
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "front-rail",
+    "kind": "capsule",
+    "bone": "seat",
+    "material": "beech-timber",
+    "role": "body",
+    "tone": 0.4,
+    "region": "frame-timber",
+    "maxDenominator": 100,
+    "p0": [
+     0.495,
+     0.0,
+     -0.18
+    ],
+    "p1": [
+     0.495,
+     0.0,
+     0.18
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "canvas-back",
+    "kind": "box",
+    "bone": "canvas-a",
+    "material": "cotton-canvas",
+    "role": "body",
+    "tone": 0.8,
+    "region": "canvas-back",
+    "size": [
+     0.6,
+     0.005,
+     0.4
+    ],
+    "transform": {
+     "translation": [
+      0.3,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "canvas-seat",
+    "kind": "box",
+    "bone": "canvas-b",
+    "material": "cotton-canvas",
+    "role": "body",
+    "tone": 0.65,
+    "region": "canvas-seat",
+    "size": [
+     0.45,
+     0.005,
+     0.4
+    ],
+    "transform": {
+     "translation": [
+      0.225,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The three hinged frames are one rounded 45 by 45 mm beech batten per side on the rear, front and seat bones; each side pair is one solid with repeat (laterally 0.54, 0.47 and 0.36 m apart), the rear frames outermost, so the scissor frames keep their real nesting when the chair folds.",
+    "de": "Die drei Gelenkrahmen sind je Seite eine gerundete Buchenlatte 45 mal 45 mm auf Hinter-, Vorder- und Sitzknochen; jedes Seitenpaar ist ein Koerper mit repeat (seitlich 0,54, 0,47 und 0,36 m auseinander), die hinteren Rahmen aussen, damit die Scherenrahmen beim Zusammenklappen ihre echte Verschachtelung behalten."
+   },
+   {
+    "en": "The sling is two 5 mm canvas panels, 0.40 m wide, on the two canvas bones (0.60 m back panel hung from the top rail, 0.45 m seat panel from the front rail), the 4 pose-solved bones of the asset follow every fold; top rail, front rail and the two pivot bolts are dowel capsules and a cylinder revolve.",
+    "de": "Die Bespannung besteht aus zwei 5 mm starken, 0,40 m breiten Stoffbahnen auf den beiden Stoffknochen (0,60 m Rueckenbahn an der oberen Traverse, 0,45 m Sitzbahn an der vorderen Traverse), die gemaess Pose gerechneten Knochen folgen jedem Zusammenklappen; obere und vordere Traverse sowie die beiden Drehbolzen sind Rundholz-Kapseln und ein Rotationszylinder."
+   },
+   {
+    "en": "Authored hints z0/z1 are lateral sweeps; the live catalog lacks the mandatory sweep and evaluates them as sweep v, so front and plan are only meaningful with sweep w (see authoring-requests.md).",
+    "de": "Die Hinweise z0/z1 sind seitliche Extrusionen; im Katalog fehlt das verpflichtende sweep und sie werden als sweep v ausgewertet, Vorder- und Draufsicht sind daher nur mit sweep w aussagekraeftig (siehe authoring-requests.md)."
+   }
+  ]
+ }
+}

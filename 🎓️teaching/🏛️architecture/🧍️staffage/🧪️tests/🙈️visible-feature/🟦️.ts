@@ -12,7 +12,8 @@ import { describe, expect, it } from "vitest";
 import type { Asset, AuthoredRepresentation, PrintProfile } from "../../🧬️schema/🟦️.ts";
 import type { Ring } from "../../🔨️modules/🎨️depiction/📐️geometry/🟦️.ts";
 import { PRINT_PROFILES, featureWidthMm, measureSuitability, visibleFeatureWidthMm } from "../../🔨️modules/🖨️representation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 requireTool("uv");
 
 type Case = { name: string; rings: Ring[]; covers: { penMm: number; rings: Ring[] }[]; widthMm: number | null };
@@ -54,7 +55,7 @@ describe("🙈️ feature width of the visible part", () => {
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify(vectors));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🙈️visible-feature/🐍️.py"), ["shapely"], [input])) as Record<string, number | null>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🙈️visible-feature/🐍️.py"), "geometry", [input])) as Record<string, number | null>;
       for (const c of vectors.cases) {
         expectWidth(reference[c.name]!, c.widthMm, `oracle ${c.name}`);
         expectWidth(measured(c), reference[c.name]!, c.name);

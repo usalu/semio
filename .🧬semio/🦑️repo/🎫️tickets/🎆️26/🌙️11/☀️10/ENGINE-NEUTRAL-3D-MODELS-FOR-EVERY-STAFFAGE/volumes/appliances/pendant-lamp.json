@@ -1,0 +1,409 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "rose",
+    "kind": "revolve",
+    "bone": "rose",
+    "material": "rose-polymer",
+    "role": "body",
+    "tone": 0.7,
+    "region": "rose",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      -0.024,
+      0.05
+     ],
+     [
+      -0.016,
+      0.05
+     ],
+     [
+      -0.01134,
+      0.04936
+     ],
+     [
+      -0.00741,
+      0.04756
+     ],
+     [
+      -0.00425,
+      0.04475
+     ],
+     [
+      -0.00193,
+      0.04111
+     ],
+     [
+      -0.00049,
+      0.03681
+     ],
+     [
+      0.0,
+      0.032
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "cord",
+    "kind": "revolve",
+    "bone": "cord",
+    "material": "textile-cord",
+    "role": "body",
+    "tone": 0.15,
+    "region": "cord",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      -0.521,
+      0.0033
+     ],
+     [
+      0,
+      0.0033
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "collar",
+    "kind": "revolve",
+    "bone": "holder",
+    "material": "brass-lacquered",
+    "role": "body",
+    "tone": 0.45,
+    "region": "lampholder",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0,
+      0.01
+     ],
+     [
+      -0.006,
+      0.0105
+     ],
+     [
+      -0.0075,
+      0.0155
+     ],
+     [
+      -0.03,
+      0.0155
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "shade",
+    "kind": "revolve",
+    "bone": "shade",
+    "material": "enamel-white",
+    "role": "body",
+    "tone": 0.4,
+    "region": "shade",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.0,
+      0.017
+     ],
+     [
+      -0.00065,
+      0.02787
+     ],
+     [
+      -0.0027,
+      0.03891
+     ],
+     [
+      -0.0063,
+      0.04998
+     ],
+     [
+      -0.01159,
+      0.06096
+     ],
+     [
+      -0.01874,
+      0.07172
+     ],
+     [
+      -0.02788,
+      0.08213
+     ],
+     [
+      -0.03916,
+      0.09205
+     ],
+     [
+      -0.05274,
+      0.10137
+     ],
+     [
+      -0.06877,
+      0.10995
+     ],
+     [
+      -0.08738,
+      0.11767
+     ],
+     [
+      -0.10875,
+      0.1244
+     ],
+     [
+      -0.133,
+      0.13
+     ],
+     [
+      -0.133,
+      0.133
+     ],
+     [
+      -0.1385,
+      0.133
+     ],
+     [
+      -0.1385,
+      0.1305
+     ],
+     [
+      -0.13356,
+      0.12756
+     ],
+     [
+      -0.1094,
+      0.12198
+     ],
+     [
+      -0.08823,
+      0.11532
+     ],
+     [
+      -0.06983,
+      0.10769
+     ],
+     [
+      -0.05403,
+      0.09923
+     ],
+     [
+      -0.04069,
+      0.09007
+     ],
+     [
+      -0.02964,
+      0.08035
+     ],
+     [
+      -0.02072,
+      0.07019
+     ],
+     [
+      -0.01376,
+      0.05972
+     ],
+     [
+      -0.00862,
+      0.04905
+     ],
+     [
+      -0.00512,
+      0.03829
+     ],
+     [
+      -0.00313,
+      0.02757
+     ],
+     [
+      -0.0025,
+      0.01685
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "bulb-cap",
+    "kind": "revolve",
+    "bone": "bulb",
+    "material": "brass-lacquered",
+    "role": "body",
+    "tone": 0.5,
+    "region": "lampholder",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.078,
+      0.0135
+     ],
+     [
+      0.105,
+      0.0135
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "bulb-glass",
+    "kind": "revolve",
+    "bone": "bulb",
+    "material": "bulb-glass",
+    "role": "body",
+    "tone": 0.9,
+    "region": "bulb-glass",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.00064,
+      0.00531
+     ],
+     [
+      0.00247,
+      0.01059
+     ],
+     [
+      0.00538,
+      0.01564
+     ],
+     [
+      0.00925,
+      0.02025
+     ],
+     [
+      0.01396,
+      0.0242
+     ],
+     [
+      0.01941,
+      0.02728
+     ],
+     [
+      0.02546,
+      0.02929
+     ],
+     [
+      0.032,
+      0.03
+     ],
+     [
+      0.03853,
+      0.02946
+     ],
+     [
+      0.04426,
+      0.02802
+     ],
+     [
+      0.04938,
+      0.02594
+     ],
+     [
+      0.05407,
+      0.02348
+     ],
+     [
+      0.05855,
+      0.02091
+     ],
+     [
+      0.063,
+      0.0185
+     ],
+     [
+      0.06717,
+      0.01678
+     ],
+     [
+      0.07087,
+      0.0154
+     ],
+     [
+      0.07439,
+      0.01439
+     ],
+     [
+      0.078,
+      0.0138
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Every part is axisymmetric about the vertical axis (plan views are circles of 50 mm and 133 mm), so all six solids are revolves of their elevation half outline.",
+    "de": "Jedes Teil ist rotationssymmetrisch um die Hochachse (die Grundrisse sind Kreise von 50 mm und 133 mm), daher sind alle sechs Körper Rotationskörper der halben Seitenansichtskontur."
+   },
+   {
+    "en": "The enamel shade is a hollow shell of 2.5 mm wall, an open revolve profile that runs down the outside and back up the inside, whose outer envelope equals the drawn dome, so the bulb hangs visibly inside; the drawn closed dome silhouette is unchanged.",
+    "de": "Der Emailleschirm ist eine hohle Schale von 2,5 mm Wandstärke, ein Rotationskörper, dessen offenes Profil außen hinab und innen hinauf läuft und dessen Außenhülle der gezeichneten Kuppel entspricht, sodass die Glühlampe sichtbar darin hängt; die Silhouette bleibt unverändert."
+   },
+   {
+    "en": "Bulb cap, cap thread, filament and the hairline shade highlights have no separate material or region; only the cap cylinder is modelled, the filament and the threads are left out.",
+    "de": "Fassung, Gewinde, Glühfaden und die Haarlinien-Glanzlichter des Schirms haben kein eigenes Material oder keine eigene Region; nur der Kappenzylinder wird modelliert, Glühfaden und Gewinde entfallen."
+   }
+  ]
+ }
+}

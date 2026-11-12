@@ -23,6 +23,7 @@ import type { Asset, BreathingPattern, Environment, Respiration, Slug } from "..
 import type { EvaluationQuery, RespirationState } from "../../🔗️contracts/🟦️.ts";
 import { clipOf, effectiveKeys, poseOf, wrapTime } from "../../🎞️animation/🟦️.ts";
 import { enthalpy, humidityRatio, latentHeat, saturationPressurePa, volumePerDryKg } from "../🌫️air/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🫁️ Share of the exhaled volume leaving through the nose when the route is `nose-and-mouth` (authored estimate). */
 export const NOSE_SHARE_MIXED = 0.5;
@@ -159,12 +160,12 @@ export function breathAt(pattern: BreathingPattern, durationS: number, tau: numb
   const c3 = c2 + pattern.exhaleFraction;
   if (tau < c1) {
     const x = tau / c1;
-    return { phase: "inhale", flowM3S: -((Math.PI * v) / 1000 / (2 * c1 * durationS)) * Math.sin(Math.PI * x), volumeL: (v / 2) * (1 - Math.cos(Math.PI * x)) };
+    return { phase: "inhale", flowM3S: -((Math.PI * v) / 1000 / (2 * c1 * durationS)) * portable.sin(Math.PI * x), volumeL: (v / 2) * (1 - portable.cos(Math.PI * x)) };
   }
   if (tau < c2) return { phase: "pause-after-inhale", flowM3S: 0, volumeL: v };
   if (tau < c3) {
     const x = (tau - c2) / pattern.exhaleFraction;
-    return { phase: "exhale", flowM3S: ((Math.PI * v) / 1000 / (2 * pattern.exhaleFraction * durationS)) * Math.sin(Math.PI * x), volumeL: (v / 2) * (1 + Math.cos(Math.PI * x)) };
+    return { phase: "exhale", flowM3S: ((Math.PI * v) / 1000 / (2 * pattern.exhaleFraction * durationS)) * portable.sin(Math.PI * x), volumeL: (v / 2) * (1 + portable.cos(Math.PI * x)) };
   }
   return { phase: "pause-after-exhale", flowM3S: 0, volumeL: 0 };
 }
@@ -195,7 +196,7 @@ export function exhaledVolumeM3(asset: Asset, query: EvaluationQuery, fromS: num
     const length = durationS * pattern.exhaleFraction;
     const cumulative = (t: number): number => {
       const x = Math.min(1, Math.max(0, (t - begin) / length));
-      return (pattern.tidalVolumeL / 1000 / 2) * (1 - Math.cos(Math.PI * x));
+      return (pattern.tidalVolumeL / 1000 / 2) * (1 - portable.cos(Math.PI * x));
     };
     total += cumulative(Math.min(toS, begin + length)) - cumulative(Math.max(a, begin));
   }

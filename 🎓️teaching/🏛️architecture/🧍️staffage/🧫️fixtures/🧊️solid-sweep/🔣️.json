@@ -1,0 +1,29 @@
+{
+  "description": "Language-agnostic vectors of the extruded solid's `sweep` (D47), hand-computed on the sample figure at 1:100 in the pose `stand`: the thigh bone `thigh-l` hangs down from the origin, so its u axis is world -y (down), its normal v is world +x (ahead) and its lateral axis w is world +z (left). One rect profile (x 0..0.45 along the bone, y 0..0.05) is swept from z0 = -0.2 to z1 = 0.3. sweep `w` puts the profile in the (u, v) plane and the thickness along w: front shows x = z0..z1 (the lateral span) and y = -0.45..0 (the profile along the bone); plan shows x = 0..0.05 (the profile's second axis, along v) and y = z0..z1. sweep `v` puts the profile in the (u, w) plane and the thickness along v: front shows x = 0..0.05 (the profile's second axis, along w) and y = -0.45..0, plan shows x = z0..z1 (the thickness along v, ahead) and y = 0..0.05. A missing sweep has no default and is refused.",
+  "asset": "sample-figure",
+  "scale": 100,
+  "pose": "stand",
+  "toleranceM": 1e-5,
+  "bone": "thigh-l",
+  "profile": { "kind": "rect", "x": 0, "y": 0, "w": 0.45, "h": 0.05 },
+  "span": { "z0": -0.2, "z1": 0.3 },
+  "basis": { "u": [0, -1, 0], "v": [1, 0, 0], "w": [0, 0, 1] },
+  "cases": [
+    {
+      "name": "sweep w: the profile lies in the (u, v) plane and the thickness runs laterally",
+      "sweep": "w",
+      "front": { "minX": -0.2, "maxX": 0.3, "minY": -0.45, "maxY": 0 },
+      "plan": { "minX": 0, "maxX": 0.05, "minY": -0.2, "maxY": 0.3 }
+    },
+    {
+      "name": "sweep v: the profile lies in the (u, w) plane and the thickness runs along the bone normal",
+      "sweep": "v",
+      "front": { "minX": 0, "maxX": 0.05, "minY": -0.45, "maxY": 0 },
+      "plan": { "minX": -0.2, "maxX": 0.3, "minY": 0, "maxY": 0.05 }
+    }
+  ],
+  "refused": [
+    { "name": "no sweep", "solid": { "kind": "extruded", "z0": -0.2, "z1": 0.3 } },
+    { "name": "an unknown sweep axis", "solid": { "kind": "extruded", "sweep": "u", "z0": -0.2, "z1": 0.3 } }
+  ]
+}

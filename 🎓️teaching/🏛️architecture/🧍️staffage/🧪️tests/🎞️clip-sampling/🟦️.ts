@@ -65,7 +65,8 @@ describe("🎞️ clip sampling", () => {
     expect(half.contacts).toEqual(atHalf.contacts);
     expect(at(-1).bones.torso!.offset.angleDeg).toBe(clampedBefore);
     expect(at(5).bones.torso!.offset.angleDeg).toBe(-3);
-    expect(at(5).timeS).toBe(durationS);
+    expect(at(5).clipTimeS).toBe(durationS);
+    expect(at(5).timeS).toBe(5);
     expect(clampedAfter).toBe(1);
   });
 

@@ -254,7 +254,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A heel-to-toe walk with double support and a shoulder bag hung from the torso on a revolute joint, so the bag swings with the stride and its weight sits on the near shoulder.",
@@ -273,7 +277,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": ["seated-person-marker"],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A man at 1.2 met on a swivel chair with a 30 W laptop and fan exhaust on a desk: a typing loop and a tilting backrest that no standing or bench-seated figure can show.",
         "de": "Ein Mann bei 1,2 met im Drehstuhl mit einem 30-W-Laptop samt Lüfterabluft auf dem Schreibtisch: eine Tippschleife und eine mitkippende Lehne, die keine stehende oder auf einer Bank sitzende Figur zeigen kann."
@@ -291,7 +295,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A lying body at 0.7 met under a 1.6 clo duvet on the mattress datum of the single-bed, with breath rising from the pillow: the only figure whose weight rests on a mattress.",
         "de": "Ein liegender Körper bei 0,7 met unter einer Bettdecke von 1,6 clo auf dem Matratzenbezug des Einzelbetts, mit vom Kissen aufsteigendem Atem: die einzige Figur, deren Gewicht auf einer Matratze ruht."
@@ -340,7 +344,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Seat, thigh-edge and backrest contacts carry the pelvis and thighs on a bench, with flat feet and a reclined reading pose that no standing figure can show.",
@@ -391,7 +399,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Child proportions (about 5.8 heads to the body) with a sprint cycle whose flight phases leave both feet airborne, and a standing jump from a crouch that the adult jogger does not have.",
@@ -441,7 +453,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Seated in a manual wheelchair whose frame is the root and whose rear tyre and castor patches are the only ground contacts, while the hands drive the hand rims.",
@@ -489,7 +505,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A stooped posture and a cane-tip contact as a third ground contact give a three-point gait, which the walking commuter with only its four foot contacts cannot represent.",
@@ -537,7 +557,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Seated on a saddle with a hand on the handlebar, the pedal spindles are attachments on the cranks, so the crank angle drives the leg chain and the feet follow the pedals while the tyre patches carry the bicycle.",
@@ -586,7 +610,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Two 10 kg box bones hang from the hands, so the 20 kg load acts at the grips and moves the centre of mass forward, with the largest lumbar lever arm in the mid-lift pose.",
@@ -634,7 +662,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "The stroller is a wheeled sub-assembly with its own contacts, and in the kerb-tilt pose the front wheels lift 12 cm so that only the rear wheel touches the ground, which no unladen figure can show.",
@@ -685,7 +717,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A running gait with a forward trunk lean, arm drive and flight poses that have no ground contact at all, whereas the walking commuter always keeps at least one foot down.",
@@ -731,7 +767,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A rigid umbrella hangs from the right hand on a revolute joint with two rib bones and a canopy load point, so wind loads the umbrella as well as the body, which the other figures do not carry.",
@@ -779,7 +819,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Its shoulder and seat contacts take a horizontal wall reaction that the soles resist by friction, so the pose is wall-supported rather than free standing.",
@@ -826,7 +870,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Carries a fixed pointer in the right hand and a flag on a revolute pole in the left hand, so its pointing and waving gestures are authored on the arms.",
@@ -876,7 +924,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A mature open-grown oak with a short massive bole that divides at about 3 m into widely spreading limbs under a broad dome-shaped crown, unlike the columnar poplar or the flat-topped pine.",
@@ -925,7 +977,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A single straight stem with four trunk bones and steeply ascending branch tiers forming a narrow, flame-shaped column of foliage, unlike the multi-stem birch or the spreading oak.",
@@ -975,7 +1031,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Three slender stems grow from one stool, each a separate two-bone chain from the shared root plate, so the ice pose can bow the outer stems apart.",
@@ -1025,7 +1085,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A straight, bare bole under a high, flat-topped crown of horizontal needle plates, whose two needle-leaf regions total 150 m² against 450 m² for the English oak.",
@@ -1074,7 +1138,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An unbranched trunk with a terminal rosette of pinnate fronds; the rig is one stem plus frond bones that droop under wind instead of swaying branches.",
@@ -1123,7 +1191,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Eight long curtains of pendulous whips hang from arching limbs almost to the ground and shape a bell-shaped silhouette in the calm, windy and storm poses.",
@@ -1173,7 +1245,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A clipped hedge segment of six stem bundles and six flat-topped blocks rather than an individual tree, whose snow pose loads the clipped top surfaces.",
@@ -1223,7 +1299,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A trunkless clump of arching blades and four stiff culms, each culm a chain of two revolute bones that bends under wind; in its wet-snow pose the blades bow down by 15 degrees.",
@@ -1271,7 +1351,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A quadruped with a collar load anchor and a rump contact that carries part of the load in the sitting pose, in addition to its four paws.",
@@ -1320,7 +1404,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 4.2 kg quadruped with a four-segment spine and five-bone tail, whose stalk cycle keeps three paws on the ground in every phase.",
@@ -1366,7 +1454,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 550 kg quadruped whose three-bone neck and head chain lowers the muzzle to the sward in the grazing pose, while all four hooves stay on the ground.",
@@ -1417,7 +1509,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "The only bird in the archive, with wing-flap take-off and airborne poses, and four feather regions that total about 0.05 m² in its thermal model.",
@@ -1466,7 +1562,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A slender deer whose cannon bones (about 0.23 m) are longer than the labrador's metatarsus (0.135 m), and whose alarm clip lifts the near foreleg while the other three hooves stay planted.",
@@ -1515,7 +1615,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A heavy bovine with rumen-flank and udder thermal regions, where fermentation heat is modelled, and a lying pose that rests on the sternum, carpi and hocks.",
@@ -1560,7 +1664,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.8 m timber seat and backrest on two steel end frames, whose load states are one or two occupants placed on the seat, unlike the point contacts of a chair.",
@@ -1606,7 +1714,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A light chair drawn in elevation with coinciding near and far legs (two leg pairs, four legs in reality), so its load rests on two point contacts at the rear and front feet; a 75 kg occupant load sits on the seat in the sit-down clip and the chair tips back on its rear feet, where the park bench rests on two long end frames.",
@@ -1647,7 +1759,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Five castor contacts on a prismatic gas-spring column with a backrest recline joint, and a swivel turn about the vertical axis as a motion event that a fixed-leg chair does not have.",
@@ -1692,7 +1808,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Two identical two-stage telescoping prismatic columns raise the top from 0.72 m to 1.15 m under a drawn monitor and a placed laptop load, so the desk changes height rather than standing fixed.",
@@ -1740,7 +1860,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A tall tapered column with a cantilevered luminaire arm, whose operating thermal rise and ignition event describe a lighting cycle that the other static objects do not have.",
@@ -1785,7 +1909,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 2.6 m eight-rib canopy on an aluminium mast with a sliding runner whose stretchers fold the ribs down along the mast, plus a tilt joint on a heavy concrete base, whose structural check applies the wind loads at the crown hub to a fixed socket.",
@@ -1830,7 +1958,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A lidded container whose only moving part is the hinged lid, and whose contents add a distributed load in the full-load pose.",
@@ -1875,7 +2007,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A steel A-frame with a seat hung on chain bones from a top beam, modelled as a one-degree-of-freedom pendulum with inertial dynamics, in which the occupant push acts while the seat swings.",
@@ -1923,7 +2059,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "Suspended front and rear axles with ±0.1 m prismatic travel, a bonnet and tailgate on revolute hinges, and a tailpipe emitter, with two axle contacts in elevation, unlike the two-wheeled cargo bike.",
@@ -1969,7 +2109,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A late-1920s saloon with separate crescent fenders, running boards and side-mounted spare wheels, authored in elevation and in plan, unlike the modern hatchback city-car.",
@@ -2017,7 +2161,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 12 m battery-electric solo bus with a kneeling pose and four sliding door leaves on prismatic joints, which the car's hinged bonnet and tailgate do not have.",
@@ -2064,7 +2212,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A tracked machine whose boom, stick and bucket form a revolute chain, each driven by a hydraulic cylinder with a prismatic rod on a fixed house; no other vehicle in the archive has a boom-stick-bucket chain.",
@@ -2113,7 +2265,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A tall lattice mast with a horizontal jib and counter-jib, where the trolley runs along the jib so that the hoisted load acts as a moving point load.",
@@ -2159,7 +2315,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A counterbalanced truck with a telescopic mast whose lift carriage is a prismatic joint, and whose mast tilt changes the overturning moment about the front axle.",
@@ -2205,7 +2365,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A two-wheeled bicycle with a front cargo box, so its load sits ahead of the front axle and shifts the reaction towards the front wheel.",
@@ -2251,7 +2415,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A slab restrained only at the wall, so the root carries the full bending moment and the rig is a fixed-support beam, unlike the simply supported glulam beam.",
@@ -2296,7 +2464,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An 8 m GL24h glulam beam of 160 × 600 mm, simply supported on a pin and a roller with timber stiffness E0,mean 11.6 GPa, whose deflection model neglects shear, unlike the cantilevered balcony.",
@@ -2343,7 +2515,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 3.0 m HEB 200 column on a fixed footing with a free head, loaded axially, eccentrically and by lateral wind, whose statics exclude second-order buckling effects, unlike the beams.",
@@ -2390,7 +2566,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A stepped, inclined run supported at landings, whose load path runs through the stringers and treads instead of a single beam.",
@@ -2438,7 +2618,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 2.0 m glass leaf on a carriage along a 3.0 m track between a pin and a roller jamb, so its weight acts as a moving vertical load that changes the jamb reactions, with wind out of plane not modelled.",
@@ -2487,7 +2671,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.2 m timber-framed sash pinned at its bottom hinge, with a horizontal head-stay roller active in every pose, that tilts outward with wind suction acting normal to the sash.",
@@ -2532,7 +2720,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A uninsulated 1960 solid brick wall in vertical section, 1 m high: 15 mm interior plaster, 365 mm solid brick and 20 mm mineral render, U = 1.43 W/(m2 K) from interior 20 degC and R_si 0.13, R_se 0.04 m2K/W.",
@@ -2577,7 +2769,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1960 solid brick wall with 12 cm ETICS in vertical section, 1 m high: 15 mm interior plaster, 365 mm solid brick, 120 mm mineral wool ETICS and 20 mm mineral render, U = 0.24 W/(m2 K) from interior 20 degC and R_si 0.13, R_se 0.04 m2K/W.",
@@ -2622,7 +2818,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1960 solid brick wall with 30 cm ETICS in vertical section, 1 m high: 15 mm interior plaster, 365 mm solid brick, 300 mm mineral wool ETICS and 20 mm mineral render, U = 0.11 W/(m2 K) from interior 20 degC and R_si 0.13, R_se 0.04 m2K/W.",
@@ -2670,7 +2870,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A single 1.1 m laminated glass panel cantilevered from a floor clamp with no posts, shown in section: a handrail line load of 1.0 kN/m (taken per metre of run on a 1 m strip), a separate crowd impact point load and wind pressure act at its top.",
@@ -2715,7 +2919,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 5.5 m steel canopy pinned at the wall and held by a tube strut hinged at both ends, modelled as a bilateral roller along the rod, so the strut carries snow in tension and net wind uplift in compression and the canopy keeps its restraint.",
@@ -2761,7 +2969,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An 8-year-old girl, 1.28 m, in a helmet, zip jacket and backpack rides a two-wheel kick scooter: she pushes with the right foot, swings it back onto the deck and glides crouched with both hands on the T-bar; the right foot also brakes on the rear fender.",
@@ -2808,7 +3020,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 34-year-old parcel courier of 1.82 m in a high-visibility jacket, cargo trousers, work boots and a cap, wheeling a steel hand truck loaded with three parcels (38 kg) tilted back on its wheels. Poses: waiting, tilting the load, parked upright; clips: walking with the load and tipping it onto the wheels.",
@@ -2840,7 +3056,7 @@
         "200": "unavailable",
         "500": "unavailable"
       },
-      "symbols": [],
+      "symbols": ["gardener-block"],
       "analytics": [
         "thermal",
         "transport",
@@ -2854,7 +3070,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 58-year-old, 1.66 m gardener kneeling on a foam pad in a straw hat, rolled linen sleeves, canvas trousers and clogs, weeding with a hand trowel beside a trug: weeding, upright kneeling and reaching to the trug, a digging loop and a trug round; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
@@ -2900,7 +3120,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.70 m parent in wool coat, scarf, beanie and boots carrying a 24-month toddler (12.2 kg) in a padded overall on the hip: the toddler is a second living body with its own breathing; standing, a walking cycle with planted feet, hoisting and settling; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
@@ -2946,7 +3170,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 24-year-old man, 1.82 m, in a hooded sweatshirt and sports shorts moves on two forearm crutches in a three-point swing gait: the left foot sits in an orthopaedic walking boot and stays off the ground while the crutch tips and the right foot carry him.",
@@ -2993,7 +3221,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 79-year-old woman, 1.58 m, in a loden coat and beret walks stooped behind a four-wheel rollator with seat, basket, brake levers and a shopping bag; the aid carries part of her weight, rolls on 0.2 m wheels and doubles as a seat.",
@@ -3040,7 +3272,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A blind woman, 1.68 m, in a denim jacket and sunglasses walks briskly with a 1.3 m long white cane held diagonally ahead of her; the roller tip stays in contact with the ground and sweeps ahead of every step.",
@@ -3087,7 +3323,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A woman of 1.66 m in week 36 of pregnancy (71 kg, 13 kg gained) in an oversized knit sweater, maternity leggings and ankle boots, standing with the torso leaned back and the lumbar curve increased. The abdomen is its own bone and thermal region; physiology (metabolism, ventilation, skin blood flow) is adjusted for the third trimester.",
@@ -3135,7 +3375,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 29-year-old man of 1.80 m with a right transtibial amputation, running at 3.1 m/s on a J-shaped carbon blade attached below a carbon socket, in a singlet and compression shorts and one running shoe. The gait has a flight phase, a shorter blade contact with 11 degrees of spring deflection, and the socket holds heat. Poses: standing, recovering, forefoot strike, blade mid-stance and flight.",
@@ -3182,7 +3426,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 42-year-old man of 1.76 m in flannel shirt, jeans and leather boots on a wooden bar stool with one foot on the rung, playing an acoustic guitar: strumming, fretting high on the neck while singing, resting and tuning, with a strum loop, a chord-change phrase and a tuning sequence; four individually drawn scales from 1:500 to 1:50.",
@@ -3230,7 +3478,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 19-year-old, 1.78 m skateboarder in beanie, hooded sweatshirt, cotton trousers and vulcanised shoes on a 0.81 m street deck: cruising, pushing off, a crouch and a tail-snap ollie with a flight phase; two individually drawn scales (1:100 and 1:50); 1:500 and 1:200 are declared unavailable.",
@@ -3276,7 +3528,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult of 1.69 m cooking at a 0.90 m kitchen counter at about 1.8 met: stirring a 2.5 litre pot on the hob with a wooden spoon, tasting from the spoon and standing by, with steam above the pot that follows the hob level.",
@@ -3324,7 +3580,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A neutral 1.67 m adult in a fleece sweatshirt, jeans and sneakers at 1.2 met, the archive's generic scale figure: relaxed, arms crossed, pointing sideways and warming the hands, with loops for idle breathing, shivering with cold and fanning in the heat.",
@@ -3370,7 +3630,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 24-year-old woman of 1.69 m in a hooded sweatshirt, slim jeans and canvas sneakers, standing at a bus stop with her head bowed over a smartphone; over-ear headphones around the neck, a ponytail, weight on one leg. Poses for texting, a call at the ear and a photo.",
@@ -3416,7 +3680,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult horned goat of 55 kg with 0.76 m withers height: lean barrel on long legs, swept-back horns, beard and upright ears; standing alert, rearing on the hind legs to browse foliage, climbing a ledge, and a four-beat walk; short summer coat, sweating and panting, bare horns and ears as thermal windows.",
@@ -3462,7 +3730,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult European hedgehog (Erinaceus europaeus, 1.0 kg): spiny dome with front and rear spine skirts that swing down to close the animal into a defensive ball, pointed snout, four short limbs; foraging, alert and rolled-up poses, a slow foraging walk and the roll-up reaction; spine and fur thermal model with 35.5 degC core, nose breathing and a back plume. Too small for 1:500.",
@@ -3508,7 +3780,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult herring gull (Larus argentatus, 1.0 kg, wingspan 1.45 m): upright standing, soaring on spread wings and a landing flare to touchdown; rig with two-piece neck, arm and hand wings, webbed legs; plumage thermal model (41 degC core), nares breathing, back plume, breathing patterns for rest, soaring and the flare. The side elevation shows spread wings in oblique projection.",
@@ -3556,7 +3832,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult drake mallard (Anas platyrhynchos, 1.15 kg): boat-shaped body with a three-piece S-neck, flat bill, folded wings that can be raised, short legs with webbed feet and a waterline contact for swimming; standing, floating, dabbling and upending poses, a waddling walk, paddling and a dabbling cycle, with a plumage thermal model (41.5 degC core), nostril breathing and a back plume.",
@@ -3602,7 +3882,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A finishing pig of 100 kg with 0.64 m withers height: deep barrel on very short legs, nearly no neck, wedge head with snout disc, floppy ears, curly tail and sparse bristles on pale skin; standing, rooting with the snout down, lying wet in a mud wallow, and a slow four-beat walk; no sweat glands, panting and wallowing for cooling.",
@@ -3648,7 +3932,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult red fox (Vulpes vulpes) of 6 kg, 1.15 m nose to brush tip and 0.5 m at the shoulder: slender legs with dark stockings, pointed muzzle, erect ears and a long bushy brush with a pale tip; standing alert, a mousing crouch, curled asleep with the brush over the nose, a diagonal trot with suspension and a mousing pounce; thick brush fur as the largest insulation patch.",
@@ -3695,7 +3983,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult Eurasian red squirrel (Sciurus vulgaris, 0.30 kg): two-part spine, bushy two-part tail, fore limbs with long fingers and digitigrade hind limbs; sitting upright eating a nut, a bounding run and climbing a vertical trunk (the trunk is not part of the asset: the claws are supports with a bark friction of 1.5); fur thermal model with 38.5 degC core, nose breathing and a back plume.",
@@ -3742,7 +4034,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An adult wool-breed ewe of 70 kg with 0.74 m withers height in full fleece: a heavy fleece barrel on thin hair-covered legs, short wool tail, level head carriage; standing, grazing with the head down, lying and ruminating, a slow four-beat walk, with fleece as a thick insulating layer, nose and open-mouth heat panting.",
@@ -3792,7 +4088,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A mature century plant (Agave americana) of 1.45 m height and 2.55 m width: a rosette of stiff, succulent, glaucous leaves with marginal teeth around a short trunk, the lowest leaves arching to the ground and a spear of young leaves in the heart. A CAM plant: its stomata open at night.",
@@ -3843,7 +4143,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A full-standard orchard apple tree with a clear stem of 1.6 m and an open, spreading vase crown of arching scaffold limbs; the fruit load is carried as a seasonal pose and load, from green fruit set to the drooping harvest load.",
@@ -3893,7 +4197,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A clump of six running-type bamboo culms (Phyllostachys aureosulcata, 29 mm culms, grown in a rhizome barrier) from 2.4 to 4.6 m tall: nodes, a groove along the culm and leaf-bearing branches in the upper half that stream in the wind.",
@@ -3942,7 +4250,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A clump of hosta (Hosta sieboldiana type) 0.62 m high and 0.9 m wide: a mound of broad, ribbed, glaucous-green blades on petioles that arch out of the crown; the outer blades touch the soil. A low shade perennial for the foreground of planting.",
@@ -3992,7 +4304,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "English ivy (Hedera helix) climbing a freestanding timber trellis, 1.9 m wide and 2.15 m high, on two timber posts in galvanised steel shoes: four main stems carry leaf mats that cover the upper lattice and shoots that overhang the top rail. Trellis and plant are one asset.",
@@ -4044,7 +4360,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A mature small Japanese maple (Acer palmatum) of three slender stems whose near-horizontal branches carry the foliage in layered, flat tiers; the crown is wider than it is high.",
@@ -4096,7 +4416,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A street plane tree held as a pollard: a clear grey-cream mottled bole of 3.8 m ends in a knuckled head from which one summer of whippy shoots carries a dense upright crown of large palmate leaves.",
@@ -4149,7 +4473,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A mature park lime (Tilia cordata) with a straight stem, one continuous leader and a dense, domed crown of small heart-shaped leaves; epicormic shoots sprout from the stem base.",
@@ -4198,7 +4526,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.75 m swivel bar stool with a chromed four-leg frame, footrest ring, foam seat pad that sinks under load and a low backrest that shows the swivel as it turns.",
@@ -4246,7 +4578,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.80 x 1.80 m chipboard bookshelf with five adjustable shelves on 32 mm pin holes; the loaded pose bends every board by its computed beam deflection, the clips load the shelves and re-pin one.",
@@ -4295,7 +4631,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.60 m solid oak dining table whose halves slide apart on slide rails so that a 0.60 m leaf lifts in (2.20 m); closed, extended, set and test-load poses.",
@@ -4344,7 +4684,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A beech deck chair of three hinged frames and a hanging canvas sling that folds flat: the scissor frames slide and turn, the sling hangs as two inextensible canvas bones solved for every pose.",
@@ -4393,7 +4737,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.80 m softwood picnic table with A-frame ends and two benches hinged to the frames that fold down for four persons or up against the frames; end elevation and plan symbol.",
@@ -4442,7 +4790,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.90 x 2.00 m pine single bed with an adjustable slatted base in three sections and a 0.20 m foam mattress that sinks under the sleeper; side elevation and the conventional plan sign.",
@@ -4492,7 +4844,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 2.00 m upholstered three-seat sofa with padded arms, three separately sinking seat cushions and three back cushions on turned beech feet; front elevation and plan symbol.",
@@ -4541,7 +4897,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A galvanised 48.3 mm tube hoop with a cross rail, set in a concrete footing: 0.75 m wide, 0.80 m high, drawn face-on from the side where the bikes park; a leaning bicycle is a load, not a second asset. The plan shows the hoop as a bar with two leg dots.",
@@ -4588,7 +4948,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 57 cm charcoal kettle grill on three legs: lid closed or raised, a glowing charcoal bed inside, hot enamel shells and smoke leaving through the lid vent or over the open bowl.",
@@ -4634,7 +4998,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.0 m cast-iron pedestal drinking fountain with a stainless basin and a goose-neck bubbler: a push button opens the tap, the water jet arcs into the basin as a cool, wet source of moisture, and the pedestal warms in the sun.",
@@ -4681,7 +5049,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A free-standing 13 kW propane radiant heater, 2.25 m high with a 0.80 m dome: operating levels off, low (6 kW) and high (13 kW) heat the emitter shroud and the dome and send a hot flue plume up through the dome.",
@@ -4700,7 +5072,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 14-inch aluminium laptop whose 60 W of electrical power under load ends as heat, mostly at the underside and the keyboard deck; the lid opens to 105 degrees and the machine idles at 15 W or sleeps at 1.8 W.",
         "de": "Ein 14-Zoll-Laptop aus Aluminium, dessen 60 W elektrische Leistung unter Last als Wärme enden, hauptsächlich an Unterseite und Tastaturdeck; der Deckel öffnet auf 105 Grad, die Maschine läuft im Leerlauf mit 15 W oder ruht mit 1,8 W."
@@ -4718,7 +5090,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 24-inch LED monitor on a stand with the panel tilted back by 5 degrees: 25 W of electrical power ends as heat, most of it in the rear housing with the power supply.",
         "de": "Ein 24-Zoll-LED-Monitor auf Standfuß mit um 5 Grad nach hinten geneigtem Panel: 25 W elektrische Leistung enden als Wärme, der größte Teil im Rückgehäuse mit dem Netzteil."
@@ -4736,7 +5108,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A single office tower server: 90 W at typical load and 200 W rated, mostly carried away by the rear fan; the 5 kW rack is the data-centre counterpart.",
         "de": "Ein einzelner Büro-Tower-Server: 90 W bei typischer Last und 200 W Nennlast, überwiegend vom Rücklüfter abgeführt; das 5-kW-Rack ist das Rechenzentrums-Gegenstück."
@@ -4754,7 +5126,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A pendant luminaire with an enamelled dome shade and a 60 W incandescent bulb hanging out of it: 95 % of the 60 W (57 W) leave as heat in the glass, the shade and the cap and the other 3 W as light that the room absorbs, the origin is the lowest point of the bulb.",
         "de": "Eine Pendelleuchte mit emailliertem Kuppelschirm und einer daraus herabhängenden 60-W-Glühlampe: 95 % der 60 W (57 W) verlassen Glas, Schirm und Sockel als Wärme und die übrigen 3 W als Licht, das der Raum absorbiert, der Ursprung ist der tiefste Punkt der Lampe."
@@ -4802,7 +5174,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An electro-hydraulic rising bollard of 0.20 m diameter, drawn as a section: 0.65 m raised above the ground, 1.25 m of sleeve below it with the cylinder and a power unit that heats up while the shaft moves; raised, lowered, moving and nudged.",
@@ -4847,7 +5223,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 100 litre zinc-plated wire-basket trolley on four castors, 1.05 m long and 1.0 m high: empty, loaded with 30 kg of groceries, and with the rear nesting gate swung up; a second trolley is not drawn.",
@@ -4892,7 +5272,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A five-step aluminium stepladder with platform, 1.50 m high and 0.68 m across the feet, open and locked: empty, under a person standing on it and under the EN 131 rated test load, with the standing load and lateral thrust as loads.",
@@ -4940,7 +5324,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A riderless Dutch city bicycle with step-through frame, 28 inch wheels, chain case, dynamo lamps and a rear stand: rolling wheels, turning cranks with levelled pedals, steering, folding stand, hub-brake and drivetrain heat.",
@@ -4990,7 +5378,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A medium diesel panel van (5.34 m, 2.0 t, 235/65 R16) with a sliding side door, rear doors, cab glazing, exhaust jet, hot engine, particulate filter, tyres and brakes.",
@@ -5038,7 +5430,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A riderless folding electric kick scooter (8.5 inch wheels, 250 W front hub motor, deck battery, rear disc brake): riding and folded states, rolling wheels, hub motor, battery, brake and charging heat.",
@@ -5088,7 +5484,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A riderless 125 cc four-stroke step-through scooter (130 kg, 12 inch wheels) with hinged seat, centre stand, exhaust jet, hot engine, silencer, tyres and brakes.",
@@ -5138,7 +5538,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A section of a 100 % low-floor articulated tram: a cab end module (9.0 m) with powered bogie and trailing bogie, the articulation bellows and a suspended middle module, with plug-sliding doors, a pantograph that raises and lowers, traction motors, brake resistor and discs, and roof air conditioning.",
@@ -5185,7 +5589,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An 8x4 truck mixer of the 9 m3 class in side elevation: heavy chassis with cab-over-engine cab and vertical exhaust stack, a tilted mixer drum whose spiral flight marks drift with its rotation, charging hopper and a folding discharge chute with extension.",
@@ -5232,7 +5640,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 400 kVA diesel generating set in a silenced 20 ft container in side elevation: louvred inlets, roof silencer with a stack and rain cap flap, and the radiator discharge hood with a weather flap. Exhaust jet and radiator fan air are separate emitters; the flaps open with load.",
@@ -5282,7 +5694,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 12 kW air-source heat pump outdoor unit in side elevation: the louvred coil guard, front fan outlet with an adjustable guide vane and a hinged service lid. In heating mode the fan blows air cooled by 5 K, in cooling mode air warmed by 7 K; a defrost cycle releases vapour from the coil.",
@@ -5330,7 +5746,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A battery-electric 19 ft scissor lift in side elevation: five scissor stages built from ten arms that fold to a 0.55 m stack or rise to a 5.8 m platform, a sliding deck extension, guard rails, and two occupants with a tool box as loads.",
@@ -5379,7 +5799,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 20 t articulated wheel loader with a 3.5 m3 bucket in side elevation: rear frame with hood and counterweight, front frame with cab and arm towers, a lift arm and bucket driven by closed-pin lift and tilt cylinders, tyres with lugs and a vertical exhaust stack. Steering articulation is shown in a plan symbol.",
@@ -5422,7 +5846,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "One 1.35 m wide, 3.30 m high mullion-transom bay of a curtain wall in elevation: 50 mm thermally broken aluminium mullions and transoms (U_f 2.0 and 2.2), a 6-16-6 argon insulating glass unit (U_g about 1.08) with warm-edge zone and an insulated spandrel panel (U about 0.31); every element is a conditioned layered region, sun and shade follow the pose sunlit fractions.",
@@ -5470,7 +5898,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.2 m wide external venetian blind (raffstore) of 17 aluminium Z-lamellae (90 mm wide, 80 mm pitch) in a 150 x 210 mm headrail box with guide rails and bottom rail, shown in vertical section in front of a double-glazed window in an insulated wall; retracted, lowered with slats horizontal, at 45 degrees or closed, with the shading effect on the glazing from the louvre geometry.",
@@ -5517,7 +5949,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 3.0 m wide, 2.75 m high full-fill cavity wall (175 mm calcium silicate, 140 mm mineral wool, 115 mm facing brick, U about 0.22 W/m2K) in elevation with a 1.25 x 1.33 m opening, a precast insulated concrete lintel with 0.25 m bearings (U about 0.39) and a precast sill; brick courses of 0.0833 m drawn where printable; floor slab and beam loads with arching over the opening.",
@@ -5565,7 +6001,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A compact type 22 steel panel radiator (two water panels, two convectors; 600 mm high, 1000 mm long, 100 mm deep, rated 1.2 kW at 75/65/20 degC) shown in vertical section on two wall brackets that stand 35 mm off the wall of the scene, with its thermostatic valve; output scales with the EN 442 exponent n = 1.3 and rises as a convection plume.",
@@ -5612,7 +6052,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "An insulated 2.5 m wide, 2.0 m high sectional garage door of four 40 mm PU sandwich panels (about 56 kg) shown in vertical section: hinged panels with rollers ride a vertical, curved (R 0.5 m) and horizontal track, balanced by a torsion spring on a cable-drum shaft; closed, half open and open poses and the full opening motion.",
@@ -5661,7 +6105,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.6 m diameter steel spiral stair around a 168 mm central column: 15 risers of 0.187 m (2.80 m floor to floor), 15 pie treads turning 22.5 degrees each, 15 balusters and a 0.93 m high helical handrail, drawn in elevation where every tread projects to a bar whose length follows the helix and the rail reads as a sine curve; a plan symbol gives the true spiral.",
@@ -5708,7 +6156,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.4 m wide reinforced concrete access ramp rising 0.60 m in two 3.6 m runs at 1:12 (8.3 %), with an at-grade landing, a middle landing and a top landing of 1.5 m, 0.10 m wheel-guard kerbs and continuous steel handrails at 0.85 m on both sides with 0.30 m extensions. 1:12 is the ADA maximum; DIN 18040-1 asks for at most 6 %.",
@@ -5727,7 +6179,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A wall-mounted indoor unit that extracts 2.5 kW from the room: a rotating discharge vane and a cold air jet of 450 m3/h cooled by 13 K, the opposite of the fan heater.",
         "de": "Ein wandhängendes Innengerät, das dem Raum 2,5 kW entzieht: eine drehende Ausblaslamelle und ein kalter Luftstrahl von 450 m3/h, um 13 K abgekühlt, das Gegenteil des Heizlüfters."
@@ -5745,7 +6197,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 900 W two-slice toaster, 0.30 m wide: in toasting pose the housing, the top plate and the bread crust heat up and hot air rises from the slots.",
         "de": "Ein Zweischeiben-Toaster von 900 W, 0,30 m breit: In der Pose Toasten erwärmen sich Gehäuse, Deckplatte und Brotkruste, und heiße Luft steigt aus den Schlitzen."
@@ -5763,7 +6215,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 700 W canister vacuum cleaner with hose, wand and floor nozzle: shell, lid and grille warm up and 520 W of warm air leave behind the canister.",
         "de": "Ein Bodenstaubsauger von 700 W mit Schlauch, Rohr und Bodendüse: Schale, Deckel und Gitter erwärmen sich, und 520 W warme Luft treten hinter dem Kessel aus."
@@ -5781,7 +6233,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 2000 W portable fan heater in two stages: a 0.032 m3/s warm jet leaves the front grille while grille, cover and housing warm up.",
         "de": "Ein tragbarer Heizlüfter von 2000 W in zwei Stufen: Ein warmer Strahl von 0,032 m3/s verlässt das vordere Gitter, während Gitter, Haube und Gehäuse sich erwärmen."
@@ -5799,7 +6251,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A mobile operating table 2.0 m long with a 0.90 m padded top that tilts head down and a mobile stand whose spring arm carries a 120 W surgical light: the lamp head is the only warm surface.",
         "de": "Ein fahrbarer Operationstisch von 2,0 m Länge mit einer 0,90 m hohen gepolsterten Platte, die in Kopftieflage kippt, und ein fahrbarer Ständer, dessen Federarm eine 120-W-Operationsleuchte trägt: der Leuchtenkopf ist die einzige warme Fläche."
@@ -5817,7 +6269,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 4.0 m by 1.2 m classroom board with chalk tray and a 2.0 m front leaf that slides over either back panel; a passive surface that takes the sun.",
         "de": "Eine Klassenraumtafel von 4,0 m mal 1,2 m mit Kreideablage und einem 2,0 m breiten Vorderflügel, der über jede Rückplatte gleitet; eine passive Fläche, die die Sonne aufnimmt."
@@ -5835,7 +6287,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.9 m wide wall chimney hood in side elevation that extracts 500 m3/h through the chimney while its motor and lamps release 150 W.",
         "de": "Eine 0,9 m breite Wand-Kaminhaube in der Seitenansicht, die 500 m3/h durch den Kamin absaugt, während Motor und Lampen 150 W abgeben."
@@ -5853,7 +6305,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.6 m wall unit with an inspection window onto the turning supply impeller and four duct spigots: 110 to 220 m3/h for 38 to 75 W with 85 percent heat recovery, supply air 2.6 K and exhaust air 17.9 K below the room.",
         "de": "Ein 0,6 m großes Wandgerät mit Schauglas auf das drehende Zuluftlaufrad und vier Kanalstutzen: 110 bis 220 m3/h bei 38 bis 75 W mit 85 Prozent Wärmerückgewinnung, Zuluft 2,6 K und Fortluft 17,9 K unter der Raumluft."
@@ -5871,7 +6323,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.22 m square axial wall fan seen face-on with five turning swept blades: 90 m3/h at 14 W on the low stage and 180 m3/h at 28 W at full speed; it replaces the circle-with-blades symbol.",
         "de": "Ein quadratischer Axial-Wandventilator von 0,22 m in der Frontansicht mit fünf drehenden gepfeilten Flügeln: 90 m3/h bei 14 W auf kleiner Stufe und 180 m3/h bei 28 W auf voller Drehzahl; er ersetzt das Symbol aus Kreis mit Flügeln."
@@ -5889,7 +6341,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.26 m square push-pull ventilation unit with its inner cover off: a reversible five-bladed fan in front of a ceramic honeycomb core that stores the heat of the extract air for 70 seconds and gives it back to the supply air for the next 70.",
         "de": "Ein quadratisches Pendellüftungsgerät von 0,26 m bei abgenommener Innenblende: ein umkehrbarer fünfflügeliger Ventilator vor einem Keramik-Wabenkern, der die Wärme der Abluft 70 Sekunden speichert und in den nächsten 70 Sekunden an die Zuluft zurückgibt."
@@ -5907,7 +6359,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 9 m wide conventional beam pumpjack whose walking beam nods over a crank with counterweight and a 2.65 m pitman rod: the horsehead rises and falls by 1.9 m at the polished rod, driven by a 30 kW motor and gear reducer that lose about 2.5 kW as heat while it runs.",
         "de": "Eine 9 m breite klassische Balancier-Erdölpumpe, deren Balancier über eine Kurbel mit Gegengewicht und eine 2,65 m lange Schubstange nickt: der Pferdekopf hebt und senkt die Polierstange um 1,9 m, angetrieben von einem 30-kW-Motor und Getriebe, die im Betrieb etwa 2,5 kW als Wärme verlieren."
@@ -5925,7 +6377,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "unavailable", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 90 mm square electronic room thermostat seen face-on with a display window, a heating-call lamp and a set-point dial that turns from 20 to 24 degrees; its electronics take 0.14 W at idle and 0.7 W with the relay closed.",
         "de": "Ein quadratischer elektronischer Raumthermostat von 90 mm in der Frontansicht mit Anzeigefenster, Heizanforderungs-Lampe und einem Sollwert-Drehknopf, der von 20 auf 24 Grad dreht; die Elektronik nimmt 0,14 W im Leerlauf und 0,7 W bei geschlossenem Relais auf."
@@ -5943,7 +6395,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "unavailable", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A brass angle valve with a 60 mm thermostat head seen along its axis whose knob turns from the star setting to setting 5: the body stays at the hot supply temperature while the head and the knob warm only with the flow.",
         "de": "Ein Eckventil aus Messing mit 60 mm großem Thermostatkopf in Achsrichtung gesehen, dessen Knopf von der Frostschutzstufe auf Stufe 5 dreht: der Körper bleibt auf heißer Vorlauftemperatur, während sich Kopf und Knopf nur mit dem Durchfluss erwärmen."
@@ -5961,7 +6413,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 38 mm tealight in its aluminium cup whose flame lifts out of the cup when lit, leans and stretches at the flicker peak and releases 35 to 40 W as a small plume.",
         "de": "Ein Teelicht von 38 mm im Aluminiumschälchen, dessen Flamme beim Anzünden aus dem Schälchen wächst, sich im Flackermaximum neigt und streckt und 35 bis 40 W als kleine Fahne abgibt."
@@ -5979,7 +6431,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.11 m hand shower on a 0.7 m riser rail with a hose loop to the wall elbow: 12 L/min (eco 9 L/min) of 38 degC water as a warm spray with a vapour plume.",
         "de": "Eine Handbrause von 0,11 m an einer 0,7 m langen Brausestange mit Schlauchbogen zum Wandanschluss: 12 L/min (Sparmodus 9 L/min) Wasser von 38 degC als warmer Strahl mit Dampffahne."
@@ -6024,7 +6476,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.30 m domino gas hob whose flame crown lifts out of the plate when lit, whose pan support glows and which releases about 2.5 kW.",
@@ -6070,7 +6526,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.22 m stock pot cut open through its axis with 3 L of water that warms to the boil, bobs and sends up a steam plume.",
@@ -6116,7 +6576,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 1.7 L jug kettle on its base that heats, boils with steam at the spout and rattles its lid.",
@@ -6162,7 +6626,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.43 m hermetic scroll compressor with a sight glass on the orbiting scroll, a hot discharge dome and a cold suction stub.",
@@ -6207,7 +6675,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A brass thermostatic expansion valve with a sensing bulb whose outlet and body run cold while the liquid inlet stays warm.",
@@ -6252,7 +6724,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.52 m finned tube coil in section that is cold as evaporator or cooling coil and hot as condenser or heating coil.",
@@ -6298,7 +6774,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.62 m desiccant wheel face-on with a turning honeycomb matrix and a hot regeneration sector.",
@@ -6344,7 +6824,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.5 m by 0.6 m cross-flow plate heat exchanger in section with a hatched plate pack, four collars and a bypass damper flap.",
@@ -6391,7 +6875,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 2.0 m by 1.0 m glazed flat-plate solar collector tilted by 35 degrees on a steel stand, whose absorber heats to stagnation in the sun and cools while the pump runs.",
@@ -6437,7 +6925,11 @@
         "png-sequence",
         "mp4",
         "webm",
-        "component"
+        "component",
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
       ],
       "distinction": {
         "en": "A 0.5 m by 0.6 m evaporative humidifier cut open: drops fall over a fluted pad that cools below the air temperature.",
@@ -6456,7 +6948,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.24 m by 0.27 m G4 bellows gas meter in front view with two union-nut stubs, an eight-digit counter and a test dial whose pointer turns with the gas flow; it replaces the dial-and-needle meter symbol.",
         "de": "Ein Balgengaszähler G4 von 0,24 m mal 0,27 m in der Frontansicht mit zwei Rohrstutzen mit Überwurfmuttern, einem achtstelligen Zählwerk und einem Prüfrad, dessen Zeiger sich mit dem Gasdurchfluss dreht; er ersetzt das Zählersymbol aus Zifferblatt und Nadel."
@@ -6474,7 +6966,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.17 m by 0.285 m Ferraris electricity meter in front view with a six-digit counter and a window onto the aluminium rotor disc whose dark mark turns with the load; it replaces the meter-with-bolt symbol.",
         "de": "Ein Ferraris-Stromzähler von 0,17 m mal 0,285 m in der Frontansicht mit sechsstelligem Zählwerk und einem Fenster auf die Läuferscheibe aus Aluminium, deren dunkle Markierung sich mit der Last dreht; er ersetzt das Zählersymbol mit Blitz."
@@ -6492,7 +6984,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.595 m square four-way ceiling diffuser in side view with a flange flush with the ceiling, stepped cones and a round collar; it supplies 300 m3/h of 18 degC air that spreads left and right along the ceiling and replaces the slotted grille strip.",
         "de": "Ein quadratischer Vierwege-Deckenauslass von 0,595 m in der Seitenansicht mit einem Flansch bündig zur Decke, Kegelstufen und einem runden Kragen; er bläst 300 m3/h Luft von 18 °C ein, die sich links und rechts an der Decke entlang ausbreitet, und ersetzt den geschlitzten Gitterstreifen."
@@ -6510,7 +7002,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "Five 600 by 400 by 300 mm plastic crates that stack loaded to 1.5 m or nest empty to 0.62 m, so the pile changes height rather than standing fixed.",
         "de": "Fünf Kunststoffkisten von 600 mal 400 mal 300 mm, die beladen auf 1,5 m stapelbar und leer auf 0,62 m ineinanderstellbar sind, sodass der Stapel seine Höhe ändert statt fest zu stehen."
@@ -6528,7 +7020,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 42U 19-inch rack with perforated front door, six servers, a storage array and a switch: 1.5 kW of heat at idle and 5 kW at full load, almost all of it in the air the fans blow from front to rear.",
         "de": "Ein 19-Zoll-Schrank mit 42 HE, gelochter Fronttür, sechs Servern, einem Speicher und einem Switch: 1,5 kW Wärme im Leerlauf und 5 kW bei Volllast, fast alles in der Luft, die die Lüfter von vorn nach hinten blasen."
@@ -6546,7 +7038,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A wet-rotor heating circulator on a pipe section, seen along its shaft, with a turning rotor indicator in a window: 5 W on the low stage and 45 W at full speed, about 30 W of it warming the room.",
         "de": "Eine Nassläufer-Heizungsumwälzpumpe in einem Rohrstück, gesehen längs der Welle, mit drehender Rotoranzeige im Fenster: 5 W auf kleiner Stufe und 45 W bei voller Drehzahl, davon wärmen etwa 30 W den Raum."
@@ -6564,7 +7056,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "unavailable" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 20 kW wall-hung condensing boiler with a visible burner flame behind its sight glass: 14 kW for heating and 20 kW for hot water, while its casing releases only about 85 W and the flue gas carries about 430 W (2.1 % of the input) at 46 K above the room.",
         "de": "Ein wandhängender 20-kW-Brennwertkessel mit sichtbarer Brennerflamme hinter dem Schauglas: 14 kW zum Heizen und 20 kW für Warmwasser, während sein Gehäuse nur etwa 85 W abgibt und das Abgas etwa 430 W (2,1 % der Zufuhr) mit 46 K über dem Raum abführt."
@@ -6582,7 +7074,7 @@
       "representations": { "50": "authored", "100": "authored", "200": "authored", "500": "authored" },
       "symbols": [],
       "analytics": ["thermal", "transport", "structural"],
-      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"],
       "distinction": {
         "en": "A 0.6 m by 1.48 m insulated 200 L storage tank whose four jacket quarters show the stratification: cold, a hot upper half over a cold lower half, or fully charged with a 76 W standby loss.",
         "de": "Ein gedämmter 200-l-Speicher von 0,6 m mal 1,48 m, dessen vier Mantelviertel die Schichtung zeigen: kalt, eine heiße obere Hälfte über einer kalten unteren oder voll geladen mit 76 W Bereitschaftsverlust."

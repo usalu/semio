@@ -13,6 +13,7 @@
 import type { Environment, HydronicCircuit, Material, PhaseChange, ThermalRegion } from "../../../🧬️schema/🟦️.ts";
 import { CP_AIR, SIGMA, absorbedSolar, airDensity, convection, emittedFlux, evaporativeCoefficient, kelvin, latentHeatJkg, radiantEnvironmentC, radiantTemperatures, radiationCoefficient, saturationPressurePa, solveDecreasing, specificHumidity, vapourPressurePa, viewFactors } from "../🔬️physics/🟦️.ts";
 import { leafLight, stomatalConductance } from "../🍃️canopy/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🤝️ Surface conductance of a contact area (seat, ground, handle), W/(m² K); illustrative. */
 export const CONTACT_CONDUCTANCE = 20;
@@ -20,7 +21,7 @@ export const CONTACT_CONDUCTANCE = 20;
 /** 📐️ Smallest share of the area that couples to the air in the solution of the temperature (stowed or enclosed regions with `exposedFraction` 0 sit in the enclosed air at about room temperature instead of having no balance); reported powers still use the bound exposed fraction. Authored-estimate. */
 export const ENCLOSED_EXPOSURE = 0.05;
 
-const PRANDTL_OVER_SCHMIDT = (0.71 / 0.6) ** (2 / 3);
+const PRANDTL_OVER_SCHMIDT = portable.fastPow((0.71 / 0.6), (2 / 3));
 
 /** 🧬️ The static, state-independent part of a region. */
 export type RegionSetup = {
@@ -87,7 +88,7 @@ export function exchange(f: RegionFrame, a: Ambient, tsC: number): Exchange {
   const r = s.region;
   const conv = convection(r.geometry, r.characteristicLengthM, tsC, a.env.airTempC, f.speed, a.env.pressurePa);
   const hc = conv.h * s.faces;
-  const radiative = s.faces * s.emissivity * SIGMA * (kelvin(tsC) ** 4 - kelvin(f.envC) ** 4);
+  const radiative = s.faces * s.emissivity * SIGMA * (portable.fastPow(kelvin(tsC), 4) - portable.fastPow(kelvin(f.envC), 4));
   const sensible = hc * (tsC - a.env.airTempC);
   let latent = 0;
   if (r.model === "leaf") {
@@ -191,7 +192,7 @@ export type RadiationSplit = { readonly sky: number; readonly ground: number; re
 export function radiationSplit(s: RegionSetup, env: Environment, tsC: number): RadiationSplit {
   const f = viewFactors(s.region.geometry, s.region.skyViewFactor);
   const t = radiantTemperatures(env);
-  const part = (view: number, tC: number): number => s.faces * s.emissivity * SIGMA * view * (kelvin(tsC) ** 4 - kelvin(tC) ** 4);
+  const part = (view: number, tC: number): number => s.faces * s.emissivity * SIGMA * view * (portable.fastPow(kelvin(tsC), 4) - portable.fastPow(kelvin(tC), 4));
   return { sky: part(f.sky, t.sky), ground: part(f.ground, t.ground), surroundings: part(f.surroundings, t.surroundings) };
 }
 

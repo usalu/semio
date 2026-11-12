@@ -1,7 +1,7 @@
 /** 🧬️ TypeScript twin of the cast manifest schema: the closed vocabularies, the types and a dependency-free validator that agrees with the JSON Schema.
  * @see ./🔣️.schema.json — the normative schema `semio.staffage.cast/v1`
  * @see ../🟦️.ts — the exporter */
-import { SCALE_DENOMINATORS, VIEWPOINTS, type ScaleDenominator, type ViewSection, type Slug, type Viewpoint } from "../../../../🧬️schema/🟦️.ts";
+import { VIEWPOINTS, SCALE_DENOMINATORS, type ScaleDenominator, type ViewSection, type Slug, type Viewpoint } from "../../../../🧬️schema/🟦️.ts";
 import { TRANSPORT_LAYERS, VIEWS, type TransportLayer, type View } from "../../../🔗️contracts/🟦️.ts";
 import type { StructureIndex } from "../../../🏗️structure/🧾️summary/🟦️.ts";
 
@@ -64,14 +64,14 @@ export type CastIndex = {
 /** 🔖️ A content hash, `sha256:` and 64 lower-case hex digits. */
 export type Revision = `sha256:${string}`;
 
-/** 🌤️ The scenario of a cast: a thermal environment (one preset or a timeline of presets), the structural model, or geometry only. */
+/** 📤️ The scenario of a cast: a thermal environment (one preset or a timeline of presets), the structural model, or geometry only. */
 export type CastScenario =
   | { readonly kind: "geometry" }
   | { readonly kind: "structural"; readonly dynamics: "quasi-static" | "inertial"; readonly gravityMS2: number }
   | { readonly kind: "thermal"; readonly environment: { readonly id: Slug; readonly revision: Revision }; readonly spanK: number | null; readonly transport: readonly TransportLayer[] }
   | { readonly kind: "thermal"; readonly timeline: readonly { readonly t: number; readonly id: Slug; readonly ease: "step" | "linear"; readonly revision: Revision }[]; readonly spanK: number | null; readonly transport: readonly TransportLayer[] };
 
-/** 🔖️ Where one rendered cast came from: asset id and revision, view, authored scale, pose or clip, clock and scenario. `clock.rate` is added by a scene; the exporter does not know it.
+/** 📏️ Where one rendered cast came from: asset id and revision, view, authored scale, pose or clip, clock and scenario. `clock.rate` is added by a scene; the exporter does not know it.
  * @see ../../../../../../../.🧬semio — ticket r3-contract.md */
 export type CastProvenance = {
   readonly version: 1;

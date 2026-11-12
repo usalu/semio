@@ -1,0 +1,412 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "cases": [
+  {
+   "name": "box",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "box",
+    "title": {
+     "en": "box",
+     "de": "box"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       0.4,
+       0.6,
+       0.8
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.192,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.3,
+      -0.4
+     ],
+     "max": [
+      0.2,
+      0.3,
+      0.4
+     ]
+    },
+    "closed": true,
+    "triangles": 12
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "rounded-box",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "rounded",
+    "title": {
+     "en": "rounded",
+     "de": "rounded"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       0.4,
+       0.6,
+       0.8
+      ],
+      "cornerRadius": 0.1
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.17788790204786395,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.3,
+      -0.4
+     ],
+     "max": [
+      0.2,
+      0.3,
+      0.4
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "transformed-box",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "transformed",
+    "title": {
+     "en": "transformed",
+     "de": "transformed"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       1,
+       2,
+       3
+      ],
+      "transform": {
+       "translation": [
+        1,
+        0,
+        0
+       ],
+       "rotation": [
+        0,
+        0.7071067811865475,
+        0,
+        0.7071067811865476
+       ]
+      }
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 6,
+    "bounds": {
+     "min": [
+      -0.5,
+      -1,
+      -0.5
+     ],
+     "max": [
+      2.5,
+      1,
+      0.5
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "mirrored-box",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "mirrored",
+    "title": {
+     "en": "mirrored",
+     "de": "mirrored"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       1,
+       1,
+       1
+      ],
+      "transform": {
+       "scale": [
+        -1,
+        1,
+        1
+       ],
+       "translation": [
+        0,
+        0,
+        2
+       ]
+      }
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 1,
+    "bounds": {
+     "min": [
+      -0.5,
+      -0.5,
+      1.5
+     ],
+     "max": [
+      0.5,
+      0.5,
+      2.5
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  }
+ ]
+}

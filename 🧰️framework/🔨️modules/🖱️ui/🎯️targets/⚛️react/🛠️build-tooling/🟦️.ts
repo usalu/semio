@@ -58,7 +58,7 @@ export type OwnedBuildOptions = {
   readonly minify?: string | boolean;
   readonly cssMinify?: boolean | string;
   readonly reportCompressedSize?: boolean;
-  readonly rollupOptions?: { readonly treeshake?: boolean; readonly [key: string]: unknown };
+  readonly rollupOptions?: { readonly treeshake?: boolean | { readonly moduleSideEffects: (id: string) => boolean }; readonly [key: string]: unknown };
   readonly esbuild?: {
     readonly drop?: readonly string[];
     readonly legalComments?: string;

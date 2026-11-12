@@ -7589,6 +7589,1029 @@
    ],
    "clinical": false
   },
+  "volume": {
+    "status": "authored",
+    "solids": [
+      {
+        "id": "body-shell",
+        "kind": "loft",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.65,
+        "region": "body-panels",
+        "sections": [
+          {
+            "at": [-2.67, 1.14, 0],
+            "rx": 0.82,
+            "ry": 0.76,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-2.6, 1.165, 0],
+            "rx": 0.9,
+            "ry": 0.785,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-2.2, 1.175, 0],
+            "rx": 0.91,
+            "ry": 0.795,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-2.08, 1.163, 0],
+            "rx": 0.91,
+            "ry": 0.807,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-2.0776, 1.18697, 0],
+            "rx": 0.91,
+            "ry": 0.78303,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-2.0656, 1.22135, 0],
+            "rx": 0.91,
+            "ry": 0.74865,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-2.0416, 1.25706, 0],
+            "rx": 0.91,
+            "ry": 0.71294,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-2.008, 1.28943, 0],
+            "rx": 0.91,
+            "ry": 0.68057,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.96, 1.32175, 0],
+            "rx": 0.91,
+            "ry": 0.64825,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.888, 1.355, 0],
+            "rx": 0.91,
+            "ry": 0.615,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.792, 1.38296, 0],
+            "rx": 0.91,
+            "ry": 0.58704,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.696, 1.39815, 0],
+            "rx": 0.91,
+            "ry": 0.57185,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.6, 1.403, 0],
+            "rx": 0.91,
+            "ry": 0.567,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.504, 1.39815, 0],
+            "rx": 0.91,
+            "ry": 0.57185,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.408, 1.38296, 0],
+            "rx": 0.91,
+            "ry": 0.58704,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.312, 1.355, 0],
+            "rx": 0.91,
+            "ry": 0.615,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.24, 1.32175, 0],
+            "rx": 0.91,
+            "ry": 0.64825,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.192, 1.28943, 0],
+            "rx": 0.91,
+            "ry": 0.68057,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.1584, 1.25706, 0],
+            "rx": 0.91,
+            "ry": 0.71294,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.1344, 1.22135, 0],
+            "rx": 0.91,
+            "ry": 0.74865,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-1.1224, 1.18697, 0],
+            "rx": 0.91,
+            "ry": 0.78303,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [-0.8, 1.163, 0],
+            "rx": 0.91,
+            "ry": 0.807,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [0.4, 1.163, 0],
+            "rx": 0.91,
+            "ry": 0.807,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.12, 1.163, 0],
+            "rx": 0.91,
+            "ry": 0.807,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.2, 1.143, 0],
+            "rx": 0.91,
+            "ry": 0.787,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.2224, 1.15185, 0],
+            "rx": 0.91,
+            "ry": 0.74791,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.2344, 1.17813, 0],
+            "rx": 0.91,
+            "ry": 0.70543,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.2584, 1.19764, 0],
+            "rx": 0.91,
+            "ry": 0.65352,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.292, 1.20733, 0],
+            "rx": 0.91,
+            "ry": 0.59847,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.34, 1.20725, 0],
+            "rx": 0.91,
+            "ry": 0.53375,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.4, 1.19535, 0],
+            "rx": 0.91,
+            "ry": 0.46465,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.412, 1.1919, 0],
+            "rx": 0.91,
+            "ry": 0.4519,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.508, 1.15506, 0],
+            "rx": 0.91,
+            "ry": 0.35914,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.604, 1.10542, 0],
+            "rx": 0.91,
+            "ry": 0.27912,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.7, 1.04482, 0],
+            "rx": 0.91,
+            "ry": 0.20882,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.796, 0.97451, 0],
+            "rx": 0.91,
+            "ry": 0.14821,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.892, 0.93621, 0],
+            "rx": 0.90498,
+            "ry": 0.14029,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.9, 0.93367, 0],
+            "rx": 0.90455,
+            "ry": 0.14133,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.988, 0.89925, 0],
+            "rx": 0.89975,
+            "ry": 0.15925,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.06, 0.85925, 0],
+            "rx": 0.89582,
+            "ry": 0.18575,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.108, 0.82243, 0],
+            "rx": 0.8932,
+            "ry": 0.21357,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.1416, 0.78691, 0],
+            "rx": 0.89137,
+            "ry": 0.24279,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.1656, 0.74895, 0],
+            "rx": 0.89006,
+            "ry": 0.27625,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.1776, 0.71344, 0],
+            "rx": 0.8894,
+            "ry": 0.30951,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.18, 0.68925, 0],
+            "rx": 0.88927,
+            "ry": 0.33325,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.3, 0.678, 0],
+            "rx": 0.88273,
+            "ry": 0.322,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.55, 0.633, 0],
+            "rx": 0.816,
+            "ry": 0.277,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.6, 0.62467, 0],
+            "rx": 0.8,
+            "ry": 0.26867,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.64, 0.638, 0],
+            "rx": 0.71429,
+            "ry": 0.242,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.67, 0.583, 0],
+            "rx": 0.65,
+            "ry": 0.157,
+            "exponent": 5,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "roof-cap",
+        "kind": "loft",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.75,
+        "region": "roof",
+        "sections": [
+          {
+            "at": [-2.55, 1.965, 0],
+            "rx": 0.8,
+            "ry": 0.025,
+            "exponent": 8,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [1.12, 1.965, 0],
+            "rx": 0.78,
+            "ry": 0.025,
+            "exponent": 8,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "windscreen",
+        "kind": "loft",
+        "bone": "chassis",
+        "material": "glass",
+        "role": "glazing",
+        "tone": 0.88,
+        "region": "cab-glazing",
+        "sections": [
+          {
+            "at": [1.79, 1.13, 0],
+            "rx": 0.84,
+            "ry": 0.014,
+            "exponent": 8,
+            "rotation": [-0.31623, -0.63246, -0.31623, 0.63246]
+          },
+          {
+            "at": [1.19, 1.93, 0],
+            "rx": 0.79,
+            "ry": 0.014,
+            "exponent": 8,
+            "rotation": [-0.31623, -0.63246, -0.31623, 0.63246]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "door-window-l",
+        "kind": "extrude",
+        "bone": "chassis",
+        "material": "glass",
+        "role": "glazing",
+        "tone": 0.88,
+        "region": "cab-glazing",
+        "profile": [[1.6, 1.2], [1.24, 1.78], [0.45, 1.78], [0.45, 1.2]],
+        "plane": "xy",
+        "from": 0.885,
+        "to": 0.915
+      },
+      {
+        "id": "mirror-l",
+        "kind": "ellipsoid",
+        "bone": "chassis",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "radii": [0.07, 0.11, 0.0425],
+        "transform": {
+          "translation": [1.98, 1.3, 0.9525]
+        }
+      },
+      {
+        "id": "mirror-arm-l",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "maxDenominator": 100,
+        "p0": [1.95, 1.3, 0.9],
+        "p1": [1.98, 1.3, 0.93],
+        "r0": 0.012,
+        "r1": 0.012
+      },
+      {
+        "id": "headlamp-l",
+        "kind": "ellipsoid",
+        "bone": "chassis",
+        "material": "glass",
+        "role": "glazing",
+        "tone": 0.9,
+        "radii": [0.1, 0.08, 0.14],
+        "transform": {
+          "translation": [2.55, 0.76, 0.64]
+        }
+      },
+      {
+        "id": "tail-lamp-l",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "size": [0.05, 0.5, 0.14],
+        "cornerRadius": 0.01,
+        "transform": {
+          "translation": [-2.645, 1.1, 0.77]
+        }
+      },
+      {
+        "id": "door-window-r",
+        "kind": "extrude",
+        "bone": "chassis",
+        "material": "glass",
+        "role": "glazing",
+        "tone": 0.88,
+        "region": "cab-glazing",
+        "profile": [[1.6, 1.2], [1.24, 1.78], [0.45, 1.78], [0.45, 1.2]],
+        "plane": "xy",
+        "from": -0.915,
+        "to": -0.885
+      },
+      {
+        "id": "mirror-r",
+        "kind": "ellipsoid",
+        "bone": "chassis",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "radii": [0.07, 0.11, 0.0425],
+        "transform": {
+          "translation": [1.98, 1.3, -0.9525]
+        }
+      },
+      {
+        "id": "mirror-arm-r",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "maxDenominator": 100,
+        "p0": [1.95, 1.3, -0.9],
+        "p1": [1.98, 1.3, -0.93],
+        "r0": 0.012,
+        "r1": 0.012
+      },
+      {
+        "id": "headlamp-r",
+        "kind": "ellipsoid",
+        "bone": "chassis",
+        "material": "glass",
+        "role": "glazing",
+        "tone": 0.9,
+        "radii": [0.1, 0.08, 0.14],
+        "transform": {
+          "translation": [2.55, 0.76, -0.64]
+        }
+      },
+      {
+        "id": "tail-lamp-r",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "size": [0.05, 0.5, 0.14],
+        "cornerRadius": 0.01,
+        "transform": {
+          "translation": [-2.645, 1.1, -0.77]
+        }
+      },
+      {
+        "id": "bumper",
+        "kind": "loft",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.45,
+        "region": "body-panels",
+        "sections": [
+          {
+            "at": [2.3, 0.45, 0],
+            "rx": 0.89,
+            "ry": 0.09,
+            "exponent": 4,
+            "rotation": [0.70711, 0.0, 0.70711, 0.0]
+          },
+          {
+            "at": [2.6, 0.45, 0],
+            "rx": 0.81,
+            "ry": 0.09,
+            "exponent": 4,
+            "rotation": [0.70505, 0.05392, 0.70505, -0.05392]
+          },
+          {
+            "at": [2.665, 0.46, 0],
+            "rx": 0.65,
+            "ry": 0.085,
+            "exponent": 4,
+            "rotation": [0.70505, 0.05392, 0.70505, -0.05392]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "grille",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "engine-metal",
+        "role": "detail",
+        "tone": 0.3,
+        "region": "engine-bay",
+        "size": [0.02, 0.28, 0.92],
+        "cornerRadius": 0.006,
+        "transform": {
+          "translation": [2.665, 0.74, 0]
+        }
+      },
+      {
+        "id": "tail-pipe",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "exhaust-steel",
+        "role": "detail",
+        "tone": 0.4,
+        "region": "exhaust-system",
+        "p0": [-2.66, 0.42, -0.31],
+        "p1": [-2.36, 0.42, -0.31],
+        "r0": 0.04,
+        "r1": 0.04
+      },
+      {
+        "id": "axle-f-beam",
+        "kind": "capsule",
+        "bone": "axle-f",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "p0": [0, 0, -0.84],
+        "p1": [0, 0, 0.84],
+        "r0": 0.05,
+        "r1": 0.05
+      },
+      {
+        "id": "axle-r-beam",
+        "kind": "capsule",
+        "bone": "axle-r",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "p0": [0, 0, -0.84],
+        "p1": [0, 0, 0.84],
+        "r0": 0.05,
+        "r1": 0.05
+      },
+      {
+        "id": "exhaust-pipe",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "exhaust-steel",
+        "role": "detail",
+        "tone": 0.4,
+        "region": "exhaust-system",
+        "maxDenominator": 100,
+        "p0": [-2.4, 0.405, -0.31],
+        "p1": [-0.9, 0.405, -0.31],
+        "r0": 0.03,
+        "r1": 0.03
+      },
+      {
+        "id": "fl-tyre",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[-0.1, 0.29192], [-0.088, 0.34105], [-0.06, 0.356], [0.06, 0.356], [0.088, 0.34105], [0.1, 0.29192]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "fl-rim",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.65,
+        "profile": [[-0.09, 0.2], [0.09, 0.2]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "fl-hub",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "profile": [[0.0, 0.055], [0.112, 0.055]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "fl-nut",
+        "kind": "capsule",
+        "bone": "wheel-f",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "maxDenominator": 50,
+        "p0": [0.09, 0, 0.932],
+        "p1": [0.09, 0, 0.942],
+        "r0": 0.012,
+        "r1": 0.012,
+        "repeat": {
+          "count": 6,
+          "rotationAxis": [0, 0, 1],
+          "rotationRad": 1.0472
+        }
+      },
+      {
+        "id": "fl-disc",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[-0.05, 0.14], [-0.03, 0.14]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "rl-tyre",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[-0.1, 0.29192], [-0.088, 0.34105], [-0.06, 0.356], [0.06, 0.356], [0.088, 0.34105], [0.1, 0.29192]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "rl-rim",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.65,
+        "profile": [[-0.09, 0.2], [0.09, 0.2]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "rl-hub",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "profile": [[0.0, 0.055], [0.112, 0.055]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "rl-nut",
+        "kind": "capsule",
+        "bone": "wheel-r",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "maxDenominator": 50,
+        "p0": [0.09, 0, 0.932],
+        "p1": [0.09, 0, 0.942],
+        "r0": 0.012,
+        "r1": 0.012,
+        "repeat": {
+          "count": 6,
+          "rotationAxis": [0, 0, 1],
+          "rotationRad": 1.0472
+        }
+      },
+      {
+        "id": "rl-disc",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[-0.05, 0.14], [-0.03, 0.14]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0.84]
+      },
+      {
+        "id": "fr-tyre",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[-0.1, 0.29192], [-0.088, 0.34105], [-0.06, 0.356], [0.06, 0.356], [0.088, 0.34105], [0.1, 0.29192]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "fr-rim",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.65,
+        "profile": [[-0.09, 0.2], [0.09, 0.2]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "fr-hub",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "profile": [[-0.112, 0.055], [0.0, 0.055]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "fr-nut",
+        "kind": "capsule",
+        "bone": "wheel-f",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "maxDenominator": 50,
+        "p0": [0.09, 0, -0.932],
+        "p1": [0.09, 0, -0.942],
+        "r0": 0.012,
+        "r1": 0.012,
+        "repeat": {
+          "count": 6,
+          "rotationAxis": [0, 0, 1],
+          "rotationRad": 1.0472
+        }
+      },
+      {
+        "id": "fr-disc",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[0.03, 0.14], [0.05, 0.14]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "rr-tyre",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[-0.1, 0.29192], [-0.088, 0.34105], [-0.06, 0.356], [0.06, 0.356], [0.088, 0.34105], [0.1, 0.29192]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "rr-rim",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.65,
+        "profile": [[-0.09, 0.2], [0.09, 0.2]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "rr-hub",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "profile": [[-0.112, 0.055], [0.0, 0.055]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "rr-nut",
+        "kind": "capsule",
+        "bone": "wheel-r",
+        "material": "steel-rim",
+        "role": "detail",
+        "tone": 0.75,
+        "maxDenominator": 50,
+        "p0": [0.09, 0, -0.932],
+        "p1": [0.09, 0, -0.942],
+        "r0": 0.012,
+        "r1": 0.012,
+        "repeat": {
+          "count": 6,
+          "rotationAxis": [0, 0, 1],
+          "rotationRad": 1.0472
+        }
+      },
+      {
+        "id": "rr-disc",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[0.03, 0.14], [0.05, 0.14]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, -0.84]
+      },
+      {
+        "id": "slider-panel",
+        "kind": "box",
+        "bone": "slider",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.6,
+        "region": "slider-door",
+        "size": [1.05, 1.444, 0.05],
+        "cornerRadius": 0.02,
+        "transform": {
+          "translation": [0.525, 0.722, -0.885]
+        }
+      },
+      {
+        "id": "handle-slider",
+        "kind": "capsule",
+        "bone": "slider",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.2,
+        "p0": [0.78, 0.764, -0.925],
+        "p1": [0.99, 0.764, -0.925],
+        "r0": 0.018,
+        "r1": 0.018
+      },
+      {
+        "id": "slider-track",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.4,
+        "region": "slider-door",
+        "maxDenominator": 100,
+        "size": [2.0, 0.03, 0.04],
+        "transform": {
+          "translation": [-0.7, 0.5, -0.925]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0, 1.3, 0]
+        }
+      },
+      {
+        "id": "rear-leaf-r",
+        "kind": "box",
+        "bone": "rear-door-r",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.6,
+        "region": "rear-doors",
+        "size": [1.35, 0.9, 0.05],
+        "cornerRadius": 0.02,
+        "transform": {
+          "translation": [0.675, 0.45, 0]
+        }
+      },
+      {
+        "id": "rear-hinge-r",
+        "kind": "capsule",
+        "bone": "rear-door-r",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "maxDenominator": 100,
+        "p0": [0.0, 0, 0],
+        "p1": [1.35, 0, 0],
+        "r0": 0.015,
+        "r1": 0.015
+      },
+      {
+        "id": "rear-leaf-l",
+        "kind": "box",
+        "bone": "rear-door-l",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.6,
+        "region": "rear-doors",
+        "size": [1.35, 0.9, 0.05],
+        "cornerRadius": 0.02,
+        "transform": {
+          "translation": [0.675, 0.45, 0]
+        }
+      },
+      {
+        "id": "rear-hinge-l",
+        "kind": "capsule",
+        "bone": "rear-door-l",
+        "material": "plastic-trim",
+        "role": "detail",
+        "tone": 0.3,
+        "maxDenominator": 100,
+        "p0": [0.0, 0, 0],
+        "p1": [1.35, 0, 0],
+        "r0": 0.015,
+        "r1": 0.015
+      }
+    ],
+    "decisions": [
+      {
+        "en": "The body shell is one loft along the van axis whose stations are read off the elevation outline (floor 0.356 m, circular wheel arches of 0.48 m radius about both axles, roof 1.97 m, the steep windscreen line, the bonnet and nose); the width follows the plan (0.91 m at the cab and cargo box, rounding to 0.65 m at the nose, 0.82 m at the tail) and a superelliptic section of exponent 5 gives the roof tumblehome of the front view.",
+        "de": "Die Karosserie ist ein einziger Loft entlang der Fahrzeugachse, dessen Stationen dem Umriss der Seitenansicht entnommen sind (Boden 0,356 m, kreisrunde Radkästen von 0,48 m Radius um beide Achsen, Dach 1,97 m, die steile Frontscheibenlinie, Haube und Nase); die Breite folgt dem Grundriss (0,91 m an Kabine und Laderaum, auf 0,65 m an der Nase und 0,82 m am Heck abgerundet) und ein superelliptischer Querschnitt mit Exponent 5 ergibt den Dacheinzug der Vorderansicht."
+      },
+      {
+        "en": "The rest frame has both rear leaves swung out 90 degrees behind the van (as in the 2D views), the poses twist them shut; so the volume at rest extends 0.9 m past the 5.34 m body, while the default pose Parked matches the dimensions. Leaves are 50 mm boxes hinged at w = +-0.88 m.",
+        "de": "Im Ruhezustand sind beide Hecktürflügel um 90 Grad hinter den Transporter geschwenkt (wie in den 2D-Ansichten), die Posen drehen sie zu; das Volumen reicht im Ruhezustand daher 0,9 m über den 5,34 m langen Aufbau hinaus, während die Standardpose Geparkt zu den Abmessungen passt. Die Flügel sind 50 mm starke Quader mit Scharnier bei w = +-0,88 m."
+      },
+      {
+        "en": "Wheels are revolves about the axle at the 1.68 m track (toroid-like tyre with rounded shoulders, steel rim disc, hub cap, six wheel nuts and a brake disc each); the sliding door panel rides on the slider bone along two rails on the right side; glazing is a tilted loft for the windscreen and 30 mm plates for the cab door windows.",
+        "de": "Die Räder sind Rotationskörper um die Achse bei 1,68 m Spurweite (Reifen mit gerundeten Schultern, Stahlfelgenscheibe, Nabenkappe, sechs Radmuttern und je eine Bremsscheibe); das Schiebetürblatt läuft am Schieberknochen auf zwei Schienen an der rechten Seite; die Verglasung ist ein geneigter Loft für die Frontscheibe und 30-mm-Platten für die Kabinenfenster."
+      }
+    ]
+  },
   "presentation": {
    "defaultPose": "parked",
    "defaultClip": "drive-loop",
@@ -7602,7 +8625,11 @@
    "png-sequence",
    "mp4",
    "webm",
-   "component"
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
   ],
   "completion": "authored"
  }

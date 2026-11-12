@@ -8,6 +8,7 @@
  * @see ../../🧬️schema/🟦️.ts — the authored data
  */
 import type { Alternative, Anchor, Asset, AuthoredRepresentation, Environment, Language, PrintProfile, ScaleDenominator, Shape, Slug, SymbolRepresentation, Text, UnavailableCause, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { ExportFormat, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 
 //#region 🧮️Evaluation
 /** 🎯️ What to evaluate: a static pose (at `timeS` on its own timeline, default 0, so respiration and transport still evolve), a clip
@@ -48,7 +49,7 @@ export type Point = { readonly x: number; readonly y: number };
 /** 🧊️ A world point or vector in all three axes `(ahead, up, left)`: x forward, y up, z the lateral position (left of the asset is +z). */
 export type Vec3 = { readonly x: number; readonly y: number; readonly z: number };
 
-/** 🧭️ The rigid frame of a bone in world space: origin `o` and the orthonormal axes `u` (along the bone, ahead-up-left), `v` (its normal in the sagittal plane at zero spread) and `w` (the lateral axis), as solved by `solveChain`. */
+/** 🗺️ The rigid frame of a bone in world space: origin `o` and the orthonormal axes `u` (along the bone, ahead-up-left), `v` (its normal in the sagittal plane at zero spread) and `w` (the lateral axis), as solved by `solveChain`. */
 export type BoneFrame = { readonly o: Vec3; readonly u: Vec3; readonly v: Vec3; readonly w: Vec3 };
 
 /** ✏️ One evaluated shape: flattened world outline (closed rings or open polylines) plus its authored metadata. */
@@ -81,7 +82,7 @@ export type EvaluatedState = {
   readonly frame: number;
   readonly phase: Slug | null;
   readonly bones: Readonly<Record<Slug, EvaluatedBone>>;
-  readonly shapes: Readonly<Record<Viewpoint, readonly EvaluatedShape[]>>;
+  readonly shapes: Readonly<Record<PlanarViewpoint, readonly EvaluatedShape[]>>;
   readonly root: { readonly x: number; readonly y: number; readonly z: number; readonly angleDeg: number };
   readonly anchors: Readonly<Record<Slug, { readonly anchor: Anchor; readonly at: Point; readonly z: number }>>;
   readonly contacts: readonly Slug[];
@@ -279,10 +280,21 @@ export type TextlessDepiction = {
   readonly diagrams: { readonly axial: boolean; readonly shear: boolean; readonly moment: boolean; readonly freeBody: false };
 };
 
-/** 🧱️ The depiction options that do not depend on whether text is rendered. */
+/** 🔭️ The three kinds of axonometric projection: `isometric` (the three world axes foreshortened equally, azimuth 45°, elevation 35.264°), `dimetric` (ISO 5456-3 1 : ½ : 1, elevation 19.471°, azimuth 69.295°: the ahead axis and the vertical axis true, the lateral axis half) and `free` (any azimuth and elevation). */
+export const AXONOMETRIC_KINDS = ["isometric", "dimetric", "free"] as const;
+
+/** 📤️ One of {@link AXONOMETRIC_KINDS}. */
+export type AxonometricKind = (typeof AXONOMETRIC_KINDS)[number];
+
+/** 👁️ Which orthographic axonometric camera the `axonometric` viewpoint uses; absent means `{ kind: "isometric" }`. `azimuthDeg` is the heading of the viewer from ahead (0°) towards the asset's right (90° is the side elevation, 180° from behind, negative from the left), `elevationDeg` the angle above the horizon (0° to 75°); the vertical axis is always drawn true to scale. */
+export type AxonometricSpec = { readonly kind: "isometric" } | { readonly kind: "dimetric" } | { readonly kind: "free"; readonly azimuthDeg: number; readonly elevationDeg: number };
+
+/** 🧱️ The depiction options that do not depend on whether text is rendered. `axonometric` chooses the camera of the `axonometric` viewpoint (default isometric); `shading` how the solid views of that viewpoint paint faces: `banded` (default) darkens a face of the tone colour in four bands by its angle to a fixed light, `flat` paints every face with the tone colour of its solid, as the planar views do. The analytic and line views are never shaded. */
 export type DepictionCommon = {
   readonly view: View;
   readonly viewpoint: Viewpoint;
+  readonly axonometric?: AxonometricSpec;
+  readonly shading?: "banded" | "flat";
   readonly scale: DrawingScale;
   readonly transparent: boolean;
   readonly marginMm: number;
@@ -329,7 +341,7 @@ export type DrawingLayer = { readonly id: LayerId; readonly title: Text; readonl
 /** 🏷️ A legend: title, unit, sign convention and colour stops, all explicit; `stops[].at` is normalised 0…1 over [`min`, `max`]. */
 export type Legend = { readonly title: Text; readonly quantity: string; readonly unit: string; readonly convention: Text; readonly min: number; readonly max: number; readonly stops: readonly { readonly at: number; readonly color: string }[]; readonly interpretation: Text; readonly range: DisplayRange["mode"]; readonly conditions?: Text; readonly assumptions?: readonly Text[] };
 
-/** 🏷️ How a drawing relates to the real object: `physical` is metres scaled to paper millimetres (an authored scale representation or a `true-extent` symbol); `conventional-symbol` is a paper-millimetre sign (`true-position` or `nominal` symbol) whose size carries no dimension. Carried by `DrawingScene.metadata.fidelity` so every consumer can show it to the reader. */
+/** 🌟️ How a drawing relates to the real object: `physical` is metres scaled to paper millimetres (an authored scale representation or a `true-extent` symbol); `conventional-symbol` is a paper-millimetre sign (`true-position` or `nominal` symbol) whose size carries no dimension. Carried by `DrawingScene.metadata.fidelity` so every consumer can show it to the reader. */
 export type Fidelity = "physical" | "conventional-symbol";
 
 /** 🖨️ A paper-space scene at a given scale: what SVG and PDF writers serialise one to one. */
@@ -339,8 +351,11 @@ export type DrawingScene = {
   readonly background: string | null;
   readonly layers: readonly DrawingLayer[];
   readonly legends: readonly Legend[];
-  readonly metadata: { readonly asset: Slug; readonly title: Text; readonly query: EvaluationQuery; readonly timeS: number; readonly view: View; readonly viewpoint: Viewpoint; readonly scale: DrawingScale; readonly resolution: RepresentationResolution["kind"]; readonly fidelity: Fidelity; readonly omittedValues: number; readonly representation: EvaluatedState["representation"]; readonly profile: Slug; readonly paperUnits: "mm"; readonly modelUnits: "m"; readonly mmPerMetre: number; readonly origin: { readonly xMm: number; readonly yMm: number } };
+  readonly metadata: { readonly asset: Slug; readonly title: Text; readonly query: EvaluationQuery; readonly timeS: number; readonly view: View; readonly viewpoint: Viewpoint; readonly scale: DrawingScale; readonly resolution: RepresentationResolution["kind"]; readonly fidelity: Fidelity; readonly omittedValues: number; readonly representation: EvaluatedState["representation"]; readonly profile: Slug; readonly paperUnits: "mm"; readonly modelUnits: "m"; readonly mmPerMetre: number; readonly origin: { readonly xMm: number; readonly yMm: number }; readonly projection?: AxonometricProjection };
 };
+
+/** 🔄️ What the axonometric view of a scene is to scale: the kind and angles of the camera and, per world axis (ahead x, up y, left z), the paper length of one metre along that axis divided by `mmPerMetre` (1 = true to scale, ½ = foreshortened to half). Lengths along a world axis are read with that factor; no other direction is to scale. */
+export type AxonometricProjection = { readonly kind: AxonometricKind; readonly azimuthDeg: number; readonly elevationDeg: number; readonly axisScale: { readonly x: number; readonly y: number; readonly z: number } };
 //#endregion 🎨️Depiction
 
 //#region 📐️CAD

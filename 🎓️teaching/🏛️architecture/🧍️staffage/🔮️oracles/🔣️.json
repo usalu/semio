@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Test-only references of the staffage archive. The package is a root devDependency resolved from the locked node_modules and is imported only by files under 🧪️tests; no module of the archive can reach it.",
+  "oracles": [
+    {
+      "id": "robust-predicates-orientation",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "robust-predicates",
+      "version": "3.0.3",
+      "source": {
+        "repository": "https://github.com/mourner/robust-predicates",
+        "license": "Unlicense"
+      },
+      "engine": {
+        "family": "shewchuk-adaptive-predicates",
+        "implementation": "Adaptive exact orientation predicates (Shewchuk) in JavaScript",
+        "version": "3.0.3"
+      },
+      "capabilities": [
+        "volume.profile.segment-intersection"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "Unlicense",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/mourner/robust-predicates",
+      "rationale": "The owned volume validator decides whether two profile segments meet. The exact orientation predicate is the reference every robust geometry library trusts, so the owned decision must equal it on thousands of random lattice segments."
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "oracleHostPackages": []
+}

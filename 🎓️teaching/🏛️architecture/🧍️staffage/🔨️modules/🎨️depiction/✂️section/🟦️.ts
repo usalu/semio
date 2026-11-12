@@ -1,8 +1,9 @@
 /** ✂️ Section views: the caption of a view ("Section A-A" / "Schnitt A-A" instead of "Front view" / "Vorderansicht") and the cut-line marker the side view shows at the plane of a sectioned front or plan view.
  *
  * The marker follows the drafting convention (ISO 128-40, DIN 6-1): a thin chain line across the object with thick ends, an arrow at each end pointing in the viewing direction, and the section letter beside each arrow.
- * It is drawn in elevations at 1:100 and larger only, where an arrow and a letter still fit beside the drawing. A front section is cut by a vertical plane across the forward axis and viewed from the front, so the line is vertical at `plane`
- * and the arrows point backwards (-x); a plan section is cut by a horizontal plane and viewed from above, so the line is horizontal at `plane` and the arrows point down.
+ * It is drawn at 1:100 and larger only, where an arrow and a letter still fit beside the drawing. A front section is cut by a vertical plane across the forward axis and viewed from the front, so the line in the side elevation is vertical at `plane`
+ * and the arrows point backwards (-x); a plan section is cut by a horizontal plane and viewed from above, so the line in the side elevation is horizontal at `plane` and the arrows point down. An elevation section is cut by a vertical plane along the forward axis and viewed from the right, so the line in the plan is horizontal at the lateral `plane`
+ * and the arrows point to the far side (+z, up in the plan).
  *
  * @see ../../../🧬️schema/🟦️.ts — {@link ViewSection}
  * @see https://www.iso.org/standard/3925.html — ISO 128-40 sections and cut lines
@@ -15,31 +16,31 @@ import { tx } from "../🖍️palette/🟦️.ts";
 
 /** 📏️ The largest scale denominator at which the side view shows the cut-line marker (1:100 and 1:50). */
 export const SECTION_MARKER_MAX_DENOMINATOR = 100;
-/** 📏️ How far the cut line reaches beyond the object, in paper millimetres. */
+/** 🔭️ How far the cut line reaches beyond the object, in paper millimetres. */
 export const SECTION_EXTENSION_MM = 6;
-/** 📏️ The length of the thick end segments of the cut line, in paper millimetres. */
+/** 🪜️ The length of the thick end segments of the cut line, in paper millimetres. */
 export const SECTION_END_MM = 4;
-/** 📏️ The length of the viewing arrows, in paper millimetres. */
+/** 👁️ The length of the viewing arrows, in paper millimetres. */
 export const SECTION_ARROW_MM = 5;
 const SECTION_ARROW_HEAD = { length: 2, width: 1.4 } as const;
 const THIN_MM = 0.18;
 const THICK_MM = 0.5;
 
 /** 🏷️ The one name of each viewpoint in captions, sheets, viewer and validator messages (terminology R1): Side elevation / Seitenansicht, Front elevation / Vorderansicht, Plan (top view) / Draufsicht. */
-export const VIEWPOINT_CAPTIONS: Readonly<Record<Viewpoint, Text>> = { elevation: tx("Side elevation", "Seitenansicht"), front: tx("Front elevation", "Vorderansicht"), plan: tx("Plan (top view)", "Draufsicht") };
+export const VIEWPOINT_CAPTIONS: Readonly<Record<Viewpoint, Text>> = { elevation: tx("Side elevation", "Seitenansicht"), front: tx("Front elevation", "Vorderansicht"), plan: tx("Plan (top view)", "Draufsicht"), axonometric: tx("Axonometric view", "Axonometrie") };
 
-/** 🏷️ The one name of a cut: Section / Schnitt for the front elevation, Plan section / Grundriss-Schnitt for the plan. */
-export const SECTION_CAPTIONS: Readonly<Record<"front" | "plan", Text>> = { front: tx("Section", "Schnitt"), plan: tx("Plan section", "Grundriss-Schnitt") };
+/** 🗂️ The one name of a cut: Section / Schnitt for the side and the front elevation, Plan section / Grundriss-Schnitt for the plan. */
+export const SECTION_CAPTIONS: Readonly<Record<"elevation" | "front" | "plan", Text>> = { elevation: tx("Section", "Schnitt"), front: tx("Section", "Schnitt"), plan: tx("Plan section", "Grundriss-Schnitt") };
 
-/** 🏷️ The caption of a viewpoint: "Section A-A" / "Schnitt A-A" for a front cut and "Plan section B-B" / "Grundriss-Schnitt B-B" for a plan cut, else "Side elevation", "Front elevation" or "Plan (top view)" (Seitenansicht, Vorderansicht, Draufsicht). */
+/** 📷️ The caption of a viewpoint: "Section A-A" / "Schnitt A-A" for a side or front cut and "Plan section B-B" / "Grundriss-Schnitt B-B" for a plan cut, else "Side elevation", "Front elevation" or "Plan (top view)" (Seitenansicht, Vorderansicht, Draufsicht). */
 export function viewpointCaption(viewpoint: Viewpoint, section: ViewSection | undefined, language: Language): string {
   if (section === undefined) return VIEWPOINT_CAPTIONS[viewpoint][language];
-  return `${SECTION_CAPTIONS[viewpoint === "plan" ? "plan" : "front"][language]} ${section.label[language]}`;
+  return `${SECTION_CAPTIONS[viewpoint === "axonometric" ? "front" : viewpoint][language]} ${section.label[language]}`;
 }
 
-/** ✂️ The section a representation declares for a viewpoint (`undefined` for the side view, which is the rig plane, and for plain views). */
+/** 🎥️ The section a representation declares for a viewpoint (`undefined` for the axonometric view, which is derived from the volume and never cut, and for plain views). */
 export function sectionOf(representation: AuthoredRepresentation | undefined, viewpoint: Viewpoint): ViewSection | undefined {
-  return viewpoint === "elevation" ? undefined : representation?.sections?.[viewpoint];
+  return viewpoint === "axonometric" ? undefined : representation?.sections?.[viewpoint];
 }
 
 /** 🔠️ The letters at the two ends of a section label: "A-A" gives A and A, a single "B" gives B at both ends. */
@@ -51,8 +52,8 @@ export function sectionLetters(label: string): readonly [string, string] {
 /** 📐️ The cut-line marker in paper millimetres relative to the model origin, y down: the thin line, the thick end segments, the arrow polygons and the letter positions. */
 export type SectionMarker = { readonly line: readonly [Vec, Vec]; readonly ends: readonly [readonly [Vec, Vec], readonly [Vec, Vec]]; readonly arrows: readonly [readonly [Vec, Vec], readonly [Vec, Vec]]; readonly letters: readonly [{ readonly at: Vec; readonly anchor: "start" | "middle" | "end" }, { readonly at: Vec; readonly anchor: "start" | "middle" | "end" }] };
 
-/** 📐️ Places the cut-line marker of a section of `viewpoint` ("front" or "plan") for the elevation extent `bounds` (metres) at `k` paper millimetres per metre. */
-export function sectionMarker(viewpoint: "front" | "plan", plane: number, k: number, bounds: { readonly minX: number; readonly maxX: number; readonly minY: number; readonly maxY: number }): SectionMarker {
+/** 🌟️ Places the cut-line marker of a section of `viewpoint` ("elevation", "front" or "plan") for the extent `bounds` (metres) of the view that carries it (the side elevation for a front or plan section, the plan for an elevation section) at `k` paper millimetres per metre. */
+export function sectionMarker(viewpoint: "elevation" | "front" | "plan", plane: number, k: number, bounds: { readonly minX: number; readonly maxX: number; readonly minY: number; readonly maxY: number }): SectionMarker {
   if (viewpoint === "front") {
     const x = plane * k;
     const top = -bounds.maxY * k - SECTION_EXTENSION_MM;
@@ -65,20 +66,21 @@ export function sectionMarker(viewpoint: "front" | "plan", plane: number, k: num
     };
   }
   const y = -plane * k;
+  const sign = viewpoint === "elevation" ? -1 : 1;
   const left = bounds.minX * k - SECTION_EXTENSION_MM;
   const right = bounds.maxX * k + SECTION_EXTENSION_MM;
   return {
     line: [{ x: left, y }, { x: right, y }],
     ends: [[{ x: left, y }, { x: left + SECTION_END_MM, y }], [{ x: right - SECTION_END_MM, y }, { x: right, y }]],
-    arrows: [[{ x: left, y }, { x: left, y: y + SECTION_ARROW_MM }], [{ x: right, y }, { x: right, y: y + SECTION_ARROW_MM }]],
+    arrows: [[{ x: left, y }, { x: left, y: y + sign * SECTION_ARROW_MM }], [{ x: right, y }, { x: right, y: y + sign * SECTION_ARROW_MM }]],
     letters: [{ at: { x: left - 1.5, y: y + ANNOTATION_TEXT_MM * 0.35 }, anchor: "end" }, { at: { x: right + 1.5, y: y + ANNOTATION_TEXT_MM * 0.35 }, anchor: "start" }],
   };
 }
 
-/** ✂️ Draws the cut-line markers of the sections a representation declares into the annotations layer of an elevation. */
-export function drawSectionMarkers(canvas: Canvas, ctx: Ctx, sections: NonNullable<AuthoredRepresentation["sections"]>, bounds: Parameters<typeof sectionMarker>[3]): void {
+/** 📤️ Draws the cut-line markers of the sections a representation declares into the annotations layer of the view that carries them: the front and plan sections in the side elevation, the elevation section in the plan. */
+export function drawSectionMarkers(canvas: Canvas, ctx: Ctx, sections: NonNullable<AuthoredRepresentation["sections"]>, bounds: Parameters<typeof sectionMarker>[3], host: "elevation" | "plan" = "elevation"): void {
   const ink = ctx.colours.ink;
-  for (const viewpoint of ["front", "plan"] as const) {
+  for (const viewpoint of host === "elevation" ? (["front", "plan"] as const) : (["elevation"] as const)) {
     const section = sections[viewpoint];
     if (section === undefined) continue;
     const marker = sectionMarker(viewpoint, section.plane, ctx.k, bounds);

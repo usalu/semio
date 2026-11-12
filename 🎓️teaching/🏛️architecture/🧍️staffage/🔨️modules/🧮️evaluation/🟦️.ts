@@ -12,7 +12,7 @@
  * @see ../🔗️contracts/🟦️.ts — `EvaluatedState`, `EvaluationQuery`
  * @see https://www.w3.org/TR/SVG11/paths.html — the path grammar
  */
-import type { Anchor, Asset, AppliedLoad, Bone, BoneOffset, Shape, Slug, Solid, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Anchor, Asset, AppliedLoad, Bone, BoneOffset, Shape, Slug, Solid, PlanarViewpoint, Text } from "../../🧬️schema/🟦️.ts";
 import type { Affine, EvaluatedBone, EvaluatedShape, EvaluatedState, EvaluationQuery, Point, RepresentationSelector, RespirationState, WorldForce } from "../🔗️contracts/🟦️.ts";
 import { PLANT_HZ, clipOf, cycleOf, poseOf, sampleClip, samplePose, transition, wrapTime } from "../🎞️animation/🟦️.ts";
 import { respirationOffsets, respirationState } from "../💨️transport/🫁️respiration/🟦️.ts";
@@ -23,6 +23,7 @@ import type { Sample } from "../🎞️animation/🟦️.ts";
 import { apply, carry, effectiveOffset, restFrames, rotationRad, sinCosDeg, solveChain, solveRig } from "../🦴️rig/🟦️.ts";
 import type { Frame3, SolvedFrame } from "../🦴️rig/🟦️.ts";
 import { nearness, project } from "../🎨️depiction/🔭️views/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 export { clipOf, poseOf };
 
@@ -40,15 +41,15 @@ type Ring = Point[];
 //#region 〰️Flattening
 function arcSteps(radius: number, sweep: number, minimum: number): number {
   const ratio = FLATTEN_TOLERANCE_M / Math.max(radius, FLATTEN_TOLERANCE_M);
-  const step = ratio >= 1 ? Math.PI / 2 : 2 * Math.acos(1 - ratio);
+  const step = ratio >= 1 ? Math.PI / 2 : 2 * portable.acos(1 - ratio);
   return Math.min(512, Math.max(minimum, Math.ceil(Math.abs(sweep) / step)));
 }
 
 function chordDistance(p: Point, a: Point, b: Point): number {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
-  const length = Math.hypot(dx, dy);
-  return length === 0 ? Math.hypot(p.x - a.x, p.y - a.y) : Math.abs((p.x - a.x) * dy - (p.y - a.y) * dx) / length;
+  const length = portable.hypot(dx, dy);
+  return length === 0 ? portable.hypot(p.x - a.x, p.y - a.y) : Math.abs((p.x - a.x) * dy - (p.y - a.y) * dx) / length;
 }
 
 function flattenCubic(p0: Point, p1: Point, p2: Point, p3: Point, out: Ring, depth: number): void {
@@ -91,16 +92,16 @@ function flattenArc(from: Point, rxIn: number, ryIn: number, rotationDeg: number
   const cyp = (-factor * ry * x1) / rx;
   const cx = cos * cxp - sin * cyp + (from.x + to.x) / 2;
   const cy = sin * cxp + cos * cyp + (from.y + to.y) / 2;
-  const theta1 = Math.atan2((y1 - cyp) / ry, (x1 - cxp) / rx);
-  const theta2 = Math.atan2((-y1 - cyp) / ry, (-x1 - cxp) / rx);
+  const theta1 = portable.atan2((y1 - cyp) / ry, (x1 - cxp) / rx);
+  const theta2 = portable.atan2((-y1 - cyp) / ry, (-x1 - cxp) / rx);
   let delta = theta2 - theta1;
   if (!sweep && delta > 0) delta -= 2 * Math.PI;
   else if (sweep && delta < 0) delta += 2 * Math.PI;
   const steps = arcSteps(Math.max(rx, ry), delta, 1);
   for (let i = 1; i < steps; i++) {
     const theta = theta1 + (delta * i) / steps;
-    const ex = rx * Math.cos(theta);
-    const ey = ry * Math.sin(theta);
+    const ex = rx * portable.cos(theta);
+    const ey = ry * portable.sin(theta);
     out.push({ x: cos * ex - sin * ey + cx, y: sin * ex + cos * ey + cy });
   }
   out.push(to);
@@ -258,8 +259,8 @@ function circle(cx: number, cy: number, rx: number, ry: number, rotationDeg: num
   const ring: Ring = [];
   for (let i = 0; i < steps; i++) {
     const theta = (2 * Math.PI * i) / steps;
-    const ex = rx * Math.cos(theta);
-    const ey = ry * Math.sin(theta);
+    const ex = rx * portable.cos(theta);
+    const ey = ry * portable.sin(theta);
     ring.push({ x: cx + cos * ex - sin * ey, y: cy + sin * ex + cos * ey });
   }
   return ring;
@@ -268,20 +269,20 @@ function circle(cx: number, cy: number, rx: number, ry: number, rotationDeg: num
 function capsule(x0: number, y0: number, x1: number, y1: number, r0: number, r1: number): Ring {
   const dx = x1 - x0;
   const dy = y1 - y0;
-  const d = Math.hypot(dx, dy);
+  const d = portable.hypot(dx, dy);
   if (d <= Math.abs(r0 - r1)) return r0 >= r1 ? circle(x0, y0, r0, r0, 0, arcSteps(r0, 2 * Math.PI, 32)) : circle(x1, y1, r1, r1, 0, arcSteps(r1, 2 * Math.PI, 32));
-  const phi = Math.atan2(dy, dx);
-  const alpha = Math.acos((r0 - r1) / d);
+  const phi = portable.atan2(dy, dx);
+  const alpha = portable.acos((r0 - r1) / d);
   const ring: Ring = [];
   const far = arcSteps(r1, 2 * alpha, 12);
   for (let i = 0; i <= far; i++) {
     const theta = phi - alpha + (2 * alpha * i) / far;
-    ring.push({ x: x1 + r1 * Math.cos(theta), y: y1 + r1 * Math.sin(theta) });
+    ring.push({ x: x1 + r1 * portable.cos(theta), y: y1 + r1 * portable.sin(theta) });
   }
   const near = arcSteps(r0, 2 * (Math.PI - alpha), 12);
   for (let i = 0; i <= near; i++) {
     const theta = phi + alpha + (2 * (Math.PI - alpha) * i) / near;
-    ring.push({ x: x0 + r0 * Math.cos(theta), y: y0 + r0 * Math.sin(theta) });
+    ring.push({ x: x0 + r0 * portable.cos(theta), y: y0 + r0 * portable.sin(theta) });
   }
   return ring;
 }
@@ -292,7 +293,7 @@ function roundedRect(x: number, y: number, w: number, h: number, rIn: number): R
   const steps = arcSteps(r, Math.PI / 2, 4);
   const ring: Ring = [];
   const corners: readonly (readonly [number, number, number])[] = [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]];
-  for (const [cx, cy, from] of corners) for (let i = 0; i <= steps; i++) ring.push({ x: cx + r * Math.cos(from + ((Math.PI / 2) * i) / steps), y: cy + r * Math.sin(from + ((Math.PI / 2) * i) / steps) });
+  for (const [cx, cy, from] of corners) for (let i = 0; i <= steps; i++) ring.push({ x: cx + r * portable.cos(from + ((Math.PI / 2) * i) / steps), y: cy + r * portable.sin(from + ((Math.PI / 2) * i) / steps) });
   return ring;
 }
 
@@ -333,7 +334,7 @@ function restOf(asset: Asset): Record<Slug, SolvedFrame> {
 }
 
 /** ➡️ A front or plan point of a bone carried by the 3D transform from its rest frame to its current frame and projected to the view: a plan point `(x, y)` is the rest point (x, height of the bone origin, lateral y), a front point `(x, y)` the rest point (forward position of the bone origin, height y, lateral x). */
-function carryPoint(kin: Chain3, bone: Slug, viewpoint: Viewpoint, p: Point, depth?: number): Point {
+function carryPoint(kin: Chain3, bone: Slug, viewpoint: PlanarViewpoint, p: Point, depth?: number): Point {
   const rest = kin.rest[bone]!.frame;
   const now = kin.now[bone]!.frame;
   if (viewpoint === "plan") {
@@ -345,7 +346,7 @@ function carryPoint(kin: Chain3, bone: Slug, viewpoint: Viewpoint, p: Point, dep
 }
 
 /** 👁️ Whether a bone has at least half of its length as extent in the view at rest (height in front, forward position in plan); a bone along the viewing axis has none and its `followTip` shapes grow outwards instead. */
-function inView(asset: Asset, bone: Slug, viewpoint: Viewpoint): boolean {
+function inView(asset: Asset, bone: Slug, viewpoint: PlanarViewpoint): boolean {
   const length = boneOf(asset, bone).lengthM;
   const rest = restWorld(asset)[bone]!;
   const tip = apply(rest, length, 0);
@@ -359,7 +360,7 @@ const vec3 = (v: Vec3): { readonly x: number; readonly y: number; readonly z: nu
 const cross = (a: Vec3, b: Vec3): Vec3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const norm = (a: Vec3): Vec3 => {
-  const l = Math.hypot(a[0], a[1], a[2]);
+  const l = portable.hypot(a[0], a[1], a[2]);
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
@@ -387,14 +388,14 @@ function simplifyRing(ring: readonly Point[], tolerance: number): Point[] {
   let far = 0;
   let best = -1;
   ring.forEach((p, i) => {
-    const d = Math.hypot(p.x - ring[0]!.x, p.y - ring[0]!.y);
+    const d = portable.hypot(p.x - ring[0]!.x, p.y - ring[0]!.y);
     if (d > best) [far, best] = [i, d];
   });
   keep[0] = keep[far] = true;
   const visit = (from: number, to: number): void => {
     const a = ring[from % ring.length]!;
     const b = ring[to % ring.length]!;
-    const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    const length = portable.hypot(b.x - a.x, b.y - a.y) || 1;
     let at = -1;
     let worst = tolerance;
     for (let i = from + 1; i < to; i++) {
@@ -413,7 +414,7 @@ function simplifyRing(ring: readonly Point[], tolerance: number): Point[] {
   return ring.filter((_, i) => keep[i]);
 }
 
-const projected = (viewpoint: Viewpoint, q: Vec3): Point => project(viewpoint, vec3(q));
+const projected = (viewpoint: PlanarViewpoint, q: Vec3): Point => project(viewpoint, vec3(q));
 
 type MemberShape = Extract<Shape, { readonly kind: "member" }>;
 
@@ -435,19 +436,19 @@ export function memberSections(member: MemberShape, frameOf: (id: Slug) => Frame
     return [reference[0] - k * bar[0], reference[1] - k * bar[1], reference[2] - k * bar[2]];
   };
   const normal = across(start.v);
-  const width = norm(Math.hypot(...normal) > 1e-9 ? normal : across(start.w));
+  const width = norm(portable.hypot(...normal) > 1e-9 ? normal : across(start.w));
   const depth = cross(bar, width);
   const { section } = member;
   const offsets: readonly (readonly [number, number])[] =
     section.kind === "circle"
-      ? Array.from({ length: MEMBER_SEGMENTS }, (_, i) => [(section.d / 2) * Math.cos((2 * Math.PI * i) / MEMBER_SEGMENTS), (section.d / 2) * Math.sin((2 * Math.PI * i) / MEMBER_SEGMENTS)] as const)
+      ? Array.from({ length: MEMBER_SEGMENTS }, (_, i) => [(section.d / 2) * portable.cos((2 * Math.PI * i) / MEMBER_SEGMENTS), (section.d / 2) * portable.sin((2 * Math.PI * i) / MEMBER_SEGMENTS)] as const)
       : ([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).map(([s, t]) => [(s * section.w) / 2, (t * section.h) / 2] as const);
   const corner = (centre: Vec3, [s, t]: readonly [number, number]): Vec3 => [centre[0] + s * width[0] + t * depth[0], centre[1] + s * width[1] + t * depth[1], centre[2] + s * width[2] + t * depth[2]];
   return [offsets.map((o) => corner(a, o)), offsets.map((o) => corner(b, o))];
 }
 
-/** 🧊️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering linearly along u to `zTip` at the bone length (clamped to the bone), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge; without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation). */
-function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: Viewpoint, length: number): Point[][] {
+/** 🔭️ A {@link Solid} placed by the full 3D frames of its bone and projected to the view (`elevation` is the side view): an extruded part is the profile swept from `z0` to `z1` along the lateral axis of the frame (`sweep` `w`: the profile in the (u, v) plane, `z` measured from the rest origin of the bone in world z) or along the bone normal (`sweep` `v`: the profile in the (u, w) plane, `z` measured from the bone origin along v), the span tapering linearly along u to `zTip` at the bone length (clamped to the bone), as ONE outline, the union of the profile at both ends and the sweep of every edge; a revolved part is revolved about the longitudinal axis of its axis bone (its own rest direction, whatever its rest tilt, carried to the current frame), one outline, the union of the hulls of the projected circles of the two ends of every profile edge; without `mirror` the half profile itself is drawn: each profile point keeps its signed distance along the forward direction of the axis bone and its height along the axis, moved into the lateral direction of the view (front) or left in the sagittal plane (elevation). */
+function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain3, bone: Slug, viewpoint: PlanarViewpoint, length: number): Point[][] {
   const rings = profile.map((ring) => simplifyRing(ring, 0.0003));
   const now = kin.now[bone]!.frame;
   const rest = kin.rest[bone]!.frame;
@@ -475,17 +476,17 @@ function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain
   const shift: Vec3 = [0, 0, 0];
   const profileZ = axisAt[2] - rest.o[2];
   const axis = norm(axisNow[solid.axis]);
-  const e1 = norm(Math.hypot(...cross(axis, [0, 0, 1])) > 1e-9 ? cross(axis, [0, 0, 1]) : cross(axis, [1, 0, 0]));
+  const e1 = norm(portable.hypot(...cross(axis, [0, 0, 1])) > 1e-9 ? cross(axis, [0, 0, 1]) : cross(axis, [1, 0, 0]));
   const e2 = cross(axis, e1);
   const circle = (p: Point): Point[] => {
     const q = place(p.x, p.y, profileZ);
     const d: Vec3 = [q[0] - origin[0], q[1] - origin[1], q[2] - origin[2]];
     const h = dot(d, axis);
     const radial: Vec3 = [d[0] - h * axis[0], d[1] - h * axis[1], d[2] - h * axis[2]];
-    const r = Math.hypot(...radial);
+    const r = portable.hypot(...radial);
     return Array.from({ length: UNION_CIRCLE_SEGMENTS }, (_, i) => {
       const t = (2 * Math.PI * i) / UNION_CIRCLE_SEGMENTS;
-      return projected(viewpoint, [origin[0] + shift[0] + h * axis[0] + r * (Math.cos(t) * e1[0] + Math.sin(t) * e2[0]), origin[1] + shift[1] + h * axis[1] + r * (Math.cos(t) * e1[1] + Math.sin(t) * e2[1]), origin[2] + shift[2] + h * axis[2] + r * (Math.cos(t) * e1[2] + Math.sin(t) * e2[2])]);
+      return projected(viewpoint, [origin[0] + shift[0] + h * axis[0] + r * (portable.cos(t) * e1[0] + portable.sin(t) * e2[0]), origin[1] + shift[1] + h * axis[1] + r * (portable.cos(t) * e1[1] + portable.sin(t) * e2[1]), origin[2] + shift[2] + h * axis[2] + r * (portable.cos(t) * e1[2] + portable.sin(t) * e2[2])]);
     });
   };
   if (solid.mirror !== true && viewpoint !== "plan") {
@@ -496,7 +497,7 @@ function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain
       return norm([0 - k * axis[0], 0 - k * axis[1], 1 - k * axis[2]]);
     })();
     const along: Vec3 = [f0[0] - dot(f0, axis) * axis[0], f0[1] - dot(f0, axis) * axis[1], f0[2] - dot(f0, axis) * axis[2]];
-    const meridian = Math.hypot(...along) > 1e-6 ? norm(along) : norm(solid.axis === "v" ? axisNow.u : axisNow.v);
+    const meridian = portable.hypot(...along) > 1e-6 ? norm(along) : norm(solid.axis === "v" ? axisNow.u : axisNow.v);
     return rings.map((ring) =>
       ring.map((p) => {
         const q = place(p.x, p.y, profileZ);
@@ -511,7 +512,7 @@ function solid3(solid: Solid, profile: readonly (readonly Point[])[], kin: Chain
   return rings.flatMap((ring) => unionPolygons(ring.map((p, i) => hull([...circle(p), ...circle(ring[(i + 1) % ring.length]!)]))));
 }
 
-/** 🧊️ The projected displacement of the origin and of the tip of a bone from the rest pose, `[ahead, up, left]`. */
+/** 🦿️ The projected displacement of the origin and of the tip of a bone from the rest pose, `[ahead, up, left]`. */
 function displacement(kin: Chain3, bone: Slug, length: number): { readonly origin: readonly [number, number, number]; readonly tip: readonly [number, number, number] } {
   const now = kin.now[bone]!.frame;
   const rest = kin.rest[bone]!.frame;
@@ -520,13 +521,13 @@ function displacement(kin: Chain3, bone: Slug, length: number): { readonly origi
   return { origin: [o1[0] - o0[0], o1[1] - o0[1], o1[2] - o0[2]], tip: [t1[0] - t0[0], t1[1] - t0[1], t1[2] - t0[2]] };
 }
 
-/** 📏️ The depth a flat front or plan shape is carried at: the height (plan) or the forward position (front) of the middle of its elevation twin (same id, same bone) at rest, so a rigid part far from the bone origin pivots about its true place; without a twin the rest position of the bone origin (author such a part as a solid instead). */
+/** 🌟️ The depth a flat front or plan shape is carried at: the height (plan) or the forward position (front) of the middle of its elevation twin (same id, same bone) at rest, so a rigid part far from the bone origin pivots about its true place; without a twin the rest position of the bone origin (author such a part as a solid instead). */
 type DepthProfile = (key: number) => number;
 
 const DEPTH_SAMPLES = 48;
 const DEPTHS = new WeakMap<Shape, DepthProfile | null>();
 
-function depthProfile(asset: Asset, shape: Shape, twins: ReadonlyMap<string, readonly Shape[]> | undefined, viewpoint: Viewpoint): DepthProfile | undefined {
+function depthProfile(asset: Asset, shape: Shape, twins: ReadonlyMap<string, readonly Shape[]> | undefined, viewpoint: PlanarViewpoint): DepthProfile | undefined {
   const cached = DEPTHS.get(shape);
   if (cached !== undefined) return cached ?? undefined;
   const sources = twins?.get(`${shape.id} ${shape.bone}`) ?? twins?.get(`* ${shape.bone}`);
@@ -579,7 +580,7 @@ function depthProfile(asset: Asset, shape: Shape, twins: ReadonlyMap<string, rea
 }
 
 /** 📐️ A front or plan shape placed by the single 3D path: every shape is carried by the transform from the rest frame to the current frame of its bone and projected to the view (rotations about any axis, spread, twist and the sagittal swing alike); a revolved or extruded solid is built in 3D from its profile ({@link solid3}); a plan capsule with `followTip` has its first end follow the origin and its second the tip of the bone; a `followTip` rect or poly on a bone that has no extent in the view (a bone along the viewing axis) additionally grows from the displacement of the origin to that of the tip, by the lateral position across the shape from its inner end to its outer end. */
-function placeProjected(asset: Asset, shape: Shape, flat: { readonly rings: readonly (readonly Point[])[]; readonly closed: boolean }, kin: Chain3, viewpoint: Exclude<Viewpoint, "elevation">, twins: ReadonlyMap<string, readonly Shape[]> | undefined): EvaluatedShape {
+function placeProjected(asset: Asset, shape: Shape, flat: { readonly rings: readonly (readonly Point[])[]; readonly closed: boolean }, kin: Chain3, viewpoint: Exclude<PlanarViewpoint, "elevation">, twins: ReadonlyMap<string, readonly Shape[]> | undefined): EvaluatedShape {
   const bone = boneOf(asset, shape.bone);
   const plan = viewpoint === "plan";
   const moved = displacement(kin, shape.bone, bone.lengthM);
@@ -605,8 +606,8 @@ function placeProjected(asset: Asset, shape: Shape, flat: { readonly rings: read
   return { shape, rings, closed: flat.closed };
 }
 
-/** 🧊️ How near a shape is to the viewer along the view direction, larger is nearer: the nearest point of the shape carried by the 3D frames of its bone (the same carry that places it) — the highest point in the plan, the foremost in the front, the point of the smallest lateral position in the elevation (the right of the asset faces the viewer) — so a broad or rotated shape is ranked by its extent, not by its bone origin and tip. A `solid` is carried at the plane of its profile; a flat shape at the depth profile it was placed with. */
-export function shapeDepth(state: EvaluatedState, shape: Shape, viewpoint: Viewpoint): number {
+/** 📷️ How near a shape is to the viewer along the view direction, larger is nearer: the nearest point of the shape carried by the 3D frames of its bone (the same carry that places it) — the highest point in the plan, the foremost in the front, the point of the smallest lateral position in the elevation (the right of the asset faces the viewer) — so a broad or rotated shape is ranked by its extent, not by its bone origin and tip. A `solid` is carried at the plane of its profile; a flat shape at the depth profile it was placed with. */
+export function shapeDepth(state: EvaluatedState, shape: Shape, viewpoint: PlanarViewpoint): number {
   const vec = (v: { readonly x: number; readonly y: number; readonly z: number }): Vec3 => [v.x, v.y, v.z];
   const frameOf = (id: Slug): Frame3 => {
     const f = state.bones[id]!.frame;
@@ -615,13 +616,13 @@ export function shapeDepth(state: EvaluatedState, shape: Shape, viewpoint: Viewp
   return state.bones[shape.bone] === undefined ? 0 : shapeDepthIn(state.asset, frameOf, shape, viewpoint);
 }
 
-/** 🧊️ The rest-pose counterpart of {@link shapeDepth}: how near the shape is when every bone is at rest. */
-export function restShapeDepth(asset: Asset, shape: Shape, viewpoint: Viewpoint): number {
+/** 📤️ The rest-pose counterpart of {@link shapeDepth}: how near the shape is when every bone is at rest. */
+export function restShapeDepth(asset: Asset, shape: Shape, viewpoint: PlanarViewpoint): number {
   const rest = restOf(asset);
   return rest[shape.bone] === undefined ? 0 : shapeDepthIn(asset, (id) => rest[id]!.frame, shape, viewpoint);
 }
 
-function shapeDepthIn(asset: Asset, frameOf: (id: Slug) => Frame3, shape: Shape, viewpoint: Viewpoint): number {
+function shapeDepthIn(asset: Asset, frameOf: (id: Slug) => Frame3, shape: Shape, viewpoint: PlanarViewpoint): number {
   const now = frameOf(shape.bone);
   if (shape.kind === "member") {
     const [start, end] = memberSections(shape, frameOf);
@@ -655,7 +656,27 @@ export class MemberInPaperUnitsError extends Error {
   }
 }
 
-function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Affine>>, viewpoint: Viewpoint, identity: boolean, kin: Chain3 | undefined = undefined, twins: ReadonlyMap<string, readonly Shape[]> | undefined = undefined): EvaluatedShape {
+/** 🚨️ Thrown when an `extruded` solid hint has no `sweep` (`v` or `w`): the axis the profile is swept along is required and never defaulted (D47), so a part is never drawn transposed in the front and plan views. The validator reports the same defect as `solid-sweep`. */
+export class SolidSweepError extends Error {
+  readonly asset: string;
+  readonly shape: string;
+  readonly viewpoint: PlanarViewpoint;
+
+  constructor(asset: string, shape: string, viewpoint: PlanarViewpoint) {
+    super(`extruded solid of shape "${shape}" (${viewpoint}) of asset "${asset}" has no sweep: state "w" (lateral) or "v" (along the bone normal), there is no default`);
+    this.name = "SolidSweepError";
+    this.asset = asset;
+    this.shape = shape;
+    this.viewpoint = viewpoint;
+  }
+
+  /** 🌍️ The refusal in both languages. */
+  get reason(): Text {
+    return { en: this.message, de: `Der extrudierte Körper der Form "${this.shape}" (${this.viewpoint}) des Assets "${this.asset}" hat keinen sweep: "w" (seitlich) oder "v" (entlang der Knochennormalen) angeben, es gibt keinen Standardwert.` };
+  }
+}
+
+function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Affine>>, viewpoint: PlanarViewpoint, identity: boolean, kin: Chain3 | undefined = undefined, twins: ReadonlyMap<string, readonly Shape[]> | undefined = undefined): EvaluatedShape {
   const matrix = world[shape.bone];
   if (matrix === undefined) throw new Error(`shape "${shape.id}" of asset "${asset.id}" is bound to unknown bone "${shape.bone}"`);
   const flat = flattenGeometry(shape);
@@ -664,6 +685,10 @@ function placeShape(asset: Asset, shape: Shape, world: Readonly<Record<Slug, Aff
   if (shape.kind === "member" && kin !== undefined) {
     const [start, end] = memberSections(shape, (id) => kin.now[id]!.frame);
     return { shape, rings: [hull([...start, ...end].map((q) => projected(viewpoint, q)))], closed: true };
+  }
+  if (kin !== undefined && shape.solid !== undefined) {
+    const sweep = shape.solid.kind === "extruded" ? (shape.solid as { sweep?: string }).sweep : "w";
+    if (sweep !== "v" && sweep !== "w") throw new SolidSweepError(asset.id, shape.id, viewpoint);
   }
   if (kin !== undefined && shape.solid !== undefined) return { shape, rings: solid3(shape.solid, flat.rings, kin, shape.bone, viewpoint, boneOf(asset, shape.bone).lengthM), closed: true };
   if (viewpoint === "elevation" || kin === undefined) return { shape, rings: flat.rings.map((ring) => ring.map((p) => apply(matrix, p.x, p.y))), closed: flat.closed };
@@ -787,7 +812,7 @@ function kinematics(asset: Asset, timeline: Timeline | null, timeS: number): Eva
 
 type Geometry = { readonly representation: EvaluatedState["representation"]; readonly elevation: readonly Shape[]; readonly front: readonly Shape[]; readonly plan: readonly Shape[]; readonly paper: boolean; readonly paperUnits?: boolean };
 
-function viewOf(asset: Asset, shapes: readonly Shape[] | undefined, viewpoint: Viewpoint): readonly Shape[] {
+function viewOf(asset: Asset, shapes: readonly Shape[] | undefined, viewpoint: PlanarViewpoint): readonly Shape[] {
   if (shapes === undefined) throw new ViewMissingError(asset.id, viewpoint);
   return shapes;
 }
@@ -854,7 +879,7 @@ export function sampleOf(asset: Asset, query: EvaluationQuery): Sample {
   return withRespiration(asset, query, sampleQuery(asset, query).sample).sample;
 }
 
-/** ▶️ The state of the asset at the query on the absolute timeline: the pose, the clip at a time (the pose wraps for looping clips, `cycle` counts the loops, planted root advance and respiration continue) or the transition between two poses, with the geometry of the selected representation. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the wrapped or clamped clip time (the query's own time for poses). Throws {@link RepresentationError} when the selected scale is unavailable and clear errors for unknown poses, clips, symbols, anchors, bones or loads without placement. */
+/** ▶️ The state of the asset at the query on the absolute timeline: the pose, the clip at a time (the pose wraps for looping clips, `cycle` counts the loops, planted root advance and respiration continue) or the transition between two poses, with the geometry of the selected representation. `frame = floor(t · fps + 1e-9)` with the clip's fps; `timeS` is the absolute query time (never wrapped, 0 for a pose without time) and `clipTimeS` the wrapped or clamped clip phase (0 for poses). Throws {@link RepresentationError} when the selected scale is unavailable and clear errors for unknown poses, clips, symbols, anchors, bones or loads without placement. */
 export function evaluate(asset: Asset, query: EvaluationQuery, selector?: RepresentationSelector): EvaluatedState {
   const geometry = geometryOf(asset, selector);
   const { sample: pure, timeline } = sampleQuery(asset, query);
@@ -875,7 +900,7 @@ export function evaluate(asset: Asset, query: EvaluationQuery, selector?: Repres
     twins.set(`${shape.id} ${shape.bone}`, [shape]);
     if (shape.role !== "ground") twins.set(`* ${shape.bone}`, [...(twins.get(`* ${shape.bone}`) ?? []), shape]);
   }
-  const shapes: Record<Viewpoint, EvaluatedShape[]> = {
+  const shapes: Record<PlanarViewpoint, EvaluatedShape[]> = {
     elevation: geometry.elevation.map((shape) => placeShape(asset, shape, world, "elevation", geometry.paper, kin)),
     front: geometry.front.map((shape) => placeShape(asset, shape, world, "front", geometry.paper, kin, twins)),
     plan: geometry.plan.map((shape) => placeShape(asset, shape, world, "plan", geometry.paper, kin, twins)),

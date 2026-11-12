@@ -1,0 +1,719 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "culm-1-a",
+    "kind": "capsule",
+    "bone": "culm-1-a",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.28945
+    ],
+    "p1": [
+     1.0379,
+     0,
+     0.28945
+    ],
+    "r0": 0.01749,
+    "r1": 0.0105
+   },
+   {
+    "id": "culm-1-b",
+    "kind": "capsule",
+    "bone": "culm-1-b",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.28945
+    ],
+    "p1": [
+     1.0082,
+     0,
+     0.3721
+    ],
+    "r0": 0.01562,
+    "r1": 0.00937
+   },
+   {
+    "id": "culm-1-c",
+    "kind": "capsule",
+    "bone": "culm-1-c",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.3721
+    ],
+    "p1": [
+     1.7016,
+     0,
+     0.47845
+    ],
+    "r0": 0.01188,
+    "r1": 0.00713
+   },
+   {
+    "id": "culm-2-a",
+    "kind": "capsule",
+    "bone": "culm-2-a",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.2803
+    ],
+    "p1": [
+     1.26,
+     0,
+     -0.2803
+    ],
+    "r0": 0.0175,
+    "r1": 0.0105
+   },
+   {
+    "id": "culm-2-b",
+    "kind": "capsule",
+    "bone": "culm-2-b",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.2803
+    ],
+    "p1": [
+     1.2152,
+     0,
+     -0.28585
+    ],
+    "r0": 0.01562,
+    "r1": 0.00937
+   },
+   {
+    "id": "culm-2-c",
+    "kind": "capsule",
+    "bone": "culm-2-c",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.28585
+    ],
+    "p1": [
+     2.0256,
+     0,
+     -0.29145
+    ],
+    "r0": 0.01187,
+    "r1": 0.00712
+   },
+   {
+    "id": "culm-3-a",
+    "kind": "capsule",
+    "bone": "culm-3-a",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.1197
+    ],
+    "p1": [
+     1.1485,
+     0,
+     0.1197
+    ],
+    "r0": 0.0175,
+    "r1": 0.0105
+   },
+   {
+    "id": "culm-3-b",
+    "kind": "capsule",
+    "bone": "culm-3-b",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.1197
+    ],
+    "p1": [
+     1.1095,
+     0,
+     0.11415
+    ],
+    "r0": 0.01562,
+    "r1": 0.00938
+   },
+   {
+    "id": "culm-3-c",
+    "kind": "capsule",
+    "bone": "culm-3-c",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.11415
+    ],
+    "p1": [
+     1.8549,
+     0,
+     0.10855
+    ],
+    "r0": 0.01188,
+    "r1": 0.00713
+   },
+   {
+    "id": "culm-4-a",
+    "kind": "capsule",
+    "bone": "culm-4-a",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.23565
+    ],
+    "p1": [
+     0.9833,
+     0,
+     -0.23565
+    ],
+    "r0": 0.01749,
+    "r1": 0.01049
+   },
+   {
+    "id": "culm-4-b",
+    "kind": "capsule",
+    "bone": "culm-4-b",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.23565
+    ],
+    "p1": [
+     0.9607,
+     0,
+     -0.27155
+    ],
+    "r0": 0.01563,
+    "r1": 0.00938
+   },
+   {
+    "id": "culm-4-c",
+    "kind": "capsule",
+    "bone": "culm-4-c",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.27155
+    ],
+    "p1": [
+     1.6371,
+     0,
+     -0.3167
+    ],
+    "r0": 0.01187,
+    "r1": 0.00712
+   },
+   {
+    "id": "culm-5-a",
+    "kind": "capsule",
+    "bone": "culm-5-a",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.23245
+    ],
+    "p1": [
+     0.8151,
+     0,
+     0.23245
+    ],
+    "r0": 0.01749,
+    "r1": 0.01049
+   },
+   {
+    "id": "culm-5-b",
+    "kind": "capsule",
+    "bone": "culm-5-b",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.23245
+    ],
+    "p1": [
+     0.7978,
+     0,
+     0.30135
+    ],
+    "r0": 0.01562,
+    "r1": 0.00937
+   },
+   {
+    "id": "culm-5-c",
+    "kind": "capsule",
+    "bone": "culm-5-c",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     0.30135
+    ],
+    "p1": [
+     1.3636,
+     0,
+     0.3897
+    ],
+    "r0": 0.01187,
+    "r1": 0.00712
+   },
+   {
+    "id": "culm-6-a",
+    "kind": "capsule",
+    "bone": "culm-6-a",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.1465
+    ],
+    "p1": [
+     0.6734,
+     0,
+     -0.1465
+    ],
+    "r0": 0.01749,
+    "r1": 0.01049
+   },
+   {
+    "id": "culm-6-b",
+    "kind": "capsule",
+    "bone": "culm-6-b",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.1465
+    ],
+    "p1": [
+     0.6548,
+     0,
+     -0.24285
+    ],
+    "r0": 0.01562,
+    "r1": 0.00937
+   },
+   {
+    "id": "culm-6-c",
+    "kind": "capsule",
+    "bone": "culm-6-c",
+    "material": "bamboo-culm",
+    "role": "body",
+    "tone": 0.25,
+    "region": "culms",
+    "p0": [
+     0,
+     0,
+     -0.24285
+    ],
+    "p1": [
+     1.1069,
+     0,
+     -0.36725
+    ],
+    "r0": 0.01187,
+    "r1": 0.00712
+   },
+   {
+    "id": "mass-1-shade",
+    "kind": "ellipsoid",
+    "bone": "fol-1",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.72,
+    "region": "leaves-shade",
+    "radii": [
+     0.47592,
+     0.7189,
+     0.39923
+    ],
+    "transform": {
+     "rotation": [
+      0.01192,
+      0.00967,
+      -0.77652,
+      0.62991
+     ],
+     "translation": [
+      0.06449,
+      -0.38211,
+      0.44904
+     ]
+    }
+   },
+   {
+    "id": "mass-1-sun",
+    "kind": "ellipsoid",
+    "bone": "fol-1",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.55,
+    "region": "leaves-sun",
+    "radii": [
+     0.29253,
+     0.43305,
+     0.24812
+    ],
+    "transform": {
+     "rotation": [
+      -0.00542,
+      -0.0044,
+      -0.77659,
+      0.62997
+     ],
+     "translation": [
+      0.08651,
+      -0.45631,
+      0.49177
+     ]
+    }
+   },
+   {
+    "id": "mass-6-shade",
+    "kind": "ellipsoid",
+    "bone": "fol-6",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.72,
+    "region": "leaves-shade",
+    "radii": [
+     0.43025,
+     0.4899,
+     0.36611
+    ],
+    "transform": {
+     "rotation": [
+      -0.00028,
+      -0.00023,
+      -0.78072,
+      0.62488
+     ],
+     "translation": [
+      0.03527,
+      -0.07446,
+      -0.4963
+     ]
+    }
+   },
+   {
+    "id": "mass-6-sun",
+    "kind": "ellipsoid",
+    "bone": "fol-6",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.55,
+    "region": "leaves-sun",
+    "radii": [
+     0.26784,
+     0.32605,
+     0.23161
+    ],
+    "transform": {
+     "rotation": [
+      -0.01897,
+      -0.01518,
+      -0.78049,
+      0.62469
+     ],
+     "translation": [
+      0.05043,
+      -0.13588,
+      -0.45243
+     ]
+    }
+   },
+   {
+    "id": "mass-2-shade",
+    "kind": "ellipsoid",
+    "bone": "fol-2",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.72,
+    "region": "leaves-shade",
+    "radii": [
+     0.52507,
+     0.9036,
+     0.45648
+    ],
+    "transform": {
+     "rotation": [
+      -0.03026,
+      -0.0295,
+      -0.71532,
+      0.69752
+     ],
+     "translation": [
+      0.16992,
+      0.14474,
+      0.07848
+     ]
+    }
+   },
+   {
+    "id": "mass-2-sun",
+    "kind": "ellipsoid",
+    "bone": "fol-2",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.55,
+    "region": "leaves-sun",
+    "radii": [
+     0.32352,
+     0.5168,
+     0.28373
+    ],
+    "transform": {
+     "rotation": [
+      0.00096,
+      0.00093,
+      -0.71596,
+      0.69814
+     ],
+     "translation": [
+      0.24367,
+      0.06646,
+      0.13206
+     ]
+    }
+   },
+   {
+    "id": "mass-3-shade",
+    "kind": "ellipsoid",
+    "bone": "fol-3",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.72,
+    "region": "leaves-shade",
+    "radii": [
+     0.47903,
+     0.8359,
+     0.47151
+    ],
+    "transform": {
+     "rotation": [
+      0.01168,
+      0.01296,
+      -0.66952,
+      0.74258
+     ],
+     "translation": [
+      0.00433,
+      0.15154,
+      -0.3276
+     ]
+    }
+   },
+   {
+    "id": "mass-3-sun",
+    "kind": "ellipsoid",
+    "bone": "fol-3",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.55,
+    "region": "leaves-sun",
+    "radii": [
+     0.29039,
+     0.4984,
+     0.28835
+    ],
+    "transform": {
+     "rotation": [
+      0.03985,
+      0.0442,
+      -0.66844,
+      0.74138
+     ],
+     "translation": [
+      0.1227,
+      0.0989,
+      -0.27944
+     ]
+    }
+   },
+   {
+    "id": "mass-4-shade",
+    "kind": "ellipsoid",
+    "bone": "fol-4",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.72,
+    "region": "leaves-shade",
+    "radii": [
+     0.48175,
+     0.691,
+     0.43783
+    ],
+    "transform": {
+     "rotation": [
+      -0.01475,
+      -0.01951,
+      -0.6028,
+      0.79752
+     ],
+     "translation": [
+      -0.15874,
+      0.33414,
+      -0.39672
+     ]
+    }
+   },
+   {
+    "id": "mass-4-sun",
+    "kind": "ellipsoid",
+    "bone": "fol-4",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.55,
+    "region": "leaves-sun",
+    "radii": [
+     0.29525,
+     0.409,
+     0.26819
+    ],
+    "transform": {
+     "rotation": [
+      0.00574,
+      0.0076,
+      -0.60295,
+      0.79772
+     ],
+     "translation": [
+      -0.03665,
+      0.30278,
+      -0.34494
+     ]
+    }
+   },
+   {
+    "id": "mass-5-shade",
+    "kind": "ellipsoid",
+    "bone": "fol-5",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.72,
+    "region": "leaves-shade",
+    "radii": [
+     0.38209,
+     0.58095,
+     0.39721
+    ],
+    "transform": {
+     "rotation": [
+      0.16912,
+      0.22798,
+      -0.57127,
+      0.77012
+     ],
+     "translation": [
+      -0.03683,
+      -0.04178,
+      -0.22344
+     ]
+    }
+   },
+   {
+    "id": "mass-5-sun",
+    "kind": "ellipsoid",
+    "bone": "fol-5",
+    "material": "bamboo-leaf",
+    "role": "body",
+    "tone": 0.55,
+    "region": "leaves-sun",
+    "radii": [
+     0.23067,
+     0.3459,
+     0.2384
+    ],
+    "transform": {
+     "rotation": [
+      -0.05905,
+      -0.0796,
+      -0.59284,
+      0.7992
+     ],
+     "translation": [
+      0.04126,
+      -0.0738,
+      -0.17806
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Six culms, each in three bones (lower, middle, upper), are tapered capsule chains standing at the lateral positions of their front outlines and leaning out as the elevation shows; a clump, not a row.",
+    "de": "Sechs Halme, je in drei Knochen (unten, mitte, oben), sind verjüngte Kapselketten an den Seitenlagen ihrer Front-Umrisse und neigen sich nach außen wie in der Ansicht; ein Horst, keine Reihe."
+   },
+   {
+    "en": "Each foliage bone carries a shade mass and a smaller sun mass as oriented ellipsoids fitted to the plan outlines at the height of the front outlines; individual leaves are not modelled.",
+    "de": "Jeder Laubknochen trägt eine Schattenmasse und eine kleinere Sonnenmasse als ausgerichtete Ellipsoide, an die Umrisse der Draufsicht angepasst und in der Höhe der Front-Umrisse; einzelne Blätter sind nicht modelliert."
+   }
+  ]
+ }
+}

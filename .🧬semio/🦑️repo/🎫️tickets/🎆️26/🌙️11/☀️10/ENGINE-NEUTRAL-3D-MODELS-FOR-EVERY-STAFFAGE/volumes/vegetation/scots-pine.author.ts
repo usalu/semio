@@ -1,0 +1,13 @@
+import { Author } from "../../veg-lib.ts";
+const a = new Author("scots-pine");
+a.loftFromViews("root-flare", "root-plate", { elev: "root-flare", front: "bole-lower", range: [0, 0.45], n: 4, exp: 2.2, pinch: 1 });
+a.loftFromViews("trunk-1", "trunk-1", { elev: "trunk-1", front: "bole-lower", range: [0.4, 7.4], n: 6, exp: 2.2, pinch: 1 });
+a.loftFromViews("trunk-2", "trunk-2", { elev: "trunk-2", front: "bole-upper", range: [7.4, 13.4], n: 6, exp: 2.2, pinch: 1 });
+a.loftFromViews("trunk-3", "trunk-3", { elev: "trunk-3", front: "bole-upper", range: [13.4, 17.6], n: 5, exp: 2.2, pinch: 1 });
+a.loftFromViews("leader", "leader", { elev: "leader", front: "bole-upper", range: [17.6, 20.4], n: 5, exp: 2.2, pinch: 0.25 });
+const limbs = ["stub-w", "stub-e", "limb-w3", "limb-e3", "limb-w1", "limb-e1", "limb-w2", "limb-e2"];
+a.limbs(limbs.map((bone) => ({ bone, meta: a.meta(bone) })));
+a.lobeTiers({ twig: 0.07, twigMeta: a.meta("limb-w3"), coreRe: /^$/, clampX: true, clampY: true, k: 0.95, boxy: 2.4, ky: 0.95 });
+a.note("A Scots pine: trunk of five lofts (root flare, lower and upper bole, leader) whose x and z half widths come from the elevation and front outlines; the lower stubs and six limbs are tapered capsules with the lateral drift of the front view.", "Eine Waldkiefer: der Stamm besteht aus fünf Lofts (Wurzelanlauf, unterer und oberer Schaft, Wipfeltrieb), deren Halbbreiten in x und z aus Ansicht und Front stammen; die unteren Stummel und sechs Äste sind verjüngte Kapseln mit der Seitendrift der Front.");
+a.note("The needle pads are flattened ellipsoids: every authored pad outline of the plan view gives one oriented ellipsoid at the height of its front outline, bound to the pad bone of its limb with a thin twig from the pad bone origin, so a pad cloud of up to three pads per limb hangs on its limb and follows sway clips.", "Die Nadelpolster sind abgeflachte Ellipsoide: jeder gezeichnete Polsterumriss der Draufsicht ergibt ein ausgerichtetes Ellipsoid in der Höhe seines Front-Umrisses, am Polsterknochen seines Asts gebunden mit einem dünnen Zweig ab dem Ursprung des Polsterknochens, sodass eine Polsterwolke aus bis zu drei Polstern am Ast hängt und Schwankungsclips folgt.");
+a.save();

@@ -9,13 +9,14 @@
  * @see ../📍️placed/🟦️.tsx — the figure on a ground line
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactElement, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { CSS_PX_PER_MM, SCALE_PRESETS, VIEWPOINTS, VIEWS, formatNumber, mmPerMetre } from "@teaching/staffage";
-import type { Asset, View, Viewpoint } from "@teaching/staffage";
+import { CSS_PX_PER_MM, SCALE_PRESETS, PLANAR_VIEWPOINTS, VIEWS, formatNumber, mmPerMetre } from "@teaching/staffage";
+import type { Asset, View, PlanarViewpoint } from "@teaching/staffage";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { Button, CheckField, Notice, NumberField, PageFrame, ProgressNotice, Segmented, SelectField, Tag, TextField, cn } from "../🪟️chrome/🟦️.tsx";
 import { useSize, type PaneView } from "../🥞️levels/🟦️.tsx";
 import { RowPreview } from "../🖼️previews/🟦️.tsx";
 import { PlacedFigure } from "../📍️placed/🟦️.tsx";
+import { isViewpoint } from "../🔭️viewpoints/🟦️.ts";
 import { ViewpointSelector } from "../🔭️viewpoints/🎚️selector/🟦️.tsx";
 import { BACKGROUNDS, wrapYaw, type Background, type Placement, type Playground, type Selection } from "../💾️persistence/🟦️.ts";
 import { addressProblems, formatAddress, navigate, playgroundFromParams, playgroundToParams, useAddress } from "../🗺️routing/🟦️.ts";
@@ -97,7 +98,7 @@ function nextX(pg: Playground, rows: ReadonlyMap<string, Row>): number {
   return snap(end > pg.lengthM - 1 ? pg.lengthM / 2 : end);
 }
 
-/** 🧪️ The playground page; the background copy is a cheap, inert preview of the local composition. */
+/** 🔭️ The playground page; the background copy is a cheap, inert preview of the local composition. */
 export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement {
   const { view } = props;
   const { t, language, store, ambient, reducedMotion, catalog } = useArchive();
@@ -290,7 +291,7 @@ export function PlaygroundPage(props: { readonly view: PaneView }): ReactElement
         <div className="flex flex-wrap items-end gap-double border border-border bg-panel p-double">
           <Segmented label={t("playground.scale")} value={(SCALE_PRESETS as readonly number[]).includes(pg.scale) ? pg.scale : null} onChange={(scale) => config({ scale })} options={SCALE_PRESETS.map((scale) => ({ value: scale as number, label: `1:${scale}` }))} />
           <NumberField label={t("playground.scaleCustom")} value={pg.scale} min={1} max={100000} step={1} onChange={(scale) => scale !== null && scale >= 1 && config({ scale })} className="w-28" />
-          <ViewpointSelector value={pg.viewpoint} language={language} choices={VIEWPOINTS} onChange={(choice) => choice !== "all" && config({ viewpoint: choice })} />
+          <ViewpointSelector value={pg.viewpoint} language={language} choices={PLANAR_VIEWPOINTS} onChange={(choice) => isViewpoint(choice) && config({ viewpoint: choice })} />
           <SelectField label={t("playground.view")} value={pg.view} onChange={(next: View) => config({ view: next })} options={VIEWS.map((v) => ({ value: v, label: t(`playground.view.${v}`) }))} className="w-48" />
           <Segmented label={t("playground.background")} value={pg.background} onChange={(background) => config({ background })} options={BACKGROUNDS.map((b) => ({ value: b, label: t(`playground.background.${b}`) }))} />
           <NumberField label={t("playground.length")} unit="m" value={pg.lengthM} min={4} max={200} step={1} onChange={(lengthM) => lengthM !== null && lengthM >= 4 && lengthM <= 200 && config({ lengthM })} className="w-28" />

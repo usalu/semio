@@ -1,31 +1,34 @@
-/** 📕️ PDF export reopened with qpdf, pdfinfo, pdftoppm, pdftotext and reportlab's AFM metrics. */
+/** 📕️ PDF export reopened with pikepdf (qpdf's engine), PDFium and reportlab's AFM metrics, all from the hash-locked wheels of the oracle environment. */
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { helveticaWidth, PT_PER_MM, winAnsiBytes, writePdf } from "../../🔨️modules/📤️export/📕️pdf/🟦️.ts";
-import { drawingScene, requireTool, parsePpm, pixel, python, STAFFAGE_ROOT, tool, toolBytes, withScratch } from "../🧰️support/🧰️.ts";
-requireTool("qpdf");
+import { drawingScene, pixel, requireTool, STAFFAGE_ROOT, withScratch } from "../🧰️support/🧰️.ts";
+import { inspectPdf, pdfText, python, renderPdf } from "../🧰️support/🐍️.ts";
+requireTool("uv");
 
 const second = (): ReturnType<typeof drawingScene> => ({ ...drawingScene(), widthMm: 100, heightMm: 30 });
 
 describe("📕️ writePdf", () => {
-  it("passes qpdf --check (skipped without qpdf) and reports both pages with MediaBox = size in points", async () => {
+  it("passes the qpdf structure and stream check and reports both pages with MediaBox = size in points", async () => {
     await withScratch((directory) => {
       const file = join(directory, "staffage.pdf");
       writeFileSync(file, writePdf([drawingScene(), second()]));
-      expect(tool("qpdf", ["--check", file])).toContain("No syntax or stream encoding errors found");
-      const info = tool("pdfinfo", ["-box", "-f", "1", "-l", "2", file]);
-      expect(info).toMatch(/PDF version:\s+1\.7/u);
-      expect(info).toMatch(/Pages:\s+2/u);
-      expect(info).toMatch(/Title:\s+Walking commuter \/ Gehender Pendler/u);
-      expect(info).toMatch(/Subject:\s+Staffage walking-commuter, scale 1:100 \(10 mm\/m\), t = 1\.25 s/u);
-      expect(info).toMatch(/Subject:[^\n]*representation Line drawing, dark \/ Strichzeichnung, dunkel, viewpoint [^,\n]+ \/ Seitenansicht, Physical drawing, to scale \/ Physikalische Zeichnung, ma/u);
-      expect(info).not.toMatch(/Subject:[^\n]*dark-line/u);
+      const report = inspectPdf(file);
+      expect(report.problems).toEqual([]);
+      expect(report.version).toBe("1.7");
+      expect(report.pages).toBe(2);
+      expect(report.title).toBe("Walking commuter / Gehender Pendler");
+      expect(report.subject).toMatch(/^Staffage walking-commuter, scale 1:100 \(10 mm\/m\), t = 1\.25 s/u);
+      expect(report.subject).toMatch(/representation Dark line \/ Dunkle Strichzeichnung, viewpoint [^,\n]+ \/ Seitenansicht, Physical drawing, to scale \/ Physikalische Zeichnung, ma/u);
+      expect(report.subject).not.toMatch(/dark-line/u);
       for (const [page, widthMm, heightMm] of [[1, 80, 50], [2, 100, 30]] as const) {
-        const box = new RegExp(`Page\\s+${page} MediaBox:\\s+([\\d.]+)\\s+([\\d.]+)\\s+([\\d.]+)\\s+([\\d.]+)`, "u").exec(info);
-        expect(box, `page ${page} MediaBox`).not.toBeNull();
-        expect(Number(box![3])).toBeCloseTo(widthMm * PT_PER_MM, 2);
-        expect(Number(box![4])).toBeCloseTo(heightMm * PT_PER_MM, 2);
+        const box = report.mediaBoxes[page - 1];
+        expect(box, `page ${page} MediaBox`).toBeDefined();
+        expect(box![0]).toBe(0);
+        expect(box![1]).toBe(0);
+        expect(box![2]!).toBeCloseTo(widthMm * PT_PER_MM, 2);
+        expect(box![3]!).toBeCloseTo(heightMm * PT_PER_MM, 2);
       }
     });
   });
@@ -34,7 +37,7 @@ describe("📕️ writePdf", () => {
     await withScratch((directory) => {
       const file = join(directory, "figure.pdf");
       writeFileSync(file, writePdf([drawingScene()]));
-      const image = parsePpm(toolBytes("pdftoppm", ["-r", "254", "-f", "1", "-l", "1", file]));
+      const image = renderPdf(file, 254);
       expect(Math.abs(image.width - 800)).toBeLessThanOrEqual(1);
       expect(Math.abs(image.height - 500)).toBeLessThanOrEqual(1);
       let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
@@ -63,7 +66,7 @@ describe("📕️ writePdf", () => {
     await withScratch((directory) => {
       const file = join(directory, "text.pdf");
       writeFileSync(file, writePdf([drawingScene()]));
-      const text = tool("pdftotext", ["-enc", "UTF-8", file, "-"]);
+      const text = pdfText(file);
       expect(text).toContain("1,80 m · 2,5 m² 20 °C -5 <= ü");
       expect(text).toContain("Mitte");
       expect(text).toContain("Ende");
@@ -72,7 +75,7 @@ describe("📕️ writePdf", () => {
 
   it("measures Helvetica advances like reportlab's Adobe metrics", () => {
     const samples: readonly (readonly [string, boolean])[] = [["The quick brown fox 0123456789 (m/s)", false], ["Walking commuter 1:100", true], ["1,80 m · 2,5 m² 20 °C", false], ["W.i-l|l", false]];
-    const oracle = JSON.parse(python(`${STAFFAGE_ROOT}/🧪️tests/📕️pdf-reopen/🐍️.py`, ["reportlab"], [JSON.stringify(samples)])) as number[];
+    const oracle = JSON.parse(python(`${STAFFAGE_ROOT}/🧪️tests/📕️pdf-reopen/🐍️.py`, "documents", [JSON.stringify(samples)])) as number[];
     samples.forEach(([text, bold], index) => expect(helveticaWidth(text, bold)).toBeCloseTo(oracle[index]!, 6));
   });
 

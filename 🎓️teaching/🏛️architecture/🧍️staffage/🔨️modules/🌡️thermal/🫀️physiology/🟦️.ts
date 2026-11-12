@@ -19,6 +19,7 @@ import type { Asset, BodyPhysiology, BreathingPattern, Environment, Respiration,
 import type { ThermalInputs } from "../../🔗️contracts/🟦️.ts";
 import { CP_AIR, R_DRY, evaporativeCoefficient, humidityRatio, latentHeatJkg, saturationPressurePa, solveDecreasing } from "../🔬️physics/🟦️.ts";
 import { type Ambient, type RegionFrame, type RegionSetup, exchange, outflow } from "../🧱️balance/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const ALPHA = 0.1;
 const BLOOD_FLOW_NEUTRAL = 6.3;
@@ -145,7 +146,7 @@ function controls(b: BodySetup, st: BodyState): Controls {
   const bodyNeutral = ALPHA * b.body.skinSetPointC + (1 - ALPHA) * b.body.coreSetPointC;
   const warmSkin = Math.max(0, sk);
   const warmBody = Math.max(0, bodyT - bodyNeutral);
-  return { warmCore: Math.max(0, cr), coldCore: Math.max(0, -cr), warmSkin, coldSkin: Math.max(0, -sk), warmBody, meanSkin, sweat: b.body.sweating ? Math.min(SWEAT_MAX, SWEAT_GAIN * warmBody * Math.exp(warmSkin / 10.7)) : 0 };
+  return { warmCore: Math.max(0, cr), coldCore: Math.max(0, -cr), warmSkin, coldSkin: Math.max(0, -sk), warmBody, meanSkin, sweat: b.body.sweating ? Math.min(SWEAT_MAX, SWEAT_GAIN * warmBody * portable.fastExp(warmSkin / 10.7)) : 0 };
 }
 
 function skinNode(b: BodySetup, i: number, tsk: number, st: BodyState, c: Controls, frame: RegionFrame, a: Ambient, dryFrame: RegionFrame): BodyRegionDiag {
@@ -158,7 +159,7 @@ function skinNode(b: BodySetup, i: number, tsk: number, st: BodyState, c: Contro
   const he = evaporativeCoefficient(x.hc, a.env.pressurePa);
   const eMax = (r.f * e * Math.max(0, saturationPressurePa(tsk) - a.pv)) / (r.setup.layerVapourResistance + 1 / he);
   const v = Math.max(frame.speed, 0.1);
-  const wMax = r.setup.region.layers.length > 0 ? 0.59 * v ** -0.08 : 0.38 * v ** -0.29;
+  const wMax = r.setup.region.layers.length > 0 ? 0.59 * portable.fastPow(v, -0.08) : 0.38 * portable.fastPow(v, -0.29);
   const sweat = SWEAT_LATENT * c.sweat * r.sweatShare;
   const w = Math.max(frame.wettedness, Math.min(wMax, 0.06 + (eMax > 0 ? (0.94 * sweat) / eMax : 0)));
   const evap = w * eMax;
@@ -228,7 +229,7 @@ export function stepBody(b: BodySetup, st: BodyState, inputs: ThermalInputs, fra
     const g = Math.max(1e-3, (diag.regions[i]!.skinNetWM2 - diag.regions[i]!.localWM2 - probe.skinNetWM2) / d);
     const target = st.skin[i]! + diag.regions[i]!.skinNetWM2 / g;
     const tau = (r.capacityJK / r.skinAreaM2) / g;
-    return target + (st.skin[i]! - target) * Math.exp(-dtS / tau);
+    return target + (st.skin[i]! - target) * portable.fastExp(-dtS / tau);
   });
   return { state: { core, skin }, diag };
 }

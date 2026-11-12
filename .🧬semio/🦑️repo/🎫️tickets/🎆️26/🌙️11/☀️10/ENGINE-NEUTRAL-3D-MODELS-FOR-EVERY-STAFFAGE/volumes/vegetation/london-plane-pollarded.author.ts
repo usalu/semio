@@ -1,0 +1,15 @@
+import { Author } from "../../veg-lib.ts";
+const a = new Author("london-plane-pollarded");
+a.loftFromViews("root-flare", "root-plate", { elev: "stem", front: "stem", range: [0, 0.45], n: 4, exp: 2.1, pinch: 1 });
+a.loftFromViews("trunk", "trunk", { elev: "stem", front: "stem", range: [0.45, 3.75], n: 6, exp: 2.1, pinch: 1 });
+a.loftFromViews("head", "head", { elev: "head", front: "head", range: [3.75, 4.55], n: 5, exp: 2.4, pinch: 0.55 });
+const knuckles = ["k-w2", "k-w1", "k-c", "k-e1", "k-e2"];
+const shoots = ["s-w2a", "s-w1a", "s-ca", "s-e1a", "s-e2a", "s-w2b", "s-w1b", "s-cb", "s-e1b", "s-e2b"];
+const idOf = (bone: string) => a.shapesOf("elevation", bone)[0]!;
+a.limbs([...knuckles, ...shoots].map((bone) => ({ bone, meta: a.meta(idOf(bone)) })));
+a.lobeTiers({ twig: 0.05, twigMeta: a.meta("shoot-c-a"), coreRe: /^(core|top)/ });
+const fillOpts = { elevIds: a.idsIn("elevation", /^leaf/), frontIds: a.idsIn("front", /^leaf/), shrink: 0.8 };
+a.fill("crown-fill-1", "fol-e1", "crown-fill-1", { ...fillOpts, extra: { weights: [{ bone: "fol-e1", weight: 0.5 }, { bone: "fol-e2", weight: 0.5 }] } });
+a.note("The pollard head and its five knuckles are a loft and five short tapered capsules bound to their own bones; the knuckles drift sideways as drawn in the front view. Each knuckle carries two shoot capsules (a, b) whose outer part continues the lateral drift of the inner one.", "Der Kopfbaumkopf und seine fünf Knorren sind ein Loft und fünf kurze verjüngte Kapseln an den eigenen Knochen; die Knorren driften seitlich wie in der Front gezeichnet. Jeder Knorren trägt zwei Triebkapseln (a, b), deren Außenteil die Seitendrift des Innenteils fortsetzt.");
+a.note("The crown is the authored set of foliage lobes (cores, top and rings of lobes at 45 to 60 degree steps) as oriented ellipsoids fitted to the plan outlines at the heights of the front outlines, each with a thin twig from its bone origin; one crown fill closes the north-east quarter the plan view shades.", "Die Krone ist der gezeichnete Satz Laublappen (Kerne, Spitze und Lappenringe in Schritten von 45 bis 60 Grad) als ausgerichtete Ellipsoide, an die Umrisse der Draufsicht angepasst und in den Höhen der Front-Umrisse, je mit dünnem Zweig vom Knochenursprung; eine Kronenfüllung schließt das Viertel, das die Draufsicht schattiert.");
+a.save();

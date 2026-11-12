@@ -19,6 +19,7 @@ import { type Vec, arrowOutline, circleCommands, commandsOf, headOutline } from 
 import { divergingColour, mix, overlayColours, tx } from "../🖍️palette/🟦️.ts";
 import { nearness, project } from "../🔭️views/🟦️.ts";
 import { formatNumber } from "../../📐️units/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🎚️ Shared comparison span of the temperature excess (K, ±) and of the vapour excess (g/kg). */
 export const SHARED_EXCESS_K = 20;
@@ -38,7 +39,7 @@ export function projector(ctx: Ctx): (p: Vec3) => Vec {
   const { k } = ctx;
   const viewpoint = ctx.options.viewpoint;
   return (p) => {
-    const q = project(viewpoint, p);
+    const q = project(viewpoint, p, ctx.camera);
     return { x: q.x * k, y: -q.y * k };
   };
 }
@@ -107,7 +108,7 @@ export function transportView(ctx: Ctx, field: TransportField, layers: readonly 
       });
     if (want.has("parcels"))
       field.parcels
-        .map((p, i) => ({ p, i, depth: nearness(ctx.options.viewpoint, p.at) }))
+        .map((p, i) => ({ p, i, depth: nearness(ctx.options.viewpoint, p.at, ctx.camera) }))
         .sort((a, b) => a.depth - b.depth || a.i - b.i)
         .forEach(({ p, i }) => disc(canvas, p, i));
     if (want.has("condensation"))
@@ -129,7 +130,7 @@ export function transportView(ctx: Ctx, field: TransportField, layers: readonly 
       const ahead = paper({ x: e.at.x + e.direction.x, y: e.at.y + e.direction.y, z: e.at.z + e.direction.z });
       const d: Vec = { x: (ahead.x - at.x) / k, y: (ahead.y - at.y) / k };
       const tip = { x: at.x + d.x * MARKER_MM, y: at.y + d.y * MARKER_MM };
-      const endOn = Math.hypot(d.x, d.y) < END_ON;
+      const endOn = portable.hypot(d.x, d.y) < END_ON;
       const outline = endOn ? circleCommands(at, MARKER_MM * 0.2) : commandsOf(arrowOutline(at, tip, 0.2, 1.1, 0.8), true);
       const value = { quantity: "volume-flow", value: e.volumeFlowM3S * 1000, unit: "L/s", label: title(e.emitter) };
       canvas.path("annotations", `emitter:${e.emitter}`, outline, e.active ? { fill: { color: colours.ink, opacity: 0.9 }, value } : { stroke: { color: colours.softInk, widthMm: 0.12 }, value });

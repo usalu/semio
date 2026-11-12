@@ -9,19 +9,19 @@
  * @see ../../🧮️evaluation/🟦️.ts — `shapeDepth`, `restShapeDepth`
  * @see ../🔭️views/🟦️.ts — `CAMERAS`, `nearness`
  */
-import type { Shape, Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import type { PlanarViewpoint, Shape } from "../../../🧬️schema/🟦️.ts";
 import type { EvaluatedShape, EvaluatedState } from "../../🔗️contracts/🟦️.ts";
 import { restShapeDepth, shapeDepth } from "../../🧮️evaluation/🟦️.ts";
 
 /** 📏️ The depth difference in metres below which two shapes count as level and keep their authored order. */
 export const DEPTH_TOLERANCE_M = 0.002;
 
-const depthOf = (state: EvaluatedState, shape: Shape, viewpoint: Viewpoint): { readonly now: number; readonly then: number } | null =>
+const depthOf = (state: EvaluatedState, shape: Shape, viewpoint: PlanarViewpoint): { readonly now: number; readonly then: number } | null =>
   shape.role === "ground" || state.bones[shape.bone] === undefined ? null : { now: shapeDepth(state, shape, viewpoint), then: restShapeDepth(state.asset, shape, viewpoint) };
 
-/** 🧊️ The indices of `items` in paint order, farthest first: the authored order of `items` with every pair that reversed its depth against the rest pose painted the other way round.
+/** 🎨️ The indices of `items` in paint order, farthest first: the authored order of `items` with every pair that reversed its depth against the rest pose painted the other way round.
  * Constraint cycles (three shapes that each hide the next) are broken deterministically: the unpainted shape with the lowest authored index is painted next, so equal inputs give equal orders. */
-export function depthOrder(state: EvaluatedState, viewpoint: Viewpoint, items: readonly EvaluatedShape[]): number[] {
+export function depthOrder(state: EvaluatedState, viewpoint: PlanarViewpoint, items: readonly EvaluatedShape[]): number[] {
   const identity = items.map((_, index) => index);
   const depths = items.map(({ shape }) => depthOf(state, shape, viewpoint));
   const before: number[][] = identity.map(() => []);

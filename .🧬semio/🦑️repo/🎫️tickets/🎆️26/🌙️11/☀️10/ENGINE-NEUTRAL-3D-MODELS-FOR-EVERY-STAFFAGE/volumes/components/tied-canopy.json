@@ -1,0 +1,479 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "wall-core",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "concrete",
+    "role": "body",
+    "tone": 0.6,
+    "region": "wall-face",
+    "size": [
+     0.3,
+     5.35,
+     1
+    ],
+    "transform": {
+     "translation": [
+      -0.35,
+      0.345,
+      0
+     ]
+    }
+   },
+   {
+    "id": "wall-insulation",
+    "kind": "extrude",
+    "bone": "canopy",
+    "material": "mineral-wool",
+    "role": "body",
+    "tone": 0.9,
+    "region": "wall-face",
+    "profile": [
+     [
+      -2.33,
+      -0.5
+     ],
+     [
+      -2.33,
+      0.5
+     ],
+     [
+      3.02,
+      0.5
+     ],
+     [
+      3.02,
+      -0.5
+     ]
+    ],
+    "plane": "yz",
+    "from": -0.2,
+    "to": -0.02,
+    "holes": [
+     [
+      [
+       -0.12,
+       -0.1
+      ],
+      [
+       -0.12,
+       0.1
+      ],
+      [
+       0.12,
+       0.1
+      ],
+      [
+       0.12,
+       -0.1
+      ]
+     ],
+     [
+      [
+       2.76,
+       -0.1
+      ],
+      [
+       2.76,
+       0.1
+      ],
+      [
+       3.0,
+       0.1
+      ],
+      [
+       3.0,
+       -0.1
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "wall-render",
+    "kind": "extrude",
+    "bone": "canopy",
+    "material": "render",
+    "role": "body",
+    "tone": 0.55,
+    "region": "wall-face",
+    "profile": [
+     [
+      -2.33,
+      -0.5
+     ],
+     [
+      -2.33,
+      0.5
+     ],
+     [
+      3.02,
+      0.5
+     ],
+     [
+      3.02,
+      -0.5
+     ]
+    ],
+    "plane": "yz",
+    "from": -0.02,
+    "to": 0,
+    "holes": [
+     [
+      [
+       -0.12,
+       -0.1
+      ],
+      [
+       -0.12,
+       0.1
+      ],
+      [
+       0.12,
+       0.1
+      ],
+      [
+       0.12,
+       -0.1
+      ]
+     ],
+     [
+      [
+       2.76,
+       -0.1
+      ],
+      [
+       2.76,
+       0.1
+      ],
+      [
+       3.0,
+       0.1
+      ],
+      [
+       3.0,
+       -0.1
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "pad-beam",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "anchor-pad",
+    "role": "body",
+    "tone": 0.7,
+    "region": "wall-plate",
+    "size": [
+     0.18,
+     0.24,
+     0.2
+    ],
+    "transform": {
+     "translation": [
+      -0.11,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "pad-strut",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "anchor-pad",
+    "role": "body",
+    "tone": 0.7,
+    "region": "wall-plate",
+    "size": [
+     0.18,
+     0.24,
+     0.2
+    ],
+    "transform": {
+     "translation": [
+      -0.11,
+      2.88,
+      0
+     ]
+    }
+   },
+   {
+    "id": "plate-beam",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "wall-plate",
+    "size": [
+     0.02,
+     0.2,
+     0.16
+    ],
+    "transform": {
+     "translation": [
+      -0.01,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "plate-strut",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "wall-plate",
+    "size": [
+     0.02,
+     0.2,
+     0.16
+    ],
+    "transform": {
+     "translation": [
+      -0.01,
+      2.88,
+      0
+     ]
+    }
+   },
+   {
+    "id": "beam-flange-top",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "canopy-steel",
+    "size": [
+     5.5,
+     0.0074,
+     0.082
+    ],
+    "transform": {
+     "translation": [
+      2.75,
+      0.0763,
+      0
+     ]
+    }
+   },
+   {
+    "id": "beam-flange-bottom",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "canopy-steel",
+    "size": [
+     5.5,
+     0.0074,
+     0.082
+    ],
+    "transform": {
+     "translation": [
+      2.75,
+      -0.0763,
+      0
+     ]
+    }
+   },
+   {
+    "id": "beam-web",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "canopy-steel",
+    "size": [
+     5.5,
+     0.1452,
+     0.005
+    ],
+    "transform": {
+     "translation": [
+      2.75,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "glass",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.92,
+    "region": "canopy-glass",
+    "size": [
+     1.28,
+     0.02,
+     1.0
+    ],
+    "transform": {
+     "translation": [
+      0.74,
+      0.09,
+      0
+     ]
+    },
+    "repeat": {
+     "count": 4,
+     "translation": [
+      1.34,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "strut-tube",
+    "kind": "capsule",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.45,
+    "region": "rod-steel",
+    "p0": [
+     4,
+     0,
+     0
+    ],
+    "p1": [
+     0,
+     2.88,
+     0
+    ],
+    "r0": 0.03,
+    "r1": 0.03
+   },
+   {
+    "id": "clevis-beam",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "rod-steel",
+    "size": [
+     0.12,
+     0.24,
+     0.1
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      4,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "clevis-wall",
+    "kind": "box",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "rod-steel",
+    "size": [
+     0.08,
+     0.24,
+     0.08
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0,
+      2.88,
+      0
+     ]
+    }
+   },
+   {
+    "id": "pin-beam",
+    "kind": "revolve",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.1,
+    "region": "rod-steel",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.012
+     ],
+     [
+      0.11,
+      0.012
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     4,
+     0,
+     -0.055
+    ]
+   },
+   {
+    "id": "pin-wall",
+    "kind": "revolve",
+    "bone": "canopy",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.1,
+    "region": "rod-steel",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.012
+     ],
+     [
+      0.09,
+      0.012
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     2.88,
+     -0.045
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The wall strip is built in its thermal layers: concrete core 300, mineral wool 180 and render 20 mm; the wool and render layers are extrudes with rectangular holes where the two anchor plates sit, and the 180 mm anchor pads (thermal break) fill the wool holes so each layer is a solid for the thermal view.",
+    "de": "Der Wandstreifen ist in seinen thermischen Schichten aufgebaut: Betonkern 300, Mineralwolle 180 und Putz 20 mm; Dämmung und Putz sind Extrusionen mit rechteckigen Löchern an den beiden Ankerplatten, und die 180 mm dicken Ankerpads (thermische Trennung) füllen die Dämmungslöcher, sodass jede Schicht ein Körper für die thermische Ansicht ist."
+   },
+   {
+    "en": "Anchor plates are 160 x 200 x 20 mm (front view; the elevation draws 240 mm height, 2D inconsistency) sitting on pads of 200 x 240 mm recessed 20 mm behind the render; the beam is an IPE160-like I-section (flanges 82 x 7.4, web 5 mm) with four 1280 mm glass panes 20 mm thick on its top flange and a 60 mm tie rod from the beam clevis to the wall clevis.",
+    "de": "Die Ankerplatten sind 160 x 200 x 20 mm (Vorderansicht; die Ansicht zeichnet 240 mm Höhe, 2D-Widerspruch) auf Pads von 200 x 240 mm, 20 mm hinter dem Putz zurückversetzt; der Träger ist ein IPE160-artiges I-Profil (Flansche 82 x 7,4, Steg 5 mm) mit vier 1280 mm langen, 20 mm dicken Glasscheiben auf dem Obergurt und einem 60 mm Zugstab vom Trägerbock zum Wandbock."
+   },
+   {
+    "en": "Pins are cylinders along w protruding 5 mm from the clevis blocks; rebar lines and the insulation zigzag are 2D texture and not modelled.",
+    "de": "Bolzen sind Zylinder längs w, die 5 mm aus den Böcken ragen; Bewehrungslinien und die Dämmungs-Zickzacklinie sind 2D-Textur und nicht modelliert."
+   }
+  ]
+ }
+}

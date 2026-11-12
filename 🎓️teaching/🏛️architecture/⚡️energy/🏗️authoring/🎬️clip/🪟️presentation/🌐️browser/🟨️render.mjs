@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {createRequire} from "node:module";
-import {accelerateClock,captureNativePaint,paintBarrier,finishIncidentalTransitions,launchBrowser,presentationTransitionStyle} from "./🧰️tools.mjs";
+import {accelerateClock,browserLaunchOptions,captureNativePaint,paintBarrier,finishIncidentalTransitions,launchBrowser,presentationTransitionStyle} from "./🧰️tools.mjs";
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const root=process.cwd();
@@ -97,7 +97,7 @@ try{
   const {loadPlaywrightV1,playwrightV1}=require(adapterPath);
   const {chromium}=await loadPlaywrightV1(root);
   browser=await launchBrowser({
-    launch:()=>chromium.launch({headless:true}),
+    launch:()=>chromium.launch(browserLaunchOptions),
     provision:async()=>{
       console.error("[DEBUG] Provisioning the repository-managed Chromium browser");
       await playwrightV1(["install","chromium"],{cwd:root,heavy:false,signal:cancellation.signal,stdout:"stderr",onProgress:event=>console.error("[DEBUG] Chromium provision "+event.phase)});

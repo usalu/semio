@@ -3,14 +3,15 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { snapLineweight, writeDxf } from "../../🔨️modules/📤️export/📐️dxf/🟦️.ts";
-import { modelScene, python, STAFFAGE_ROOT, withScratch } from "../🧰️support/🧰️.ts";
+import { modelScene, STAFFAGE_ROOT, withScratch } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 
 type Report = { projectname: string; version: string; insunits: number; measurement: number; extmin: number[]; extmax: number[]; errors: string[]; fixes: string[]; layers: Record<string, { aci: number; lineweight: number }>; lwpolylines: { layer: string; closed: boolean; points: number[][] }[]; texts: { layer: string; text: string; height: number; at: number[] }[]; bbox: number[][] | null; layouts: string[]; handles: boolean };
 
 const reopen = (text: string): Promise<Report> => withScratch((directory) => {
   const file = join(directory, "scene.dxf");
   writeFileSync(file, text);
-  return JSON.parse(python(`${STAFFAGE_ROOT}/🧪️tests/📐️dxf-reopen/🐍️.py`, ["ezdxf"], [file])) as Report;
+  return JSON.parse(python(`${STAFFAGE_ROOT}/🧪️tests/📐️dxf-reopen/🐍️.py`, "documents", [file])) as Report;
 });
 
 describe("📐️ writeDxf", () => {

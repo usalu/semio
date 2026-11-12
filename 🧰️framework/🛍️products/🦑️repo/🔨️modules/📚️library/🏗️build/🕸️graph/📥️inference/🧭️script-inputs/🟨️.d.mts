@@ -10,7 +10,7 @@ export function declaredInputPatternV1(input: ScriptInputsValueV1, projectRoot: 
 export function declaredModuleGlobsV1(inputs: ScriptInputsValueV1, workspaceRoot: string, projectRoot: string, environment: ScriptInputsValueV1): ScriptInputsValueV1;
 export function declaredTypeScriptProjectsV1(inputs: ScriptInputsValueV1, workspaceRoot: string, projectRoot: string, environment: ScriptInputsValueV1): ScriptInputsValueV1;
 export function relativeScriptInputs(entries: ScriptInputsValueV1, workspaceRoot: string, cache?: ScriptInputsValueV1, requiredSources?: boolean, resourceEntries?: ScriptInputsValueV1, commands?: ReadonlyMap<string, readonly string[]>): Promise<ScriptInputsValueV1>;
-export function withoutSchedulingV1(closure: readonly ScriptInputsValueV1[]): ScriptInputsValueV1[];
+export function withoutSchedulingV1(closure: readonly ScriptInputsValueV1[], prefixes?: readonly string[]): ScriptInputsValueV1[];
 export function nativeCommandInputs(workspaceRoot: string, scripts: ScriptInputsValueV1): Promise<ScriptInputsValueV1>;
 export function targetScriptSources(target: ScriptInputsValueV1, workspaceRoot: string, scripts: ScriptInputsValueV1, projectRoot?: string, nativeManifest?: ScriptInputsValueV1): Promise<ScriptInputsValueV1>;
 export function ownerCommandChildV1(options: ScriptInputsValueV1, bound: ScriptInputsValueV1): { readonly cwd: string; readonly command: string } | undefined;

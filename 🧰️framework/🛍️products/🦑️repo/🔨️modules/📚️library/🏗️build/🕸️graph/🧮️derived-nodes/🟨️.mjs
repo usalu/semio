@@ -358,6 +358,22 @@ export function createDerivedGraphV1({rules,world,store,statIndex,environment,en
    return out;
   }),
   put:(node,params)=>{const id=keyIdV1(node.key),rec=fromPublic(id,node,params),old=nodes.get(id);if(old){unlinkDeps(old);unlinkReads(old);}nodes.set(id,rec);linkDeps(rec);linkReads(rec);if(params!==undefined)registry.set(id,params);evict();},
+  /** 🔁️ Finds the settled files whose content no longer matches what the nodes read (one stat per file, a read only where the stamp moved) and invalidates them; the answer to "what changed" when no exact journal can say, so a task key never rests on a digest of a file that was edited since the node was derived. */
+  async verify({signal}={}){
+   if(!statIndex)return[];
+   const expected=new Map();
+   for(const rec of nodes.values()){
+    for(const[path,ref]of rec.files??[])expected.set(path,ref.digest);
+    for(const ref of rec.globs?.values()??[])ref.paths.forEach((path,index)=>expected.set(path,ref.digests[index]));
+   }
+   const entries=[...expected],changed=[];
+   for(let at=0;at<entries.length;at+=256){
+    signal?.throwIfAborted();
+    await Promise.all(entries.slice(at,at+256).map(async([path,digest])=>{const found=await statIndex.digest(path,world,signal);if(found.digest!==digest)changed.push(path);}));
+   }
+   if(changed.length)await this.invalidate({paths:changed},{signal});
+   return changed;
+  },
   invalidate:(dirty,{signal,progress}={})=>around(async()=>{
    rev=dirty.revision??rev;
    await refreshListings(dirty,signal);

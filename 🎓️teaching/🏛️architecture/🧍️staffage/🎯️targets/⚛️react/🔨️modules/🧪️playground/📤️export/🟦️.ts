@@ -6,14 +6,14 @@
  * @see ../../🧮️pipeline/🟦️.ts — `figureFrame`
  */
 import { writeSvg } from "@teaching/staffage";
-import type { Asset, JobControl, Language, Text, View, Viewpoint } from "@teaching/staffage";
+import type { Asset, JobControl, Language, Text, View, PlanarViewpoint } from "@teaching/staffage";
 import { figureFrame } from "../../🧮️pipeline/🟦️.ts";
 import type { Background, Placement } from "../../💾️persistence/🟦️.ts";
 import { placementQuery } from "../../📍️placed/🟦️.tsx";
 import { composeSvg, linePosition, type ComposedPart } from "../🧱️compose/🟦️.ts";
 
 /** 🧾️ What an export needs. */
-export type CompositionExport = { readonly placements: readonly Placement[]; readonly assets: ReadonlyMap<string, Asset>; readonly scale: number; readonly view: View; readonly viewpoint: Viewpoint; readonly background: Background; readonly lengthM: number; readonly language: Language; readonly timeS: number; readonly title: string };
+export type CompositionExport = { readonly placements: readonly Placement[]; readonly assets: ReadonlyMap<string, Asset>; readonly scale: number; readonly view: View; readonly viewpoint: PlanarViewpoint; readonly background: Background; readonly lengthM: number; readonly language: Language; readonly timeS: number; readonly title: string };
 
 const yieldToBrowser = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 const label: Text = { en: "Drawing placements", de: "Platzierungen werden gezeichnet" };

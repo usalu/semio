@@ -539,6 +539,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -559,6 +560,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -579,6 +581,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -631,6 +634,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -651,6 +655,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -671,6 +676,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -882,6 +888,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -902,6 +909,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -922,6 +930,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1020,6 +1029,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1040,6 +1050,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1060,6 +1071,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1399,6 +1411,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1418,6 +1431,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1437,6 +1451,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1457,6 +1472,7 @@
               "h": 0.022,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.43,
                 "z1": 0.43
               }
@@ -1477,6 +1493,7 @@
               "h": 0.022,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.43,
                 "z1": 0.43
               }
@@ -1497,6 +1514,7 @@
               "h": 0.022,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.43,
                 "z1": 0.43
               }
@@ -1608,6 +1626,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.17 Q -0.725 0.2 -0.695 0.2 L -0.01 0.2 Q 0.02 0.2 0.02 0.17 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1627,6 +1646,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.59 0.2 Q 0.62 0.2 0.62 0.17 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -1646,6 +1666,7 @@
               "d": "M 0 -0.01 L 0 0.17 Q 0 0.2 0.03 0.2 L 0.655 0.2 Q 0.685 0.2 0.685 0.17 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -2014,6 +2035,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.16 Q -0.725 0.2 -0.685 0.2 L -0.02 0.2 Q 0.02 0.2 0.02 0.16 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -2033,6 +2055,7 @@
               "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.58 0.2 Q 0.62 0.2 0.62 0.16 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -2052,6 +2075,7 @@
               "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.645 0.2 Q 0.685 0.2 0.685 0.16 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -2072,6 +2096,7 @@
               "h": 0.022,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.43,
                 "z1": 0.43
               }
@@ -2092,6 +2117,7 @@
               "h": 0.022,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.43,
                 "z1": 0.43
               }
@@ -2112,6 +2138,7 @@
               "h": 0.022,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.43,
                 "z1": 0.43
               }
@@ -2221,6 +2248,7 @@
               "d": "M -0.725 -0.01 L -0.725 0.16 Q -0.725 0.2 -0.685 0.2 L -0.02 0.2 Q 0.02 0.2 0.02 0.16 L 0.02 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -2240,6 +2268,7 @@
               "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.58 0.2 Q 0.62 0.2 0.62 0.16 L 0.62 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -2259,6 +2288,7 @@
               "d": "M 0 -0.01 L 0 0.16 Q 0 0.2 0.04 0.2 L 0.645 0.2 Q 0.685 0.2 0.685 0.16 L 0.685 -0.01 Z",
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.41,
                 "z1": 0.41
               }
@@ -3484,6 +3514,223 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "head",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.5,
+          "region": "bed-frame",
+          "size": [0.06, 0.95, 0.9],
+          "cornerRadius": 0.02,
+          "transform": {
+            "translation": [0.03, 0.475, 0.0]
+          }
+        },
+        {
+          "id": "foot-post",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.5,
+          "region": "bed-frame",
+          "size": [0.06, 0.55, 0.06],
+          "cornerRadius": 0.02,
+          "transform": {
+            "translation": [2.09, 0.275, 0.42]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.84]
+          }
+        },
+        {
+          "id": "foot-rail",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.5,
+          "region": "bed-frame",
+          "size": [0.06, 0.08, 0.9],
+          "cornerRadius": 0.02,
+          "transform": {
+            "translation": [2.09, 0.51, 0.0]
+          }
+        },
+        {
+          "id": "foot-cross-rail",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.55,
+          "region": "bed-frame",
+          "size": [0.04, 0.16, 0.8],
+          "transform": {
+            "translation": [2.09, 0.22, 0.0]
+          }
+        },
+        {
+          "id": "rail",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.55,
+          "region": "bed-frame",
+          "size": [2.04, 0.16, 0.04],
+          "transform": {
+            "translation": [1.06, 0.22, 0.43]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.86]
+          }
+        },
+        {
+          "id": "center-beam",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.5,
+          "region": "bed-frame",
+          "size": [2.0, 0.103, 0.05],
+          "transform": {
+            "translation": [1.06, 0.2115, 0.0]
+          }
+        },
+        {
+          "id": "leg-mid",
+          "kind": "box",
+          "bone": "frame",
+          "material": "pine-timber",
+          "role": "body",
+          "tone": 0.5,
+          "region": "bed-frame",
+          "size": [0.06, 0.16, 0.06],
+          "transform": {
+            "translation": [1.06, 0.08, 0.0]
+          }
+        },
+        {
+          "id": "slats-head",
+          "kind": "box",
+          "bone": "slat-head",
+          "material": "birch-slat",
+          "role": "body",
+          "tone": 0.6,
+          "region": "slats",
+          "size": [0.06, 0.022, 0.86],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [-0.69, -0.011, 0.0]
+          },
+          "repeat": {
+            "count": 11,
+            "translation": [0.066, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "slats-mid",
+          "kind": "box",
+          "bone": "slat-mid",
+          "material": "birch-slat",
+          "role": "body",
+          "tone": 0.6,
+          "region": "slats",
+          "size": [0.06, 0.022, 0.86],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.03, -0.011, 0.0]
+          },
+          "repeat": {
+            "count": 9,
+            "translation": [0.0675, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "slats-foot",
+          "kind": "box",
+          "bone": "slat-foot",
+          "material": "birch-slat",
+          "role": "body",
+          "tone": 0.6,
+          "region": "slats",
+          "size": [0.06, 0.022, 0.86],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.03, -0.011, 0.0]
+          },
+          "repeat": {
+            "count": 10,
+            "translation": [0.06889, 0.0, 0.0]
+          }
+        },
+        {
+          "id": "mat-head",
+          "kind": "box",
+          "bone": "mat-head",
+          "material": "quilted-cover",
+          "role": "body",
+          "tone": 0.85,
+          "regions": ["mattress"],
+          "size": [0.745, 0.21, 0.82],
+          "cornerRadius": 0.04,
+          "transform": {
+            "translation": [-0.3525, 0.095, 0.0]
+          }
+        },
+        {
+          "id": "mat-mid",
+          "kind": "box",
+          "bone": "mat-mid",
+          "material": "quilted-cover",
+          "role": "body",
+          "tone": 0.85,
+          "regions": ["mattress"],
+          "size": [0.62, 0.21, 0.82],
+          "cornerRadius": 0.04,
+          "transform": {
+            "translation": [0.31, 0.095, 0.0]
+          }
+        },
+        {
+          "id": "mat-foot",
+          "kind": "box",
+          "bone": "mat-foot",
+          "material": "quilted-cover",
+          "role": "body",
+          "tone": 0.85,
+          "regions": ["mattress"],
+          "size": [0.685, 0.21, 0.82],
+          "cornerRadius": 0.04,
+          "transform": {
+            "translation": [0.3425, 0.095, 0.0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The frame is a solid 0.06 m headboard, an open footboard (two posts, a top rail and a lower cross rail the front view draws as rail-end), two 40 mm side rails and a centre beam on the centre leg that the drawings imply but do not show, so the slats have a real support at z = 0.",
+          "de": "Der Rahmen ist ein massives 0,06 m starkes Kopfteil, ein offenes Fussteil (zwei Pfosten, eine obere Leiste und die in der Vorderansicht als rail-end gezeichnete untere Querleiste), zwei 40 mm starke Seitenholme und ein Mittelbalken auf dem Mittelbein, den die Zeichnungen voraussetzen aber nicht zeigen, damit die Latten bei z = 0 eine echte Auflage haben."
+        },
+        {
+          "en": "Each of the three slat sections is one batten (60 by 22 mm, 0.86 m long) repeated 11, 9 and 10 times across its section with the gaps the pitch leaves; the head section sits on the revolute slat-head bone and carries its mattress bone, so raising the head lifts slats and mattress together.",
+          "de": "Jeder der drei Lattenrostabschnitte ist eine Latte (60 mal 22 mm, 0,86 m lang), die 11-, 9- und 10-mal ueber den Abschnitt wiederholt wird, mit den Fugen, die der Abstand laesst; der Kopfabschnitt sitzt auf dem Drehknochen slat-head und traegt seinen Matratzenknochen, sodass sich beim Anheben des Kopfteils Latten und Matratze gemeinsam heben."
+        },
+        {
+          "en": "The mattress is three 0.82 m wide sections with 40 mm rounded edges and 20 mm overlaps (as drawn), each on its own prismatic bone so that it sinks under load; the quilting piping lines are not modelled.",
+          "de": "Die Matratze besteht aus drei 0,82 m breiten Abschnitten mit 40 mm gerundeten Kanten und 20 mm Ueberlappung (wie gezeichnet), jeder auf eigenem Schubknochen, damit er unter Last einsinkt; die Steppnahtlinien sind nicht modelliert."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "flat",
       "defaultClip": "raise-head-section",
@@ -3497,7 +3744,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

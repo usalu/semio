@@ -1,0 +1,518 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "cases": [
+  {
+   "name": "box-hard-edges",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "e-box",
+    "title": {
+     "en": "e-box",
+     "de": "e-box"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "angleDeg": 30,
+   "expectedSegments": 12
+  },
+  {
+   "name": "two-boxes",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "e-boxes",
+    "title": {
+     "en": "e-boxes",
+     "de": "e-boxes"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       1,
+       1,
+       1
+      ],
+      "repeat": {
+       "count": 2,
+       "translation": [
+        3,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "angleDeg": 30,
+   "expectedSegments": 24
+  },
+  {
+   "name": "sphere-smooth",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "e-sphere",
+    "title": {
+     "en": "e-sphere",
+     "de": "e-sphere"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "e",
+      "kind": "ellipsoid",
+      "node": "root",
+      "material": "skin",
+      "radii": [
+       0.5,
+       0.5,
+       0.5
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "angleDeg": 60,
+   "expectedSegments": 0
+  },
+  {
+   "name": "cylinder-caps",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "e-cyl",
+    "title": {
+     "en": "e-cyl",
+     "de": "e-cyl"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "r",
+      "kind": "revolve",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0.2
+       ],
+       [
+        1,
+        0.2
+       ]
+      ],
+      "axis": [
+       0,
+       1,
+       0
+      ],
+      "origin": [
+       0,
+       0,
+       0
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "angleDeg": 30,
+   "expectedSegments": null
+  },
+  {
+   "name": "rounded-box",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "e-rbox",
+    "title": {
+     "en": "e-rbox",
+     "de": "e-rbox"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       1,
+       1,
+       1
+      ],
+      "cornerRadius": 0.1
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "angleDeg": 60,
+   "expectedSegments": 0
+  },
+  {
+   "name": "open-tube-boundary",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "e-tube",
+    "title": {
+     "en": "e-tube",
+     "de": "e-tube"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       }
+      ],
+      "capStart": false,
+      "capEnd": false
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "angleDeg": 30,
+   "expectedSegments": null
+  }
+ ]
+}

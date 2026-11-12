@@ -46,14 +46,20 @@ export const PARAMETER_SOURCES = ["measured", "literature", "calibrated", "autho
 /** 🧪️ One of {@link PARAMETER_SOURCES}. */
 export type ParameterSource = (typeof PARAMETER_SOURCES)[number];
 
-/** 👁️ The projection an authored geometry set is drawn in. `elevation` is the side elevation, the rig plane (paper x = world x ahead, paper up = y), seen from the asset's right (-z). `front` is the front elevation, seen from ahead (+x): paper x = world z (the asset's left is paper right), paper up = y. `plan` is the plan (top view), seen from above (+y): paper x = world x, paper up = world z (the asset's left is up the page). Front and plan shapes are authored in the rest pose and follow their bone through its full 3D frame. */
-export const VIEWPOINTS = ["elevation", "front", "plan"] as const;
+/** 👁️ The projection an authored geometry set is drawn in. `elevation` is the side elevation, the rig plane (paper x = world x ahead, paper up = y), seen from the asset's right (-z). `front` is the front elevation, seen from ahead (+x): paper x = world z (the asset's left is paper right), paper up = y. `plan` is the plan (top view), seen from above (+y): paper x = world x, paper up = world z (the asset's left is up the page). Front and plan shapes are authored in the rest pose and follow their bone through its full 3D frame. `axonometric` is the derived 3D view of the `volume`; only the first three have authored shapes ({@link PLANAR_VIEWPOINTS}). */
+export const VIEWPOINTS = ["elevation", "front", "plan", "axonometric"] as const;
 
 /** 🔭️ One of {@link VIEWPOINTS}. */
 export type Viewpoint = (typeof VIEWPOINTS)[number];
 
-/** 📤️ The output kinds an asset can be exported to. */
-export const EXPORT_FORMATS = ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"] as const;
+/** 📐️ The viewpoints with authored planar shapes, the keys of `geometry` and of every evaluated shape set. */
+export const PLANAR_VIEWPOINTS = ["elevation", "front", "plan"] as const;
+
+/** 🧭️ One of {@link PLANAR_VIEWPOINTS}. */
+export type PlanarViewpoint = (typeof PLANAR_VIEWPOINTS)[number];
+
+/** 📤️ The output kinds an asset can be exported to: `glb` a glTF 2.0 binary with every pose and clip, `fbx` an FBX 7.4 binary of one clip, `model` the engine-neutral JSON model document, `model-zip` the ZIP of every pose and clip of an asset as glb, fbx and model files. */
+export const EXPORT_FORMATS = ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component", "glb", "fbx", "model", "model-zip"] as const;
 
 /** 📦️ One of {@link EXPORT_FORMATS}. */
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
@@ -227,13 +233,13 @@ export type PolyShape = { readonly kind: "poly"; readonly points: readonly (read
 /** 〰️ An SVG-style path (`M L H V C Q A Z`, absolute or relative) in local metres, y up. */
 export type PathShape = { readonly kind: "path"; readonly d: string };
 
-/** 📍️ An end point of a {@link MemberShape}: metres from the origin of `bone` (default the shape's own bone; the shape's own bone or one of its ancestors) at rest, `x` along the bone (u), `y` along its normal (v), `z` lateral (w, left is +); `z` is required and never defaulted. */
+/** 🦿️ An end point of a {@link MemberShape}: metres from the origin of `bone` (default the shape's own bone; the shape's own bone or one of its ancestors) at rest, `x` along the bone (u), `y` along its normal (v), `z` lateral (w, left is +); `z` is required and never defaulted. */
 export type MemberEnd = { readonly bone?: Slug; readonly x: number; readonly y: number; readonly z: number };
 
-/** 📐️ The physical section of a member: a rectangle of width `w` (along bar x bone-w) and height `h` (completing the orthonormal frame), or a circle of diameter `d`, in metres. */
+/** 🎡️ The physical section of a member: a rectangle of width `w` (along bar x bone-w) and height `h` (completing the orthonormal frame), or a circle of diameter `d`, in metres. */
 export type MemberSection = { readonly kind: "rect"; readonly w: number; readonly h: number } | { readonly kind: "circle"; readonly d: number };
 
-/** 🦴️ A prismatic bar between two bone-local end points with a physical section, carried by the full 3D frames of its bones and drawn in its true foreshortened outline in every viewpoint. It has no planar geometry and no `solid`: a diagonal is one member, never a bounding rectangle. */
+/** 📊️ A prismatic bar between two bone-local end points with a physical section, carried by the full 3D frames of its bones and drawn in its true foreshortened outline in every viewpoint. It has no planar geometry and no `solid`: a diagonal is one member, never a bounding rectangle. */
 export type MemberShape = { readonly kind: "member"; readonly from: MemberEnd; readonly to: MemberEnd; readonly section: MemberSection };
 
 /** 🔺️ One of the shape primitives. */
@@ -263,11 +269,73 @@ export type Shape = ShapeGeometry & {
 };
 //#endregion ✏️Geometry
 
+//#region 🧊️Volume
+/** 🔢️ A pair [a, b]: a point of a profile plane, in metres. */
+export type Vector2 = readonly [number, number];
+
+/** 🤸️ A triple [u, v, w]: a point or direction in the bone-local frame (u along the bone, v its normal in the sagittal plane, w lateral with the left of the asset at +), in metres for points. */
+export type Vector3 = readonly [number, number, number];
+
+/** 💾️ A rotation quaternion [x, y, z, w] of unit length; the identity is [0, 0, 0, 1]. */
+export type Quaternion = readonly [number, number, number, number];
+
+/** 🌟️ The six kinds of a {@link VolumeSolid}. */
+export const VOLUME_SOLID_KINDS = ["box", "ellipsoid", "capsule", "revolve", "extrude", "loft"] as const;
+
+/** 🧬️ One of {@link VOLUME_SOLID_KINDS}. */
+export type VolumeSolidKind = (typeof VOLUME_SOLID_KINDS)[number];
+
+/** 🗃️ The coordinate planes an `extrude` solid lies on: `xy` has the profile coordinates (u, v) and extrudes along w, `yz` (v, w) along u, `zx` (w, u) along v. */
+export const VOLUME_PLANES = ["xy", "yz", "zx"] as const;
+
+/** 🔁️ The largest `count` of a {@link VolumeRepeat}. */
+export const VOLUME_REPEAT_MAX = 256;
+
+/** 🧮️ The most bones a solid is blended over. */
+export const VOLUME_WEIGHTS_MAX = 4;
+
+/** 🪜️ A placement of one solid inside the bone-local frame, applied to its own coordinates in the order scale (positive per-axis factors), rotation (unit quaternion), translation (metres); absent parts mean identity. */
+export type VolumeTransform = { readonly translation?: Vector3; readonly rotation?: Quaternion; readonly scale?: Vector3 };
+
+/** 🕰️ `count` copies of a solid: copy k = 0 .. count-1 is the solid after `transform`, moved by the step applied k times (a rotation of `rotationRad` about `rotationAxis` through `origin`, default the origin of the frame, then `translation`). */
+export type VolumeRepeat = { readonly count: number; readonly translation?: Vector3; readonly rotationAxis?: Vector3; readonly rotationRad?: number; readonly origin?: Vector3 };
+
+/** 🕸️ The fields every {@link VolumeSolid} carries: `bone` frames its coordinates and carries it (or, with `weights`, blends it over up to four bones that sum to 1), `material` an entry of the asset's materials, `role` the line-hierarchy role, `tone` the grey 0..1 of the solid views, `region`/`regions` its thermal regions, `maxDenominator` the largest preset denominator that still shows it. */
+export type VolumeSolidBase = {
+  readonly id: Slug;
+  readonly bone: Slug;
+  readonly material: Slug;
+  readonly role: ShapeRole;
+  readonly tone: number;
+  readonly region?: Slug;
+  readonly regions?: readonly Slug[];
+  readonly maxDenominator?: ScaleDenominator;
+  readonly weights?: readonly { readonly bone: Slug; readonly weight: number }[];
+  readonly transform?: VolumeTransform;
+  readonly repeat?: VolumeRepeat;
+  readonly tags?: readonly Slug[];
+};
+
+/** 💡️ One declarative solid of a {@link Volume} in the bone-local rest frame of its bone, in metres: `box` (centred, edges along u, v, w, optionally rounded), `ellipsoid` (centred, semi-axes along u, v, w), `capsule` (hull of two spheres, optionally elliptic through `lateralScale`), `revolve` (a [axial, radial] profile about the axis through `origin`), `extrude` (a polygon with holes on `plane` pushed from `from` to `to`, optionally tapered) and `loft` (superelliptic sections joined in order). */
+export type VolumeSolid = VolumeSolidBase &
+  (
+    | { readonly kind: "box"; readonly size: Vector3; readonly cornerRadius?: number }
+    | { readonly kind: "ellipsoid"; readonly radii: Vector3 }
+    | { readonly kind: "capsule"; readonly p0: Vector3; readonly p1: Vector3; readonly r0: number; readonly r1: number; readonly lateralScale?: number }
+    | { readonly kind: "revolve"; readonly profile: readonly Vector2[]; readonly axis: Vector3; readonly origin: Vector3; readonly sweepRad?: number; readonly lateralScale?: number }
+    | { readonly kind: "extrude"; readonly profile: readonly Vector2[]; readonly holes?: readonly (readonly Vector2[])[]; readonly plane: (typeof VOLUME_PLANES)[number]; readonly from: number; readonly to: number; readonly taperTo?: readonly [number, number] }
+    | { readonly kind: "loft"; readonly sections: readonly { readonly at: Vector3; readonly rx: number; readonly ry: number; readonly exponent?: number; readonly rotation?: Quaternion }[]; readonly capStart: boolean; readonly capEnd: boolean }
+  );
+
+/** 🔧️ The declarative 3D volume of an asset: its solids bound to the bones of the rig in the bone-local rest frame, the source of the engine-neutral model, the GLB and FBX files and the axonometric view. `decisions` states what the solids stand for and which simplifications were made. */
+export type Volume = { readonly status: "authored"; readonly solids: readonly VolumeSolid[]; readonly decisions: readonly Text[] };
+//#endregion 🧊️Volume
+
 //#region 🖨️Representations
 /** 🖨️ The preset drawing-scale denominators, smallest scale first; every asset decides each of them explicitly. */
 export const SCALE_DENOMINATORS = [500, 200, 100, 50] as const;
 
-/** 🔢️ One of {@link SCALE_DENOMINATORS}. */
+/** 🖱️ One of {@link SCALE_DENOMINATORS}. */
 export type ScaleDenominator = (typeof SCALE_DENOMINATORS)[number];
 
 /** 🔑️ The key of a representation in {@link Asset.representations}: the denominator as a string. */
@@ -300,11 +368,11 @@ export type AuthoredRepresentation = {
   readonly pens: PenSet;
   readonly hatches: readonly Hatch[];
   readonly geometry: { readonly elevation: readonly Shape[]; readonly front: readonly Shape[]; readonly plan: readonly Shape[] };
-  readonly sections?: { readonly front?: ViewSection; readonly plan?: ViewSection };
+  readonly sections?: { readonly elevation?: ViewSection; readonly front?: ViewSection; readonly plan?: ViewSection };
   readonly decisions: RepresentationDecisions;
 };
 
-/** ✂️ A viewpoint drawn as a section: the cut plane lies at `plane` metres along the view axis (front: the forward position x of a plane across the forward axis, seen from ahead; plan: the height y of a horizontal plane, seen from above) and is named by `label` (such as A-A). The side elevation shows the cut-line marker at that plane; sheets and the viewer caption the cut "Section A-A" / "Schnitt A-A" (front) and "Plan section B-B" / "Grundriss-Schnitt B-B" (plan). */
+/** ✂️ A viewpoint drawn as a section: the cut plane lies at `plane` metres along the view axis (elevation: the lateral position z of a vertical plane along the forward axis, seen from the right, the part at smaller z removed; front: the forward position x of a plane across the forward axis, seen from ahead, the part at larger x removed; plan: the height y of a horizontal plane, seen from above, the part above removed) and is named by `label` (such as A-A). The side elevation shows the cut-line marker of a front or plan section, the plan the cut-line marker of an elevation section; sheets and the viewer caption the cut "Section A-A" / "Schnitt A-A" (elevation and front) and "Plan section B-B" / "Grundriss-Schnitt B-B" (plan). */
 export type ViewSection = { readonly plane: number; readonly label: Text };
 
 /** ↪️ What to offer instead of an unavailable representation: another scale of the asset, a symbol of the asset, or another asset. */
@@ -316,7 +384,7 @@ export const UNAVAILABLE_CAUSES = ["below-printable-feature", "no-physical-depic
 /** 🔎️ One of {@link UNAVAILABLE_CAUSES}. */
 export type UnavailableCause = (typeof UNAVAILABLE_CAUSES)[number];
 
-/** 🚫️ An explicit decision that the asset cannot be meaningfully drawn at this scale: why,which feature limits it and at what real size,
+/** 🪛️ An explicit decision that the asset cannot be meaningfully drawn at this scale: why,which feature limits it and at what real size,
  * and what to use instead (at least one alternative). */
 export type UnavailableRepresentation = {
   readonly status: "unavailable";
@@ -406,7 +474,7 @@ export type ThermalBinding = {
   readonly emitters: Readonly<Record<Slug, number>>;
 };
 
-/** 🧭️ A configuration: bone offsets, root placement, active contacts, thermal binding and loads. `key: true` marks an in-between key
+/** 📥️ A configuration: bone offsets, root placement, active contacts, thermal binding and loads. `key: true` marks an in-between key
  * pose of a clip, evaluable like any pose but not offered as a named pose; every asset has at least three named poses. */
 export type Pose = {
   readonly id: Slug;
@@ -479,7 +547,7 @@ export type Environment = {
   readonly groundTempC?: number;
   readonly relativeHumidity: number;
   readonly windMS: number;
-  /** Horizontal bearing the air moves towards, degrees from the forward axis +x towards the left axis +z (0 forward, 90 towards the left of the asset, 180 backward; the frame is left-handed: x ahead, y up, z left); the wind has no vertical component. */
+  /** 🛰️ Horizontal bearing the air moves towards, degrees from the forward axis +x towards the left axis +z (0 forward, 90 towards the left of the asset, 180 backward; the frame is left-handed: x ahead, y up, z left); the wind has no vertical component. */
   readonly windDirectionDeg: number;
   readonly solarWM2: number;
   readonly diffuseFraction: number;
@@ -492,12 +560,12 @@ export type EnvironmentPreset = { readonly id: Slug; readonly title: Text; reado
 /** 🏔️ The environment preset document. */
 export type EnvironmentDocument = { readonly $schema: string; readonly version: typeof SCHEMA_VERSION; readonly presets: readonly EnvironmentPreset[]; readonly references: readonly Reference[] };
 
-/** 🧮️ How a region's surface temperature is obtained.
+/** ♨️ How a region's surface temperature is obtained.
  * - `body`: a living body segment; heat flows from the regulated core through tissue (conductance driven by skin blood flow) to the skin,
  *   then through the region's `layers` (clothing, fur, feathers, trapped air) to the outer surface.
  * - `leaf`: leaf energy balance with stomatal conductance (latent heat by transpiration).
  * - `passive`: solar absorption, radiation, convection and contact conduction of an inert object, with heat capacity.
- * - `operating`: an inert surface heated from inside by `operating.heatW × level` (engines, motors, lamps, heaters, exhausts).
+ * - `operating`: an inert surface heated from inside by `operating.heatW × level` (engines, motors, lamps, heaters, exhausts); a negative `heatW` removes heat (evaporators, cooling coils).
  * - `conditioned`: a building element separating the environment from an interior at `conditioned.interiorTempC` through its `layers`.
  * - `hydronic`: a surface heated by the water of a heating circuit: the inside temperature is the circuit water at the region's position along the flow, from the supply temperature falling to the return temperature, at the circuit's operating level; heat flows from it through the layers and the water-side film.
  * - `coupled`: a surface whose inside is the water of another region of the asset (a jug or pot wall): below the fill level the wall follows that region's temperature through the layers and the water-side film, and the heat it draws is taken from that region.
@@ -522,7 +590,7 @@ export type ThermalLayer = {
   readonly reference?: Slug;
 };
 
-/** 💧️ One row of a heating-circuit table: the supply and return water temperatures at one operating level `v`. */
+/** 📖️ One row of a heating-circuit table: the supply and return water temperatures at one operating level `v`. */
 export type CircuitRow = { readonly v: number; readonly supplyTempC: number; readonly returnTempC: number };
 
 /** 🚰️ The inside of a `hydronic` region: the water of the circuit driven by the operating level `key`. `rows` (ascending in `v`, at least one) give the supply and return temperatures at named levels and are interpolated linearly in between; below the first row the water falls linearly to the air temperature at level 0, above the last row it holds. `flowPosition` (0 at the inlet, 1 at the outlet) places the region along the flow: its water is `supply − (supply − return) · flowPosition`. `filmM2KW` is the resistance between that water and the layers (water-side film, fins), referred to the region's outer area. */
@@ -559,7 +627,7 @@ export type ThermalRegion = {
   readonly reference?: Slug;
 };
 
-/** 🔑️ The operating key that drives a region: the key of its `operating` heat or of its `hydronic` circuit, else `null`. */
+/** 🧯️ The operating key that drives a region: the key of its `operating` heat or of its `hydronic` circuit, else `null`. */
 export const operatingKeyOf = (region: ThermalRegion): Slug | null => region.operating?.key ?? region.hydronic?.key ?? null;
 
 /** 🫀️ The whole-body thermal physiology of a human or animal: size, basal metabolism, regulated set points and thermoregulatory limits. */
@@ -666,7 +734,7 @@ export type StructuralModel = {
 //#endregion 🏗️Structure
 
 //#region 🧍️Asset
-/** 📐️ Nominal overall real dimensions and total mass: the physical envelope of everything that belongs to the asset in its rest pose (held items, attachments, plates, flanges, lids, footings), without stroke width, ground shading, plumes, transport or annotations; every authored representation reproduces them in every viewpoint within max(2 % of the declared value, 15 mm).
+/** 🧰️ Nominal overall real dimensions and total mass: the physical envelope of everything that belongs to the asset in its rest pose (held items, attachments, plates, flanges, lids, footings), without stroke width, ground shading, plumes, transport or annotations; every authored representation reproduces them in every viewpoint within max(2 % of the declared value, 15 mm).
  * `heightM` is the extent along world y (up), `widthM` along world x (ahead: the real depth of an object drawn in side elevation; paper x of the side elevation and of the plan), `depthM` along world z (lateral: paper x of the front elevation, paper up of the plan; the left-right width of an object drawn in side elevation). */
 export type Dimensions = { readonly heightM: number; readonly widthM: number; readonly depthM: number; readonly massKg: number };
 
@@ -684,6 +752,7 @@ export type Asset = {
   readonly dimensions: Dimensions;
   readonly materials: readonly Material[];
   readonly rig: Rig;
+  readonly volume: Volume;
   readonly anchors: readonly Anchor[];
   readonly representations: Readonly<Record<RepresentationKey, Representation>>;
   readonly symbols: readonly SymbolRepresentation[];

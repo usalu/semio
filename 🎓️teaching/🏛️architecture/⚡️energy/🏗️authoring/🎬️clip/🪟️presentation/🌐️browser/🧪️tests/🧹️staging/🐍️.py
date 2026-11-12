@@ -17,7 +17,7 @@ class StagingMembership(unittest.TestCase):
     def test_membership_matches_tailwind_and_preserves_authored_hidden_sources(self):
         """📂 Generated staging does not enter CSS inputs, while authored hidden paths remain visible."""
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             (root / ".git").mkdir()
             (root / ".gitignore").write_text(".p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/\n", encoding="utf-8")
             for name in CASES["files"]:
@@ -26,7 +26,7 @@ class StagingMembership(unittest.TestCase):
                 file.write_text("export const colour = 'text-red-500';", encoding="utf-8")
             actual = BROWSER._membership([{"base": str(root), "pattern": CASES["pattern"], "negated": False}])
             paths = sorted(Path(name).relative_to(root).as_posix() for name in actual)
-            oracle = subprocess.run(["repo", "tools", "exec", "--light", "node", "--", str(Path(__file__).with_name("🟨️.cjs")), str(root), CASES["pattern"]], cwd=ROOT, text=True, capture_output=True, check=True)
+            oracle = subprocess.run([BROWSER._repo(), "tools", "exec", "--light", "node", "--", str(Path(__file__).with_name("🟨️.cjs")), str(root), CASES["pattern"]], cwd=ROOT, text=True, capture_output=True, check=True)
             self.assertEqual(paths, sorted(CASES["expected"]))
             self.assertEqual(paths, json.loads(oracle.stdout))
 

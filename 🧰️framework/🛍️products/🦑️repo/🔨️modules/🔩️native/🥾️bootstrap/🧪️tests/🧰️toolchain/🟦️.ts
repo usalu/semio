@@ -21,6 +21,21 @@ if (!output) throw Error("Bootstrap toolchain tests require SEMIO_TEST_ARTIFACT_
 const generated = resolve(output, `bt-${process.pid}`);
 mkdirSync(generated, { recursive: true });
 const body = (name: string, next: string) => bootstrap.slice(bootstrap.indexOf(name + "() {"), bootstrap.indexOf(next + "() {"));
+const linuxHost = (name: string): string => {
+  const directory = join(generated, name);
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(join(directory, "uname"), '#!/bin/sh\n[ "$1" = "-s" ] && { echo Linux; exit 0; }\nexec /usr/bin/uname "$@"\n', { mode: 0o755 });
+  return directory;
+};
+const withoutCompilers = (name: string, tools: readonly string[]): string => {
+  const directory = join(generated, name);
+  mkdirSync(directory, { recursive: true });
+  for (const tool of tools) {
+    const source = ["/usr/bin", "/bin"].map((base) => join(base, tool)).find((candidate) => existsSync(candidate));
+    if (source !== undefined && !existsSync(join(directory, tool))) symlinkSync(source, join(directory, tool));
+  }
+  return directory;
+};
 const execute = (script: string, env: Record<string, string> = {}) => spawnSync("bash", ["-c", script], { encoding: "utf8", env: { ...process.env, ...env } });
 
 test.skipIf(process.platform !== "win32")("pinned downloads verify independent SHA256 vectors without optional PowerShell cmdlets", () => {
@@ -396,7 +411,7 @@ test("Linux session persistence keeps the Playwright cache inside the checkout",
   expect(end).toBeGreaterThan(start);
   const home = join(generated, "session-home"), repo = join(generated, "session-repo");
   mkdirSync(home, {recursive: true});
-  const result = execute(bootstrap.slice(start, end) + "\npersist_linux_session\n", {HOME: home, XDG_CONFIG_HOME: join(home, "config"), REPO_ROOT: repo, CMAKE_PRESET: ""});
+  const result = execute(bootstrap.slice(start, end) + "\npersist_linux_session\n", {HOME: home, XDG_CONFIG_HOME: join(home, "config"), REPO_ROOT: repo, CMAKE_PRESET: "", PATH: `${linuxHost("session-host")}:${process.env.PATH}`});
   expect(result.status, result.stderr).toBe(0);
   const file = readFileSync(join(home, "config", "environment.d", "semio.conf"), "utf8");
   const playwright = `${repo}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright`;
@@ -405,7 +420,7 @@ test("Linux session persistence keeps the Playwright cache inside the checkout",
   expect(file).toContain("DOTNET_CLI_TELEMETRY_OPTOUT=1");
   expect(existsSync(playwright)).toBe(true);
   expect(file.includes("/home/deck")).toBe(false);
-  expect(file.includes("/Users/")).toBe(false);
+  expect(file.replaceAll(repo, "").includes("/Users/")).toBe(false);
 });
 
 test("user-local Zig wrappers target host glibc unless a target is already set", () => {
@@ -419,7 +434,7 @@ host_pin() { printf '%s\\n' '{"version":"0.14.1"}'; }
 pin_field() { printf '%s\\n' 0.14.1; }
 ensure_user_cc
 `;
-  const result = execute(script, {HOME: home, XDG_DATA_HOME: data, LOCAL_BIN: bin, PATH: "/usr/bin:/bin", SEMIO_TEST_ZIG_ARGS: recorded});
+  const result = execute(script, {HOME: home, XDG_DATA_HOME: data, LOCAL_BIN: bin, PATH: `${linuxHost("zig-host")}:${withoutCompilers("zig-tools", ["cat", "mkdir", "ln", "chmod", "rm", "mktemp", "sed", "awk", "grep", "dirname", "basename", "tr", "cp", "mv", "head", "tail", "sh", "bash", "env", "printf", "wc", "sort", "cut"])}`, SEMIO_TEST_ZIG_ARGS: recorded});
   expect(result.status, result.stderr).toBe(0);
   const machine = spawnSync("uname", ["-m"], {encoding: "utf8"}).stdout.trim();
   const triple = machine === "x86_64" || machine === "amd64" ? "x86_64-linux-gnu" : machine === "aarch64" || machine === "arm64" ? "aarch64-linux-gnu" : "";
@@ -442,11 +457,11 @@ ensure_user_cc
   expect(readFileSync(wrapper, "utf8")).toContain("# kept");
   expect(readlinkSync(join(bin, "zig"))).toBe(zig);
 
-  const plain = spawnSync(wrapper, ["-dumpmachine"], {encoding: "utf8", env: {...process.env, SEMIO_TEST_ZIG_ARGS: recorded}});
+  const plain = spawnSync(wrapper, ["-dumpmachine"], {encoding: "utf8", env: {...process.env, PATH: `${linuxHost("zig-host")}:${process.env.PATH}`, SEMIO_TEST_ZIG_ARGS: recorded}});
   expect(plain.status, plain.stderr).toBe(0);
   const plainArgs = readFileSync(recorded, "utf8").trim().split("\n");
   if (triple) expect(plainArgs.slice(0, 3)).toEqual(["c++", "-target", triple]);
-  const explicit = spawnSync(wrapper, ["-target", "aarch64-linux-musl", "-dumpmachine"], {encoding: "utf8", env: {...process.env, SEMIO_TEST_ZIG_ARGS: recorded}});
+  const explicit = spawnSync(wrapper, ["-target", "aarch64-linux-musl", "-dumpmachine"], {encoding: "utf8", env: {...process.env, PATH: `${linuxHost("zig-host")}:${process.env.PATH}`, SEMIO_TEST_ZIG_ARGS: recorded}});
   expect(explicit.status, explicit.stderr).toBe(0);
   expect(readFileSync(recorded, "utf8").trim().split("\n")).toEqual(["c++", "-target", "aarch64-linux-musl", "-dumpmachine"]);
 });

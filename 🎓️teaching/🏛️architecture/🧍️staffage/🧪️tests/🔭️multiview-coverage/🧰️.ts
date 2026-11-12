@@ -11,7 +11,7 @@
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { CATEGORIES, SCALE_DENOMINATORS, VIEWPOINTS, type Alternative, type Asset, type AssetDocument, type AuthoredRepresentation, type Language, type SymbolRepresentation, type Viewpoint } from "../../🧬️schema/🟦️.ts";
+import { CATEGORIES, SCALE_DENOMINATORS, PLANAR_VIEWPOINTS, type Alternative, type Asset, type AssetDocument, type AuthoredRepresentation, type Language, type SymbolRepresentation, type PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import { VIEWS, type DrawingScene, type EvaluatedShape, type EvaluatedState, type EvaluationQuery, type RepresentationSelector, type View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, textlessDepictionOptions } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
@@ -21,8 +21,8 @@ import { STAFFAGE_ROOT } from "../🧰️support/🧰️.ts";
 import { derivedFlags } from "./🪞️derived.ts";
 import { anchorLandmarks, boneSync } from "./⚓️landmarks.ts";
 
-/** 🔭️ The three supported viewpoints: the side (elevation), the front and the top (plan). */
-export const VIEWPOINT_LIST: readonly Viewpoint[] = VIEWPOINTS;
+/** 👁️ The three supported viewpoints: the side (elevation), the front and the top (plan). */
+export const VIEWPOINT_LIST: readonly PlanarViewpoint[] = PLANAR_VIEWPOINTS;
 
 /** 🎨️ The seven modes. */
 export const MODE_LIST: readonly View[] = VIEWS;
@@ -46,7 +46,7 @@ export type Cell = {
   readonly scale: string;
   readonly scaleKind: ScaleKind;
   readonly requested: number | null;
-  readonly view: Viewpoint;
+  readonly view: PlanarViewpoint;
   readonly mode: View;
   readonly status: Status;
   readonly checked: number;
@@ -65,28 +65,28 @@ export type Subject = { readonly id: string; readonly query: EvaluationQuery; re
 /** 📏️ The extent of drawn shapes. */
 export type Extent = { readonly minX: number; readonly maxX: number; readonly minY: number; readonly maxY: number };
 
-/** 🔢️ The count of uniform intermediate instants per clip, and per clip longer than {@link LONG_CLIP_S}. */
+/** 📤️ The count of uniform intermediate instants per clip, and per clip longer than {@link LONG_CLIP_S}. */
 export const UNIFORM_INSTANTS = 8;
 
 /** ⏳️ The duration above which a clip counts as long and is sampled at {@link LONG_UNIFORM_INSTANTS} uniform instants. */
 export const LONG_CLIP_S = 600;
 
-/** 🔢️ The uniform instants of a long clip. */
+/** 📝️ The uniform instants of a long clip. */
 export const LONG_UNIFORM_INSTANTS = 16;
 
 /** 🌍️ The languages rendered at poses and at the start, key, extreme and end instants; the other instants render English. */
 export const LANGUAGES: readonly Language[] = ["en", "de"];
 
-/** 🎨️ The representative modes rendered at the cheaper instants (uniform, mid, transitions): one line mode, the thermal and the moments mode. */
+/** 🌡️ The representative modes rendered at the cheaper instants (uniform, mid, transitions): one line mode, the thermal and the moments mode. */
 export const SAMPLED_MODES: readonly View[] = ["light-line", "thermal", "moments"];
 
-/** 🔢️ The probes of the extreme scan of a clip. */
+/** 📦️ The probes of the extreme scan of a clip. */
 export const EXTREME_PROBES = 48;
 
 /** 🎯️ The D18 tolerance of a dimension: the larger of 15 mm and 2 % of it. */
 export const d18 = (nominalM: number): number => Math.max(0.015, 0.02 * nominalM);
 
-/** 🎯️ The D18 tolerance of the synchrony checks: D18 of the largest dimension of the asset. */
+/** 💾️ The D18 tolerance of the synchrony checks: D18 of the largest dimension of the asset. */
 export const toleranceM = (asset: Asset): number => d18(Math.max(asset.dimensions.heightM, asset.dimensions.widthM, asset.dimensions.depthM));
 
 /** 🗂️ The catalog asset documents in id order, without validating them. */
@@ -109,7 +109,7 @@ export function extentOf(shapes: readonly EvaluatedShape[]): Extent | undefined 
   return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
 }
 
-/** 📏️ The bounding box in paper millimetres of the path items of a scene whose id is in `ids` (all path items of the body layers when `ids` is undefined). */
+/** 🪜️ The bounding box in paper millimetres of the path items of a scene whose id is in `ids` (all path items of the body layers when `ids` is undefined). */
 export function sceneBox(scene: DrawingScene, ids?: ReadonlySet<string>): Extent | undefined {
   const xs: number[] = [];
   const ys: number[] = [];
@@ -128,12 +128,12 @@ export function sceneBox(scene: DrawingScene, ids?: ReadonlySet<string>): Extent
 }
 
 /** 🔑️ The key of a cell. */
-export const cellKey = (asset: string, scale: string, view: Viewpoint, mode: View): string => `${asset}|${scale}|${view}|${mode}`;
+export const cellKey = (asset: string, scale: string, view: PlanarViewpoint, mode: View): string => `${asset}|${scale}|${view}|${mode}`;
 
 /** 🧭️ One scale entry of an asset's matrix. */
 export type ScaleEntry = { readonly scale: string; readonly kind: ScaleKind; readonly requested: number | null; readonly representation: string };
 
-/** 🔢️ The scale entries of an asset: every preset and every declared key, plus the edges of the valid range of every authored representation; alternatives follow their unavailable entry. */
+/** ✅️ The scale entries of an asset: every preset and every declared key, plus the edges of the valid range of every authored representation; alternatives follow their unavailable entry. */
 export function scaleEntries(asset: Asset): ScaleEntry[] {
   const keys = [...new Set([...PRESET_KEYS, ...Object.keys(asset.representations)])].sort((a, b) => Number(b) - Number(a));
   const entries: ScaleEntry[] = [];
@@ -158,7 +158,7 @@ export function universe(assets: readonly Asset[]): string[] {
   return assets.flatMap((asset) => scaleEntries(asset).flatMap((entry) => VIEWPOINT_LIST.flatMap((view) => MODE_LIST.map((mode) => cellKey(asset.id, entry.scale, view, mode)))));
 }
 
-/** ⏱️ The sampled instants of a clip: start, every keyframe, the middle of every key interval, the extremes of the extents (`probe` maps a time to the extents of the three views and the rig bounds), `UNIFORM_INSTANTS` uniform intermediates and the end. Looping clips wrap, non-looping ones stay inside. */
+/** 🗺️ The sampled instants of a clip: start, every keyframe, the middle of every key interval, the extremes of the extents (`probe` maps a time to the extents of the three views and the rig bounds), `UNIFORM_INSTANTS` uniform intermediates and the end. Looping clips wrap, non-looping ones stay inside. */
 export function clipInstants(asset: Asset, clipId: string, probe?: (t: number) => readonly number[] | undefined): Instant[] {
   const clip = asset.clips.find((candidate) => candidate.id === clipId)!;
   const last = clip.loop ? clip.durationS : clip.durationS * 0.999;
@@ -241,10 +241,10 @@ export function transitionPairs(asset: Asset): (readonly [string, string])[] {
   return pairs;
 }
 
-/** ⏱️ The fractions of a transition that are sampled. */
+/** 🖨️ The fractions of a transition that are sampled. */
 export const TRANSITION_FRACTIONS: readonly number[] = [0, 0.25, 0.5, 0.75, 1];
 
-/** ▶️ Every pose, clip instant and transition instant of an asset as subjects; the seven modes render at poses and at the start, key, extreme and end instants, the sampled modes elsewhere. */
+/** 🖱️ Every pose, clip instant and transition instant of an asset as subjects; the seven modes render at poses and at the start, key, extreme and end instants, the sampled modes elsewhere. */
 export function subjects(asset: Asset, requested: number): Subject[] {
   const poses: Subject[] = asset.poses.map((pose) => ({ id: `pose ${pose.id}`, query: { kind: "pose", pose: pose.id }, isDefault: pose.id === asset.presentation.defaultPose, modes: MODE_LIST, languages: LANGUAGES }));
   const probeScale = scaleSelector(requested);
@@ -265,15 +265,15 @@ export function subjects(asset: Asset, requested: number): Subject[] {
 class Collector {
   readonly cells = new Map<string, { checked: number; failures: Map<string, { count: number; first: { subject: string; message: string }[]; worst?: { deltaMm: number; subject: string; pair: string }; byKey?: Record<string, { deltaMm: number; subject: string }> }> }>();
 
-  constructor(private readonly keyOf: (view: Viewpoint, mode: View) => string) {
+  constructor(private readonly keyOf: (view: PlanarViewpoint, mode: View) => string) {
     for (const view of VIEWPOINT_LIST) for (const mode of MODE_LIST) this.cells.set(keyOf(view, mode), { checked: 0, failures: new Map() });
   }
 
-  checked(views: readonly Viewpoint[], modes: readonly View[] = MODE_LIST): void {
+  checked(views: readonly PlanarViewpoint[], modes: readonly View[] = MODE_LIST): void {
     for (const view of views) for (const mode of modes) this.cells.get(this.keyOf(view, mode))!.checked++;
   }
 
-  fail(views: readonly Viewpoint[], modes: readonly View[], check: string, subject: string, message: string, delta?: { readonly deltaMm: number; readonly pair: string }): void {
+  fail(views: readonly PlanarViewpoint[], modes: readonly View[], check: string, subject: string, message: string, delta?: { readonly deltaMm: number; readonly pair: string }): void {
     for (const view of views)
       for (const mode of modes) {
         const cell = this.cells.get(this.keyOf(view, mode))!;
@@ -297,14 +297,14 @@ const messageOf = (error: unknown): string => (error instanceof Error ? error.me
 
 function checkGeometry(asset: Asset, subject: Subject, state: EvaluatedState, collector: Collector): void {
   const tolerance = toleranceM(asset);
-  const extents = Object.fromEntries(VIEWPOINT_LIST.map((view) => [view, extentOf(state.shapes[view])])) as Record<Viewpoint, Extent | undefined>;
+  const extents = Object.fromEntries(VIEWPOINT_LIST.map((view) => [view, extentOf(state.shapes[view])])) as Record<PlanarViewpoint, Extent | undefined>;
   for (const view of VIEWPOINT_LIST) {
     const extent = extents[view];
     if (extent === undefined) collector.fail([view], MODE_LIST, `${view}-empty`, subject.id, `${view} evaluates to no geometry`);
     else if (!finite(extent)) collector.fail([view], MODE_LIST, `${view}-bounds`, subject.id, `${view} has non-finite bounds ${JSON.stringify(extent)}`);
   }
   const { elevation: e, front: f, plan: p } = extents;
-  const agree = (check: string, views: readonly Viewpoint[], label: string, a: readonly [number, number], b: readonly [number, number]): void => {
+  const agree = (check: string, views: readonly PlanarViewpoint[], label: string, a: readonly [number, number], b: readonly [number, number]): void => {
     const delta = Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]));
     if (!(delta <= tolerance)) collector.fail(views, MODE_LIST, check, subject.id, `${label} differ: [${a[0].toFixed(3)}, ${a[1].toFixed(3)}] vs [${b[0].toFixed(3)}, ${b[1].toFixed(3)}] m (tolerance ${tolerance.toFixed(3)})`, { deltaMm: delta * 1000, pair: views.join("/") });
   };
@@ -312,12 +312,12 @@ function checkGeometry(asset: Asset, subject: Subject, state: EvaluatedState, co
   if (e && f) agree("sync-height", ["elevation", "front"], "elevation y and front y", [e.minY, e.maxY], [f.minY, f.maxY]);
   if (f && p) agree("sync-lateral", ["front", "plan"], "front x and plan y", [f.minX, f.maxX], [p.minY, p.maxY]);
   for (const finding of boneSync(state, tolerance)) {
-    const [a, b] = finding.pair.split("/") as [Viewpoint, Viewpoint];
+    const [a, b] = finding.pair.split("/") as [PlanarViewpoint, PlanarViewpoint];
     collector.fail([a, b], MODE_LIST, finding.check, subject.id, finding.message, { deltaMm: finding.deltaMm, pair: `${finding.pair} ${finding.bone}` });
   }
   for (const finding of anchorLandmarks(state, tolerance)) collector.fail([finding.view], MODE_LIST, "anchor-landmark", subject.id, finding.message, { deltaMm: finding.deltaMm, pair: `${finding.view} ${finding.anchor}` });
   if (!subject.isDefault) return;
-  const size = (check: string, view: Viewpoint, label: string, measured: number, nominal: number): void => {
+  const size = (check: string, view: PlanarViewpoint, label: string, measured: number, nominal: number): void => {
     if (!(Math.abs(measured - nominal) <= d18(nominal))) collector.fail([view], MODE_LIST, check, subject.id, `${label} is ${measured.toFixed(3)} m but the dimensions say ${nominal.toFixed(3)} m`, { deltaMm: Math.abs(measured - nominal) * 1000, pair: `${view} vs dimensions` });
   };
   const d = asset.dimensions;
@@ -336,7 +336,7 @@ function checkGeometry(asset: Asset, subject: Subject, state: EvaluatedState, co
 }
 
 /** 🕳️ Why a scene draws none of the shapes of a view: per shape its role, pen and filled flag, then the reason class (`zero-pen`, `degenerate`, `occluded-or-unexplained`). */
-export function blankReason(state: EvaluatedState, view: Viewpoint, mode: View): string {
+export function blankReason(state: EvaluatedState, view: PlanarViewpoint, mode: View): string {
   const rep = state.representation.kind === "scale" ? state.asset.representations[`${state.representation.denominator}` as keyof Asset["representations"]] : undefined;
   const pens = rep?.status === "authored" ? (rep.pens as unknown as Record<string, number | null>) : undefined;
   const lines = state.shapes[view]
@@ -352,7 +352,7 @@ export function blankReason(state: EvaluatedState, view: Viewpoint, mode: View):
   return `${mode}: ${lines.length} shapes: ${lines.slice(0, 6).join("; ")}`;
 }
 
-function checkScene(asset: Asset, subject: Subject, state: EvaluatedState, view: Viewpoint, mode: View, scene: DrawingScene, requested: number, collector: Collector): void {
+function checkScene(asset: Asset, subject: Subject, state: EvaluatedState, view: PlanarViewpoint, mode: View, scene: DrawingScene, requested: number, collector: Collector): void {
   const fail = (check: string, message: string): void => collector.fail([view], [mode], check, subject.id, message);
   const m = scene.metadata;
   if (m.viewpoint !== view) fail("scene-viewpoint", `scene is the ${m.viewpoint} viewpoint`);
@@ -446,7 +446,7 @@ function toCells(asset: Asset, entry: ScaleEntry, collector: Collector, reason?:
   );
 }
 
-const cellKeyOf = (view: Viewpoint, mode: View, asset: Asset, entry: ScaleEntry): string => cellKey(asset.id, entry.scale, view, mode);
+const cellKeyOf = (view: PlanarViewpoint, mode: View, asset: Asset, entry: ScaleEntry): string => cellKey(asset.id, entry.scale, view, mode);
 const collectorOf = (asset: Asset, entry: ScaleEntry): Collector => new Collector((view, mode) => cellKeyOf(view, mode, asset, entry));
 
 const filled = (text: { readonly en: string; readonly de: string } | undefined): boolean => text !== undefined && text.en.trim().length > 0 && text.de.trim().length > 0;
@@ -497,8 +497,8 @@ function runAuthored(asset: Asset, entry: ScaleEntry): Collector {
   return collector;
 }
 
-/** 🧾️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason. */
-export type DerivedAllowance = { readonly asset: string; readonly view: Viewpoint; readonly reason: string };
+/** 📷️ One allowlisted symmetric view: the asset, the viewpoint and the physical reason. */
+export type DerivedAllowance = { readonly asset: string; readonly view: PlanarViewpoint; readonly reason: string };
 
 /** 📜️ The allowlist of genuinely symmetric bodies, read from the fixture of the vectors. */
 export function derivedAllowlist(): readonly DerivedAllowance[] {
@@ -608,14 +608,14 @@ function okAll(asset: Asset, entry: ScaleEntry): Collector {
   return collector;
 }
 
-/** 🧩️ The result of the matrix: every universe cell exactly once, missing ones as `cell-missing` failures. */
+/** 🚨️ The result of the matrix: every universe cell exactly once, missing ones as `cell-missing` failures. */
 export function assemble(assets: readonly Asset[], produced: readonly Cell[]): Cell[] {
   const byKey = new Map(produced.map((cell) => [cellKey(cell.asset, cell.scale, cell.view, cell.mode), cell]));
   const byId = new Map(assets.map((asset) => [asset.id, asset]));
   return universe(assets).map((key) => {
     const found = byKey.get(key);
     if (found !== undefined) return found;
-    const [assetId, scale, view, mode] = key.split("|") as [string, string, Viewpoint, View];
+    const [assetId, scale, view, mode] = key.split("|") as [string, string, PlanarViewpoint, View];
     const asset = byId.get(assetId)!;
     return { asset: assetId, category: asset.category, scale, scaleKind: "preset" as const, requested: null, view, mode, status: "fail" as const, checked: 0, failures: { "cell-missing": { count: 1, first: [{ subject: key, message: "no runner produced this cell" }] } } };
   });
@@ -630,11 +630,11 @@ export function buildMatrix(assets: readonly Asset[], catalogAssets: readonly As
 /** 📊️ The counts of one group of cells. */
 export type Counts = { ok: number; unavailable: number; "range-end": number; "group-drift": number; fail: number };
 
-/** 📊️ Counts by category, then by viewpoint, and the failing checks by number of cells. */
-export function summarise(cells: readonly Cell[]): { total: Counts; byCategory: Record<string, { total: Counts; byView: Record<Viewpoint, Counts>; assets: number; failingAssets: number }>; checks: Record<string, number> } {
+/** 🛑️ Counts by category, then by viewpoint, and the failing checks by number of cells. */
+export function summarise(cells: readonly Cell[]): { total: Counts; byCategory: Record<string, { total: Counts; byView: Record<PlanarViewpoint, Counts>; assets: number; failingAssets: number }>; checks: Record<string, number> } {
   const zero = (): Counts => ({ ok: 0, unavailable: 0, "range-end": 0, "group-drift": 0, fail: 0 });
   const total = zero();
-  const byCategory: Record<string, { total: Counts; byView: Record<Viewpoint, Counts>; assets: number; failingAssets: number }> = {};
+  const byCategory: Record<string, { total: Counts; byView: Record<PlanarViewpoint, Counts>; assets: number; failingAssets: number }> = {};
   const checks: Record<string, number> = {};
   const assetsIn = new Map<string, Set<string>>();
   const failingIn = new Map<string, Set<string>>();
@@ -654,7 +654,7 @@ export function summarise(cells: readonly Cell[]): { total: Counts; byCategory: 
   return { total, byCategory, checks: Object.fromEntries(Object.entries(checks).sort((a, b) => b[1] - a[1])) };
 }
 
-/** 🏷️ The categories in schema order. */
+/** 📥️ The categories in schema order. */
 export const CATEGORY_ORDER: readonly string[] = CATEGORIES;
 
 /** 🔖️ The authored representation of a scale key, or undefined. */

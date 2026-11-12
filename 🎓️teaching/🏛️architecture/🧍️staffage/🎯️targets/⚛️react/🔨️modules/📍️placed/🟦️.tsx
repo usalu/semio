@@ -8,7 +8,7 @@
  * @see ../⏱️clock/🟦️.ts — the clock figures follow
  */
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactElement } from "react";
-import type { Asset, DisplayRange, EvaluationQuery, Language, View, Viewpoint } from "@teaching/staffage";
+import type { Asset, DisplayRange, EvaluationQuery, Language, View, PlanarViewpoint } from "@teaching/staffage";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
 import { defaultQuery, depictionOptions, evaluateState, inlineSvg, sceneOf } from "../🧮️pipeline/🟦️.ts";
 import type { Selection } from "../💾️persistence/🟦️.ts";
@@ -29,14 +29,14 @@ export function travelledM(asset: Asset, query: EvaluationQuery): number {
   return Math.floor(query.timeS / clip.durationS) * clip.advanceM;
 }
 
-/** 📍️ The props of {@link PlacedFigure}. */
+/** 📤️ The props of {@link PlacedFigure}. */
 export type PlacedFigureProps = {
   readonly asset: Asset;
   readonly selection: Selection | null;
   readonly clock: StaffageClock;
   readonly offsetS?: number;
   readonly view: View;
-  readonly viewpoint: Viewpoint;
+  readonly viewpoint: PlanarViewpoint;
   readonly scale: number;
   readonly language: Language;
   readonly pxPerMm: number;
@@ -68,7 +68,7 @@ function useHeldFrame(clock: StaffageClock, active: boolean): number | null {
   return useSyncExternalStore(clock.subscribe, snapshot, snapshot);
 }
 
-/** 📍️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. */
+/** 📦️ Draws one figure with its ground point at (`xPx`, `groundPx`) of the positioned parent. */
 export function PlacedFigure(props: PlacedFigureProps): ReactElement | null {
   const { asset, selection, clock, offsetS = 0, view, viewpoint, scale, language, pxPerMm, xPx, groundPx, mirrored: mirroredRequest = false, travel, className, label, style } = props;
   const mirrored = mirroredRequest && viewpoint === "elevation";

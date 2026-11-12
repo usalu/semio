@@ -6,6 +6,7 @@
  */
 import type { Environment } from "../../../🧬️schema/🟦️.ts";
 import type { EnvironmentTimeline } from "../../🔗️contracts/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🌤️ A constant environment or a timeline. */
 export type EnvironmentInput = Environment | EnvironmentTimeline;
@@ -17,9 +18,9 @@ function blend(a: Environment, b: Environment, f: number): Environment {
   const lerp = (x: number, y: number): number => x + (y - x) * f;
   const opt = (x: number | undefined, y: number | undefined): number | undefined => (x === undefined && y === undefined ? undefined : lerp(x ?? y!, y ?? x!));
   const rad = (d: number): number => (d * Math.PI) / 180;
-  const wx = lerp(a.windMS * Math.cos(rad(a.windDirectionDeg)), b.windMS * Math.cos(rad(b.windDirectionDeg)));
-  const wz = lerp(a.windMS * Math.sin(rad(a.windDirectionDeg)), b.windMS * Math.sin(rad(b.windDirectionDeg)));
-  const speed = Math.hypot(wx, wz);
+  const wx = lerp(a.windMS * portable.cos(rad(a.windDirectionDeg)), b.windMS * portable.cos(rad(b.windDirectionDeg)));
+  const wz = lerp(a.windMS * portable.sin(rad(a.windDirectionDeg)), b.windMS * portable.sin(rad(b.windDirectionDeg)));
+  const speed = portable.hypot(wx, wz);
   const sky = opt(a.skyTempC, b.skyTempC);
   const ground = opt(a.groundTempC, b.groundTempC);
   return {
@@ -29,7 +30,7 @@ function blend(a: Environment, b: Environment, f: number): Environment {
     ...(ground === undefined ? {} : { groundTempC: ground }),
     relativeHumidity: lerp(a.relativeHumidity, b.relativeHumidity),
     windMS: speed,
-    windDirectionDeg: speed === 0 ? a.windDirectionDeg : (Math.atan2(wz, wx) * 180) / Math.PI,
+    windDirectionDeg: speed === 0 ? a.windDirectionDeg : (portable.atan2(wz, wx) * 180) / Math.PI,
     solarWM2: lerp(a.solarWM2, b.solarWM2),
     diffuseFraction: lerp(a.diffuseFraction, b.diffuseFraction),
     pressurePa: lerp(a.pressurePa, b.pressurePa),

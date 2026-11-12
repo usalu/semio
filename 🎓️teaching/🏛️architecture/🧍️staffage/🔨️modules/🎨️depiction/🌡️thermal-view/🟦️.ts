@@ -15,11 +15,11 @@
  * @see ../../🌡️thermal/🟦️.ts — `solveThermal`, `QUANTITY_SPECS`, `radiationSplit`
  * @see ../../🔗️contracts/🟦️.ts — {@link ThermalField}
  */
-import type { Slug, Text } from "../../../🧬️schema/🟦️.ts";
+import type { Asset, Slug, Text } from "../../../🧬️schema/🟦️.ts";
 import { QUANTITY_SPECS, areaWeighted, radiationSplit } from "../../🌡️thermal/🟦️.ts";
-import type { DisplayRange, Fill, Legend, ThermalField } from "../../🔗️contracts/🟦️.ts";
+import type { DisplayRange, Fill, Legend, ThermalField, ThermalQuantity } from "../../🔗️contracts/🟦️.ts";
 import { type Ctx } from "../🧱️canvas/🟦️.ts";
-import { type Scale, divergingColour, legendOf, scaleOf, toneColour, tx } from "../🖍️palette/🟦️.ts";
+import { type Scale, type Theme, divergingColour, legendOf, scaleOf, toneColour, tx } from "../🖍️palette/🟦️.ts";
 import { type AnalyticView, type Prepared, type Style, outlineRuns, regionsOf } from "../🧩️shapes/🟦️.ts";
 import { commandsOf } from "../📐️geometry/🟦️.ts";
 
@@ -57,27 +57,36 @@ function rangeNote(display: DisplayRange, scale: Scale, unit: string): Text {
   }
 }
 
-/** 🟥️ Builds the thermal view: shape styles, open-stroke halos and the legend of the requested quantity. */
-export function thermalView(ctx: Ctx, shapes: readonly Prepared[], field: ThermalField): AnalyticView {
-  const { options, state, theme } = ctx;
-  const asset = state.asset;
-  const spec = QUANTITY_SPECS[options.thermalQuantity];
+/** 🎨️ The value-to-colour mapping of a thermal view, shared by every depiction of the same field (the 2D views and the 3D model): the quantity spec, the centre, the display range actually applied (`span` exists for surface temperature only, every other quantity falls back to `shared`), the scale, the value of a region and of a merged set of regions (area-weighted) and the diverging colour of a value (warm above the centre). */
+export type ThermalPaint = { readonly spec: (typeof QUANTITY_SPECS)[ThermalQuantity]; readonly centre: number; readonly display: DisplayRange; readonly scale: Scale; readonly regionValue: (id: Slug) => number | undefined; readonly valueOf: (ids: readonly Slug[]) => number | undefined; readonly colourOf: (value: number) => string };
+
+/** 🖍️ The {@link ThermalPaint} of a solved field: the single source of the thermal ramp, range and centre of the 2D thermal view and the 3D model. */
+export function thermalPaint(asset: Asset, field: ThermalField, quantity: ThermalQuantity, range: DisplayRange, theme: Theme): ThermalPaint {
+  const spec = QUANTITY_SPECS[quantity];
   const centre = spec.centre(field.environment);
   const regionValue = (id: Slug): number | undefined => {
     const f = field.regions[id];
     if (!f) return undefined;
-    return spec.pick(f) ?? (options.thermalQuantity === "skin-temperature" ? f.surfaceTempC : undefined);
+    return spec.pick(f) ?? (quantity === "skin-temperature" ? f.surfaceTempC : undefined);
   };
-  const valueOfShape = (p: Prepared): number | undefined => areaWeighted(asset.thermal.regions, field, regionsOf(p.shape), options.thermalQuantity) ?? undefined;
+  const display: DisplayRange = range.mode === "span" && quantity !== "surface-temperature" ? { mode: "shared" } : range;
+  const fieldValues = asset.thermal.regions.flatMap((region) => regionValue(region.id) ?? []);
+  const scale: Scale = scaleOf(fieldValues, centre, display, spec.quantity.endsWith("temperature") ? 1 : 10, spec.shared);
+  return { spec, centre, display, scale, regionValue, valueOf: (ids) => areaWeighted(asset.thermal.regions, field, ids, quantity) ?? undefined, colourOf: (value) => divergingColour(value, scale, true, theme) };
+}
+
+/** 🟥️ Builds the thermal view: shape styles, open-stroke halos and the legend of the requested quantity. */
+export function thermalView(ctx: Ctx, shapes: readonly Prepared[], field: ThermalField): AnalyticView {
+  const { options, state, theme } = ctx;
+  const asset = state.asset;
+  const { spec, centre, display, scale, regionValue, valueOf, colourOf } = thermalPaint(asset, field, options.thermalQuantity, options.range, theme);
+  const valueOfShape = (p: Prepared): number | undefined => valueOf(regionsOf(p.shape));
   const painted = shapes.filter((p) => regionsOf(p.shape).length > 0 && (p.closed ? p.shape.filled : true));
   const values = new Map<string, number>();
   for (const p of painted) {
     const v = valueOfShape(p);
     if (v !== undefined) values.set(p.shape.id, v);
   }
-  const display: DisplayRange = options.range.mode === "span" && options.thermalQuantity !== "surface-temperature" ? { mode: "shared" } : options.range;
-  const fieldValues = asset.thermal.regions.flatMap((region) => regionValue(region.id) ?? []);
-  const scale: Scale = scaleOf(fieldValues, centre, display, spec.quantity.endsWith("temperature") ? 1 : 10, spec.shared);
   const mode = display.mode;
   const note = rangeNote(display, scale, spec.unit);
   const regionTitle = (id: Slug): Text => asset.thermal.regions.find((r) => r.id === id)?.title ?? tx(id, id);
@@ -94,7 +103,6 @@ export function thermalView(ctx: Ctx, shapes: readonly Prepared[], field: Therma
     if (options.thermalQuantity === "skin-temperature" && field.regions[ids[0]!]?.skinTempC === null) return tx(`${title.en} (no skin: surface temperature)`, `${title.de} (keine Haut: Oberflächentemperatur)`);
     return title;
   };
-  const colourOf = (v: number): string => divergingColour(v, scale, true, theme);
   const patternOf = (v: number): Fill["pattern"] | undefined => {
     const d = v - scale.centre;
     const span = d > 0 ? scale.max - scale.centre : scale.centre - scale.min;

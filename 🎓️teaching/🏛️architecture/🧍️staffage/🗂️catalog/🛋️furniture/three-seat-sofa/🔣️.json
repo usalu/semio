@@ -842,7 +842,7 @@
               "material": "upholstery-fabric"
             },
             {
-              "id": "back-seam-0.73",
+              "id": "back-seam-0-73",
               "bone": "frame",
               "role": "detail",
               "z": 3.5,
@@ -863,7 +863,7 @@
               "region": "back-cushions"
             },
             {
-              "id": "back-seam-1.27",
+              "id": "back-seam-1-27",
               "bone": "frame",
               "role": "detail",
               "z": 3.5,
@@ -1184,7 +1184,7 @@
               "r": 0.04
             },
             {
-              "id": "back-seam-0.7333",
+              "id": "back-seam-0-7333",
               "bone": "frame",
               "role": "detail",
               "z": 3.5,
@@ -1205,7 +1205,7 @@
               "closed": false
             },
             {
-              "id": "back-seam-1.2667",
+              "id": "back-seam-1-2667",
               "bone": "frame",
               "role": "detail",
               "z": 3.5,
@@ -4615,6 +4615,245 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "arm-l",
+          "kind": "box",
+          "bone": "arm-left",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.5,
+          "region": "arm-pads",
+          "size": [0.2, 0.52, 0.9],
+          "cornerRadius": 0.09,
+          "transform": {
+            "translation": [0.1, 0.26, 0.0]
+          }
+        },
+        {
+          "id": "arm-r",
+          "kind": "box",
+          "bone": "arm-right",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.5,
+          "region": "arm-pads",
+          "size": [0.2, 0.52, 0.9],
+          "cornerRadius": 0.09,
+          "transform": {
+            "translation": [0.1, 0.26, 0.0]
+          }
+        },
+        {
+          "id": "seat-1",
+          "kind": "box",
+          "bone": "seat-1",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.72,
+          "region": "seat-cushions",
+          "size": [0.5433, 0.23, 0.62],
+          "cornerRadius": 0.04,
+          "transform": {
+            "translation": [0.27165, 0.095, -0.11]
+          }
+        },
+        {
+          "id": "back-1",
+          "kind": "extrude",
+          "bone": "back-1",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.62,
+          "region": "back-cushions",
+          "profile": [
+            [0.0, 0.19],
+            [0.0, 0.44],
+            [0.6, 0.45],
+            [0.62187, 0.44688],
+            [0.6375, 0.4375],
+            [0.64687, 0.42188],
+            [0.65, 0.4],
+            [0.65, 0.34],
+            [0.64688, 0.3225],
+            [0.6375, 0.31],
+            [0.62187, 0.3025],
+            [0.6, 0.3]
+          ],
+          "plane": "yz",
+          "from": 0.0,
+          "to": 0.5433
+        },
+        {
+          "id": "seat-2",
+          "kind": "box",
+          "bone": "seat-2",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.72,
+          "region": "seat-cushions",
+          "size": [0.5334, 0.23, 0.62],
+          "cornerRadius": 0.04,
+          "transform": {
+            "translation": [0.2667, 0.095, -0.11]
+          }
+        },
+        {
+          "id": "back-2",
+          "kind": "extrude",
+          "bone": "back-2",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.62,
+          "region": "back-cushions",
+          "profile": [
+            [0.0, 0.19],
+            [0.0, 0.44],
+            [0.6, 0.45],
+            [0.62187, 0.44688],
+            [0.6375, 0.4375],
+            [0.64687, 0.42188],
+            [0.65, 0.4],
+            [0.65, 0.34],
+            [0.64688, 0.3225],
+            [0.6375, 0.31],
+            [0.62187, 0.3025],
+            [0.6, 0.3]
+          ],
+          "plane": "yz",
+          "from": 0.0,
+          "to": 0.5334
+        },
+        {
+          "id": "seat-3",
+          "kind": "box",
+          "bone": "seat-3",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.72,
+          "region": "seat-cushions",
+          "size": [0.5433, 0.23, 0.62],
+          "cornerRadius": 0.04,
+          "transform": {
+            "translation": [0.27165, 0.095, -0.11]
+          }
+        },
+        {
+          "id": "back-3",
+          "kind": "extrude",
+          "bone": "back-3",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.62,
+          "region": "back-cushions",
+          "profile": [
+            [0.0, 0.19],
+            [0.0, 0.44],
+            [0.6, 0.45],
+            [0.62187, 0.44688],
+            [0.6375, 0.4375],
+            [0.64687, 0.42188],
+            [0.65, 0.4],
+            [0.65, 0.34],
+            [0.64688, 0.3225],
+            [0.6375, 0.31],
+            [0.62187, 0.3025],
+            [0.6, 0.3]
+          ],
+          "plane": "yz",
+          "from": 0.0,
+          "to": 0.5433
+        },
+        {
+          "id": "skirt",
+          "kind": "box",
+          "bone": "frame",
+          "material": "upholstery-fabric",
+          "role": "body",
+          "tone": 0.45,
+          "region": "base-rail",
+          "size": [1.7, 0.14, 0.86],
+          "cornerRadius": 0.01,
+          "transform": {
+            "translation": [1.0, 0.17, 0.0]
+          }
+        },
+        {
+          "id": "foot-l",
+          "kind": "loft",
+          "bone": "frame",
+          "material": "beech-timber",
+          "role": "body",
+          "tone": 0.4,
+          "region": "feet",
+          "sections": [
+            {
+              "at": [0.12, 0.0, 0.36],
+              "rx": 0.025,
+              "ry": 0.025,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [0.12, 0.12, 0.36],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.72]
+          }
+        },
+        {
+          "id": "foot-r",
+          "kind": "loft",
+          "bone": "frame",
+          "material": "beech-timber",
+          "role": "body",
+          "tone": 0.4,
+          "region": "feet",
+          "sections": [
+            {
+              "at": [1.88, 0.0, 0.36],
+              "rx": 0.025,
+              "ry": 0.025,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            },
+            {
+              "at": [1.88, 0.12, 0.36],
+              "rx": 0.035,
+              "ry": 0.035,
+              "exponent": 2,
+              "rotation": [0.5, 0.5, 0.5, -0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true,
+          "repeat": {
+            "count": 2,
+            "translation": [0.0, 0.0, -0.72]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The sofa is a skirted base block on four turned, tapered beech feet (lofts from 50 to 70 mm, at z = +-0.36 and x = 0.12 and 1.88, as the elevation and front views draw them), two roll arms (boxes with 90 mm rounded edges, 0.9 m deep) and three seat cushions and three back cushions on their own prismatic bones so each sinks separately.",
+          "de": "Das Sofa ist ein Zargenblock auf vier gedrechselten, verjuengten Buchenfuessen (Lofts von 50 auf 70 mm bei z = +-0,36 und x = 0,12 und 1,88, wie Ansicht und Vorderansicht sie zeichnen), zwei Rollenarmlehnen (Boxen mit 90 mm gerundeten Kanten, 0,9 m tief) sowie drei Sitz- und drei Rueckenkissen auf eigenen Schubknochen, damit jedes einzeln einsinkt."
+        },
+        {
+          "en": "The back cushions are exact extrusions of the front-view profile (0.25 m thick at the seat, 0.15 m at the top, rounded top, reclined front face) across each cushion width; seat cushions are 0.62 m deep boxes with 40 mm rounded edges. The 2D plan rounds the vertical corners by 40 and 55 mm, the 3D back cushions keep sharp vertical edges.",
+          "de": "Die Rueckenkissen sind exakte Extrusionen des Vorderansicht-Profils (0,25 m dick am Sitz, 0,15 m oben, gerundete Oberkante, geneigte Vorderflaeche) ueber die jeweilige Kissenbreite; Sitzkissen sind 0,62 m tiefe Boxen mit 40 mm gerundeten Kanten. Der 2D-Grundriss rundet die senkrechten Ecken um 40 und 55 mm, die 3D-Rueckenkissen behalten scharfe senkrechte Kanten."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "unoccupied",
       "defaultClip": "sit-down-and-settle",
@@ -4628,7 +4867,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

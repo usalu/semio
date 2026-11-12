@@ -1677,11 +1677,17 @@ def _ramp_nominal_parts(model: dict, obj: dict) -> list:
         result.append({"outline":[[q(v)for v in p]for p in _expand(model,landing["outline"])],"z0":top-q(landing["thickness"]["value"]),"z1":top,"owner":obj["tag"],"owner_guid":obj["guid"],"tag":landing["tag"],"role":"landing","material":_material(model,obj)["tag"]})
     return result
 
-def _reference_material_parts(part: dict, cutters: list, bounds: list = (), progress=None, cancel=None) -> list:
-    """🪨 Retain exact original structural stock and physical aperture operands before publication."""
+def _reference_material_parts(part: dict, cutters: list, bounds: list = (), progress=None, cancel=None, memo: dict | None = None) -> list:
+    """🪨 Retain exact original structural stock and physical aperture operands before publication; an operation-local `memo` reuses the exact cells and planes of operands that stay alive across calls."""
     if any("csg"in p for p in [part,*cutters,*bounds]):
         return _analytic_solids_backend().reference_material_parts(_analytic_input(part),[_analytic_input(p)for p in cutters],[_analytic_input(p)for p in bounds],progress=progress,cancel=cancel)
     backend = surface_finishes()
+    def remembered(kind,item,build):
+        if memo is None:return build(item)
+        entry = memo.get((kind,id(item)))
+        if entry is None or entry[0] is not item:
+            entry = memo[(kind,id(item))] = (item,build(item))
+        return entry[1]
     def planes(cell):
         vertices = part_vertices(cell)
         for face in part_faces(cell):
@@ -1696,10 +1702,10 @@ def _reference_material_parts(part: dict, cutters: list, bounds: list = (), prog
             if max(sides)>-min(sides):normal,offset = [-v for v in normal],-offset
             yield {"normal":normal,"offset":offset,"points":[anchor,vertices[face[i]],vertices[face[i+1]]]}
     stocks = []
-    for cell in _native_material_cells(part):
+    for cell in remembered("cells",part,_native_material_cells):
         for boundary in bounds or (None,):
             stock = backend.clip_stock(cell,[],exact=True)
-            for plane in planes(boundary) if boundary else ():
+            for plane in remembered("planes",boundary,lambda item:list(planes(item))) if boundary else ():
                 stock = backend.clip_stock(stock,[plane])
                 if stock is None:break
             if stock is not None:stocks.append(stock)
@@ -1709,8 +1715,8 @@ def _reference_material_parts(part: dict, cutters: list, bounds: list = (), prog
         if progress:progress({'phase':'reference-material','completed':cutter_index,'total':len(cutters)})
         cutter_bounds = _material_bounds(cutter)
         if not all(a[0]<b[1] and b[0]<a[1] for a,b in zip(reference_bounds,cutter_bounds)):continue
-        for cell in _native_material_cells(cutter):
-            ordered = list(planes(cell))
+        for cell in remembered("cells",cutter,_native_material_cells):
+            ordered = remembered("planes",cell,lambda item:list(planes(item)))
             result = []
             for stock in stocks:
                 if cancel and cancel():raise InterruptedError('Native reference construction cancelled')
@@ -2185,7 +2191,7 @@ def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, ca
         if material is None:raise ValueError("A finish reserve requires explicit host layer material")
         host.extend(_native_material_cells({**part,"material":material,"role":part.get("role","finish")}))
     low,high=min(p["z0"]for p in parts),max(p["z1"]for p in parts)
-    owners={};reserves=[];shared=[];shared_bounds=[];tags=set();records={};boxes={};indices={}
+    owners={};reserves=[];shared=[];shared_bounds=[];tags=set();records={};boxes={};indices={};memo={}
     def record(part):
         """🗃️ Index immutable operation-local geometry without retaining another model or render object."""
         key=id(part)
@@ -2218,10 +2224,10 @@ def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, ca
         """📑 Query exact native intervals without replacing any occupied geometry."""
         from bisect import bisect_left
         if tag not in indices:
-            rows=sorted(((box(part)[0][0],index,part)for index,part in enumerate(owners[tag][1])),key=lambda row:(row[0],row[1]))
+            rows=sorted(((box(part)[0][0],index,part,box(part))for index,part in enumerate(owners[tag][1])),key=lambda row:(row[0],row[1]))
             indices[tag]=([row[0]for row in rows],rows)
         lows,rows=indices[tag];target_box=box(target)
-        return (part for _,_,part in rows[:bisect_left(lows,target_box[0][1])]if all(x[0]<y[1]and y[0]<x[1]for x,y in zip(box(part),target_box)))
+        return (part for _,_,part,bounds in rows[:bisect_left(lows,target_box[0][1])]if all(x[0]<y[1]and y[0]<x[1]for x,y in zip(bounds,target_box)))
     def overlap(a,b):
         """🔀 Reject only exact disjoint native bounding intervals."""
         return all(x[0]<y[1]and y[0]<x[1]for x,y in zip(box(a),box(b)))
@@ -2233,7 +2239,7 @@ def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, ca
         if not overlap(left,right):return []
         if contains(right,left):return [deepcopy(left)]
         if contains(left,right):return [{**{k:deepcopy(v)for k,v in left.items()if k not in ("outline","holes","top_outline","section","mesh","z0","z1")},"mesh":deepcopy(right["mesh"])}]
-        return _reference_material_parts(left,[],[right],progress=progress,cancel=cancel)
+        return _reference_material_parts(left,[],[right],progress=progress,cancel=cancel,memo=memo)
     def resolve(tag):
         """🎚️ Expand only authored covering displacement owners without aggregating borrowed references."""
         if tag==slab["tag"]:raise ValueError("A finish reserve requires independent physical owners")
@@ -2264,7 +2270,7 @@ def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, ca
         targets=[cell for part in host for boundary in bounds for cell in intersect(part,boundary)]
         if not _native_parts_have_volume(targets):raise ValueError("A finish reserve requires occupied target material")
         earlier={id(target):[part for part,other in shared_bounds if all(a[0]<b[1]and b[0]<a[1]for a,b in zip(box(target),other))]for target in targets}
-        expected=[cell for target in targets for cell in _reference_material_parts(target,earlier[id(target)],progress=progress,cancel=cancel)]
+        expected=[cell for target in targets for cell in _reference_material_parts(target,earlier[id(target)],progress=progress,cancel=cancel,memo=memo)]
         owner_tags=[reserve["owner"],*reserve.get("joint_owners",())]
         if len(owner_tags)!=len(set(owner_tags)):raise ValueError("Finish joint owners must be distinct")
         cursor=0
@@ -2284,12 +2290,12 @@ def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, ca
                             if other["owner"]!=tag and _native_parts_have_volume(intersect(cell,other)):
                                 raise ValueError("Finish joint owners share occupied material")
                         prior=[other for other in [*earlier[id(target)],*common]if other["owner"]==tag and overlap(cell,other)]
-                        for retained in _reference_material_parts(cell,prior,progress=progress,cancel=cancel)if prior else [cell]:
+                        for retained in _reference_material_parts(cell,prior,progress=progress,cancel=cancel,memo=memo)if prior else [cell]:
                             common.append({**retained,"owner":tag,"owner_guid":obj["guid"],"role":"finish_joint","joint_host":slab["tag"]})
         missing=_native_parts_exact_volume(expected)-_native_parts_exact_volume(common)
         if missing:raise ValueError(f"Finish reserve {reserve['tag']} is not fully occupied by its declared physical owners: exact missing volume {missing!r} m3")
         shared.extend(common);shared_bounds.extend((part,box(part))for part in common);reserves.extend(bounds)
-    remaining=[cell for part in host for cell in _reference_material_parts(part,[boundary for boundary in reserves if overlap(part,boundary)],progress=progress,cancel=cancel)]
+    remaining=[cell for part in host for cell in _reference_material_parts(part,[boundary for boundary in reserves if overlap(part,boundary)],progress=progress,cancel=cancel,memo=memo)]
     publish=lambda cells:[backend.publish_stock(backend.clip_stock(cell,[],exact=True))for cell in cells]
     return (remaining,shared) if exact else (publish(remaining),publish(shared))
 

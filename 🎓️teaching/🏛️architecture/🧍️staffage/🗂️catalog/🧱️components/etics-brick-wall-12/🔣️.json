@@ -1425,6 +1425,91 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "plaster",
+          "kind": "box",
+          "bone": "root",
+          "material": "lime-plaster",
+          "role": "body",
+          "tone": 0.9,
+          "region": "wall-field",
+          "size": [0.015, 1, 1],
+          "transform": {
+            "translation": [0.0075, 0.5, 0]
+          }
+        },
+        {
+          "id": "brick",
+          "kind": "box",
+          "bone": "root",
+          "material": "solid-brick",
+          "role": "body",
+          "tone": 0.55,
+          "region": "wall-field",
+          "size": [0.365, 1, 1],
+          "transform": {
+            "translation": [0.1975, 0.5, 0]
+          }
+        },
+        {
+          "id": "insulation",
+          "kind": "box",
+          "bone": "root",
+          "material": "mineral-wool",
+          "role": "body",
+          "tone": 0.8,
+          "region": "wall-field",
+          "size": [0.12, 1, 1],
+          "transform": {
+            "translation": [0.44, 0.5, 0]
+          }
+        },
+        {
+          "id": "render",
+          "kind": "box",
+          "bone": "root",
+          "material": "mineral-render",
+          "role": "body",
+          "tone": 0.85,
+          "region": "wall-field",
+          "size": [0.02, 1, 1],
+          "transform": {
+            "translation": [0.51, 0.5, 0]
+          }
+        },
+        {
+          "id": "bed-joints",
+          "kind": "box",
+          "bone": "root",
+          "material": "lime-plaster",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "wall-field",
+          "maxDenominator": 50,
+          "size": [0.365, 0.01, 1.004],
+          "transform": {
+            "translation": [0.1975, 0.075, 0]
+          },
+          "repeat": {
+            "count": 12,
+            "translation": [0, 0.075, 0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Each construction layer of the wall strip is its own full-width box (plaster, brick, mineral wool, render) in the order of the thermal layers, so the thermal view colours them separately.",
+          "de": "Jede Schicht des Wandstreifens ist ein eigener Quader über die ganze Breite (Putz, Ziegel, Mineralwolle, Putz) in der Reihenfolge der thermischen Schichten, sodass die thermische Ansicht sie getrennt einfärbt."
+        },
+        {
+          "en": "Bed joints are 8 mm mortar bands pushed 2 mm proud of the brick strip on both sides, repeated 12 times at 75 mm; only shown at 1:50 like the 2D joints.",
+          "de": "Lagerfugen sind 8 mm breite Mörtelbänder, beidseitig 2 mm über den Ziegelstreifen hinaus, 12 Mal im Abstand von 75 mm; wie die 2D-Fugen nur bei 1:50 sichtbar."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "winter-night",
       "defaultClip": "sunrise",
@@ -1438,7 +1523,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

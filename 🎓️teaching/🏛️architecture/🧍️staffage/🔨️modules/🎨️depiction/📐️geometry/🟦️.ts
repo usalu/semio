@@ -5,6 +5,7 @@
  * @see ../../🔗️contracts/🟦️.ts — {@link PathCommand}
  */
 import type { PathCommand } from "../../🔗️contracts/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 📍️ A planar point. */
 export type Vec = { readonly x: number; readonly y: number };
@@ -31,7 +32,7 @@ export const sub = (a: Vec, b: Vec): Vec => ({ x: a.x - b.x, y: a.y - b.y });
 export const scale = (a: Vec, factor: number): Vec => ({ x: a.x * factor, y: a.y * factor });
 
 /** 📏️ The Euclidean length. */
-export const length = (a: Vec): number => Math.hypot(a.x, a.y);
+export const length = (a: Vec): number => portable.hypot(a.x, a.y);
 
 /** 🧭️ The unit vector, or the zero vector for a zero input. */
 export function unit(a: Vec): Vec {
@@ -57,7 +58,7 @@ function distanceToSegment(p: Vec, a: Vec, b: Vec): number {
   const d = sub(b, a);
   const l2 = d.x * d.x + d.y * d.y;
   const t = l2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * d.x + (p.y - a.y) * d.y) / l2));
-  return Math.hypot(p.x - (a.x + d.x * t), p.y - (a.y + d.y * t));
+  return portable.hypot(p.x - (a.x + d.x * t), p.y - (a.y + d.y * t));
 }
 
 function simplifyOpen(points: readonly Vec[], tolerance: number): Vec[] {
@@ -239,26 +240,26 @@ export function circleCommands(c: Vec, r: number): PathCommand[] {
 
 /** 🥧️ A closed pie sector of a circle between two screen angles (radians, y down). */
 export function sectorCommands(c: Vec, r: number, from: number, to: number): PathCommand[] {
-  return [{ op: "M", x: c.x, y: c.y }, { op: "L", x: c.x + r * Math.cos(from), y: c.y + r * Math.sin(from) }, ...arcSegments(c, r, from, to - from), { op: "Z" }];
+  return [{ op: "M", x: c.x, y: c.y }, { op: "L", x: c.x + r * portable.cos(from), y: c.y + r * portable.sin(from) }, ...arcSegments(c, r, from, to - from), { op: "Z" }];
 }
 
 /** 🌀️ Cubic Bézier segments of an arc around a centre from a screen angle through a signed sweep (radians, y down). */
 export function arcSegments(c: Vec, r: number, from: number, sweep: number): PathCommand[] {
   const count = Math.max(1, Math.ceil(Math.abs(sweep) / (Math.PI / 2) - 1e-9));
   const step = sweep / count;
-  const h = (4 / 3) * Math.tan(step / 4) * r;
+  const h = (4 / 3) * portable.tan(step / 4) * r;
   const out: PathCommand[] = [];
   for (let i = 0; i < count; i++) {
     const a0 = from + i * step;
     const a1 = a0 + step;
-    out.push({ op: "C", x1: c.x + r * Math.cos(a0) - h * Math.sin(a0), y1: c.y + r * Math.sin(a0) + h * Math.cos(a0), x2: c.x + r * Math.cos(a1) + h * Math.sin(a1), y2: c.y + r * Math.sin(a1) - h * Math.cos(a1), x: c.x + r * Math.cos(a1), y: c.y + r * Math.sin(a1) });
+    out.push({ op: "C", x1: c.x + r * portable.cos(a0) - h * portable.sin(a0), y1: c.y + r * portable.sin(a0) + h * portable.cos(a0), x2: c.x + r * portable.cos(a1) + h * portable.sin(a1), y2: c.y + r * portable.sin(a1) - h * portable.cos(a1), x: c.x + r * portable.cos(a1), y: c.y + r * portable.sin(a1) });
   }
   return out;
 }
 
 /** 🌀️ An open arc path starting at its first point. */
 export function arcCommands(c: Vec, r: number, from: number, sweep: number): PathCommand[] {
-  return [{ op: "M", x: c.x + r * Math.cos(from), y: c.y + r * Math.sin(from) }, ...arcSegments(c, r, from, sweep)];
+  return [{ op: "M", x: c.x + r * portable.cos(from), y: c.y + r * portable.sin(from) }, ...arcSegments(c, r, from, sweep)];
 }
 
 /** ➡️ The filled outline of an arrow from tail to head: a thin shaft and a triangular head whose tip is the head point. */

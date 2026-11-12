@@ -1,0 +1,77 @@
+{
+ "document": {
+  "$schema": "../../../../🧬️schema/🔣️.json",
+  "version": "semio.model/v1",
+  "solids": [
+   {
+    "id": "block",
+    "node": "root",
+    "material": "grey",
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ]
+   }
+  ],
+  "variants": [],
+  "poses": [],
+  "animations": [],
+  "skins": [],
+  "meshes": [],
+  "materials": [
+   {
+    "id": "grey",
+    "title": {
+     "en": "grey",
+     "de": "grey"
+    },
+    "baseColor": [
+     0.5,
+     0.5,
+     0.5,
+     1
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emissive": [
+     0,
+     0,
+     0
+    ],
+    "alphaMode": "opaque",
+    "doubleSided": false,
+    "unlit": false
+   }
+  ],
+  "id": "procedural",
+  "title": {
+   "en": "Procedural",
+   "de": "Prozedural"
+  },
+  "nodes": [
+   {
+    "id": "root",
+    "parent": null,
+    "translation": [
+     0,
+     0,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ]
+   }
+  ]
+ },
+ "expectedError": "procedural-document"
+}

@@ -8,7 +8,7 @@
     -6.6,
     6.6
   ],
-  "y": -2.3,
+  "y": -2.1,
   "sizes": {
     "counter": 21.0,
     "label": 17.0
@@ -32,7 +32,7 @@
     ]
   ],
   "model_counts": [
-    82,
+    506,
     13
   ],
   "sweep_each_integer": true,

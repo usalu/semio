@@ -7,11 +7,13 @@
  * @see ../../../🧬️schema/🟦️.ts — `AuthoredRepresentation`, `Hatch`, `PenSet`
  * @see ../../🔗️contracts/🟦️.ts — {@link EvaluatedShape}
  */
-import type { Hatch, PenSet, Shape, ShapeRole, Slug, Viewpoint } from "../../../🧬️schema/🟦️.ts";
-import type { EvaluatedState, Fill, ItemValue, LayerId, Legend } from "../../🔗️contracts/🟦️.ts";
+import type { Hatch, PenSet, Shape, ShapeRole, Slug, PlanarViewpoint } from "../../../🧬️schema/🟦️.ts";
+import type { EvaluatedState, Fill, ItemValue, LayerId, Legend, View } from "../../🔗️contracts/🟦️.ts";
 import type { Canvas, Ctx } from "../🧱️canvas/🟦️.ts";
+import { type Theme, THEMES, toneColour } from "../🖍️palette/🟦️.ts";
 import { depthOrder } from "../🧊️depth/🟦️.ts";
 import { type Box, type Occluder, type Ring, type Run, type Vec, boxOf, circleCommands, clipSegmentToRings, commandsOf, pointInside, ringsCommands, simplify, visibleRuns } from "../📐️geometry/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const ROLE_LAYER: Readonly<Record<ShapeRole, LayerId>> = { body: "body", detail: "detail", texture: "texture", glazing: "glazing", ground: "ground" };
 const OCCLUDING_ROLES: readonly ShapeRole[] = ["body", "detail", "texture"];
@@ -23,7 +25,7 @@ const ANALYTIC_VIEWS: readonly string[] = ["thermal", "forces", "moments"];
 /** 🖨️ What a representation contributes to drawing: its pens, hatches and whether its geometry is in paper millimetres (symbols other than `true-extent`). */
 export type Source = { readonly pens: PenSet; readonly hatches: readonly Hatch[]; readonly paperUnits: boolean };
 
-/** 🧩️ One shape ready to draw: simplified paper rings in z order with its occluder, pen and hatch. */
+/** 📤️ One shape ready to draw: simplified paper rings in z order with its occluder, pen and hatch. */
 export type Prepared = { readonly shape: Shape; readonly rings: readonly (readonly Vec[])[]; readonly closed: boolean; readonly box: Box; readonly order: number; readonly occluder: Occluder | null; readonly weightMm: number; readonly hatch: Hatch | null; readonly parent: Slug | null };
 
 /** 🎨️ How a view paints one shape: a fill (or none), the value it carries, and the width of the thin outline on the fill item (or none). */
@@ -32,7 +34,7 @@ export type Style = { readonly fill: Fill | null; readonly value?: ItemValue; re
 /** 🔬️ An analytic view: how it paints shapes, what it adds on top, and which legends explain it. */
 export type AnalyticView = { readonly styleOf: (p: Prepared) => Style; readonly overlay: (canvas: Canvas) => void; readonly inset?: (canvas: Canvas) => number; readonly legends: readonly Legend[] };
 
-/** 🖨️ The pens, hatches and units of the representation a state was evaluated with; throws for a state evaluated without one. */
+/** 🚨️ The pens, hatches and units of the representation a state was evaluated with; throws for a state evaluated without one. */
 export function sourceOf(state: EvaluatedState): Source {
   const representation = state.representation;
   if (representation.kind === "scale") {
@@ -48,13 +50,30 @@ export function sourceOf(state: EvaluatedState): Source {
   throw new Error("the state was evaluated without a representation selector; evaluate(asset, query, selector) first");
 }
 
+/** 🌗️ The theme a view draws in: the dark views dark, the light views light, the analytic views the chosen theme (default light). */
+export function themeOf(view: View, chosen: Theme | undefined): Theme {
+  return view === "dark-line" || view === "dark-solid" ? "dark" : view === "light-line" || view === "light-solid" ? "light" : (chosen ?? "light");
+}
+
+/** 🖍️ How the four graphic views paint a shape: line views fill with the paper (glazing not at all), solid views with the tone of the theme (glazing 45 % opaque) and, when `detailed` (1:100 and larger), a half-pen outline. */
+export function baseStyle(view: View, theme: Theme, detailed: boolean): (p: Prepared) => Style {
+  const line = view.endsWith("-line");
+  const background = THEMES[theme].background;
+  return (p) => {
+    const glaze = p.shape.role === "glazing";
+    if (line) return { fill: glaze ? null : { color: background }, outlineMm: null };
+    return { fill: { color: toneColour(theme, p.shape.tone), ...(glaze ? { opacity: 0.45 } : {}) }, outlineMm: detailed ? p.weightMm * 0.5 : null };
+  };
+}
+
+
 /** 🔗️ The thermal regions a shape paints: its single `region`, or the several of a merged `regions` form. */
 export function regionsOf(shape: Shape): readonly Slug[] {
   return shape.region !== undefined ? [shape.region] : (shape.regions ?? []);
 }
 
 /** 🔭️ Selects the shapes the representation draws, maps them to paper millimetres (`k` paper mm per metre; paper-unit symbols sit at the model origin), simplifies them and sorts them by z, then by physical depth where a pose reverses it ({@link depthOrder}). */
-export function prepare(state: EvaluatedState, viewpoint: Viewpoint, source: Source, k: number): Prepared[] {
+export function prepare(state: EvaluatedState, viewpoint: PlanarViewpoint, source: Source, k: number): Prepared[] {
   const hatches = new Map(source.hatches.map((hatch) => [hatch.id, hatch]));
   const selected = state.shapes[viewpoint].flatMap((e, index) => {
     const weight = e.shape.penMm ?? source.pens[e.shape.role];
@@ -101,8 +120,8 @@ export function hatchOf(rings: readonly Ring[], hatch: Hatch, id: string): { rea
   const s = hatch.spacingMm;
   const theta = (hatch.angleDeg * Math.PI) / 180;
   const family = (angle: number): [Vec, Vec][] => {
-    const u = { x: Math.cos(angle), y: -Math.sin(angle) };
-    const n = { x: Math.sin(angle), y: Math.cos(angle) };
+    const u = { x: portable.cos(angle), y: -portable.sin(angle) };
+    const n = { x: portable.sin(angle), y: portable.cos(angle) };
     const corners = [{ x: box.minX, y: box.minY }, { x: box.maxX, y: box.minY }, { x: box.maxX, y: box.maxY }, { x: box.minX, y: box.maxY }];
     const ts = corners.map((c) => c.x * n.x + c.y * n.y);
     const as = corners.map((c) => c.x * u.x + c.y * u.y);
@@ -119,8 +138,8 @@ export function hatchOf(rings: readonly Ring[], hatch: Hatch, id: string): { rea
   };
   if (hatch.pattern === "lines") return { lines: family(theta), dots: [] };
   if (hatch.pattern === "cross") return { lines: [...family(theta), ...family(theta + Math.PI / 2)], dots: [] };
-  const u = { x: Math.cos(theta), y: -Math.sin(theta) };
-  const n = { x: Math.sin(theta), y: Math.cos(theta) };
+  const u = { x: portable.cos(theta), y: -portable.sin(theta) };
+  const n = { x: portable.sin(theta), y: portable.cos(theta) };
   const corners = [{ x: box.minX, y: box.minY }, { x: box.maxX, y: box.minY }, { x: box.maxX, y: box.maxY }, { x: box.minX, y: box.maxY }];
   const is = corners.map((c) => c.x * u.x + c.y * u.y);
   const js = corners.map((c) => c.x * n.x + c.y * n.y);

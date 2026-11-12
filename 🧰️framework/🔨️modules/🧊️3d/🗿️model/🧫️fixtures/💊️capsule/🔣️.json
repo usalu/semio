@@ -1,0 +1,414 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "cases": [
+  {
+   "name": "capsule",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "capsule",
+    "title": {
+     "en": "capsule",
+     "de": "capsule"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "c",
+      "kind": "capsule",
+      "node": "root",
+      "material": "skin",
+      "p0": [
+       0,
+       0,
+       0
+      ],
+      "p1": [
+       0,
+       1,
+       0
+      ],
+      "r0": 0.2,
+      "r1": 0.2
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.15917402778188286,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.2,
+      -0.2
+     ],
+     "max": [
+      0.2,
+      1.2,
+      0.2
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "tapered-capsule",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "tapered",
+    "title": {
+     "en": "tapered",
+     "de": "tapered"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "c",
+      "kind": "capsule",
+      "node": "root",
+      "material": "skin",
+      "p0": [
+       0,
+       0,
+       0
+      ],
+      "p1": [
+       0,
+       1,
+       0
+      ],
+      "r0": 0.3,
+      "r1": 0.1
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.20022417178878948,
+    "bounds": {
+     "min": [
+      -0.3,
+      -0.3,
+      -0.3
+     ],
+     "max": [
+      0.3,
+      1.1,
+      0.3
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "lateral-scale",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "lateral",
+    "title": {
+     "en": "lateral",
+     "de": "lateral"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "c",
+      "kind": "capsule",
+      "node": "root",
+      "material": "skin",
+      "p0": [
+       0,
+       0,
+       0
+      ],
+      "p1": [
+       0,
+       1,
+       0
+      ],
+      "r0": 0.2,
+      "r1": 0.2,
+      "lateralScale": 0.5
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.07958701389094143,
+    "bounds": {
+     "min": [
+      -0.1,
+      -0.2,
+      -0.2
+     ],
+     "max": [
+      0.1,
+      1.2,
+      0.2
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "cone-tip",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "cone",
+    "title": {
+     "en": "cone",
+     "de": "cone"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "c",
+      "kind": "capsule",
+      "node": "root",
+      "material": "skin",
+      "p0": [
+       0,
+       0,
+       0
+      ],
+      "p1": [
+       0,
+       1,
+       0
+      ],
+      "r0": 0,
+      "r1": 0.2
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.060318578948924034,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.0,
+      -0.2
+     ],
+     "max": [
+      0.2,
+      1.2,
+      0.2
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.02,
+   "boundsTolerance": 0.002
+  }
+ ]
+}

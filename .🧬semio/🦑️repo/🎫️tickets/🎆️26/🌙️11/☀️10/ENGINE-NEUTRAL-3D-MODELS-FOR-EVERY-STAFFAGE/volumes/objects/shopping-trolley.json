@@ -1,0 +1,1446 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "basket-shell",
+    "kind": "extrude",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "body",
+    "tone": 0.08,
+    "region": "basket-wire",
+    "profile": [
+     [
+      -0.18000000000000002,
+      -0.292
+     ],
+     [
+      -0.2,
+      -0.27199999999999996
+     ],
+     [
+      -0.2,
+      0.328
+     ],
+     [
+      -0.18000000000000002,
+      0.34800000000000003
+     ],
+     [
+      0.18000000000000002,
+      0.34800000000000003
+     ],
+     [
+      0.2,
+      0.328
+     ],
+     [
+      0.2,
+      -0.27199999999999996
+     ],
+     [
+      0.18000000000000002,
+      -0.292
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.17600000000000002,
+       -0.288
+      ],
+      [
+       -0.196,
+       -0.26799999999999996
+      ],
+      [
+       -0.196,
+       0.324
+      ],
+      [
+       -0.17600000000000002,
+       0.34400000000000003
+      ],
+      [
+       0.17600000000000002,
+       0.34400000000000003
+      ],
+      [
+       0.196,
+       0.324
+      ],
+      [
+       0.196,
+       -0.26799999999999996
+      ],
+      [
+       0.17600000000000002,
+       -0.288
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0,
+    "to": 0.5,
+    "taperTo": [
+     1,
+     1.4375
+    ]
+   },
+   {
+    "id": "basket-floor",
+    "kind": "box",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "body",
+    "tone": 0.08,
+    "region": "basket-wire",
+    "size": [
+     0.64,
+     0.006,
+     0.4
+    ],
+    "transform": {
+     "translation": [
+      0.02,
+      0.003,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "wire-1-1",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.32212,
+     0.12,
+     -0.22046
+    ],
+    "p1": [
+     -0.32212,
+     0.12,
+     0.22046
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-1-2",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.32212,
+     0.12,
+     0.22046
+    ],
+    "p1": [
+     0.38508,
+     0.12,
+     0.22046
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-1-3",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.38508,
+     0.12,
+     0.22046
+    ],
+    "p1": [
+     0.38508,
+     0.12,
+     -0.22046
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-1-4",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.38508,
+     0.12,
+     -0.22046
+    ],
+    "p1": [
+     -0.32212,
+     0.12,
+     -0.22046
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-2-1",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.35284,
+     0.24,
+     -0.24092
+    ],
+    "p1": [
+     -0.35284,
+     0.24,
+     0.24092
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-2-2",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.35284,
+     0.24,
+     0.24092
+    ],
+    "p1": [
+     0.42156,
+     0.24,
+     0.24092
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-2-3",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.42156,
+     0.24,
+     0.24092
+    ],
+    "p1": [
+     0.42156,
+     0.24,
+     -0.24092
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-2-4",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.42156,
+     0.24,
+     -0.24092
+    ],
+    "p1": [
+     -0.35284,
+     0.24,
+     -0.24092
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-3-1",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.38356,
+     0.36,
+     -0.26139
+    ],
+    "p1": [
+     -0.38356,
+     0.36,
+     0.26139
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-3-2",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.38356,
+     0.36,
+     0.26139
+    ],
+    "p1": [
+     0.45804,
+     0.36,
+     0.26139
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-3-3",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.45804,
+     0.36,
+     0.26139
+    ],
+    "p1": [
+     0.45804,
+     0.36,
+     -0.26139
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-3-4",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.45804,
+     0.36,
+     -0.26139
+    ],
+    "p1": [
+     -0.38356,
+     0.36,
+     -0.26139
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-4-1",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.41428,
+     0.48,
+     -0.28185
+    ],
+    "p1": [
+     -0.41428,
+     0.48,
+     0.28185
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-4-2",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     -0.41428,
+     0.48,
+     0.28185
+    ],
+    "p1": [
+     0.49452,
+     0.48,
+     0.28185
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-4-3",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.49452,
+     0.48,
+     0.28185
+    ],
+    "p1": [
+     0.49452,
+     0.48,
+     -0.28185
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "wire-4-4",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "maxDenominator": 100,
+    "p0": [
+     0.49452,
+     0.48,
+     -0.28185
+    ],
+    "p1": [
+     -0.41428,
+     0.48,
+     -0.28185
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "rim-1",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "p0": [
+     -0.42,
+     0.5,
+     -0.285
+    ],
+    "p1": [
+     -0.42,
+     0.5,
+     0.285
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "rim-2",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "p0": [
+     -0.42,
+     0.5,
+     0.285
+    ],
+    "p1": [
+     0.5,
+     0.5,
+     0.285
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "rim-3",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "p0": [
+     0.5,
+     0.5,
+     0.285
+    ],
+    "p1": [
+     0.5,
+     0.5,
+     -0.285
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "rim-4",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "basket-wire",
+    "p0": [
+     0.5,
+     0.5,
+     -0.285
+    ],
+    "p1": [
+     -0.42,
+     0.5,
+     -0.285
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "chassis-1",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     -0.32,
+     0.17,
+     -0.215
+    ],
+    "p1": [
+     -0.32,
+     0.17,
+     0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "chassis-2",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     -0.32,
+     0.17,
+     0.215
+    ],
+    "p1": [
+     0.36,
+     0.17,
+     0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "chassis-3",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.36,
+     0.17,
+     0.215
+    ],
+    "p1": [
+     0.36,
+     0.17,
+     -0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "chassis-4",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.36,
+     0.17,
+     -0.215
+    ],
+    "p1": [
+     -0.32,
+     0.17,
+     -0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "fork-rear-l-upper",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     -0.3,
+     0.38,
+     0.2
+    ],
+    "p1": [
+     -0.32,
+     0.17,
+     0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "fork-rear-l-lower",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     -0.32,
+     0.17,
+     0.215
+    ],
+    "p1": [
+     -0.3,
+     0.0625,
+     0.2
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "wheel-rear-l",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "body",
+    "tone": 0.15,
+    "region": "wheels",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.0575
+     ],
+     [
+      0.005,
+      0.0625
+     ],
+     [
+      0.035,
+      0.0625
+     ],
+     [
+      0.04,
+      0.0575
+     ],
+     [
+      0.04,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.3,
+      0.0625,
+      0.2
+     ]
+    }
+   },
+   {
+    "id": "hub-rear-l",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "wheels",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.022
+     ],
+     [
+      0.044,
+      0.022
+     ],
+     [
+      0.044,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.3,
+      0.0625,
+      0.198
+     ]
+    }
+   },
+   {
+    "id": "fork-front-l-upper",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.34,
+     0.38,
+     0.2
+    ],
+    "p1": [
+     0.36,
+     0.17,
+     0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "fork-front-l-lower",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.36,
+     0.17,
+     0.215
+    ],
+    "p1": [
+     0.33,
+     0.0625,
+     0.2
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "wheel-front-l",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "body",
+    "tone": 0.15,
+    "region": "wheels",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.0575
+     ],
+     [
+      0.005,
+      0.0625
+     ],
+     [
+      0.035,
+      0.0625
+     ],
+     [
+      0.04,
+      0.0575
+     ],
+     [
+      0.04,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.33,
+      0.0625,
+      0.2
+     ]
+    }
+   },
+   {
+    "id": "hub-front-l",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "wheels",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.022
+     ],
+     [
+      0.044,
+      0.022
+     ],
+     [
+      0.044,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.33,
+      0.0625,
+      0.198
+     ]
+    }
+   },
+   {
+    "id": "castor-plate-l",
+    "kind": "box",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.6,
+    "region": "frame-tube",
+    "size": [
+     0.05,
+     0.015,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.36,
+      0.1725,
+      0.21
+     ]
+    }
+   },
+   {
+    "id": "fork-rear-r-upper",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     -0.3,
+     0.38,
+     -0.2
+    ],
+    "p1": [
+     -0.32,
+     0.17,
+     -0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "fork-rear-r-lower",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     -0.32,
+     0.17,
+     -0.215
+    ],
+    "p1": [
+     -0.3,
+     0.0625,
+     -0.2
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "wheel-rear-r",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "body",
+    "tone": 0.15,
+    "region": "wheels",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.0575
+     ],
+     [
+      0.005,
+      0.0625
+     ],
+     [
+      0.035,
+      0.0625
+     ],
+     [
+      0.04,
+      0.0575
+     ],
+     [
+      0.04,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.3,
+      0.0625,
+      -0.24
+     ]
+    }
+   },
+   {
+    "id": "hub-rear-r",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "wheels",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.022
+     ],
+     [
+      0.044,
+      0.022
+     ],
+     [
+      0.044,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.3,
+      0.0625,
+      -0.242
+     ]
+    }
+   },
+   {
+    "id": "fork-front-r-upper",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.34,
+     0.38,
+     -0.2
+    ],
+    "p1": [
+     0.36,
+     0.17,
+     -0.215
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "fork-front-r-lower",
+    "kind": "capsule",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.36,
+     0.17,
+     -0.215
+    ],
+    "p1": [
+     0.33,
+     0.0625,
+     -0.2
+    ],
+    "r0": 0.007,
+    "r1": 0.007
+   },
+   {
+    "id": "wheel-front-r",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "body",
+    "tone": 0.15,
+    "region": "wheels",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.0575
+     ],
+     [
+      0.005,
+      0.0625
+     ],
+     [
+      0.035,
+      0.0625
+     ],
+     [
+      0.04,
+      0.0575
+     ],
+     [
+      0.04,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.33,
+      0.0625,
+      -0.24
+     ]
+    }
+   },
+   {
+    "id": "hub-front-r",
+    "kind": "revolve",
+    "bone": "chassis",
+    "material": "pu-tyre",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "wheels",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.022
+     ],
+     [
+      0.044,
+      0.022
+     ],
+     [
+      0.044,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.33,
+      0.0625,
+      -0.242
+     ]
+    }
+   },
+   {
+    "id": "castor-plate-r",
+    "kind": "box",
+    "bone": "chassis",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.6,
+    "region": "frame-tube",
+    "size": [
+     0.05,
+     0.015,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.36,
+      0.1725,
+      -0.21
+     ]
+    }
+   },
+   {
+    "id": "handle-post-l",
+    "kind": "capsule",
+    "bone": "handle",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.0,
+     0.0,
+     0.245
+    ],
+    "p1": [
+     0.02,
+     0.09,
+     0.245
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "handle-arm-l",
+    "kind": "capsule",
+    "bone": "handle",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.03,
+     0.1,
+     0.245
+    ],
+    "p1": [
+     -0.11,
+     0.1,
+     0.245
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "handle-post-r",
+    "kind": "capsule",
+    "bone": "handle",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.0,
+     0.0,
+     -0.245
+    ],
+    "p1": [
+     0.02,
+     0.09,
+     -0.245
+    ],
+    "r0": 0.0125,
+    "r1": 0.0125
+   },
+   {
+    "id": "handle-arm-r",
+    "kind": "capsule",
+    "bone": "handle",
+    "material": "zinc-tube",
+    "role": "body",
+    "tone": 0.3,
+    "region": "frame-tube",
+    "p0": [
+     0.03,
+     0.1,
+     -0.245
+    ],
+    "p1": [
+     -0.11,
+     0.1,
+     -0.245
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "grip",
+    "kind": "capsule",
+    "bone": "handle",
+    "material": "pp-grip",
+    "role": "body",
+    "tone": 0.7,
+    "region": "handle-grip",
+    "p0": [
+     -0.11,
+     0.1,
+     -0.245
+    ],
+    "p1": [
+     -0.13,
+     0.1,
+     0.245
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "gate",
+    "kind": "extrude",
+    "bone": "gate",
+    "material": "zinc-wire",
+    "role": "body",
+    "tone": 0.5,
+    "region": "gate-wire",
+    "profile": [
+     [
+      0.01455,
+      0.00364
+     ],
+     [
+      0.13455,
+      -0.47636
+     ],
+     [
+      0.10545,
+      -0.48364
+     ],
+     [
+      -0.01455,
+      -0.00364
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.24,
+    "to": 0.24
+   },
+   {
+    "id": "gate-hinge",
+    "kind": "capsule",
+    "bone": "basket",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "gate-wire",
+    "p0": [
+     -0.42,
+     0.5,
+     -0.24
+    ],
+    "p1": [
+     -0.42,
+     0.5,
+     0.24
+    ],
+    "r0": 0.008,
+    "r1": 0.008
+   },
+   {
+    "id": "gate-eye-l",
+    "kind": "ellipsoid",
+    "bone": "gate",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "gate-wire",
+    "maxDenominator": 100,
+    "radii": [
+     0.014,
+     0.014,
+     0.014
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.0,
+      0.24
+     ]
+    }
+   },
+   {
+    "id": "gate-eye-r",
+    "kind": "ellipsoid",
+    "bone": "gate",
+    "material": "zinc-wire",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "gate-wire",
+    "maxDenominator": 100,
+    "radii": [
+     0.014,
+     0.014,
+     0.014
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.0,
+      -0.24
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The wire basket is one tapered shell (an extrusion of a rounded-rectangle ring with taper, 4 mm sheet, 0.92 x 0.57 m at the rim to 0.64 x 0.40 m at the floor) with a floor plate, a 12 mm rim tube and four wire loops of 7 mm as the visible wire grid; the individual wires of the drawing are not modelled one by one, the shell stands for the mesh.",
+    "de": "Der Drahtkorb ist eine einzige konische Schale (Extrusion eines abgerundeten Rechteckrings mit Verjüngung, 4 mm Blech, 0,92 x 0,57 m am Rand bis 0,64 x 0,40 m am Boden) mit Bodenplatte, 12 mm Randrohr und vier Drahtschlaufen von 7 mm als sichtbares Drahtgitter; die einzelnen Drähte der Zeichnung werden nicht einzeln modelliert, die Schale steht für das Gitter."
+   },
+   {
+    "en": "The chassis is a rectangular tube frame at y 0.17 with four fork legs (two bent tubes per side), four tyres (revolves about z, 0.125 m diameter, 0.04 m wide, at z +-0.22 as the plan shows) with hub discs and two castor plates at the front. The handle is a U of two posts, two arms and a rubber grip across z at x -0.52 as the plan shows.",
+    "de": "Das Fahrgestell ist ein Rechteckrohrrahmen auf y 0,17 mit vier Gabelbeinen (je zwei gebogene Rohre pro Seite), vier Reifen (Revolve um z, 0,125 m Durchmesser, 0,04 m breit, bei z +-0,22 wie die Draufsicht zeigt) mit Nabenscheiben und zwei Rollenplatten vorn. Der Griff ist ein U aus zwei Pfosten, zwei Armen und einem Gummigriff quer in z bei x -0,52 wie die Draufsicht zeigt."
+   },
+   {
+    "en": "The gate is a flap along the sloping rear wall hinged at the top rear rim, as wide as the basket interior (z +-0.24); it swings with the gate bone.",
+    "de": "Die Klappe liegt an der geneigten Rückwand und ist am oberen hinteren Rand angeschlagen, so breit wie der Korbinnenraum (z +-0,24); sie schwingt mit dem Klappenknochen."
+   }
+  ]
+ }
+}

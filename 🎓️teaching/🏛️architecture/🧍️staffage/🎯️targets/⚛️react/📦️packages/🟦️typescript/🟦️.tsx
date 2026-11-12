@@ -9,6 +9,10 @@ export { STAFFAGE_ATTRIBUTES, defineStaffageElement } from "../../🔨️modules
 export type { StaffageCatalog, StaffageElementState } from "../../🔨️modules/🧩️element/🟦️.ts";
 export { exportCapabilities, exportFigure, exportFilename, saveExport } from "../../🔨️modules/📤️downloads/🟦️.ts";
 export type { ExportCapabilities, ExportDetails, ExportFormat, ExportHost, ExportOptions, ExportResult, FormatCapability } from "../../🔨️modules/📤️downloads/🟦️.ts";
+export { CAMERA_PRESETS, DEFAULT_CAMERA } from "../../🔨️modules/🧊️spatial/🟦️.ts";
+export type { CameraPresetName } from "../../🔨️modules/🧊️spatial/🟦️.ts";
+export { FIGURE_CHOICES, SPATIAL_VIEWPOINTS } from "../../🔨️modules/🔭️viewpoints/🟦️.ts";
+export type { SpatialViewpoint, ViewpointKey } from "../../🔨️modules/🔭️viewpoints/🟦️.ts";
 export { evaluateState, figureFrame, frameOf, sceneExtent } from "../../🔨️modules/🧮️pipeline/🟦️.ts";
 export type { DepictionRequest, SceneFrame, StaffageFrame } from "../../🔨️modules/🧮️pipeline/🟦️.ts";
 export { VIEW_NAMES, describeScene } from "../../🔨️modules/🗣️labels/🟦️.ts";
@@ -33,5 +37,6 @@ export type {
   ThermalField,
   ThermalQuantity,
   View,
+  PlanarViewpoint,
   Viewpoint,
 } from "@teaching/staffage";

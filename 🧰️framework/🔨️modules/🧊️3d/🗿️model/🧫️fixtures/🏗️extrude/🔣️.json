@@ -1,0 +1,1124 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "cases": [
+  {
+   "name": "square-with-hole",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "hole",
+    "title": {
+     "en": "hole",
+     "de": "hole"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.25,
+         0.25
+        ],
+        [
+         0.25,
+         0.75
+        ],
+        [
+         0.75,
+         0.75
+        ],
+        [
+         0.75,
+         0.25
+        ]
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 0.5
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.375,
+    "bounds": {
+     "min": [
+      0,
+      0,
+      0
+     ],
+     "max": [
+      1,
+      1,
+      0.5
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "l-shape-yz",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "lshape",
+    "title": {
+     "en": "lshape",
+     "de": "lshape"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        0.4
+       ],
+       [
+        0.4,
+        0.4
+       ],
+       [
+        0.4,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "yz",
+      "from": -1,
+      "to": 1
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 1.28,
+    "bounds": {
+     "min": [
+      -1,
+      0,
+      0
+     ],
+     "max": [
+      1,
+      1,
+      1
+     ]
+    },
+    "closed": true,
+    "oracle": "ExtrudeGeometry"
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "tapered",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "taper",
+    "title": {
+     "en": "taper",
+     "de": "taper"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        -0.5,
+        -0.5
+       ],
+       [
+        0.5,
+        -0.5
+       ],
+       [
+        0.5,
+        0.5
+       ],
+       [
+        -0.5,
+        0.5
+       ]
+      ],
+      "plane": "zx",
+      "from": 0,
+      "to": 2,
+      "taperTo": [
+       1,
+       0.5
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 1.1666666666666665,
+    "bounds": {
+     "min": [
+      -0.5,
+      0,
+      -0.5
+     ],
+     "max": [
+      0.5,
+      2,
+      0.5
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "pyramid",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "pyramid",
+    "title": {
+     "en": "pyramid",
+     "de": "pyramid"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        -0.5,
+        -0.5
+       ],
+       [
+        0.5,
+        -0.5
+       ],
+       [
+        0.5,
+        0.5
+       ],
+       [
+        -0.5,
+        0.5
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 1,
+      "taperTo": [
+       1,
+       0
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.3333333333333333,
+    "bounds": {
+     "min": [
+      -0.5,
+      -0.5,
+      0
+     ],
+     "max": [
+      0.5,
+      0.5,
+      1
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "collinear-midpoints",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "midpoints",
+    "title": {
+     "en": "midpoints",
+     "de": "midpoints"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        0.5,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        0.5
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0.5,
+        1
+       ],
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        0.5
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 0.5
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.5,
+    "bounds": {
+     "min": [
+      0,
+      0,
+      0
+     ],
+     "max": [
+      1,
+      1,
+      0.5
+     ]
+    },
+    "closed": true,
+    "oracle": "ExtrudeGeometry"
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "near-duplicate-points",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "neardup",
+    "title": {
+     "en": "neardup",
+     "de": "neardup"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1e-05
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 0.5
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.5,
+    "bounds": {
+     "min": [
+      0,
+      0,
+      0
+     ],
+     "max": [
+      1,
+      1,
+      0.5
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "closed-loop-profile",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "loop",
+    "title": {
+     "en": "loop",
+     "de": "loop"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ],
+       [
+        0,
+        0
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 0.5
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.5,
+    "bounds": {
+     "min": [
+      0,
+      0,
+      0
+     ],
+     "max": [
+      1,
+      1,
+      0.5
+     ]
+    },
+    "closed": true,
+    "oracle": "ExtrudeGeometry"
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "two-aligned-holes",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "aligned",
+    "title": {
+     "en": "aligned",
+     "de": "aligned"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        -2,
+        0.06
+       ],
+       [
+        2,
+        0.06
+       ],
+       [
+        2,
+        1.26
+       ],
+       [
+        -2,
+        1.26
+       ]
+      ],
+      "holes": [
+       [
+        [
+         -1.965,
+         0.095
+        ],
+        [
+         -0.015,
+         0.095
+        ],
+        [
+         -0.015,
+         1.225
+        ],
+        [
+         -1.965,
+         1.225
+        ]
+       ],
+       [
+        [
+         0.015,
+         0.095
+        ],
+        [
+         1.965,
+         0.095
+        ],
+        [
+         1.965,
+         1.225
+        ],
+        [
+         0.015,
+         1.225
+        ]
+       ]
+      ],
+      "plane": "xy",
+      "from": -0.005,
+      "to": 0.04
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.01768500000000003,
+    "bounds": {
+     "min": [
+      -2,
+      0.06,
+      -0.005
+     ],
+     "max": [
+      2,
+      1.26,
+      0.04
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "hole-with-collinear-points",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "holemid",
+    "title": {
+     "en": "holemid",
+     "de": "holemid"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "x",
+      "kind": "extrude",
+      "node": "root",
+      "material": "skin",
+      "profile": [
+       [
+        0,
+        0
+       ],
+       [
+        1,
+        0
+       ],
+       [
+        1,
+        1
+       ],
+       [
+        0,
+        1
+       ]
+      ],
+      "holes": [
+       [
+        [
+         0.25,
+         0.25
+        ],
+        [
+         0.25,
+         0.5
+        ],
+        [
+         0.25,
+         0.75
+        ],
+        [
+         0.75,
+         0.75
+        ],
+        [
+         0.75,
+         0.25
+        ]
+       ]
+      ],
+      "plane": "xy",
+      "from": 0,
+      "to": 0.5
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.375,
+    "bounds": {
+     "min": [
+      0,
+      0,
+      0
+     ],
+     "max": [
+      1,
+      1,
+      0.5
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  }
+ ]
+}

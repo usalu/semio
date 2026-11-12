@@ -9,6 +9,7 @@
  */
 import type { Bone, BoneOffset, Rig, Slug } from "../../🧬️schema/🟦️.ts";
 import type { Affine, Point } from "../🔗️contracts/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🟰️ The transform that changes nothing. */
 export const IDENTITY: Affine = [1, 0, 0, 1, 0, 0];
@@ -21,7 +22,7 @@ export function sinCosDeg(deg: number): { readonly sin: number; readonly cos: nu
     return k === 0 ? { sin: 0, cos: 1 } : k === 1 ? { sin: 1, cos: 0 } : k === 2 ? { sin: 0, cos: -1 } : { sin: -1, cos: 0 };
   }
   const rad = (deg * Math.PI) / 180;
-  return { sin: Math.sin(rad), cos: Math.cos(rad) };
+  return { sin: portable.sin(rad), cos: portable.cos(rad) };
 }
 
 /** ↗️ A translation by (`x`, `y`) followed by a counter-clockwise rotation of `angleDeg` about the translated origin. */
@@ -63,7 +64,7 @@ export function invert(matrix: Affine): Affine {
 
 /** 🧭️ The rotation of the matrix in radians (`atan2(b, a)`). */
 export function rotationRad(matrix: Affine): number {
-  return Math.atan2(matrix[1], matrix[0]);
+  return portable.atan2(matrix[1], matrix[0]);
 }
 
 /** 🔒️ `value` limited to the optional bounds. */

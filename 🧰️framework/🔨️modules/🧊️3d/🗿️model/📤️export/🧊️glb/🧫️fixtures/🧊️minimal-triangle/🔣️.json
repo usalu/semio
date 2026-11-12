@@ -1,0 +1,222 @@
+{
+  "schema": "semio.model.glb-vector/v1",
+  "name": "minimal-triangle",
+  "document": {
+    "version": "semio.model/v1",
+    "id": "triangle",
+    "title": {
+      "en": "Triangle",
+      "de": "Dreieck"
+    },
+    "nodes": [
+      {
+        "id": "root",
+        "parent": null,
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "mesh": "triangle"
+      }
+    ],
+    "solids": [],
+    "meshes": [
+      {
+        "id": "triangle",
+        "primitives": [
+          {
+            "mode": "triangles",
+            "material": "grey",
+            "positions": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            "indices": [
+              0,
+              1,
+              2
+            ]
+          }
+        ]
+      }
+    ],
+    "skins": [],
+    "materials": [
+      {
+        "id": "grey",
+        "title": {
+          "en": "Grey",
+          "de": "Grau"
+        },
+        "baseColor": [
+          0.5,
+          0.5,
+          0.5,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 1,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+  },
+  "options": {
+    "animations": false,
+    "variants": false
+  },
+  "expected": {
+    "glbByteLength": 1024,
+    "jsonChunkByteLength": 952,
+    "binChunkByteLength": 44,
+    "sha256": "521f2bebef2971fcf46459422ed3c996dad4a47e762e853831cbcb97fbbb51cf",
+    "accessorCounts": [
+      "VEC3:3",
+      "SCALAR:3"
+    ],
+    "json": {
+      "asset": {
+        "version": "2.0",
+        "generator": "semio.model glb/v1",
+        "extras": {
+          "schema": "semio.model/v1",
+          "id": "triangle",
+          "title": {
+            "en": "Triangle",
+            "de": "Dreieck"
+          }
+        }
+      },
+      "scene": 0,
+      "scenes": [
+        {
+          "name": "triangle",
+          "nodes": [
+            0
+          ],
+          "extras": {
+            "title": {
+              "en": "Triangle",
+              "de": "Dreieck"
+            }
+          }
+        }
+      ],
+      "nodes": [
+        {
+          "name": "root",
+          "mesh": 0
+        }
+      ],
+      "meshes": [
+        {
+          "name": "triangle",
+          "primitives": [
+            {
+              "attributes": {
+                "POSITION": 0
+              },
+              "indices": 1,
+              "material": 0,
+              "mode": 4
+            }
+          ]
+        }
+      ],
+      "materials": [
+        {
+          "name": "grey",
+          "pbrMetallicRoughness": {
+            "baseColorFactor": [
+              0.5,
+              0.5,
+              0.5,
+              1
+            ],
+            "metallicFactor": 0,
+            "roughnessFactor": 1
+          },
+          "alphaMode": "OPAQUE",
+          "doubleSided": false,
+          "extras": {
+            "title": {
+              "en": "Grey",
+              "de": "Grau"
+            }
+          }
+        }
+      ],
+      "buffers": [
+        {
+          "byteLength": 44
+        }
+      ],
+      "bufferViews": [
+        {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 36,
+          "target": 34962
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 36,
+          "byteLength": 6,
+          "target": 34963
+        }
+      ],
+      "accessors": [
+        {
+          "bufferView": 0,
+          "componentType": 5126,
+          "count": 3,
+          "type": "VEC3",
+          "min": [
+            0,
+            0,
+            0
+          ],
+          "max": [
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "bufferView": 1,
+          "componentType": 5123,
+          "count": 3,
+          "type": "SCALAR"
+        }
+      ]
+    }
+  }
+}

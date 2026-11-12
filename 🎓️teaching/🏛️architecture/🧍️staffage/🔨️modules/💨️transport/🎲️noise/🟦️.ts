@@ -2,6 +2,7 @@
  *
  * @see https://github.com/aappleby/smhasher — MurmurHash3 finaliser
  */
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🎲️ A 32-bit hash of four integers (murmur3 mixing). */
 export function hash32(a: number, b: number, c: number, d: number): number {
@@ -29,6 +30,6 @@ export const uniform = (hash: number): number => (hash + 0.5) / 4294967296;
 export function gaussianPair(seed: number, key: number, step: number): readonly [number, number] {
   const u1 = uniform(hash32(seed, key, step, 1));
   const u2 = uniform(hash32(seed, key, step, 2));
-  const r = Math.sqrt(-2 * Math.log(u1));
-  return [r * Math.cos(2 * Math.PI * u2), r * Math.sin(2 * Math.PI * u2)];
+  const r = Math.sqrt(-2 * portable.fastLog(u1));
+  return [r * portable.cos(2 * Math.PI * u2), r * portable.sin(2 * Math.PI * u2)];
 }

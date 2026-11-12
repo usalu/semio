@@ -2817,7 +2817,6 @@
           "operatingKey": "stage-1",
           "volumeFlowM3S": 0.016,
           "temperatureRiseK": 49.1,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "iec-60335-2-30"
         },
@@ -2834,7 +2833,6 @@
           "operatingKey": "stage-2",
           "volumeFlowM3S": 0.016,
           "temperatureRiseK": 50.7,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "iec-60335-2-30"
         }
@@ -2865,6 +2863,471 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "foot-back",
+          "kind": "box",
+          "bone": "body",
+          "material": "rubber-foot",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "size": [0.035, 0.016, 0.03],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [-0.0575, 0.008, -0.085]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.17]
+          }
+        },
+        {
+          "id": "foot-front",
+          "kind": "box",
+          "bone": "body",
+          "material": "rubber-foot",
+          "role": "body",
+          "tone": 0.15,
+          "region": "feet",
+          "size": [0.035, 0.016, 0.03],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0575, 0.008, -0.085]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.17]
+          }
+        },
+        {
+          "id": "housing",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-cream",
+          "role": "body",
+          "tone": 0.78,
+          "region": "casing",
+          "size": [0.168, 0.256, 0.235],
+          "cornerRadius": 0.02,
+          "transform": {
+            "translation": [-0.006, 0.144, 0.0025]
+          }
+        },
+        {
+          "id": "housing-front",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "abs-cream",
+          "role": "body",
+          "tone": 0.78,
+          "region": "casing",
+          "profile": [
+            [0.252, -0.115],
+            [0.25718, -0.11432],
+            [0.262, -0.11232],
+            [0.26614, -0.10914],
+            [0.26932, -0.105],
+            [0.27132, -0.10018],
+            [0.272, -0.095],
+            [0.272, 0.1],
+            [0.27132, 0.10518],
+            [0.26932, 0.11],
+            [0.26614, 0.11414],
+            [0.262, 0.11732],
+            [0.25718, 0.11932],
+            [0.252, 0.12],
+            [0.036, 0.12],
+            [0.03082, 0.11932],
+            [0.026, 0.11732],
+            [0.02186, 0.11414],
+            [0.01868, 0.11],
+            [0.01668, 0.10518],
+            [0.016, 0.1],
+            [0.016, -0.095],
+            [0.01668, -0.10018],
+            [0.01868, -0.105],
+            [0.02186, -0.10914],
+            [0.026, -0.11232],
+            [0.03082, -0.11432],
+            [0.036, -0.115]
+          ],
+          "plane": "yz",
+          "from": 0.078,
+          "to": 0.095,
+          "holes": [
+            [
+              [0.226, -0.105],
+              [0.22704, -0.10486],
+              [0.228, -0.10446],
+              [0.22883, -0.10383],
+              [0.22946, -0.103],
+              [0.22986, -0.10204],
+              [0.23, -0.101],
+              [0.23, 0.101],
+              [0.22986, 0.10204],
+              [0.22946, 0.103],
+              [0.22883, 0.10383],
+              [0.228, 0.10446],
+              [0.22704, 0.10486],
+              [0.226, 0.105],
+              [0.064, 0.105],
+              [0.06296, 0.10486],
+              [0.062, 0.10446],
+              [0.06117, 0.10383],
+              [0.06054, 0.103],
+              [0.06014, 0.10204],
+              [0.06, 0.101],
+              [0.06, -0.101],
+              [0.06014, -0.10204],
+              [0.06054, -0.103],
+              [0.06117, -0.10383],
+              [0.062, -0.10446],
+              [0.06296, -0.10486],
+              [0.064, -0.105]
+            ]
+          ]
+        },
+        {
+          "id": "top-cover",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-cream",
+          "role": "body",
+          "tone": 0.6,
+          "region": "top-cover",
+          "size": [0.1856, 0.022, 0.2356],
+          "cornerRadius": 0.01,
+          "transform": {
+            "translation": [0.0025, 0.261, 0.0025]
+          }
+        },
+        {
+          "id": "belt",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "abs-cream",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "casing",
+          "maxDenominator": 50,
+          "profile": [
+            [0.1, -0.0905],
+            [0.10531, -0.0898],
+            [0.11025, -0.08775],
+            [0.1145, -0.0845],
+            [0.11775, -0.08025],
+            [0.1198, -0.07531],
+            [0.1205, -0.07],
+            [0.1205, 0.075],
+            [0.1198, 0.08031],
+            [0.11775, 0.08525],
+            [0.1145, 0.0895],
+            [0.11025, 0.09275],
+            [0.10531, 0.0948],
+            [0.1, 0.0955],
+            [-0.095, 0.0955],
+            [-0.10031, 0.0948],
+            [-0.10525, 0.09275],
+            [-0.1095, 0.0895],
+            [-0.11275, 0.08525],
+            [-0.1148, 0.08031],
+            [-0.1155, 0.075],
+            [-0.1155, -0.07],
+            [-0.1148, -0.07531],
+            [-0.11275, -0.08025],
+            [-0.1095, -0.0845],
+            [-0.10525, -0.08775],
+            [-0.10031, -0.0898],
+            [-0.095, -0.0905]
+          ],
+          "plane": "zx",
+          "from": 0.0445,
+          "to": 0.0455,
+          "holes": [
+            [
+              [0.1, -0.09],
+              [0.10518, -0.08932],
+              [0.11, -0.08732],
+              [0.11414, -0.08414],
+              [0.11732, -0.08],
+              [0.11932, -0.07518],
+              [0.12, -0.07],
+              [0.12, 0.075],
+              [0.11932, 0.08018],
+              [0.11732, 0.085],
+              [0.11414, 0.08914],
+              [0.11, 0.09232],
+              [0.10518, 0.09432],
+              [0.1, 0.095],
+              [-0.095, 0.095],
+              [-0.10018, 0.09432],
+              [-0.105, 0.09232],
+              [-0.10914, 0.08914],
+              [-0.11232, 0.085],
+              [-0.11432, 0.08018],
+              [-0.115, 0.075],
+              [-0.115, -0.07],
+              [-0.11432, -0.07518],
+              [-0.11232, -0.08],
+              [-0.10914, -0.08414],
+              [-0.105, -0.08732],
+              [-0.10018, -0.08932],
+              [-0.095, -0.09]
+            ]
+          ]
+        },
+        {
+          "id": "handle",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "abs-cream",
+          "role": "body",
+          "tone": 0.75,
+          "region": "casing",
+          "profile": [
+            [-0.045, 0.268],
+            [-0.04475, 0.27899],
+            [-0.04391, 0.28806],
+            [-0.04236, 0.29535],
+            [-0.04, 0.301],
+            [-0.0367, 0.30515],
+            [-0.03234, 0.30794],
+            [-0.02682, 0.30951],
+            [-0.02, 0.31],
+            [0.03, 0.31],
+            [0.03682, 0.30951],
+            [0.04234, 0.30794],
+            [0.0467, 0.30515],
+            [0.05, 0.301],
+            [0.05236, 0.29535],
+            [0.05391, 0.28806],
+            [0.05475, 0.27899],
+            [0.055, 0.268]
+          ],
+          "plane": "xy",
+          "from": -0.065,
+          "to": 0.065,
+          "holes": [
+            [
+              [0.029, 0.278],
+              [0.03206, 0.27861],
+              [0.03466, 0.28034],
+              [0.03639, 0.28294],
+              [0.037, 0.286],
+              [0.037, 0.29],
+              [0.03639, 0.29306],
+              [0.03466, 0.29566],
+              [0.03206, 0.29739],
+              [0.029, 0.298],
+              [-0.02, 0.298],
+              [-0.02306, 0.29739],
+              [-0.02566, 0.29566],
+              [-0.02739, 0.29306],
+              [-0.028, 0.29],
+              [-0.028, 0.286],
+              [-0.02739, 0.28294],
+              [-0.02566, 0.28034],
+              [-0.02306, 0.27861],
+              [-0.02, 0.278]
+            ]
+          ]
+        },
+        {
+          "id": "outlet-grille",
+          "kind": "box",
+          "bone": "body",
+          "material": "steel-mesh",
+          "role": "body",
+          "tone": 0.2,
+          "region": "grille",
+          "size": [0.0025, 0.17, 0.21],
+          "cornerRadius": 0.001,
+          "transform": {
+            "translation": [0.07925, 0.145, 0.0]
+          }
+        },
+        {
+          "id": "louvres-lower",
+          "kind": "box",
+          "bone": "body",
+          "material": "steel-mesh",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "grille",
+          "maxDenominator": 100,
+          "size": [0.02102, 0.0015, 0.2],
+          "transform": {
+            "rotation": [0, 0, -0.21939, 0.97564],
+            "translation": [0.0885, 0.0705, 0.0]
+          },
+          "repeat": {
+            "count": 4,
+            "translation": [0, 0.02, 0]
+          }
+        },
+        {
+          "id": "louvres-upper",
+          "kind": "box",
+          "bone": "body",
+          "material": "steel-mesh",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "grille",
+          "maxDenominator": 50,
+          "size": [0.02102, 0.0015, 0.2],
+          "transform": {
+            "rotation": [0, 0, -0.21939, 0.97564],
+            "translation": [0.0885, 0.1505, 0.0]
+          },
+          "repeat": {
+            "count": 4,
+            "translation": [0, 0.02, 0]
+          }
+        },
+        {
+          "id": "inlet-plate",
+          "kind": "box",
+          "bone": "body",
+          "material": "pc-heat",
+          "role": "body",
+          "tone": 0.15,
+          "region": "intake",
+          "size": [0.002, 0.16, 0.21],
+          "cornerRadius": 0.001,
+          "transform": {
+            "translation": [-0.0905, 0.13, 0.0]
+          }
+        },
+        {
+          "id": "inlet-slat-bottom",
+          "kind": "box",
+          "bone": "body",
+          "material": "pc-heat",
+          "role": "body",
+          "tone": 0.3,
+          "region": "intake",
+          "size": [0.0075, 0.009, 0.21],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [-0.09425, 0.0545, 0.0]
+          }
+        },
+        {
+          "id": "inlet-slats",
+          "kind": "box",
+          "bone": "body",
+          "material": "pc-heat",
+          "role": "body",
+          "tone": 0.3,
+          "region": "intake",
+          "size": [0.0075, 0.01967, 0.21],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [-0.09425, 0.07083, 0.0]
+          },
+          "repeat": {
+            "count": 6,
+            "translation": [0, 0.02167, 0]
+          }
+        },
+        {
+          "id": "inlet-slat-top",
+          "kind": "box",
+          "bone": "body",
+          "material": "pc-heat",
+          "role": "body",
+          "tone": 0.3,
+          "region": "intake",
+          "size": [0.0075, 0.019, 0.21],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [-0.09425, 0.2005, 0.0]
+          }
+        },
+        {
+          "id": "dial",
+          "kind": "revolve",
+          "bone": "knob",
+          "material": "pp-dial",
+          "role": "body",
+          "tone": 0.2,
+          "region": "control",
+          "profile": [[0, 0.024], [0.005, 0.024]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, -0.12]
+        },
+        {
+          "id": "dial-hub",
+          "kind": "revolve",
+          "bone": "knob",
+          "material": "pp-dial",
+          "role": "body",
+          "tone": 0.35,
+          "region": "control",
+          "profile": [[0, 0.012], [0.001, 0.012]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, -0.121]
+        },
+        {
+          "id": "dial-pointer",
+          "kind": "box",
+          "bone": "knob",
+          "material": "pp-dial",
+          "role": "detail",
+          "tone": 0.95,
+          "region": "control",
+          "size": [0.002, 0.016, 0.0005],
+          "transform": {
+            "translation": [0.0, 0.014, -0.12125]
+          }
+        },
+        {
+          "id": "mode-switch",
+          "kind": "box",
+          "bone": "body",
+          "material": "pp-dial",
+          "role": "body",
+          "tone": 0.2,
+          "region": "control",
+          "size": [0.04, 0.02, 0.004],
+          "cornerRadius": 0.0019,
+          "transform": {
+            "translation": [0.0, 0.102, -0.117]
+          }
+        },
+        {
+          "id": "mode-mark",
+          "kind": "box",
+          "bone": "body",
+          "material": "pp-dial",
+          "role": "detail",
+          "tone": 0.95,
+          "region": "control",
+          "maxDenominator": 50,
+          "size": [0.02, 0.001, 0.0005],
+          "transform": {
+            "translation": [0.0, 0.102, -0.11925]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The housing is a rounded box (0.02 m corner radius from plan and front) offset 2.5 mm to +z as the plan and front views draw it, with the dial on the -z side face; a separate front frame (extrude with a hole) forms the outlet opening in which a recessed mesh plate and slanted louvre fins stand, the fins ending at the drawn +x extreme of 0.098 m.",
+          "de": "Das Gehäuse ist ein abgerundeter Quader (Eckenradius 0,02 m aus Grundriss und Ansicht), wie in Grundriss und Ansicht gezeichnet 2,5 mm nach +z versetzt, mit dem Drehknopf an der Seitenfläche -z; ein separater Frontrahmen (Extrusion mit Loch) bildet die Ausblasöffnung, in der eine zurückgesetzte Gitterplatte und schräge Lamellen stehen, deren Enden das gezeichnete Maximum +x von 0,098 m erreichen."
+        },
+        {
+          "en": "The handle is the drawn side outline extruded 0.13 m along w with the drawn finger opening as a true through-hole (the 2D plan and front rounding of the handle ends is not modelled). The intake is a dark plate behind eight slats whose gaps are the drawn slot lines.",
+          "de": "Der Griff ist die gezeichnete Seitenkontur, 0,13 m entlang w extrudiert, mit der gezeichneten Grifföffnung als echtem Durchgangsloch (die Rundung der Griffenden aus Grundriss und Ansicht ist nicht modelliert). Der Ansaugbereich ist eine dunkle Platte hinter acht Lamellen, deren Spalten die gezeichneten Schlitzlinien sind."
+        },
+        {
+          "en": "The knob bone carries dial, hub and pointer (revolute 0 to 270 degrees about w); the mode switch is view-only in the 2D drawings and is given an assumed 4 mm relief. The highlight streak is a rendering aid of the drawing and has no solid; lower louvres, belt, hub, mode mark and the upper louvres carry maxDenominator 100 or 50 as in the coarser drawings.",
+          "de": "Der Knopfknochen trägt Skala, Nabe und Zeiger (Drehgelenk 0 bis 270 Grad um w); der Modusschalter kommt nur in der 2D-Ansicht vor und erhält ein angenommenes Relief von 4 mm. Der Glanzstreifen ist ein Zeichnungshilfsmittel und hat keinen Körper; untere Lamellen, Gürtel, Nabe, Modusmarke und obere Lamellen tragen maxDenominator 100 bzw. 50 wie in den gröberen Zeichnungen."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "heating",
       "defaultClip": "warm-up",
@@ -2878,7 +3341,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

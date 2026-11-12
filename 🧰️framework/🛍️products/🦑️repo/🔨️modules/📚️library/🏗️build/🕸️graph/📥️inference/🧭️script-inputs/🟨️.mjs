@@ -144,7 +144,7 @@ export function workspacePackageModuleV1(containing, specifier, workspaceRoot, c
       const physical=host.realpath?host.realpath(manifest):manifest,local=relative(workspaceRoot,physical);
       if(local===""||local.startsWith("..")||isAbsolute(local)||local.split(sep).includes("node_modules"))continue;
       const text=host.readFile(physical);
-      if(text!==undefined&&JSON.parse(text).name===packageName){const error=new Error("Workspace import is not resolved by current package metadata: "+specifier+" from "+containing);error.code="MODULE_NOT_FOUND";throw error;}
+      if(text!==undefined&&JSON.parse(text).name===packageName){const error=new Error("Workspace import is not resolved by current package metadata: "+specifier+" from "+containing);error.code="MODULE_NOT_FOUND";error.unresolved=true;throw error;}
     }
     return undefined;
   }
@@ -342,14 +342,14 @@ function generatedTargetsV1(cache, closure, workspaceRoot) {
 
 /** 🗓️ Drops the scheduling code from a command closure: the files of the declared scheduling domains decide when and where the command runs, never what it writes, so an edit of one must not change the key of the target (the policy and its law live in the closure module's scheduling domains). */
 export function withoutSchedulingV1(closure, prefixes) {
-  const standard = prefixes === undefined, known = standard ? keptClosuresV1.get(closure) : undefined;
+  const standard = prefixes === undefined, key = standard ? undefined : prefixes.join("\0"), views = keptClosuresV1.get(closure) ?? keptClosuresV1.set(closure, new Map()).get(closure), known = views.get(key);
   if (known !== undefined) return known;
   const selected = prefixes ?? buildSchedulingPrefixesV1(), kept = closure.filter(entry => typeof entry !== "string" || !selected.some(prefix => (entry.startsWith("{workspaceRoot}/") ? entry.slice("{workspaceRoot}/".length) : entry).startsWith(prefix)));
-  if (standard) keptClosuresV1.set(closure, kept);
+  views.set(key, kept);
   return kept;
 }
 
-/** 🪆️ The filtered copy of one command closure under the standard scheduling prefixes, so a warm replay returns the identical array and keeps its compiled evidence. */
+/** 🪆️ The filtered copy of one command closure per prefix set, so a closure read through the same view again (every port of a provider designation reads the same walks) returns the identical array and keeps its compiled evidence. */
 const keptClosuresV1 = new WeakMap();
 
 /** 🔀️ The router script is the one closure member that is a content fact: its command table is read from its bytes, so the imports of the commands it runs with are exactly the ones its text names. */
@@ -445,7 +445,7 @@ async function walkImportsV1({ cache, workspaceRoot, requiredSources, selectors,
         if (kept && !kept.has(entry)) continue;
         const resource=buildImportResourceV1(path,entry);
         if(generated(resource.specifier))continue;
-        let resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,compiler.ModuleKind.ESNext,false,output);
+        let resolved;try{resolved=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,compiler.ModuleKind.ESNext,false,output);}catch(error){if(error?.unresolved!==true)throw error;}
         try { resolved ??= observedRequireResolve(path, resource.specifier); }
         catch (error) {
           if (error.code !== "MODULE_NOT_FOUND") throw error;
@@ -458,7 +458,7 @@ async function walkImportsV1({ cache, workspaceRoot, requiredSources, selectors,
       const references = observedSourceAnalysisV1(prepareSourceAnalysesV1().references,path);
       for (const [specifiers, mode] of [[references.runtime.imports, compiler.ModuleKind.ESNext], [references.runtime.requires, compiler.ModuleKind.CommonJS]]) for (const specifier of specifiers) {
         await checkpoint();
-        const resource=buildImportResourceV1(path,specifier);if(generated(resource.specifier))continue;const member=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,mode,false,output);
+        const resource=buildImportResourceV1(path,specifier);if(generated(resource.specifier))continue;let member;try{member=workspacePackageModuleV1(path,resource.specifier,workspaceRoot,compiler,host,mode,false,output);}catch(error){if(error?.unresolved!==true)throw error;}
         if (member&&!generated(member)) imports.push({path:member,source:resource.source});
       }
       for (const literal of references.urls) {

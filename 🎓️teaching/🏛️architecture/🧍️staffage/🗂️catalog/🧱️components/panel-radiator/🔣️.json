@@ -1141,6 +1141,15 @@
             }
           ]
         },
+        "sections": {
+          "elevation": {
+            "plane": 0.0,
+            "label": {
+              "en": "A-A",
+              "de": "A-A"
+            }
+          }
+        },
         "decisions": {
           "silhouette": {
             "en": "The vertical section of a type 22 radiator (panel, convector, convector, panel) hung on two brackets 0.035 m off the wall of the scene, valve head on the bottom connection. Front elevation (1.0 m long, 0.60 m high, 0.11 m above the floor): the front plate in three bands (water enters at the top, the plate cools towards the return) over its outline, a slotted grille strip at the top edge with the convector fin tips, the two end seams, the thermostatic head on the left and the lockshield cap on the right bottom connection, each with pipe and valve body. Front view with thermostatic head and lockshield moved inside the 1.0 m length (head 0.50 to 0.42 m left of the centre). Plan view: the top grille (100 x 1000 mm) with four slot lines, two end seams and the two 12 mm bracket plates in the 0.035 m wall gap.",
@@ -2982,7 +2991,6 @@
           "operatingKey": "heating",
           "volumeFlowM3S": 0.018,
           "temperatureRiseK": 28,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "radiator-catalogues"
         },
@@ -3043,6 +3051,322 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "panel-rear",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "region": "panel-rear",
+          "size": [0.585, 0.022, 1.0],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.2925, -0.011, 0]
+          }
+        },
+        {
+          "id": "panel-front-lower",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "region": "panel-front-lower",
+          "size": [0.195, 0.022, 1.0],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0975, -0.089, 0]
+          }
+        },
+        {
+          "id": "panel-front-mid",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "region": "panel-front-mid",
+          "size": [0.195, 0.022, 1.0],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.2925, -0.089, 0]
+          }
+        },
+        {
+          "id": "panel-front-upper",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.7,
+          "region": "panel-front-upper",
+          "size": [0.195, 0.022, 1.0],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.4875, -0.089, 0]
+          }
+        },
+        {
+          "id": "convector-rear",
+          "kind": "extrude",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "detail",
+          "tone": 0.5,
+          "region": "convector",
+          "profile": [
+            [0.03, -0.0216],
+            [0.08045, -0.0496],
+            [0.13091, -0.0216],
+            [0.18136, -0.0496],
+            [0.23182, -0.0216],
+            [0.28227, -0.0496],
+            [0.33273, -0.0216],
+            [0.38318, -0.0496],
+            [0.43364, -0.0216],
+            [0.48409, -0.0496],
+            [0.53455, -0.0216],
+            [0.585, -0.0496],
+            [0.585, -0.0504],
+            [0.53455, -0.0224],
+            [0.48409, -0.0504],
+            [0.43364, -0.0224],
+            [0.38318, -0.0504],
+            [0.33273, -0.0224],
+            [0.28227, -0.0504],
+            [0.23182, -0.0224],
+            [0.18136, -0.0504],
+            [0.13091, -0.0224],
+            [0.08045, -0.0504],
+            [0.03, -0.0224]
+          ],
+          "plane": "xy",
+          "from": -0.47,
+          "to": 0.47
+        },
+        {
+          "id": "convector-front",
+          "kind": "extrude",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "detail",
+          "tone": 0.5,
+          "region": "convector",
+          "profile": [
+            [0.03, -0.0496],
+            [0.08045, -0.0776],
+            [0.13091, -0.0496],
+            [0.18136, -0.0776],
+            [0.23182, -0.0496],
+            [0.28227, -0.0776],
+            [0.33273, -0.0496],
+            [0.38318, -0.0776],
+            [0.43364, -0.0496],
+            [0.48409, -0.0776],
+            [0.53455, -0.0496],
+            [0.585, -0.0776],
+            [0.585, -0.0784],
+            [0.53455, -0.0504],
+            [0.48409, -0.0784],
+            [0.43364, -0.0504],
+            [0.38318, -0.0784],
+            [0.33273, -0.0504],
+            [0.28227, -0.0784],
+            [0.23182, -0.0504],
+            [0.18136, -0.0784],
+            [0.13091, -0.0504],
+            [0.08045, -0.0784],
+            [0.03, -0.0504]
+          ],
+          "plane": "xy",
+          "from": -0.47,
+          "to": 0.47
+        },
+        {
+          "id": "end-cap",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "region": "panel-rear",
+          "size": [0.585, 0.056, 0.03],
+          "transform": {
+            "translation": [0.2925, -0.05, 0.485]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.97]
+          }
+        },
+        {
+          "id": "bottom-cap",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "body",
+          "tone": 0.5,
+          "region": "panel-rear",
+          "size": [0.003, 0.1, 1.0],
+          "transform": {
+            "translation": [0.0015, -0.05, 0]
+          }
+        },
+        {
+          "id": "top-grille",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "detail",
+          "tone": 0.35,
+          "region": "top-grille",
+          "size": [0.015, 0.1, 1.0],
+          "transform": {
+            "translation": [0.5925, -0.05, 0]
+          }
+        },
+        {
+          "id": "bracket-l",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "detail",
+          "tone": 0.4,
+          "region": "bracket",
+          "size": [0.012, 0.035, 0.04],
+          "transform": {
+            "translation": [0.056, 0.0175, 0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.42, 0, 0]
+          }
+        },
+        {
+          "id": "bracket-r",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "painted-steel",
+          "role": "detail",
+          "tone": 0.4,
+          "region": "bracket",
+          "size": [0.012, 0.035, 0.04],
+          "transform": {
+            "translation": [0.056, 0.0175, -0.4]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0.42, 0, 0]
+          }
+        },
+        {
+          "id": "supply-pipe-l",
+          "kind": "revolve",
+          "bone": "radiator",
+          "material": "brass",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "valve",
+          "profile": [[0, 0.011], [0.07, 0.011]],
+          "axis": [1, 0, 0],
+          "origin": [-0.11, -0.055, -0.335]
+        },
+        {
+          "id": "supply-pipe-r",
+          "kind": "revolve",
+          "bone": "radiator",
+          "material": "brass",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "valve",
+          "profile": [[0, 0.011], [0.07, 0.011]],
+          "axis": [1, 0, 0],
+          "origin": [-0.11, -0.055, 0.395]
+        },
+        {
+          "id": "valve-body-l",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "brass",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "valve",
+          "size": [0.06, 0.044, 0.07],
+          "transform": {
+            "translation": [-0.03, -0.055, -0.335]
+          }
+        },
+        {
+          "id": "valve-body-r",
+          "kind": "box",
+          "bone": "radiator",
+          "material": "brass",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "valve",
+          "size": [0.06, 0.044, 0.07],
+          "transform": {
+            "translation": [-0.03, -0.055, 0.395]
+          }
+        },
+        {
+          "id": "lockshield-cap",
+          "kind": "revolve",
+          "bone": "radiator",
+          "material": "brass",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "valve",
+          "profile": [[0, 0.021], [0.032, 0.021]],
+          "axis": [0, 0, 1],
+          "origin": [-0.033, -0.055, 0.43]
+        },
+        {
+          "id": "valve-head",
+          "kind": "revolve",
+          "bone": "valve-head",
+          "material": "brass",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "valve",
+          "profile": [[0, 0.018], [0.0035, 0.0265], [0.012, 0.03], [0.068, 0.03], [0.0765, 0.0265], [0.08, 0.018]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, -0.45]
+        },
+        {
+          "id": "valve-index",
+          "kind": "box",
+          "bone": "valve-head",
+          "material": "brass",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "valve",
+          "maxDenominator": 50,
+          "size": [0.004, 0.027, 0.002],
+          "transform": {
+            "translation": [0, 0.0135, -0.451]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "A type 22 panel radiator is built from its thermal regions: a 22 mm rear panel, three 22 mm front panel sections of 195 mm (lower, mid, upper, so the thermal view shows the vertical temperature gradient), two thin zigzag convector fins between them, end caps, the top grille plate and the bottom cap. Elevation panels end at 585 mm; the front view draws 565 mm (2D inconsistency of 20 mm), the elevation values are used.",
+          "de": "Ein Plattenheizkörper Typ 22 ist aus seinen thermischen Regionen aufgebaut: eine 22 mm Rückplatte, drei 22 mm Frontplattenabschnitte von 195 mm (unten, Mitte, oben, damit die thermische Ansicht den vertikalen Temperaturverlauf zeigt), zwei dünne Zickzack-Konvektorlamellen dazwischen, Endkappen, die Abdeckgitterplatte und die untere Kappe. Die Platten enden in der Ansicht bei 585 mm; die Vorderansicht zeichnet 565 mm (2D-Widerspruch von 20 mm), die Werte der Ansicht sind verwendet."
+        },
+        {
+          "en": "The thermostatic head is a revolve about the lateral axis on the rotating valve-head bone, so the knob keeps its shape in every pose; a small dark index ridge on its outer end face makes the rotation (0 to 270 degrees) visible. Its centre follows the elevation (bone origin 85 mm above the floor); the front view draws it 15 mm lower (2D inconsistency).",
+          "de": "Der Thermostatkopf ist ein Rotationskörper um die Querachse am drehenden Knochen valve-head, sodass der Knopf in jeder Pose seine Form behält; ein kleiner dunkler Indexsteg an der äusseren Stirnfläche macht die Drehung (0 bis 270 Grad) sichtbar. Sein Mittelpunkt folgt der Ansicht (Knochenursprung 85 mm über dem Boden); die Vorderansicht zeichnet ihn 15 mm tiefer (2D-Widerspruch)."
+        },
+        {
+          "en": "Left and right valve bodies sit on 22 mm brass pipes rising from the floor; the right one carries the lockshield cap. Grille slots, convector hatching and seam lines are 2D texture and not modelled.",
+          "de": "Linker und rechter Ventilkörper sitzen auf 22 mm Messingrohren vom Boden; der rechte trägt die Rücklaufverschraubungskappe. Gitterschlitze, Konvektorschraffur und Nahtlinien sind 2D-Textur und nicht modelliert."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "rated",
       "defaultClip": "heat-up",
@@ -3056,7 +3380,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

@@ -1,0 +1,13 @@
+import { Author } from "../../veg-lib.ts";
+const a = new Author("multi-stem-birch");
+a.loftFromViews("stool", "root-plate", { elev: "stool", front: "stool", range: [0, 0.35], n: 4, exp: 2.3, pinch: 0.8 });
+const stems = ["stem-l-1", "stem-c-1", "stem-r-1", "stem-l-2", "stem-c-2", "stem-r-2"];
+a.limbs(stems.map((bone) => ({ bone, meta: a.meta(bone), r0: bone.endsWith("-1") ? 0.14 : 0.095, r1: bone.endsWith("-1") ? 0.1 : 0.06 })));
+const zOf = (fol: string) => { const ids = a.st.plan.filter((s) => s.closed && s.shape.bone === fol && /^p-/.test(s.shape.id)); const cs = ids.map((s) => a.pca(s.shape.id).cz); return cs.reduce((t, c) => t + c, 0) / (cs.length || 1); };
+const brs = ["br-l-a", "br-l-b", "br-c-a", "br-c-b", "br-r-a", "br-r-b"];
+const branchMeta = a.meta("br-l-a");
+a.limbs(brs.map((bone) => ({ bone, meta: a.meta(bone), zEnd: zOf(bone.replace("br-", "fol-")) * 0.45, r0: 0.07, r1: 0.04 })));
+a.lobeTiers({ twig: 0.03, twigMeta: branchMeta, coreRe: /^$/, clampX: true, k: 0.95, ky: 0.93 });
+a.note("A multi-stem birch: three stems, each in two bones (lower and upper), are tapered capsules whose lateral drift follows the front outlines; the stool at the base is a flattened loft.", "Eine mehrstämmige Birke: drei Stämme in je zwei Knochen (unten, oben) sind verjüngte Kapseln, deren Seitendrift den Front-Umrissen folgt; der Wurzelstock am Fuß ist ein abgeflachter Loft.");
+a.note("The crown is the authored set of foliage lobes: each lobe is an oriented ellipsoid fitted to its plan outline at the height of its front outline, bound to the foliage bone of its branch, and carried by a thin twig from that bone's origin so sway clips move them; branches are capsules aiming at the mean lateral position of their lobes.", "Die Krone ist der gezeichnete Satz Laublappen: jeder Lappen ist ein ausgerichtetes Ellipsoid, an den Umriss der Draufsicht angepasst und in der Höhe seines Front-Umrisses, an den Laubknochen seines Asts gebunden und von einem dünnen Zweig ab dem Knochenursprung getragen, damit Schwankungsclips sie mitnehmen; Äste sind Kapseln, die auf die mittlere Seitenlage ihrer Lappen zielen.");
+a.save();

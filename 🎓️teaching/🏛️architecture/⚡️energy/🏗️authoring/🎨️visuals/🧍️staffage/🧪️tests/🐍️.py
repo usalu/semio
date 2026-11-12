@@ -8,6 +8,7 @@ import io
 import json
 import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -470,6 +471,36 @@ class Schema(unittest.TestCase):
         for vector in self.VECTORS["invalid"]:
             with self.subTest(case=vector["name"]):
                 self.assertTrue(list(validator.iter_errors({"version": 1, "casts": {"bad": vector["cast"]}})))
+
+    def test_the_viewpoints_and_export_formats_agree_with_the_staffage_schema(self):
+        case = CASE["viewpoints"]
+        schema = json.loads((S._SOURCES / "🧬️schema/🔣️.json").read_text(encoding="utf-8"))["$defs"]
+        cast = json.loads(self.SCHEMA.read_text(encoding="utf-8"))["$defs"]
+        self.assertEqual(list(S._VIEWPOINTS), schema["Viewpoint"]["enum"])
+        self.assertEqual(list(S._VIEWPOINTS), cast["Cast"]["properties"]["viewpoint"]["enum"])
+        self.assertEqual(list(S._VIEWPOINTS), case["valid"])
+        self.assertTrue(set(case["formats"]["models"]) <= set(schema["ExportFormat"]["enum"]))
+        validator = self.validator()
+        for viewpoint in S._VIEWPOINTS:
+            with self.subTest(viewpoint=viewpoint):
+                entry = {**case["axonometric"]["entry"], "viewpoint": viewpoint}
+                self.assertEqual(S.entry_issues(entry), [])
+                self.assertEqual(list(validator.iter_errors({"version": 1, "casts": {"case": entry}})), [])
+
+    def test_catalog_assets_listing_every_export_format_are_not_rejected(self):
+        case = CASE["viewpoints"]
+        formats = set(json.loads((S._SOURCES / "🧬️schema/🔣️.json").read_text(encoding="utf-8"))["$defs"]["ExportFormat"]["enum"])
+        files = sorted((S._SOURCES / "🗂️catalog").glob(f"*/*/{S._INDEX}"))
+        listed = {file.parent.name: set(json.loads(file.read_text(encoding="utf-8"))["asset"]["exports"]) for file in files if "exports" in json.loads(file.read_text(encoding="utf-8")).get("asset", {})}
+        self.assertTrue(listed)
+        for slug, exports in listed.items():
+            self.assertTrue(exports <= formats, slug)
+        self.assertTrue(set(case["formats"]["models"]) <= listed[case["formats"]["asset"]])
+        for slug in listed:
+            self.assertRegex(S.asset_revision(slug), r"^sha256:[0-9a-f]{64}$")
+        entry = {**case["axonometric"]["entry"], "asset": case["formats"]["asset"], "viewpoint": "axonometric"}
+        self.assertEqual(S.entry_issues(entry), [])
+        self.assertEqual(len(S.cast_key(entry)), S._KEY_LENGTH)
 
     def test_the_manifest_keys_are_cast_slugs(self):
         validator = self.validator()
@@ -1014,6 +1045,46 @@ def snapshot(root: Path) -> dict[str, bytes | None]:
     return {path.relative_to(root).as_posix(): path.read_bytes() if path.is_file() else None for path in sorted(root.rglob("*")) if kept(path)}
 
 
+class Axonometric(unittest.TestCase):
+    def export(self, root: Path, viewpoints):
+        case = CASE["viewpoints"]["axonometric"]
+        manifest = root / "manifest.json"
+        manifest.write_text(json.dumps({"version": 1, "casts": {f"case-{viewpoint}": {**case["entry"], "viewpoint": viewpoint} for viewpoint in viewpoints}}), encoding="utf-8")
+        with patch.dict(os.environ, {"SEMIO_TEACHING_CACHE_ROOT": str(root / "cache")}), patch.object(S, "_MANIFEST", manifest), contextlib.redirect_stderr(io.StringIO()):
+            return S.ensure_casts(None, None)
+
+    def drawn(self, folder: Path) -> tuple[float, float, float, float]:
+        import svgelements
+
+        index = json.loads((folder / S._INDEX).read_text(encoding="utf-8"))
+        parsed = svgelements.SVG.parse(str(folder / index["frames"][0]))
+        boxes = [e.bbox() for e in parsed.elements() if isinstance(e, svgelements.Shape) and e.bbox()]
+        pixels = float(parsed.width) / float(parsed.viewbox.width)
+        ox, oy = index["originMm"]
+        scale = index["mmPerMetre"]
+        return ((min(b[0] for b in boxes) / pixels - ox) / scale, (oy - max(b[3] for b in boxes) / pixels) / scale, (max(b[2] for b in boxes) / pixels - ox) / scale, (oy - min(b[1] for b in boxes) / pixels) / scale)
+
+    def test_the_exporter_draws_the_axonometric_view_and_an_independent_parser_measures_the_bounds_it_reports(self):
+        case = CASE["viewpoints"]["axonometric"]
+        with tempfile.TemporaryDirectory() as directory:
+            folders = self.export(Path(directory), ("elevation", "axonometric"))
+            indexes = {name: json.loads((folder / S._INDEX).read_text(encoding="utf-8")) for name, folder in folders.items()}
+            axo, elevation = indexes["case-axonometric"], indexes["case-elevation"]
+            self.assertEqual((axo["viewpoint"], axo["provenance"]["view"]["viewpoint"]), ("axonometric", "axonometric"))
+            self.assertEqual(elevation["viewpoint"], "elevation")
+            for name, index in indexes.items():
+                with self.subTest(cast=name):
+                    padding = case["paddingMm"] / index["mmPerMetre"]
+                    bounds = index["boundsM"]
+                    measured = self.drawn(folders[name])
+                    np.testing.assert_allclose(measured, [bounds["minX"] + padding, bounds["minY"] + padding, bounds["maxX"] - padding, bounds["maxY"] - padding], atol=case["toleranceM"])
+            width = lambda folder: self.drawn(folder)[2] - self.drawn(folder)[0]
+            height = lambda folder: self.drawn(folder)[3] - self.drawn(folder)[1]
+            self.assertGreaterEqual(height(folders["case-axonometric"]), axo["heightM"] - case["toleranceM"])
+            self.assertGreater(width(folders["case-axonometric"]), width(folders["case-elevation"]) + case["toleranceM"])
+            self.assertNotEqual((folders["case-axonometric"] / "0000.svg").read_bytes(), (folders["case-elevation"] / "0000.svg").read_bytes())
+
+
 class Cancellation(unittest.TestCase):
     VECTORS = json.loads((S._SOURCES / "🧫️fixtures/🎭️cast-cancellation/🔣️.json").read_text(encoding="utf-8"))
 
@@ -1047,30 +1118,25 @@ class Cancellation(unittest.TestCase):
 
         def progress(line: str) -> None:
             lines.append(line)
-            if re.match(self.VECTORS["progress"]["cast"], line):
-                timer = threading.Timer(0.5, interrupt)
-                timers.append(timer)
-                timer.start()
-
-        def interrupt() -> None:
-            interrupted.append(time.monotonic())
-            _thread.interrupt_main()
+            frame = re.match(self.VECTORS["progress"]["frames"], line)
+            if frame and int(frame.group(1)) >= self.VECTORS["cancelAfterFrames"] and not interrupted:
+                interrupted.append(time.monotonic())
+                _thread.interrupt_main()
 
         interrupted: list[float] = []
-        timers: list[threading.Timer] = []
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             keep = root / "cache/staffage/keep"
             keep.mkdir(parents=True)
             (keep / "🔣️.json").write_text("{}", encoding="utf-8")
             before = snapshot(root / "cache")
-            with patch.object(subprocess, "Popen", Recording):
-                try:
+            previous = signal.signal(signal.SIGINT, signal.default_int_handler)
+            try:
+                with patch.object(subprocess, "Popen", Recording):
                     with self.assertRaises(KeyboardInterrupt):
                         self.run_with(root, self.VECTORS["slowIds"], progress)
-                finally:
-                    for timer in timers:
-                        timer.cancel()
+            finally:
+                signal.signal(signal.SIGINT, previous)
             self.assertLess(time.monotonic() - interrupted[0], 60)
             self.assertEqual(snapshot(root / "cache"), before)
             total = self.VECTORS["slowFrames"] * len(self.VECTORS["slowIds"])

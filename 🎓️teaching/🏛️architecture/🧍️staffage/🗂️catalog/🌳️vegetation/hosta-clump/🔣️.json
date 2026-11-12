@@ -32,7 +32,7 @@
           }
         },
         {
-          "id": "petiole-R1",
+          "id": "petiole-r1",
           "parent": "root-plate",
           "title": {
             "en": "Petiole R1",
@@ -57,8 +57,8 @@
           }
         },
         {
-          "id": "blade-R1",
-          "parent": "petiole-R1",
+          "id": "blade-r1",
+          "parent": "petiole-r1",
           "title": {
             "en": "Leaf blade R1",
             "de": "Blattspreite R1"
@@ -82,7 +82,7 @@
           }
         },
         {
-          "id": "petiole-R2",
+          "id": "petiole-r2",
           "parent": "root-plate",
           "title": {
             "en": "Petiole R2",
@@ -107,8 +107,8 @@
           }
         },
         {
-          "id": "blade-R2",
-          "parent": "petiole-R2",
+          "id": "blade-r2",
+          "parent": "petiole-r2",
           "title": {
             "en": "Leaf blade R2",
             "de": "Blattspreite R2"
@@ -132,7 +132,7 @@
           }
         },
         {
-          "id": "petiole-R3",
+          "id": "petiole-r3",
           "parent": "root-plate",
           "title": {
             "en": "Petiole R3",
@@ -157,8 +157,8 @@
           }
         },
         {
-          "id": "blade-R3",
-          "parent": "petiole-R3",
+          "id": "blade-r3",
+          "parent": "petiole-r3",
           "title": {
             "en": "Leaf blade R3",
             "de": "Blattspreite R3"
@@ -182,7 +182,7 @@
           }
         },
         {
-          "id": "petiole-R4",
+          "id": "petiole-r4",
           "parent": "root-plate",
           "title": {
             "en": "Petiole R4",
@@ -207,8 +207,8 @@
           }
         },
         {
-          "id": "blade-R4",
-          "parent": "petiole-R4",
+          "id": "blade-r4",
+          "parent": "petiole-r4",
           "title": {
             "en": "Leaf blade R4",
             "de": "Blattspreite R4"
@@ -232,7 +232,7 @@
           }
         },
         {
-          "id": "petiole-L1",
+          "id": "petiole-l1",
           "parent": "root-plate",
           "title": {
             "en": "Petiole L1",
@@ -257,8 +257,8 @@
           }
         },
         {
-          "id": "blade-L1",
-          "parent": "petiole-L1",
+          "id": "blade-l1",
+          "parent": "petiole-l1",
           "title": {
             "en": "Leaf blade L1",
             "de": "Blattspreite L1"
@@ -282,7 +282,7 @@
           }
         },
         {
-          "id": "petiole-L2",
+          "id": "petiole-l2",
           "parent": "root-plate",
           "title": {
             "en": "Petiole L2",
@@ -307,8 +307,8 @@
           }
         },
         {
-          "id": "blade-L2",
-          "parent": "petiole-L2",
+          "id": "blade-l2",
+          "parent": "petiole-l2",
           "title": {
             "en": "Leaf blade L2",
             "de": "Blattspreite L2"
@@ -332,7 +332,7 @@
           }
         },
         {
-          "id": "petiole-L3",
+          "id": "petiole-l3",
           "parent": "root-plate",
           "title": {
             "en": "Petiole L3",
@@ -357,8 +357,8 @@
           }
         },
         {
-          "id": "blade-L3",
-          "parent": "petiole-L3",
+          "id": "blade-l3",
+          "parent": "petiole-l3",
           "title": {
             "en": "Leaf blade L3",
             "de": "Blattspreite L3"
@@ -382,7 +382,7 @@
           }
         },
         {
-          "id": "petiole-L4",
+          "id": "petiole-l4",
           "parent": "root-plate",
           "title": {
             "en": "Petiole L4",
@@ -407,8 +407,8 @@
           }
         },
         {
-          "id": "blade-L4",
-          "parent": "petiole-L4",
+          "id": "blade-l4",
+          "parent": "petiole-l4",
           "title": {
             "en": "Leaf blade L4",
             "de": "Blattspreite L4"
@@ -432,7 +432,7 @@
           }
         },
         {
-          "id": "petiole-C1",
+          "id": "petiole-c1",
           "parent": "root-plate",
           "title": {
             "en": "Petiole C1",
@@ -457,8 +457,8 @@
           }
         },
         {
-          "id": "blade-C1",
-          "parent": "petiole-C1",
+          "id": "blade-c1",
+          "parent": "petiole-c1",
           "title": {
             "en": "Leaf blade C1",
             "de": "Blattspreite C1"
@@ -502,7 +502,7 @@
       },
       {
         "id": "tp-outer-1",
-        "bone": "blade-R1",
+        "bone": "blade-r1",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -513,7 +513,7 @@
       },
       {
         "id": "tp-outer-2",
-        "bone": "blade-R2",
+        "bone": "blade-r2",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -524,7 +524,7 @@
       },
       {
         "id": "tp-inner-1",
-        "bone": "blade-R3",
+        "bone": "blade-r3",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -535,7 +535,7 @@
       },
       {
         "id": "tp-inner-2",
-        "bone": "blade-R4",
+        "bone": "blade-r4",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -546,7 +546,7 @@
       },
       {
         "id": "tp-outer-3",
-        "bone": "blade-L1",
+        "bone": "blade-l1",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -557,7 +557,7 @@
       },
       {
         "id": "tp-outer-4",
-        "bone": "blade-L2",
+        "bone": "blade-l2",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -568,7 +568,7 @@
       },
       {
         "id": "tp-inner-3",
-        "bone": "blade-L3",
+        "bone": "blade-l3",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -579,7 +579,7 @@
       },
       {
         "id": "tp-inner-4",
-        "bone": "blade-L4",
+        "bone": "blade-l4",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -590,7 +590,7 @@
       },
       {
         "id": "tp-inner-5",
-        "bone": "blade-C1",
+        "bone": "blade-c1",
         "x": 0.1552,
         "y": 0,
         "kind": "emitter",
@@ -698,8 +698,8 @@
         "geometry": {
           "elevation": [
             {
-              "id": "midrib-R1",
-              "bone": "blade-R1",
+              "id": "midrib-r1",
+              "bone": "blade-r1",
               "role": "detail",
               "z": 5,
               "filled": false,
@@ -726,15 +726,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R1",
+                "axisBone": "blade-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R1",
-              "bone": "blade-R1",
+              "id": "blade-r1",
+              "bone": "blade-r1",
               "role": "body",
               "z": 2,
               "filled": true,
@@ -750,8 +750,8 @@
               }
             },
             {
-              "id": "midrib-L1",
-              "bone": "blade-L1",
+              "id": "midrib-l1",
+              "bone": "blade-l1",
               "role": "detail",
               "z": 5.01,
               "filled": false,
@@ -778,15 +778,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L1",
+                "axisBone": "blade-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L1",
-              "bone": "blade-L1",
+              "id": "blade-l1",
+              "bone": "blade-l1",
               "role": "body",
               "z": 2.01,
               "filled": true,
@@ -802,8 +802,8 @@
               }
             },
             {
-              "id": "midrib-R2",
-              "bone": "blade-R2",
+              "id": "midrib-r2",
+              "bone": "blade-r2",
               "role": "detail",
               "z": 5.02,
               "filled": false,
@@ -830,15 +830,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R2",
+                "axisBone": "blade-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R2",
-              "bone": "blade-R2",
+              "id": "blade-r2",
+              "bone": "blade-r2",
               "role": "body",
               "z": 2.02,
               "filled": true,
@@ -854,8 +854,8 @@
               }
             },
             {
-              "id": "midrib-L2",
-              "bone": "blade-L2",
+              "id": "midrib-l2",
+              "bone": "blade-l2",
               "role": "detail",
               "z": 5.03,
               "filled": false,
@@ -882,15 +882,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L2",
+                "axisBone": "blade-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L2",
-              "bone": "blade-L2",
+              "id": "blade-l2",
+              "bone": "blade-l2",
               "role": "body",
               "z": 2.03,
               "filled": true,
@@ -906,8 +906,8 @@
               }
             },
             {
-              "id": "midrib-R3",
-              "bone": "blade-R3",
+              "id": "midrib-r3",
+              "bone": "blade-r3",
               "role": "detail",
               "z": 5.04,
               "filled": false,
@@ -934,15 +934,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R3",
+                "axisBone": "blade-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R3",
-              "bone": "blade-R3",
+              "id": "blade-r3",
+              "bone": "blade-r3",
               "role": "body",
               "z": 2.04,
               "filled": true,
@@ -958,8 +958,8 @@
               }
             },
             {
-              "id": "midrib-L3",
-              "bone": "blade-L3",
+              "id": "midrib-l3",
+              "bone": "blade-l3",
               "role": "detail",
               "z": 5.05,
               "filled": false,
@@ -986,15 +986,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L3",
+                "axisBone": "blade-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L3",
-              "bone": "blade-L3",
+              "id": "blade-l3",
+              "bone": "blade-l3",
               "role": "body",
               "z": 2.05,
               "filled": true,
@@ -1010,8 +1010,8 @@
               }
             },
             {
-              "id": "midrib-R4",
-              "bone": "blade-R4",
+              "id": "midrib-r4",
+              "bone": "blade-r4",
               "role": "detail",
               "z": 5.06,
               "filled": false,
@@ -1038,15 +1038,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R4",
+                "axisBone": "blade-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R4",
-              "bone": "blade-R4",
+              "id": "blade-r4",
+              "bone": "blade-r4",
               "role": "body",
               "z": 2.06,
               "filled": true,
@@ -1062,8 +1062,8 @@
               }
             },
             {
-              "id": "midrib-L4",
-              "bone": "blade-L4",
+              "id": "midrib-l4",
+              "bone": "blade-l4",
               "role": "detail",
               "z": 5.07,
               "filled": false,
@@ -1090,15 +1090,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L4",
+                "axisBone": "blade-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L4",
-              "bone": "blade-L4",
+              "id": "blade-l4",
+              "bone": "blade-l4",
               "role": "body",
               "z": 2.07,
               "filled": true,
@@ -1114,8 +1114,8 @@
               }
             },
             {
-              "id": "petiole-R4",
-              "bone": "petiole-R4",
+              "id": "petiole-r4",
+              "bone": "petiole-r4",
               "role": "body",
               "z": 1.03,
               "filled": true,
@@ -1143,15 +1143,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R4",
+                "axisBone": "petiole-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L4",
-              "bone": "petiole-L4",
+              "id": "petiole-l4",
+              "bone": "petiole-l4",
               "role": "body",
               "z": 1.08,
               "filled": true,
@@ -1179,15 +1179,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L4",
+                "axisBone": "petiole-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R3",
-              "bone": "petiole-R3",
+              "id": "petiole-r3",
+              "bone": "petiole-r3",
               "role": "body",
               "z": 1.02,
               "filled": true,
@@ -1215,15 +1215,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R3",
+                "axisBone": "petiole-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L3",
-              "bone": "petiole-L3",
+              "id": "petiole-l3",
+              "bone": "petiole-l3",
               "role": "body",
               "z": 1.07,
               "filled": true,
@@ -1251,15 +1251,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L3",
+                "axisBone": "petiole-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L2",
-              "bone": "petiole-L2",
+              "id": "petiole-l2",
+              "bone": "petiole-l2",
               "role": "body",
               "z": 1.06,
               "filled": true,
@@ -1287,15 +1287,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L2",
+                "axisBone": "petiole-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R2",
-              "bone": "petiole-R2",
+              "id": "petiole-r2",
+              "bone": "petiole-r2",
               "role": "body",
               "z": 1.01,
               "filled": true,
@@ -1323,15 +1323,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R2",
+                "axisBone": "petiole-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L1",
-              "bone": "petiole-L1",
+              "id": "petiole-l1",
+              "bone": "petiole-l1",
               "role": "body",
               "z": 1.05,
               "filled": true,
@@ -1359,15 +1359,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L1",
+                "axisBone": "petiole-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R1",
-              "bone": "petiole-R1",
+              "id": "petiole-r1",
+              "bone": "petiole-r1",
               "role": "body",
               "z": 1,
               "filled": true,
@@ -1395,15 +1395,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R1",
+                "axisBone": "petiole-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "midrib-C1",
-              "bone": "blade-C1",
+              "id": "midrib-c1",
+              "bone": "blade-c1",
               "role": "detail",
               "z": 5.08,
               "filled": false,
@@ -1430,15 +1430,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-C1",
+                "axisBone": "blade-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-C1",
-              "bone": "blade-C1",
+              "id": "blade-c1",
+              "bone": "blade-c1",
               "role": "body",
               "z": 2.08,
               "filled": true,
@@ -1454,8 +1454,8 @@
               }
             },
             {
-              "id": "petiole-C1",
-              "bone": "petiole-C1",
+              "id": "petiole-c1",
+              "bone": "petiole-c1",
               "role": "body",
               "z": 1.04,
               "filled": true,
@@ -1483,7 +1483,7 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-C1",
+                "axisBone": "petiole-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
@@ -1492,8 +1492,8 @@
           ],
           "front": [
             {
-              "id": "midrib-R1",
-              "bone": "blade-R1",
+              "id": "midrib-r1",
+              "bone": "blade-r1",
               "role": "detail",
               "z": 5,
               "filled": false,
@@ -1520,15 +1520,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R1",
+                "axisBone": "blade-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R1",
-              "bone": "blade-R1",
+              "id": "blade-r1",
+              "bone": "blade-r1",
               "role": "body",
               "z": 2,
               "filled": true,
@@ -1544,8 +1544,8 @@
               }
             },
             {
-              "id": "midrib-L1",
-              "bone": "blade-L1",
+              "id": "midrib-l1",
+              "bone": "blade-l1",
               "role": "detail",
               "z": 5.01,
               "filled": false,
@@ -1572,15 +1572,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L1",
+                "axisBone": "blade-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L1",
-              "bone": "blade-L1",
+              "id": "blade-l1",
+              "bone": "blade-l1",
               "role": "body",
               "z": 2.01,
               "filled": true,
@@ -1596,8 +1596,8 @@
               }
             },
             {
-              "id": "midrib-R2",
-              "bone": "blade-R2",
+              "id": "midrib-r2",
+              "bone": "blade-r2",
               "role": "detail",
               "z": 5.02,
               "filled": false,
@@ -1624,15 +1624,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R2",
+                "axisBone": "blade-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R2",
-              "bone": "blade-R2",
+              "id": "blade-r2",
+              "bone": "blade-r2",
               "role": "body",
               "z": 2.02,
               "filled": true,
@@ -1648,8 +1648,8 @@
               }
             },
             {
-              "id": "midrib-L2",
-              "bone": "blade-L2",
+              "id": "midrib-l2",
+              "bone": "blade-l2",
               "role": "detail",
               "z": 5.03,
               "filled": false,
@@ -1676,15 +1676,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L2",
+                "axisBone": "blade-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L2",
-              "bone": "blade-L2",
+              "id": "blade-l2",
+              "bone": "blade-l2",
               "role": "body",
               "z": 2.03,
               "filled": true,
@@ -1700,8 +1700,8 @@
               }
             },
             {
-              "id": "midrib-R3",
-              "bone": "blade-R3",
+              "id": "midrib-r3",
+              "bone": "blade-r3",
               "role": "detail",
               "z": 5.04,
               "filled": false,
@@ -1728,15 +1728,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R3",
+                "axisBone": "blade-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R3",
-              "bone": "blade-R3",
+              "id": "blade-r3",
+              "bone": "blade-r3",
               "role": "body",
               "z": 2.04,
               "filled": true,
@@ -1752,8 +1752,8 @@
               }
             },
             {
-              "id": "midrib-L3",
-              "bone": "blade-L3",
+              "id": "midrib-l3",
+              "bone": "blade-l3",
               "role": "detail",
               "z": 5.05,
               "filled": false,
@@ -1780,15 +1780,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L3",
+                "axisBone": "blade-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L3",
-              "bone": "blade-L3",
+              "id": "blade-l3",
+              "bone": "blade-l3",
               "role": "body",
               "z": 2.05,
               "filled": true,
@@ -1804,8 +1804,8 @@
               }
             },
             {
-              "id": "midrib-R4",
-              "bone": "blade-R4",
+              "id": "midrib-r4",
+              "bone": "blade-r4",
               "role": "detail",
               "z": 5.06,
               "filled": false,
@@ -1832,15 +1832,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R4",
+                "axisBone": "blade-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R4",
-              "bone": "blade-R4",
+              "id": "blade-r4",
+              "bone": "blade-r4",
               "role": "body",
               "z": 2.06,
               "filled": true,
@@ -1856,8 +1856,8 @@
               }
             },
             {
-              "id": "midrib-L4",
-              "bone": "blade-L4",
+              "id": "midrib-l4",
+              "bone": "blade-l4",
               "role": "detail",
               "z": 5.07,
               "filled": false,
@@ -1884,15 +1884,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L4",
+                "axisBone": "blade-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L4",
-              "bone": "blade-L4",
+              "id": "blade-l4",
+              "bone": "blade-l4",
               "role": "body",
               "z": 2.07,
               "filled": true,
@@ -1908,8 +1908,8 @@
               }
             },
             {
-              "id": "petiole-R4",
-              "bone": "petiole-R4",
+              "id": "petiole-r4",
+              "bone": "petiole-r4",
               "role": "body",
               "z": 1.03,
               "filled": true,
@@ -1937,15 +1937,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R4",
+                "axisBone": "petiole-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L4",
-              "bone": "petiole-L4",
+              "id": "petiole-l4",
+              "bone": "petiole-l4",
               "role": "body",
               "z": 1.08,
               "filled": true,
@@ -1973,15 +1973,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L4",
+                "axisBone": "petiole-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R3",
-              "bone": "petiole-R3",
+              "id": "petiole-r3",
+              "bone": "petiole-r3",
               "role": "body",
               "z": 1.02,
               "filled": true,
@@ -2009,15 +2009,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R3",
+                "axisBone": "petiole-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L3",
-              "bone": "petiole-L3",
+              "id": "petiole-l3",
+              "bone": "petiole-l3",
               "role": "body",
               "z": 1.07,
               "filled": true,
@@ -2045,15 +2045,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L3",
+                "axisBone": "petiole-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L2",
-              "bone": "petiole-L2",
+              "id": "petiole-l2",
+              "bone": "petiole-l2",
               "role": "body",
               "z": 1.06,
               "filled": true,
@@ -2081,15 +2081,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L2",
+                "axisBone": "petiole-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R2",
-              "bone": "petiole-R2",
+              "id": "petiole-r2",
+              "bone": "petiole-r2",
               "role": "body",
               "z": 1.01,
               "filled": true,
@@ -2117,15 +2117,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R2",
+                "axisBone": "petiole-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L1",
-              "bone": "petiole-L1",
+              "id": "petiole-l1",
+              "bone": "petiole-l1",
               "role": "body",
               "z": 1.05,
               "filled": true,
@@ -2153,15 +2153,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L1",
+                "axisBone": "petiole-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R1",
-              "bone": "petiole-R1",
+              "id": "petiole-r1",
+              "bone": "petiole-r1",
               "role": "body",
               "z": 1,
               "filled": true,
@@ -2189,15 +2189,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R1",
+                "axisBone": "petiole-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "midrib-C1",
-              "bone": "blade-C1",
+              "id": "midrib-c1",
+              "bone": "blade-c1",
               "role": "detail",
               "z": 5.08,
               "filled": false,
@@ -2224,15 +2224,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-C1",
+                "axisBone": "blade-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-C1",
-              "bone": "blade-C1",
+              "id": "blade-c1",
+              "bone": "blade-c1",
               "role": "body",
               "z": 2.08,
               "filled": true,
@@ -2248,8 +2248,8 @@
               }
             },
             {
-              "id": "petiole-C1",
-              "bone": "petiole-C1",
+              "id": "petiole-c1",
+              "bone": "petiole-c1",
               "role": "body",
               "z": 1.04,
               "filled": true,
@@ -2277,7 +2277,7 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-C1",
+                "axisBone": "petiole-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
@@ -2286,8 +2286,8 @@
           ],
           "plan": [
             {
-              "id": "midrib-R1",
-              "bone": "blade-R1",
+              "id": "midrib-r1",
+              "bone": "blade-r1",
               "role": "detail",
               "z": 5,
               "filled": false,
@@ -2314,15 +2314,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R1",
+                "axisBone": "blade-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R1",
-              "bone": "blade-R1",
+              "id": "blade-r1",
+              "bone": "blade-r1",
               "role": "body",
               "z": 2,
               "filled": true,
@@ -2338,8 +2338,8 @@
               }
             },
             {
-              "id": "midrib-L1",
-              "bone": "blade-L1",
+              "id": "midrib-l1",
+              "bone": "blade-l1",
               "role": "detail",
               "z": 5.01,
               "filled": false,
@@ -2366,15 +2366,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L1",
+                "axisBone": "blade-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L1",
-              "bone": "blade-L1",
+              "id": "blade-l1",
+              "bone": "blade-l1",
               "role": "body",
               "z": 2.01,
               "filled": true,
@@ -2390,8 +2390,8 @@
               }
             },
             {
-              "id": "midrib-R2",
-              "bone": "blade-R2",
+              "id": "midrib-r2",
+              "bone": "blade-r2",
               "role": "detail",
               "z": 5.02,
               "filled": false,
@@ -2418,15 +2418,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R2",
+                "axisBone": "blade-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R2",
-              "bone": "blade-R2",
+              "id": "blade-r2",
+              "bone": "blade-r2",
               "role": "body",
               "z": 2.02,
               "filled": true,
@@ -2442,8 +2442,8 @@
               }
             },
             {
-              "id": "midrib-L2",
-              "bone": "blade-L2",
+              "id": "midrib-l2",
+              "bone": "blade-l2",
               "role": "detail",
               "z": 5.03,
               "filled": false,
@@ -2470,15 +2470,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L2",
+                "axisBone": "blade-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L2",
-              "bone": "blade-L2",
+              "id": "blade-l2",
+              "bone": "blade-l2",
               "role": "body",
               "z": 2.03,
               "filled": true,
@@ -2494,8 +2494,8 @@
               }
             },
             {
-              "id": "midrib-R3",
-              "bone": "blade-R3",
+              "id": "midrib-r3",
+              "bone": "blade-r3",
               "role": "detail",
               "z": 5.04,
               "filled": false,
@@ -2522,15 +2522,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R3",
+                "axisBone": "blade-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R3",
-              "bone": "blade-R3",
+              "id": "blade-r3",
+              "bone": "blade-r3",
               "role": "body",
               "z": 2.04,
               "filled": true,
@@ -2546,8 +2546,8 @@
               }
             },
             {
-              "id": "midrib-L3",
-              "bone": "blade-L3",
+              "id": "midrib-l3",
+              "bone": "blade-l3",
               "role": "detail",
               "z": 5.05,
               "filled": false,
@@ -2574,15 +2574,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L3",
+                "axisBone": "blade-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L3",
-              "bone": "blade-L3",
+              "id": "blade-l3",
+              "bone": "blade-l3",
               "role": "body",
               "z": 2.05,
               "filled": true,
@@ -2598,8 +2598,8 @@
               }
             },
             {
-              "id": "midrib-R4",
-              "bone": "blade-R4",
+              "id": "midrib-r4",
+              "bone": "blade-r4",
               "role": "detail",
               "z": 5.06,
               "filled": false,
@@ -2626,15 +2626,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-R4",
+                "axisBone": "blade-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-R4",
-              "bone": "blade-R4",
+              "id": "blade-r4",
+              "bone": "blade-r4",
               "role": "body",
               "z": 2.06,
               "filled": true,
@@ -2650,8 +2650,8 @@
               }
             },
             {
-              "id": "midrib-L4",
-              "bone": "blade-L4",
+              "id": "midrib-l4",
+              "bone": "blade-l4",
               "role": "detail",
               "z": 5.07,
               "filled": false,
@@ -2678,15 +2678,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-L4",
+                "axisBone": "blade-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-L4",
-              "bone": "blade-L4",
+              "id": "blade-l4",
+              "bone": "blade-l4",
               "role": "body",
               "z": 2.07,
               "filled": true,
@@ -2702,8 +2702,8 @@
               }
             },
             {
-              "id": "petiole-R4",
-              "bone": "petiole-R4",
+              "id": "petiole-r4",
+              "bone": "petiole-r4",
               "role": "body",
               "z": 1.03,
               "filled": true,
@@ -2731,15 +2731,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R4",
+                "axisBone": "petiole-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L4",
-              "bone": "petiole-L4",
+              "id": "petiole-l4",
+              "bone": "petiole-l4",
               "role": "body",
               "z": 1.08,
               "filled": true,
@@ -2767,15 +2767,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L4",
+                "axisBone": "petiole-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R3",
-              "bone": "petiole-R3",
+              "id": "petiole-r3",
+              "bone": "petiole-r3",
               "role": "body",
               "z": 1.02,
               "filled": true,
@@ -2803,15 +2803,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R3",
+                "axisBone": "petiole-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L3",
-              "bone": "petiole-L3",
+              "id": "petiole-l3",
+              "bone": "petiole-l3",
               "role": "body",
               "z": 1.07,
               "filled": true,
@@ -2839,15 +2839,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L3",
+                "axisBone": "petiole-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L2",
-              "bone": "petiole-L2",
+              "id": "petiole-l2",
+              "bone": "petiole-l2",
               "role": "body",
               "z": 1.06,
               "filled": true,
@@ -2875,15 +2875,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L2",
+                "axisBone": "petiole-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R2",
-              "bone": "petiole-R2",
+              "id": "petiole-r2",
+              "bone": "petiole-r2",
               "role": "body",
               "z": 1.01,
               "filled": true,
@@ -2911,15 +2911,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R2",
+                "axisBone": "petiole-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L1",
-              "bone": "petiole-L1",
+              "id": "petiole-l1",
+              "bone": "petiole-l1",
               "role": "body",
               "z": 1.05,
               "filled": true,
@@ -2947,15 +2947,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L1",
+                "axisBone": "petiole-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R1",
-              "bone": "petiole-R1",
+              "id": "petiole-r1",
+              "bone": "petiole-r1",
               "role": "body",
               "z": 1,
               "filled": true,
@@ -2983,15 +2983,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R1",
+                "axisBone": "petiole-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "midrib-C1",
-              "bone": "blade-C1",
+              "id": "midrib-c1",
+              "bone": "blade-c1",
               "role": "detail",
               "z": 5.08,
               "filled": false,
@@ -3018,15 +3018,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "blade-C1",
+                "axisBone": "blade-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-C1",
-              "bone": "blade-C1",
+              "id": "blade-c1",
+              "bone": "blade-c1",
               "role": "body",
               "z": 2.08,
               "filled": true,
@@ -3042,8 +3042,8 @@
               }
             },
             {
-              "id": "petiole-C1",
-              "bone": "petiole-C1",
+              "id": "petiole-c1",
+              "bone": "petiole-c1",
               "role": "body",
               "z": 1.04,
               "filled": true,
@@ -3071,7 +3071,7 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-C1",
+                "axisBone": "petiole-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
@@ -3132,8 +3132,8 @@
         "geometry": {
           "elevation": [
             {
-              "id": "blade-R1",
-              "bone": "blade-R1",
+              "id": "blade-r1",
+              "bone": "blade-r1",
               "role": "body",
               "z": 2,
               "filled": true,
@@ -3149,8 +3149,8 @@
               }
             },
             {
-              "id": "blade-L1",
-              "bone": "blade-L1",
+              "id": "blade-l1",
+              "bone": "blade-l1",
               "role": "body",
               "z": 2.01,
               "filled": true,
@@ -3166,8 +3166,8 @@
               }
             },
             {
-              "id": "blade-R2",
-              "bone": "blade-R2",
+              "id": "blade-r2",
+              "bone": "blade-r2",
               "role": "body",
               "z": 2.02,
               "filled": true,
@@ -3183,8 +3183,8 @@
               }
             },
             {
-              "id": "blade-L2",
-              "bone": "blade-L2",
+              "id": "blade-l2",
+              "bone": "blade-l2",
               "role": "body",
               "z": 2.03,
               "filled": true,
@@ -3200,8 +3200,8 @@
               }
             },
             {
-              "id": "blade-R3",
-              "bone": "blade-R3",
+              "id": "blade-r3",
+              "bone": "blade-r3",
               "role": "body",
               "z": 2.04,
               "filled": true,
@@ -3217,8 +3217,8 @@
               }
             },
             {
-              "id": "blade-L3",
-              "bone": "blade-L3",
+              "id": "blade-l3",
+              "bone": "blade-l3",
               "role": "body",
               "z": 2.05,
               "filled": true,
@@ -3234,8 +3234,8 @@
               }
             },
             {
-              "id": "blade-R4",
-              "bone": "blade-R4",
+              "id": "blade-r4",
+              "bone": "blade-r4",
               "role": "body",
               "z": 2.06,
               "filled": true,
@@ -3251,8 +3251,8 @@
               }
             },
             {
-              "id": "blade-L4",
-              "bone": "blade-L4",
+              "id": "blade-l4",
+              "bone": "blade-l4",
               "role": "body",
               "z": 2.07,
               "filled": true,
@@ -3268,8 +3268,8 @@
               }
             },
             {
-              "id": "petiole-R4",
-              "bone": "petiole-R4",
+              "id": "petiole-r4",
+              "bone": "petiole-r4",
               "role": "body",
               "z": 1.03,
               "filled": true,
@@ -3297,15 +3297,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R4",
+                "axisBone": "petiole-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L4",
-              "bone": "petiole-L4",
+              "id": "petiole-l4",
+              "bone": "petiole-l4",
               "role": "body",
               "z": 1.08,
               "filled": true,
@@ -3333,15 +3333,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L4",
+                "axisBone": "petiole-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R3",
-              "bone": "petiole-R3",
+              "id": "petiole-r3",
+              "bone": "petiole-r3",
               "role": "body",
               "z": 1.02,
               "filled": true,
@@ -3369,15 +3369,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R3",
+                "axisBone": "petiole-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L3",
-              "bone": "petiole-L3",
+              "id": "petiole-l3",
+              "bone": "petiole-l3",
               "role": "body",
               "z": 1.07,
               "filled": true,
@@ -3405,15 +3405,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L3",
+                "axisBone": "petiole-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L2",
-              "bone": "petiole-L2",
+              "id": "petiole-l2",
+              "bone": "petiole-l2",
               "role": "body",
               "z": 1.06,
               "filled": true,
@@ -3441,15 +3441,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L2",
+                "axisBone": "petiole-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R2",
-              "bone": "petiole-R2",
+              "id": "petiole-r2",
+              "bone": "petiole-r2",
               "role": "body",
               "z": 1.01,
               "filled": true,
@@ -3477,15 +3477,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R2",
+                "axisBone": "petiole-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L1",
-              "bone": "petiole-L1",
+              "id": "petiole-l1",
+              "bone": "petiole-l1",
               "role": "body",
               "z": 1.05,
               "filled": true,
@@ -3513,15 +3513,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L1",
+                "axisBone": "petiole-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R1",
-              "bone": "petiole-R1",
+              "id": "petiole-r1",
+              "bone": "petiole-r1",
               "role": "body",
               "z": 1,
               "filled": true,
@@ -3549,15 +3549,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R1",
+                "axisBone": "petiole-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-C1",
-              "bone": "blade-C1",
+              "id": "blade-c1",
+              "bone": "blade-c1",
               "role": "body",
               "z": 2.08,
               "filled": true,
@@ -3573,8 +3573,8 @@
               }
             },
             {
-              "id": "petiole-C1",
-              "bone": "petiole-C1",
+              "id": "petiole-c1",
+              "bone": "petiole-c1",
               "role": "body",
               "z": 1.04,
               "filled": true,
@@ -3602,7 +3602,7 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-C1",
+                "axisBone": "petiole-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
@@ -3611,8 +3611,8 @@
           ],
           "front": [
             {
-              "id": "blade-R1",
-              "bone": "blade-R1",
+              "id": "blade-r1",
+              "bone": "blade-r1",
               "role": "body",
               "z": 2,
               "filled": true,
@@ -3628,8 +3628,8 @@
               }
             },
             {
-              "id": "blade-L1",
-              "bone": "blade-L1",
+              "id": "blade-l1",
+              "bone": "blade-l1",
               "role": "body",
               "z": 2.01,
               "filled": true,
@@ -3645,8 +3645,8 @@
               }
             },
             {
-              "id": "blade-R2",
-              "bone": "blade-R2",
+              "id": "blade-r2",
+              "bone": "blade-r2",
               "role": "body",
               "z": 2.02,
               "filled": true,
@@ -3662,8 +3662,8 @@
               }
             },
             {
-              "id": "blade-L2",
-              "bone": "blade-L2",
+              "id": "blade-l2",
+              "bone": "blade-l2",
               "role": "body",
               "z": 2.03,
               "filled": true,
@@ -3679,8 +3679,8 @@
               }
             },
             {
-              "id": "blade-R3",
-              "bone": "blade-R3",
+              "id": "blade-r3",
+              "bone": "blade-r3",
               "role": "body",
               "z": 2.04,
               "filled": true,
@@ -3696,8 +3696,8 @@
               }
             },
             {
-              "id": "blade-L3",
-              "bone": "blade-L3",
+              "id": "blade-l3",
+              "bone": "blade-l3",
               "role": "body",
               "z": 2.05,
               "filled": true,
@@ -3713,8 +3713,8 @@
               }
             },
             {
-              "id": "blade-R4",
-              "bone": "blade-R4",
+              "id": "blade-r4",
+              "bone": "blade-r4",
               "role": "body",
               "z": 2.06,
               "filled": true,
@@ -3730,8 +3730,8 @@
               }
             },
             {
-              "id": "blade-L4",
-              "bone": "blade-L4",
+              "id": "blade-l4",
+              "bone": "blade-l4",
               "role": "body",
               "z": 2.07,
               "filled": true,
@@ -3747,8 +3747,8 @@
               }
             },
             {
-              "id": "petiole-R4",
-              "bone": "petiole-R4",
+              "id": "petiole-r4",
+              "bone": "petiole-r4",
               "role": "body",
               "z": 1.03,
               "filled": true,
@@ -3776,15 +3776,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R4",
+                "axisBone": "petiole-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L4",
-              "bone": "petiole-L4",
+              "id": "petiole-l4",
+              "bone": "petiole-l4",
               "role": "body",
               "z": 1.08,
               "filled": true,
@@ -3812,15 +3812,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L4",
+                "axisBone": "petiole-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R3",
-              "bone": "petiole-R3",
+              "id": "petiole-r3",
+              "bone": "petiole-r3",
               "role": "body",
               "z": 1.02,
               "filled": true,
@@ -3848,15 +3848,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R3",
+                "axisBone": "petiole-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L3",
-              "bone": "petiole-L3",
+              "id": "petiole-l3",
+              "bone": "petiole-l3",
               "role": "body",
               "z": 1.07,
               "filled": true,
@@ -3884,15 +3884,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L3",
+                "axisBone": "petiole-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L2",
-              "bone": "petiole-L2",
+              "id": "petiole-l2",
+              "bone": "petiole-l2",
               "role": "body",
               "z": 1.06,
               "filled": true,
@@ -3920,15 +3920,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L2",
+                "axisBone": "petiole-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R2",
-              "bone": "petiole-R2",
+              "id": "petiole-r2",
+              "bone": "petiole-r2",
               "role": "body",
               "z": 1.01,
               "filled": true,
@@ -3956,15 +3956,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R2",
+                "axisBone": "petiole-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L1",
-              "bone": "petiole-L1",
+              "id": "petiole-l1",
+              "bone": "petiole-l1",
               "role": "body",
               "z": 1.05,
               "filled": true,
@@ -3992,15 +3992,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L1",
+                "axisBone": "petiole-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R1",
-              "bone": "petiole-R1",
+              "id": "petiole-r1",
+              "bone": "petiole-r1",
               "role": "body",
               "z": 1,
               "filled": true,
@@ -4028,15 +4028,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R1",
+                "axisBone": "petiole-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-C1",
-              "bone": "blade-C1",
+              "id": "blade-c1",
+              "bone": "blade-c1",
               "role": "body",
               "z": 2.08,
               "filled": true,
@@ -4052,8 +4052,8 @@
               }
             },
             {
-              "id": "petiole-C1",
-              "bone": "petiole-C1",
+              "id": "petiole-c1",
+              "bone": "petiole-c1",
               "role": "body",
               "z": 1.04,
               "filled": true,
@@ -4081,7 +4081,7 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-C1",
+                "axisBone": "petiole-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
@@ -4090,8 +4090,8 @@
           ],
           "plan": [
             {
-              "id": "blade-R1",
-              "bone": "blade-R1",
+              "id": "blade-r1",
+              "bone": "blade-r1",
               "role": "body",
               "z": 2,
               "filled": true,
@@ -4107,8 +4107,8 @@
               }
             },
             {
-              "id": "blade-L1",
-              "bone": "blade-L1",
+              "id": "blade-l1",
+              "bone": "blade-l1",
               "role": "body",
               "z": 2.01,
               "filled": true,
@@ -4124,8 +4124,8 @@
               }
             },
             {
-              "id": "blade-R2",
-              "bone": "blade-R2",
+              "id": "blade-r2",
+              "bone": "blade-r2",
               "role": "body",
               "z": 2.02,
               "filled": true,
@@ -4141,8 +4141,8 @@
               }
             },
             {
-              "id": "blade-L2",
-              "bone": "blade-L2",
+              "id": "blade-l2",
+              "bone": "blade-l2",
               "role": "body",
               "z": 2.03,
               "filled": true,
@@ -4158,8 +4158,8 @@
               }
             },
             {
-              "id": "blade-R3",
-              "bone": "blade-R3",
+              "id": "blade-r3",
+              "bone": "blade-r3",
               "role": "body",
               "z": 2.04,
               "filled": true,
@@ -4175,8 +4175,8 @@
               }
             },
             {
-              "id": "blade-L3",
-              "bone": "blade-L3",
+              "id": "blade-l3",
+              "bone": "blade-l3",
               "role": "body",
               "z": 2.05,
               "filled": true,
@@ -4192,8 +4192,8 @@
               }
             },
             {
-              "id": "blade-R4",
-              "bone": "blade-R4",
+              "id": "blade-r4",
+              "bone": "blade-r4",
               "role": "body",
               "z": 2.06,
               "filled": true,
@@ -4209,8 +4209,8 @@
               }
             },
             {
-              "id": "blade-L4",
-              "bone": "blade-L4",
+              "id": "blade-l4",
+              "bone": "blade-l4",
               "role": "body",
               "z": 2.07,
               "filled": true,
@@ -4226,8 +4226,8 @@
               }
             },
             {
-              "id": "petiole-R4",
-              "bone": "petiole-R4",
+              "id": "petiole-r4",
+              "bone": "petiole-r4",
               "role": "body",
               "z": 1.03,
               "filled": true,
@@ -4255,15 +4255,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R4",
+                "axisBone": "petiole-r4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L4",
-              "bone": "petiole-L4",
+              "id": "petiole-l4",
+              "bone": "petiole-l4",
               "role": "body",
               "z": 1.08,
               "filled": true,
@@ -4291,15 +4291,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L4",
+                "axisBone": "petiole-l4",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R3",
-              "bone": "petiole-R3",
+              "id": "petiole-r3",
+              "bone": "petiole-r3",
               "role": "body",
               "z": 1.02,
               "filled": true,
@@ -4327,15 +4327,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R3",
+                "axisBone": "petiole-r3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L3",
-              "bone": "petiole-L3",
+              "id": "petiole-l3",
+              "bone": "petiole-l3",
               "role": "body",
               "z": 1.07,
               "filled": true,
@@ -4363,15 +4363,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L3",
+                "axisBone": "petiole-l3",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L2",
-              "bone": "petiole-L2",
+              "id": "petiole-l2",
+              "bone": "petiole-l2",
               "role": "body",
               "z": 1.06,
               "filled": true,
@@ -4399,15 +4399,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L2",
+                "axisBone": "petiole-l2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R2",
-              "bone": "petiole-R2",
+              "id": "petiole-r2",
+              "bone": "petiole-r2",
               "role": "body",
               "z": 1.01,
               "filled": true,
@@ -4435,15 +4435,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R2",
+                "axisBone": "petiole-r2",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-L1",
-              "bone": "petiole-L1",
+              "id": "petiole-l1",
+              "bone": "petiole-l1",
               "role": "body",
               "z": 1.05,
               "filled": true,
@@ -4471,15 +4471,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-L1",
+                "axisBone": "petiole-l1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "petiole-R1",
-              "bone": "petiole-R1",
+              "id": "petiole-r1",
+              "bone": "petiole-r1",
               "role": "body",
               "z": 1,
               "filled": true,
@@ -4507,15 +4507,15 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-R1",
+                "axisBone": "petiole-r1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
               }
             },
             {
-              "id": "blade-C1",
-              "bone": "blade-C1",
+              "id": "blade-c1",
+              "bone": "blade-c1",
               "role": "body",
               "z": 2.08,
               "filled": true,
@@ -4531,8 +4531,8 @@
               }
             },
             {
-              "id": "petiole-C1",
-              "bone": "petiole-C1",
+              "id": "petiole-c1",
+              "bone": "petiole-c1",
               "role": "body",
               "z": 1.04,
               "filled": true,
@@ -4560,7 +4560,7 @@
               "closed": true,
               "solid": {
                 "kind": "revolved",
-                "axisBone": "petiole-C1",
+                "axisBone": "petiole-c1",
                 "axis": "u",
                 "axisX": 0,
                 "mirror": true
@@ -8091,47 +8091,53 @@
           "de": "Beschattetes Sommerbeet: Die Spreiten breiten sich zu einem bogigen Hügel aus, die äußeren Spreiten berühren den Boden. Nur Lichtflecken erreichen die äußeren Spreiten."
         },
         "bones": {
-          "petiole-R1": {
+          "petiole-r1": {
             "angleDeg": 0.4432,
             "abductionDeg": -11.1146,
             "twistDeg": -4.5526
           },
-          "petiole-R2": {
+          "blade-r1": {
+            "angleDeg": -5
+          },
+          "petiole-r2": {
             "angleDeg": 39.0326,
             "abductionDeg": 44.687,
             "twistDeg": 81.5455
           },
-          "petiole-R3": {
+          "petiole-r3": {
             "angleDeg": 8.9819,
             "abductionDeg": -19.4527,
             "twistDeg": -49.2369
           },
-          "petiole-R4": {
+          "petiole-r4": {
             "angleDeg": 2.0895,
             "abductionDeg": 6.1371,
             "twistDeg": 37.5753
           },
-          "petiole-C1": {
+          "petiole-c1": {
             "angleDeg": 0,
             "abductionDeg": 0,
             "twistDeg": -180
           },
-          "petiole-L1": {
+          "petiole-l1": {
             "angleDeg": -0.4432,
             "abductionDeg": 11.1146,
             "twistDeg": -4.5526
           },
-          "petiole-L2": {
+          "blade-l1": {
+            "angleDeg": 5
+          },
+          "petiole-l2": {
             "angleDeg": -37.4327,
             "abductionDeg": -42.708,
             "twistDeg": 81.8219
           },
-          "petiole-L3": {
+          "petiole-l3": {
             "angleDeg": -8.6712,
             "abductionDeg": 18.6939,
             "twistDeg": -49.4622
           },
-          "petiole-L4": {
+          "petiole-l4": {
             "angleDeg": -1.0088,
             "abductionDeg": -4.6253,
             "twistDeg": 24.5955
@@ -8161,13 +8167,13 @@
         },
         "loads": [
           {
-            "id": "wind-R1",
+            "id": "wind-r1",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R1",
               "de": "Winddruck auf Spreite R1"
             },
-            "bone": "blade-R1",
+            "bone": "blade-r1",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8176,13 +8182,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-R2",
+            "id": "wind-r2",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R2",
               "de": "Winddruck auf Spreite R2"
             },
-            "bone": "blade-R2",
+            "bone": "blade-r2",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8191,13 +8197,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-R3",
+            "id": "wind-r3",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R3",
               "de": "Winddruck auf Spreite R3"
             },
-            "bone": "blade-R3",
+            "bone": "blade-r3",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8206,13 +8212,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-R4",
+            "id": "wind-r4",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R4",
               "de": "Winddruck auf Spreite R4"
             },
-            "bone": "blade-R4",
+            "bone": "blade-r4",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8221,13 +8227,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L1",
+            "id": "wind-l1",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L1",
               "de": "Winddruck auf Spreite L1"
             },
-            "bone": "blade-L1",
+            "bone": "blade-l1",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8236,13 +8242,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L2",
+            "id": "wind-l2",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L2",
               "de": "Winddruck auf Spreite L2"
             },
-            "bone": "blade-L2",
+            "bone": "blade-l2",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8251,13 +8257,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L3",
+            "id": "wind-l3",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L3",
               "de": "Winddruck auf Spreite L3"
             },
-            "bone": "blade-L3",
+            "bone": "blade-l3",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8266,13 +8272,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L4",
+            "id": "wind-l4",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L4",
               "de": "Winddruck auf Spreite L4"
             },
-            "bone": "blade-L4",
+            "bone": "blade-l4",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8281,13 +8287,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-C1",
+            "id": "wind-c1",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade C1",
               "de": "Winddruck auf Spreite C1"
             },
-            "bone": "blade-C1",
+            "bone": "blade-c1",
             "x": 0.12,
             "y": 0,
             "fxN": 0.101,
@@ -8308,76 +8314,76 @@
           "de": "Junge Blätter steigen in dichten, aufrechten Rollen auf: Die Stiele heben sich um 25 Grad und die Spreiten falten sich daneben; der Hügel ist schmal und transpiriert wenig."
         },
         "bones": {
-          "petiole-R1": {
+          "petiole-r1": {
             "angleDeg": 14.604,
             "abductionDeg": -9.6834,
             "twistDeg": -7.1215
           },
-          "blade-R1": {
+          "blade-r1": {
             "angleDeg": 38
           },
-          "petiole-R2": {
+          "petiole-r2": {
             "angleDeg": 41.4061,
             "abductionDeg": 30.8116,
             "twistDeg": 83.0094
           },
-          "blade-R2": {
+          "blade-r2": {
             "angleDeg": 38
           },
-          "petiole-R3": {
+          "petiole-r3": {
             "angleDeg": 18.1757,
             "abductionDeg": -8.6478,
             "twistDeg": -51.4834
           },
-          "blade-R3": {
+          "blade-r3": {
             "angleDeg": 38
           },
-          "petiole-R4": {
+          "petiole-r4": {
             "angleDeg": 13.154,
             "abductionDeg": -2.4614,
             "twistDeg": 37.9322
           },
-          "blade-R4": {
+          "blade-r4": {
             "angleDeg": 38
           },
-          "petiole-L1": {
+          "petiole-l1": {
             "angleDeg": -14.604,
             "abductionDeg": 9.6834,
             "twistDeg": -7.1215
           },
-          "blade-L1": {
+          "blade-l1": {
             "angleDeg": -38
           },
-          "petiole-L2": {
+          "petiole-l2": {
             "angleDeg": -39.6839,
             "abductionDeg": -28.8262,
             "twistDeg": 83.1475
           },
-          "blade-L2": {
+          "blade-l2": {
             "angleDeg": -38
           },
-          "petiole-L3": {
+          "petiole-l3": {
             "angleDeg": -17.8044,
             "abductionDeg": 7.8648,
             "twistDeg": -51.5737
           },
-          "blade-L3": {
+          "blade-l3": {
             "angleDeg": -38
           },
-          "petiole-L4": {
+          "petiole-l4": {
             "angleDeg": -13.7194,
             "abductionDeg": 1.2674,
             "twistDeg": 24.9699
           },
-          "blade-L4": {
+          "blade-l4": {
             "angleDeg": -38
           },
-          "petiole-C1": {
+          "petiole-c1": {
             "angleDeg": -14,
             "abductionDeg": 0,
             "twistDeg": -180
           },
-          "blade-C1": {
+          "blade-c1": {
             "angleDeg": 38
           }
         },
@@ -8405,13 +8411,13 @@
         },
         "loads": [
           {
-            "id": "wind-R1",
+            "id": "wind-r1",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R1",
               "de": "Winddruck auf Spreite R1"
             },
-            "bone": "blade-R1",
+            "bone": "blade-r1",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8420,13 +8426,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-R2",
+            "id": "wind-r2",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R2",
               "de": "Winddruck auf Spreite R2"
             },
-            "bone": "blade-R2",
+            "bone": "blade-r2",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8435,13 +8441,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-R3",
+            "id": "wind-r3",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R3",
               "de": "Winddruck auf Spreite R3"
             },
-            "bone": "blade-R3",
+            "bone": "blade-r3",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8450,13 +8456,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-R4",
+            "id": "wind-r4",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade R4",
               "de": "Winddruck auf Spreite R4"
             },
-            "bone": "blade-R4",
+            "bone": "blade-r4",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8465,13 +8471,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L1",
+            "id": "wind-l1",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L1",
               "de": "Winddruck auf Spreite L1"
             },
-            "bone": "blade-L1",
+            "bone": "blade-l1",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8480,13 +8486,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L2",
+            "id": "wind-l2",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L2",
               "de": "Winddruck auf Spreite L2"
             },
-            "bone": "blade-L2",
+            "bone": "blade-l2",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8495,13 +8501,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L3",
+            "id": "wind-l3",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L3",
               "de": "Winddruck auf Spreite L3"
             },
-            "bone": "blade-L3",
+            "bone": "blade-l3",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8510,13 +8516,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-L4",
+            "id": "wind-l4",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade L4",
               "de": "Winddruck auf Spreite L4"
             },
-            "bone": "blade-L4",
+            "bone": "blade-l4",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8525,13 +8531,13 @@
             "reference": "en-1991-1-4"
           },
           {
-            "id": "wind-C1",
+            "id": "wind-c1",
             "kind": "wind",
             "title": {
               "en": "Wind drag on blade C1",
               "de": "Winddruck auf Spreite C1"
             },
-            "bone": "blade-C1",
+            "bone": "blade-c1",
             "x": 0.12,
             "y": 0,
             "fxN": 0.051,
@@ -8552,76 +8558,76 @@
           "de": "Regenwasser auf den breiten Spreiten beugt sie durch sein Gewicht nach unten; die Oberfläche ist nass (Verdunstung, kein Transpirationsbedarf)."
         },
         "bones": {
-          "petiole-R1": {
+          "petiole-r1": {
             "angleDeg": 0.4432,
             "abductionDeg": -11.1146,
             "twistDeg": -4.5526
           },
-          "blade-R1": {
+          "blade-r1": {
             "angleDeg": 0
           },
-          "petiole-R2": {
+          "petiole-r2": {
             "angleDeg": 37.6448,
             "abductionDeg": 50.614,
             "twistDeg": 80.5184
           },
-          "blade-R2": {
+          "blade-r2": {
             "angleDeg": -14
           },
-          "petiole-R3": {
+          "petiole-r3": {
             "angleDeg": 4.6992,
             "abductionDeg": -23.9448,
             "twistDeg": -47.6516
           },
-          "blade-R3": {
+          "blade-r3": {
             "angleDeg": -14
           },
-          "petiole-R4": {
+          "petiole-r4": {
             "angleDeg": -2.7326,
             "abductionDeg": 9.7703,
             "twistDeg": 36.9073
           },
-          "blade-R4": {
+          "blade-r4": {
             "angleDeg": -14
           },
-          "petiole-L1": {
+          "petiole-l1": {
             "angleDeg": -0.1384,
             "abductionDeg": 11.1383,
             "twistDeg": -4.4938
           },
-          "blade-L1": {
+          "blade-l1": {
             "angleDeg": 0.7
           },
-          "petiole-L2": {
+          "petiole-l2": {
             "angleDeg": -36.1433,
             "abductionDeg": -48.6402,
             "twistDeg": 80.8982
           },
-          "blade-L2": {
+          "blade-l2": {
             "angleDeg": 14
           },
-          "petiole-L3": {
+          "petiole-l3": {
             "angleDeg": -4.4321,
             "abductionDeg": 23.204,
             "twistDeg": -47.9448
           },
-          "blade-L3": {
+          "blade-l3": {
             "angleDeg": 14
           },
-          "petiole-L4": {
+          "petiole-l4": {
             "angleDeg": 4.4873,
             "abductionDeg": -7.0977,
             "twistDeg": 24.0336
           },
-          "blade-L4": {
+          "blade-l4": {
             "angleDeg": 14
           },
-          "petiole-C1": {
+          "petiole-c1": {
             "angleDeg": 6,
             "abductionDeg": 0,
             "twistDeg": -180
           },
-          "blade-C1": {
+          "blade-c1": {
             "angleDeg": -14
           }
         },
@@ -8652,13 +8658,13 @@
         },
         "loads": [
           {
-            "id": "water-R1",
+            "id": "water-r1",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade R1",
               "de": "Auf Spreite R1 haftendes Regenwasser"
             },
-            "bone": "blade-R1",
+            "bone": "blade-r1",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8667,13 +8673,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-R2",
+            "id": "water-r2",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade R2",
               "de": "Auf Spreite R2 haftendes Regenwasser"
             },
-            "bone": "blade-R2",
+            "bone": "blade-r2",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8682,13 +8688,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-R3",
+            "id": "water-r3",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade R3",
               "de": "Auf Spreite R3 haftendes Regenwasser"
             },
-            "bone": "blade-R3",
+            "bone": "blade-r3",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8697,13 +8703,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-R4",
+            "id": "water-r4",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade R4",
               "de": "Auf Spreite R4 haftendes Regenwasser"
             },
-            "bone": "blade-R4",
+            "bone": "blade-r4",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8712,13 +8718,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-L1",
+            "id": "water-l1",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade L1",
               "de": "Auf Spreite L1 haftendes Regenwasser"
             },
-            "bone": "blade-L1",
+            "bone": "blade-l1",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8727,13 +8733,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-L2",
+            "id": "water-l2",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade L2",
               "de": "Auf Spreite L2 haftendes Regenwasser"
             },
-            "bone": "blade-L2",
+            "bone": "blade-l2",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8742,13 +8748,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-L3",
+            "id": "water-l3",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade L3",
               "de": "Auf Spreite L3 haftendes Regenwasser"
             },
-            "bone": "blade-L3",
+            "bone": "blade-l3",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8757,13 +8763,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-L4",
+            "id": "water-l4",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade L4",
               "de": "Auf Spreite L4 haftendes Regenwasser"
             },
-            "bone": "blade-L4",
+            "bone": "blade-l4",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8772,13 +8778,13 @@
             "reference": "en-1991-1-3"
           },
           {
-            "id": "water-C1",
+            "id": "water-c1",
             "kind": "imposed",
             "title": {
               "en": "Rain water retained on blade C1",
               "de": "Auf Spreite C1 haftendes Regenwasser"
             },
-            "bone": "blade-C1",
+            "bone": "blade-c1",
             "x": 0.15,
             "y": 0,
             "fxN": 0,
@@ -8799,76 +8805,76 @@
           "de": "Nach dem ersten Frost verlieren die Blätter Turgor und sinken ein: Die Stiele klappen nach unten und die Spreiten hängen zum Boden; welkende Blätter transpirieren kaum."
         },
         "bones": {
-          "petiole-R1": {
+          "petiole-r1": {
             "angleDeg": 0.4432,
             "abductionDeg": -11.1146,
             "twistDeg": -4.5526
           },
-          "blade-R1": {
+          "blade-r1": {
             "angleDeg": 0
           },
-          "petiole-R2": {
+          "petiole-r2": {
             "angleDeg": 35.4306,
             "abductionDeg": 57.6973,
             "twistDeg": 78.7201
           },
-          "blade-R2": {
+          "blade-r2": {
             "angleDeg": -18.7
           },
-          "petiole-R3": {
+          "petiole-r3": {
             "angleDeg": -10.3076,
             "abductionDeg": -36.4926,
             "twistDeg": -40.0208
           },
-          "blade-R3": {
+          "blade-r3": {
             "angleDeg": -34
           },
-          "petiole-R4": {
+          "petiole-r4": {
             "angleDeg": -17.9915,
             "abductionDeg": 20.1375,
             "twistDeg": 32.9317
           },
-          "blade-R4": {
+          "blade-r4": {
             "angleDeg": -34
           },
-          "petiole-L1": {
+          "petiole-l1": {
             "angleDeg": -0.4432,
             "abductionDeg": 11.1146,
             "twistDeg": -4.5526
           },
-          "blade-L1": {
+          "blade-l1": {
             "angleDeg": 0
           },
-          "petiole-L2": {
+          "petiole-l2": {
             "angleDeg": -33.7173,
             "abductionDeg": -56.9124,
             "twistDeg": 78.9613
           },
-          "blade-L2": {
+          "blade-l2": {
             "angleDeg": 20.4
           },
-          "petiole-L3": {
+          "petiole-l3": {
             "angleDeg": 10.3628,
             "abductionDeg": 35.8458,
             "twistDeg": -40.5783
           },
-          "blade-L3": {
+          "blade-l3": {
             "angleDeg": 34
           },
-          "petiole-L4": {
+          "petiole-l4": {
             "angleDeg": 21.3994,
             "abductionDeg": -14.0285,
             "twistDeg": 20.9057
           },
-          "blade-L4": {
+          "blade-l4": {
             "angleDeg": 34
           },
-          "petiole-C1": {
+          "petiole-c1": {
             "angleDeg": 24,
             "abductionDeg": 0,
             "twistDeg": -180
           },
-          "blade-C1": {
+          "blade-c1": {
             "angleDeg": -34
           }
         },
@@ -8921,76 +8927,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 3.031
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.19,
                 "abductionDeg": 43.9243,
                 "twistDeg": 81.6554
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 3.447
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 9.7959,
                 "abductionDeg": -18.5556,
                 "twistDeg": -49.502
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 2.25
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.9168,
                 "abductionDeg": 5.5029,
                 "twistDeg": 37.6592
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 0
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.0266,
                 "abductionDeg": 11.1469,
                 "twistDeg": -4.4722
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -2.25
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.5116,
                 "abductionDeg": -42.3021,
                 "twistDeg": 81.8752
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -3.447
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -9.3808,
                 "abductionDeg": 17.903,
                 "twistDeg": -49.685
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -3.031
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -2.0864,
                 "abductionDeg": -4.1326,
                 "twistDeg": 24.6778
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -1.197
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0.771,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 1.197
               }
             }
@@ -9000,76 +9006,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 1.0526,
                 "abductionDeg": -11.0664,
                 "twistDeg": -4.6698
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 3.5
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.2615,
                 "abductionDeg": 43.571,
                 "twistDeg": 81.7048
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 2.681
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 9.7589,
                 "abductionDeg": -18.5966,
                 "twistDeg": -49.4902
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 0.608
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.5675,
                 "abductionDeg": 5.771,
                 "twistDeg": 37.6248
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": -1.75
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.6545,
                 "abductionDeg": 11.098,
                 "twistDeg": -4.5933
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -3.289
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.6081,
                 "abductionDeg": -41.7982,
                 "twistDeg": 81.9398
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -3.289
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -9.4902,
                 "abductionDeg": 17.7802,
                 "twistDeg": -49.7185
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -1.75
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.8467,
                 "abductionDeg": -4.2423,
                 "twistDeg": 24.6603
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 0.608
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0.208,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 2.681
               }
             }
@@ -9079,76 +9085,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 1.4984,
                 "abductionDeg": -11.0303,
                 "twistDeg": -4.7552
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 3.031
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.2723,
                 "abductionDeg": 43.5176,
                 "twistDeg": 81.7122
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 1.197
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 9.5139,
                 "abductionDeg": -18.8679,
                 "twistDeg": -49.4115
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -1.197
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.0895,
                 "abductionDeg": 6.1371,
                 "twistDeg": 37.5753
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": -3.031
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -1.2263,
                 "abductionDeg": 11.0524,
                 "twistDeg": -4.7031
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -3.447
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.6573,
                 "abductionDeg": -41.5378,
                 "twistDeg": 81.9726
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -2.25
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -9.3808,
                 "abductionDeg": 17.903,
                 "twistDeg": -49.685
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 0
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.3827,
                 "abductionDeg": -4.4546,
                 "twistDeg": 24.6251
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 2.25
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": -0.41,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 3.447
               }
             }
@@ -9158,76 +9164,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 1.6619,
                 "abductionDeg": -11.0169,
                 "twistDeg": -4.7865
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 1.75
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.2198,
                 "abductionDeg": 43.7778,
                 "twistDeg": 81.676
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -0.608
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 9.1258,
                 "abductionDeg": -19.2951,
                 "twistDeg": -49.2846
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -2.681
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 1.6109,
                 "abductionDeg": 6.5028,
                 "twistDeg": 37.5226
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": -3.5
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -1.5888,
                 "abductionDeg": 11.0229,
                 "twistDeg": -4.7725
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -2.681
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.6472,
                 "abductionDeg": -41.5913,
                 "twistDeg": 81.9659
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -0.608
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -9.0818,
                 "abductionDeg": 18.2375,
                 "twistDeg": -49.5922
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 1.75
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -0.819,
                 "abductionDeg": -4.7119,
                 "twistDeg": 24.58
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 3.289
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": -0.919,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 3.289
               }
             }
@@ -9237,76 +9243,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 1.4984,
                 "abductionDeg": -11.0303,
                 "twistDeg": -4.7552
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.1168,
                 "abductionDeg": 44.2814,
                 "twistDeg": 81.6045
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -2.25
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.6974,
                 "abductionDeg": -19.763,
                 "twistDeg": -49.1415
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -3.447
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 1.2603,
                 "abductionDeg": 6.7701,
                 "twistDeg": 37.4821
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": -3.031
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -1.6436,
                 "abductionDeg": 11.0184,
                 "twistDeg": -4.783
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -1.197
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.5802,
                 "abductionDeg": -41.9447,
                 "twistDeg": 81.9212
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 1.197
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.6712,
                 "abductionDeg": 18.6939,
                 "twistDeg": -49.4622
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 3.031
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -0.3052,
                 "abductionDeg": -4.9459,
                 "twistDeg": 24.5368
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 3.447
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": -1.182,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 2.25
               }
             }
@@ -9316,76 +9322,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 38.9895,
                 "abductionDeg": 44.8927,
                 "twistDeg": 81.5151
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -3.289
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.3427,
                 "abductionDeg": -20.1476,
                 "twistDeg": -49.0204
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -3.289
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 1.1316,
                 "abductionDeg": 6.868,
                 "twistDeg": 37.4668
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": -1.75
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -1.3766,
                 "abductionDeg": 11.0402,
                 "twistDeg": -4.7319
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 0.608
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.4729,
                 "abductionDeg": -42.5021,
                 "twistDeg": 81.8491
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 2.681
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.2584,
                 "abductionDeg": 19.1495,
                 "twistDeg": -49.3283
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 3.5
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": 0.0209,
                 "abductionDeg": -5.094,
                 "twistDeg": 24.5082
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 2.681
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": -1.128,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 0.608
               }
             }
@@ -9395,76 +9401,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 38.8711,
                 "abductionDeg": 45.4495,
                 "twistDeg": 81.4311
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -3.447
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.1588,
                 "abductionDeg": -20.346,
                 "twistDeg": -48.9567
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -2.25
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 1.2603,
                 "abductionDeg": 6.7701,
                 "twistDeg": 37.4821
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 0
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.7561,
                 "abductionDeg": 11.09,
                 "twistDeg": -4.6128
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 1.687
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.3528,
                 "abductionDeg": -43.1138,
                 "twistDeg": 81.7675
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 3.447
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -7.9549,
                 "abductionDeg": 19.4822,
                 "twistDeg": -49.2279
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 3.031
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": 0.0702,
                 "abductionDeg": -5.1164,
                 "twistDeg": 24.5039
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 1.197
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": -0.771,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -1.197
               }
             }
@@ -9474,76 +9480,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 38.7948,
                 "abductionDeg": 45.8025,
                 "twistDeg": 81.3765
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -2.681
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.1966,
                 "abductionDeg": -20.3053,
                 "twistDeg": -48.9699
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -0.608
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 1.6109,
                 "abductionDeg": 6.5028,
                 "twistDeg": 37.5226
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 1.75
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.3792,
                 "abductionDeg": 11.1196,
                 "twistDeg": -4.5402
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 0.987
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.2522,
                 "abductionDeg": -43.6175,
                 "twistDeg": 81.6984
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 3.289
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -7.8433,
                 "abductionDeg": 19.6041,
                 "twistDeg": -49.1906
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 1.75
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -0.17,
                 "abductionDeg": -5.0073,
                 "twistDeg": 24.525
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -0.608
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": -0.208,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -2.681
               }
             }
@@ -9553,76 +9559,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 38.7831,
                 "abductionDeg": 45.8559,
                 "twistDeg": 81.3682
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -1.197
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.446,
                 "abductionDeg": -20.0358,
                 "twistDeg": -49.0559
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 1.197
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.0895,
                 "abductionDeg": 6.1371,
                 "twistDeg": 37.5753
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 3.031
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.2471,
                 "abductionDeg": 11.1299,
                 "twistDeg": -4.5148
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 0.862
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.1995,
                 "abductionDeg": -43.8777,
                 "twistDeg": 81.662
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 2.25
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -7.9549,
                 "abductionDeg": 19.4822,
                 "twistDeg": -49.2279
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 0
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -0.6347,
                 "abductionDeg": -4.7959,
                 "twistDeg": 24.5648
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -2.25
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0.41,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -3.447
               }
             }
@@ -9632,76 +9638,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 38.8395,
                 "abductionDeg": 45.5958,
                 "twistDeg": 81.4086
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 0.608
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.8377,
                 "abductionDeg": -19.6101,
                 "twistDeg": -49.1887
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 2.681
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.5675,
                 "abductionDeg": 5.771,
                 "twistDeg": 37.6248
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 3.5
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.1567,
                 "abductionDeg": 11.1369,
                 "twistDeg": -4.4973
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 0.67
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.2103,
                 "abductionDeg": -43.8243,
                 "twistDeg": 81.6695
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 0.608
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.2584,
                 "abductionDeg": 19.1495,
                 "twistDeg": -49.3283
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -1.75
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.1985,
                 "abductionDeg": -4.5387,
                 "twistDeg": 24.6106
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -3.289
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0.919,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -3.289
               }
             }
@@ -9711,76 +9717,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 38.9472,
                 "abductionDeg": 45.0925,
                 "twistDeg": 81.4852
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 2.25
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 9.2652,
                 "abductionDeg": -19.1419,
                 "twistDeg": -49.3306
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 3.447
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.9168,
                 "abductionDeg": 5.5029,
                 "twistDeg": 37.6592
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 3.031
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": 0.0374,
                 "abductionDeg": 11.1518,
                 "twistDeg": -4.4598
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 0.479
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.2816,
                 "abductionDeg": -43.4711,
                 "twistDeg": 81.7187
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -1.197
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.6712,
                 "abductionDeg": 18.6939,
                 "twistDeg": -49.4622
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -3.031
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.7118,
                 "abductionDeg": -4.3041,
                 "twistDeg": 24.6502
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -3.447
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 1.182,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -2.25
               }
             }
@@ -9790,76 +9796,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": -0.1664,
                 "abductionDeg": -11.1616,
                 "twistDeg": -4.4348
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 1.75
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.0755,
                 "abductionDeg": 44.4812,
                 "twistDeg": 81.5756
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 3.289
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 9.6156,
                 "abductionDeg": -18.7555,
                 "twistDeg": -49.4443
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 3.289
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 3.0448,
                 "abductionDeg": 5.4046,
                 "twistDeg": 37.6713
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 1.75
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": 0.4907,
                 "abductionDeg": 11.1861,
                 "twistDeg": -4.372
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -0.608
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.3923,
                 "abductionDeg": -42.9139,
                 "twistDeg": 81.7945
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -2.681
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -9.0818,
                 "abductionDeg": 18.2375,
                 "twistDeg": -49.5922
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -3.5
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -2.0372,
                 "abductionDeg": -4.1551,
                 "twistDeg": 24.6742
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -2.681
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 1.128,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -0.608
               }
             }
@@ -9869,76 +9875,76 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 3.031
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.19,
                 "abductionDeg": 43.9243,
                 "twistDeg": 81.6554
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 3.447
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 9.7959,
                 "abductionDeg": -18.5556,
                 "twistDeg": -49.502
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 2.25
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.9168,
                 "abductionDeg": 5.5029,
                 "twistDeg": 37.6592
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 0
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.0266,
                 "abductionDeg": 11.1469,
                 "twistDeg": -4.4722
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -2.25
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.5116,
                 "abductionDeg": -42.3021,
                 "twistDeg": 81.8752
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -3.447
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -9.3808,
                 "abductionDeg": 17.903,
                 "twistDeg": -49.685
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -3.031
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -2.0864,
                 "abductionDeg": -4.1326,
                 "twistDeg": 24.6778
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -1.197
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0.771,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 1.197
               }
             }
@@ -9969,74 +9975,74 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 0.383
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 0.492
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 0.25
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -0.171
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -0.47
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -0.433
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -0.087
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 0.321
               },
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.0326,
                 "abductionDeg": 44.687,
                 "twistDeg": 81.5455
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.9819,
                 "abductionDeg": -19.4527,
                 "twistDeg": -49.2369
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.0895,
                 "abductionDeg": 6.1371,
                 "twistDeg": 37.5753
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.4432,
                 "abductionDeg": 11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.4327,
                 "abductionDeg": -42.708,
                 "twistDeg": 81.8219
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.6712,
                 "abductionDeg": 18.6939,
                 "twistDeg": -49.4622
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.0088,
                 "abductionDeg": -4.6253,
                 "twistDeg": 24.5955
@@ -10048,74 +10054,74 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 3.535
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": 4.981
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": 2.868
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": -1.294
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": -4.532
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": -4.532
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": -1.294
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 2.868
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": 4.981
               },
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.0326,
                 "abductionDeg": 44.687,
                 "twistDeg": 81.5455
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.9819,
                 "abductionDeg": -19.4527,
                 "twistDeg": -49.2369
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.0895,
                 "abductionDeg": 6.1371,
                 "twistDeg": 37.5753
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.4432,
                 "abductionDeg": 11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.4327,
                 "abductionDeg": -42.708,
                 "twistDeg": 81.8219
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.6712,
                 "abductionDeg": 18.6939,
                 "twistDeg": -49.4622
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.0088,
                 "abductionDeg": -4.6253,
                 "twistDeg": 24.5955
@@ -10127,74 +10133,74 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -7.878
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -6.128
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 0
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 1.226
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 7.878
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 4
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -2.736
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -7.518
               },
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.0326,
                 "abductionDeg": 44.687,
                 "twistDeg": 81.5455
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.9819,
                 "abductionDeg": -19.4527,
                 "twistDeg": -49.2369
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.0895,
                 "abductionDeg": 6.1371,
                 "twistDeg": 37.5753
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.4432,
                 "abductionDeg": 11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.4327,
                 "abductionDeg": -42.708,
                 "twistDeg": 81.8219
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.6712,
                 "abductionDeg": 18.6939,
                 "twistDeg": -49.4622
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.0088,
                 "abductionDeg": -4.6253,
                 "twistDeg": 24.5955
@@ -10206,74 +10212,74 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -3.759
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -1.368
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": 2
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 1.182
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 3.064
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 0
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": -3.064
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -3.939
               },
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.0326,
                 "abductionDeg": 44.687,
                 "twistDeg": 81.5455
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.9819,
                 "abductionDeg": -19.4527,
                 "twistDeg": -49.2369
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.0895,
                 "abductionDeg": 6.1371,
                 "twistDeg": 37.5753
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.4432,
                 "abductionDeg": 11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.4327,
                 "abductionDeg": -42.708,
                 "twistDeg": 81.8219
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.6712,
                 "abductionDeg": 18.6939,
                 "twistDeg": -49.4622
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.0088,
                 "abductionDeg": -4.6253,
                 "twistDeg": 24.5955
@@ -10285,74 +10291,74 @@
             "pose": "summer-full",
             "ease": "smooth",
             "bones": {
-              "blade-R1": {
+              "blade-r1": {
                 "angleDeg": 0
               },
-              "blade-R2": {
+              "blade-r2": {
                 "angleDeg": -0.383
               },
-              "blade-R3": {
+              "blade-r3": {
                 "angleDeg": -0.492
               },
-              "blade-R4": {
+              "blade-r4": {
                 "angleDeg": -0.25
               },
-              "blade-L1": {
+              "blade-l1": {
                 "angleDeg": 0.171
               },
-              "blade-L2": {
+              "blade-l2": {
                 "angleDeg": 0.47
               },
-              "blade-L3": {
+              "blade-l3": {
                 "angleDeg": 0.433
               },
-              "blade-L4": {
+              "blade-l4": {
                 "angleDeg": 0.087
               },
-              "blade-C1": {
+              "blade-c1": {
                 "angleDeg": -0.321
               },
-              "petiole-R1": {
+              "petiole-r1": {
                 "angleDeg": 0.4432,
                 "abductionDeg": -11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-R2": {
+              "petiole-r2": {
                 "angleDeg": 39.0326,
                 "abductionDeg": 44.687,
                 "twistDeg": 81.5455
               },
-              "petiole-R3": {
+              "petiole-r3": {
                 "angleDeg": 8.9819,
                 "abductionDeg": -19.4527,
                 "twistDeg": -49.2369
               },
-              "petiole-R4": {
+              "petiole-r4": {
                 "angleDeg": 2.0895,
                 "abductionDeg": 6.1371,
                 "twistDeg": 37.5753
               },
-              "petiole-C1": {
+              "petiole-c1": {
                 "angleDeg": 0,
                 "abductionDeg": 0,
                 "twistDeg": -180
               },
-              "petiole-L1": {
+              "petiole-l1": {
                 "angleDeg": -0.4432,
                 "abductionDeg": 11.1146,
                 "twistDeg": -4.5526
               },
-              "petiole-L2": {
+              "petiole-l2": {
                 "angleDeg": -37.4327,
                 "abductionDeg": -42.708,
                 "twistDeg": 81.8219
               },
-              "petiole-L3": {
+              "petiole-l3": {
                 "angleDeg": -8.6712,
                 "abductionDeg": 18.6939,
                 "twistDeg": -49.4622
               },
-              "petiole-L4": {
+              "petiole-l4": {
                 "angleDeg": -1.0088,
                 "abductionDeg": -4.6253,
                 "twistDeg": 24.5955
@@ -10564,6 +10570,755 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "petiole-r1",
+          "kind": "capsule",
+          "bone": "petiole-r1",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.16, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-r1",
+          "kind": "loft",
+          "bone": "blade-r1",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.4,
+          "region": "blades-outer",
+          "sections": [
+            {
+              "at": [0, 0, 0.02285],
+              "rx": 0.02921,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04658, 0, 0.02285],
+              "rx": 0.09348,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.1242, 0, 0.02285],
+              "rx": 0.11685,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.21735, 0, 0.02285],
+              "rx": 0.09348,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.28566, 0, 0.02285],
+              "rx": 0.04674,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.3105, 0, 0.02285],
+              "rx": 0.00935,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-r1",
+          "kind": "capsule",
+          "bone": "blade-r1",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.3105, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-r2",
+          "kind": "capsule",
+          "bone": "petiole-r2",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.21, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-r2",
+          "kind": "loft",
+          "bone": "blade-r2",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.4,
+          "region": "blades-outer",
+          "sections": [
+            {
+              "at": [0, 0, 0.02085],
+              "rx": 0.02924,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04658, 0, 0.02085],
+              "rx": 0.09356,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.1242, 0, 0.02085],
+              "rx": 0.11695,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.21735, 0, 0.02085],
+              "rx": 0.09356,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.28566, 0, 0.02085],
+              "rx": 0.04678,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.3105, 0, 0.02085],
+              "rx": 0.00936,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-r2",
+          "kind": "capsule",
+          "bone": "blade-r2",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.3105, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-r3",
+          "kind": "capsule",
+          "bone": "petiole-r3",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.26, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-r3",
+          "kind": "loft",
+          "bone": "blade-r3",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.55,
+          "region": "blades-inner",
+          "sections": [
+            {
+              "at": [0, 0, 0.0169],
+              "rx": 0.02925,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04657, 0, 0.0169],
+              "rx": 0.0936,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.1242, 0, 0.0169],
+              "rx": 0.117,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.21735, 0, 0.0169],
+              "rx": 0.0936,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.28566, 0, 0.0169],
+              "rx": 0.0468,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.3105, 0, 0.0169],
+              "rx": 0.00936,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-r3",
+          "kind": "capsule",
+          "bone": "blade-r3",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.3105, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-r4",
+          "kind": "capsule",
+          "bone": "petiole-r4",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.3, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-r4",
+          "kind": "loft",
+          "bone": "blade-r4",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.55,
+          "region": "blades-inner",
+          "sections": [
+            {
+              "at": [0, 0, 0.01005],
+              "rx": 0.02946,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04347, 0, 0.01005],
+              "rx": 0.09428,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.11592, 0, 0.01005],
+              "rx": 0.11785,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.20286, 0, 0.01005],
+              "rx": 0.09428,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.26662, 0, 0.01005],
+              "rx": 0.04714,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.2898, 0, 0.01005],
+              "rx": 0.00943,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-r4",
+          "kind": "capsule",
+          "bone": "blade-r4",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.2898, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-l1",
+          "kind": "capsule",
+          "bone": "petiole-l1",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.17, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-l1",
+          "kind": "loft",
+          "bone": "blade-l1",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.4,
+          "region": "blades-outer",
+          "sections": [
+            {
+              "at": [0, 0, -0.02195],
+              "rx": 0.02916,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04502, 0, -0.02195],
+              "rx": 0.09332,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.12004, 0, -0.02195],
+              "rx": 0.11665,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.21007, 0, -0.02195],
+              "rx": 0.09332,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.27609, 0, -0.02195],
+              "rx": 0.04666,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.3001, 0, -0.02195],
+              "rx": 0.00933,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-l1",
+          "kind": "capsule",
+          "bone": "blade-l1",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.3001, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-l2",
+          "kind": "capsule",
+          "bone": "petiole-l2",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.2, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-l2",
+          "kind": "loft",
+          "bone": "blade-l2",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.4,
+          "region": "blades-outer",
+          "sections": [
+            {
+              "at": [0, 0, -0.0205],
+              "rx": 0.02923,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04657, 0, -0.0205],
+              "rx": 0.09352,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.1242, 0, -0.0205],
+              "rx": 0.1169,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.21735, 0, -0.0205],
+              "rx": 0.09352,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.28566, 0, -0.0205],
+              "rx": 0.04676,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.3105, 0, -0.0205],
+              "rx": 0.00935,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-l2",
+          "kind": "capsule",
+          "bone": "blade-l2",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.3105, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-l3",
+          "kind": "capsule",
+          "bone": "petiole-l3",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.25, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-l3",
+          "kind": "loft",
+          "bone": "blade-l3",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.55,
+          "region": "blades-inner",
+          "sections": [
+            {
+              "at": [0, 0, -0.0157],
+              "rx": 0.0292,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04502, 0, -0.0157],
+              "rx": 0.09344,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.12004, 0, -0.0157],
+              "rx": 0.1168,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.21007, 0, -0.0157],
+              "rx": 0.09344,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.27609, 0, -0.0157],
+              "rx": 0.04672,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.3001, 0, -0.0157],
+              "rx": 0.00934,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-l3",
+          "kind": "capsule",
+          "bone": "blade-l3",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.3001, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-l4",
+          "kind": "capsule",
+          "bone": "petiole-l4",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.29, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-l4",
+          "kind": "loft",
+          "bone": "blade-l4",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.55,
+          "region": "blades-inner",
+          "sections": [
+            {
+              "at": [0, 0, -0.01015],
+              "rx": 0.02944,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.04191, 0, -0.01015],
+              "rx": 0.0942,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.11176, 0, -0.01015],
+              "rx": 0.11775,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.19558, 0, -0.01015],
+              "rx": 0.0942,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.25705, 0, -0.01015],
+              "rx": 0.0471,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.2794, 0, -0.01015],
+              "rx": 0.00942,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-l4",
+          "kind": "capsule",
+          "bone": "blade-l4",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.2794, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        },
+        {
+          "id": "petiole-c1",
+          "kind": "capsule",
+          "bone": "petiole-c1",
+          "material": "hosta-petiole",
+          "role": "body",
+          "tone": 0.35,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.32, 0, 0],
+          "r0": 0.016,
+          "r1": 0.012
+        },
+        {
+          "id": "blade-c1",
+          "kind": "loft",
+          "bone": "blade-c1",
+          "material": "hosta-blade",
+          "role": "body",
+          "tone": 0.55,
+          "region": "blades-inner",
+          "sections": [
+            {
+              "at": [0, 0, -0.00185],
+              "rx": 0.02969,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.03726, 0, -0.00185],
+              "rx": 0.095,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.09936, 0, -0.00185],
+              "rx": 0.11875,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.17388, 0, -0.00185],
+              "rx": 0.095,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.22853, 0, -0.00185],
+              "rx": 0.0475,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            },
+            {
+              "at": [0.2484, 0, -0.00185],
+              "rx": 0.0095,
+              "ry": 0.004,
+              "exponent": 2.2,
+              "rotation": [0.70711, 0, 0.70711, 0]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "midrib-c1",
+          "kind": "capsule",
+          "bone": "blade-c1",
+          "material": "hosta-petiole",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "petioles",
+          "p0": [0, 0, 0],
+          "p1": [0.2484, 0, 0],
+          "r0": 0.005,
+          "r1": 0.003,
+          "maxDenominator": 50
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Hosta: nine petioles (tapered capsules) each carry a lamina loft: a flat leaf of 0.23 m width and 0.28 to 0.31 m length with an elliptical outline (widest at 40 percent), 8 mm thick, centred on the lateral offset of the plan outline; the midrib is a thin capsule on top. The rest pose is a flat fan in the sagittal plane; the spread to depth 0.9 m appears only in the default pose through the abduction and twist of the petiole bones, so the bounding box is judged in that pose.",
+          "de": "Funkie: neun Blattstiele (verjüngte Kapseln) tragen je einen Spreitenloft: ein flaches Blatt mit 0,23 m Breite und 0,28 bis 0,31 m Länge, elliptischem Umriss (am breitesten bei 40 Prozent), 8 mm dick, mittig auf dem Seitenversatz des Umrisses der Draufsicht; die Mittelrippe ist eine dünne Kapsel obenauf. Die Ruhelage ist ein flacher Fächer in der Längsebene; die Auffächerung auf 0,9 m Tiefe entsteht nur in der Standardpose durch Abduktion und Verdrehung der Stielknochen, daher wird die Bounding Box in dieser Pose beurteilt."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "summer-full",
       "defaultClip": "wind-flutter",
@@ -10577,7 +11332,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

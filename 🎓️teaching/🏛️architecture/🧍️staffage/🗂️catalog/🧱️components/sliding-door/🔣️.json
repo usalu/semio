@@ -988,11 +988,11 @@
               "filled": false,
               "tone": 0.35,
               "region": "leaf-frame",
-              "kind": "ellipse",
-              "cx": 1.075,
-              "cy": 0,
-              "rx": 0.012,
-              "ry": 0.012
+              "kind": "rect",
+              "x": 1.32,
+              "y": -0.025,
+              "w": 0.04,
+              "h": 0.05
             },
             {
               "id": "hanger-above-b",
@@ -1002,11 +1002,11 @@
               "filled": false,
               "tone": 0.35,
               "region": "leaf-frame",
-              "kind": "ellipse",
-              "cx": 1.925,
-              "cy": 0,
-              "rx": 0.012,
-              "ry": 0.012
+              "kind": "rect",
+              "x": 1.64,
+              "y": -0.025,
+              "w": 0.04,
+              "h": 0.05
             }
           ]
         },
@@ -3033,6 +3033,311 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "track",
+          "kind": "extrude",
+          "bone": "track",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.45,
+          "region": "track-steel",
+          "profile": [[-0.05, -0.05], [-0.05, 0.05], [0.05, 0.05], [0.05, -0.05]],
+          "plane": "yz",
+          "from": -0.05,
+          "to": 3.05,
+          "holes": [
+            [[-0.046, -0.046], [-0.046, 0.046], [0.046, 0.046], [0.046, -0.046]]
+          ]
+        },
+        {
+          "id": "track-cavity",
+          "kind": "box",
+          "bone": "track",
+          "material": "frame-cavity",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "track-steel",
+          "size": [3.1, 0.092, 0.092],
+          "transform": {
+            "translation": [1.5, 0, 0]
+          }
+        },
+        {
+          "id": "jamb",
+          "kind": "extrude",
+          "bone": "track",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.45,
+          "region": "jamb-steel",
+          "profile": [[-0.05, -0.05], [-0.05, 0.05], [0.05, 0.05], [0.05, -0.05]],
+          "plane": "zx",
+          "from": -2.1,
+          "to": -0.05,
+          "holes": [
+            [[-0.046, -0.046], [-0.046, 0.046], [0.046, 0.046], [0.046, -0.046]]
+          ],
+          "repeat": {
+            "count": 2,
+            "translation": [3, 0, 0]
+          }
+        },
+        {
+          "id": "jamb-cavity",
+          "kind": "box",
+          "bone": "track",
+          "material": "frame-cavity",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "jamb-steel",
+          "size": [0.092, 2.05, 0.092],
+          "transform": {
+            "translation": [0, -1.075, 0]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [3, 0, 0]
+          }
+        },
+        {
+          "id": "track-screw-0-3",
+          "kind": "revolve",
+          "bone": "track",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.2,
+          "region": "track-steel",
+          "maxDenominator": 50,
+          "profile": [[0, 0.012], [0.002, 0.012]],
+          "axis": [0, 0, -1],
+          "origin": [0.3, 0, -0.05]
+        },
+        {
+          "id": "track-screw-1",
+          "kind": "revolve",
+          "bone": "track",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.2,
+          "region": "track-steel",
+          "maxDenominator": 50,
+          "profile": [[0, 0.012], [0.002, 0.012]],
+          "axis": [0, 0, -1],
+          "origin": [1, 0, -0.05]
+        },
+        {
+          "id": "track-screw-2",
+          "kind": "revolve",
+          "bone": "track",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.2,
+          "region": "track-steel",
+          "maxDenominator": 50,
+          "profile": [[0, 0.012], [0.002, 0.012]],
+          "axis": [0, 0, -1],
+          "origin": [2, 0, -0.05]
+        },
+        {
+          "id": "track-screw-2-7",
+          "kind": "revolve",
+          "bone": "track",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.2,
+          "region": "track-steel",
+          "maxDenominator": 50,
+          "profile": [[0, 0.012], [0.002, 0.012]],
+          "axis": [0, 0, -1],
+          "origin": [2.7, 0, -0.05]
+        },
+        {
+          "id": "stile",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.5,
+          "region": "leaf-frame",
+          "profile": [[-0.5, -0.025], [-0.5, 0.025], [-0.45, 0.025], [-0.45, -0.025]],
+          "plane": "yz",
+          "from": 0.1,
+          "to": 2.0,
+          "holes": [
+            [[-0.496, -0.021], [-0.496, 0.021], [-0.454, 0.021], [-0.454, -0.021]]
+          ],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.95, 0]
+          }
+        },
+        {
+          "id": "stile-cavity",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "frame-cavity",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "leaf-frame",
+          "size": [1.9, 0.042, 0.042],
+          "transform": {
+            "translation": [1.05, -0.475, 0]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.95, 0]
+          }
+        },
+        {
+          "id": "rail",
+          "kind": "extrude",
+          "bone": "leaf",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.5,
+          "region": "leaf-frame",
+          "profile": [[-0.025, 0.1], [-0.025, 0.15], [0.025, 0.15], [0.025, 0.1]],
+          "plane": "zx",
+          "from": -0.45,
+          "to": 0.45,
+          "holes": [
+            [[-0.021, 0.104], [-0.021, 0.146], [0.021, 0.146], [0.021, 0.104]]
+          ],
+          "repeat": {
+            "count": 2,
+            "translation": [1.85, 0, 0]
+          }
+        },
+        {
+          "id": "rail-cavity",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "frame-cavity",
+          "role": "detail",
+          "tone": 0.9,
+          "region": "leaf-frame",
+          "size": [0.042, 0.9, 0.042],
+          "transform": {
+            "translation": [0.125, 0, 0]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [1.85, 0, 0]
+          }
+        },
+        {
+          "id": "leaf-glass",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.92,
+          "region": "leaf-glass",
+          "size": [1.8, 0.9, 0.01],
+          "transform": {
+            "translation": [1.05, 0, 0]
+          }
+        },
+        {
+          "id": "bottom-seal",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.2,
+          "region": "leaf-frame",
+          "size": [0.02, 1.0, 0.05],
+          "transform": {
+            "translation": [2.01, 0, 0]
+          }
+        },
+        {
+          "id": "hanger",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "leaf-frame",
+          "size": [0.05, 0.04, 0.05],
+          "transform": {
+            "translation": [0.075, -0.16, 0]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.32, 0]
+          }
+        },
+        {
+          "id": "hanger-bolt",
+          "kind": "revolve",
+          "bone": "leaf",
+          "material": "steel",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "leaf-frame",
+          "maxDenominator": 50,
+          "profile": [[0, 0.008], [0.002, 0.008]],
+          "axis": [0, 0, -1],
+          "origin": [0.075, -0.16, -0.025],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0.32, 0]
+          }
+        },
+        {
+          "id": "handle-base",
+          "kind": "box",
+          "bone": "leaf",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "leaf-frame",
+          "size": [0.29, 0.06, 0.004],
+          "transform": {
+            "translation": [1.025, 0.42, 0.007]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.014]
+          }
+        },
+        {
+          "id": "handle-grip",
+          "kind": "capsule",
+          "bone": "leaf",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.25,
+          "region": "leaf-frame",
+          "p0": [0.9375, 0.415, 0.0165],
+          "p1": [1.1125, 0.415, 0.0165],
+          "r0": 0.0075,
+          "r1": 0.0075,
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.033]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Track, jambs and leaf frame members are hollow steel sections: a 4 mm skin tube (extrude with a hole) filled by a separate cavity solid of frame-cavity material, so skin and cavity layers have their own solids for the thermal view; the 2D thermal layers sum to 58 mm while the plan draws 50 mm, the drawn 50 mm sections are used with a 42 mm cavity.",
+          "de": "Schiene, Pfosten und Flügelrahmen sind Stahlhohlprofile: ein 4 mm dickes Hautrohr (Extrusion mit Loch), gefüllt durch einen eigenen Hohlraumkörper aus dem Material frame-cavity, sodass Haut und Hohlraum eigene Körper für die thermische Ansicht haben; die thermischen 2D-Schichten summieren sich auf 58 mm, die Draufsicht zeichnet 50 mm, es gelten die gezeichneten 50 mm mit 42 mm Hohlraum."
+        },
+        {
+          "en": "The leaf is hung 50 mm under the track by two hangers at v = +-0.16 (elevation positions; the plan draws them at the stiles, 2D inconsistency) and keeps its bone on the track so it slides with the prismatic joint; in the open pose its east stile overlaps the east jamb by 50 mm as the joint travel of 1 m dictates.",
+          "de": "Der Flügel hängt 50 mm unter der Schiene an zwei Laufwagen bei v = +-0,16 (Positionen der Ansicht; die Draufsicht zeichnet sie an den Pfosten, 2D-Widerspruch) und bleibt mit seinem Knochen an der Schiene, sodass er mit dem Schubgelenk gleitet; in der offenen Pose überlappt sein östlicher Pfosten den östlichen Rahmenpfosten um 50 mm, wie es der Gelenkweg von 1 m vorgibt."
+        },
+        {
+          "en": "The 10 mm glass pane sits between the frame members; the pull handle is a base plate and a grip tube on each glass face; screw heads and bolt heads (only at 1:50) protrude 2 mm; jamb seal lines and glass reflexes are 2D texture.",
+          "de": "Die 10 mm Glasscheibe sitzt zwischen den Rahmenprofilen; der Griff ist je Glasseite eine Grundplatte mit Griffrohr; Schrauben- und Bolzenköpfe (nur bei 1:50) stehen 2 mm vor; Dichtungslinien der Pfosten und Glasreflexe sind 2D-Textur."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "closed",
       "defaultClip": "slide-open-close",
@@ -3046,7 +3351,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

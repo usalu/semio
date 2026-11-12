@@ -277,7 +277,7 @@ class LayeredBrowserOracleTest(unittest.TestCase):
                         self.assertTrue(pane["inert"])
                         self.assertFalse(pane["opened"])
                         self.assertTrue(next(card for card in hover["cards"] if card["id"] == target)["revealed"])
-                        self.assertEqual(hover["veil"]["visibility"], "hidden")
+                        self.assertEqual(hover["veil"]["visibility"], "visible")
                         for key in ("x", "y", "width", "height"):
                             self.assertAlmostEqual(pane["rect"][key], hover["rect"][key], delta=self.fixture["geometryTolerance"])
                         pane = next(pane for pane in opened["panes"] if pane["id"] == target)

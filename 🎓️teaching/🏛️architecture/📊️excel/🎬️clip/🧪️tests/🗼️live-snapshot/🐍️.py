@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 from types import SimpleNamespace
 import numpy as np
-from manim import Camera, FadeIn, Scene, Square, VGroup, ValueTracker, UpdateFromAlphaFunc, tempconfig
+from manim import Camera, FadeIn, Scene, Square, VGroup, VMobject, ValueTracker, UpdateFromAlphaFunc, tempconfig
 anatomy = importlib.import_module("🎓️teaching.🏛️architecture.📊️excel.🎬️clip.🦴️anatomy.🐍️")
 references = importlib.import_module("🎓️teaching.🏛️architecture.📊️excel.🎬️clip.📍️references.🐍️")
 program = importlib.import_module("🎓️teaching.🏛️architecture.📊️excel.🎬️clip.📋️program.🐍️")
@@ -260,13 +260,15 @@ class StableClientFrameTest(unittest.TestCase):
             def update(*args,**kwargs):
                 result=original(*args,**kwargs)
                 actual=np.asarray(scene.camera.get_image(),dtype=int).copy()
-                oracle.reset();oracle.capture_mobjects([VGroup(scene._say(key(),(0,0),size=20,color=energy.DATA,anchor="c"))])
+                label=scene._say(key(),(0,0),size=20,color=energy.DATA,anchor="c");parts=[part for part in label.get_family() if isinstance(part,VMobject) and len(part.points)];union=VMobject()
+                for part in parts:union.append_vectorized_mobject(part)
+                union.match_style(parts[0]);oracle.reset();oracle.capture_mobjects([union])
                 differences.append(int(np.abs(actual-np.asarray(oracle.get_image(),dtype=int)).max()))
                 return result
             scene.renderer.update_frame=update
             scene.play(UpdateFromAlphaFunc(tracker,lambda mob,alpha:mob.set_value(1+2*alpha)),run_time=1)
             self.assertEqual(id(display),identity)
-            self.assertLessEqual(max(differences),5,repr(differences))
+            self.assertLessEqual(max(differences),2,repr(differences))
             self.assertIsInstance(VGroup(display),VGroup)
 
     def test_anatomy_bound_window_and_vector_restore(self):

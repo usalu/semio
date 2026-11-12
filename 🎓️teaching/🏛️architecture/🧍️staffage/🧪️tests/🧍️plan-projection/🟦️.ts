@@ -15,7 +15,8 @@ import type { EvaluatedShape } from "../../🔨️modules/🔗️contracts/🟦�
 import { exportCast } from "../../🔨️modules/📤️export/🎭️cast/🟦️.ts";
 import type { CastIndex } from "../../🔨️modules/📤️export/🎭️cast/🧬️schema/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 
 glMatrix.setMatrixArrayType(Array);
 
@@ -86,12 +87,18 @@ function planOf(asset: Asset, pose: string, denominator: number): Record<string,
   return Object.fromEntries(state.shapes.plan.map((evaluated) => [evaluated.shape.id, evaluated]));
 }
 
+/** 📌️ A rigid plan shape is carried at the height of the middle of its elevation twin (same id, same bone); the vectors fix the twins at the pivot of their bones, where a point only turns about the bone, so the footprints are those hand-computed in the vectors (r cos(angle), 0.168573 + 0.945519 x). */
+const pivotTwins: Shape[] = [
+  { id: "rigid", kind: "rect", bone: "thigh-l", role: "body", z: 1, filled: true, tone: 0.4, x: -0.001, y: -0.001, w: 0.002, h: 0.002 },
+  { id: "follower", kind: "rect", bone: "shank-l", role: "body", z: 1, filled: true, tone: 0.4, x: -0.001, y: -0.001, w: 0.002, h: 0.002 },
+];
+
 describe("🧍️ plan projection of a limb", () => {
   const patched: Asset = {
     ...sample,
     representations: {
       ...sample.representations,
-      [String(vectors.scale)]: { ...authoredAt(sample, vectors.scale), geometry: { ...authoredAt(sample, vectors.scale).geometry, plan: vectors.shapes } },
+      [String(vectors.scale)]: { ...authoredAt(sample, vectors.scale), geometry: { ...authoredAt(sample, vectors.scale).geometry, elevation: [...authoredAt(sample, vectors.scale).geometry.elevation, ...pivotTwins], plan: vectors.shapes } },
     },
   };
 
@@ -148,7 +155,7 @@ describe("🧍️ handcrafted plan drawings of the catalog", () => {
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify(Object.fromEntries(Object.entries(measured).map(([key, value]) => [key, value.rings]))));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧍️plan-projection/🐍️.py"), ["shapely"], [input])) as Record<string, { minY: number; maxY: number }>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧍️plan-projection/🐍️.py"), "geometry", [input])) as Record<string, { minY: number; maxY: number }>;
       for (const [key, value] of Object.entries(measured)) expect(reference[key]!.maxY - reference[key]!.minY, `${key} (shapely)`).toBeCloseTo(value.span, 6);
     } finally {
       rmSync(directory, { recursive: true, force: true });
@@ -215,8 +222,11 @@ describe("🧍️ cast export of plan casts", { timeout: 60_000 }, () => {
       const depth = index.boundsM.maxY - index.boundsM.minY;
       expect(depth, id).toBeGreaterThan(min);
       expect(depth, id).toBeLessThan(max);
-      if (index.viewpoint === "plan") expect(index.heightM, `${id}: heightM is the physical figure height, not the plan depth`).toBeGreaterThan(depth + 0.3);
-      else expect(Math.abs(index.heightM - depth), id).toBeLessThan(0.15);
+      const cast = (vectors.casts.manifest as { casts: Record<string, { asset: string; pose: string; scale: number }> }).casts[id]!;
+      const figure = evaluate(catalogAsset(cast.asset), { kind: "pose", pose: cast.pose }, select(cast.scale)).shapes.elevation.filter((evaluated) => evaluated.shape.role !== "ground").flatMap((evaluated) => evaluated.rings.flat());
+      const height = Math.max(...figure.map((p) => p.y)) - Math.min(...figure.map((p) => p.y));
+      expect(Math.abs(index.heightM - height), `${id}: heightM is the physical figure height in the side elevation, whatever the viewpoint of the cast`).toBeLessThan(0.01);
+      if (index.viewpoint !== "plan") expect(Math.abs(index.heightM - depth), id).toBeLessThan(0.15);
     }
   });
 });

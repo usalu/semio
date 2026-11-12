@@ -12,7 +12,8 @@ import { describe, expect, it } from "vitest";
 import type { Asset, AuthoredRepresentation, PrintProfile } from "../../🧬️schema/🟦️.ts";
 import { PRINT_PROFILES, measureSuitability } from "../../🔨️modules/🖨️representation/🟦️.ts";
 import { featureWidthMm, releaseMeasureScratch } from "../../🔨️modules/🖨️representation/📐️measure/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 requireTool("uv");
 
 type Case = { name: string; rings: { x: number; y: number }[][]; widthMm: number; oracle: "erosion" | "opening" };
@@ -49,7 +50,7 @@ describe("🔬️ minimum feature width", () => {
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify(vectors));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🔬️feature-width/🐍️.py"), ["shapely"], [input])) as Record<string, number>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🔬️feature-width/🐍️.py"), "geometry", [input])) as Record<string, number>;
       for (const c of vectors.cases) expect(Math.abs(measured(c) - reference[c.name]!), `${c.name}: ${measured(c)} against ${reference[c.name]}`).toBeLessThanOrEqual(tolerance(c.widthMm));
     } finally {
       rmSync(directory, { recursive: true, force: true });

@@ -54,7 +54,7 @@ export function createGraphPlannerPortV1({loadGraph,loadSlice,identify,bytesOf=e
    revision=pinned?.revision??revision;
    let keys,staleSet;
    if(taskState){
-    const state=await taskState({root,workspace});keys=await taskKeysV1({graph:state.graph,tasks,order,signal});
+    const state=await taskState({root,workspace});await state.graph.verify?.({signal});keys=await taskKeysV1({graph:state.graph,tasks,order,signal});
     const fresh=await state.recorder.upToDate(workspace,new Map([...keys].filter(([id])=>tasks.get(id).cacheable)));
     staleSet=new Set(order.filter(id=>!fresh.has(id)||!tasks.get(id).outputs.every(output=>existsSync(join(root,output)))));
    }else{

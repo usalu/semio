@@ -9,8 +9,8 @@
  * @see https://developer.mozilla.org/docs/Web/API/Window/storage_event — cross-tab events
  */
 import { useSyncExternalStore } from "react";
-import { VIEWPOINTS } from "@teaching/staffage";
-import type { Language, Slug, Text, View, Viewpoint } from "@teaching/staffage";
+import { PLANAR_VIEWPOINTS } from "@teaching/staffage";
+import type { Language, Slug, Text, View, PlanarViewpoint } from "@teaching/staffage";
 import { isLanguage } from "../🌐️i18n/🟦️.ts";
 
 /** 🔖️ The version of the stored document; a different version is dropped, not migrated. */
@@ -54,12 +54,12 @@ export type Motion = "system" | "reduced" | "full";
 export type TextSize = "normal" | "large";
 
 /** 🎛️ The reader's preferences; `language` stays unset until the reader or the browser's list decides. */
-export type Preferences = { readonly language?: Language; readonly theme: Theme; readonly motion: Motion; readonly textSize: TextSize; readonly playful: boolean; readonly previewViewpoint: Viewpoint };
+export type Preferences = { readonly language?: Language; readonly theme: Theme; readonly motion: Motion; readonly textSize: TextSize; readonly playful: boolean; readonly previewViewpoint: PlanarViewpoint };
 
 /** 🖼️ The ground of the playground. */
 export const BACKGROUNDS = ["paper", "dark", "light", "transparent"] as const;
 
-/** 🖼️ One of {@link BACKGROUNDS}. */
+/** 📤️ One of {@link BACKGROUNDS}. */
 export type Background = (typeof BACKGROUNDS)[number];
 
 /** 🎯️ What a placed or compared figure shows: a static pose, or a clip with a phase offset in seconds. */
@@ -69,7 +69,7 @@ export type Selection = { readonly kind: "pose"; readonly pose: Slug } | { reado
 export type Placement = { readonly id: string; readonly asset: Slug; readonly xM: number; readonly zM: number; readonly yawDeg: number; readonly pick: Selection | null; readonly offsetS: number; readonly mirrored: boolean };
 
 /** 🧪️ The playground composition: shared scale, view and ground, plus its placements. */
-export type Playground = { readonly scale: number; readonly view: View; readonly viewpoint: Viewpoint; readonly background: Background; readonly lengthM: number; readonly placements: readonly Placement[] };
+export type Playground = { readonly scale: number; readonly view: View; readonly viewpoint: PlanarViewpoint; readonly background: Background; readonly lengthM: number; readonly placements: readonly Placement[] };
 
 /** 📚️ A collection the reader saved. */
 export type SavedCollection = { readonly id: string; readonly name: string; readonly assets: readonly Slug[] };
@@ -183,7 +183,7 @@ export function sanitize(value: unknown, views: readonly View[]): ArchiveState {
       motion: oneOf(prefs.motion, ["system", "reduced", "full"], "system"),
       textSize: oneOf(prefs.textSize, ["normal", "large"], "normal"),
       playful: prefs.playful !== false,
-      previewViewpoint: oneOf(prefs.previewViewpoint, VIEWPOINTS, "elevation"),
+      previewViewpoint: oneOf(prefs.previewViewpoint, PLANAR_VIEWPOINTS, "elevation"),
     },
     favorites: Array.isArray(favorites) ? [...new Set(favorites.filter(isSlug))] : [],
     collections: Array.isArray(collections)
@@ -192,7 +192,7 @@ export function sanitize(value: unknown, views: readonly View[]): ArchiveState {
     playground: {
       scale: Math.max(1, finite(ground.scale, 100)),
       view: oneOf(ground.view, views, "dark-line"),
-      viewpoint: oneOf(ground.viewpoint, VIEWPOINTS, "elevation"),
+      viewpoint: oneOf(ground.viewpoint, PLANAR_VIEWPOINTS, "elevation"),
       background: oneOf(ground.background, BACKGROUNDS, "paper"),
       lengthM,
       placements: Array.isArray(ground.placements)
@@ -211,10 +211,10 @@ export function storedProblems(value: unknown): readonly Text[] {
   if (!isRecord(value) || value.version !== STORAGE_VERSION || !isRecord(value.state)) return [];
   const { preferences, playground } = value.state;
   const named = [isRecord(preferences) ? preferences.previewViewpoint : undefined, isRecord(playground) ? playground.viewpoint : undefined];
-  return named.flatMap((viewpoint) => (viewpoint === undefined || (VIEWPOINTS as readonly unknown[]).includes(viewpoint) ? [] : [{ en: `The saved viewpoint "${String(viewpoint)}" is unknown; the side elevation is used instead.`, de: `Die gespeicherte Blickrichtung "${String(viewpoint)}" ist unbekannt; stattdessen wird die Seitenansicht verwendet.` }]));
+  return named.flatMap((viewpoint) => (viewpoint === undefined || (PLANAR_VIEWPOINTS as readonly unknown[]).includes(viewpoint) ? [] : [{ en: `The saved viewpoint "${String(viewpoint)}" is unknown; the side elevation is used instead.`, de: `Die gespeicherte Blickrichtung "${String(viewpoint)}" ist unbekannt; stattdessen wird die Seitenansicht verwendet.` }]));
 }
 
-/** 🗃️ Whether what the store holds survives a reload. */
+/** 📦️ Whether what the store holds survives a reload. */
 export type PersistenceMode = "durable" | "volatile";
 
 /** 🏪️ The event-sourced store: `dispatch` an event, read the folded state, subscribe to changes. */

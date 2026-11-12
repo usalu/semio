@@ -6,27 +6,32 @@
  * @see ../../📤️downloads/🟦️.ts — `exportFigure`, `exportCapabilities`, `saveExport`
  */
 import { useEffect, useRef, useState, type ReactElement } from "react";
-import { formatNumber } from "@teaching/staffage";
+import { EXPORT_FORMATS, MODEL_REFUSALS, formatNumber, modelFormats } from "@teaching/staffage";
 import type { Asset, EvaluationQuery, Language, Text } from "@teaching/staffage";
-import { exportCapabilities, exportFigure, saveExport } from "../../📤️downloads/🟦️.ts";
+import { exportCapabilities, exportFigure, isSpatialExport, saveExport } from "../../📤️downloads/🟦️.ts";
 import type { ExportCapabilities, ExportFormat, ExportHost, ExportResult } from "../../📤️downloads/🟦️.ts";
 import type { DepictionRequest } from "../../🧮️pipeline/🟦️.ts";
+import { translator, type Key } from "../../🌐️i18n/🟦️.ts";
 import { useArchive } from "../../🧭️context/🟦️.tsx";
 import { VIEW_NAMES } from "../../🗣️labels/🟦️.ts";
-import { VIEWPOINT_PHRASES } from "../../🔭️viewpoints/🟦️.ts";
+import { VIEWPOINT_PHRASES, isDrawn, type ViewpointKey } from "../../🔭️viewpoints/🟦️.ts";
+import { namedPoses } from "../../🔎️search/🟦️.ts";
 import { Button, Notice, NumberField, ProgressNotice, SelectField, Tag } from "../../🪟️chrome/🟦️.tsx";
 
-const FORMATS: readonly ExportFormat[] = ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm"];
+const FORMATS: readonly ExportFormat[] = EXPORT_FORMATS.filter((format): format is ExportFormat => format !== "component");
 const FRAMED: readonly ExportFormat[] = ["png-sequence", "mp4", "webm"];
+
+const both = (key: Key): Text => ({ en: translator("en")(key), de: translator("de")(key) });
 
 type Outcome = { readonly kind: "done"; readonly result: Extract<ExportResult, { status: "done" }> } | { readonly kind: "cancelled"; readonly format: ExportFormat } | { readonly kind: "unavailable"; readonly format: ExportFormat; readonly reason: Text } | { readonly kind: "error"; readonly message: string };
 type Running = { readonly format: ExportFormat; readonly done: number; readonly total: number; readonly label: string };
 
-/** 📤️ The props of {@link ExportPanel}. */
+/** 📦️ The props of {@link ExportPanel}. */
 export type ExportPanelProps = {
   readonly asset: Asset;
   readonly query: EvaluationQuery;
   readonly request: DepictionRequest;
+  readonly viewpoint?: ViewpointKey;
   readonly language: Language;
   readonly capabilities?: ExportCapabilities;
   readonly host?: ExportHost;
@@ -39,9 +44,16 @@ export type ExportPanelProps = {
 /** 🎛️ The export settings a link may carry: PDF sheet, frame rate and duration (seconds, `null` = the clip). */
 export type ExportSettings = { readonly sheet: "single" | "all-views"; readonly fps: number | null; readonly durationS: number | null };
 
-/** 📤️ The export panel. */
+/** 🏷️ The export panel. */
 export function ExportPanel(props: ExportPanelProps): ReactElement {
   const { asset, query, request, language, host, exporter = exportFigure, save = saveExport } = props;
+  const viewpoint: ViewpointKey = props.viewpoint ?? request.viewpoint;
+  const drawing = isDrawn(viewpoint);
+  const poses = namedPoses(asset);
+  const [source, setSource] = useState<{ readonly pose?: string; readonly clip?: string; readonly model?: string }>({});
+  const pose = source.pose ?? (query.kind === "pose" && poses.some((candidate) => candidate.id === query.pose) ? query.pose : (poses.find((candidate) => candidate.id === asset.presentation.defaultPose) ?? poses[0])?.id ?? "");
+  const clip = source.clip ?? (query.kind === "clip" && asset.clips.some((candidate) => candidate.id === query.clip) ? query.clip : asset.presentation.defaultClip);
+  const model = source.model ?? (query.kind === "clip" ? `clip:${clip}` : `pose:${pose}`);
   const { t } = useArchive();
   const [probed, setProbed] = useState<ExportCapabilities | null>(props.capabilities ?? null);
   const [running, setRunning] = useState<Running | null>(null);
@@ -70,7 +82,8 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
     controller.current = job;
     setOutcome(null);
     setRunning({ format, done: 0, total: 1, label: "" });
-    const options = { ...request, sheet, ...(FRAMED.includes(format) ? { fps: Math.min(60, Math.max(12, fps ?? 30)), durationS: duration ?? clipDuration } : {}) };
+    const spatial = format === "glb" ? { pose } : format === "fbx" ? { clip } : format === "model" ? (model.startsWith("clip:") ? { clip: model.slice(5) } : { pose: model.slice(5) }) : {};
+    const options = { ...request, sheet, ...spatial, ...(FRAMED.includes(format) ? { fps: Math.min(60, Math.max(12, fps ?? 30)), durationS: duration ?? clipDuration } : {}) };
     try {
       const result = await exporter(asset, query, options, format, { signal: job.signal, progress: (done, total, label) => setRunning({ format, done, total, label: label[language] }) }, host);
       if (result.status === "done") {
@@ -84,21 +97,25 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
       setRunning(null);
     }
   };
-  const offered = FORMATS.filter((format) => asset.exports.includes(format));
-  const snippet = `<staffage-figure asset="${asset.id}" view="${request.view}" viewpoint="${request.viewpoint}" scale="${request.scale.denominator}" lang="${language}"></staffage-figure>`;
+  const offered = FORMATS.filter((format) => asset.exports.includes(format === "model-zip" ? "model" : format));
+  const producible = new Set<string>(modelFormats(asset));
+  const snippet = `<staffage-figure asset="${asset.id}" view="${request.view}" viewpoint="${viewpoint}" scale="${request.scale.denominator}" lang="${language}"></staffage-figure>`;
   const needsClip = query.kind === "pose";
   return (
     <section aria-labelledby="detail-export" className="flex flex-col gap-double" data-section="export">
       <h2 id="detail-export" className="m-0 font-serif text-lg">{t("detail.export.title")}</h2>
-      <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{t("detail.export.lede", { representation: VIEW_NAMES[request.view][language], viewpoint: VIEWPOINT_PHRASES[request.viewpoint][language], scale: request.scale.denominator })}</p>
+      <p className="m-0 max-w-[70ch] text-xs leading-normal text-muted-foreground">{t("detail.export.lede", { representation: VIEW_NAMES[request.view][language], viewpoint: VIEWPOINT_PHRASES[viewpoint][language], scale: request.scale.denominator })}</p>
       {probed === null ? <Notice kind="loading" compact title={t("detail.export.probing")} /> : (
         <ul className="m-0 grid list-none gap-double p-0 md:grid-cols-2" data-formats="">
           {offered.map((format) => {
-            const capability = probed[format];
+            const spatial = isSpatialExport(format);
+            const missing = spatial && !producible.has(format === "model-zip" ? "model" : format);
+            const capability = missing ? { available: false, reason: asset.volume === undefined ? MODEL_REFUSALS["model-no-volume"] : both(format === "fbx" ? "model.exports.noClip" : "model.exports.noPose") } : probed[format];
             const kind = capability.available ? null : format === "dwg" ? "unavailable" : "unsupported";
-            const blocked = capability.available && FRAMED.includes(format) && needsClip;
+            const wrongViewpoint = !spatial && !drawing;
+            const blocked = capability.available && !wrongViewpoint && FRAMED.includes(format) && needsClip;
             return (
-              <li key={format} data-format={format} data-state={kind ?? (blocked ? "needs-clip" : "available")} className="flex min-w-0 flex-col gap-single border border-border bg-panel p-double">
+              <li key={format} data-format={format} data-state={kind ?? (wrongViewpoint ? "needs-drawing" : blocked ? "needs-clip" : "available")} className="flex min-w-0 flex-col gap-single border border-border bg-panel p-double">
                 <div className="flex flex-wrap items-center justify-between gap-single">
                   <h3 className="m-0 text-sm font-semibold">{t(`detail.format.${format}`)}</h3>
                   <Tag>{t(capability.available ? "detail.export.available" : kind === "unavailable" ? "detail.export.unavailable" : "detail.export.unsupported")}</Tag>
@@ -106,6 +123,10 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
                 <p className="m-0 text-xs leading-normal text-muted-foreground">{t(`detail.format.${format}.body`)}</p>
                 {kind === null ? null : <Notice kind={kind} compact title={t(kind === "unavailable" ? "detail.export.unavailableTitle" : "detail.export.unsupportedTitle")}>{capability.reason?.[language]}</Notice>}
                 {blocked ? <Notice kind="info" compact title={t("detail.export.needsClip")} /> : null}
+                {wrongViewpoint ? <Notice kind="info" compact title={t("model.exports.drawingBlocked")}>{t("model.exports.drawingOnly")}</Notice> : null}
+                {capability.available && format === "glb" ? <SelectField label={t("model.exports.pose")} value={pose} onChange={(next) => setSource({ ...source, pose: next })} options={poses.map((candidate) => ({ value: candidate.id, label: candidate.title[language] }))} /> : null}
+                {capability.available && format === "fbx" ? <SelectField label={t("model.exports.clip")} value={clip} onChange={(next) => setSource({ ...source, clip: next })} options={asset.clips.map((candidate) => ({ value: candidate.id, label: candidate.title[language] }))} /> : null}
+                {capability.available && format === "model" ? <SelectField label={t("model.exports.source")} value={model} onChange={(next) => setSource({ ...source, model: next })} options={[...asset.clips.map((candidate) => ({ value: `clip:${candidate.id}`, label: `${t("model.exports.clip")}: ${candidate.title[language]}` })), ...poses.map((candidate) => ({ value: `pose:${candidate.id}`, label: `${t("model.exports.pose")}: ${candidate.title[language]}` }))]} /> : null}
                 {capability.available && format === "pdf" ? <SelectField label={t("detail.export.sheet")} value={sheet} onChange={setSheet} options={[{ value: "single", label: t("detail.export.sheetSingle") }, { value: "all-views", label: t("detail.export.sheetAll") }]} /> : null}
                 {capability.available && FRAMED.includes(format) && !needsClip ? (
                   <div className="flex gap-double">
@@ -115,7 +136,7 @@ export function ExportPanel(props: ExportPanelProps): ReactElement {
                 ) : null}
                 {capability.available && capability.codec !== undefined ? <p className="m-0 font-mono text-[0.65rem] text-muted-foreground">{t("detail.export.codec", { codec: capability.codec, alpha: t(capability.alpha === true ? "detail.yes" : "detail.no") })}</p> : null}
                 <div className="mt-auto pt-single">
-                  <Button variant="primary" icon="file-archive" disabled={!capability.available || blocked || running !== null} onClick={() => void run(format)}>
+                  <Button variant="primary" icon="file-archive" disabled={!capability.available || blocked || wrongViewpoint || running !== null} onClick={() => void run(format)}>
                     {t("detail.export.run", { format: t(`detail.format.${format}`) })}
                   </Button>
                 </div>

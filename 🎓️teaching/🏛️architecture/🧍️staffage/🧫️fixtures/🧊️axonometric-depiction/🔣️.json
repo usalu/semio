@@ -1,0 +1,92 @@
+{
+  "description": "Hand-computed numbers of the axonometric depiction. Shading: the light is (-0.45, 0.78, 0.5) normalised in view space; a face with unit normal n is lit by max(0, n.light) and falls in band 3 above 0.75, 2 above 0.5, 1 above 0.25, else 0; the shadow share of the bands 0..2 is 0.36, 0.24, 0.12 towards #001117. normals are (x, y, z) in view space (x right, y up, z towards the viewer). lit = n.light is hand-computed with |light| = sqrt(0.45^2 + 0.78^2 + 0.5^2) = 1.0307764.",
+  "bands": [
+    {
+      "name": "facing the viewer",
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "lit": 0.4851,
+      "band": 1
+    },
+    {
+      "name": "facing up",
+      "normal": [
+        0,
+        1,
+        0
+      ],
+      "lit": 0.75675,
+      "band": 3
+    },
+    {
+      "name": "facing right",
+      "normal": [
+        1,
+        0,
+        0
+      ],
+      "lit": 0,
+      "band": 0
+    },
+    {
+      "name": "facing left",
+      "normal": [
+        -1,
+        0,
+        0
+      ],
+      "lit": 0.43656,
+      "band": 1
+    },
+    {
+      "name": "facing down",
+      "normal": [
+        0,
+        -1,
+        0
+      ],
+      "lit": 0,
+      "band": 0
+    },
+    {
+      "name": "towards the light",
+      "normal": [
+        -0.4366,
+        0.7567,
+        0.4851
+      ],
+      "lit": 1,
+      "band": 3
+    },
+    {
+      "name": "away from the light",
+      "normal": [
+        0.4366,
+        -0.7567,
+        -0.4851
+      ],
+      "lit": 0,
+      "band": 0
+    }
+  ],
+  "shade": {
+    "base": "#808080",
+    "bands": [
+      "#52585a",
+      "#616567",
+      "#717373",
+      "#808080"
+    ]
+  },
+  "joins": {
+    "description": "two bars crossing in view space: horizontal [0,0,0,6,1,1] and vertical [0,0,0,1,6,1.5] (centre, width, height, depth); the curves where their surfaces meet are four vertical lines (x = +-0.5, z = +-0.5, y in -0.5..0.5, length 1 each) and four lines along z (x = +-0.5, y = +-0.5, z in -0.5..0.5, length 1 each); seen from +z only the two lines at z = 0.5 have a front-facing triangle",
+    "visibleCandidateLength": 2
+  },
+  "sheetCells": {
+    "third": "the axonometric cell is right of the plan and above the front elevation",
+    "first": "the axonometric cell is left of the plan and below the front elevation"
+  }
+}

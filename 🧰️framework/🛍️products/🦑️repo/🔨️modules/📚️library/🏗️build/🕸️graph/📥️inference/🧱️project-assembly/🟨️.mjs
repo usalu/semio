@@ -382,7 +382,7 @@ export async function projectWithDefaults(json, root, projectDir, workspaceRoot,
     const inheritedBase=targetWithDefaults({ ...(POLICY.targetDefaults?.[name] ?? {}), ...target,...(target.cache===false&&target.inputs===undefined?{inputs:["default"]}:{}) }, root, ownsScript);
     const inherited=inheritedBase.metadata?.semio?.hostPlatformOutputsV1?withHostPlatformOutputsV1(inheritedBase,process.platform):inheritedBase;
     if(typeof inherited.options?.cwd==="string")inherited.options={...inherited.options,cwd:inherited.options.cwd.replaceAll("{projectRoot}",root).replaceAll("{workspaceRoot}",workspaceRoot)};
-    let policy = targetPolicy(name,inherited);
+    let policy = targetPolicy(name,inherited,undefined,`${json.name}:${name}`);
     const execution = targetExecutionKindV1(target,`${json.name}:${name}`), orchestrator = execution === "orchestration" || target.metadata?.semio?.orchestrator === true;
     if (execution === "native" && !nativeProject) throw Error(`Native execution contract requires a native project owner: ${json.name}:${name}`);
     const nativePolicyTarget = execution !== "source" && !orchestrator && nativeProject && policy.executor !== "repo:noop" && (execution === "native" || typeof policy.options?.command === "string" && await closures.some(await commandSourcesOf({...policy,configurations:undefined}), nativeCommandDriverNamesV1));

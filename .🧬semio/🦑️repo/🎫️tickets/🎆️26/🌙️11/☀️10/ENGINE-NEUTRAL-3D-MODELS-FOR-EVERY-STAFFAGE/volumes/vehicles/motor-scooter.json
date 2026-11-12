@@ -1,0 +1,1409 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "rear-body-top",
+    "kind": "loft",
+    "bone": "frame",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.55,
+    "region": "body-panels",
+    "sections": [
+     {
+      "at": [
+       -0.945,
+       0.655,
+       0
+      ],
+      "rx": 0.08,
+      "ry": 0.095,
+      "exponent": 3.2,
+      "rotation": [
+       0.70288,
+       0.07716,
+       0.70288,
+       -0.07716
+      ]
+     },
+     {
+      "at": [
+       -0.9,
+       0.665,
+       0
+      ],
+      "rx": 0.15,
+      "ry": 0.125,
+      "exponent": 3.2,
+      "rotation": [
+       0.70689,
+       -0.01766,
+       0.70689,
+       0.01766
+      ]
+     },
+     {
+      "at": [
+       -0.85,
+       0.6625,
+       0
+      ],
+      "rx": 0.17,
+      "ry": 0.1425,
+      "exponent": 3.2,
+      "rotation": [
+       0.70623,
+       -0.03522,
+       0.70623,
+       0.03522
+      ]
+     },
+     {
+      "at": [
+       -0.7,
+       0.6475,
+       0
+      ],
+      "rx": 0.19,
+      "ry": 0.0975,
+      "exponent": 3.2,
+      "rotation": [
+       0.70574,
+       -0.04394,
+       0.70574,
+       0.04394
+      ]
+     },
+     {
+      "at": [
+       -0.36,
+       0.605,
+       0
+      ],
+      "rx": 0.2,
+      "ry": 0.085,
+      "exponent": 3.2,
+      "rotation": [
+       0.70676,
+       -0.02206,
+       0.70676,
+       0.02206
+      ]
+     },
+     {
+      "at": [
+       -0.2,
+       0.595,
+       0
+      ],
+      "rx": 0.2,
+      "ry": 0.075,
+      "exponent": 3.2,
+      "rotation": [
+       0.70676,
+       -0.02206,
+       0.70676,
+       0.02206
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "rear-body-side-l",
+    "kind": "loft",
+    "bone": "frame",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.55,
+    "region": "body-panels",
+    "sections": [
+     {
+      "at": [
+       -0.9,
+       0.52,
+       0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.22,
+      "exponent": 3.5,
+      "rotation": [
+       0.70367,
+       -0.06968,
+       0.70367,
+       0.06968
+      ]
+     },
+     {
+      "at": [
+       -0.8,
+       0.5,
+       0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.25,
+      "exponent": 3.5,
+      "rotation": [
+       0.70706,
+       -0.00803,
+       0.70706,
+       0.00803
+      ]
+     },
+     {
+      "at": [
+       -0.36,
+       0.49,
+       0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.2,
+      "exponent": 3.5,
+      "rotation": [
+       0.70676,
+       0.02206,
+       0.70676,
+       -0.02206
+      ]
+     },
+     {
+      "at": [
+       -0.2,
+       0.5,
+       0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.17,
+      "exponent": 3.5,
+      "rotation": [
+       0.70676,
+       0.02206,
+       0.70676,
+       -0.02206
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "rear-body-side-r",
+    "kind": "loft",
+    "bone": "frame",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.55,
+    "region": "body-panels",
+    "sections": [
+     {
+      "at": [
+       -0.9,
+       0.52,
+       -0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.22,
+      "exponent": 3.5,
+      "rotation": [
+       0.70367,
+       -0.06968,
+       0.70367,
+       0.06968
+      ]
+     },
+     {
+      "at": [
+       -0.8,
+       0.5,
+       -0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.25,
+      "exponent": 3.5,
+      "rotation": [
+       0.70706,
+       -0.00803,
+       0.70706,
+       0.00803
+      ]
+     },
+     {
+      "at": [
+       -0.36,
+       0.49,
+       -0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.2,
+      "exponent": 3.5,
+      "rotation": [
+       0.70676,
+       0.02206,
+       0.70676,
+       -0.02206
+      ]
+     },
+     {
+      "at": [
+       -0.2,
+       0.5,
+       -0.13
+      ],
+      "rx": 0.065,
+      "ry": 0.17,
+      "exponent": 3.5,
+      "rotation": [
+       0.70676,
+       0.02206,
+       0.70676,
+       -0.02206
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "floorboard",
+    "kind": "box",
+    "bone": "frame",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.55,
+    "region": "body-panels",
+    "size": [
+     0.4,
+     0.07,
+     0.4
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      -0.01,
+      0.305,
+      0
+     ]
+    }
+   },
+   {
+    "id": "leg-shield",
+    "kind": "loft",
+    "bone": "frame",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.55,
+    "region": "body-panels",
+    "sections": [
+     {
+      "at": [
+       0.33,
+       0.33,
+       0
+      ],
+      "rx": 0.2,
+      "ry": 0.15,
+      "exponent": 3,
+      "rotation": [
+       0.55431,
+       0.43902,
+       0.55431,
+       -0.43902
+      ]
+     },
+     {
+      "at": [
+       0.37,
+       0.5,
+       0
+      ],
+      "rx": 0.19,
+      "ry": 0.17,
+      "exponent": 3,
+      "rotation": [
+       0.51836,
+       0.48094,
+       0.51836,
+       -0.48094
+      ]
+     },
+     {
+      "at": [
+       0.385,
+       0.7,
+       0
+      ],
+      "rx": 0.17,
+      "ry": 0.16,
+      "exponent": 3,
+      "rotation": [
+       0.51368,
+       0.48593,
+       0.51368,
+       -0.48593
+      ]
+     },
+     {
+      "at": [
+       0.395,
+       0.88,
+       0
+      ],
+      "rx": 0.15,
+      "ry": 0.1,
+      "exponent": 3,
+      "rotation": [
+       0.5103,
+       0.48948,
+       0.5103,
+       -0.48948
+      ]
+     },
+     {
+      "at": [
+       0.4,
+       1.0,
+       0
+      ],
+      "rx": 0.13,
+      "ry": 0.06,
+      "exponent": 3,
+      "rotation": [
+       0.5103,
+       0.48948,
+       0.5103,
+       -0.48948
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "tail-lamp",
+    "kind": "box",
+    "bone": "frame",
+    "material": "glass",
+    "role": "body",
+    "tone": 0.3,
+    "region": "headlamp",
+    "size": [
+     0.03,
+     0.08,
+     0.14
+    ],
+    "cornerRadius": 0.008,
+    "transform": {
+     "translation": [
+      -0.94,
+      0.6,
+      0
+     ]
+    }
+   },
+   {
+    "id": "seat",
+    "kind": "loft",
+    "bone": "seat",
+    "material": "seat-vinyl",
+    "role": "body",
+    "tone": 0.1,
+    "region": "seat",
+    "sections": [
+     {
+      "at": [
+       0.01,
+       0.023,
+       0.0
+      ],
+      "rx": 0.155,
+      "ry": 0.052,
+      "exponent": 3,
+      "rotation": [
+       0.70347,
+       -0.07166,
+       0.70347,
+       0.07166
+      ]
+     },
+     {
+      "at": [
+       0.18,
+       -0.012,
+       0.0
+      ],
+      "rx": 0.155,
+      "ry": 0.053,
+      "exponent": 3,
+      "rotation": [
+       0.70399,
+       -0.06629,
+       0.70399,
+       0.06629
+      ]
+     },
+     {
+      "at": [
+       0.38,
+       -0.05,
+       0.0
+      ],
+      "rx": 0.155,
+      "ry": 0.055,
+      "exponent": 3,
+      "rotation": [
+       0.7056,
+       -0.04611,
+       0.7056,
+       0.04611
+      ]
+     },
+     {
+      "at": [
+       0.54,
+       -0.071,
+       0.0
+      ],
+      "rx": 0.15,
+      "ry": 0.046,
+      "exponent": 3,
+      "rotation": [
+       0.70162,
+       -0.0879,
+       0.70162,
+       0.0879
+      ]
+     },
+     {
+      "at": [
+       0.595,
+       -0.085,
+       0.0
+      ],
+      "rx": 0.1,
+      "ry": 0.022,
+      "exponent": 3,
+      "rotation": [
+       0.70162,
+       -0.0879,
+       0.70162,
+       0.0879
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "engine-cover",
+    "kind": "ellipsoid",
+    "bone": "swing",
+    "material": "engine-metal",
+    "role": "body",
+    "tone": 0.35,
+    "region": "engine",
+    "radii": [
+     0.11,
+     0.09,
+     0.03
+    ],
+    "transform": {
+     "translation": [
+      -0.23,
+      0.22,
+      -0.185
+     ]
+    }
+   },
+   {
+    "id": "engine",
+    "kind": "box",
+    "bone": "swing",
+    "material": "engine-metal",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "engine",
+    "size": [
+     0.3,
+     0.22,
+     0.14
+    ],
+    "cornerRadius": 0.03,
+    "transform": {
+     "translation": [
+      -0.22,
+      0.13,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "muffler",
+    "kind": "capsule",
+    "bone": "swing",
+    "material": "exhaust-steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "exhaust-system",
+    "p0": [
+     -0.64,
+     0.165,
+     -0.15
+    ],
+    "p1": [
+     -0.35,
+     0.165,
+     -0.15
+    ],
+    "r0": 0.055,
+    "r1": 0.055
+   },
+   {
+    "id": "tail-pipe",
+    "kind": "capsule",
+    "bone": "swing",
+    "material": "exhaust-steel",
+    "role": "body",
+    "tone": 0.45,
+    "region": "exhaust-system",
+    "p0": [
+     -0.78,
+     0.17,
+     -0.15
+    ],
+    "p1": [
+     -0.64,
+     0.17,
+     -0.15
+    ],
+    "r0": 0.022,
+    "r1": 0.022
+   },
+   {
+    "id": "muffler-link",
+    "kind": "capsule",
+    "bone": "swing",
+    "material": "exhaust-steel",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "exhaust-system",
+    "maxDenominator": 100,
+    "p0": [
+     -0.35,
+     0.165,
+     -0.15
+    ],
+    "p1": [
+     -0.3,
+     0.15,
+     -0.1
+    ],
+    "r0": 0.03,
+    "r1": 0.03
+   },
+   {
+    "id": "swing-arm-l",
+    "kind": "capsule",
+    "bone": "swing",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "body-panels",
+    "p0": [
+     0.0,
+     0.0,
+     0.075
+    ],
+    "p1": [
+     -0.47,
+     -0.07,
+     0.075
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "swing-arm-r",
+    "kind": "capsule",
+    "bone": "swing",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "body-panels",
+    "p0": [
+     0.0,
+     0.0,
+     -0.075
+    ],
+    "p1": [
+     -0.47,
+     -0.07,
+     -0.075
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "stand-leg-l",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.4,
+    "region": "body-panels",
+    "p0": [
+     0,
+     0,
+     0.11
+    ],
+    "p1": [
+     0.335,
+     0,
+     0.11
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "stand-leg-r",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.4,
+    "region": "body-panels",
+    "p0": [
+     0,
+     0,
+     -0.11
+    ],
+    "p1": [
+     0.335,
+     0,
+     -0.11
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "stand-pivot",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "body-panels",
+    "p0": [
+     0,
+     0,
+     -0.11
+    ],
+    "p1": [
+     0,
+     0,
+     0.11
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "stand-foot",
+    "kind": "capsule",
+    "bone": "stand",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "body-panels",
+    "p0": [
+     0.335,
+     0,
+     -0.11
+    ],
+    "p1": [
+     0.335,
+     0,
+     0.11
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "fork-l",
+    "kind": "capsule",
+    "bone": "steer",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steer-assembly",
+    "p0": [
+     0.79032,
+     0.0198,
+     0.08
+    ],
+    "p1": [
+     -0.00956,
+     0.00292,
+     0.08
+    ],
+    "r0": 0.016,
+    "r1": 0.016
+   },
+   {
+    "id": "grip-l",
+    "kind": "capsule",
+    "bone": "steer",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "steer-assembly",
+    "p0": [
+     -0.08474,
+     0.00499,
+     0.32
+    ],
+    "p1": [
+     -0.08474,
+     0.00499,
+     0.34
+    ],
+    "r0": 0.03,
+    "r1": 0.03
+   },
+   {
+    "id": "fork-r",
+    "kind": "capsule",
+    "bone": "steer",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steer-assembly",
+    "p0": [
+     0.79032,
+     0.0198,
+     -0.08
+    ],
+    "p1": [
+     -0.00956,
+     0.00292,
+     -0.08
+    ],
+    "r0": 0.016,
+    "r1": 0.016
+   },
+   {
+    "id": "grip-r",
+    "kind": "capsule",
+    "bone": "steer",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "steer-assembly",
+    "p0": [
+     -0.08474,
+     0.00499,
+     -0.32
+    ],
+    "p1": [
+     -0.08474,
+     0.00499,
+     -0.34
+    ],
+    "r0": 0.03,
+    "r1": 0.03
+   },
+   {
+    "id": "fork-crown",
+    "kind": "capsule",
+    "bone": "steer",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steer-assembly",
+    "p0": [
+     -0.00956,
+     0.00292,
+     -0.08
+    ],
+    "p1": [
+     -0.00956,
+     0.00292,
+     0.08
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "handlebar",
+    "kind": "capsule",
+    "bone": "steer",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steer-assembly",
+    "p0": [
+     -0.08474,
+     0.00499,
+     -0.32
+    ],
+    "p1": [
+     -0.08474,
+     0.00499,
+     0.32
+    ],
+    "r0": 0.0175,
+    "r1": 0.0175
+   },
+   {
+    "id": "cowl",
+    "kind": "ellipsoid",
+    "bone": "steer",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.5,
+    "region": "steer-assembly",
+    "radii": [
+     0.125,
+     0.11,
+     0.17
+    ],
+    "transform": {
+     "translation": [
+      -0.03719,
+      0.03228,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "headlamp",
+    "kind": "ellipsoid",
+    "bone": "steer",
+    "material": "glass",
+    "role": "body",
+    "tone": 0.9,
+    "region": "headlamp",
+    "radii": [
+     0.045,
+     0.03,
+     0.065
+    ],
+    "transform": {
+     "translation": [
+      -0.04568,
+      0.05579,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "fender-f",
+    "kind": "extrude",
+    "bone": "steer",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.55,
+    "region": "body-panels",
+    "profile": [
+     [
+      0.70596,
+      0.27944
+     ],
+     [
+      0.66041,
+      0.2599
+     ],
+     [
+      0.61913,
+      0.23246
+     ],
+     [
+      0.58351,
+      0.198
+     ],
+     [
+      0.55469,
+      0.15767
+     ],
+     [
+      0.53365,
+      0.1128
+     ],
+     [
+      0.52107,
+      0.06486
+     ],
+     [
+      0.51736,
+      0.01543
+     ],
+     [
+      0.52264,
+      -0.03385
+     ],
+     [
+      0.53676,
+      -0.08136
+     ],
+     [
+      0.55923,
+      -0.12554
+     ],
+     [
+      0.58931,
+      -0.16493
+     ],
+     [
+      0.62603,
+      -0.19823
+     ],
+     [
+      0.64408,
+      -0.17427
+     ],
+     [
+      0.6114,
+      -0.14463
+     ],
+     [
+      0.58462,
+      -0.10957
+     ],
+     [
+      0.56462,
+      -0.07025
+     ],
+     [
+      0.55206,
+      -0.02796
+     ],
+     [
+      0.54735,
+      0.01591
+     ],
+     [
+      0.55065,
+      0.0599
+     ],
+     [
+      0.56186,
+      0.10258
+     ],
+     [
+      0.58059,
+      0.14252
+     ],
+     [
+      0.60623,
+      0.17842
+     ],
+     [
+      0.63795,
+      0.20909
+     ],
+     [
+      0.67468,
+      0.23352
+     ],
+     [
+      0.71523,
+      0.2509
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.065,
+    "to": 0.065
+   },
+   {
+    "id": "fender-f-stay",
+    "kind": "capsule",
+    "bone": "steer",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.55,
+    "region": "body-panels",
+    "maxDenominator": 100,
+    "p0": [
+     0.49703,
+     -0.01602,
+     0.0
+    ],
+    "p1": [
+     0.08528,
+     0.0053,
+     0.0
+    ],
+    "r0": 0.01,
+    "r1": 0.01
+   },
+   {
+    "id": "f-tyre",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "p0": [
+     0.18,
+     0,
+     0.0
+    ],
+    "p1": [
+     0.17778,
+     0.02816,
+     0.0
+    ],
+    "r0": 0.05,
+    "r1": 0.05,
+    "repeat": {
+     "count": 40,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.15708
+    }
+   },
+   {
+    "id": "f-rim",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "alloy",
+    "role": "body",
+    "tone": 0.78,
+    "region": "tyres",
+    "profile": [
+     [
+      -0.04,
+      0.153
+     ],
+     [
+      0.04,
+      0.153
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "f-disc",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "cast-iron",
+    "role": "body",
+    "tone": 0.45,
+    "region": "brake-disc",
+    "profile": [
+     [
+      0.04,
+      0.095
+     ],
+     [
+      0.046,
+      0.095
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "f-hub",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "alloy",
+    "role": "body",
+    "tone": 0.7,
+    "region": "brake-disc",
+    "profile": [
+     [
+      -0.05,
+      0.045
+     ],
+     [
+      0.05,
+      0.045
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "f-axle",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "alloy",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "brake-disc",
+    "profile": [
+     [
+      -0.075,
+      0.015
+     ],
+     [
+      0.075,
+      0.015
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "f-spoke",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "alloy",
+    "role": "detail",
+    "tone": 0.78,
+    "region": "tyres",
+    "maxDenominator": 100,
+    "p0": [
+     0.05,
+     0,
+     0.042
+    ],
+    "p1": [
+     0.15,
+     0,
+     0.042
+    ],
+    "r0": 0.014,
+    "r1": 0.014,
+    "repeat": {
+     "count": 5,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 1.25664
+    }
+   },
+   {
+    "id": "r-tyre",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "p0": [
+     0.175,
+     0,
+     0.0
+    ],
+    "p1": [
+     0.17285,
+     0.02738,
+     0.0
+    ],
+    "r0": 0.055,
+    "r1": 0.055,
+    "repeat": {
+     "count": 40,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.15708
+    }
+   },
+   {
+    "id": "r-rim",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "alloy",
+    "role": "body",
+    "tone": 0.78,
+    "region": "tyres",
+    "profile": [
+     [
+      -0.04,
+      0.153
+     ],
+     [
+      0.04,
+      0.153
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "r-disc",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "cast-iron",
+    "role": "body",
+    "tone": 0.45,
+    "region": "brake-disc",
+    "profile": [
+     [
+      0.04,
+      0.095
+     ],
+     [
+      0.046,
+      0.095
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "r-hub",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "alloy",
+    "role": "body",
+    "tone": 0.7,
+    "region": "brake-disc",
+    "profile": [
+     [
+      -0.05,
+      0.045
+     ],
+     [
+      0.05,
+      0.045
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "r-axle",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "alloy",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "brake-disc",
+    "profile": [
+     [
+      -0.075,
+      0.015
+     ],
+     [
+      0.075,
+      0.015
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "r-spoke",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "alloy",
+    "role": "detail",
+    "tone": 0.78,
+    "region": "tyres",
+    "maxDenominator": 100,
+    "p0": [
+     0.05,
+     0,
+     0.042
+    ],
+    "p1": [
+     0.15,
+     0,
+     0.042
+    ],
+    "r0": 0.014,
+    "r1": 0.014,
+    "repeat": {
+     "count": 5,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 1.25664
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The shell is split into the parts a real scooter has: a leg shield (loft leaning from the floor to the steering head), a floorboard, and a rear body made of a top tray and two side panels 0.13 m off the centre so that the rear wheel runs in a slot between them; the engine, swing arms and muffler hang on the swing bone.",
+    "de": "Die Verkleidung ist in die Teile eines echten Rollers zerlegt: ein Beinschild (Loft, vom Boden zum Steuerkopf geneigt), ein Trittbrett und ein Heck aus einer oberen Schale und zwei Seitenteilen 0,13 m neben der Mitte, damit das Hinterrad in einem Schlitz dazwischen läuft; Motor, Schwingenarme und Auspuff hängen am Schwingenknochen."
+   },
+   {
+    "en": "Tyres are rings of 40 capsule segments (one solid with repeat about the axle), rims are solid revolves 0.08 m wide with a raised brake disc, hub and axle; five spokes per wheel are one solid with repeat; the seat is a loft on the seat bone and opens with it.",
+    "de": "Reifen sind Ringe aus 40 Kapselsegmenten (ein Körper mit repeat um die Achse), Felgen sind volle Rotationskörper von 0,08 m Breite mit aufgesetzter Bremsscheibe, Nabe und Achse; fünf Speichen je Rad sind ein Körper mit repeat; die Sitzbank ist ein Loft am Sitzknochen und klappt mit ihm auf."
+   },
+   {
+    "en": "The two-legged centre stand and the single exhaust on the right (w = -0.15 m, from the plan) are explicit capsule solids; the fork legs, handlebar, grips, cowl, headlamp and front fender turn with the steer bone.",
+    "de": "Der zweibeinige Hauptständer und die einzelne Auspuffanlage rechts (w = -0,15 m, aus dem Grundriss) sind eigene Kapselkörper; Gabelholme, Lenker, Griffe, Verkleidung, Scheinwerfer und Vorderkotflügel drehen mit dem Lenkknochen."
+   }
+  ]
+ }
+}

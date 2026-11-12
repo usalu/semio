@@ -1,0 +1,19 @@
+{
+  "description": "Language-agnostic vectors of the catalog silhouette guard. `gate` is the authoring gate (bounding box at most 8 % per axis, IoU at least 0.80 per view at 1:50 in presentation.defaultPose, tolerance of the independent raster 0.06 (cells a few millimetres wide: hairline members are one pixel wide and the two scanline rules round them differently)). `exemptions` lists the assets excused from a check with the physical reason: none. `cuts` are solids of the neutral kernel cut by a plane: the net area of the section is hand-computed (box 1 x 1 x 1 cut at its middle 1 m2; a 1 x 1 plate with a 0.4 x 0.4 hole 1 - 0.16 = 0.84 m2; a cylinder of radius 0.2 and length 1 along y cut through its axis 0.4 m2, polygonal to 3 %; a sphere of radius 1 cut at 0.5 a circle of radius sqrt(0.75), 0.75 pi = 2.356 m2, polygonal to 4 %). `members` are the widths of drawn strokes against a body mask (cell 1 mm): a stroke on a 30 mm bar is that bar, on the boundary of a plate it is two cells wide and shifted into the plate, where there is no body it keeps its pen width, beside a filled shape of the drawing it is two cells wide, on a body wider than the cap it is the cap.",
+  "gate": { "bbox": 0.08, "iou": 0.8, "scale": 50, "oracle": 0.06 },
+  "exemptions": {},
+  "exact": ["cooking-pot", "hedgehog", "retractable-bollard", "panel-radiator", "sliding-door"],
+  "cuts": [
+    { "id": "box", "solid": { "id": "box", "kind": "box", "node": "n", "material": "m", "size": [1, 1, 1] }, "axis": 0, "plane": 0, "area": 1, "tolerance": 0.001 },
+    { "id": "plate-with-hole", "solid": { "id": "plate", "kind": "extrude", "node": "n", "material": "m", "profile": [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]], "holes": [[[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]]], "plane": "xy", "from": -0.5, "to": 0.5 }, "axis": 2, "plane": 0, "area": 0.84, "tolerance": 0.001 },
+    { "id": "cylinder-through-axis", "solid": { "id": "cylinder", "kind": "revolve", "node": "n", "material": "m", "profile": [[-0.5, 0.2], [0.5, 0.2]], "axis": [0, 1, 0], "origin": [0, 0, 0] }, "axis": 2, "plane": 0, "area": 0.4, "tolerance": 0.03 },
+    { "id": "sphere-off-centre", "solid": { "id": "sphere", "kind": "ellipsoid", "node": "n", "material": "m", "radii": [1, 1, 1] }, "axis": 1, "plane": 0.5, "area": 2.356194, "tolerance": 0.04 }
+  ],
+  "members": [
+    { "id": "stroke-on-bar", "cell": 0.001, "bodies": [[0, -0.015, 1, 0.015]], "drawn": [], "stroke": [[0.2, 0], [0.8, 0]], "pen": 0.009, "cap": 0.15, "width": 0.03, "shift": 0, "tolerance": 0.0025 },
+    { "id": "stroke-on-plate-boundary", "cell": 0.001, "bodies": [[0, -0.2, 1, 0]], "drawn": [], "stroke": [[0.2, 0], [0.8, 0]], "pen": 0.009, "cap": 0.15, "width": 0.002, "shift": -0.001, "tolerance": 0.0011 },
+    { "id": "stroke-on-nothing", "cell": 0.001, "bodies": [[0, -0.015, 1, 0.015]], "drawn": [], "stroke": [[0.2, 0.5], [0.8, 0.5]], "pen": 0.009, "cap": 0.15, "width": 0.009, "shift": 0, "tolerance": 0.0001 },
+    { "id": "stroke-beside-filled-shape", "cell": 0.001, "bodies": [[0, -0.2, 1, 0.2]], "drawn": [[0, -0.2, 1, 0.2]], "stroke": [[0.2, 0.05], [0.8, 0.05]], "pen": 0.009, "cap": 0.15, "width": 0.002, "shift": 0, "tolerance": 0.0011 },
+    { "id": "stroke-on-wide-body", "cell": 0.001, "bodies": [[0, -0.3, 1, 0.3]], "drawn": [], "stroke": [[0.2, 0], [0.8, 0]], "pen": 0.009, "cap": 0.15, "width": 0.15, "shift": 0, "tolerance": 0.003 }
+  ]
+}

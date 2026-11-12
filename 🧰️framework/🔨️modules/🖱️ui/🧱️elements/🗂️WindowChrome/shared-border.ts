@@ -5,6 +5,11 @@ import { sharedBorderAxisScale, sharedOutlineSegments, clipSharedOutlineSegments
 import { windowSilhouetteOutline, type WindowSilhouetteGeometry } from "../🔲️WindowSilhouette/🟦️.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 
+/** 🪪 Narrows an event or mutation target to an element of any document realm. */
+function isElement(target: unknown): target is Element {
+  return typeof target === "object" && target !== null && (target as Node).nodeType === 1;
+}
+
 export interface SharedBorderPaintSegment {
   readonly d: string;
   readonly state: BorderState;

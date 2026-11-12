@@ -233,11 +233,12 @@ test("a declared memory limit replaces the cgroup and charges the resident memor
  expect(memory.serviceMemoryHeadroomBytesV1({environment:{[name]:"nonsense"},cgroup:()=>({limitBytes:4096*MEGABYTE,currentBytes:2560*MEGABYTE})})).toBe(Math.floor(4096*MEGABYTE*(1-margin)-2560*MEGABYTE));
 });
 
-test("the governor reports pressure when the headroom no longer covers the largest learned peak",async()=>{
- let free=1000*MEGABYTE;
- const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>free,estimateBytes:300*MEGABYTE,peaks:{read:()=>({rust:400*MEGABYTE}),write:()=>undefined}});
- expect(governor.pressure()).toBe(false);free=399*MEGABYTE;expect(governor.pressure()).toBe(true);free=401*MEGABYTE;expect(governor.pressure()).toBe(false);
- const unlearned=memory.createMemoryGovernorV1({workers:2,headroom:()=>200*MEGABYTE,estimateBytes:300*MEGABYTE});expect(unlearned.pressure()).toBe(true);
+test("the governor reports pressure only when the host floor is crossed, never because a learned peak is large: a poisoned peak must not flush the shared state after every owner",()=>{
+ const floor=memory.GRAPH_MEMORY_POLICY_V1.hostAvailableFloorMegabytes;let free=(floor+1000)*MEGABYTE;
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>free,estimateBytes:300*MEGABYTE,peaks:{read:()=>({rust:5000*MEGABYTE}),write:()=>undefined}});
+ expect(governor.pressure(),"a headroom far below the learned peak but above the floor").toBe(false);
+ free=(floor-1)*MEGABYTE;expect(governor.pressure()).toBe(true);free=(floor+1)*MEGABYTE;expect(governor.pressure()).toBe(false);
+ const unlearned=memory.createMemoryGovernorV1({workers:2,headroom:()=>(floor-200)*MEGABYTE,estimateBytes:300*MEGABYTE});expect(unlearned.pressure()).toBe(true);
  governor.dispose();unlearned.dispose();
 });
 
@@ -251,4 +252,16 @@ test("every admission decision reaches the decide port with its closed key, mega
  expect(learning).toEqual({key:"learning",used:256,budget:expect.any(Number),kind:"language:cargo"});
  expect(lines.some(line=>line.includes("language:cargo")||line.includes("one project"))).toBe(true);
  for(const row of decisions)expect(["waiting","serial","resumed","learning"]).toContain(row.key);
+});
+
+test("on a host that reports only machine-wide headroom the peak of an owner is the growth of this process, never what other processes took meanwhile",async()=>{
+ const learn=async(attributed:boolean)=>{
+  const time=new FakeTime(),total=64000*MEGABYTE;let own=0,other=0,done=0;
+  const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>total-own-other,...(attributed?{attributable:()=>own}:{}),estimateBytes:20*MEGABYTE,now:time.now,sleep:time.sleep});
+  const task=async()=>{own+=50*MEGABYTE;other+=1000*MEGABYTE;await time.sleep(5000);own-=50*MEGABYTE;done++;};
+  const all=Array.from({length:4},()=>governor.run(task,{kind:"language:rust"}));
+  await time.drive(()=>done===4);await Promise.all(all);const cost=governor.stats().kinds["language:rust"]!;governor.dispose();return cost;
+ };
+ expect(await learn(false),"without the own counter the noise of other processes is charged to the owner").toBeGreaterThanOrEqual(1000);
+ expect(await learn(true),"with the own counter only the growth of this process is charged").toBe(50);
 });

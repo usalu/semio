@@ -1,0 +1,3122 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "body-shell",
+    "kind": "loft",
+    "bone": "body",
+    "material": "paint",
+    "role": "body",
+    "tone": 0.7,
+    "region": "body-panels",
+    "sections": [
+     {
+      "at": [
+       0.0,
+       1.539,
+       0
+      ],
+      "rx": 1.24,
+      "ry": 1.061,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       0.05,
+       1.53333,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.23333,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       0.2,
+       1.59268,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.29268,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       0.6,
+       1.6182,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.3182,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       1.0,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.2,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.7,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.8391,
+       1.8104,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.1396,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.8544,
+       1.83211,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.11789,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.8851,
+       1.86541,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.08459,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.9281,
+       1.90022,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.04978,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.9895,
+       1.93723,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.01277,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.0816,
+       1.97667,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.97333,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.2044,
+       2.0105,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.9395,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.3272,
+       2.02905,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.92095,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.45,
+       2.035,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.915,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.5728,
+       2.02905,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.92095,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.6956,
+       2.0105,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.9395,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.8184,
+       1.97667,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.97333,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.9105,
+       1.93723,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.01277,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       3.9719,
+       1.90022,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.04978,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       4.0149,
+       1.86541,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.08459,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       4.0456,
+       1.83211,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.11789,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       4.0609,
+       1.8104,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.1396,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       4.4,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       5.6,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       6.8,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       8.0,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       8.7391,
+       1.8104,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.1396,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       8.7544,
+       1.83211,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.11789,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       8.7851,
+       1.86541,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.08459,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       8.8281,
+       1.90022,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.04978,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       8.8895,
+       1.93723,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.01277,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       8.9816,
+       1.97667,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.97333,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.1044,
+       2.0105,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.9395,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.2272,
+       2.02905,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.92095,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.35,
+       2.035,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.915,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.4728,
+       2.02905,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.92095,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.5956,
+       2.0105,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.9395,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.7184,
+       1.97667,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.97333,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.8105,
+       1.93723,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.01277,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.8719,
+       1.90022,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.04978,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.9149,
+       1.86541,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.08459,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.9456,
+       1.83211,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.11789,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       9.9609,
+       1.8104,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.1396,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       10.2,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.0,
+       1.625,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.325,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.62,
+       1.6075,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.3075,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.72,
+       1.574,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.274,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.78,
+       1.5,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 1.2,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.85,
+       1.22159,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.92159,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.95,
+       0.8672,
+       0
+      ],
+      "rx": 1.275,
+      "ry": 0.48053,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       12.0,
+       0.69,
+       0
+      ],
+      "rx": 1.24,
+      "ry": 0.26,
+      "exponent": 12,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "roof-panel",
+    "kind": "loft",
+    "bone": "body",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.8,
+    "region": "roof",
+    "sections": [
+     {
+      "at": [
+       0.3,
+       2.935,
+       0
+      ],
+      "rx": 1.2,
+      "ry": 0.045,
+      "exponent": 10,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       1.0,
+       2.935,
+       0
+      ],
+      "rx": 1.2,
+      "ry": 0.045,
+      "exponent": 10,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.0,
+       2.935,
+       0
+      ],
+      "rx": 1.2,
+      "ry": 0.045,
+      "exponent": 10,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.4,
+       2.915,
+       0
+      ],
+      "rx": 1.2,
+      "ry": 0.045,
+      "exponent": 10,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       11.6,
+       2.89,
+       0
+      ],
+      "rx": 1.18,
+      "ry": 0.04,
+      "exponent": 10,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "battery-pack",
+    "kind": "loft",
+    "bone": "battery",
+    "material": "battery-housing",
+    "role": "body",
+    "tone": 0.55,
+    "region": "battery-pack",
+    "sections": [
+     {
+      "at": [
+       0.0,
+       0.01,
+       0.0
+      ],
+      "rx": 1.0,
+      "ry": 0.015,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.07,
+       0.0
+      ],
+      "rx": 1.075,
+      "ry": 0.07,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       6.1,
+       0.07,
+       0.0
+      ],
+      "rx": 1.075,
+      "ry": 0.07,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       6.3,
+       0.01,
+       0.0
+      ],
+      "rx": 1.0,
+      "ry": 0.015,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "hvac-unit",
+    "kind": "loft",
+    "bone": "hvac",
+    "material": "hvac-housing",
+    "role": "body",
+    "tone": 0.6,
+    "region": "hvac-unit",
+    "sections": [
+     {
+      "at": [
+       0.0,
+       0.01,
+       0.0
+      ],
+      "rx": 0.95,
+      "ry": 0.015,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       0.1,
+       0.08,
+       0.0
+      ],
+      "rx": 1.0,
+      "ry": 0.08,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.3,
+       0.08,
+       0.0
+      ],
+      "rx": 1.0,
+      "ry": 0.08,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.5,
+       0.01,
+       0.0
+      ],
+      "rx": 0.95,
+      "ry": 0.015,
+      "exponent": 6,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "hvac-louvre",
+    "kind": "box",
+    "bone": "hvac",
+    "material": "hvac-housing",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 50,
+    "size": [
+     0.03,
+     0.012,
+     1.7
+    ],
+    "transform": {
+     "translation": [
+      0.6,
+      0.165,
+      0.0
+     ]
+    },
+    "repeat": {
+     "count": 9,
+     "translation": [
+      0.15625,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "side-window-1",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.15,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      0.875,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-2",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.15,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      2.125,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-3",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.3,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      3.45,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-4",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.15,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      4.775,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-5",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.8,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      5.85,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-6",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.1,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      8.1,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-7",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.1,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      9.3,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-8",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.3,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      10.1,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-1",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.15,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      0.875,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-2",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.15,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      2.125,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-3",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.3,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      3.45,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-4",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.15,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      4.775,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-5",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     0.8,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      5.85,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-6",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.1,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      6.9,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-7",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.1,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      8.1,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-8",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.1,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      9.3,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-9",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     0.3,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      10.1,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "upper-window-10",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.7,
+    "region": "glazing",
+    "size": [
+     1.1,
+     0.3,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      10.9,
+      2.63,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "side-window-door-gap-m",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.1,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      6.9,
+      1.8,
+      1.2765
+     ]
+    }
+   },
+   {
+    "id": "side-window-door-gap-f",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     1.1,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      10.9,
+      1.8,
+      1.2765
+     ]
+    }
+   },
+   {
+    "id": "side-window-front",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.3,
+     1.2,
+     0.0135
+    ],
+    "transform": {
+     "translation": [
+      11.65,
+      1.8,
+      1.2765
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -2.553
+     ]
+    }
+   },
+   {
+    "id": "windscreen",
+    "kind": "loft",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.75,
+    "region": "glazing",
+    "sections": [
+     {
+      "at": [
+       11.99,
+       1.2,
+       0.625
+      ],
+      "rx": 0.595,
+      "ry": 0.012,
+      "exponent": 8,
+      "rotation": [
+       -0.46708,
+       -0.53088,
+       -0.46708,
+       0.53088
+      ]
+     },
+     {
+      "at": [
+       11.8,
+       2.68,
+       0.625
+      ],
+      "rx": 0.575,
+      "ry": 0.012,
+      "exponent": 8,
+      "rotation": [
+       -0.46708,
+       -0.53088,
+       -0.46708,
+       0.53088
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.25
+     ]
+    }
+   },
+   {
+    "id": "destination-sign",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.03,
+     0.14,
+     1.9
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      11.75,
+      2.79,
+      0
+     ]
+    }
+   },
+   {
+    "id": "bumper-front",
+    "kind": "box",
+    "bone": "body",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "body-panels",
+    "size": [
+     0.1,
+     0.3,
+     2.45
+    ],
+    "cornerRadius": 0.04,
+    "transform": {
+     "translation": [
+      11.95,
+      0.45,
+      0
+     ]
+    }
+   },
+   {
+    "id": "bumper-rear",
+    "kind": "box",
+    "bone": "body",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "body-panels",
+    "size": [
+     0.1,
+     0.3,
+     2.45
+    ],
+    "cornerRadius": 0.04,
+    "transform": {
+     "translation": [
+      0.05,
+      0.45,
+      0
+     ]
+    }
+   },
+   {
+    "id": "headlamp-l",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.9,
+    "size": [
+     0.06,
+     0.22,
+     0.35
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      11.97,
+      0.73,
+      0.975
+     ]
+    }
+   },
+   {
+    "id": "tail-lamp-l",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "detail",
+    "tone": 0.7,
+    "size": [
+     0.06,
+     0.5,
+     0.35
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      0.03,
+      0.87,
+      0.975
+     ]
+    }
+   },
+   {
+    "id": "mirror-l",
+    "kind": "box",
+    "bone": "body",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.3,
+    "size": [
+     0.12,
+     0.37,
+     0.075
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      11.85,
+      2.3,
+      1.2375
+     ]
+    }
+   },
+   {
+    "id": "mirror-arm-l",
+    "kind": "capsule",
+    "bone": "body",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 100,
+    "p0": [
+     11.8,
+     2.45,
+     1.2
+    ],
+    "p1": [
+     11.85,
+     2.45,
+     1.24
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "headlamp-r",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.9,
+    "size": [
+     0.06,
+     0.22,
+     0.35
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      11.97,
+      0.73,
+      -0.975
+     ]
+    }
+   },
+   {
+    "id": "tail-lamp-r",
+    "kind": "box",
+    "bone": "body",
+    "material": "glass",
+    "role": "detail",
+    "tone": 0.7,
+    "size": [
+     0.06,
+     0.5,
+     0.35
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      0.03,
+      0.87,
+      -0.975
+     ]
+    }
+   },
+   {
+    "id": "mirror-r",
+    "kind": "box",
+    "bone": "body",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.3,
+    "size": [
+     0.12,
+     0.37,
+     0.075
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      11.85,
+      2.3,
+      -1.2375
+     ]
+    }
+   },
+   {
+    "id": "mirror-arm-r",
+    "kind": "capsule",
+    "bone": "body",
+    "material": "paint",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 100,
+    "p0": [
+     11.8,
+     2.45,
+     -1.2
+    ],
+    "p1": [
+     11.85,
+     2.45,
+     -1.24
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "door-opening-m",
+    "kind": "box",
+    "bone": "body",
+    "material": "interior-trim",
+    "role": "detail",
+    "tone": 0.06,
+    "size": [
+     1.1,
+     2.12,
+     0.004
+    ],
+    "transform": {
+     "translation": [
+      6.9,
+      1.4,
+      -1.2765
+     ]
+    }
+   },
+   {
+    "id": "door-opening-f",
+    "kind": "box",
+    "bone": "body",
+    "material": "interior-trim",
+    "role": "detail",
+    "tone": 0.06,
+    "size": [
+     1.1,
+     2.12,
+     0.004
+    ],
+    "transform": {
+     "translation": [
+      10.9,
+      1.4,
+      -1.2765
+     ]
+    }
+   },
+   {
+    "id": "leaf-m-aft",
+    "kind": "box",
+    "bone": "door-m-aft",
+    "material": "door-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "doors",
+    "size": [
+     0.55,
+     2.12,
+     0.04
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.275,
+      1.06,
+      -1.265
+     ]
+    }
+   },
+   {
+    "id": "leaf-m-aft-glass",
+    "kind": "box",
+    "bone": "door-m-aft",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.45,
+     1.5,
+     0.008
+    ],
+    "transform": {
+     "translation": [
+      0.275,
+      1.25,
+      -1.2885
+     ]
+    }
+   },
+   {
+    "id": "leaf-handrail-m-aft",
+    "kind": "capsule",
+    "bone": "door-m-aft",
+    "material": "interior-trim",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 50,
+    "p0": [
+     0.04,
+     0.34,
+     -1.3
+    ],
+    "p1": [
+     0.51,
+     0.34,
+     -1.3
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "leaf-m-fwd",
+    "kind": "box",
+    "bone": "door-m-fwd",
+    "material": "door-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "doors",
+    "size": [
+     0.55,
+     2.12,
+     0.04
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.275,
+      1.06,
+      -1.265
+     ]
+    }
+   },
+   {
+    "id": "leaf-m-fwd-glass",
+    "kind": "box",
+    "bone": "door-m-fwd",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.45,
+     1.5,
+     0.008
+    ],
+    "transform": {
+     "translation": [
+      0.275,
+      1.25,
+      -1.2885
+     ]
+    }
+   },
+   {
+    "id": "leaf-handrail-m-fwd",
+    "kind": "capsule",
+    "bone": "door-m-fwd",
+    "material": "interior-trim",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 50,
+    "p0": [
+     0.04,
+     0.34,
+     -1.3
+    ],
+    "p1": [
+     0.51,
+     0.34,
+     -1.3
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "leaf-f-aft",
+    "kind": "box",
+    "bone": "door-f-aft",
+    "material": "door-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "doors",
+    "size": [
+     0.55,
+     2.12,
+     0.04
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.275,
+      1.06,
+      -1.265
+     ]
+    }
+   },
+   {
+    "id": "leaf-f-aft-glass",
+    "kind": "box",
+    "bone": "door-f-aft",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.45,
+     1.5,
+     0.008
+    ],
+    "transform": {
+     "translation": [
+      0.275,
+      1.25,
+      -1.2885
+     ]
+    }
+   },
+   {
+    "id": "leaf-handrail-f-aft",
+    "kind": "capsule",
+    "bone": "door-f-aft",
+    "material": "interior-trim",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 50,
+    "p0": [
+     0.04,
+     0.34,
+     -1.3
+    ],
+    "p1": [
+     0.51,
+     0.34,
+     -1.3
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "leaf-f-fwd",
+    "kind": "box",
+    "bone": "door-f-fwd",
+    "material": "door-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "doors",
+    "size": [
+     0.55,
+     2.12,
+     0.04
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.275,
+      1.06,
+      -1.265
+     ]
+    }
+   },
+   {
+    "id": "leaf-f-fwd-glass",
+    "kind": "box",
+    "bone": "door-f-fwd",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "glazing",
+    "size": [
+     0.45,
+     1.5,
+     0.008
+    ],
+    "transform": {
+     "translation": [
+      0.275,
+      1.25,
+      -1.2885
+     ]
+    }
+   },
+   {
+    "id": "leaf-handrail-f-fwd",
+    "kind": "capsule",
+    "bone": "door-f-fwd",
+    "material": "interior-trim",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 50,
+    "p0": [
+     0.04,
+     0.34,
+     -1.3
+    ],
+    "p1": [
+     0.51,
+     0.34,
+     -1.3
+    ],
+    "r0": 0.015,
+    "r1": 0.015
+   },
+   {
+    "id": "e-axle-casting",
+    "kind": "ellipsoid",
+    "bone": "axle-r",
+    "material": "e-axle",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "e-axle",
+    "radii": [
+     0.4,
+     0.15,
+     0.7
+    ],
+    "transform": {
+     "translation": [
+      0,
+      0.0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "axle-beam-r",
+    "kind": "capsule",
+    "bone": "axle-r",
+    "material": "e-axle",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "e-axle",
+    "p0": [
+     0,
+     0,
+     -1.05
+    ],
+    "p1": [
+     0,
+     0,
+     1.05
+    ],
+    "r0": 0.07,
+    "r1": 0.07
+   },
+   {
+    "id": "air-spring-r",
+    "kind": "box",
+    "bone": "axle-r",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.2,
+    "size": [
+     0.28,
+     0.3,
+     0.18
+    ],
+    "transform": {
+     "translation": [
+      0,
+      0.6,
+      0.8
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.6
+     ]
+    }
+   },
+   {
+    "id": "front-axle-casting",
+    "kind": "ellipsoid",
+    "bone": "axle-f",
+    "material": "cast-iron",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "brakes",
+    "radii": [
+     0.4,
+     0.15,
+     0.7
+    ],
+    "transform": {
+     "translation": [
+      0,
+      0.0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "axle-beam-f",
+    "kind": "capsule",
+    "bone": "axle-f",
+    "material": "cast-iron",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "brakes",
+    "p0": [
+     0,
+     0,
+     -1.05
+    ],
+    "p1": [
+     0,
+     0,
+     1.05
+    ],
+    "r0": 0.07,
+    "r1": 0.07
+   },
+   {
+    "id": "air-spring-f",
+    "kind": "box",
+    "bone": "axle-f",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.2,
+    "size": [
+     0.28,
+     0.3,
+     0.18
+    ],
+    "transform": {
+     "translation": [
+      0,
+      0.6,
+      0.8
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      -1.6
+     ]
+    }
+   },
+   {
+    "id": "fl-tyre",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "profile": [
+     [
+      -0.15,
+      0.3792
+     ],
+     [
+      -0.132,
+      0.45648
+     ],
+     [
+      -0.09,
+      0.48
+     ],
+     [
+      0.09,
+      0.48
+     ],
+     [
+      0.132,
+      0.45648
+     ],
+     [
+      0.15,
+      0.3792
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "fl-rim",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.7,
+    "profile": [
+     [
+      -0.14,
+      0.286
+     ],
+     [
+      0.14,
+      0.286
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "fl-hub",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.55,
+    "profile": [
+     [
+      0.0,
+      0.11
+     ],
+     [
+      0.17,
+      0.11
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "fl-stud",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.2,
+    "maxDenominator": 50,
+    "p0": [
+     0.075,
+     0,
+     1.192
+    ],
+    "p1": [
+     0.075,
+     0,
+     1.21
+    ],
+    "r0": 0.013,
+    "r1": 0.013,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "fl-drum",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "cast-iron",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "brakes",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      -0.14,
+      0.235
+     ],
+     [
+      -0.1,
+      0.235
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "rl-tyre",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "profile": [
+     [
+      -0.15,
+      0.3792
+     ],
+     [
+      -0.132,
+      0.45648
+     ],
+     [
+      -0.09,
+      0.48
+     ],
+     [
+      0.09,
+      0.48
+     ],
+     [
+      0.132,
+      0.45648
+     ],
+     [
+      0.15,
+      0.3792
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "rl-rim",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.7,
+    "profile": [
+     [
+      -0.14,
+      0.286
+     ],
+     [
+      0.14,
+      0.286
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "rl-hub",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.55,
+    "profile": [
+     [
+      0.0,
+      0.11
+     ],
+     [
+      0.17,
+      0.11
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "rl-stud",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.2,
+    "maxDenominator": 50,
+    "p0": [
+     0.075,
+     0,
+     1.192
+    ],
+    "p1": [
+     0.075,
+     0,
+     1.21
+    ],
+    "r0": 0.013,
+    "r1": 0.013,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "rl-drum",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "cast-iron",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "brakes",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      -0.14,
+      0.235
+     ],
+     [
+      -0.1,
+      0.235
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     1.05
+    ]
+   },
+   {
+    "id": "fr-tyre",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "profile": [
+     [
+      -0.15,
+      0.3792
+     ],
+     [
+      -0.132,
+      0.45648
+     ],
+     [
+      -0.09,
+      0.48
+     ],
+     [
+      0.09,
+      0.48
+     ],
+     [
+      0.132,
+      0.45648
+     ],
+     [
+      0.15,
+      0.3792
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   },
+   {
+    "id": "fr-rim",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.7,
+    "profile": [
+     [
+      -0.14,
+      0.286
+     ],
+     [
+      0.14,
+      0.286
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   },
+   {
+    "id": "fr-hub",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.55,
+    "profile": [
+     [
+      -0.17,
+      0.11
+     ],
+     [
+      0.0,
+      0.11
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   },
+   {
+    "id": "fr-stud",
+    "kind": "capsule",
+    "bone": "wheel-f",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.2,
+    "maxDenominator": 50,
+    "p0": [
+     0.075,
+     0,
+     -1.192
+    ],
+    "p1": [
+     0.075,
+     0,
+     -1.21
+    ],
+    "r0": 0.013,
+    "r1": 0.013,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "fr-drum",
+    "kind": "revolve",
+    "bone": "wheel-f",
+    "material": "cast-iron",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "brakes",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.1,
+      0.235
+     ],
+     [
+      0.14,
+      0.235
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   },
+   {
+    "id": "rr-tyre",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.1,
+    "region": "tyres",
+    "profile": [
+     [
+      -0.15,
+      0.3792
+     ],
+     [
+      -0.132,
+      0.45648
+     ],
+     [
+      -0.09,
+      0.48
+     ],
+     [
+      0.09,
+      0.48
+     ],
+     [
+      0.132,
+      0.45648
+     ],
+     [
+      0.15,
+      0.3792
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   },
+   {
+    "id": "rr-rim",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.7,
+    "profile": [
+     [
+      -0.14,
+      0.286
+     ],
+     [
+      0.14,
+      0.286
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   },
+   {
+    "id": "rr-hub",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.55,
+    "profile": [
+     [
+      -0.17,
+      0.11
+     ],
+     [
+      0.0,
+      0.11
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   },
+   {
+    "id": "rr-stud",
+    "kind": "capsule",
+    "bone": "wheel-r",
+    "material": "steel-wheel",
+    "role": "detail",
+    "tone": 0.2,
+    "maxDenominator": 50,
+    "p0": [
+     0.075,
+     0,
+     -1.192
+    ],
+    "p1": [
+     0.075,
+     0,
+     -1.21
+    ],
+    "r0": 0.013,
+    "r1": 0.013,
+    "repeat": {
+     "count": 8,
+     "rotationAxis": [
+      0,
+      0,
+      1
+     ],
+     "rotationRad": 0.7854
+    }
+   },
+   {
+    "id": "rr-drum",
+    "kind": "revolve",
+    "bone": "wheel-r",
+    "material": "cast-iron",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "brakes",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.1,
+      0.235
+     ],
+     [
+      0.14,
+      0.235
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -1.05
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The shell is one loft along the bus axis (12 m) with vertical slices every 0.1 to 0.3 m near the wheel arches; the stations come from the elevation outline (circular arches of 0.64 m about both axles, floor 0.3 m, rounded roof ends, raked front face down to 0.95 m), the width is the plan's 2.55 m and an exponent of 12 gives the front view's small roof radii; the arches are open across the whole width as drawn.",
+    "de": "Die Karosserie ist ein Loft entlang der Busachse (12 m) mit senkrechten Schnitten alle 0,1 bis 0,3 m nahe der Radkästen; die Stationen stammen aus dem Umriss der Seitenansicht (kreisrunde Radkästen von 0,64 m um beide Achsen, Boden 0,3 m, gerundete Dachenden, geneigte Front bis 0,95 m), die Breite ist die 2,55 m des Grundrisses und ein Exponent von 12 ergibt die kleinen Dachradien der Vorderansicht; die Radkästen sind wie gezeichnet über die ganze Breite offen."
+   },
+   {
+    "en": "Glazing is a set of thin plates flush with the sides (windows on both sides as one solid with repeat, the two door-side gaps only on the left), two raked windscreen panes (one solid with repeat) and the destination sign; the four door leaves are boxes with a glass inset on their own prismatic bones, riding over dark door-opening plates on the right side.",
+    "de": "Die Verglasung besteht aus dünnen, bündigen Platten (Fenster beider Seiten als ein Körper mit repeat, die zwei Türfelder nur links), zwei geneigten Frontscheiben (ein Körper mit repeat) und dem Zielschild; die vier Türflügel sind Quader mit Glaseinsatz auf eigenen Schiebeknochen und laufen auf der rechten Seite über dunklen Türöffnungsplatten."
+   },
+   {
+    "en": "Wheels are revolves about the axle at a 2.1 m track (rounded tyre of 0.3 m width, steel rim disc, hub, eight wheel studs with repeat, brake drum); axle bones carry the axle beam, the casting (e-axle at the rear) and the two air springs, so the suspension travel and the kneeling pose move them together with the wheels.",
+    "de": "Die Räder sind Rotationskörper um die Achse bei 2,1 m Spurweite (Reifen mit gerundeten Schultern von 0,3 m Breite, Stahlfelgenscheibe, Nabe, acht Radbolzen mit repeat, Bremstrommel); die Achsknochen tragen den Achskörper, das Gehäuse (hinten E-Achse) und die zwei Luftfedern, sodass Federweg und Kneeling-Pose sie gemeinsam mit den Rädern bewegen."
+   },
+   {
+    "en": "The battery pack and the HVAC unit on the roof are thin lofts with tapered ends on their own bones (2.1 m and 2.0 m wide as in the front view), the HVAC louvres are nine ribs with repeat shown at 1:50 only.",
+    "de": "Das Batteriepaket und die Klimaanlage auf dem Dach sind flache Lofts mit verjüngten Enden auf eigenen Knochen (2,1 m und 2,0 m breit wie in der Vorderansicht), die Lüftungslamellen sind neun Rippen mit repeat, nur im Maßstab 1:50 sichtbar."
+   }
+  ]
+ }
+}

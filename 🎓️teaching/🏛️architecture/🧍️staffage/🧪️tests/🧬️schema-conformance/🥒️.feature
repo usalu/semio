@@ -1,6 +1,6 @@
 @capability-staffage-schema
 Feature: The JSON Schema is the normative contract
-  `🧬️schema/🔣️.json` (draft-07, `$id` semio.staffage/v1) defines one `$defs` entry per type of the TypeScript twin, with the same name, the same enums and
+  `🧬️schema/🔣️.json` (draft-07, `$id` semio.staffage/v2) defines one `$defs` entry per type of the TypeScript twin, with the same name, the same enums and
   `additionalProperties: false`. A category document is `{ $schema, version, category, assets }`; the manifest is `{ $schema, version, categories,
   collections, entries }`; every Text requires `en` and `de`; a Shape is exactly one of the five geometries plus the common fields.
 

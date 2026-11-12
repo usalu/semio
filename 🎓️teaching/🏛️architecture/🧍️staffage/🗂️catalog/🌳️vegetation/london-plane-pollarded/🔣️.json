@@ -16163,6 +16163,1070 @@
    ],
    "clinical": false
   },
+  "volume": {
+    "status": "authored",
+    "solids": [
+      {
+        "id": "root-flare",
+        "kind": "loft",
+        "bone": "root-plate",
+        "material": "plane-bark",
+        "role": "body",
+        "tone": 0.33,
+        "region": "trunk-bark",
+        "sections": [
+          {
+            "at": [0, 0.14661, 0],
+            "rx": 0.66994,
+            "ry": 0.56832,
+            "exponent": 2.1,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.15, -0.00583, 0],
+            "rx": 0.583,
+            "ry": 0.45608,
+            "exponent": 2.1,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.3, -0.00468, 0],
+            "rx": 0.496,
+            "ry": 0.37109,
+            "exponent": 2.1,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.45, -0.00104, 0],
+            "rx": 0.40906,
+            "ry": 0.33958,
+            "exponent": 2.1,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "trunk",
+        "kind": "loft",
+        "bone": "trunk",
+        "material": "plane-bark",
+        "role": "body",
+        "tone": 0.33,
+        "region": "trunk-bark",
+        "sections": [
+          {
+            "at": [-1e-05, -0.00103, 0],
+            "rx": 0.40894,
+            "ry": 0.33956,
+            "exponent": 2.1,
+            "rotation": [0.7071, -0.00309, 0.7071, 0.00309]
+          },
+          {
+            "at": [0.66003, 0.0002, 0],
+            "rx": 0.37076,
+            "ry": 0.3188,
+            "exponent": 2.1,
+            "rotation": [0.7071, -0.00309, 0.7071, 0.00309]
+          },
+          {
+            "at": [1.32004, -0.00144, 0],
+            "rx": 0.36076,
+            "ry": 0.31154,
+            "exponent": 2.1,
+            "rotation": [0.7071, -0.00309, 0.7071, 0.00309]
+          },
+          {
+            "at": [1.98008, 0.00089, 0],
+            "rx": 0.35076,
+            "ry": 0.30326,
+            "exponent": 2.1,
+            "rotation": [0.7071, -0.00309, 0.7071, 0.00309]
+          },
+          {
+            "at": [2.64009, -0.00096, 0],
+            "rx": 0.34076,
+            "ry": 0.29824,
+            "exponent": 2.1,
+            "rotation": [0.7071, -0.00309, 0.7071, 0.00309]
+          },
+          {
+            "at": [3.30014, 0.00165, 0],
+            "rx": 0.33076,
+            "ry": 0.32847,
+            "exponent": 2.1,
+            "rotation": [0.7071, -0.00309, 0.7071, 0.00309]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "head",
+        "kind": "loft",
+        "bone": "head",
+        "material": "plane-bark-scarred",
+        "role": "body",
+        "tone": 0.35,
+        "region": "pollard-bark",
+        "sections": [
+          {
+            "at": [0.00013, 0, -0.0009],
+            "rx": 0.25958,
+            "ry": 0.17106,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.20013, 0, -0.00089],
+            "rx": 0.4566,
+            "ry": 0.37525,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.40013, 0, -0.00087],
+            "rx": 0.44124,
+            "ry": 0.4265,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.60013, 0, -0.00086],
+            "rx": 0.42587,
+            "ry": 0.40665,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.80013, 0, 0],
+            "rx": 0.21438,
+            "ry": 0.21438,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "k-w2",
+        "kind": "capsule",
+        "bone": "k-w2",
+        "material": "plane-bark-scarred",
+        "role": "body",
+        "tone": 0.35,
+        "region": "pollard-bark",
+        "p0": [0, 0, 0],
+        "p1": [0.55, 0, 0.9477],
+        "r0": 0.15216,
+        "r1": 0.0913
+      },
+      {
+        "id": "k-w1",
+        "kind": "capsule",
+        "bone": "k-w1",
+        "material": "plane-bark-scarred",
+        "role": "body",
+        "tone": 0.35,
+        "region": "pollard-bark",
+        "p0": [0, 0, 0],
+        "p1": [0.6, 0, 0.58027],
+        "r0": 0.15238,
+        "r1": 0.09143
+      },
+      {
+        "id": "k-c",
+        "kind": "capsule",
+        "bone": "k-c",
+        "material": "plane-bark-scarred",
+        "role": "body",
+        "tone": 0.35,
+        "region": "pollard-bark",
+        "p0": [0, 0, 0],
+        "p1": [0.5, 0, -0.10609],
+        "r0": 0.15234,
+        "r1": 0.09141
+      },
+      {
+        "id": "k-e1",
+        "kind": "capsule",
+        "bone": "k-e1",
+        "material": "plane-bark-scarred",
+        "role": "body",
+        "tone": 0.35,
+        "region": "pollard-bark",
+        "p0": [0, 0, 0],
+        "p1": [0.6, 0, -0.58194],
+        "r0": 0.15244,
+        "r1": 0.09146
+      },
+      {
+        "id": "k-e2",
+        "kind": "capsule",
+        "bone": "k-e2",
+        "material": "plane-bark-scarred",
+        "role": "body",
+        "tone": 0.35,
+        "region": "pollard-bark",
+        "p0": [0, 0, 0],
+        "p1": [0.55, 0, -0.9494],
+        "r0": 0.15216,
+        "r1": 0.0913
+      },
+      {
+        "id": "s-w2a",
+        "kind": "capsule",
+        "bone": "s-w2a",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 0.9477],
+        "p1": [1.6, 0, 2.06302],
+        "r0": 0.05547,
+        "r1": 0.03328
+      },
+      {
+        "id": "s-w1a",
+        "kind": "capsule",
+        "bone": "s-w1a",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 0.58027],
+        "p1": [1.8, 0, 0.75441],
+        "r0": 0.05549,
+        "r1": 0.03329
+      },
+      {
+        "id": "s-ca",
+        "kind": "capsule",
+        "bone": "s-ca",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.10609],
+        "p1": [2, 0, -0.0662],
+        "r0": 0.0555,
+        "r1": 0.0333
+      },
+      {
+        "id": "s-e1a",
+        "kind": "capsule",
+        "bone": "s-e1a",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.58194],
+        "p1": [1.8, 0, -0.75611],
+        "r0": 0.05549,
+        "r1": 0.03329
+      },
+      {
+        "id": "s-e2a",
+        "kind": "capsule",
+        "bone": "s-e2a",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.9494],
+        "p1": [1.6, 0, -2.06482],
+        "r0": 0.05547,
+        "r1": 0.03328
+      },
+      {
+        "id": "s-w2b",
+        "kind": "capsule",
+        "bone": "s-w2b",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 2.06302],
+        "p1": [1.8, 0, 3.31774],
+        "r0": 0.03132,
+        "r1": 0.01879
+      },
+      {
+        "id": "s-w1b",
+        "kind": "capsule",
+        "bone": "s-w1b",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 0.75441],
+        "p1": [1.6, 0, 0.9092],
+        "r0": 0.03131,
+        "r1": 0.01879
+      },
+      {
+        "id": "s-cb",
+        "kind": "capsule",
+        "bone": "s-cb",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.0662],
+        "p1": [1.6, 0, -0.03429],
+        "r0": 0.03131,
+        "r1": 0.01879
+      },
+      {
+        "id": "s-e1b",
+        "kind": "capsule",
+        "bone": "s-e1b",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.75611],
+        "p1": [1.6, 0, -0.91093],
+        "r0": 0.03131,
+        "r1": 0.01879
+      },
+      {
+        "id": "s-e2b",
+        "kind": "capsule",
+        "bone": "s-e2b",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -2.06482],
+        "p1": [1.8, 0, -3.31966],
+        "r0": 0.03132,
+        "r1": 0.01879
+      },
+      {
+        "id": "crown-core",
+        "kind": "loft",
+        "bone": "fol-core",
+        "material": "plane-leaf-shade",
+        "role": "body",
+        "tone": 0.45,
+        "region": "leaf-shade",
+        "sections": [
+          {
+            "at": [-1.56587, -0.14394, -0.03006],
+            "rx": 0.046,
+            "ry": 0.004,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [-1.09895, 0.01631, 0.00492],
+            "rx": 1.02458,
+            "ry": 0.95194,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [-0.63203, 0.06289, -0.02843],
+            "rx": 1.13041,
+            "ry": 1.14334,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [-0.1651, -0.08878, 0.04386],
+            "rx": 1.36789,
+            "ry": 1.28644,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.30182, -0.08222, -0.02595],
+            "rx": 1.36667,
+            "ry": 1.28041,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [0.76875, -0.06261, 0.00889],
+            "rx": 1.17854,
+            "ry": 1.18552,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [1.23567, -0.04068, 0.01337],
+            "rx": 1.03272,
+            "ry": 0.94017,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          },
+          {
+            "at": [1.70259, 0.1067, 0.06929],
+            "rx": 0.06602,
+            "ry": 0.004,
+            "exponent": 2.4,
+            "rotation": [0.70711, 0, 0.70711, 0]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "crown-top",
+        "kind": "loft",
+        "bone": "fol-top",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "sections": [
+          {
+            "at": [-0.82824, -0.10246, 0.00074],
+            "rx": 0.01776,
+            "ry": 0.004,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          },
+          {
+            "at": [-0.57372, 0.01072, -0.00211],
+            "rx": 0.69385,
+            "ry": 0.68555,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          },
+          {
+            "at": [-0.33138, -0.05031, 0.03377],
+            "rx": 0.90532,
+            "ry": 0.92393,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          },
+          {
+            "at": [-0.0902, -0.12786, -0.01148],
+            "rx": 0.98751,
+            "ry": 0.97826,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          },
+          {
+            "at": [0.15953, -0.08331, -0.00296],
+            "rx": 0.98541,
+            "ry": 0.99996,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          },
+          {
+            "at": [0.40504, -0.09897, 0.02159],
+            "rx": 0.90743,
+            "ry": 0.89306,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          },
+          {
+            "at": [0.64664, -0.17055, 0.00162],
+            "rx": 0.69281,
+            "ry": 0.66908,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          },
+          {
+            "at": [0.90001, -0.07384, 0.00616],
+            "rx": 0.02426,
+            "ry": 0.004,
+            "exponent": 2.4,
+            "rotation": [0.70668, -0.02468, 0.70668, 0.02468]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true
+      },
+      {
+        "id": "lobe-o-0",
+        "kind": "ellipsoid",
+        "bone": "fol-e2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.96227, 1.31577, 0.60665],
+        "transform": {
+          "rotation": [0.42672, 0.55611, -0.43417, 0.56582],
+          "translation": [0.17233, -0.37385, -0.00694]
+        }
+      },
+      {
+        "id": "lobe-o-0-twig",
+        "kind": "capsule",
+        "bone": "fol-e2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -3.31966],
+        "p1": [-0.20895, -0.47602, -0.00694],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-o-180",
+        "kind": "ellipsoid",
+        "bone": "fol-w2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.98499, 1.29905, 0.61367],
+        "transform": {
+          "rotation": [-0.54935, -0.42153, 0.57239, -0.43921],
+          "translation": [0.12249, 0.31266, -0.03085]
+        }
+      },
+      {
+        "id": "lobe-o-180-twig",
+        "kind": "capsule",
+        "bone": "fol-w2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 3.31774],
+        "p1": [-0.25395, 0.41353, -0.03085],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-ol-90",
+        "kind": "ellipsoid",
+        "bone": "fol-e2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.98838, 1.30818, 0.5975],
+        "transform": {
+          "rotation": [-0.42884, -0.55887, -0.43207, 0.56309],
+          "translation": [-0.15965, 1.08526, 2.21617]
+        }
+      },
+      {
+        "id": "lobe-ol-90-twig",
+        "kind": "capsule",
+        "bone": "fol-e2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -3.31966],
+        "p1": [-0.53873, 0.98368, 2.21617],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-ol-270",
+        "kind": "ellipsoid",
+        "bone": "fol-w2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [1.02489, 1.31542, 0.64606],
+        "transform": {
+          "rotation": [0.55294, 0.42428, 0.56892, -0.43655],
+          "translation": [-0.22027, -1.17273, -2.29163]
+        }
+      },
+      {
+        "id": "lobe-ol-270-twig",
+        "kind": "capsule",
+        "bone": "fol-w2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 3.31774],
+        "p1": [-0.60145, -1.07059, -2.29163],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-od-45",
+        "kind": "ellipsoid",
+        "bone": "fol-e2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.95673, 1.27553, 0.58683],
+        "transform": {
+          "rotation": [0.4292, 0.55935, -0.43171, 0.56262],
+          "translation": [0.11482, 0.18387, 1.5069]
+        }
+      },
+      {
+        "id": "lobe-od-45-twig",
+        "kind": "capsule",
+        "bone": "fol-e2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -3.31966],
+        "p1": [-0.2548, 0.08483, 1.5069],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-od-135",
+        "kind": "ellipsoid",
+        "bone": "fol-w2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.96643, 1.2627, 0.5896],
+        "transform": {
+          "rotation": [-0.5573, -0.42763, 0.56465, -0.43327],
+          "translation": [0.04686, -0.21709, 1.51802]
+        }
+      },
+      {
+        "id": "lobe-od-135-twig",
+        "kind": "capsule",
+        "bone": "fol-w2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 3.31774],
+        "p1": [-0.31904, -0.11904, 1.51802],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-od-225",
+        "kind": "ellipsoid",
+        "bone": "fol-w2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.97598, 1.26857, 0.58867],
+        "transform": {
+          "rotation": [-0.55956, -0.42937, 0.5624, -0.43155],
+          "translation": [0.06692, -0.21205, -1.5511]
+        }
+      },
+      {
+        "id": "lobe-od-225-twig",
+        "kind": "capsule",
+        "bone": "fol-w2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 3.31774],
+        "p1": [-0.30068, -0.11355, -1.5511],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-od-315",
+        "kind": "ellipsoid",
+        "bone": "fol-e2",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.98397, 1.26189, 0.61647],
+        "transform": {
+          "rotation": [0.42298, 0.55124, -0.43781, 0.57057],
+          "translation": [0.08051, 0.16217, -1.57128]
+        }
+      },
+      {
+        "id": "lobe-od-315-twig",
+        "kind": "capsule",
+        "bone": "fol-e2",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -3.31966],
+        "p1": [-0.28515, 0.06419, -1.57128],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-m-0",
+        "kind": "ellipsoid",
+        "bone": "fol-e1",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.94119, 1.30015, 0.57307],
+        "transform": {
+          "rotation": [0.45163, 0.53824, -0.45739, 0.54509],
+          "translation": [0.06599, 0.15073, -0.01613]
+        }
+      },
+      {
+        "id": "lobe-m-0-twig",
+        "kind": "capsule",
+        "bone": "fol-e1",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.91093],
+        "p1": [-0.31813, 0.083, -0.01613],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-m-180",
+        "kind": "ellipsoid",
+        "bone": "fol-w1",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.97238, 1.29519, 0.60685],
+        "transform": {
+          "rotation": [-0.53082, -0.44541, 0.55232, -0.46345],
+          "translation": [0.03052, -0.27552, -0.01398]
+        }
+      },
+      {
+        "id": "lobe-m-180-twig",
+        "kind": "capsule",
+        "bone": "fol-w1",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 0.9092],
+        "p1": [-0.35214, -0.20805, -0.01398],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-m-60",
+        "kind": "ellipsoid",
+        "bone": "fol-e1",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.87592, 1.30781, 0.5362],
+        "transform": {
+          "rotation": [-0.45314, -0.54003, -0.4559, 0.54332],
+          "translation": [0.00488, 0.54812, 1.0641]
+        }
+      },
+      {
+        "id": "lobe-m-60-twig",
+        "kind": "capsule",
+        "bone": "fol-e1",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.91093],
+        "p1": [-0.3815, 0.47999, 1.0641],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-m-120",
+        "kind": "ellipsoid",
+        "bone": "fol-w1",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.89945, 1.31199, 0.56619],
+        "transform": {
+          "rotation": [-0.53506, -0.44897, 0.54821, -0.46],
+          "translation": [-0.03162, -0.68713, 1.08969]
+        }
+      },
+      {
+        "id": "lobe-m-120-twig",
+        "kind": "capsule",
+        "bone": "fol-w1",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 0.9092],
+        "p1": [-0.41924, -0.61878, 1.08969],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-m-240",
+        "kind": "ellipsoid",
+        "bone": "fol-w1",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.89109, 1.30764, 0.53321],
+        "transform": {
+          "rotation": [0.54038, 0.45343, 0.54297, -0.4556],
+          "translation": [-0.02737, -0.69408, -1.14576]
+        }
+      },
+      {
+        "id": "lobe-m-240-twig",
+        "kind": "capsule",
+        "bone": "fol-w1",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 0.9092],
+        "p1": [-0.41371, -0.62596, -1.14576],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-m-300",
+        "kind": "ellipsoid",
+        "bone": "fol-e1",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.94744, 1.30018, 0.57099],
+        "transform": {
+          "rotation": [0.45452, 0.54167, -0.45452, 0.54168],
+          "translation": [0.01453, 0.52222, -1.14745]
+        }
+      },
+      {
+        "id": "lobe-m-300-twig",
+        "kind": "capsule",
+        "bone": "fol-e1",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -0.91093],
+        "p1": [-0.3696, 0.45449, -1.14745],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-lo-0",
+        "kind": "ellipsoid",
+        "bone": "fol-low-e",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.85898, 0.85741, 0.51962],
+        "transform": {
+          "rotation": [-0.18194, -0.67901, -0.18408, 0.687],
+          "translation": [0.28366, 0.28642, -0.03099]
+        }
+      },
+      {
+        "id": "lobe-lo-0-twig",
+        "kind": "capsule",
+        "bone": "fol-low-e",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -2.06482],
+        "p1": [0.15505, 0.06366, -0.03099],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-lo-180",
+        "kind": "ellipsoid",
+        "bone": "fol-low-w",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.87918, 0.87459, 0.5658],
+        "transform": {
+          "rotation": [0.67241, 0.18017, 0.69345, -0.18581],
+          "translation": [0.22696, -0.32496, -0.05015]
+        }
+      },
+      {
+        "id": "lobe-lo-180-twig",
+        "kind": "capsule",
+        "bone": "fol-low-w",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 2.06302],
+        "p1": [0.09577, -0.09773, -0.05015],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-lo-90",
+        "kind": "ellipsoid",
+        "bone": "fol-low-e",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.93702, 0.85821, 0.58063],
+        "transform": {
+          "rotation": [-0.18206, -0.67945, -0.18396, 0.68656],
+          "translation": [-0.59811, 0.80344, 1.56008]
+        }
+      },
+      {
+        "id": "lobe-lo-90-twig",
+        "kind": "capsule",
+        "bone": "fol-low-e",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, -2.06482],
+        "p1": [-0.72684, 0.58047, 1.56008],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "lobe-lo-270",
+        "kind": "ellipsoid",
+        "bone": "fol-low-w",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "radii": [0.95395, 0.87482, 0.60624],
+        "transform": {
+          "rotation": [0.68096, 0.18246, 0.68506, -0.18356],
+          "translation": [-0.63886, -0.83096, -1.59978]
+        }
+      },
+      {
+        "id": "lobe-lo-270-twig",
+        "kind": "capsule",
+        "bone": "fol-low-w",
+        "material": "plane-twig",
+        "role": "body",
+        "tone": 0.35,
+        "region": "shoot-bark",
+        "p0": [0, 0, 2.06302],
+        "p1": [-0.77008, -0.60368, -1.59978],
+        "r0": 0.05,
+        "r1": 0.03
+      },
+      {
+        "id": "crown-fill-1",
+        "kind": "loft",
+        "bone": "fol-e1",
+        "material": "plane-leaf-sun",
+        "role": "body",
+        "tone": 0.6,
+        "region": "leaf-sun",
+        "sections": [
+          {
+            "at": [-2.03046, 0.67861, -1.8094],
+            "rx": 0.68686,
+            "ry": 0.79757,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [-1.75257, 0.72761, -1.8094],
+            "rx": 1.11751,
+            "ry": 1.29763,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [-1.47469, 0.77661, -1.8094],
+            "rx": 1.34308,
+            "ry": 1.55955,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [-1.19681, 0.82561, -1.8094],
+            "rx": 1.46181,
+            "ry": 1.69742,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [-0.91892, 0.87461, -1.8094],
+            "rx": 1.4993,
+            "ry": 1.74095,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [-0.64104, 0.92361, -1.8094],
+            "rx": 1.46181,
+            "ry": 1.69742,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [-0.36315, 0.9726, -1.8094],
+            "rx": 1.34308,
+            "ry": 1.55955,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [-0.08527, 1.0216, -1.8094],
+            "rx": 1.11751,
+            "ry": 1.29763,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          },
+          {
+            "at": [0.19261, 1.0706, -1.8094],
+            "rx": 0.68686,
+            "ry": 0.79757,
+            "exponent": 2.6,
+            "rotation": [0.70442, 0.06163, 0.70442, -0.06163]
+          }
+        ],
+        "capStart": true,
+        "capEnd": true,
+        "weights": [
+          {
+            "bone": "fol-e1",
+            "weight": 0.5
+          },
+          {
+            "bone": "fol-e2",
+            "weight": 0.5
+          }
+        ]
+      }
+    ],
+    "decisions": [
+      {
+        "en": "The pollard head and its five knuckles are a loft and five short tapered capsules bound to their own bones; the knuckles drift sideways as drawn in the front view. Each knuckle carries two shoot capsules (a, b) whose outer part continues the lateral drift of the inner one.",
+        "de": "Der Kopfbaumkopf und seine fünf Knorren sind ein Loft und fünf kurze verjüngte Kapseln an den eigenen Knochen; die Knorren driften seitlich wie in der Front gezeichnet. Jeder Knorren trägt zwei Triebkapseln (a, b), deren Außenteil die Seitendrift des Innenteils fortsetzt."
+      },
+      {
+        "en": "The crown is the authored set of foliage lobes (cores, top and rings of lobes at 45 to 60 degree steps) as oriented ellipsoids fitted to the plan outlines at the heights of the front outlines, each with a thin twig from its bone origin; one crown fill closes the north-east quarter the plan view shades.",
+        "de": "Die Krone ist der gezeichnete Satz Laublappen (Kerne, Spitze und Lappenringe in Schritten von 45 bis 60 Grad) als ausgerichtete Ellipsoide, an die Umrisse der Draufsicht angepasst und in den Höhen der Front-Umrisse, je mit dünnem Zweig vom Knochenursprung; eine Kronenfüllung schließt das Viertel, das die Draufsicht schattiert."
+      }
+    ]
+  },
   "presentation": {
    "defaultPose": "summer-calm",
    "defaultClip": "breeze-sway",
@@ -16176,7 +17240,11 @@
    "png-sequence",
    "mp4",
    "webm",
-   "component"
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
   ],
   "completion": "authored"
  }

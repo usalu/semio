@@ -21,6 +21,7 @@ export function activeTestLevel(): TestLevel {
 
 /**
  * 🎚️Resolves the test level from `segments[0]` (if it names a level) or `SEMIO_TEST_LEVEL`, else `fundamental`.
+ * Coverage switches on only when `exhaustive` is requested, never because a suite's `minimum` raised the level: a floor is about the wall-clock budget, not about instrumentation.
  * `minimum` is the floor a suite declares when its own fixed cost (independent oracles, generated-bundle
  * renders, taxonomy loads) already exceeds a lower level's budget, so the suite is levelled honestly
  * instead of being killed at every invocation. Sets `process.env.SEMIO_TEST_LEVEL` so every child process
@@ -32,7 +33,7 @@ export function resolveTestLevel(segments: string[], minimum: TestLevel = "funda
   const requested = isTestLevel(first) ? first : activeTestLevel();
   const level = testLevelRank(requested) >= testLevelRank(minimum) ? requested : minimum;
   process.env.SEMIO_TEST_LEVEL = level;
-  if (level === "exhaustive" && process.env.SEMIO_COVERAGE === undefined) process.env.SEMIO_COVERAGE = "1";
+  if (requested === "exhaustive" && process.env.SEMIO_COVERAGE === undefined) process.env.SEMIO_COVERAGE = "1";
   return { level, rest: isTestLevel(first) ? restIfLevel : segments };
 }
 

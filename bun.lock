@@ -26,6 +26,8 @@
         "@dnd-kit/sortable": "10.0.0",
         "@dnd-kit/utilities": "3.2.2",
         "@eslint/js": "^10.0.1",
+        "@gltf-transform/core": "4.5.1",
+        "@gltf-transform/extensions": "4.5.1",
         "@iarna/toml": "2.2.5",
         "@modelcontextprotocol/sdk": "1.32.1",
         "@noble/hashes": "2.4.0",
@@ -92,6 +94,7 @@
         "ajv": "8.20.0",
         "ajv-formats": "3.0.1",
         "aria-query": "5.3.0",
+        "assimpjs": "0.0.10",
         "base64-js": "1.5.1",
         "bidi-js": "1.1.0",
         "binaryen": "^130.0.0",
@@ -153,6 +156,7 @@
         "fresh": "2.0.0",
         "gl-matrix": "3.4.3",
         "glob": "13.0.6",
+        "gltf-validator": "2.0.0-dev.3.10",
         "graphlib": "2.1.8",
         "graphology": "0.26.0",
         "graphql": "^17.0.2",
@@ -202,6 +206,7 @@
         "remark-rehype": "11.1.2",
         "resolve.exports": "2.0.3",
         "reveal.js": "5.2.1",
+        "robust-predicates": "3.0.3",
         "rxjs": "^7.8.2",
         "safe-regex": "2.1.1",
         "semver": "7.8.5",
@@ -8732,6 +8737,12 @@
       {},
       "sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA=="
     ],
+    "assimpjs": [
+      "assimpjs@0.0.10",
+      "",
+      {},
+      "sha512-iY8M+eQzdCvfSkdduj6sPmIbP2fIn40PK6JRrAMxBawL3tHG6Mm0qvitkxB3ZoFBug5o7IdbzQK+jujZTopGPQ=="
+    ],
     "ast-types": [
       "ast-types@0.16.3",
       "",
@@ -11060,6 +11071,12 @@
       "",
       {},
       "sha512-b/ZCF6amfAUb7dJM/MxRs7AetQEahYzJ8PtgfrmEdtw6uyGOr+ZSGtgjFm6mfsBkxJ4d2W7kg+Nlqzqvn3Bc0w=="
+    ],
+    "gltf-validator": [
+      "gltf-validator@2.0.0-dev.3.10",
+      "",
+      {},
+      "sha512-odJ4k0tRkGXiDGn78yDBg+fBbAIvBnXxh3RwAta0emSxGtyagFE8B4xELB1oYe3S5RD8Ci3uZAsZaascH2LAEQ=="
     ],
     "gopd": [
       "gopd@1.2.0",

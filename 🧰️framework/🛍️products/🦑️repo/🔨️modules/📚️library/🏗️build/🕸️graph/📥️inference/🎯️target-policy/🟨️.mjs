@@ -1,6 +1,7 @@
 /** 🎯️ Admits target execution contracts and decides which generated targets are cached, continuous or side-effecting. */
 import { createBoundedCacheV1 } from "../../../🧊️bounded/🟨️.mjs";
 import { conformsOwnerContractV1 } from "../../../📤️arguments/🟨️.mjs";
+import { refuseBuildV1 } from "../../../📖️texts/🟦️.ts";
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "target-policy";
@@ -45,11 +46,18 @@ export function excludedInputConflictV1(inputs, namedInputs, patterns, matches, 
 
 export const cacheableFamily = (name, rows) => targetClassV1(name, rows)?.class === "deterministic";
 
+/** 🚫️ Refuses one cache decision as a named `invalid` refusal that names the target and the reasons its class admits, never as an internal error that ends a whole graph read.
+ * @see ../../../📖️texts/🔣️.json */
+function cacheDecisionRefusalV1(decisionClass, reason, identity) {
+  const definition = Object.values(targetCacheSchema.definitions).find(row => row.properties.class.const === decisionClass), admitted = definition ? definition.properties.reason.enum : Object.values(targetCacheSchema.definitions).map(row => row.properties.class.const);
+  return refuseBuildV1("invalid", "target.cache-decision-refused", { target: identity ?? "-", decision: decisionClass + "/" + reason, admitted: admitted.join(", ") });
+}
+
 /** 📌️ Admits the cache decision a target declares itself in `metadata.semio.cache`; a malformed or open record is refused instead of ignored. */
-function declaredCacheDecisionV1(value) {
+function declaredCacheDecisionV1(value, identity) {
   if (value === undefined) return undefined;
-  const decision = cacheDecisionV1(value?.class, value?.reason);
-  if (Object.keys(value).length !== Object.keys(decision).length || value.version !== decision.version) throw Error(`Repository target cache decision refused: ${value?.class}/${value?.reason}`);
+  const decision = cacheDecisionV1(value?.class, value?.reason, identity);
+  if (Object.keys(value).length !== Object.keys(decision).length || value.version !== decision.version) throw cacheDecisionRefusalV1(value?.class, value?.reason, identity);
   return decision;
 }
 
@@ -57,11 +65,11 @@ const cacheDecisions = createBoundedCacheV1({ name: "inference:cache-decisions",
 
 /** 💾️ Admits one cache decision against the closed schema once and shares the frozen record between every target that carries it.
  * @see ../../../../🏗️build/🏃️execution/🧬️schema/💾️cache.json */
-export function cacheDecisionV1(decisionClass, reason) {
+export function cacheDecisionV1(decisionClass, reason, identity) {
   const key = decisionClass + "\0" + reason, known = cacheDecisions.get(key);
   if (known) return known;
   const value = Object.freeze({ version: 1, class: decisionClass, reason }), schema = Object.values(targetCacheSchema.definitions).find(definition => definition.properties.class.const === decisionClass);
-  if (!schema || !conformsOwnerContractV1(schema, value)) throw Error(`Repository target cache decision refused: ${decisionClass}/${reason}`);
+  if (!schema || !conformsOwnerContractV1(schema, value)) throw cacheDecisionRefusalV1(decisionClass, reason, identity);
   cacheDecisions.set(key, value);
   return value;
 }
@@ -80,14 +88,14 @@ export function uncachedDecisionV1(name) {
 }
 
 /** 🛡️ Side effects and live processes cannot be replayed as completed task results, and neither can a target nothing classifies: a target replays only when the owner declared it deterministic, the policy classes its name as deterministic or its command verifies. */
-export function targetPolicy(name, target, policy = POLICY) {
+export function targetPolicy(name, target, policy = POLICY, identity) {
   const bare = normalizedTargetName(name);
   if (matchesCommand(bare, policy.continuous)) return withCacheDecision({ ...target, cache: false, continuous: true }, "continuous", "serves-until-stopped");
-  if (target.cache === false) { declaredCacheDecisionV1(target.metadata?.semio?.cache); return { inputs: ["default"], outputs: [], ...target, cache: false }; }
+  if (target.cache === false) { declaredCacheDecisionV1(target.metadata?.semio?.cache, identity); return { inputs: ["default"], outputs: [], ...target, cache: false }; }
   if (matchesUncached(bare, policy)) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(bare));
   const exact = policy.cachedExact.includes(bare);
   if (!exact && (mutatingName(bare) || liveName(bare))) return withCacheDecision({ ...target, cache: false }, ...uncachedDecisionV1(bare));
-  const decision = declaredCacheDecisionV1(target.metadata?.semio?.cache) ?? targetClassV1(bare, policy.targetClasses) ?? (exact || verifyCommand(target) ? cacheDecisionV1("deterministic", "check-without-outputs") : undefined);
+  const decision = declaredCacheDecisionV1(target.metadata?.semio?.cache, identity) ?? targetClassV1(bare, policy.targetClasses) ?? (exact || verifyCommand(target) ? cacheDecisionV1("deterministic", "check-without-outputs") : undefined);
   if (!decision) return withCacheDecision({ ...target, cache: false }, "unclassified", "no-cache-classification");
   if (decision.class !== "deterministic") return withCacheDecision({ ...target, cache: false }, decision.class, decision.reason);
   return { inputs: ["default", "^default"], outputs: [], ...withCacheDecision(target, decision.class, decision.reason), cache: true };

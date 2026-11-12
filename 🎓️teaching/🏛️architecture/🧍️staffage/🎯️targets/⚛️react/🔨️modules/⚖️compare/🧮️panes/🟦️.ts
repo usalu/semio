@@ -2,8 +2,8 @@
  *
  * @see ../../🗺️routing/🟦️.ts — `ComparePane`, `CompareState` and their address parameters
  */
-import { VIEWPOINTS, VIEWS } from "@teaching/staffage";
-import type { Asset, EvaluationQuery, Slug, View, Viewpoint } from "@teaching/staffage";
+import { PLANAR_VIEWPOINTS, VIEWS } from "@teaching/staffage";
+import type { Asset, EvaluationQuery, Slug, View, PlanarViewpoint } from "@teaching/staffage";
 import { COMPARE_LIMITS, type CompareState, type ComparePane, type ViewerState } from "../../🗺️routing/🟦️.ts";
 import type { Selection } from "../../💾️persistence/🟦️.ts";
 
@@ -15,7 +15,7 @@ export function selectionKey(selection: Selection | null): string {
   return selection === null ? "default" : selection.kind === "pose" ? `pose:${selection.pose}` : `clip:${selection.clip}`;
 }
 
-/** 🔑️ The selection a {@link selectionKey} names. */
+/** 🗂️ The selection a {@link selectionKey} names. */
 export function selectionFromKey(key: string): Selection | null {
   const [kind, slug] = key.split(":");
   return slug === undefined ? null : kind === "pose" ? { kind: "pose", pose: slug } : kind === "clip" ? { kind: "clip", clip: slug } : null;
@@ -30,24 +30,24 @@ export function defaultPanes(ready: readonly Slug[], preferred: Slug | undefined
   return [{ asset: ready[0]!, view: "dark-line", viewpoint: "elevation", selection: null }, { asset: ready[1]!, view: "dark-line", viewpoint: "elevation", selection: null }];
 }
 
-/** 🔗️ The comparison the asset page links to: the asset in the dark line and the thermal representation, at the viewer's viewpoint, pose or clip, time and scale. */
+/** 🔗️ The comparison the asset page links to: the asset in the dark line and the thermal representation, at the viewer's viewpoint (the side elevation when the viewer shows the axonometric drawing or the 3D model, which a comparison does not draw), pose or clip, time and scale. */
 export function comparisonOf(asset: Slug, viewer: Pick<ViewerState, "viewpoint" | "selection" | "timeS" | "scale">): CompareState {
-  return { panes: (["dark-line", "thermal"] as const).map((view) => ({ asset, view, viewpoint: viewer.viewpoint, selection: viewer.selection })), scale: viewer.scale, timeS: viewer.timeS };
+  return { panes: (["dark-line", "thermal"] as const).map((view) => ({ asset, view, viewpoint: viewer.viewpoint === "front" || viewer.viewpoint === "plan" ? viewer.viewpoint : "elevation", selection: viewer.selection })), scale: viewer.scale, timeS: viewer.timeS };
 }
 
 /** 🪞️ One asset in `count` different views. */
-export function sameAssetAcrossViews(asset: Slug, count: number, selection: Selection | null = null, viewpoint: Viewpoint = "elevation"): readonly ComparePane[] {
+export function sameAssetAcrossViews(asset: Slug, count: number, selection: Selection | null = null, viewpoint: PlanarViewpoint = "elevation"): readonly ComparePane[] {
   const views = [...ACROSS_VIEWS, ...VIEWS.filter((view) => !ACROSS_VIEWS.includes(view))];
   return views.slice(0, Math.min(Math.max(count, COMPARE_LIMITS.min), COMPARE_LIMITS.max)).map((view) => ({ asset, view, viewpoint, selection }));
 }
 
 /** 📐️ One asset in the three viewpoints, side elevation, front elevation and plan, in one representation, at one selection: one physical state seen three ways. */
 export function sameAssetAcrossViewpoints(asset: Slug, view: View, selection: Selection | null = null): readonly ComparePane[] {
-  return VIEWPOINTS.map((viewpoint) => ({ asset, view, viewpoint, selection }));
+  return PLANAR_VIEWPOINTS.map((viewpoint) => ({ asset, view, viewpoint, selection }));
 }
 
 /** 👥️ `count` different assets in one view, starting with `first`. */
-export function differentAssetsSameView(ready: readonly Slug[], first: Slug, view: View, count: number, viewpoint: Viewpoint = "elevation"): readonly ComparePane[] {
+export function differentAssetsSameView(ready: readonly Slug[], first: Slug, view: View, count: number, viewpoint: PlanarViewpoint = "elevation"): readonly ComparePane[] {
   const order = [first, ...ready.filter((id) => id !== first)];
   return order.slice(0, Math.min(Math.max(count, COMPARE_LIMITS.min), COMPARE_LIMITS.max)).map((asset) => ({ asset, view, viewpoint, selection: null }));
 }

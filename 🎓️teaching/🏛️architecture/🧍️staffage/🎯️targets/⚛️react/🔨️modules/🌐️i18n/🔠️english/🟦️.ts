@@ -3,8 +3,9 @@ import { COLLECTIONS_EN } from "./⭐️collections.ts";
 import { COMPARE_EN } from "./⚖️compare.ts";
 import { CORE_EN } from "./🧱️core.ts";
 import { DETAIL_EN } from "./📖️detail.ts";
+import { MODEL_EN } from "./🧊️model.ts";
 import { PLAYGROUND_EN } from "./🧪️playground.ts";
 import { VIEWER_EN } from "./🎛️viewer.ts";
 import { VIEWPOINTS_EN } from "./🔭️viewpoints.ts";
 
-export const ENGLISH = { ...CORE_EN, ...COLLECTIONS_EN, ...COMPARE_EN, ...DETAIL_EN, ...PLAYGROUND_EN, ...VIEWER_EN, ...VIEWPOINTS_EN } as const;
+export const ENGLISH = { ...CORE_EN, ...COLLECTIONS_EN, ...COMPARE_EN, ...DETAIL_EN, ...MODEL_EN, ...PLAYGROUND_EN, ...VIEWER_EN, ...VIEWPOINTS_EN } as const;

@@ -2910,7 +2910,8 @@ class BimBrowserMetadataContract(unittest.TestCase):
         import importlib
 
         runtime = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
-        runtime.run_command(["repo", "tools", "exec", "--light", "node", "--", str(CLIP / "🧪️tests/🟨️metadata.mjs")], cwd=ROOT)
+        browser = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🌐️browser.🐍️")
+        runtime.run_command([browser._repo(), "tools", "exec", "--light", "node", "--", str(CLIP / "🧪️tests/🟨️metadata.mjs")], cwd=ROOT)
 
 
 COLOCATED_TEST_MODULES = (
@@ -2941,6 +2942,7 @@ COLOCATED_TEST_MODULES = (
     "🧱️model.🧪️tests.🏗️construction",
     "🧱️model.🧪️tests.📏️path-stations",
     "🧱️model.🧪️tests.⚡️geometry-cache",
+    "🧱️model.🧪️tests.⚡️finish-memo",
     "🎨️visuals.🎥️camera.🧪️tests.🐍️",
     "🧱️model.🧮️analysis.🧪️tests.🐍️",
     "🧱️model.🧪️tests.🚗️parking",

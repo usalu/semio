@@ -23,3 +23,8 @@ Feature: Lazy, validated catalog
     Given a category load in flight
     When the reader cancels it
     Then the category is idle and loads fully on the next request
+
+  Scenario: A category file without its revisions fails in both languages
+    Given a category document that lists assets but no revisions record
+    When the category is loaded
+    Then it is failed with a message in English and German and never stays in loading

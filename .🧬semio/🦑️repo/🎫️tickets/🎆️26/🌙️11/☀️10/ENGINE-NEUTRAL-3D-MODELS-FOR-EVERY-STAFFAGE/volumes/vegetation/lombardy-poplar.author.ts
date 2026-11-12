@@ -1,0 +1,10 @@
+import { Author } from "../../veg-lib.ts";
+const a = new Author("lombardy-poplar");
+a.loftFromViews("root-flare", "root-plate", { elev: "root-flare", front: "root-flare", range: [0, 0.3], n: 4, exp: 2.2, pinch: 1 });
+for (const [i, r] of [[1, [0.3, 6.3]], [2, [6.3, 12.3]], [3, [12.3, 18.3]], [4, [18.3, 24.6]]] as const) a.loftFromViews(`trunk-${i}`, `trunk-${i}`, { elev: `trunk-${i}`, front: `trunk-${i}`, range: [r[0], r[1]] as [number, number], n: 6, exp: 2.1, pinch: i === 4 ? 0.3 : 1 });
+const brs = ["br-l1", "br-r1", "br-l2", "br-r2", "br-l3", "br-r3", "br-l4", "br-r4"];
+a.limbs(brs.map((bone) => ({ bone, meta: a.meta(bone) })));
+a.lobeTiers({ twig: 0.04, twigMeta: a.meta("br-l1"), coreRe: /^top$/, clampX: true, k: 0.97, lean: 1.3 });
+a.note("The fastigiate crown is the authored set of tall foliage lobes: for each of the eight branch bones up to six lobes arranged around the branch, each one an oriented ellipsoid fitted to its plan outline and as tall as its front outline, bound to the foliage bone of its branch with a thin twig from the bone origin; the leader top is a loft.", "Die Säulenkrone ist der gezeichnete Satz hoher Laublappen: je Astknochen bis zu sechs Lappen rund um den Ast, jeder ein ausgerichtetes Ellipsoid, an den Umriss der Draufsicht angepasst und so hoch wie sein Front-Umriss, am Laubknochen des Asts mit einem dünnen Zweig ab dem Knochenursprung gebunden; die Wipfelspitze ist ein Loft.");
+a.note("The trunk is four lofts (one per bone, 6 m each) read from the elevation and front outlines; the branches are steeply rising tapered capsules with the lateral drift of the front view.", "Der Stamm besteht aus vier Lofts (je Knochen 6 m) nach den Umrissen von Ansicht und Front; die Äste sind steil aufsteigende verjüngte Kapseln mit der Seitendrift der Front.");
+a.save();

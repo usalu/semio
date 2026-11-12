@@ -1820,7 +1820,6 @@
           "operatingKey": "exchange",
           "volumeFlowM3S": 0.278,
           "temperatureRiseK": -3.1,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "en-308-1997"
         },
@@ -1837,7 +1836,6 @@
           "operatingKey": "exchange",
           "volumeFlowM3S": 0.278,
           "temperatureRiseK": -17.9,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "en-308-1997"
         }
@@ -1863,6 +1861,248 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "frame-base",
+          "kind": "box",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "size": [0.5, 0.02, 0.5],
+          "transform": {
+            "translation": [0.0, 0.01, 0.0]
+          }
+        },
+        {
+          "id": "frame-top",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "profile": [[-0.25, -0.25], [-0.25, 0.25], [0.25, 0.25], [0.25, -0.25]],
+          "holes": [
+            [[-0.2, -0.2], [0.2, -0.2], [0.2, 0.2], [-0.2, 0.2]]
+          ],
+          "plane": "zx",
+          "from": 0.58,
+          "to": 0.6
+        },
+        {
+          "id": "frame-post-rear-left",
+          "kind": "box",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "size": [0.05, 0.56, 0.05],
+          "transform": {
+            "translation": [-0.225, 0.3, -0.225]
+          }
+        },
+        {
+          "id": "frame-post-rear-right",
+          "kind": "box",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "size": [0.05, 0.56, 0.05],
+          "transform": {
+            "translation": [0.225, 0.3, -0.225]
+          }
+        },
+        {
+          "id": "frame-post-front-left",
+          "kind": "box",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "size": [0.05, 0.56, 0.05],
+          "transform": {
+            "translation": [-0.225, 0.3, 0.225]
+          }
+        },
+        {
+          "id": "frame-post-front-right",
+          "kind": "box",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "size": [0.05, 0.56, 0.05],
+          "transform": {
+            "translation": [0.225, 0.3, 0.225]
+          }
+        },
+        {
+          "id": "plate-pack",
+          "kind": "box",
+          "bone": "plates",
+          "material": "aluminium-plate",
+          "role": "body",
+          "tone": 0.7,
+          "region": "plates",
+          "size": [0.44, 0.043, 0.4],
+          "transform": {
+            "translation": [0.0, 0.0215, 0.0]
+          },
+          "repeat": {
+            "count": 12,
+            "translation": [0.0, 0.045, 0.0]
+          }
+        },
+        {
+          "id": "end-wall-left",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "profile": [[0.02, -0.2], [0.58, -0.2], [0.58, 0.2], [0.02, 0.2]],
+          "holes": [
+            [[0.41, -0.14], [0.54, -0.14], [0.54, 0.14], [0.41, 0.14]],
+            [[0.07, -0.14], [0.2, -0.14], [0.2, 0.14], [0.07, 0.14]]
+          ],
+          "plane": "yz",
+          "from": -0.25,
+          "to": -0.22
+        },
+        {
+          "id": "end-wall-right",
+          "kind": "extrude",
+          "bone": "frame",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.35,
+          "region": "frame",
+          "profile": [[0.02, -0.2], [0.58, -0.2], [0.58, 0.2], [0.02, 0.2]],
+          "holes": [
+            [[0.41, -0.14], [0.54, -0.14], [0.54, 0.14], [0.41, 0.14]],
+            [[0.07, -0.14], [0.2, -0.14], [0.2, 0.14], [0.07, 0.14]]
+          ],
+          "plane": "yz",
+          "from": 0.22,
+          "to": 0.25
+        },
+        {
+          "id": "collar-upper-left",
+          "kind": "extrude",
+          "bone": "ports",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.4,
+          "region": "ports",
+          "profile": [[0.1, -0.15], [0.25, -0.15], [0.25, 0.15], [0.1, 0.15]],
+          "holes": [
+            [[0.11, -0.14], [0.24, -0.14], [0.24, 0.14], [0.11, 0.14]]
+          ],
+          "plane": "yz",
+          "from": -0.31,
+          "to": -0.25
+        },
+        {
+          "id": "collar-lower-left",
+          "kind": "extrude",
+          "bone": "ports",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.4,
+          "region": "ports",
+          "profile": [[-0.24, -0.15], [-0.09, -0.15], [-0.09, 0.15], [-0.24, 0.15]],
+          "holes": [
+            [[-0.23, -0.14], [-0.1, -0.14], [-0.1, 0.14], [-0.23, 0.14]]
+          ],
+          "plane": "yz",
+          "from": -0.31,
+          "to": -0.25
+        },
+        {
+          "id": "collar-upper-right",
+          "kind": "extrude",
+          "bone": "ports",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.4,
+          "region": "ports",
+          "profile": [[0.1, -0.15], [0.25, -0.15], [0.25, 0.15], [0.1, 0.15]],
+          "holes": [
+            [[0.11, -0.14], [0.24, -0.14], [0.24, 0.14], [0.11, 0.14]]
+          ],
+          "plane": "yz",
+          "from": 0.25,
+          "to": 0.31
+        },
+        {
+          "id": "collar-lower-right",
+          "kind": "extrude",
+          "bone": "ports",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.4,
+          "region": "ports",
+          "profile": [[-0.24, -0.15], [-0.09, -0.15], [-0.09, 0.15], [-0.24, 0.15]],
+          "holes": [
+            [[-0.23, -0.14], [-0.1, -0.14], [-0.1, 0.14], [-0.23, 0.14]]
+          ],
+          "plane": "yz",
+          "from": 0.25,
+          "to": 0.31
+        },
+        {
+          "id": "damper",
+          "kind": "box",
+          "bone": "damper",
+          "material": "galvanised-steel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "damper",
+          "size": [0.4, 0.014, 0.4],
+          "transform": {
+            "translation": [0.2, -0.013, 0.0]
+          }
+        },
+        {
+          "id": "damper-hinge",
+          "kind": "capsule",
+          "bone": "damper",
+          "material": "galvanised-steel",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "damper",
+          "maxDenominator": 50,
+          "p0": [0.0, -0.01, -0.2],
+          "p1": [0.0, -0.01, 0.2],
+          "r0": 0.01,
+          "r1": 0.01
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The plate pack is 12 stacked slabs with 2 mm gaps rather than one block, so it reads as a pack of plates; the 1:50 drawing shows it as a block.",
+          "de": "Das Plattenpaket besteht aus 12 gestapelten Platten mit 2 mm Spalt statt aus einem Block, damit es als Plattenpaket lesbar ist; die 1:50-Zeichnung zeigt es als Block."
+        },
+        {
+          "en": "The casing is open on the long sides: base plate, two end walls with port openings, top ring with a vent opening under the damper and four square corner posts of 50 mm. The posts fill the strip between plate pack and frame outline seen from the side and the front.",
+          "de": "Das Gehaeuse ist an den Laengsseiten offen: Bodenplatte, zwei Stirnwaende mit Anschlussoeffnungen, Deckring mit Lueftungsoeffnung unter der Klappe und vier Eckpfosten 50 mm. Die Pfosten fuellen den Streifen zwischen Plattenpaket und Rahmenumriss in Seiten- und Vorderansicht."
+        },
+        {
+          "en": "The four port collars are hollow rectangular stubs (10 mm wall, 150 mm by 300 mm duct opening) on the left and right faces; the damper is one plate on its own bone with its hinge barrel on the same bone, so both swing together about the hinge axis.",
+          "de": "Die vier Anschlusskragen sind hohle Rechteckstutzen (10 mm Wand, Kanaloeffnung 150 mm mal 300 mm) an der linken und rechten Seite; die Klappe ist eine Platte auf eigenem Knochen mit dem Scharnierrohr auf demselben Knochen, beide schwenken zusammen um die Scharnierachse."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "full",
       "defaultClip": "bypass",
@@ -1876,7 +2116,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

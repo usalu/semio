@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { Asset, AuthoredRepresentation, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import { VIEWS, type DrawingScene, type EvaluatedShape, type EvaluationQuery, type View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { modelScene } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
@@ -27,12 +27,13 @@ import { resolveRepresentation } from "../../🔨️modules/🖨️representatio
 import { solveStructure } from "../../🔨️modules/🏗️structure/🟦️.ts";
 import { solveTransport } from "../../🔨️modules/💨️transport/🟦️.ts";
 import { UNCHECKED_PROFILE, rolesAsset, rolesAssetWith, sampleAsset } from "../../🧫️fixtures/🧱️synthetic-figure/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 import { MODE_LIST, PRESET_KEYS, UNIFORM_INSTANTS, VIEWPOINT_LIST, assemble, buildMatrix, cellKey, clipInstants, drawOptions, extentOf, hash, loadCatalog, scaleEntries, sceneBox, seeded, subjects, toleranceM, transitionPairs, universe, LONG_CLIP_S, LONG_UNIFORM_INSTANTS } from "./🧰️.ts";
 import { TRANSFORMS, bestTransform, derivedFlags, pointSet } from "./🪞️derived.ts";
 
 type Vectors = {
-  viewpoints: Viewpoint[];
+  viewpoints: PlanarViewpoint[];
   modes: View[];
   presetDenominators: number[];
   sampling: { uniformInstants: number; longClipSeconds: number; longUniformInstants: number; transitionFractions: number[]; transitionRandomPairs: number };
@@ -42,7 +43,7 @@ type Vectors = {
   thermal: { movingEmitter: { asset: string; clip: string; times: number[]; followToleranceM: number } };
   printability: { gap: { denominator: number; barWidthM: number; gapM: number; bodyPenMm: number; expectedInkGapMm: number; minGapMm: number }; coarseAssets: string[] };
   determinism: { asset: string; clip: string; timeS: number; scale: number };
-  scrubbing: { asset: string; clip: string; samples: number; seed: number; switches: Viewpoint[] };
+  scrubbing: { asset: string; clip: string; samples: number; seed: number; switches: PlanarViewpoint[] };
   derived: { cases: { name: string; elevation: number[][]; other: number[][]; flagged: boolean }[] };
 };
 
@@ -52,12 +53,11 @@ const catalog = loadCatalog();
 const byId = new Map(catalog.map((asset) => [asset.id, asset]));
 const asset = (id: string): Asset => byId.get(id) ?? (() => { throw new Error(`the catalog has no asset "${id}"`); })();
 const sample = sampleAsset();
-const ORACLE_PACKAGES = ["svgelements", "scipy", "shapely", "numpy"];
 const oracleUp = requireTool("uv");
 
 const draw = (target: Asset, query: EvaluationQuery, denominator: number, mode: View = "light-line", extra: Partial<DrawOptions> = {}): MultiView =>
   resolveViews(target, query, { kind: "scale", denominator }, mode, { ...drawOptions(mode, denominator), ...extra } as DrawOptions);
-const drawingOf = (multi: MultiView, view: Viewpoint) => {
+const drawingOf = (multi: MultiView, view: PlanarViewpoint) => {
   const found = multi.views[view];
   if (found.kind !== "drawing") throw new Error(`${view} is unavailable: ${found.code} ${found.reason.en}`);
   return found;
@@ -138,7 +138,7 @@ describe("🔭️ multiview coverage engine", () => {
     delete (mutant.representations as Record<string, unknown>)["100"];
     const cells = buildMatrix([mutant]);
     expect(cells.length).toBe(universe([mutant]).length);
-    const at = (scale: string, view: Viewpoint, mode: View) => cells.find((cell) => cell.scale === scale && cell.view === view && cell.mode === mode)!;
+    const at = (scale: string, view: PlanarViewpoint, mode: View) => cells.find((cell) => cell.scale === scale && cell.view === view && cell.mode === mode)!;
     for (const view of VIEWPOINT_LIST) for (const mode of MODE_LIST) expect(at("100", view, mode).failures["representation-missing"]).toBeDefined();
     for (const mode of MODE_LIST) {
       expect(at("50", "front", mode).status).toBe("fail");
@@ -180,7 +180,7 @@ describe("🔭️ reference cases", () => {
         const multi = draw(target, { kind: "pose", pose: target.presentation.defaultPose }, denominator, "light-line", uncheckedProfile);
         const k = 1000 / denominator;
         const { heightM, widthM, depthM } = target.dimensions;
-        const expected: Record<Viewpoint, [number, number]> = { elevation: [widthM, heightM], front: [depthM, heightM], plan: [widthM, depthM] };
+        const expected: Record<PlanarViewpoint, [number, number]> = { elevation: [widthM, heightM], front: [depthM, heightM], plan: [widthM, depthM] };
         for (const view of VIEWPOINT_LIST) {
           const found = multi.views[view];
           if (found.kind !== "drawing") continue;
@@ -296,7 +296,7 @@ describe("🔭️ reference cases", () => {
       const query: EvaluationQuery = { kind: "pose", pose: target.presentation.defaultPose };
       for (const mode of ["thermal", "forces", "moments"] as const) {
         const multi = draw(target, query, 50, mode, uncheckedProfile);
-        const peaks = new Map<string, Map<Viewpoint, number>>();
+        const peaks = new Map<string, Map<PlanarViewpoint, number>>();
         const legends = new Set<string>();
         for (const view of VIEWPOINT_LIST) {
           const drawn = multi.views[view];
@@ -307,7 +307,7 @@ describe("🔭️ reference cases", () => {
               const owner = mode === "thermal" ? item.kind === "path" && item.region : item.kind === "path" && item.bone;
               if (item.kind !== "path" || item.value === undefined || !owner) continue;
               const key = `${owner}|${item.value.quantity}`;
-              const perView = peaks.get(key) ?? new Map<Viewpoint, number>();
+              const perView = peaks.get(key) ?? new Map<PlanarViewpoint, number>();
               perView.set(view, Math.max(perView.get(view) ?? Number.NEGATIVE_INFINITY, item.value.value));
               peaks.set(key, perView);
             }
@@ -532,7 +532,7 @@ function runOracle(job: OracleJob): OracleOut {
   try {
     const file = join(directory, "job.json");
     writeFileSync(file, JSON.stringify(job));
-    return JSON.parse(python(oracle, ORACLE_PACKAGES, [file]).trim().split("\n").pop()!) as OracleOut;
+    return JSON.parse(python(oracle, "geometry", [file]).trim().split("\n").pop()!) as OracleOut;
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

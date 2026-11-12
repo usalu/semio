@@ -81,6 +81,17 @@
         }
       ]
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        { "id": "stand", "kind": "box", "bone": "stand", "material": "steel", "role": "body", "tone": 0.5, "size": [0.2, 0.05, 0.094], "transform": { "translation": [0, 0.025, 0] } },
+        { "id": "rim", "kind": "revolve", "bone": "wheel", "material": "steel", "role": "body", "tone": 0.5, "profile": [[-0.047, 0.444], [0.047, 0.444], [0.047, 0.494], [-0.047, 0.494], [-0.047, 0.444]], "axis": [0, 0, 1], "origin": [0, 0, 0] },
+        { "id": "spoke", "kind": "box", "bone": "wheel", "material": "steel", "role": "detail", "tone": 0.5, "size": [0.444, 0.02, 0.02], "transform": { "translation": [0.222, 0, 0] } }
+      ],
+      "decisions": [
+        { "en": "The wheel is one annular revolve about the lateral axis of its bone (rim 0.444 to 0.494 m, 0.094 m wide) and one spoke box, the stand a flat box, read off the elevation, front and plan shapes of the fixture.", "de": "Das Rad ist ein ringförmiger Rotationskörper um die Querachse seines Knochens (Felge 0,444 bis 0,494 m, 0,094 m breit) und eine Speichenbox, das Gestell eine flache Box, abgelesen aus den Ansichten, der Vorderansicht und dem Grundriss des Fixtures." }
+      ]
+    },
     "anchors": [
       {
         "id": "foot",
@@ -267,6 +278,7 @@
         "windMS": 0,
         "solarWM2": 0,
         "windDirectionDeg": 0,
+        "diffuseFraction": 1,
         "pressurePa": 101325
       },
       "regions": [],
@@ -371,6 +383,7 @@
               "ry": 0.5,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.05,
                 "z1": 0.05
               }
@@ -404,6 +417,7 @@
               "ry": 0.5,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.05,
                 "z1": 0.05
               }
@@ -537,6 +551,7 @@
               "ry": 0.498,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.049,
                 "z1": 0.049
               }
@@ -562,6 +577,7 @@
               "closed": false,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.01,
                 "z1": 0.01
               }
@@ -595,6 +611,7 @@
               "ry": 0.498,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.049,
                 "z1": 0.049
               }
@@ -620,6 +637,7 @@
               "closed": false,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.01,
                 "z1": 0.01
               }
@@ -753,6 +771,7 @@
               "ry": 0.496,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.048,
                 "z1": 0.048
               }
@@ -778,6 +797,7 @@
               "closed": false,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.01,
                 "z1": 0.01
               }
@@ -811,6 +831,7 @@
               "ry": 0.496,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.048,
                 "z1": 0.048
               }
@@ -836,6 +857,7 @@
               "closed": false,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.01,
                 "z1": 0.01
               }
@@ -969,6 +991,7 @@
               "ry": 0.494,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.047,
                 "z1": 0.047
               }
@@ -994,6 +1017,7 @@
               "closed": false,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.01,
                 "z1": 0.01
               }
@@ -1027,6 +1051,7 @@
               "ry": 0.494,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.047,
                 "z1": 0.047
               }
@@ -1052,6 +1077,7 @@
               "closed": false,
               "solid": {
                 "kind": "extruded",
+                "sweep": "w",
                 "z0": -0.01,
                 "z1": 0.01
               }

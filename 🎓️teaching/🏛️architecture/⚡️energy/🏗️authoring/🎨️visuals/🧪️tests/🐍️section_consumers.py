@@ -7,6 +7,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 from manim import Circle, Line, Rectangle, tempconfig
@@ -21,6 +22,9 @@ class SectionConsumersTest(unittest.TestCase):
         workspace = next(parent for parent in Path(__file__).parents if (parent / "🧰️framework").is_dir())
         output = Path(os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT", workspace / ".🧬semio/🎓️teaching/⚡️cache/tests"))
         output.mkdir(parents=True, exist_ok=True)
+        language = mock.patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": CASES["language"]})
+        language.start()
+        cls.addClassCleanup(language.stop)
         cls.directory = tempfile.TemporaryDirectory(dir=output)
         cls.configuration = tempconfig({"text_dir": str(Path(cls.directory.name) / "text")})
         cls.configuration.__enter__()

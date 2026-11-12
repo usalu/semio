@@ -1,0 +1,437 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "base-rail",
+    "kind": "box",
+    "bone": "stand",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.5,
+    "region": "stand",
+    "size": [
+     1.5,
+     0.05,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.025,
+      0.4
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -0.8
+     ]
+    }
+   },
+   {
+    "id": "front-strut",
+    "kind": "extrude",
+    "bone": "stand",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.5,
+    "region": "stand",
+    "profile": [
+     [
+      -0.57,
+      0.04
+     ],
+     [
+      -0.53,
+      0.04
+     ],
+     [
+      -0.53,
+      0.37439
+     ],
+     [
+      -0.57,
+      0.34638
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.375,
+    "to": 0.425,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -0.8
+     ]
+    }
+   },
+   {
+    "id": "rear-strut",
+    "kind": "extrude",
+    "bone": "stand",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.5,
+    "region": "stand",
+    "profile": [
+     [
+      0.53,
+      0.04
+     ],
+     [
+      0.57,
+      0.04
+     ],
+     [
+      0.57,
+      1.14461
+     ],
+     [
+      0.53,
+      1.11661
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.375,
+    "to": 0.425,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -0.8
+     ]
+    }
+   },
+   {
+    "id": "tray-floor",
+    "kind": "box",
+    "bone": "housing",
+    "material": "anodised-aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "housing",
+    "size": [
+     2.0,
+     0.012,
+     1.0
+    ],
+    "transform": {
+     "translation": [
+      0.02524,
+      0.75849,
+      0.0
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   },
+   {
+    "id": "tray-end-low",
+    "kind": "box",
+    "bone": "housing",
+    "material": "anodised-aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "housing",
+    "size": [
+     0.02,
+     0.088,
+     1.0
+    ],
+    "transform": {
+     "translation": [
+      -0.8144,
+      0.23161,
+      0.0
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   },
+   {
+    "id": "tray-end-high",
+    "kind": "box",
+    "bone": "housing",
+    "material": "anodised-aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "housing",
+    "size": [
+     0.02,
+     0.088,
+     1.0
+    ],
+    "transform": {
+     "translation": [
+      0.80752,
+      1.36729,
+      0.0
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   },
+   {
+    "id": "tray-side-left",
+    "kind": "box",
+    "bone": "housing",
+    "material": "anodised-aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "housing",
+    "size": [
+     1.96,
+     0.088,
+     0.03
+    ],
+    "transform": {
+     "translation": [
+      -0.00344,
+      0.79945,
+      0.485
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   },
+   {
+    "id": "tray-side-right",
+    "kind": "box",
+    "bone": "housing",
+    "material": "anodised-aluminium",
+    "role": "body",
+    "tone": 0.35,
+    "region": "housing",
+    "size": [
+     1.96,
+     0.088,
+     0.03
+    ],
+    "transform": {
+     "translation": [
+      -0.00344,
+      0.79945,
+      -0.485
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   },
+   {
+    "id": "insulation",
+    "kind": "box",
+    "bone": "housing",
+    "material": "mineral-wool",
+    "role": "body",
+    "tone": 0.8,
+    "region": "housing",
+    "maxDenominator": 100,
+    "size": [
+     1.96,
+     0.026,
+     0.94
+    ],
+    "transform": {
+     "translation": [
+      0.01434,
+      0.77406,
+      0.0
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   },
+   {
+    "id": "absorber-plate",
+    "kind": "box",
+    "bone": "absorber",
+    "material": "selective-absorber",
+    "role": "body",
+    "tone": 0.2,
+    "region": "absorber",
+    "size": [
+     1.88,
+     0.008,
+     0.91
+    ],
+    "transform": {
+     "translation": [
+      -0.00229,
+      0.79781,
+      0.0
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   },
+   {
+    "id": "riser",
+    "kind": "revolve",
+    "bone": "absorber",
+    "material": "copper",
+    "role": "detail",
+    "tone": 0.55,
+    "region": "absorber",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.006
+     ],
+     [
+      1.88,
+      0.006
+     ]
+    ],
+    "axis": [
+     0.81915,
+     0.57358,
+     0.0
+    ],
+    "origin": [
+     -0.76656,
+     0.25046,
+     -0.4
+    ],
+    "repeat": {
+     "count": 9,
+     "translation": [
+      0.0,
+      0.0,
+      0.1
+     ]
+    }
+   },
+   {
+    "id": "header-lower",
+    "kind": "revolve",
+    "bone": "headers",
+    "material": "copper",
+    "role": "body",
+    "tone": 0.4,
+    "region": "header-lower",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0165
+     ],
+     [
+      0.88,
+      0.0165
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     -0.76885,
+     0.25373,
+     -0.44
+    ]
+   },
+   {
+    "id": "header-upper",
+    "kind": "revolve",
+    "bone": "headers",
+    "material": "copper",
+    "role": "body",
+    "tone": 0.4,
+    "region": "header-upper",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0165
+     ],
+     [
+      0.88,
+      0.0165
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.77115,
+     1.33206,
+     -0.44
+    ]
+   },
+   {
+    "id": "glass",
+    "kind": "box",
+    "bone": "glass",
+    "material": "solar-glass",
+    "role": "glazing",
+    "tone": 0.92,
+    "region": "glazing",
+    "size": [
+     1.962,
+     0.01,
+     0.94
+    ],
+    "transform": {
+     "translation": [
+      -0.02581,
+      0.8314,
+      0.0
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      0.30071,
+      0.95372
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The collector is built in its own slope frame (35 degrees, origin at the lower tray corner, s up the slope, t out of the panel): tray floor, two 20 mm end walls and two 30 mm side walls, 26 mm mineral wool, 8 mm absorber at t 0.05, nine 12 mm copper risers at 100 mm pitch under it, two 33 mm headers across the ends and a 10 mm glass pane flush with the rim. All values are read from the elevation polygons and checked against front and plan.",
+    "de": "Der Kollektor ist in seinem eigenen Neigungssystem aufgebaut (35 Grad, Ursprung an der unteren Wannenecke, s die Neigung hinauf, t aus der Flaeche heraus): Wannenboden, zwei 20-mm-Stirnwaende und zwei 30-mm-Seitenwaende, 26 mm Mineralwolle, 8 mm Absorber bei t 0,05, neun 12-mm-Kupfersteiger im Abstand 100 mm darunter, zwei 33-mm-Sammler an den Enden und eine 10-mm-Glasscheibe buendig mit dem Rand. Alle Werte stammen aus den Polygonen der Ansicht und wurden mit Vorderansicht und Grundriss geprueft."
+   },
+   {
+    "en": "Four galvanised struts (two front, two rear, 50 mm wide at z +-0.4) end exactly on the tray floor (they reach 12 mm into it) and stand on two base rails, so the frame carries the tray without a gap; the stand and housing bones are fixed, nothing moves in any pose.",
+    "de": "Vier verzinkte Stuetzen (zwei vorn, zwei hinten, 50 mm breit bei z +-0,4) enden genau am Wannenboden (12 mm ueberlappend) und stehen auf zwei Grundschienen, das Gestell traegt die Wanne luckenlos; Gestell und Gehaeuse sind feste Knochen, in keiner Pose bewegt sich etwas."
+   }
+  ]
+ }
+}

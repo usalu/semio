@@ -1,0 +1,1514 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "shaft",
+    "kind": "revolve",
+    "bone": "shaft",
+    "material": "steel-grey",
+    "role": "body",
+    "tone": 0.5,
+    "region": "shaft-steel",
+    "profile": [
+     [
+      -1.15,
+      0.0
+     ],
+     [
+      -1.15,
+      0.1
+     ],
+     [
+      -0.07,
+      0.1
+     ],
+     [
+      -0.04745,
+      0.09606
+     ],
+     [
+      -0.02963,
+      0.08519
+     ],
+     [
+      -0.01625,
+      0.06875
+     ],
+     [
+      -0.00704,
+      0.04815
+     ],
+     [
+      -0.00171,
+      0.02477
+     ],
+     [
+      0.0,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "reflector",
+    "kind": "revolve",
+    "bone": "shaft",
+    "material": "retro-film",
+    "role": "body",
+    "tone": 0.08,
+    "region": "reflector-band",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.1015
+     ],
+     [
+      0.11,
+      0.1015
+     ],
+     [
+      0.11,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      -0.24,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "beacon",
+    "kind": "revolve",
+    "bone": "shaft",
+    "material": "pc-amber",
+    "role": "body",
+    "tone": 0.7,
+    "region": "beacon-led",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.1015
+     ],
+     [
+      0.06,
+      0.1015
+     ],
+     [
+      0.06,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      -0.13,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "led",
+    "kind": "revolve",
+    "bone": "shaft",
+    "material": "steel-grey",
+    "role": "detail",
+    "tone": 0.1,
+    "region": "beacon-led",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.01
+     ],
+     [
+      0.002,
+      0.01
+     ],
+     [
+      0.002,
+      0.0
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.1015,
+      -0.1,
+      0.0
+     ]
+    },
+    "repeat": {
+     "count": 12,
+     "rotationAxis": [
+      0,
+      1,
+      0
+     ],
+     "rotationRad": 0.523599,
+     "origin": [
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "sleeve-wall",
+    "kind": "extrude",
+    "bone": "sleeve",
+    "material": "steel-sleeve",
+    "role": "body",
+    "tone": 0.3,
+    "region": "sleeve-steel",
+    "profile": [
+     [
+      0.0,
+      0.15
+     ],
+     [
+      0.02347,
+      0.14815
+     ],
+     [
+      0.04635,
+      0.14266
+     ],
+     [
+      0.0681,
+      0.13365
+     ],
+     [
+      0.08817,
+      0.12135
+     ],
+     [
+      0.10607,
+      0.10607
+     ],
+     [
+      0.12135,
+      0.08817
+     ],
+     [
+      0.13365,
+      0.0681
+     ],
+     [
+      0.14266,
+      0.04635
+     ],
+     [
+      0.14815,
+      0.02347
+     ],
+     [
+      0.15,
+      0.0
+     ],
+     [
+      0.14815,
+      -0.02347
+     ],
+     [
+      0.14266,
+      -0.04635
+     ],
+     [
+      0.13365,
+      -0.0681
+     ],
+     [
+      0.12135,
+      -0.08817
+     ],
+     [
+      0.10607,
+      -0.10607
+     ],
+     [
+      0.08817,
+      -0.12135
+     ],
+     [
+      0.0681,
+      -0.13365
+     ],
+     [
+      0.04635,
+      -0.14266
+     ],
+     [
+      0.02347,
+      -0.14815
+     ],
+     [
+      0.0,
+      -0.15
+     ],
+     [
+      -0.02347,
+      -0.14815
+     ],
+     [
+      -0.04635,
+      -0.14266
+     ],
+     [
+      -0.0681,
+      -0.13365
+     ],
+     [
+      -0.08817,
+      -0.12135
+     ],
+     [
+      -0.10607,
+      -0.10607
+     ],
+     [
+      -0.12135,
+      -0.08817
+     ],
+     [
+      -0.13365,
+      -0.0681
+     ],
+     [
+      -0.14266,
+      -0.04635
+     ],
+     [
+      -0.14815,
+      -0.02347
+     ],
+     [
+      -0.15,
+      0.0
+     ],
+     [
+      -0.14815,
+      0.02347
+     ],
+     [
+      -0.14266,
+      0.04635
+     ],
+     [
+      -0.13365,
+      0.0681
+     ],
+     [
+      -0.12135,
+      0.08817
+     ],
+     [
+      -0.10607,
+      0.10607
+     ],
+     [
+      -0.08817,
+      0.12135
+     ],
+     [
+      -0.0681,
+      0.13365
+     ],
+     [
+      -0.04635,
+      0.14266
+     ],
+     [
+      -0.02347,
+      0.14815
+     ]
+    ],
+    "holes": [
+     [
+      [
+       0.0,
+       0.145
+      ],
+      [
+       0.02268,
+       0.14321
+      ],
+      [
+       0.04481,
+       0.1379
+      ],
+      [
+       0.06583,
+       0.1292
+      ],
+      [
+       0.08523,
+       0.11731
+      ],
+      [
+       0.10253,
+       0.10253
+      ],
+      [
+       0.11731,
+       0.08523
+      ],
+      [
+       0.1292,
+       0.06583
+      ],
+      [
+       0.1379,
+       0.04481
+      ],
+      [
+       0.14321,
+       0.02268
+      ],
+      [
+       0.145,
+       0.0
+      ],
+      [
+       0.14321,
+       -0.02268
+      ],
+      [
+       0.1379,
+       -0.04481
+      ],
+      [
+       0.1292,
+       -0.06583
+      ],
+      [
+       0.11731,
+       -0.08523
+      ],
+      [
+       0.10253,
+       -0.10253
+      ],
+      [
+       0.08523,
+       -0.11731
+      ],
+      [
+       0.06583,
+       -0.1292
+      ],
+      [
+       0.04481,
+       -0.1379
+      ],
+      [
+       0.02268,
+       -0.14321
+      ],
+      [
+       0.0,
+       -0.145
+      ],
+      [
+       -0.02268,
+       -0.14321
+      ],
+      [
+       -0.04481,
+       -0.1379
+      ],
+      [
+       -0.06583,
+       -0.1292
+      ],
+      [
+       -0.08523,
+       -0.11731
+      ],
+      [
+       -0.10253,
+       -0.10253
+      ],
+      [
+       -0.11731,
+       -0.08523
+      ],
+      [
+       -0.1292,
+       -0.06583
+      ],
+      [
+       -0.1379,
+       -0.04481
+      ],
+      [
+       -0.14321,
+       -0.02268
+      ],
+      [
+       -0.145,
+       0.0
+      ],
+      [
+       -0.14321,
+       0.02268
+      ],
+      [
+       -0.1379,
+       0.04481
+      ],
+      [
+       -0.1292,
+       0.06583
+      ],
+      [
+       -0.11731,
+       0.08523
+      ],
+      [
+       -0.10253,
+       0.10253
+      ],
+      [
+       -0.08523,
+       0.11731
+      ],
+      [
+       -0.06583,
+       0.1292
+      ],
+      [
+       -0.04481,
+       0.1379
+      ],
+      [
+       -0.02268,
+       0.14321
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": -1.25,
+    "to": -0.07
+   },
+   {
+    "id": "sleeve-floor",
+    "kind": "revolve",
+    "bone": "sleeve",
+    "material": "steel-sleeve",
+    "role": "body",
+    "tone": 0.3,
+    "region": "sleeve-steel",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.15
+     ],
+     [
+      0.01,
+      0.15
+     ],
+     [
+      0.01,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      -1.25,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "cover-frame",
+    "kind": "extrude",
+    "bone": "sleeve",
+    "material": "cast-iron-frame",
+    "role": "body",
+    "tone": 0.6,
+    "region": "cover-frame",
+    "profile": [
+     [
+      -0.18,
+      -0.2
+     ],
+     [
+      -0.2,
+      -0.18
+     ],
+     [
+      -0.2,
+      0.18
+     ],
+     [
+      -0.18,
+      0.2
+     ],
+     [
+      0.18,
+      0.2
+     ],
+     [
+      0.2,
+      0.18
+     ],
+     [
+      0.2,
+      -0.18
+     ],
+     [
+      0.18,
+      -0.2
+     ]
+    ],
+    "plane": "zx",
+    "from": -0.07,
+    "to": 0.015,
+    "holes": [
+     [
+      [
+       0.0,
+       0.145
+      ],
+      [
+       0.02268,
+       0.14321
+      ],
+      [
+       0.04481,
+       0.1379
+      ],
+      [
+       0.06583,
+       0.1292
+      ],
+      [
+       0.08523,
+       0.11731
+      ],
+      [
+       0.10253,
+       0.10253
+      ],
+      [
+       0.11731,
+       0.08523
+      ],
+      [
+       0.1292,
+       0.06583
+      ],
+      [
+       0.1379,
+       0.04481
+      ],
+      [
+       0.14321,
+       0.02268
+      ],
+      [
+       0.145,
+       0.0
+      ],
+      [
+       0.14321,
+       -0.02268
+      ],
+      [
+       0.1379,
+       -0.04481
+      ],
+      [
+       0.1292,
+       -0.06583
+      ],
+      [
+       0.11731,
+       -0.08523
+      ],
+      [
+       0.10253,
+       -0.10253
+      ],
+      [
+       0.08523,
+       -0.11731
+      ],
+      [
+       0.06583,
+       -0.1292
+      ],
+      [
+       0.04481,
+       -0.1379
+      ],
+      [
+       0.02268,
+       -0.14321
+      ],
+      [
+       0.0,
+       -0.145
+      ],
+      [
+       -0.02268,
+       -0.14321
+      ],
+      [
+       -0.04481,
+       -0.1379
+      ],
+      [
+       -0.06583,
+       -0.1292
+      ],
+      [
+       -0.08523,
+       -0.11731
+      ],
+      [
+       -0.10253,
+       -0.10253
+      ],
+      [
+       -0.11731,
+       -0.08523
+      ],
+      [
+       -0.1292,
+       -0.06583
+      ],
+      [
+       -0.1379,
+       -0.04481
+      ],
+      [
+       -0.14321,
+       -0.02268
+      ],
+      [
+       -0.145,
+       0.0
+      ],
+      [
+       -0.14321,
+       0.02268
+      ],
+      [
+       -0.1379,
+       0.04481
+      ],
+      [
+       -0.1292,
+       0.06583
+      ],
+      [
+       -0.11731,
+       0.08523
+      ],
+      [
+       -0.10253,
+       0.10253
+      ],
+      [
+       -0.08523,
+       0.11731
+      ],
+      [
+       -0.06583,
+       0.1292
+      ],
+      [
+       -0.04481,
+       0.1379
+      ],
+      [
+       -0.02268,
+       0.14321
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "frame-bolt-1",
+    "kind": "revolve",
+    "bone": "sleeve",
+    "material": "cast-iron-frame",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "cover-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.01
+     ],
+     [
+      0.003,
+      0.01
+     ],
+     [
+      0.003,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.175,
+      0.015,
+      -0.175
+     ]
+    }
+   },
+   {
+    "id": "frame-bolt-2",
+    "kind": "revolve",
+    "bone": "sleeve",
+    "material": "cast-iron-frame",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "cover-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.01
+     ],
+     [
+      0.003,
+      0.01
+     ],
+     [
+      0.003,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.175,
+      0.015,
+      -0.175
+     ]
+    }
+   },
+   {
+    "id": "frame-bolt-3",
+    "kind": "revolve",
+    "bone": "sleeve",
+    "material": "cast-iron-frame",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "cover-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.01
+     ],
+     [
+      0.003,
+      0.01
+     ],
+     [
+      0.003,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.175,
+      0.015,
+      0.175
+     ]
+    }
+   },
+   {
+    "id": "frame-bolt-4",
+    "kind": "revolve",
+    "bone": "sleeve",
+    "material": "cast-iron-frame",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "cover-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.01
+     ],
+     [
+      0.003,
+      0.01
+     ],
+     [
+      0.003,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.175,
+      0.015,
+      0.175
+     ]
+    }
+   },
+   {
+    "id": "brush-seal",
+    "kind": "extrude",
+    "bone": "sleeve",
+    "material": "cast-iron-frame",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "cover-frame",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.145
+     ],
+     [
+      0.02268,
+      0.14321
+     ],
+     [
+      0.04481,
+      0.1379
+     ],
+     [
+      0.06583,
+      0.1292
+     ],
+     [
+      0.08523,
+      0.11731
+     ],
+     [
+      0.10253,
+      0.10253
+     ],
+     [
+      0.11731,
+      0.08523
+     ],
+     [
+      0.1292,
+      0.06583
+     ],
+     [
+      0.1379,
+      0.04481
+     ],
+     [
+      0.14321,
+      0.02268
+     ],
+     [
+      0.145,
+      0.0
+     ],
+     [
+      0.14321,
+      -0.02268
+     ],
+     [
+      0.1379,
+      -0.04481
+     ],
+     [
+      0.1292,
+      -0.06583
+     ],
+     [
+      0.11731,
+      -0.08523
+     ],
+     [
+      0.10253,
+      -0.10253
+     ],
+     [
+      0.08523,
+      -0.11731
+     ],
+     [
+      0.06583,
+      -0.1292
+     ],
+     [
+      0.04481,
+      -0.1379
+     ],
+     [
+      0.02268,
+      -0.14321
+     ],
+     [
+      0.0,
+      -0.145
+     ],
+     [
+      -0.02268,
+      -0.14321
+     ],
+     [
+      -0.04481,
+      -0.1379
+     ],
+     [
+      -0.06583,
+      -0.1292
+     ],
+     [
+      -0.08523,
+      -0.11731
+     ],
+     [
+      -0.10253,
+      -0.10253
+     ],
+     [
+      -0.11731,
+      -0.08523
+     ],
+     [
+      -0.1292,
+      -0.06583
+     ],
+     [
+      -0.1379,
+      -0.04481
+     ],
+     [
+      -0.14321,
+      -0.02268
+     ],
+     [
+      -0.145,
+      0.0
+     ],
+     [
+      -0.14321,
+      0.02268
+     ],
+     [
+      -0.1379,
+      0.04481
+     ],
+     [
+      -0.1292,
+      0.06583
+     ],
+     [
+      -0.11731,
+      0.08523
+     ],
+     [
+      -0.10253,
+      0.10253
+     ],
+     [
+      -0.08523,
+      0.11731
+     ],
+     [
+      -0.06583,
+      0.1292
+     ],
+     [
+      -0.04481,
+      0.1379
+     ],
+     [
+      -0.02268,
+      0.14321
+     ]
+    ],
+    "holes": [
+     [
+      [
+       0.0,
+       0.1
+      ],
+      [
+       0.01564,
+       0.09877
+      ],
+      [
+       0.0309,
+       0.09511
+      ],
+      [
+       0.0454,
+       0.0891
+      ],
+      [
+       0.05878,
+       0.0809
+      ],
+      [
+       0.07071,
+       0.07071
+      ],
+      [
+       0.0809,
+       0.05878
+      ],
+      [
+       0.0891,
+       0.0454
+      ],
+      [
+       0.09511,
+       0.0309
+      ],
+      [
+       0.09877,
+       0.01564
+      ],
+      [
+       0.1,
+       0.0
+      ],
+      [
+       0.09877,
+       -0.01564
+      ],
+      [
+       0.09511,
+       -0.0309
+      ],
+      [
+       0.0891,
+       -0.0454
+      ],
+      [
+       0.0809,
+       -0.05878
+      ],
+      [
+       0.07071,
+       -0.07071
+      ],
+      [
+       0.05878,
+       -0.0809
+      ],
+      [
+       0.0454,
+       -0.0891
+      ],
+      [
+       0.0309,
+       -0.09511
+      ],
+      [
+       0.01564,
+       -0.09877
+      ],
+      [
+       0.0,
+       -0.1
+      ],
+      [
+       -0.01564,
+       -0.09877
+      ],
+      [
+       -0.0309,
+       -0.09511
+      ],
+      [
+       -0.0454,
+       -0.0891
+      ],
+      [
+       -0.05878,
+       -0.0809
+      ],
+      [
+       -0.07071,
+       -0.07071
+      ],
+      [
+       -0.0809,
+       -0.05878
+      ],
+      [
+       -0.0891,
+       -0.0454
+      ],
+      [
+       -0.09511,
+       -0.0309
+      ],
+      [
+       -0.09877,
+       -0.01564
+      ],
+      [
+       -0.1,
+       0.0
+      ],
+      [
+       -0.09877,
+       0.01564
+      ],
+      [
+       -0.09511,
+       0.0309
+      ],
+      [
+       -0.0891,
+       0.0454
+      ],
+      [
+       -0.0809,
+       0.05878
+      ],
+      [
+       -0.07071,
+       0.07071
+      ],
+      [
+       -0.05878,
+       0.0809
+      ],
+      [
+       -0.0454,
+       0.0891
+      ],
+      [
+       -0.0309,
+       0.09511
+      ],
+      [
+       -0.01564,
+       0.09877
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": -0.02,
+    "to": -0.01
+   },
+   {
+    "id": "power-unit",
+    "kind": "box",
+    "bone": "hydraulic",
+    "material": "steel-hyd",
+    "role": "body",
+    "tone": 0.5,
+    "region": "hydraulic-unit",
+    "size": [
+     0.21,
+     0.4,
+     0.21
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.055,
+      0.05,
+      0.095
+     ]
+    }
+   },
+   {
+    "id": "motor",
+    "kind": "revolve",
+    "bone": "hydraulic",
+    "material": "steel-hyd",
+    "role": "detail",
+    "tone": 0.8,
+    "region": "hydraulic-unit",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.035
+     ],
+     [
+      0.14,
+      0.035
+     ],
+     [
+      0.14,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.055,
+      0.16,
+      0.025
+     ]
+    }
+   },
+   {
+    "id": "ram",
+    "kind": "revolve",
+    "bone": "hydraulic",
+    "material": "steel-hyd",
+    "role": "body",
+    "tone": 0.7,
+    "region": "hydraulic-unit",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.06
+     ],
+     [
+      0.55,
+      0.06
+     ],
+     [
+      0.55,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.2,
+      -0.45,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "ram-rod",
+    "kind": "revolve",
+    "bone": "hydraulic",
+    "material": "steel-hyd",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "hydraulic-unit",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.02
+     ],
+     [
+      0.25,
+      0.02
+     ],
+     [
+      0.25,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.2,
+      0.1,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "hose",
+    "kind": "capsule",
+    "bone": "hydraulic",
+    "material": "steel-hyd",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "hydraulic-unit",
+    "maxDenominator": 100,
+    "p0": [
+     -0.05,
+     0.1,
+     0.03
+    ],
+    "p1": [
+     -0.145,
+     0.1,
+     0.03
+    ],
+    "r0": 0.008,
+    "r1": 0.008
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The asset is drawn as a cut through the ground: sleeve, hydraulic unit and ram are buried (y -1.25 to -0.07) and invisible in the raised pose except for the shaft; the shaft rises with its prismatic joint by up to 0.65 m. `dimensions` (1.9 m high) describe the raised default pose; at rest (shaft lowered) the body is 1.27 m high.",
+    "de": "Das Asset ist als Schnitt durch den Boden gezeichnet: Hülse, Hydraulikeinheit und Zylinder sind vergraben (y -1,25 bis -0,07) und in der ausgefahrenen Pose bis auf den Schaft unsichtbar; der Schaft fährt mit seinem Schiebegelenk bis 0,65 m aus. `dimensions` (1,9 m hoch) beschreiben die ausgefahrene Standardpose; in Ruhe (Schaft abgesenkt) ist der Körper 1,27 m hoch."
+   },
+   {
+    "en": "The sleeve is a hollow tube (a 5 mm ring extrusion with a floor disc) so the shaft slides inside it; the cast cover frame is a rounded-square ring around the 0.29 m opening with four bolts; the beacon carries a ring of 12 LED discs (the views show three per side).",
+    "de": "Die Hülse ist ein Hohlrohr (Ringextrusion von 5 mm mit Bodenscheibe), in dem der Schaft gleitet; der Gussrahmen ist ein abgerundeter Quadratring um die 0,29 m Öffnung mit vier Schrauben; die Leuchte trägt einen Kranz aus 12 LED-Scheiben (die Ansichten zeigen drei pro Seite)."
+   },
+   {
+    "en": "The hydraulic unit sits beside the sleeve at +x (plan and front agree), the ram stands under the shaft with its rod reaching the shaft base in the raised pose and the hose runs through the sleeve wall.",
+    "de": "Die Hydraulikeinheit sitzt neben der Hülse bei +x (Draufsicht und Vorderansicht stimmen überein), der Zylinder steht unter dem Schaft, seine Stange erreicht in der ausgefahrenen Pose den Schaftfuss, der Schlauch führt durch die Hülsenwand."
+   }
+  ]
+ }
+}

@@ -8,14 +8,15 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { VIEWPOINTS, type Asset, type Language } from "../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type Asset, type Language } from "../../🧬️schema/🟦️.ts";
 import { DEFAULT_CATALOG_ROOT, loadCatalogFromFiles } from "../../🔨️modules/🗂️catalog/📥️files/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { captionLines } from "../../🔨️modules/🎨️depiction/🖨️preview/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { RepresentationError } from "../../🔨️modules/🖨️representation/🟦️.ts";
 import { textWidthMm } from "../../🔨️modules/📐️units/🟦️.ts";
-import { STAFFAGE_ROOT, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 
 type Text = { text: string; size: number; bold: boolean };
 vi.setConfig({ testTimeout: 900_000 });
@@ -31,7 +32,7 @@ function widths(texts: readonly Text[]): number[] {
   try {
     const file = join(directory, "texts.json");
     writeFileSync(file, JSON.stringify(texts));
-    return JSON.parse(python(ORACLE, ["pymupdf"], [file])) as number[];
+    return JSON.parse(python(ORACLE, "documents", [file])) as number[];
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -56,7 +57,7 @@ describe("scene text", () => {
     let drawn = 0;
     const entries: { name: string; width: number; x: number; anchor: string; text: Text }[] = [];
     for (const [id, denominator] of cases)
-      for (const viewpoint of VIEWPOINTS)
+      for (const viewpoint of PLANAR_VIEWPOINTS)
         for (const language of ["en", "de"] as Language[]) {
           const asset = assets.get(id)!;
           const selector = { kind: "scale", scale: { denominator } } as const;

@@ -1772,7 +1772,6 @@
           "operatingKey": "fan",
           "volumeFlowM3S": 0.125,
           "temperatureRiseK": -13.3,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "iso-5151-2017"
         }
@@ -1803,6 +1802,165 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "casing",
+          "kind": "extrude",
+          "bone": "unit",
+          "material": "abs-white",
+          "role": "body",
+          "tone": 0.88,
+          "region": "casing",
+          "profile": [
+            [0, 0],
+            [0.065, 0],
+            [0.065, 0.03],
+            [0.185, 0.03],
+            [0.19206, 0.03993],
+            [0.19815, 0.05444],
+            [0.20312, 0.07313],
+            [0.20685, 0.09556],
+            [0.20919, 0.12132],
+            [0.21, 0.15],
+            [0.21, 0.245],
+            [0.20875, 0.25875],
+            [0.205, 0.27],
+            [0.19875, 0.27875],
+            [0.19, 0.285],
+            [0.17875, 0.28875],
+            [0.165, 0.29],
+            [0, 0.29]
+          ],
+          "plane": "xy",
+          "from": -0.425,
+          "to": 0.425
+        },
+        {
+          "id": "end-cap",
+          "kind": "box",
+          "bone": "unit",
+          "material": "abs-white",
+          "role": "body",
+          "tone": 0.88,
+          "region": "casing",
+          "size": [0.12, 0.03, 0.035],
+          "transform": {
+            "translation": [0.125, 0.015, -0.4075]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, 0.815]
+          }
+        },
+        {
+          "id": "intake-grille",
+          "kind": "box",
+          "bone": "unit",
+          "material": "abs-grey",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "intake-grille",
+          "maxDenominator": 200,
+          "size": [0.11, 0.0032, 0.74],
+          "cornerRadius": 0.0015,
+          "transform": {
+            "translation": [0.085, 0.2916, 0]
+          }
+        },
+        {
+          "id": "grille-slat-z",
+          "kind": "capsule",
+          "bone": "unit",
+          "material": "abs-grey",
+          "role": "detail",
+          "tone": 0.7,
+          "region": "intake-grille",
+          "maxDenominator": 50,
+          "p0": [0.047, 0.285, -0.36],
+          "p1": [0.047, 0.285, 0.36],
+          "r0": 0.0035,
+          "r1": 0.0035,
+          "repeat": {
+            "count": 4,
+            "translation": [0.025, 0, 0]
+          }
+        },
+        {
+          "id": "grille-slat-x",
+          "kind": "capsule",
+          "bone": "unit",
+          "material": "abs-grey",
+          "role": "detail",
+          "tone": 0.7,
+          "region": "intake-grille",
+          "maxDenominator": 50,
+          "p0": [0.045, 0.281, -0.32],
+          "p1": [0.125, 0.281, -0.32],
+          "r0": 0.0035,
+          "r1": 0.0035,
+          "repeat": {
+            "count": 9,
+            "translation": [0, 0, 0.08]
+          }
+        },
+        {
+          "id": "display-window",
+          "kind": "box",
+          "bone": "unit",
+          "material": "display",
+          "role": "detail",
+          "tone": 0.15,
+          "region": "casing",
+          "maxDenominator": 100,
+          "size": [0.004, 0.04, 0.06],
+          "cornerRadius": 0.0019,
+          "transform": {
+            "translation": [0.2085, 0.142, 0.35]
+          }
+        },
+        {
+          "id": "vane",
+          "kind": "extrude",
+          "bone": "vane",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.6,
+          "region": "discharge-vane",
+          "maxDenominator": 200,
+          "profile": [
+            [0, -0.015],
+            [0.11, -0.015],
+            [0.11458, -0.01417],
+            [0.11833, -0.01167],
+            [0.12125, -0.0075],
+            [0.12333, -0.00167],
+            [0.12458, 0.00583],
+            [0.125, 0.015],
+            [0.12, 0.015],
+            [0, 0.015]
+          ],
+          "plane": "xy",
+          "from": -0.39,
+          "to": 0.39
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The casing is the extrusion of the elevation profile (wall plate, discharge recess of 30 mm, front curvature) over the full 0.85 m length; the recess is closed at both ends by a small end cap (one solid repeated) and spanned by the vane, so the unit reads as a closed body when the vane is shut.",
+          "de": "Das Gehäuse ist die Extrusion des Seitenprofils (Wandplatte, 30-mm-Ausblasnische, Frontkrümmung) über die volle Länge von 0,85 m; die Nische ist an beiden Enden durch eine kleine Endkappe (ein wiederholter Körper) geschlossen und von der Lamelle überspannt, sodass das Gerät bei geschlossener Lamelle als geschlossener Körper erscheint."
+        },
+        {
+          "en": "The vane is the extrusion of its profile over 0.78 m on its own bone, hinged at the front edge of the recess; it swings from 0 to -55 degrees without leaving the recess. The grille is a dark panel with four slats along z (elevation) and nine ribs along x (plan), 7 mm thick bars at 1:50 only.",
+          "de": "Die Lamelle ist die Extrusion ihres Profils über 0,78 m an ihrem eigenen Knochen, am vorderen Nischenrand angelenkt; sie schwenkt von 0 bis -55 Grad, ohne die Nische zu verlassen. Das Gitter ist eine dunkle Platte mit vier Stäben entlang z (Seitenansicht) und neun Rippen entlang x (Grundriss), 7 mm dick, nur im Maßstab 1:50."
+        },
+        {
+          "en": "The display window is drawn at three different places (elevation y 0.13 to 0.18, front y 0.12 to 0.155 and z 0.32 to 0.38, plan z 0.30 to 0.38); the volume takes the front view for z and y and 4 mm depth. Rounded plan corners (20 mm) and front corners (45 mm) of the casing are not modelled; they are drawn but cost under 1 % of the silhouette.",
+          "de": "Das Anzeigefenster ist an drei verschiedenen Orten gezeichnet (Seitenansicht y 0,13 bis 0,18, Vorderansicht y 0,12 bis 0,155 und z 0,32 bis 0,38, Grundriss z 0,30 bis 0,38); das Volumen übernimmt z und y aus der Vorderansicht und 4 mm Tiefe. Die gerundeten Grundrissecken (20 mm) und Frontecken (45 mm) des Gehäuses werden nicht modelliert; sie sind gezeichnet, kosten aber unter 1 % der Silhouette."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "off",
       "defaultClip": "start-cooling",
@@ -1816,7 +1974,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

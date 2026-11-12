@@ -1,0 +1,2352 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "track-belt",
+    "kind": "extrude",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "body",
+    "tone": 0.2,
+    "region": "tracks",
+    "profile": [
+     [
+      1.65,
+      0.0
+     ],
+     [
+      1.78288,
+      0.02105
+     ],
+     [
+      1.90275,
+      0.08212
+     ],
+     [
+      1.99788,
+      0.17725
+     ],
+     [
+      2.05895,
+      0.29712
+     ],
+     [
+      2.08,
+      0.43
+     ],
+     [
+      2.05895,
+      0.56288
+     ],
+     [
+      1.99788,
+      0.68275
+     ],
+     [
+      1.90275,
+      0.77788
+     ],
+     [
+      1.78288,
+      0.83895
+     ],
+     [
+      1.65,
+      0.86
+     ],
+     [
+      -1.65,
+      0.86
+     ],
+     [
+      -1.78288,
+      0.83895
+     ],
+     [
+      -1.90275,
+      0.77788
+     ],
+     [
+      -1.99788,
+      0.68275
+     ],
+     [
+      -2.05895,
+      0.56288
+     ],
+     [
+      -2.08,
+      0.43
+     ],
+     [
+      -2.05895,
+      0.29712
+     ],
+     [
+      -1.99788,
+      0.17725
+     ],
+     [
+      -1.90275,
+      0.08212
+     ],
+     [
+      -1.78288,
+      0.02105
+     ],
+     [
+      -1.65,
+      0.0
+     ]
+    ],
+    "holes": [
+     [
+      [
+       1.65,
+       0.07
+      ],
+      [
+       1.76125,
+       0.08762
+      ],
+      [
+       1.8616,
+       0.13875
+      ],
+      [
+       1.94125,
+       0.2184
+      ],
+      [
+       1.99238,
+       0.31875
+      ],
+      [
+       2.01,
+       0.43
+      ],
+      [
+       1.99238,
+       0.54125
+      ],
+      [
+       1.94125,
+       0.6416
+      ],
+      [
+       1.8616,
+       0.72125
+      ],
+      [
+       1.76125,
+       0.77238
+      ],
+      [
+       1.65,
+       0.79
+      ],
+      [
+       -1.65,
+       0.79
+      ],
+      [
+       -1.76125,
+       0.77238
+      ],
+      [
+       -1.8616,
+       0.72125
+      ],
+      [
+       -1.94125,
+       0.6416
+      ],
+      [
+       -1.99238,
+       0.54125
+      ],
+      [
+       -2.01,
+       0.43
+      ],
+      [
+       -1.99238,
+       0.31875
+      ],
+      [
+       -1.94125,
+       0.2184
+      ],
+      [
+       -1.8616,
+       0.13875
+      ],
+      [
+       -1.76125,
+       0.08762
+      ],
+      [
+       -1.65,
+       0.07
+      ]
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.895,
+    "to": 1.495,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -2.39
+     ]
+    }
+   },
+   {
+    "id": "grouser-top",
+    "kind": "box",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "size": [
+     0.05,
+     0.03,
+     0.6
+    ],
+    "transform": {
+     "translation": [
+      -1.4,
+      0.875,
+      1.195
+     ]
+    },
+    "repeat": {
+     "count": 16,
+     "translation": [
+      0.2,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "grouser-top-r",
+    "kind": "box",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "size": [
+     0.05,
+     0.03,
+     0.6
+    ],
+    "transform": {
+     "translation": [
+      -1.4,
+      0.875,
+      -1.195
+     ]
+    },
+    "repeat": {
+     "count": 16,
+     "translation": [
+      0.2,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "grouser-bottom",
+    "kind": "box",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "size": [
+     0.05,
+     0.03,
+     0.6
+    ],
+    "transform": {
+     "translation": [
+      -1.5,
+      -0.015,
+      1.195
+     ]
+    },
+    "repeat": {
+     "count": 16,
+     "translation": [
+      0.2,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "grouser-bottom-r",
+    "kind": "box",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "size": [
+     0.05,
+     0.03,
+     0.6
+    ],
+    "transform": {
+     "translation": [
+      -1.5,
+      -0.015,
+      -1.195
+     ]
+    },
+    "repeat": {
+     "count": 16,
+     "translation": [
+      0.2,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "track-frame",
+    "kind": "box",
+    "bone": "undercarriage",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 200,
+    "size": [
+     3.4,
+     0.45,
+     0.4
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.475,
+      1.195
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -2.39
+     ]
+    }
+   },
+   {
+    "id": "sprocket",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.5,
+    "profile": [
+     [
+      0.0,
+      0.33
+     ],
+     [
+      0.43,
+      0.33
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     -1.65,
+     0.43,
+     0.98
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -2.39
+     ]
+    }
+   },
+   {
+    "id": "idler",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.5,
+    "profile": [
+     [
+      0.0,
+      0.33
+     ],
+     [
+      0.43,
+      0.33
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     1.65,
+     0.43,
+     0.98
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -2.39
+     ]
+    }
+   },
+   {
+    "id": "sprocket-hub",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.25,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.1
+     ],
+     [
+      0.49,
+      0.1
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     -1.65,
+     0.43,
+     0.95
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -2.39
+     ]
+    }
+   },
+   {
+    "id": "idler-hub",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.25,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.1
+     ],
+     [
+      0.49,
+      0.1
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     1.65,
+     0.43,
+     0.95
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -2.39
+     ]
+    }
+   },
+   {
+    "id": "roller",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.55,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.11
+     ],
+     [
+      0.3,
+      0.11
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     -1.0,
+     0.2,
+     1.045
+    ],
+    "repeat": {
+     "count": 5,
+     "translation": [
+      0.5,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "roller-r",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.55,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.11
+     ],
+     [
+      0.3,
+      0.11
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     -1.0,
+     0.2,
+     -1.345
+    ],
+    "repeat": {
+     "count": 5,
+     "translation": [
+      0.5,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "carrier-roller",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.55,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.07
+     ],
+     [
+      0.2,
+      0.07
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.0,
+     0.74,
+     1.095
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -2.39
+     ]
+    }
+   },
+   {
+    "id": "carbody",
+    "kind": "box",
+    "bone": "undercarriage",
+    "material": "paint-steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "tracks",
+    "size": [
+     2.0,
+     0.56,
+     1.79
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.58,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "slew-ring",
+    "kind": "revolve",
+    "bone": "undercarriage",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.8
+     ],
+     [
+      0.14,
+      0.8
+     ]
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "origin": [
+     0.0,
+     0.86,
+     0.0
+    ]
+   },
+   {
+    "id": "house",
+    "kind": "extrude",
+    "bone": "upper",
+    "material": "paint-steel",
+    "role": "body",
+    "tone": 0.62,
+    "region": "house",
+    "profile": [
+     [
+      -1.75,
+      0.0
+     ],
+     [
+      1.6,
+      0.0
+     ],
+     [
+      1.6,
+      0.3
+     ],
+     [
+      0.12,
+      0.3
+     ],
+     [
+      0.12,
+      1.25
+     ],
+     [
+      -1.4,
+      1.25
+     ],
+     [
+      -1.65,
+      1.2
+     ],
+     [
+      -1.75,
+      0.95
+     ]
+    ],
+    "plane": "xy",
+    "from": -1.25,
+    "to": 1.25
+   },
+   {
+    "id": "cab",
+    "kind": "extrude",
+    "bone": "upper",
+    "material": "paint-steel",
+    "role": "body",
+    "tone": 0.62,
+    "region": "house",
+    "profile": [
+     [
+      0.12,
+      0.3
+     ],
+     [
+      1.6,
+      0.3
+     ],
+     [
+      1.58,
+      0.95
+     ],
+     [
+      1.55,
+      1.4
+     ],
+     [
+      1.49,
+      1.72
+     ],
+     [
+      1.42,
+      1.88
+     ],
+     [
+      1.36,
+      1.96
+     ],
+     [
+      1.28,
+      1.97
+     ],
+     [
+      0.4,
+      1.97
+     ],
+     [
+      0.3,
+      1.95
+     ],
+     [
+      0.16,
+      1.85
+     ],
+     [
+      0.12,
+      1.7
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.1,
+    "to": 1.25
+   },
+   {
+    "id": "cab-glass-side-window",
+    "kind": "extrude",
+    "bone": "upper",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.85,
+    "region": "cab-glazing",
+    "profile": [
+     [
+      0.3,
+      0.6
+     ],
+     [
+      0.95,
+      0.6
+     ],
+     [
+      0.95,
+      1.9
+     ],
+     [
+      0.45,
+      1.9
+     ],
+     [
+      0.3,
+      1.85
+     ]
+    ],
+    "plane": "xy",
+    "from": 1.25,
+    "to": 1.26
+   },
+   {
+    "id": "cab-glass-rear-window",
+    "kind": "extrude",
+    "bone": "upper",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.85,
+    "region": "cab-glazing",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      1.02,
+      0.58
+     ],
+     [
+      1.46,
+      0.58
+     ],
+     [
+      1.44,
+      1.1
+     ],
+     [
+      1.4,
+      1.6
+     ],
+     [
+      1.34,
+      1.82
+     ],
+     [
+      1.2,
+      1.87
+     ],
+     [
+      1.02,
+      1.87
+     ]
+    ],
+    "plane": "xy",
+    "from": 1.25,
+    "to": 1.26
+   },
+   {
+    "id": "cab-windscreen",
+    "kind": "box",
+    "bone": "upper",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.85,
+    "region": "cab-glazing",
+    "size": [
+     0.02,
+     1.29,
+     0.95
+    ],
+    "transform": {
+     "translation": [
+      1.5,
+      1.2,
+      0.675
+     ],
+     "rotation": [
+      0.0,
+      0.0,
+      -0.06105,
+      0.99813
+     ]
+    }
+   },
+   {
+    "id": "cab-sill",
+    "kind": "extrude",
+    "bone": "upper",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.12,
+      0.55
+     ],
+     [
+      1.58,
+      0.55
+     ],
+     [
+      1.58,
+      0.6
+     ],
+     [
+      0.12,
+      0.6
+     ]
+    ],
+    "plane": "xy",
+    "from": 1.25,
+    "to": 1.265
+   },
+   {
+    "id": "hood-grille-top",
+    "kind": "box",
+    "bone": "upper",
+    "material": "engine-metal",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "engine-compartment",
+    "maxDenominator": 200,
+    "size": [
+     1.0,
+     0.02,
+     1.8
+    ],
+    "transform": {
+     "translation": [
+      -1.05,
+      1.26,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "hood-grille-side",
+    "kind": "box",
+    "bone": "upper",
+    "material": "engine-metal",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "engine-compartment",
+    "maxDenominator": 200,
+    "size": [
+     1.0,
+     0.65,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      -1.05,
+      0.725,
+      -1.255
+     ]
+    }
+   },
+   {
+    "id": "hood-rail-bar",
+    "kind": "capsule",
+    "bone": "upper",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 100,
+    "p0": [
+     -1.65,
+     1.5,
+     -1.15
+    ],
+    "p1": [
+     -0.3,
+     1.5,
+     -1.15
+    ],
+    "r0": 0.025,
+    "r1": 0.025
+   },
+   {
+    "id": "hood-rail-post",
+    "kind": "capsule",
+    "bone": "upper",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 100,
+    "p0": [
+     -1.65,
+     1.25,
+     -1.15
+    ],
+    "p1": [
+     -1.65,
+     1.5,
+     -1.15
+    ],
+    "r0": 0.025,
+    "r1": 0.025,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      1.35,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "stack",
+    "kind": "revolve",
+    "bone": "upper",
+    "material": "exhaust-steel",
+    "role": "detail",
+    "tone": 0.25,
+    "region": "exhaust-stack",
+    "profile": [
+     [
+      0.0,
+      0.055
+     ],
+     [
+      0.55,
+      0.055
+     ]
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "origin": [
+     -1.2,
+     1.25,
+     -0.9
+    ]
+   },
+   {
+    "id": "stack-cap",
+    "kind": "revolve",
+    "bone": "upper",
+    "material": "exhaust-steel",
+    "role": "detail",
+    "tone": 0.2,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.08
+     ],
+     [
+      0.04,
+      0.08
+     ]
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "origin": [
+     -1.2,
+     1.78,
+     -0.9
+    ]
+   },
+   {
+    "id": "boom-foot",
+    "kind": "extrude",
+    "bone": "upper",
+    "material": "paint-steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "house",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.78,
+      0.22
+     ],
+     [
+      1.3,
+      0.22
+     ],
+     [
+      1.3,
+      0.55
+     ],
+     [
+      1.15,
+      0.78
+     ],
+     [
+      0.9,
+      0.78
+     ],
+     [
+      0.78,
+      0.55
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.7,
+    "to": -0.55
+   },
+   {
+    "id": "boom-foot-inner",
+    "kind": "extrude",
+    "bone": "upper",
+    "material": "paint-steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "house",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.78,
+      0.22
+     ],
+     [
+      1.3,
+      0.22
+     ],
+     [
+      1.3,
+      0.55
+     ],
+     [
+      1.15,
+      0.78
+     ],
+     [
+      0.9,
+      0.78
+     ],
+     [
+      0.78,
+      0.55
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.05,
+    "to": 0.1
+   },
+   {
+    "id": "counterweight-body",
+    "kind": "extrude",
+    "bone": "counterweight",
+    "material": "cast-iron",
+    "role": "body",
+    "tone": 0.35,
+    "region": "counterweight",
+    "profile": [
+     [
+      0.65,
+      0.0
+     ],
+     [
+      -0.5,
+      0.0
+     ],
+     [
+      -0.58,
+      0.05
+     ],
+     [
+      -0.65,
+      0.25
+     ],
+     [
+      -0.63,
+      0.85
+     ],
+     [
+      -0.57,
+      1.05
+     ],
+     [
+      -0.4,
+      1.17
+     ],
+     [
+      -0.15,
+      1.2
+     ],
+     [
+      0.65,
+      1.2
+     ]
+    ],
+    "plane": "xy",
+    "from": -1.2,
+    "to": 1.2
+   },
+   {
+    "id": "boom-body",
+    "kind": "extrude",
+    "bone": "boom",
+    "material": "paint-steel",
+    "role": "body",
+    "tone": 0.58,
+    "region": "attachment",
+    "profile": [
+     [
+      0.0,
+      -0.5
+     ],
+     [
+      0.1916,
+      -0.55594
+     ],
+     [
+      0.4048,
+      -0.59232
+     ],
+     [
+      0.6372,
+      -0.60998
+     ],
+     [
+      0.8864,
+      -0.60976
+     ],
+     [
+      1.15,
+      -0.5925
+     ],
+     [
+      1.4256,
+      -0.55904
+     ],
+     [
+      1.7108,
+      -0.51022
+     ],
+     [
+      2.0032,
+      -0.44688
+     ],
+     [
+      2.3004,
+      -0.36986
+     ],
+     [
+      2.6,
+      -0.28
+     ],
+     [
+      2.9055,
+      -0.19848
+     ],
+     [
+      3.22,
+      -0.14384
+     ],
+     [
+      3.5405,
+      -0.11296
+     ],
+     [
+      3.864,
+      -0.10272
+     ],
+     [
+      4.1875,
+      -0.11
+     ],
+     [
+      4.508,
+      -0.13168
+     ],
+     [
+      4.8225,
+      -0.16464
+     ],
+     [
+      5.128,
+      -0.20576
+     ],
+     [
+      5.4215,
+      -0.25192
+     ],
+     [
+      5.7,
+      -0.3
+     ],
+     [
+      5.7,
+      0.3
+     ],
+     [
+      5.4299,
+      0.32255
+     ],
+     [
+      5.1592,
+      0.364
+     ],
+     [
+      4.8873,
+      0.42105
+     ],
+     [
+      4.6136,
+      0.4904
+     ],
+     [
+      4.3375,
+      0.56875
+     ],
+     [
+      4.0584,
+      0.6528
+     ],
+     [
+      3.7757,
+      0.73925
+     ],
+     [
+      3.4888,
+      0.8248
+     ],
+     [
+      3.1971,
+      0.90615
+     ],
+     [
+      2.9,
+      0.98
+     ],
+     [
+      2.6541,
+      1.00787
+     ],
+     [
+      2.3968,
+      1.01936
+     ],
+     [
+      2.1287,
+      1.01429
+     ],
+     [
+      1.8504,
+      0.99248
+     ],
+     [
+      1.5625,
+      0.95375
+     ],
+     [
+      1.2656,
+      0.89792
+     ],
+     [
+      0.9603,
+      0.82481
+     ],
+     [
+      0.6472,
+      0.73424
+     ],
+     [
+      0.3269,
+      0.62603
+     ],
+     [
+      0.0,
+      0.5
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.55,
+    "to": 0.05
+   },
+   {
+    "id": "boom-pin",
+    "kind": "revolve",
+    "bone": "boom",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.0,
+      0.09
+     ],
+     [
+      0.8,
+      0.09
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.7
+    ]
+   },
+   {
+    "id": "boom-tip-boss",
+    "kind": "revolve",
+    "bone": "boom",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.35,
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.0,
+      0.26
+     ],
+     [
+      0.6,
+      0.26
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     5.7,
+     0.0,
+     -0.55
+    ]
+   },
+   {
+    "id": "stick-body",
+    "kind": "extrude",
+    "bone": "stick",
+    "material": "paint-steel",
+    "role": "body",
+    "tone": 0.58,
+    "region": "attachment",
+    "profile": [
+     [
+      0.0,
+      -0.38
+     ],
+     [
+      0.2756,
+      -0.39278
+     ],
+     [
+      0.5608,
+      -0.39584
+     ],
+     [
+      0.8532,
+      -0.39026
+     ],
+     [
+      1.1504,
+      -0.37712
+     ],
+     [
+      1.45,
+      -0.3575
+     ],
+     [
+      1.7496,
+      -0.33248
+     ],
+     [
+      2.0468,
+      -0.30314
+     ],
+     [
+      2.3392,
+      -0.27056
+     ],
+     [
+      2.6244,
+      -0.23582
+     ],
+     [
+      2.9,
+      -0.2
+     ],
+     [
+      2.9,
+      0.2
+     ],
+     [
+      2.6244,
+      0.23154
+     ],
+     [
+      2.3392,
+      0.26512
+     ],
+     [
+      2.0468,
+      0.29918
+     ],
+     [
+      1.7496,
+      0.33216
+     ],
+     [
+      1.45,
+      0.3625
+     ],
+     [
+      1.1504,
+      0.38864
+     ],
+     [
+      0.8532,
+      0.40902
+     ],
+     [
+      0.5608,
+      0.42208
+     ],
+     [
+      0.2756,
+      0.42626
+     ],
+     [
+      0.0,
+      0.42
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.49,
+    "to": -0.01
+   },
+   {
+    "id": "stick-root-boss",
+    "kind": "revolve",
+    "bone": "stick",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.35,
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.0,
+      0.28
+     ],
+     [
+      0.48,
+      0.28
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.49
+    ]
+   },
+   {
+    "id": "stick-tip-boss",
+    "kind": "revolve",
+    "bone": "stick",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.35,
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.0,
+      0.22
+     ],
+     [
+      0.48,
+      0.22
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     2.9,
+     0.0,
+     -0.49
+    ]
+   },
+   {
+    "id": "boom-cyl-barrel",
+    "kind": "revolve",
+    "bone": "boom-cyl",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "hydraulics",
+    "profile": [
+     [
+      0.0,
+      0.1
+     ],
+     [
+      1.45,
+      0.1
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     0.25
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -1.0
+     ]
+    }
+   },
+   {
+    "id": "boom-cyl-rod",
+    "kind": "revolve",
+    "bone": "boom-rod",
+    "material": "chrome",
+    "role": "detail",
+    "tone": 0.85,
+    "region": "hydraulics",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.045
+     ],
+     [
+      2.05,
+      0.045
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     -0.4,
+     0.0,
+     0.25
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      -1.0
+     ]
+    }
+   },
+   {
+    "id": "stick-cyl-barrel",
+    "kind": "revolve",
+    "bone": "stick-cyl",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "hydraulics",
+    "profile": [
+     [
+      0.0,
+      0.095
+     ],
+     [
+      1.6,
+      0.095
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.25
+    ]
+   },
+   {
+    "id": "stick-cyl-rod",
+    "kind": "revolve",
+    "bone": "stick-rod",
+    "material": "chrome",
+    "role": "detail",
+    "tone": 0.85,
+    "region": "hydraulics",
+    "profile": [
+     [
+      0.0,
+      0.05
+     ],
+     [
+      2.85,
+      0.05
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     -0.5,
+     0.0,
+     -0.25
+    ]
+   },
+   {
+    "id": "bucket-cyl-barrel",
+    "kind": "revolve",
+    "bone": "bucket-cyl",
+    "material": "paint-steel",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "hydraulics",
+    "profile": [
+     [
+      0.0,
+      0.075
+     ],
+     [
+      0.85,
+      0.075
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.25
+    ]
+   },
+   {
+    "id": "bucket-cyl-rod",
+    "kind": "revolve",
+    "bone": "bucket-rod",
+    "material": "chrome",
+    "role": "detail",
+    "tone": 0.85,
+    "region": "hydraulics",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.04
+     ],
+     [
+      1.35,
+      0.04
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     -0.4,
+     0.0,
+     -0.25
+    ]
+   },
+   {
+    "id": "boom-cyl-foot",
+    "kind": "revolve",
+    "bone": "upper",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.08
+     ],
+     [
+      1.2,
+      0.08
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.45,
+     0.1,
+     -0.85
+    ]
+   },
+   {
+    "id": "boom-rod-eye",
+    "kind": "revolve",
+    "bone": "boom",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.07
+     ],
+     [
+      1.2,
+      0.07
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     1.79971,
+     -0.45014,
+     -0.85
+    ]
+   },
+   {
+    "id": "stick-cyl-foot",
+    "kind": "revolve",
+    "bone": "boom",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.07
+     ],
+     [
+      0.3,
+      0.07
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     2.99956,
+     0.95023,
+     -0.4
+    ]
+   },
+   {
+    "id": "stick-rod-eye",
+    "kind": "revolve",
+    "bone": "stick",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.07
+     ],
+     [
+      0.3,
+      0.07
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.9005,
+     0.3795,
+     -0.4
+    ]
+   },
+   {
+    "id": "bucket-cyl-foot",
+    "kind": "revolve",
+    "bone": "stick",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.06
+     ],
+     [
+      0.3,
+      0.06
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     1.24998,
+     0.36039,
+     -0.4
+    ]
+   },
+   {
+    "id": "bucket-cheek",
+    "kind": "extrude",
+    "bone": "bucket",
+    "material": "wear-steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "attachment",
+    "profile": [
+     [
+      1.35,
+      0.0
+     ],
+     [
+      1.3,
+      0.05
+     ],
+     [
+      1.2398,
+      0.1658
+     ],
+     [
+      1.16741,
+      0.26863
+     ],
+     [
+      1.08438,
+      0.35808
+     ],
+     [
+      0.9923,
+      0.43373
+     ],
+     [
+      0.89275,
+      0.49517
+     ],
+     [
+      0.78729,
+      0.54198
+     ],
+     [
+      0.6775,
+      0.57375
+     ],
+     [
+      0.56496,
+      0.59006
+     ],
+     [
+      0.45123,
+      0.59049
+     ],
+     [
+      0.3379,
+      0.57464
+     ],
+     [
+      0.22654,
+      0.54207
+     ],
+     [
+      0.11872,
+      0.49239
+     ],
+     [
+      0.01601,
+      0.42517
+     ],
+     [
+      -0.08,
+      0.34
+     ],
+     [
+      -0.12,
+      0.06
+     ],
+     [
+      0.02,
+      -0.12
+     ],
+     [
+      0.22269,
+      -0.11111
+     ],
+     [
+      0.44481,
+      -0.10222
+     ],
+     [
+      0.6775,
+      -0.09
+     ],
+     [
+      0.91185,
+      -0.07111
+     ],
+     [
+      1.13898,
+      -0.04222
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.75,
+    "to": -0.7,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      0.95
+     ]
+    }
+   },
+   {
+    "id": "bucket-shell",
+    "kind": "extrude",
+    "bone": "bucket",
+    "material": "wear-steel",
+    "role": "body",
+    "tone": 0.4,
+    "region": "attachment",
+    "profile": [
+     [
+      1.3,
+      0.05
+     ],
+     [
+      1.2398,
+      0.1658
+     ],
+     [
+      1.16741,
+      0.26863
+     ],
+     [
+      1.08438,
+      0.35808
+     ],
+     [
+      0.9923,
+      0.43373
+     ],
+     [
+      0.89275,
+      0.49517
+     ],
+     [
+      0.78729,
+      0.54198
+     ],
+     [
+      0.6775,
+      0.57375
+     ],
+     [
+      0.56496,
+      0.59006
+     ],
+     [
+      0.45123,
+      0.59049
+     ],
+     [
+      0.3379,
+      0.57464
+     ],
+     [
+      0.22654,
+      0.54207
+     ],
+     [
+      0.11872,
+      0.49239
+     ],
+     [
+      0.01601,
+      0.42517
+     ],
+     [
+      -0.08,
+      0.34
+     ],
+     [
+      -0.12,
+      0.06
+     ],
+     [
+      0.02,
+      -0.12
+     ],
+     [
+      0.05947,
+      -0.0893
+     ],
+     [
+      -0.07114,
+      0.07062
+     ],
+     [
+      -0.03314,
+      0.32255
+     ],
+     [
+      0.04644,
+      0.38549
+     ],
+     [
+      0.14299,
+      0.44868
+     ],
+     [
+      0.2441,
+      0.49526
+     ],
+     [
+      0.34843,
+      0.52576
+     ],
+     [
+      0.45462,
+      0.54061
+     ],
+     [
+      0.56127,
+      0.54019
+     ],
+     [
+      0.66693,
+      0.52488
+     ],
+     [
+      0.77014,
+      0.49501
+     ],
+     [
+      0.8694,
+      0.45096
+     ],
+     [
+      0.96321,
+      0.39307
+     ],
+     [
+      1.05008,
+      0.3217
+     ],
+     [
+      1.12852,
+      0.2372
+     ],
+     [
+      1.19705,
+      0.13987
+     ],
+     [
+      1.25564,
+      0.02694
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.7,
+    "to": 0.2
+   },
+   {
+    "id": "bucket-floor-lip",
+    "kind": "extrude",
+    "bone": "bucket",
+    "material": "wear-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "attachment",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.02,
+      -0.12
+     ],
+     [
+      1.35,
+      0.0
+     ],
+     [
+      1.35,
+      -0.04
+     ],
+     [
+      0.02,
+      -0.17
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.75,
+    "to": 0.25
+   },
+   {
+    "id": "bucket-tooth",
+    "kind": "extrude",
+    "bone": "bucket",
+    "material": "wear-steel",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "attachment",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      1.3,
+      0.07
+     ],
+     [
+      1.5,
+      -0.03
+     ],
+     [
+      1.28,
+      -0.09
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.72,
+    "to": -0.6,
+    "repeat": {
+     "count": 5,
+     "translation": [
+      0.0,
+      0.0,
+      0.2
+     ]
+    }
+   },
+   {
+    "id": "bucket-rib",
+    "kind": "extrude",
+    "bone": "bucket",
+    "material": "wear-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.28,
+      0.1
+     ],
+     [
+      0.42,
+      0.1
+     ],
+     [
+      0.45,
+      0.57
+     ],
+     [
+      0.3,
+      0.58
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.28,
+    "to": -0.22
+   },
+   {
+    "id": "bucket-pin",
+    "kind": "revolve",
+    "bone": "bucket",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.1
+     ],
+     [
+      1.06,
+      0.1
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.78
+    ]
+   },
+   {
+    "id": "bucket-ear",
+    "kind": "revolve",
+    "bone": "bucket",
+    "material": "track-steel",
+    "role": "detail",
+    "tone": 0.12,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.06
+     ],
+     [
+      0.3,
+      0.06
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.35,
+     0.18,
+     -0.4
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Every moving part is its own solid on the bone that drives it: tracks, sprocket, idler and rollers on the undercarriage; house, cab and counterweight on the slewing bones; boom, stick and bucket as extruded side outlines (Bezier outlines flattened) with pivot bosses and pins on their own bones; three cylinder pairs as barrel and rod cylinders, the barrel at the lateral position of the front view (boom cylinders at z +0.25 and -0.75 around the boom, stick and bucket cylinders on the boom centre line z -0.25).",
+    "de": "Jedes bewegliche Teil ist ein eigener Koerper auf dem Knochen, der es antreibt: Ketten, Kettenrad, Leitrad und Rollen auf dem Unterwagen; Oberwagen, Kabine und Gegengewicht auf den Drehknochen; Ausleger, Stiel und Loeffel als extrudierte Seitenumrisse (Bezier-Umrisse abgeflacht) mit Gelenkbossen und Bolzen auf ihren eigenen Knochen; drei Zylinderpaare als Rohr- und Stangenzylinder, das Rohr an der seitlichen Lage der Vorderansicht (Auslegerzylinder bei z +0,25 und -0,75 um den Ausleger, Stiel- und Loeffelzylinder auf der Auslegermitte z -0,25)."
+   },
+   {
+    "en": "Cylinder rods extend back inside their barrels (0.4 to 0.5 m) so they stay in the barrel over the stroke; the rig's rest pose is not a closed linkage (rod tips do not meet their eyes at rest), the authored poses close it. dimensions describe the stowed default pose; at rest (boom angle 40) the box is larger.",
+    "de": "Zylinderstangen reichen ins Rohr zurueck (0,4 bis 0,5 m), damit sie ueber den Hub im Rohr bleiben; die Ruhelage des Rigs ist kein geschlossenes Gestaenge (Stangenspitzen treffen ihre Augen in Ruhe nicht), die autorisierten Posen schliessen es. dimensions beschreibt die verstaute Standardpose; in Ruhe (Auslegerwinkel 40) ist die Box groesser."
+   },
+   {
+    "en": "The cab (left half, z 0.1 to 1.25) is taller than the hood (right half, to 2.25 m plus rail); the front view draws a 1.97 m high rectangle over the whole width, a union envelope that the 3D does not fill on the right. The bucket is a scoop (two cheeks, a 50 mm back shell, floor lip, rib, five teeth) with the mouth edge of the 2D outline open; the engine block and the seat inside the closed house and cab are not modelled.",
+    "de": "Die Kabine (linke Haelfte, z 0,1 bis 1,25) ist hoeher als die Haube (rechte Haelfte, bis 2,25 m plus Gelaender); die Vorderansicht zeichnet ein 1,97 m hohes Rechteck ueber die ganze Breite, eine Huellkurve, die das 3D rechts nicht fuellt. Der Loeffel ist eine Schaufel (zwei Wangen, 50 mm Rueckenschale, Bodenlippe, Rippe, fuenf Zaehne) mit offener Muendungskante des 2D-Umrisses; Motorblock und Sitz im geschlossenen Oberwagen und in der Kabine sind nicht modelliert."
+   }
+  ]
+ }
+}

@@ -1,0 +1,548 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "post-l",
+    "kind": "box",
+    "bone": "post-l",
+    "material": "timber-c24",
+    "role": "body",
+    "tone": 0.35,
+    "region": "trellis-timber",
+    "size": [
+     0.09,
+     2.1,
+     0.1
+    ],
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      1.05,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "shoe-l",
+    "kind": "box",
+    "bone": "post-l",
+    "material": "steel-s235",
+    "role": "body",
+    "tone": 0.15,
+    "region": "post-shoes",
+    "size": [
+     0.11,
+     0.28,
+     0.13
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.14,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "post-r",
+    "kind": "box",
+    "bone": "post-r",
+    "material": "timber-c24",
+    "role": "body",
+    "tone": 0.35,
+    "region": "trellis-timber",
+    "size": [
+     0.09,
+     2.1,
+     0.1
+    ],
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      1.05,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "shoe-r",
+    "kind": "box",
+    "bone": "post-r",
+    "material": "steel-s235",
+    "role": "body",
+    "tone": 0.15,
+    "region": "post-shoes",
+    "size": [
+     0.11,
+     0.28,
+     0.13
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.14,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "rail-top",
+    "kind": "box",
+    "bone": "panel",
+    "material": "timber-c24",
+    "role": "body",
+    "tone": 0.35,
+    "region": "trellis-timber",
+    "size": [
+     1.8,
+     0.07,
+     0.07
+    ],
+    "transform": {
+     "translation": [
+      0.9,
+      1.615,
+      0
+     ]
+    }
+   },
+   {
+    "id": "rail-bottom",
+    "kind": "box",
+    "bone": "panel",
+    "material": "timber-c24",
+    "role": "body",
+    "tone": 0.35,
+    "region": "trellis-timber",
+    "size": [
+     1.8,
+     0.07,
+     0.07
+    ],
+    "transform": {
+     "translation": [
+      0.9,
+      0.035,
+      0
+     ]
+    }
+   },
+   {
+    "id": "batten-h-0",
+    "kind": "box",
+    "bone": "panel",
+    "material": "timber-c24",
+    "role": "body",
+    "tone": 0.4,
+    "region": "trellis-timber",
+    "size": [
+     1.8,
+     0.02,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.9,
+      0.17,
+      0
+     ]
+    }
+   },
+   {
+    "id": "batten-h-1",
+    "kind": "box",
+    "bone": "panel",
+    "material": "timber-c24",
+    "role": "body",
+    "tone": 0.4,
+    "region": "trellis-timber",
+    "size": [
+     1.8,
+     0.02,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.9,
+      0.31,
+      0
+     ]
+    }
+   },
+   {
+    "id": "batten-v",
+    "kind": "box",
+    "bone": "panel",
+    "material": "timber-c24",
+    "role": "body",
+    "tone": 0.4,
+    "region": "trellis-timber",
+    "size": [
+     0.02,
+     0.32,
+     0.05
+    ],
+    "transform": {
+     "translation": [
+      0.2,
+      0.23,
+      0
+     ]
+    },
+    "repeat": {
+     "count": 8,
+     "translation": [
+      0.2,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "stem-1",
+    "kind": "capsule",
+    "bone": "stem-1",
+    "material": "ivy-stem",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "stems",
+    "p0": [
+     0.05,
+     0,
+     0.02
+    ],
+    "p1": [
+     1.9,
+     -0.02,
+     0.02
+    ],
+    "r0": 0.014,
+    "r1": 0.01
+   },
+   {
+    "id": "mat-1-lo",
+    "kind": "box",
+    "bone": "fol-1-lo",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.65,
+    "region": "leaves-lower",
+    "size": [
+     0.6494,
+     0.548,
+     0.191
+    ],
+    "cornerRadius": 0.09359,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2211,
+      -0.12125,
+      -0.0009
+     ]
+    }
+   },
+   {
+    "id": "mat-1-hi",
+    "kind": "box",
+    "bone": "fol-1-hi",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "leaves-upper",
+    "size": [
+     0.6743,
+     0.776,
+     0.2454
+    ],
+    "cornerRadius": 0.12025,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2352,
+      -0.1227,
+      -0.0026
+     ]
+    }
+   },
+   {
+    "id": "stem-2",
+    "kind": "capsule",
+    "bone": "stem-2",
+    "material": "ivy-stem",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "stems",
+    "p0": [
+     0.05,
+     0,
+     0.02
+    ],
+    "p1": [
+     1.95,
+     -0.02,
+     0.02
+    ],
+    "r0": 0.014,
+    "r1": 0.01
+   },
+   {
+    "id": "mat-2-lo",
+    "kind": "box",
+    "bone": "fol-2-lo",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.65,
+    "region": "leaves-lower",
+    "size": [
+     0.7145,
+     0.636,
+     0.1936
+    ],
+    "cornerRadius": 0.09486,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2479,
+      -0.05555,
+      -0.001
+     ]
+    }
+   },
+   {
+    "id": "mat-2-hi",
+    "kind": "box",
+    "bone": "fol-2-hi",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "leaves-upper",
+    "size": [
+     0.7428,
+     0.768,
+     0.2436
+    ],
+    "cornerRadius": 0.11936,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2309,
+      -0.056,
+      -0.0013
+     ]
+    }
+   },
+   {
+    "id": "stem-3",
+    "kind": "capsule",
+    "bone": "stem-3",
+    "material": "ivy-stem",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "stems",
+    "p0": [
+     0.05,
+     0,
+     0.02
+    ],
+    "p1": [
+     1.95,
+     -0.02,
+     0.02
+    ],
+    "r0": 0.014,
+    "r1": 0.01
+   },
+   {
+    "id": "mat-3-lo",
+    "kind": "box",
+    "bone": "fol-3-lo",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.65,
+    "region": "leaves-lower",
+    "size": [
+     0.72295,
+     0.72,
+     0.1951
+    ],
+    "cornerRadius": 0.0956,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2829,
+      -0.03732,
+      -0.00065
+     ]
+    }
+   },
+   {
+    "id": "mat-3-hi",
+    "kind": "box",
+    "bone": "fol-3-hi",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "leaves-upper",
+    "size": [
+     0.74495,
+     0.772,
+     0.2403
+    ],
+    "cornerRadius": 0.11775,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2384,
+      -0.04187,
+      -0.00195
+     ]
+    }
+   },
+   {
+    "id": "stem-4",
+    "kind": "capsule",
+    "bone": "stem-4",
+    "material": "ivy-stem",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "stems",
+    "p0": [
+     0.05,
+     0,
+     0.02
+    ],
+    "p1": [
+     1.85,
+     -0.02,
+     0.02
+    ],
+    "r0": 0.014,
+    "r1": 0.01
+   },
+   {
+    "id": "mat-4-lo",
+    "kind": "box",
+    "bone": "fol-4-lo",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.65,
+    "region": "leaves-lower",
+    "size": [
+     0.6623,
+     0.636,
+     0.1939
+    ],
+    "cornerRadius": 0.09501,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2461,
+      0.0043,
+      0.00185
+     ]
+    }
+   },
+   {
+    "id": "mat-4-hi",
+    "kind": "box",
+    "bone": "fol-4-hi",
+    "material": "ivy-leaf",
+    "role": "body",
+    "tone": 0.5,
+    "region": "leaves-upper",
+    "size": [
+     0.6776,
+     0.716,
+     0.2436
+    ],
+    "cornerRadius": 0.11936,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      -0.70711,
+      0.70711
+     ],
+     "translation": [
+      0.2045,
+      0.00565,
+      0.0029
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Posts, shoes, rails and battens are boxes of the authored sizes; the eight vertical battens are one box with a repeat of 0.2 m, the horizontal ones two boxes. The panel is 0.05 to 0.07 m deep as the plan view draws it.",
+    "de": "Pfosten, Schuhe, Riegel und Latten sind Boxen in den gezeichneten Größen; die acht senkrechten Latten sind eine Box mit Wiederholung im Abstand 0,2 m, die waagerechten zwei Boxen. Das Gitter ist 0,05 bis 0,07 m tief wie in der Draufsicht gezeichnet."
+   },
+   {
+    "en": "The ivy is four climbing stems (thin capsules) and per stem a lower and an upper leaf mat, each a rounded box as wide and tall as its elevation outline and as thick as its plan outline (0.19 to 0.24 m, centred on the trellis); individual leaves are not modelled.",
+    "de": "Der Efeu besteht aus vier kletternden Trieben (dünne Kapseln) und je Trieb einer unteren und oberen Blattmatte, jeweils eine gerundete Box so breit und hoch wie ihr Umriss in der Ansicht und so dick wie ihr Umriss in der Draufsicht (0,19 bis 0,24 m, mittig am Gitter); einzelne Blätter sind nicht modelliert."
+   }
+  ]
+ }
+}

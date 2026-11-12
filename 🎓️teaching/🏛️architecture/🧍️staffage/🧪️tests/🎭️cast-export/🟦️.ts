@@ -94,7 +94,7 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
   it("thins a long transient to 600 evenly spaced samples and writes repeated frames once", async () => {
     const out = mkdtempSync(join(tmpdir(), "staffage-thin-"));
     try {
-      const manifest = { version: 1, casts: { toast: { asset: "toaster", clip: "toast-cycle", view: "thermal", environment: "indoor-heated-winter", theme: "dark", viewpoint: "elevation" } } } as unknown as CastManifest;
+      const manifest = { version: 1, casts: { toast: { asset: "toaster", clip: "toast-cycle", view: "thermal", environment: "indoor-heated-winter", theme: "dark", viewpoint: "elevation", scale: 50, fps: 15 } } } as unknown as CastManifest;
       const [index] = await exportCast(manifest, ["toast"], out);
       expect(index!.frames).toHaveLength(600);
       expect(index!.fps).toBeCloseTo(599 / index!.durationS, 9);
@@ -107,7 +107,7 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
   it("thins a long pose timeline to 600 samples that end exactly on the last key time", async () => {
     const out = mkdtempSync(join(tmpdir(), "staffage-thin-timeline-"));
     try {
-      const manifest = { version: 1, casts: { slow: { asset: "panel-radiator", pose: "comfort", view: "thermal", theme: "dark", viewpoint: "elevation", fps: 15, timeline: [{ t: 0, environment: "office-neutral" }, { t: 100, environment: "summer-hot-sun" }] } } } as unknown as CastManifest;
+      const manifest = { version: 1, casts: { slow: { asset: "panel-radiator", pose: "comfort", view: "thermal", theme: "dark", viewpoint: "elevation", fps: 15, timeline: [{ t: 0, environment: "office-neutral", ease: "linear" }, { t: 100, environment: "summer-hot-sun", ease: "linear" }], scale: 50 } } } as unknown as CastManifest;
       const [index] = await exportCast(manifest, ["slow"], out);
       expect(index!.durationS).toBe(100);
       expect(index!.loop).toBe(false);
@@ -216,8 +216,9 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
   it("develops the air before the first frame of a looping transport cast, bounds the figure alone and thickens the pathlines", async () => {
     const out = mkdtempSync(join(tmpdir(), "staffage-air-"));
     try {
-      const base = { asset: "standing-adult", clip: "idle-breathing", view: "thermal", environment: "office-still", theme: "dark", viewpoint: "elevation", transport: ["pathlines"], fps: 2 };
-      const manifest = { version: 1, casts: { cold: base, warm: { ...base, transportAgeS: 5, transportStrokeMm: 0.3 } } } as unknown as CastManifest;
+      const base = { asset: "standing-adult", clip: "idle-breathing", view: "thermal", environment: "office-still", theme: "dark", viewpoint: "elevation", transport: ["pathlines"], fps: 2, scale: 50 };
+      const manifest = { version: 1, casts: { cold: { ...base, transportAgeS: 0.001, transportStrokeMm: 0.3 }, warm: { ...base, transportAgeS: 5, transportStrokeMm: 0.3 } } } as unknown as CastManifest;
+      await expect(exportCast({ version: 1, casts: { undeveloped: base } } as unknown as CastManifest, ["undeveloped"], out)).rejects.toThrow("transport layers need transportAgeS");
       await exportCast(manifest, ["cold", "warm"], out);
       const lines = (id: string, frame: number): string[] => [...new JSDOM(svgOf(out, id, read(out, id).frames[frame]!), { contentType: "image/svg+xml" }).window.document.querySelectorAll("g[id^='pathline']")].map((g) => g.querySelector("path")?.getAttribute("stroke-width") ?? "");
       expect(lines("cold", 0)).toHaveLength(0);
@@ -248,7 +249,7 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
   });
 
   it("never writes a NaN into a frame of a thermal clip with a coupled wall", async () => {
-    const manifest = { version: 1, casts: { kettle: { asset: "electric-kettle", clip: "boil", view: "thermal", environment: "office-neutral", theme: "dark", viewpoint: "elevation", thermalSpanK: 78 } } } as unknown as CastManifest;
+    const manifest = { version: 1, casts: { kettle: { asset: "electric-kettle", clip: "boil", view: "thermal", environment: "office-neutral", theme: "dark", viewpoint: "elevation", thermalSpanK: 78, scale: 50, fps: 5 } } } as unknown as CastManifest;
     await withScratch(async (directory) => {
       const [index] = await exportCast(manifest, ["kettle"], directory);
       expect(index!.frames.length).toBeGreaterThan(1);

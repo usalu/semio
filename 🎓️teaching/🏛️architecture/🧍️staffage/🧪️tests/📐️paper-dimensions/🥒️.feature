@@ -6,7 +6,7 @@ Feature: Paper dimensions of staffage
     When the scene is written as SVG
     Then the figure path spans <millimetres> mm in user units
     And the SVG width in millimetres equals the scene width
-    And librsvg renders the figure element <millimetres> mm times 10 pixels per mm within 1 pixel
+    And MuPDF renders the figure element <millimetres> mm times 10 pixels per mm within 1 pixel (pixels at least half covered)
 
     Examples:
       | denominator | millimetres |

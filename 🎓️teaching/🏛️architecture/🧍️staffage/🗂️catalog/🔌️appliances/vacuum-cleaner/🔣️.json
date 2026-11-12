@@ -7066,7 +7066,6 @@
           "operatingKey": "motor",
           "volumeFlowM3S": 0.03,
           "temperatureRiseK": 15,
-          "vapourKgPerKg": 0,
           "source": "authored-estimate",
           "reference": "en-60312"
         }
@@ -7098,6 +7097,792 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "shell",
+          "kind": "loft",
+          "bone": "body",
+          "material": "abs-red",
+          "role": "body",
+          "tone": 0.5,
+          "region": "body-shell",
+          "sections": [
+            {
+              "at": [0.0, 0.045, 0],
+              "rx": 0.08,
+              "ry": 0.215,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00081, 0.05, 0],
+              "rx": 0.10144,
+              "ry": 0.23142,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.0015, 0.058, 0],
+              "rx": 0.11336,
+              "ry": 0.24088,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00241, 0.07, 0],
+              "rx": 0.12307,
+              "ry": 0.24877,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00362, 0.085, 0],
+              "rx": 0.12899,
+              "ry": 0.25434,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.005, 0.1, 0],
+              "rx": 0.13,
+              "ry": 0.257,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.005, 0.12, 0],
+              "rx": 0.13,
+              "ry": 0.257,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00422, 0.15, 0],
+              "rx": 0.13,
+              "ry": 0.25622,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.00049, 0.17, 0],
+              "rx": 0.13,
+              "ry": 0.25151,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.0037, 0.18, 0],
+              "rx": 0.12816,
+              "ry": 0.24681,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.00655, 0.19, 0],
+              "rx": 0.12222,
+              "ry": 0.23815,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.00882, 0.197, 0],
+              "rx": 0.11286,
+              "ry": 0.22578,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.009, 0.2, 0],
+              "rx": 0.1,
+              "ry": 0.209,
+              "exponent": 6,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "lid",
+          "kind": "loft",
+          "bone": "body",
+          "material": "abs-red",
+          "role": "body",
+          "tone": 0.62,
+          "region": "lid",
+          "maxDenominator": 100,
+          "sections": [
+            {
+              "at": [0.009, 0.2, 0],
+              "rx": 0.12,
+              "ry": 0.249,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00781, 0.21, 0],
+              "rx": 0.11878,
+              "ry": 0.24669,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00666, 0.22, 0],
+              "rx": 0.11539,
+              "ry": 0.24304,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00543, 0.23, 0],
+              "rx": 0.10908,
+              "ry": 0.23745,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00342, 0.24, 0],
+              "rx": 0.09932,
+              "ry": 0.2285,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [0.00075, 0.25, 0],
+              "rx": 0.08429,
+              "ry": 0.21476,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.00273, 0.258, 0],
+              "rx": 0.06579,
+              "ry": 0.19742,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.00771, 0.264, 0],
+              "rx": 0.04307,
+              "ry": 0.17482,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            },
+            {
+              "at": [-0.02, 0.268, 0],
+              "rx": 0.004,
+              "ry": 0.13,
+              "exponent": 5,
+              "rotation": [-0.5, -0.5, -0.5, 0.5]
+            }
+          ],
+          "capStart": true,
+          "capEnd": true
+        },
+        {
+          "id": "handle",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "abs-red",
+          "role": "body",
+          "tone": 0.62,
+          "region": "lid",
+          "maxDenominator": 100,
+          "profile": [
+            [-0.07, 0.266],
+            [-0.058, 0.296],
+            [-0.05575, 0.30036],
+            [-0.052, 0.30313],
+            [-0.04675, 0.30458],
+            [-0.04, 0.305],
+            [0.06, 0.305],
+            [0.06675, 0.30458],
+            [0.072, 0.30312],
+            [0.07575, 0.30036],
+            [0.078, 0.296],
+            [0.09, 0.266]
+          ],
+          "plane": "xy",
+          "from": -0.04,
+          "to": 0.04,
+          "holes": [
+            [
+              [0.043, 0.275],
+              [0.04568, 0.27553],
+              [0.04795, 0.27705],
+              [0.04947, 0.27932],
+              [0.05, 0.282],
+              [0.05, 0.284],
+              [0.04947, 0.28668],
+              [0.04795, 0.28895],
+              [0.04568, 0.29047],
+              [0.043, 0.291],
+              [-0.033, 0.291],
+              [-0.03568, 0.29047],
+              [-0.03795, 0.28895],
+              [-0.03947, 0.28668],
+              [-0.04, 0.284],
+              [-0.04, 0.282],
+              [-0.03947, 0.27932],
+              [-0.03795, 0.27705],
+              [-0.03568, 0.27553],
+              [-0.033, 0.275]
+            ]
+          ]
+        },
+        {
+          "id": "rewind-button",
+          "kind": "ellipsoid",
+          "bone": "body",
+          "material": "abs-grey",
+          "role": "detail",
+          "tone": 0.8,
+          "region": "lid",
+          "maxDenominator": 50,
+          "radii": [0.014, 0.007, 0.014],
+          "transform": {
+            "translation": [0.175, 0.256, 0]
+          }
+        },
+        {
+          "id": "exhaust-grille",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.25,
+          "region": "exhaust",
+          "maxDenominator": 100,
+          "size": [0.02, 0.1, 0.18],
+          "cornerRadius": 0.005,
+          "transform": {
+            "translation": [-0.252, 0.14, 0]
+          }
+        },
+        {
+          "id": "front-bumper",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.25,
+          "region": "body-shell",
+          "maxDenominator": 50,
+          "size": [0.02, 0.1, 0.1],
+          "cornerRadius": 0.008,
+          "transform": {
+            "translation": [0.255, 0.11, 0]
+          }
+        },
+        {
+          "id": "rear-wheel",
+          "kind": "revolve",
+          "bone": "wheel",
+          "material": "rubber-wheel",
+          "role": "body",
+          "tone": 0.2,
+          "region": "wheels",
+          "profile": [[-0.015, 0.05], [-0.0125, 0.058], [-0.007, 0.06], [0.007, 0.06], [0.0125, 0.058], [0.015, 0.05]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [0, 0, 0.135]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.27]
+          }
+        },
+        {
+          "id": "rear-hub",
+          "kind": "revolve",
+          "bone": "wheel",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.75,
+          "region": "wheels",
+          "maxDenominator": 100,
+          "profile": [[-0.0195, 0.026], [0.0195, 0.026]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [0, 0, 0.135]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.27]
+          }
+        },
+        {
+          "id": "caster-wheel",
+          "kind": "revolve",
+          "bone": "caster",
+          "material": "rubber-wheel",
+          "role": "body",
+          "tone": 0.2,
+          "region": "wheels",
+          "maxDenominator": 100,
+          "profile": [[-0.01, 0.015], [-0.0075, 0.023], [-0.002, 0.025], [0.002, 0.025], [0.0075, 0.023], [0.01, 0.015]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [0, 0, 0.05]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.1]
+          }
+        },
+        {
+          "id": "caster-hub",
+          "kind": "revolve",
+          "bone": "caster",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.7,
+          "region": "wheels",
+          "maxDenominator": 50,
+          "profile": [[-0.0125, 0.009], [0.0125, 0.009]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0],
+          "transform": {
+            "translation": [0, 0, 0.05]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.1]
+          }
+        },
+        {
+          "id": "hose-1-tube",
+          "kind": "capsule",
+          "bone": "hose-1",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-1-rib",
+          "kind": "revolve",
+          "bone": "hose-1",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-2-tube",
+          "kind": "capsule",
+          "bone": "hose-2",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-2-rib",
+          "kind": "revolve",
+          "bone": "hose-2",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-3-tube",
+          "kind": "capsule",
+          "bone": "hose-3",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-3-rib",
+          "kind": "revolve",
+          "bone": "hose-3",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-4-tube",
+          "kind": "capsule",
+          "bone": "hose-4",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-4-rib",
+          "kind": "revolve",
+          "bone": "hose-4",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-5-tube",
+          "kind": "capsule",
+          "bone": "hose-5",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-5-rib",
+          "kind": "revolve",
+          "bone": "hose-5",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-6-tube",
+          "kind": "capsule",
+          "bone": "hose-6",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-6-rib",
+          "kind": "revolve",
+          "bone": "hose-6",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-7-tube",
+          "kind": "capsule",
+          "bone": "hose-7",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-7-rib",
+          "kind": "revolve",
+          "bone": "hose-7",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-8-tube",
+          "kind": "capsule",
+          "bone": "hose-8",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-8-rib",
+          "kind": "revolve",
+          "bone": "hose-8",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-9-tube",
+          "kind": "capsule",
+          "bone": "hose-9",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-9-rib",
+          "kind": "revolve",
+          "bone": "hose-9",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "hose-10-tube",
+          "kind": "capsule",
+          "bone": "hose-10",
+          "material": "hose-pvc",
+          "role": "body",
+          "tone": 0.35,
+          "region": "hose",
+          "p0": [0, 0, 0],
+          "p1": [0.11, 0, 0],
+          "r0": 0.019,
+          "r1": 0.019
+        },
+        {
+          "id": "hose-10-rib",
+          "kind": "revolve",
+          "bone": "hose-10",
+          "material": "hose-pvc",
+          "role": "texture",
+          "tone": 0.15,
+          "region": "hose",
+          "maxDenominator": 50,
+          "profile": [[0.027, 0.0215], [0.033, 0.0215]],
+          "axis": [1, 0, 0],
+          "origin": [0, 0, 0],
+          "repeat": {
+            "count": 2,
+            "translation": [0.05, 0, 0]
+          }
+        },
+        {
+          "id": "cuff",
+          "kind": "capsule",
+          "bone": "hose-1",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.25,
+          "region": "hose",
+          "maxDenominator": 100,
+          "p0": [-0.03, 0, 0],
+          "p1": [0.012, 0, 0],
+          "r0": 0.026,
+          "r1": 0.026
+        },
+        {
+          "id": "grip-sleeve",
+          "kind": "capsule",
+          "bone": "grip",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.3,
+          "region": "grip",
+          "p0": [0, 0, 0],
+          "p1": [0.14, 0, 0],
+          "r0": 0.026,
+          "r1": 0.026
+        },
+        {
+          "id": "air-slide",
+          "kind": "ellipsoid",
+          "bone": "grip",
+          "material": "abs-grey",
+          "role": "detail",
+          "tone": 0.7,
+          "region": "grip",
+          "maxDenominator": 50,
+          "radii": [0.014, 0.007, 0.012],
+          "transform": {
+            "translation": [0.06, 0.026, 0]
+          }
+        },
+        {
+          "id": "wand-tube",
+          "kind": "capsule",
+          "bone": "wand",
+          "material": "tube-steel",
+          "role": "body",
+          "tone": 0.8,
+          "region": "wand",
+          "p0": [0, 0, 0],
+          "p1": [0.78, 0, 0],
+          "r0": 0.0175,
+          "r1": 0.0175
+        },
+        {
+          "id": "nozzle",
+          "kind": "extrude",
+          "bone": "nozzle",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.45,
+          "region": "nozzle",
+          "profile": [
+            [-0.09, -0.045],
+            [0.17, -0.045],
+            [0.17945, -0.04328],
+            [0.18562, -0.03875],
+            [0.18898, -0.03234],
+            [0.19, -0.025],
+            [0.19, -0.005],
+            [0.18828, 0.00192],
+            [0.18375, 0.00762],
+            [0.17734, 0.01202],
+            [0.17, 0.015],
+            [0.06, 0.028],
+            [0.035, 0.05],
+            [-0.035, 0.05],
+            [-0.06, 0.022],
+            [-0.09, -0.01]
+          ],
+          "plane": "xy",
+          "from": -0.14,
+          "to": 0.14
+        },
+        {
+          "id": "swivel",
+          "kind": "ellipsoid",
+          "bone": "nozzle",
+          "material": "abs-grey",
+          "role": "body",
+          "tone": 0.5,
+          "region": "nozzle",
+          "maxDenominator": 50,
+          "radii": [0.028, 0.028, 0.028],
+          "transform": {
+            "translation": [0, 0, 0]
+          }
+        },
+        {
+          "id": "brush",
+          "kind": "box",
+          "bone": "nozzle",
+          "material": "nylon-bristle",
+          "role": "body",
+          "tone": 0.15,
+          "region": "brush",
+          "maxDenominator": 100,
+          "size": [0.18, 0.0125, 0.28],
+          "transform": {
+            "translation": [0.09, -0.03925, 0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The dimensions (1.5 x 0.76 x 0.3 m) describe a posed state (the parked pose folds hose, grip and wand), whereas the rig rest and the authored 1:50 shapes are the straight chain: hose segments, grip, wand and nozzle in a line along x. At rest the volume is therefore about 2.6 m long and 0.305 m high and misses the x and y bounding-box gates by construction; the silhouette gates are met against the authored rest shapes.",
+          "de": "Die Abmessungen (1,5 x 0,76 x 0,3 m) beschreiben einen Posenzustand (die Parkpose faltet Schlauch, Griff und Rohr), während Ruhelage des Gerüsts und die gezeichneten 1:50-Formen die gestreckte Kette sind: Schlauchglieder, Griff, Rohr und Düse in einer Linie entlang x. In Ruhe ist das Volumen daher etwa 2,6 m lang und 0,305 m hoch und verfehlt die Hüllquader-Grenzen in x und y systembedingt; die Silhouettengrenzen werden gegen die gezeichneten Ruheformen erfüllt."
+        },
+        {
+          "en": "Shell and lid are lofts of superelliptic sections whose x range comes from the elevation outline and whose half width comes from the front outline (exponents 6 and 5 give the rounded plan corners); the carrying handle is the extrusion of its outline with a through opening; wheels and casters are revolves about the lateral axis in pairs (one solid repeated across z).",
+          "de": "Gehäuse und Deckel sind Lofts aus superelliptischen Schnitten, deren x-Bereich der Seitenansichtskontur und deren halbe Breite der Vorderansichtskontur entnommen ist (die Exponenten 6 und 5 ergeben die gerundeten Grundrissecken); der Tragegriff ist die Extrusion seiner Kontur mit durchgehender Öffnung; Räder und Rollen sind Rotationskörper um die Querachse paarweise (ein über z wiederholter Körper)."
+        },
+        {
+          "en": "Each of the ten hose segments is a capsule on its own bone with one repeated pair of rib collars (texture, 1:50 only); the nozzle is the elevation outline extruded across 0.28 m with a ball swivel and a bristle strip proud by 0.5 mm; the exhaust grille width (0.18 m) is an estimate, its louvre lines and the wand joint line are not modelled.",
+          "de": "Jedes der zehn Schlauchglieder ist eine Kapsel an einem eigenen Knochen mit einem wiederholten Paar Rippenringe (Textur, nur 1:50); die Düse ist die Seitenansichtskontur über 0,28 m extrudiert mit Kugelgelenk und 0,5 mm überstehendem Borstenstreifen; die Breite des Abluftgitters (0,18 m) ist geschätzt, seine Lamellenlinien und die Rohrfugenlinie werden nicht modelliert."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "running",
       "defaultClip": "floor-stroke",
@@ -7111,7 +7896,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

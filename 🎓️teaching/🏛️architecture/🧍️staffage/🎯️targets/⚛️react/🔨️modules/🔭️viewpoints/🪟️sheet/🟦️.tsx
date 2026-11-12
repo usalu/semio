@@ -8,7 +8,7 @@
  */
 import { useId, useMemo, type ReactElement } from "react";
 import { CSS_PX_PER_MM, formatNumber, mmPerMetre } from "@teaching/staffage";
-import type { Asset, DrawingScale, EvaluationQuery, Language, Viewpoint, View } from "@teaching/staffage";
+import type { Asset, DrawingScale, EvaluationQuery, Language, PlanarViewpoint, View } from "@teaching/staffage";
 import type { StaffageClock } from "../../⏱️clock/🧱️core/🟦️.ts";
 import { StaffageFigure, type StaffageFigureProps } from "../../🧍️figure/🟦️.tsx";
 import { useSize } from "../../🥞️levels/🟦️.tsx";
@@ -30,19 +30,19 @@ export type ThreeViewSheetProps = {
   readonly language: Language;
   readonly sheet: Sheet;
   readonly zoom: number;
-  readonly focus: Viewpoint;
-  readonly onFocus?: (viewpoint: Viewpoint) => void;
+  readonly focus: PlanarViewpoint;
+  readonly onFocus?: (viewpoint: PlanarViewpoint) => void;
   readonly onEvaluated?: StaffageFigureProps["onEvaluated"];
   readonly figure?: SheetFigureOptions;
   readonly className?: string;
 };
 
-/** 🪟️ Draws the given sheet at a zoom. */
+/** 🔭️ Draws the given sheet at a zoom. */
 export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
   const { asset, language, sheet, zoom, focus, onFocus, onEvaluated } = props;
   const { layout, resolutions } = sheet;
   const mm = (value: number): string => `${value * zoom}mm`;
-  const column = (viewpoint: Viewpoint): number => layout.cells[viewpoint].column;
+  const column = (viewpoint: PlanarViewpoint): number => layout.cells[viewpoint].column;
   const helpId = useId();
   const missing = SHEET_ORDER.filter((viewpoint) => !resolutions[viewpoint].available).map((viewpoint) => VIEWPOINT_PHRASES[viewpoint][language]);
   return (
@@ -127,10 +127,10 @@ export function ThreeViewSheet(props: ThreeViewSheetProps): ReactElement {
   );
 }
 
-/** ⚙️ The props of {@link StaffageViews}. */
-export type StaffageViewsProps = Omit<ThreeViewSheetProps, "sheet" | "zoom" | "focus" | "scale"> & { readonly scale: DrawingScale; readonly zoom?: "fit" | number; readonly focus?: Viewpoint };
+/** 📏️ The props of {@link StaffageViews}. */
+export type StaffageViewsProps = Omit<ThreeViewSheetProps, "sheet" | "zoom" | "focus" | "scale"> & { readonly scale: DrawingScale; readonly zoom?: "fit" | number; readonly focus?: PlanarViewpoint };
 
-/** 🪟️ The reusable three-view component: finds the layout of the asset at the scale and shows the aligned sheet. `zoom` is a number (1 = print size on screen) or `"fit"` to the parent box; either way all three views share it. */
+/** 📐️ The reusable three-view component: finds the layout of the asset at the scale and shows the aligned sheet. `zoom` is a number (1 = print size on screen) or `"fit"` to the parent box; either way all three views share it. */
 export function StaffageViews(props: StaffageViewsProps): ReactElement {
   const { asset, language, view, scale, zoom = "fit" } = props;
   const [attach, size] = useSize({ width: 800, height: 600 });

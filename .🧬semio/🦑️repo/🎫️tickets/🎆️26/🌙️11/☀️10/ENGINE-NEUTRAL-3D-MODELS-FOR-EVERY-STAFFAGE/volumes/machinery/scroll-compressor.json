@@ -1,0 +1,745 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "feet",
+    "kind": "box",
+    "bone": "shell",
+    "material": "steel-shell",
+    "role": "body",
+    "tone": 0.4,
+    "region": "feet",
+    "maxDenominator": 50,
+    "size": [
+     0.28,
+     0.03,
+     0.28
+    ],
+    "cornerRadius": 0.008,
+    "transform": {
+     "translation": [
+      0.0,
+      0.015,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "shell",
+    "kind": "revolve",
+    "bone": "shell",
+    "material": "steel-shell",
+    "role": "body",
+    "tone": 0.5,
+    "region": "shell",
+    "profile": [
+     [
+      0.0,
+      0.1
+     ],
+     [
+      0.31,
+      0.1
+     ]
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "origin": [
+     0.0,
+     0.03,
+     0.0
+    ]
+   },
+   {
+    "id": "dome",
+    "kind": "revolve",
+    "bone": "dome",
+    "material": "steel-shell",
+    "role": "body",
+    "tone": 0.7,
+    "region": "dome",
+    "profile": [
+     [
+      0.0,
+      0.1
+     ],
+     [
+      0.01464,
+      0.09775
+     ],
+     [
+      0.02709,
+      0.09141
+     ],
+     [
+      0.03744,
+      0.08154
+     ],
+     [
+      0.04575,
+      0.06875
+     ],
+     [
+      0.05209,
+      0.05361
+     ],
+     [
+      0.05653,
+      0.03672
+     ],
+     [
+      0.05914,
+      0.01865
+     ],
+     [
+      0.06,
+      0.0
+     ]
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   {
+    "id": "discharge-stub",
+    "kind": "revolve",
+    "bone": "dome",
+    "material": "copper",
+    "role": "body",
+    "tone": 0.7,
+    "region": "discharge",
+    "profile": [
+     [
+      0.0,
+      0.014
+     ],
+     [
+      0.032,
+      0.014
+     ]
+    ],
+    "axis": [
+     0.0,
+     1.0,
+     0.0
+    ],
+    "origin": [
+     0.0,
+     0.058,
+     0.0
+    ]
+   },
+   {
+    "id": "suction-stub",
+    "kind": "revolve",
+    "bone": "shell",
+    "material": "copper",
+    "role": "body",
+    "tone": 0.2,
+    "region": "suction",
+    "profile": [
+     [
+      0.0,
+      0.013
+     ],
+     [
+      0.052,
+      0.013
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     -0.15,
+     0.213,
+     0.0
+    ]
+   },
+   {
+    "id": "terminal",
+    "kind": "box",
+    "bone": "terminal",
+    "material": "pa-plastic",
+    "role": "body",
+    "tone": 0.3,
+    "region": "terminal",
+    "size": [
+     0.04,
+     0.06,
+     0.055
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.02,
+      0.03,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "sight-ring",
+    "kind": "revolve",
+    "bone": "shell",
+    "material": "steel-shell",
+    "role": "body",
+    "tone": 0.3,
+    "region": "shell",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.05
+     ],
+     [
+      0.008,
+      0.05
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     -1.0
+    ],
+    "origin": [
+     0.0,
+     0.18,
+     -0.1
+    ]
+   },
+   {
+    "id": "scroll-disc",
+    "kind": "revolve",
+    "bone": "rotor",
+    "material": "cast-aluminium",
+    "role": "glazing",
+    "tone": 0.8,
+    "region": "scroll",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.04
+     ],
+     [
+      0.004,
+      0.04
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.106
+    ]
+   },
+   {
+    "id": "spiral",
+    "kind": "loft",
+    "bone": "rotor",
+    "material": "cast-aluminium",
+    "role": "detail",
+    "tone": 0.1,
+    "region": "scroll",
+    "maxDenominator": 100,
+    "sections": [
+     {
+      "at": [
+       0.006,
+       0.0,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.57639,
+       0.40961,
+       0.57639,
+       -0.40961
+      ]
+     },
+     {
+      "at": [
+       0.0067,
+       0.00201,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.53675,
+       0.46033,
+       0.53675,
+       -0.46033
+      ]
+     },
+     {
+      "at": [
+       0.00668,
+       0.00441,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.45098,
+       -0.54463,
+       -0.45098,
+       0.54463
+      ]
+     },
+     {
+      "at": [
+       0.00577,
+       0.00691,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.3543,
+       -0.61194,
+       -0.3543,
+       0.61194
+      ]
+     },
+     {
+      "at": [
+       0.00393,
+       0.0092,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.25066,
+       -0.66119,
+       -0.25066,
+       0.66119
+      ]
+     },
+     {
+      "at": [
+       0.00123,
+       0.01093,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.14259,
+       -0.69258,
+       -0.14259,
+       0.69258
+      ]
+     },
+     {
+      "at": [
+       -0.00214,
+       0.01181,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.03213,
+       -0.70638,
+       -0.03213,
+       0.70638
+      ]
+     },
+     {
+      "at": [
+       -0.0059,
+       0.01158,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.0779,
+       -0.7028,
+       0.0779,
+       0.7028
+      ]
+     },
+     {
+      "at": [
+       -0.00967,
+       0.01012,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.18487,
+       -0.68251,
+       0.18487,
+       0.68251
+      ]
+     },
+     {
+      "at": [
+       -0.01305,
+       0.0074,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.28697,
+       -0.64626,
+       0.28697,
+       0.64626
+      ]
+     },
+     {
+      "at": [
+       -0.0156,
+       0.00356,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.38201,
+       -0.59504,
+       0.38201,
+       0.59504
+      ]
+     },
+     {
+      "at": [
+       -0.01696,
+       -0.00114,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.46757,
+       -0.53045,
+       0.46757,
+       0.53045
+      ]
+     },
+     {
+      "at": [
+       -0.01685,
+       -0.00632,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.54192,
+       -0.45423,
+       0.54192,
+       0.45423
+      ]
+     },
+     {
+      "at": [
+       -0.01512,
+       -0.01151,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.60389,
+       -0.36786,
+       0.60389,
+       0.36786
+      ]
+     },
+     {
+      "at": [
+       -0.01176,
+       -0.01618,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.65221,
+       -0.27317,
+       0.65221,
+       0.27317
+      ]
+     },
+     {
+      "at": [
+       -0.00694,
+       -0.01982,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.68565,
+       -0.17288,
+       0.68565,
+       0.17288
+      ]
+     },
+     {
+      "at": [
+       -0.00099,
+       -0.02198,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.70375,
+       -0.06881,
+       0.70375,
+       0.06881
+      ]
+     },
+     {
+      "at": [
+       0.00562,
+       -0.0223,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.70616,
+       0.03654,
+       0.70616,
+       -0.03654
+      ]
+     },
+     {
+      "at": [
+       0.01231,
+       -0.0206,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.69299,
+       0.14061,
+       0.69299,
+       -0.14061
+      ]
+     },
+     {
+      "at": [
+       0.01845,
+       -0.01687,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.66453,
+       0.24166,
+       0.66453,
+       -0.24166
+      ]
+     },
+     {
+      "at": [
+       0.02343,
+       -0.01128,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.62146,
+       0.33732,
+       0.62146,
+       -0.33732
+      ]
+     },
+     {
+      "at": [
+       0.02667,
+       -0.00422,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.56482,
+       0.42542,
+       0.56482,
+       -0.42542
+      ]
+     },
+     {
+      "at": [
+       0.02775,
+       0.00376,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.49582,
+       -0.50415,
+       -0.49582,
+       0.50415
+      ]
+     },
+     {
+      "at": [
+       0.0264,
+       0.01199,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.41615,
+       -0.57168,
+       -0.41615,
+       0.57168
+      ]
+     },
+     {
+      "at": [
+       0.02259,
+       0.01974,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.32761,
+       -0.62663,
+       -0.32761,
+       0.62663
+      ]
+     },
+     {
+      "at": [
+       0.01649,
+       0.02625,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.23182,
+       -0.66803,
+       -0.23182,
+       0.66803
+      ]
+     },
+     {
+      "at": [
+       0.00851,
+       0.03085,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.13107,
+       -0.69485,
+       -0.13107,
+       0.69485
+      ]
+     },
+     {
+      "at": [
+       -0.00074,
+       0.03299,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       -0.02763,
+       -0.70657,
+       -0.02763,
+       0.70657
+      ]
+     },
+     {
+      "at": [
+       -0.01051,
+       0.03234,
+       -0.1075
+      ],
+      "rx": 0.0016,
+      "ry": 0.0016,
+      "rotation": [
+       0.02348,
+       -0.70672,
+       0.02348,
+       0.70672
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "scroll-hub",
+    "kind": "revolve",
+    "bone": "rotor",
+    "material": "cast-aluminium",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "scroll",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.006
+     ],
+     [
+      0.005,
+      0.006
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.109
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The hermetic shell is a cylinder (r 0.1 m) with a revolved dome (the elevation Bezier) and a base plate for the feet; the side window shows the scroll set: a 4 mm cast-aluminium disc on the rotor bone with the 29-point spiral as one swept tube, so the spiral turns with the rotor in every pose and clip.",
+    "de": "Das hermetische Gehaeuse ist ein Zylinder (r 0,1 m) mit gedrehter Kuppel (Bezierkurve der Ansicht) und einer Grundplatte fuer die Fuesse; das Seitenfenster zeigt den Scrollsatz: eine 4 mm dicke Aluminiumgussscheibe auf dem Knochen rotor mit der 29-Punkte-Spirale als ein gefuehrtes Rohr, die Spirale dreht sich in jeder Pose und jedem Clip mit dem Rotor."
+   },
+   {
+    "en": "The sight glass sits on the -z side (the drawn side), 8 mm proud of the shell; the terminal box is 55 mm wide (front view 50 mm, plan 60 mm); suction pipe, discharge pipe are flat-ended copper cylinders. Total width is 0.29 m against dimensions.widthM 0.30 m because the drawn parts stop at x -0.15 and 0.14.",
+    "de": "Das Schauglas sitzt auf der -z-Seite (der gezeichneten Seite), 8 mm vor dem Gehaeuse; der Klemmenkasten ist 55 mm breit (Vorderansicht 50 mm, Grundriss 60 mm); Saug- und Druckrohr sind Kupferzylinder mit ebenen Enden. Die Gesamtbreite betraegt 0,29 m gegen dimensions.widthM 0,30 m, weil die gezeichneten Teile bei x -0,15 und 0,14 enden."
+   }
+  ]
+ }
+}

@@ -213,7 +213,8 @@
     "valid": [
       "elevation",
       "front",
-      "plan"
+      "plan",
+      "axonometric"
     ],
     "invalid": "side",
     "forms": [
@@ -228,8 +229,32 @@
       {
         "name": "plan",
         "viewpoint": "plan"
+      },
+      {
+        "name": "axonometric",
+        "viewpoint": "axonometric"
       }
-    ]
+    ],
+    "axonometric": {
+      "entry": {
+        "asset": "standing-adult",
+        "pose": "relaxed",
+        "view": "dark-line",
+        "theme": "dark",
+        "scale": 50
+      },
+      "paddingMm": 1,
+      "toleranceM": 0.001
+    },
+    "formats": {
+      "models": [
+        "glb",
+        "fbx",
+        "model",
+        "model-zip"
+      ],
+      "asset": "toaster"
+    }
   },
   "key": {
     "entry": {

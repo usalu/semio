@@ -4,13 +4,14 @@
  * @see ../../💾️persistence/🟦️.ts — `Preferences.previewViewpoint`
  */
 import type { ReactElement } from "react";
-import { VIEWPOINTS } from "@teaching/staffage";
-import type { Viewpoint } from "@teaching/staffage";
+import { PLANAR_VIEWPOINTS } from "@teaching/staffage";
+import type { PlanarViewpoint } from "@teaching/staffage";
 import { useArchive, useLocal } from "../../🧭️context/🟦️.tsx";
+import { isViewpoint } from "../🟦️.ts";
 import { ViewpointSelector } from "../🎚️selector/🟦️.tsx";
 
-/** 🪝️ The preview viewpoint and the way to change it. */
-export function usePreviewViewpoint(): readonly [Viewpoint, (viewpoint: Viewpoint) => void] {
+/** 🔭️ The preview viewpoint and the way to change it. */
+export function usePreviewViewpoint(): readonly [PlanarViewpoint, (viewpoint: PlanarViewpoint) => void] {
   const { store } = useArchive();
   const { preferences } = useLocal();
   return [preferences.previewViewpoint, (previewViewpoint) => store.dispatch({ type: "preferences-changed", patch: { previewViewpoint } })];
@@ -20,5 +21,5 @@ export function usePreviewViewpoint(): readonly [Viewpoint, (viewpoint: Viewpoin
 export function PreviewViewpointSelector(props: { readonly className?: string }): ReactElement {
   const { language } = useArchive();
   const [viewpoint, setViewpoint] = usePreviewViewpoint();
-  return <ViewpointSelector className={props.className} value={viewpoint} language={language} choices={VIEWPOINTS} onChange={(choice) => choice !== "all" && setViewpoint(choice)} />;
+  return <ViewpointSelector className={props.className} value={viewpoint} language={language} choices={PLANAR_VIEWPOINTS} onChange={(choice) => isViewpoint(choice) && setViewpoint(choice)} />;
 }

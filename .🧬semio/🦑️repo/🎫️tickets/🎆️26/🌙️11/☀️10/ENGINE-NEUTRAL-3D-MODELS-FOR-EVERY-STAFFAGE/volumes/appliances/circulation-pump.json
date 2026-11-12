@@ -1,0 +1,1368 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "casing",
+    "kind": "revolve",
+    "bone": "housing",
+    "material": "cast-iron",
+    "role": "body",
+    "tone": 0.42,
+    "region": "casing",
+    "profile": [
+     [
+      0,
+      0.0515
+     ],
+     [
+      0.006,
+      0.0575
+     ],
+     [
+      0.044,
+      0.0575
+     ],
+     [
+      0.05,
+      0.0515
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0.015
+    ]
+   },
+   {
+    "id": "union-l",
+    "kind": "revolve",
+    "bone": "housing",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.5,
+    "region": "casing",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.021
+     ],
+     [
+      0.013,
+      0.021
+     ],
+     [
+      0.013,
+      0.0195
+     ],
+     [
+      0.0235,
+      0.0195
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     -0.0775,
+     0,
+     0.04
+    ]
+   },
+   {
+    "id": "stub-l",
+    "kind": "extrude",
+    "bone": "housing",
+    "material": "copper",
+    "role": "body",
+    "tone": 0.7,
+    "region": "casing",
+    "profile": [
+     [
+      0.014,
+      0.04
+     ],
+     [
+      0.01373,
+      0.04273
+     ],
+     [
+      0.01293,
+      0.04536
+     ],
+     [
+      0.01164,
+      0.04778
+     ],
+     [
+      0.0099,
+      0.0499
+     ],
+     [
+      0.00778,
+      0.05164
+     ],
+     [
+      0.00536,
+      0.05293
+     ],
+     [
+      0.00273,
+      0.05373
+     ],
+     [
+      0.0,
+      0.054
+     ],
+     [
+      -0.00273,
+      0.05373
+     ],
+     [
+      -0.00536,
+      0.05293
+     ],
+     [
+      -0.00778,
+      0.05164
+     ],
+     [
+      -0.0099,
+      0.0499
+     ],
+     [
+      -0.01164,
+      0.04778
+     ],
+     [
+      -0.01293,
+      0.04536
+     ],
+     [
+      -0.01373,
+      0.04273
+     ],
+     [
+      -0.014,
+      0.04
+     ],
+     [
+      -0.01373,
+      0.03727
+     ],
+     [
+      -0.01293,
+      0.03464
+     ],
+     [
+      -0.01164,
+      0.03222
+     ],
+     [
+      -0.0099,
+      0.0301
+     ],
+     [
+      -0.00778,
+      0.02836
+     ],
+     [
+      -0.00536,
+      0.02707
+     ],
+     [
+      -0.00273,
+      0.02627
+     ],
+     [
+      0.0,
+      0.026
+     ],
+     [
+      0.00273,
+      0.02627
+     ],
+     [
+      0.00536,
+      0.02707
+     ],
+     [
+      0.00778,
+      0.02836
+     ],
+     [
+      0.0099,
+      0.0301
+     ],
+     [
+      0.01164,
+      0.03222
+     ],
+     [
+      0.01293,
+      0.03464
+     ],
+     [
+      0.01373,
+      0.03727
+     ]
+    ],
+    "plane": "yz",
+    "from": -0.09,
+    "to": -0.075,
+    "holes": [
+     [
+      [
+       0.009,
+       0.04
+      ],
+      [
+       0.00883,
+       0.04176
+      ],
+      [
+       0.00831,
+       0.04344
+      ],
+      [
+       0.00748,
+       0.045
+      ],
+      [
+       0.00636,
+       0.04636
+      ],
+      [
+       0.005,
+       0.04748
+      ],
+      [
+       0.00344,
+       0.04831
+      ],
+      [
+       0.00176,
+       0.04883
+      ],
+      [
+       0.0,
+       0.049
+      ],
+      [
+       -0.00176,
+       0.04883
+      ],
+      [
+       -0.00344,
+       0.04831
+      ],
+      [
+       -0.005,
+       0.04748
+      ],
+      [
+       -0.00636,
+       0.04636
+      ],
+      [
+       -0.00748,
+       0.045
+      ],
+      [
+       -0.00831,
+       0.04344
+      ],
+      [
+       -0.00883,
+       0.04176
+      ],
+      [
+       -0.009,
+       0.04
+      ],
+      [
+       -0.00883,
+       0.03824
+      ],
+      [
+       -0.00831,
+       0.03656
+      ],
+      [
+       -0.00748,
+       0.035
+      ],
+      [
+       -0.00636,
+       0.03364
+      ],
+      [
+       -0.005,
+       0.03252
+      ],
+      [
+       -0.00344,
+       0.03169
+      ],
+      [
+       -0.00176,
+       0.03117
+      ],
+      [
+       0.0,
+       0.031
+      ],
+      [
+       0.00176,
+       0.03117
+      ],
+      [
+       0.00344,
+       0.03169
+      ],
+      [
+       0.005,
+       0.03252
+      ],
+      [
+       0.00636,
+       0.03364
+      ],
+      [
+       0.00748,
+       0.035
+      ],
+      [
+       0.00831,
+       0.03656
+      ],
+      [
+       0.00883,
+       0.03824
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "union-r",
+    "kind": "revolve",
+    "bone": "housing",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.5,
+    "region": "casing",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.0195
+     ],
+     [
+      0.0105,
+      0.0195
+     ],
+     [
+      0.0105,
+      0.021
+     ],
+     [
+      0.0235,
+      0.021
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0.054,
+     0,
+     0.04
+    ]
+   },
+   {
+    "id": "stub-r",
+    "kind": "extrude",
+    "bone": "housing",
+    "material": "copper",
+    "role": "body",
+    "tone": 0.7,
+    "region": "casing",
+    "profile": [
+     [
+      0.014,
+      0.04
+     ],
+     [
+      0.01373,
+      0.04273
+     ],
+     [
+      0.01293,
+      0.04536
+     ],
+     [
+      0.01164,
+      0.04778
+     ],
+     [
+      0.0099,
+      0.0499
+     ],
+     [
+      0.00778,
+      0.05164
+     ],
+     [
+      0.00536,
+      0.05293
+     ],
+     [
+      0.00273,
+      0.05373
+     ],
+     [
+      0.0,
+      0.054
+     ],
+     [
+      -0.00273,
+      0.05373
+     ],
+     [
+      -0.00536,
+      0.05293
+     ],
+     [
+      -0.00778,
+      0.05164
+     ],
+     [
+      -0.0099,
+      0.0499
+     ],
+     [
+      -0.01164,
+      0.04778
+     ],
+     [
+      -0.01293,
+      0.04536
+     ],
+     [
+      -0.01373,
+      0.04273
+     ],
+     [
+      -0.014,
+      0.04
+     ],
+     [
+      -0.01373,
+      0.03727
+     ],
+     [
+      -0.01293,
+      0.03464
+     ],
+     [
+      -0.01164,
+      0.03222
+     ],
+     [
+      -0.0099,
+      0.0301
+     ],
+     [
+      -0.00778,
+      0.02836
+     ],
+     [
+      -0.00536,
+      0.02707
+     ],
+     [
+      -0.00273,
+      0.02627
+     ],
+     [
+      0.0,
+      0.026
+     ],
+     [
+      0.00273,
+      0.02627
+     ],
+     [
+      0.00536,
+      0.02707
+     ],
+     [
+      0.00778,
+      0.02836
+     ],
+     [
+      0.0099,
+      0.0301
+     ],
+     [
+      0.01164,
+      0.03222
+     ],
+     [
+      0.01293,
+      0.03464
+     ],
+     [
+      0.01373,
+      0.03727
+     ]
+    ],
+    "plane": "yz",
+    "from": 0.075,
+    "to": 0.09,
+    "holes": [
+     [
+      [
+       0.009,
+       0.04
+      ],
+      [
+       0.00883,
+       0.04176
+      ],
+      [
+       0.00831,
+       0.04344
+      ],
+      [
+       0.00748,
+       0.045
+      ],
+      [
+       0.00636,
+       0.04636
+      ],
+      [
+       0.005,
+       0.04748
+      ],
+      [
+       0.00344,
+       0.04831
+      ],
+      [
+       0.00176,
+       0.04883
+      ],
+      [
+       0.0,
+       0.049
+      ],
+      [
+       -0.00176,
+       0.04883
+      ],
+      [
+       -0.00344,
+       0.04831
+      ],
+      [
+       -0.005,
+       0.04748
+      ],
+      [
+       -0.00636,
+       0.04636
+      ],
+      [
+       -0.00748,
+       0.045
+      ],
+      [
+       -0.00831,
+       0.04344
+      ],
+      [
+       -0.00883,
+       0.04176
+      ],
+      [
+       -0.009,
+       0.04
+      ],
+      [
+       -0.00883,
+       0.03824
+      ],
+      [
+       -0.00831,
+       0.03656
+      ],
+      [
+       -0.00748,
+       0.035
+      ],
+      [
+       -0.00636,
+       0.03364
+      ],
+      [
+       -0.005,
+       0.03252
+      ],
+      [
+       -0.00344,
+       0.03169
+      ],
+      [
+       -0.00176,
+       0.03117
+      ],
+      [
+       0.0,
+       0.031
+      ],
+      [
+       0.00176,
+       0.03117
+      ],
+      [
+       0.00344,
+       0.03169
+      ],
+      [
+       0.005,
+       0.03252
+      ],
+      [
+       0.00636,
+       0.03364
+      ],
+      [
+       0.00748,
+       0.035
+      ],
+      [
+       0.00831,
+       0.03656
+      ],
+      [
+       0.00883,
+       0.03824
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "motor-head",
+    "kind": "revolve",
+    "bone": "motor",
+    "material": "aluminium",
+    "role": "body",
+    "tone": 0.62,
+    "region": "motor",
+    "profile": [
+     [
+      0,
+      0.0415
+     ],
+     [
+      0.004,
+      0.0455
+     ],
+     [
+      0.071,
+      0.0455
+     ],
+     [
+      0.075,
+      0.0415
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -0.06
+    ]
+   },
+   {
+    "id": "motor-ring",
+    "kind": "revolve",
+    "bone": "motor",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "motor",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.0455
+     ],
+     [
+      0,
+      0.0462
+     ],
+     [
+      0.003,
+      0.0462
+     ],
+     [
+      0.003,
+      0.0455
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -0.0465
+    ]
+   },
+   {
+    "id": "bezel",
+    "kind": "extrude",
+    "bone": "motor",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "motor",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0305,
+      0.0
+     ],
+     [
+      0.03012,
+      0.00477
+     ],
+     [
+      0.02901,
+      0.00943
+     ],
+     [
+      0.02718,
+      0.01385
+     ],
+     [
+      0.02468,
+      0.01793
+     ],
+     [
+      0.02157,
+      0.02157
+     ],
+     [
+      0.01793,
+      0.02468
+     ],
+     [
+      0.01385,
+      0.02718
+     ],
+     [
+      0.00943,
+      0.02901
+     ],
+     [
+      0.00477,
+      0.03012
+     ],
+     [
+      0.0,
+      0.0305
+     ],
+     [
+      -0.00477,
+      0.03012
+     ],
+     [
+      -0.00943,
+      0.02901
+     ],
+     [
+      -0.01385,
+      0.02718
+     ],
+     [
+      -0.01793,
+      0.02468
+     ],
+     [
+      -0.02157,
+      0.02157
+     ],
+     [
+      -0.02468,
+      0.01793
+     ],
+     [
+      -0.02718,
+      0.01385
+     ],
+     [
+      -0.02901,
+      0.00943
+     ],
+     [
+      -0.03012,
+      0.00477
+     ],
+     [
+      -0.0305,
+      0.0
+     ],
+     [
+      -0.03012,
+      -0.00477
+     ],
+     [
+      -0.02901,
+      -0.00943
+     ],
+     [
+      -0.02718,
+      -0.01385
+     ],
+     [
+      -0.02468,
+      -0.01793
+     ],
+     [
+      -0.02157,
+      -0.02157
+     ],
+     [
+      -0.01793,
+      -0.02468
+     ],
+     [
+      -0.01385,
+      -0.02718
+     ],
+     [
+      -0.00943,
+      -0.02901
+     ],
+     [
+      -0.00477,
+      -0.03012
+     ],
+     [
+      0.0,
+      -0.0305
+     ],
+     [
+      0.00477,
+      -0.03012
+     ],
+     [
+      0.00943,
+      -0.02901
+     ],
+     [
+      0.01385,
+      -0.02718
+     ],
+     [
+      0.01793,
+      -0.02468
+     ],
+     [
+      0.02157,
+      -0.02157
+     ],
+     [
+      0.02468,
+      -0.01793
+     ],
+     [
+      0.02718,
+      -0.01385
+     ],
+     [
+      0.02901,
+      -0.00943
+     ],
+     [
+      0.03012,
+      -0.00477
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.065,
+    "to": -0.06,
+    "holes": [
+     [
+      [
+       0.0265,
+       0.0
+      ],
+      [
+       0.02617,
+       0.00415
+      ],
+      [
+       0.0252,
+       0.00819
+      ],
+      [
+       0.02361,
+       0.01203
+      ],
+      [
+       0.02144,
+       0.01558
+      ],
+      [
+       0.01874,
+       0.01874
+      ],
+      [
+       0.01558,
+       0.02144
+      ],
+      [
+       0.01203,
+       0.02361
+      ],
+      [
+       0.00819,
+       0.0252
+      ],
+      [
+       0.00415,
+       0.02617
+      ],
+      [
+       0.0,
+       0.0265
+      ],
+      [
+       -0.00415,
+       0.02617
+      ],
+      [
+       -0.00819,
+       0.0252
+      ],
+      [
+       -0.01203,
+       0.02361
+      ],
+      [
+       -0.01558,
+       0.02144
+      ],
+      [
+       -0.01874,
+       0.01874
+      ],
+      [
+       -0.02144,
+       0.01558
+      ],
+      [
+       -0.02361,
+       0.01203
+      ],
+      [
+       -0.0252,
+       0.00819
+      ],
+      [
+       -0.02617,
+       0.00415
+      ],
+      [
+       -0.0265,
+       0.0
+      ],
+      [
+       -0.02617,
+       -0.00415
+      ],
+      [
+       -0.0252,
+       -0.00819
+      ],
+      [
+       -0.02361,
+       -0.01203
+      ],
+      [
+       -0.02144,
+       -0.01558
+      ],
+      [
+       -0.01874,
+       -0.01874
+      ],
+      [
+       -0.01558,
+       -0.02144
+      ],
+      [
+       -0.01203,
+       -0.02361
+      ],
+      [
+       -0.00819,
+       -0.0252
+      ],
+      [
+       -0.00415,
+       -0.02617
+      ],
+      [
+       0.0,
+       -0.0265
+      ],
+      [
+       0.00415,
+       -0.02617
+      ],
+      [
+       0.00819,
+       -0.0252
+      ],
+      [
+       0.01203,
+       -0.02361
+      ],
+      [
+       0.01558,
+       -0.02144
+      ],
+      [
+       0.01874,
+       -0.01874
+      ],
+      [
+       0.02144,
+       -0.01558
+      ],
+      [
+       0.02361,
+       -0.01203
+      ],
+      [
+       0.0252,
+       -0.00819
+      ],
+      [
+       0.02617,
+       -0.00415
+      ]
+     ]
+    ]
+   },
+   {
+    "id": "window",
+    "kind": "revolve",
+    "bone": "motor",
+    "material": "window-glass",
+    "role": "body",
+    "tone": 0.18,
+    "region": "rotor-window",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0,
+      0.0265
+     ],
+     [
+      0.0015,
+      0.0265
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -0.065
+    ]
+   },
+   {
+    "id": "dial",
+    "kind": "revolve",
+    "bone": "motor",
+    "material": "polyamide",
+    "role": "detail",
+    "tone": 0.25,
+    "region": "motor",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.0265
+     ],
+     [
+      0.0015,
+      0.0265
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -0.0615
+    ]
+   },
+   {
+    "id": "terminal-neck",
+    "kind": "box",
+    "bone": "terminal",
+    "material": "polyamide",
+    "role": "body",
+    "tone": 0.7,
+    "region": "terminal-box",
+    "size": [
+     0.04,
+     0.008,
+     0.04
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      0.0,
+      -0.0035,
+      -0.025
+     ]
+    }
+   },
+   {
+    "id": "terminal-box",
+    "kind": "box",
+    "bone": "terminal",
+    "material": "polyamide",
+    "role": "body",
+    "tone": 0.78,
+    "region": "terminal-box",
+    "size": [
+     0.06,
+     0.025,
+     0.05
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.0,
+      0.0125,
+      -0.025
+     ]
+    }
+   },
+   {
+    "id": "terminal-lid",
+    "kind": "box",
+    "bone": "terminal",
+    "material": "polyamide",
+    "role": "body",
+    "tone": 0.82,
+    "region": "terminal-box",
+    "maxDenominator": 100,
+    "size": [
+     0.061,
+     0.0175,
+     0.051
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.0,
+      0.03375,
+      -0.025
+     ]
+    }
+   },
+   {
+    "id": "gland",
+    "kind": "revolve",
+    "bone": "terminal",
+    "material": "polyamide",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "terminal-box",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.0068
+     ],
+     [
+      0.0165,
+      0.0068
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     -0.0465,
+     0.01125,
+     -0.025
+    ]
+   },
+   {
+    "id": "led",
+    "kind": "revolve",
+    "bone": "terminal",
+    "material": "polyamide",
+    "role": "detail",
+    "tone": 0.95,
+    "region": "terminal-box",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.0045
+     ],
+     [
+      0.0006,
+      0.0045
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0.033,
+     -0.0506
+    ]
+   },
+   {
+    "id": "pointer",
+    "kind": "extrude",
+    "bone": "rotor",
+    "material": "window-glass",
+    "role": "detail",
+    "tone": 0.95,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      -0.007,
+      0
+     ],
+     [
+      0.007,
+      0
+     ],
+     [
+      0,
+      0.026
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.0635,
+    "to": -0.0615
+   },
+   {
+    "id": "tail",
+    "kind": "extrude",
+    "bone": "rotor",
+    "material": "window-glass",
+    "role": "detail",
+    "tone": 0.7,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      -0.005,
+      0
+     ],
+     [
+      0.005,
+      0
+     ],
+     [
+      0,
+      -0.012
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.0635,
+    "to": -0.0615
+   },
+   {
+    "id": "hub",
+    "kind": "revolve",
+    "bone": "rotor",
+    "material": "window-glass",
+    "role": "detail",
+    "tone": 0.35,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.0055
+     ],
+     [
+      0.002,
+      0.0055
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     -0.0635
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Axes follow the plan and front views: the pump head (casing, 0.115 m across, z 0.015..0.065) and the wet-rotor motor (z -0.06..0.015) are cylinders about the lateral axis w; the unions and copper stubs lie on a line along u at w = 0.04, the centre of the casing.",
+    "de": "Die Achsen folgen Grundriss und Ansicht: Pumpenkopf (Gehäuse, 0,115 m Durchmesser, z 0,015..0,065) und Nassläufermotor (z -0,06..0,015) sind Zylinder um die Querachse w; Verschraubungen und Kupferstutzen liegen auf einer Linie entlang u bei w = 0,04, der Gehäusemitte."
+   },
+   {
+    "en": "The 2D drawing leaves a 4.5 mm gap between the motor top and the terminal box. A neck block is added so the box sits on the motor; the box lateral extent (w -0.05..0) follows the plan, the front view draws it 5 mm further out.",
+    "de": "Die 2D-Zeichnung lässt 4,5 mm Luft zwischen Motoroberseite und Klemmenkasten. Ein Halsblock lässt den Kasten auf dem Motor aufsitzen; die seitliche Ausdehnung (w -0,05..0) folgt dem Grundriss, die Ansicht zeichnet ihn 5 mm weiter aussen."
+   },
+   {
+    "en": "The copper stubs are hollow (bore 18 mm, shown end-on in the front view); the union nut and neck are one stepped revolve whose step is the drawn nut edge. Hollow bodies are rings extruded with a hole, because closed revolve profiles are rejected by the validator.",
+    "de": "Die Kupferstutzen sind hohl (Bohrung 18 mm, in der Ansicht stirnseitig gezeichnet); Überwurfmutter und Hals sind ein gestuftes Drehteil, dessen Stufe die gezeichnete Mutterkante ist. Hohlkörper sind Ringe mit Loch, da geschlossene Revolve-Profile vom Validator abgelehnt werden."
+   },
+   {
+    "en": "The inspection window is a glass disc, a pointer layer on the rotor bone and a dial disc behind it; pointer, tail and hub turn with the revolute rotor bone about w, everything else is rigid. Fine parts (unions, bezel, ring, gland, LED, rotor) carry maxDenominator 50.",
+    "de": "Das Schauglas besteht aus einer Glasscheibe, einer Zeigerebene am Rotorknochen und einer Zifferblattscheibe dahinter; Zeiger, Schwanz und Nabe drehen mit dem Drehknochen Rotor um w, alles übrige ist starr. Feinteile (Verschraubungen, Blende, Ring, Verschraubung, LED, Rotor) tragen maxDenominator 50."
+   }
+  ]
+ }
+}

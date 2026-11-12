@@ -28,7 +28,7 @@ for m in data["markers"]:
         direction = (-ARROW, 0.0)
     else:
         line = LineString([(bounds["minX"] * k - REACH, -m["plane"] * k), (bounds["maxX"] * k + REACH, -m["plane"] * k)])
-        direction = (0.0, ARROW)
+        direction = (0.0, -ARROW if m["viewpoint"] == "elevation" else ARROW)
     ends = [substring(line, 0, END), substring(line, line.length - END, line.length)]
     tips = [affinity.translate(Point(line.coords[i]), *direction) for i in (0, 1)]
     out[m["id"]] = {"line": coords(line), "ends": [coords(e) for e in ends], "tips": [[t.x, t.y] for t in tips]}

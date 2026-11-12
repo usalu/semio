@@ -10,8 +10,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { Asset, Viewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluationQuery, View } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, modelScene } from "../../🔨️modules/🎨️depiction/🟦️.ts";
-import { configureDwg } from "../../🔨️modules/📤️export/🖊️dwg/🟦️.ts";
-import { parseArguments, runExport, type ToolPort } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
+import { configureDwg, writeDwg } from "../../🔨️modules/📤️export/🖊️dwg/🟦️.ts";
+import { parseArguments, runExport } from "../../🔨️modules/📤️export/🎬️cli/🟦️.ts";
+import type { ToolPort } from "../../🔨️modules/📤️export/🔌️tools/🟦️.ts";
 import { writeDxf } from "../../🔨️modules/📤️export/📐️dxf/🟦️.ts";
 import { PROJECTIONS, SheetUnavailableError, modelSheet, projectionSymbolGeometry, resolveSheet, withNote, type Projection } from "../../🔨️modules/📤️export/📑️sheet/🟦️.ts";
 import { writePdf } from "../../🔨️modules/📤️export/📕️pdf/🟦️.ts";
@@ -23,7 +24,9 @@ import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { type DrawOptions, resolveViews } from "../../🔨️modules/🔭️multiview/🟦️.ts";
 import { solveStructure } from "../../🔨️modules/🏗️structure/🟦️.ts";
 import { authoredScales, extentOf } from "../🧊️three-views/🧰️.ts";
-import { STAFFAGE_ROOT, python, withScratch } from "../🧰️support/🧰️.ts";
+import { ensureDwgWasm, STAFFAGE_ROOT, withScratch } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
+import { expectSameDrawing, readDwgBytes } from "../🧰️support/🖊️.ts";
 
 type Box = [number, number, number, number] | null;
 type Boxes = Record<Viewpoint, Box>;
@@ -67,7 +70,7 @@ beforeAll(async () => {
       manifest[name] = { svg: `${stem}.svg`, pdf: `${stem}.pdf`, dxf: job.dxf === null ? null : `${stem}.dxf` };
     });
     writeFileSync(join(directory, "jobs.json"), JSON.stringify(manifest));
-    reports = JSON.parse(python(ORACLE, ["lxml", "pymupdf", "ezdxf"], [join(directory, "jobs.json")])) as Record<string, Report>;
+    reports = JSON.parse(python(ORACLE, "documents", [join(directory, "jobs.json")])) as Record<string, Report>;
   });
 }, 600_000);
 
@@ -196,7 +199,7 @@ describe("📑️ multiview sheet", () => {
 
   it("draws the projection-method symbol of ISO 5456-2 as the Wikimedia reference symbols do: first-angle circles left of the frustum, third-angle circles right, the frustum's shortest side always on the right", () => {
     const reference = {
-      first: { frustum: [[110, 10], [190, 30], [190, 70], [110, 90]], circles: [100, 50, 40, 20] },
+      first: { frustum: [[110, 10], [190, 30], [190, 70], [110, 90]], circles: [50, 50, 40, 20] },
       third: { frustum: [[10, 10], [90, 30], [90, 70], [10, 90]], circles: [150, 50, 40, 20] },
     } as const;
     for (const projection of PROJECTIONS) {
@@ -366,6 +369,37 @@ describe("📑️ export paths name their view", () => {
       configureDwg({});
     }
   }, 60_000);
+
+  it("writes every sheet as a genuine DWG through the wasm writer, which ezdwg reads back as the scene of the DXF", async () => {
+    configureDwg({ wasm: readFileSync(ensureDwgWasm()) });
+    try {
+      for (const entry of CASES)
+        for (const projection of PROJECTIONS) {
+          const b = built(entry, projection, "en");
+          const model = withNote(modelSheet(b.state, { projection, denominator: b.denominator, language: "en", analysis: b.analysis, diagrams: diagramsOf(entry.view) }), "note", b.denominator);
+          expectSameDrawing(await readDwgBytes(await writeDwg(model)), model);
+        }
+    } finally {
+      configureDwg({});
+    }
+  }, 600_000);
+
+  it("exports --format sheet-dwg through the real wasm writer: one DWG whose layers, polylines and note ezdwg reads as the evaluated sheet", async () => {
+    ensureDwgWasm();
+    configureDwg({});
+    await withScratch(async (directory) => {
+      const options = parseArguments(["--asset", "standing-adult", "--pose", "relaxed", "--view", "light-line", "--projection", "third", "--scale", "100", "--lang", "en", "--format", "sheet-dwg", "--out", directory]);
+      const files = await runExport(options);
+      expect(files).toHaveLength(1);
+      expect(files[0]).toContain("sheet-third");
+      const report = await readDwgBytes(readFileSync(files[0]!));
+      const note = report.entities.find((entity) => entity.layer === "STAFFAGE-NOTE")!.text!;
+      expect(note).toMatch(/^staffage standing-adult relaxed light-line sheet-third 1:100 /u);
+      const asset = assets.get("standing-adult")!;
+      const state = evaluate(asset, { kind: "pose", pose: "relaxed" }, { kind: "scale", scale: { denominator: 100 } });
+      expectSameDrawing(report, withNote(modelSheet(state, { projection: "third", denominator: 100, language: "en", analysis: {}, diagrams: [], axonometric: false }), note, 100));
+    });
+  }, 300_000);
 
   it("names the viewpoint of an MP4 in its file name and its container comment", async () => {
     await withScratch(async (directory) => {

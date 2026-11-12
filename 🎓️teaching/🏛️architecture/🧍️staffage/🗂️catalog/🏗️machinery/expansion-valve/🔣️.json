@@ -1534,6 +1534,152 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "body",
+          "kind": "box",
+          "bone": "body",
+          "material": "brass",
+          "role": "body",
+          "tone": 0.5,
+          "region": "body",
+          "size": [0.064, 0.05, 0.06],
+          "cornerRadius": 0.006,
+          "transform": {
+            "translation": [0.0, 0.025, 0.0]
+          }
+        },
+        {
+          "id": "inlet",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "inlet",
+          "profile": [[0.0, 0.009], [0.048, 0.009]],
+          "axis": [1.0, 0.0, 0.0],
+          "origin": [-0.078, 0.029, 0.0]
+        },
+        {
+          "id": "outlet",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "outlet",
+          "profile": [[0.0, 0.009], [0.048, 0.009]],
+          "axis": [1.0, 0.0, 0.0],
+          "origin": [0.03, 0.019, 0.0]
+        },
+        {
+          "id": "head",
+          "kind": "revolve",
+          "bone": "head",
+          "material": "brass",
+          "role": "body",
+          "tone": 0.55,
+          "region": "head",
+          "profile": [
+            [0.0, 0.025],
+            [0.00637, 0.0245],
+            [0.01197, 0.02306],
+            [0.01677, 0.02078],
+            [0.02075, 0.01775],
+            [0.02389, 0.01406],
+            [0.02616, 0.00981],
+            [0.02754, 0.00509],
+            [0.028, 0.0]
+          ],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "stem",
+          "kind": "revolve",
+          "bone": "stem",
+          "material": "brass",
+          "role": "body",
+          "tone": 0.3,
+          "region": "head",
+          "profile": [[0.0, 0.01], [0.012, 0.01]],
+          "axis": [0.0, 1.0, 0.0],
+          "origin": [0.0, 0.0, 0.0]
+        },
+        {
+          "id": "bulb",
+          "kind": "capsule",
+          "bone": "bulb",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.5,
+          "region": "bulb",
+          "p0": [0.0, -0.005, 0.018],
+          "p1": [0.0, 0.01, 0.018],
+          "r0": 0.01,
+          "r1": 0.01
+        },
+        {
+          "id": "capillary-1",
+          "kind": "capsule",
+          "bone": "head",
+          "material": "copper",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "capillary",
+          "maxDenominator": 50,
+          "p0": [0.018, 0.022, 0.0],
+          "p1": [0.05, 0.038, 0.012],
+          "r0": 0.0012,
+          "r1": 0.0012
+        },
+        {
+          "id": "capillary-2",
+          "kind": "capsule",
+          "bone": "head",
+          "material": "copper",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "capillary",
+          "maxDenominator": 50,
+          "p0": [0.05, 0.038, 0.012],
+          "p1": [0.09, 0.032, 0.02],
+          "r0": 0.0012,
+          "r1": 0.0012
+        },
+        {
+          "id": "capillary-3",
+          "kind": "capsule",
+          "bone": "head",
+          "material": "copper",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "capillary",
+          "maxDenominator": 50,
+          "p0": [0.09, 0.032, 0.02],
+          "p1": [0.108, 0.0, 0.018],
+          "r0": 0.0012,
+          "r1": 0.0012
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The capillary is three round bars through the 3D points read from all three drawings (elevation gives x and y, plan z, front confirms the rise to 88 mm); it sits on the head bone, which is fixed, so it stays attached at every stem position.",
+          "de": "Die Kapillare besteht aus drei Rundstaeben durch die 3D-Punkte aus allen drei Zeichnungen (Ansicht liefert x und y, Grundriss z, Vorderansicht bestaetigt den Anstieg auf 88 mm); sie sitzt auf dem festen Kopfknochen und bleibt in jeder Stellung der Spindel verbunden."
+        },
+        {
+          "en": "The diaphragm head is a revolved dome about the vertical axis (elevation outline), the spindle a cylinder on its own prismatic bone that sinks into the dome when it moves down; pipe stubs are flat-ended cylinders, the sensing bulb a vertical capsule.",
+          "de": "Der Membrankopf ist eine um die senkrechte Achse gedrehte Kuppel (Umriss der Ansicht), die Spindel ein Zylinder auf eigenem Schubknochen, der beim Absenken in die Kuppel taucht; Rohrstutzen sind Zylinder mit ebenen Enden, der Fuehler eine senkrechte Kapsel."
+        },
+        {
+          "en": "The drawn parts reach x -0.078 to 0.118 m (0.196 m) while dimensions.widthM is 0.19 m, a 3 % overshoot taken from the drawings.",
+          "de": "Die gezeichneten Teile reichen von x -0,078 bis 0,118 m (0,196 m), dimensions.widthM ist 0,19 m, 3 % Ueberstand aus den Zeichnungen."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "open",
       "defaultClip": "modulate",
@@ -1547,7 +1693,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

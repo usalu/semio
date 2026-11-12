@@ -1,0 +1,1019 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "foot-left",
+    "kind": "box",
+    "bone": "unit",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.2,
+    "region": "feet",
+    "maxDenominator": 100,
+    "size": [
+     0.34,
+     0.09,
+     0.18
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.045,
+      0.43
+     ]
+    }
+   },
+   {
+    "id": "foot-right",
+    "kind": "box",
+    "bone": "unit",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.2,
+    "region": "feet",
+    "maxDenominator": 100,
+    "size": [
+     0.34,
+     0.09,
+     0.18
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.045,
+      -0.43
+     ]
+    }
+   },
+   {
+    "id": "base-tray",
+    "kind": "box",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "base-tray",
+    "size": [
+     0.45,
+     0.07,
+     1.1
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.115,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "compressor-panel",
+    "kind": "box",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.4,
+    "region": "compressor-casing",
+    "size": [
+     0.45,
+     0.17,
+     1.1
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.0,
+      0.235,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "service-panel-line",
+    "kind": "box",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.3,
+    "region": "compressor-casing",
+    "maxDenominator": 200,
+    "size": [
+     0.003,
+     0.15,
+     1.04
+    ],
+    "transform": {
+     "translation": [
+      0.2255,
+      0.235,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "rear-wall",
+    "kind": "box",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.55,
+    "region": "casing",
+    "size": [
+     0.015,
+     1.09,
+     1.1
+    ],
+    "transform": {
+     "translation": [
+      -0.2175,
+      0.865,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "top-wall",
+    "kind": "box",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.55,
+    "region": "casing",
+    "size": [
+     0.45,
+     0.015,
+     1.1
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      1.4025,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "side-wall-left",
+    "kind": "extrude",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.55,
+    "region": "casing",
+    "profile": [
+     [
+      -0.225,
+      0.32
+     ],
+     [
+      0.225,
+      0.32
+     ],
+     [
+      0.225,
+      1.41
+     ],
+     [
+      -0.225,
+      1.41
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.13,
+       0.42
+      ],
+      [
+       0.09,
+       0.42
+      ],
+      [
+       0.09,
+       1.28
+      ],
+      [
+       -0.13,
+       1.28
+      ]
+     ]
+    ],
+    "plane": "xy",
+    "from": 0.535,
+    "to": 0.55
+   },
+   {
+    "id": "side-wall-right",
+    "kind": "extrude",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.55,
+    "region": "casing",
+    "profile": [
+     [
+      -0.225,
+      0.32
+     ],
+     [
+      0.225,
+      0.32
+     ],
+     [
+      0.225,
+      1.41
+     ],
+     [
+      -0.225,
+      1.41
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.13,
+       0.42
+      ],
+      [
+       0.09,
+       0.42
+      ],
+      [
+       0.09,
+       1.28
+      ],
+      [
+       -0.13,
+       1.28
+      ]
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.55,
+    "to": -0.535
+   },
+   {
+    "id": "front-panel",
+    "kind": "extrude",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.55,
+    "region": "casing",
+    "profile": [
+     [
+      0.32,
+      -0.55
+     ],
+     [
+      1.41,
+      -0.55
+     ],
+     [
+      1.41,
+      0.55
+     ],
+     [
+      0.32,
+      0.55
+     ]
+    ],
+    "holes": [
+     [
+      [
+       0.8,
+       0.45
+      ],
+      [
+       0.86438,
+       0.44366
+      ],
+      [
+       0.92629,
+       0.42488
+      ],
+      [
+       0.98334,
+       0.39438
+      ],
+      [
+       1.03335,
+       0.35335
+      ],
+      [
+       1.07438,
+       0.30334
+      ],
+      [
+       1.10488,
+       0.24629
+      ],
+      [
+       1.12366,
+       0.18438
+      ],
+      [
+       1.13,
+       0.12
+      ],
+      [
+       1.12366,
+       0.05562
+      ],
+      [
+       1.10488,
+       -0.00629
+      ],
+      [
+       1.07438,
+       -0.06334
+      ],
+      [
+       1.03335,
+       -0.11335
+      ],
+      [
+       0.98334,
+       -0.15438
+      ],
+      [
+       0.92629,
+       -0.18488
+      ],
+      [
+       0.86438,
+       -0.20366
+      ],
+      [
+       0.8,
+       -0.21
+      ],
+      [
+       0.73562,
+       -0.20366
+      ],
+      [
+       0.67371,
+       -0.18488
+      ],
+      [
+       0.61666,
+       -0.15438
+      ],
+      [
+       0.56665,
+       -0.11335
+      ],
+      [
+       0.52562,
+       -0.06334
+      ],
+      [
+       0.49512,
+       -0.00629
+      ],
+      [
+       0.47634,
+       0.05562
+      ],
+      [
+       0.47,
+       0.12
+      ],
+      [
+       0.47634,
+       0.18438
+      ],
+      [
+       0.49512,
+       0.24629
+      ],
+      [
+       0.52562,
+       0.30334
+      ],
+      [
+       0.56665,
+       0.35335
+      ],
+      [
+       0.61666,
+       0.39438
+      ],
+      [
+       0.67371,
+       0.42488
+      ],
+      [
+       0.73562,
+       0.44366
+      ]
+     ]
+    ],
+    "plane": "yz",
+    "from": 0.205,
+    "to": 0.225
+   },
+   {
+    "id": "coil",
+    "kind": "box",
+    "bone": "unit",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.25,
+    "region": "coil-guard",
+    "size": [
+     0.22,
+     0.86,
+     1.06
+    ],
+    "transform": {
+     "translation": [
+      -0.02,
+      0.85,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "panel-handle",
+    "kind": "box",
+    "bone": "unit",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.2,
+    "region": "casing",
+    "maxDenominator": 50,
+    "size": [
+     0.04,
+     0.1,
+     0.0075
+    ],
+    "cornerRadius": 0.003,
+    "transform": {
+     "translation": [
+      0.12,
+      0.85,
+      -0.5525
+     ]
+    }
+   },
+   {
+    "id": "fan-motor",
+    "kind": "revolve",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "fan-guard",
+    "profile": [
+     [
+      0.0,
+      0.055
+     ],
+     [
+      0.18,
+      0.055
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     -0.02,
+     0.8,
+     0.12
+    ]
+   },
+   {
+    "id": "motor-stay",
+    "kind": "box",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "fan-guard",
+    "maxDenominator": 200,
+    "size": [
+     0.02,
+     1.09,
+     0.03
+    ],
+    "transform": {
+     "translation": [
+      -0.03,
+      0.865,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "fan-hub",
+    "kind": "revolve",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "fan-guard",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.07
+     ],
+     [
+      0.05,
+      0.07
+     ],
+     [
+      0.068,
+      0.045
+     ],
+     [
+      0.075,
+      0.0
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     0.16,
+     0.8,
+     0.12
+    ]
+   },
+   {
+    "id": "fan-blade",
+    "kind": "loft",
+    "bone": "unit",
+    "material": "aluminium",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "fan-guard",
+    "maxDenominator": 100,
+    "sections": [
+     {
+      "at": [
+       0.19,
+       0.85292,
+       0.15775
+      ],
+      "rx": 0.02,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       -0.38617,
+       -0.24602,
+       -0.47767,
+       0.74979
+      ]
+     },
+     {
+      "at": [
+       0.19,
+       0.88955,
+       0.18388
+      ],
+      "rx": 0.036,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       -0.38617,
+       -0.24602,
+       -0.47767,
+       0.74979
+      ]
+     },
+     {
+      "at": [
+       0.19,
+       0.9384,
+       0.21872
+      ],
+      "rx": 0.043,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       -0.38617,
+       -0.24602,
+       -0.47767,
+       0.74979
+      ]
+     },
+     {
+      "at": [
+       0.19,
+       0.97911,
+       0.24775
+      ],
+      "rx": 0.036,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       -0.38617,
+       -0.24602,
+       -0.47767,
+       0.74979
+      ]
+     },
+     {
+      "at": [
+       0.19,
+       1.0133,
+       0.27214
+      ],
+      "rx": 0.018,
+      "ry": 0.004,
+      "exponent": 2.4,
+      "rotation": [
+       -0.38617,
+       -0.24602,
+       -0.47767,
+       0.74979
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true,
+    "repeat": {
+     "count": 5,
+     "rotationRad": -1.25664,
+     "rotationAxis": [
+      1,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.19,
+      0.8,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "guard-rim",
+    "kind": "capsule",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "body",
+    "tone": 0.3,
+    "region": "fan-guard",
+    "maxDenominator": 200,
+    "p0": [
+     0.222,
+     0.8,
+     0.465
+    ],
+    "p1": [
+     0.222,
+     0.74009,
+     0.45976
+    ],
+    "r0": 0.008,
+    "r1": 0.008,
+    "repeat": {
+     "count": 36,
+     "rotationRad": 0.17453,
+     "rotationAxis": [
+      1,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.222,
+      0.8,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "fan-ring-outer",
+    "kind": "capsule",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "fan-guard",
+    "maxDenominator": 50,
+    "p0": [
+     0.26,
+     0.8,
+     0.39
+    ],
+    "p1": [
+     0.26,
+     0.73012,
+     0.3808
+    ],
+    "r0": 0.004,
+    "r1": 0.004,
+    "repeat": {
+     "count": 24,
+     "rotationRad": 0.2618,
+     "rotationAxis": [
+      1,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.26,
+      0.8,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "fan-ring-inner",
+    "kind": "capsule",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "fan-guard",
+    "maxDenominator": 50,
+    "p0": [
+     0.26,
+     0.8,
+     0.31
+    ],
+    "p1": [
+     0.26,
+     0.75082,
+     0.30353
+    ],
+    "r0": 0.004,
+    "r1": 0.004,
+    "repeat": {
+     "count": 24,
+     "rotationRad": 0.2618,
+     "rotationAxis": [
+      1,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.26,
+      0.8,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "guard-cap",
+    "kind": "revolve",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "fan-guard",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.07
+     ],
+     [
+      0.012,
+      0.07
+     ]
+    ],
+    "axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "origin": [
+     0.25,
+     0.8,
+     0.12
+    ]
+   },
+   {
+    "id": "guard-spoke",
+    "kind": "capsule",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "fan-guard",
+    "maxDenominator": 200,
+    "p0": [
+     0.26,
+     0.8,
+     0.19
+    ],
+    "p1": [
+     0.26,
+     0.8,
+     0.42
+    ],
+    "r0": 0.003,
+    "r1": 0.003,
+    "repeat": {
+     "count": 8,
+     "rotationRad": 0.7854,
+     "rotationAxis": [
+      1,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.26,
+      0.8,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "guard-skirt",
+    "kind": "capsule",
+    "bone": "unit",
+    "material": "galvanised-steel",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "fan-guard",
+    "maxDenominator": 200,
+    "p0": [
+     0.26,
+     0.8,
+     0.42
+    ],
+    "p1": [
+     0.222,
+     0.8,
+     0.465
+    ],
+    "r0": 0.003,
+    "r1": 0.003,
+    "repeat": {
+     "count": 12,
+     "rotationRad": 0.5236,
+     "rotationAxis": [
+      1,
+      0.0,
+      0.0
+     ],
+     "origin": [
+      0.26,
+      0.8,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "lid",
+    "kind": "box",
+    "bone": "lid",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.35,
+    "region": "top-lid",
+    "size": [
+     0.47,
+     0.04,
+     1.12
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.235,
+      -0.02,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "lid-hinge-front",
+    "kind": "revolve",
+    "bone": "lid",
+    "material": "powder-coat",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "top-lid",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.02
+     ],
+     [
+      0.25,
+      0.02
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.02,
+     -0.02,
+     0.25
+    ]
+   },
+   {
+    "id": "lid-hinge-rear",
+    "kind": "revolve",
+    "bone": "lid",
+    "material": "powder-coat",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "top-lid",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.02
+     ],
+     [
+      0.25,
+      0.02
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.02,
+     -0.02,
+     -0.5
+    ]
+   },
+   {
+    "id": "vane",
+    "kind": "box",
+    "bone": "vane",
+    "material": "powder-coat",
+    "role": "body",
+    "tone": 0.3,
+    "region": "discharge-vane",
+    "size": [
+     0.24,
+     0.05,
+     0.72
+    ],
+    "cornerRadius": 0.02,
+    "transform": {
+     "translation": [
+      0.1,
+      0.0,
+      0.12
+     ]
+    }
+   },
+   {
+    "id": "vane-hinge",
+    "kind": "revolve",
+    "bone": "vane",
+    "material": "powder-coat",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "discharge-vane",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.012
+     ],
+     [
+      0.72,
+      0.012
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.0,
+     0.0,
+     -0.24
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The casing is a thin-walled shell (rear wall, top wall, two side walls with a coil window, a front panel with a round fan opening) on a solid base tray and compressor compartment; the coil block behind the windows and the fan behind the opening are modelled, so the unit can be looked into.",
+    "de": "Das Gehaeuse ist eine duennwandige Huelle (Rueckwand, Deckwand, zwei Seitenwaende mit Registerfenster, Frontblech mit runder Ventilatoroeffnung) auf einem vollen Bodenblech und Verdichterfach; der Register-Block hinter den Fenstern und der Ventilator hinter der Oeffnung sind modelliert, man kann in das Geraet hineinsehen."
+   },
+   {
+    "en": "The fan has five identical pitched blades as one loft with a rotational repeat about the fan axis (centre z 0.12, y 0.8, as in the front view), a spinner hub and a motor on a stay that spans the casing; the guard is wire: rim ring, two rings, eight spokes and twelve skirt wires on a 4.5 cm dish, again written with rotational repeats.",
+    "de": "Der Ventilator hat fuenf gleiche angestellte Fluegel als ein Loft mit Rotationswiederholung um die Ventilatorachse (Mitte z 0,12, y 0,8 wie in der Vorderansicht), eine Nabe mit Haube und einen Motor an einer gehaeuseueberspannenden Strebe; das Schutzgitter ist Draht: Randring, zwei Ringe, acht Speichen und zwoelf Mantelstaebe auf einer 4,5 cm tiefen Schale, ebenfalls mit Rotationswiederholung."
+   },
+   {
+    "en": "The lid (on the lid bone) carries its two hinge knuckles on the same bone, the discharge vane carries its hinge rod on the vane bone, so lid and vane swing about the rig's hinge axes without leaving the casing. The 2D lid and vane drawings are 56 mm and 24 mm wider than the casing, taken as drawn.",
+    "de": "Der Deckel (Knochen lid) traegt seine zwei Scharnierknoten auf demselben Knochen, die Ausblaslamelle ihre Scharnierstange auf dem Knochen vane, so schwenken Deckel und Lamelle um die Scharnierachsen des Rigs, ohne das Gehaeuse zu verlassen. Deckel und Lamelle sind in den 2D-Zeichnungen breiter als das Gehaeuse (56 mm und 24 mm), wie gezeichnet uebernommen."
+   }
+  ]
+ }
+}

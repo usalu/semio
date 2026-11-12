@@ -1,0 +1,724 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "base",
+    "kind": "revolve",
+    "bone": "pot",
+    "material": "stainless",
+    "role": "body",
+    "tone": 0.4,
+    "region": "base",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.086
+     ],
+     [
+      0.008,
+      0.086
+     ],
+     [
+      0.008,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "wall",
+    "kind": "extrude",
+    "bone": "pot",
+    "material": "stainless",
+    "role": "body",
+    "tone": 0.4,
+    "region": "wall",
+    "profile": [
+     [
+      0.0,
+      0.086
+     ],
+     [
+      0.01345,
+      0.08494
+     ],
+     [
+      0.02658,
+      0.08179
+     ],
+     [
+      0.03904,
+      0.07663
+     ],
+     [
+      0.05055,
+      0.06958
+     ],
+     [
+      0.06081,
+      0.06081
+     ],
+     [
+      0.06958,
+      0.05055
+     ],
+     [
+      0.07663,
+      0.03904
+     ],
+     [
+      0.08179,
+      0.02658
+     ],
+     [
+      0.08494,
+      0.01345
+     ],
+     [
+      0.086,
+      0.0
+     ],
+     [
+      0.08494,
+      -0.01345
+     ],
+     [
+      0.08179,
+      -0.02658
+     ],
+     [
+      0.07663,
+      -0.03904
+     ],
+     [
+      0.06958,
+      -0.05055
+     ],
+     [
+      0.06081,
+      -0.06081
+     ],
+     [
+      0.05055,
+      -0.06958
+     ],
+     [
+      0.03904,
+      -0.07663
+     ],
+     [
+      0.02658,
+      -0.08179
+     ],
+     [
+      0.01345,
+      -0.08494
+     ],
+     [
+      0.0,
+      -0.086
+     ],
+     [
+      -0.01345,
+      -0.08494
+     ],
+     [
+      -0.02658,
+      -0.08179
+     ],
+     [
+      -0.03904,
+      -0.07663
+     ],
+     [
+      -0.05055,
+      -0.06958
+     ],
+     [
+      -0.06081,
+      -0.06081
+     ],
+     [
+      -0.06958,
+      -0.05055
+     ],
+     [
+      -0.07663,
+      -0.03904
+     ],
+     [
+      -0.08179,
+      -0.02658
+     ],
+     [
+      -0.08494,
+      -0.01345
+     ],
+     [
+      -0.086,
+      0.0
+     ],
+     [
+      -0.08494,
+      0.01345
+     ],
+     [
+      -0.08179,
+      0.02658
+     ],
+     [
+      -0.07663,
+      0.03904
+     ],
+     [
+      -0.06958,
+      0.05055
+     ],
+     [
+      -0.06081,
+      0.06081
+     ],
+     [
+      -0.05055,
+      0.06958
+     ],
+     [
+      -0.03904,
+      0.07663
+     ],
+     [
+      -0.02658,
+      0.08179
+     ],
+     [
+      -0.01345,
+      0.08494
+     ]
+    ],
+    "holes": [
+     [
+      [
+       0.0,
+       0.08
+      ],
+      [
+       0.01251,
+       0.07902
+      ],
+      [
+       0.02472,
+       0.07608
+      ],
+      [
+       0.03632,
+       0.07128
+      ],
+      [
+       0.04702,
+       0.06472
+      ],
+      [
+       0.05657,
+       0.05657
+      ],
+      [
+       0.06472,
+       0.04702
+      ],
+      [
+       0.07128,
+       0.03632
+      ],
+      [
+       0.07608,
+       0.02472
+      ],
+      [
+       0.07902,
+       0.01251
+      ],
+      [
+       0.08,
+       0.0
+      ],
+      [
+       0.07902,
+       -0.01251
+      ],
+      [
+       0.07608,
+       -0.02472
+      ],
+      [
+       0.07128,
+       -0.03632
+      ],
+      [
+       0.06472,
+       -0.04702
+      ],
+      [
+       0.05657,
+       -0.05657
+      ],
+      [
+       0.04702,
+       -0.06472
+      ],
+      [
+       0.03632,
+       -0.07128
+      ],
+      [
+       0.02472,
+       -0.07608
+      ],
+      [
+       0.01251,
+       -0.07902
+      ],
+      [
+       0.0,
+       -0.08
+      ],
+      [
+       -0.01251,
+       -0.07902
+      ],
+      [
+       -0.02472,
+       -0.07608
+      ],
+      [
+       -0.03632,
+       -0.07128
+      ],
+      [
+       -0.04702,
+       -0.06472
+      ],
+      [
+       -0.05657,
+       -0.05657
+      ],
+      [
+       -0.06472,
+       -0.04702
+      ],
+      [
+       -0.07128,
+       -0.03632
+      ],
+      [
+       -0.07608,
+       -0.02472
+      ],
+      [
+       -0.07902,
+       -0.01251
+      ],
+      [
+       -0.08,
+       0.0
+      ],
+      [
+       -0.07902,
+       0.01251
+      ],
+      [
+       -0.07608,
+       0.02472
+      ],
+      [
+       -0.07128,
+       0.03632
+      ],
+      [
+       -0.06472,
+       0.04702
+      ],
+      [
+       -0.05657,
+       0.05657
+      ],
+      [
+       -0.04702,
+       0.06472
+      ],
+      [
+       -0.03632,
+       0.07128
+      ],
+      [
+       -0.02472,
+       0.07608
+      ],
+      [
+       -0.01251,
+       0.07902
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.008,
+    "to": 0.1
+   },
+   {
+    "id": "handle-left",
+    "kind": "box",
+    "bone": "handles",
+    "material": "stainless",
+    "role": "body",
+    "tone": 0.2,
+    "region": "handle",
+    "size": [
+     0.043,
+     0.015,
+     0.02
+    ],
+    "cornerRadius": 0.003,
+    "transform": {
+     "translation": [
+      -0.1035,
+      0.0005,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "rivet-left",
+    "kind": "revolve",
+    "bone": "handles",
+    "material": "stainless",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "handle",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.003
+     ],
+     [
+      0.0012,
+      0.003
+     ],
+     [
+      0.0012,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      -0.108,
+      0.008,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "handle-right",
+    "kind": "box",
+    "bone": "handles",
+    "material": "stainless",
+    "role": "body",
+    "tone": 0.2,
+    "region": "handle",
+    "size": [
+     0.043,
+     0.015,
+     0.02
+    ],
+    "cornerRadius": 0.003,
+    "transform": {
+     "translation": [
+      0.1035,
+      0.0005,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "rivet-right",
+    "kind": "revolve",
+    "bone": "handles",
+    "material": "stainless",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "handle",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.003
+     ],
+     [
+      0.0012,
+      0.003
+     ],
+     [
+      0.0012,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.108,
+      0.008,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "water",
+    "kind": "revolve",
+    "bone": "water",
+    "material": "water",
+    "role": "body",
+    "tone": 0.45,
+    "region": "water",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.08
+     ],
+     [
+      0.046,
+      0.08
+     ],
+     [
+      0.046,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.003,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "water-surface",
+    "kind": "revolve",
+    "bone": "surface",
+    "material": "water",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "water",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.0795
+     ],
+     [
+      0.002,
+      0.0795
+     ],
+     [
+      0.002,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      -0.001,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "bubble-a",
+    "kind": "ellipsoid",
+    "bone": "surface",
+    "material": "water",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "water",
+    "maxDenominator": 50,
+    "radii": [
+     0.006,
+     0.003,
+     0.006
+    ],
+    "transform": {
+     "translation": [
+      -0.03,
+      0.0018,
+      0.02
+     ]
+    }
+   },
+   {
+    "id": "bubble-b",
+    "kind": "ellipsoid",
+    "bone": "surface",
+    "material": "water",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "water",
+    "maxDenominator": 50,
+    "radii": [
+     0.005,
+     0.003,
+     0.005
+    ],
+    "transform": {
+     "translation": [
+      0.025,
+      0.0018,
+      0.03
+     ]
+    }
+   },
+   {
+    "id": "bubble-c",
+    "kind": "ellipsoid",
+    "bone": "surface",
+    "material": "water",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "water",
+    "maxDenominator": 50,
+    "radii": [
+     0.007,
+     0.003,
+     0.007
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.0018,
+      -0.02
+     ]
+    }
+   },
+   {
+    "id": "bubble-d",
+    "kind": "ellipsoid",
+    "bone": "surface",
+    "material": "water",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "water",
+    "maxDenominator": 50,
+    "radii": [
+     0.005,
+     0.003,
+     0.005
+    ],
+    "transform": {
+     "translation": [
+      0.04,
+      0.0018,
+      -0.015
+     ]
+    }
+   },
+   {
+    "id": "bubble-e",
+    "kind": "ellipsoid",
+    "bone": "surface",
+    "material": "water",
+    "role": "detail",
+    "tone": 0.9,
+    "region": "water",
+    "maxDenominator": 50,
+    "radii": [
+     0.005,
+     0.003,
+     0.005
+    ],
+    "transform": {
+     "translation": [
+      -0.04,
+      0.0018,
+      -0.03
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The pot is a hollow cylinder: a 6 mm wall ring on an 8 mm solid base disc, open at the top; the water fills the inner radius 0.08 m as drawn in the elevation (the plan draws the water top smaller, 0.072 m, as a visual margin) and its surface disc and bubbles sit on the surface bone, so they rise with the boiling pose.",
+    "de": "Der Topf ist ein hohler Zylinder: ein 6 mm starker Wandring auf einer massiven 8 mm Bodenscheibe, oben offen; das Wasser füllt den Innenradius 0,08 m wie in der Ansicht gezeichnet (die Draufsicht zeichnet die Wasseroberfläche mit 0,072 m kleiner, als optischen Rand); Oberflächenscheibe und Blasen sitzen am Oberflächenknochen und steigen in der Kochpose mit."
+   },
+   {
+    "en": "The two flat grip straps with their rivets are boxes anchored 2 mm inside the wall; the rim bead of the 1:50 line drawing is not modelled.",
+    "de": "Die zwei flachen Griffbänder mit ihren Nieten sind Quader, 2 mm in der Wand verankert; der Randwulst der Strichzeichnung 1:50 wird nicht modelliert."
+   }
+  ]
+ }
+}

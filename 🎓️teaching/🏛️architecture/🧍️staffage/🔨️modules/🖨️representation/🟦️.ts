@@ -10,7 +10,7 @@
  * @see ./🧭️pick/🟦️.ts — selection without a profile
  * @see ../🔗️contracts/🟦️.ts — `RepresentationResolution`, `Suitability`, `Violation`
  */
-import { VIEWPOINTS, type Asset, type AuthoredRepresentation, type PrintProfile, type Shape, type Slug, type SymbolRepresentation } from "../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type Asset, type AuthoredRepresentation, type PrintProfile, type Shape, type Slug, type SymbolRepresentation } from "../../🧬️schema/🟦️.ts";
 import type { DrawingScale, RepresentationResolution, RepresentationSelector, Suitability, Violation } from "../🔗️contracts/🟦️.ts";
 import { outlineRuns, prepare, sourceOf } from "../🎨️depiction/🧩️shapes/🟦️.ts";
 import { pointInside } from "../🎨️depiction/📐️geometry/🟦️.ts";
@@ -46,7 +46,7 @@ function thresholdKey(requested: number, profile: PrintProfile): string {
   return `${requested}|${profile.id}|${profile.minStrokeMm}|${profile.minGapMm}|${profile.minFeatureMm}|${profile.minHatchSpacingMm}`;
 }
 
-/** 🖨️ What suitability measures: the pens, hatches and three-view geometry of an authored representation or of a symbol. */
+/** 🔭️ What suitability measures: the pens, hatches and three-view geometry of an authored representation or of a symbol. */
 type Drawn = { readonly pens: AuthoredRepresentation["pens"]; readonly hatches: AuthoredRepresentation["hatches"]; readonly geometry: AuthoredRepresentation["geometry"] };
 
 /** 📏️ One suitability measurement; the retained raster buffers of the measure module are dropped when it ends, success or failure. */
@@ -94,7 +94,7 @@ function measureDrawn(asset: Asset, rep: Drawn, selector: RepresentationSelector
   const featureWorst = new Map<Slug, Violation>();
   const k = 1000 / requested;
   const poses = asset.poses.filter((pose) => !pose.key);
-  for (const { pose, viewpoint } of poses.flatMap((pose) => VIEWPOINTS.map((viewpoint) => ({ pose, viewpoint })))) {
+  for (const { pose, viewpoint } of poses.flatMap((pose) => PLANAR_VIEWPOINTS.map((viewpoint) => ({ pose, viewpoint })))) {
     const state = evaluate(asset, { kind: "pose", pose: pose.id }, selector);
     const prepared = prepare(state, viewpoint, sourceOf(state), k);
     const filled = prepared.filter((p) => p.closed && p.shape.filled && p.shape.role !== "ground");
@@ -200,7 +200,7 @@ export function requireDrawable(resolution: RepresentationResolution, asset: str
 
 const SYMBOL_CACHE = new WeakMap<SymbolRepresentation, Map<string, Suitability>>();
 
-/** ✅️ The suitability of a symbol drawn at `requested` under a print profile: its pens, hatch spacing, gaps and feature widths measured on the evaluated paper geometry of all three viewpoints, the same measurements as an authored representation. A `true-extent` symbol is physically scaled and must pass; paper-millimetre symbols measure at their fixed paper size. Cached per symbol, scale and thresholds. */
+/** 🗂️ The suitability of a symbol drawn at `requested` under a print profile: its pens, hatch spacing, gaps and feature widths measured on the evaluated paper geometry of all three viewpoints, the same measurements as an authored representation. A `true-extent` symbol is physically scaled and must pass; paper-millimetre symbols measure at their fixed paper size. Cached per symbol, scale and thresholds. */
 export function measureSymbolSuitability(asset: Asset, symbol: SymbolRepresentation, requested: number, profile: PrintProfile): Suitability {
   let byKey = SYMBOL_CACHE.get(symbol);
   if (byKey === undefined) SYMBOL_CACHE.set(symbol, (byKey = new Map()));

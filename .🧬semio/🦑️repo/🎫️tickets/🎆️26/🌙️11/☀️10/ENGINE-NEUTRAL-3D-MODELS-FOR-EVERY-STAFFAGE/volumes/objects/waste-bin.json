@@ -1,0 +1,898 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "pedestal",
+    "kind": "box",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.3,
+    "region": "bin-hdpe",
+    "size": [
+     0.4,
+     0.025,
+     0.4
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.0,
+      0.0125,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "pedestal-foot",
+    "kind": "box",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "bin-hdpe",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.008,
+     0.4
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      -0.175,
+      0.004,
+      0.0
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.35,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "floor",
+    "kind": "box",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.42,
+    "region": "bin-hdpe",
+    "size": [
+     0.4,
+     0.01,
+     0.4
+    ],
+    "cornerRadius": 0.005,
+    "transform": {
+     "translation": [
+      0.0,
+      0.03,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "shell",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.42,
+    "region": "bin-hdpe",
+    "profile": [
+     [
+      -0.167,
+      -0.2
+     ],
+     [
+      -0.2,
+      -0.167
+     ],
+     [
+      -0.2,
+      0.167
+     ],
+     [
+      -0.167,
+      0.2
+     ],
+     [
+      0.167,
+      0.2
+     ],
+     [
+      0.2,
+      0.167
+     ],
+     [
+      0.2,
+      -0.167
+     ],
+     [
+      0.167,
+      -0.2
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.167,
+       -0.1895
+      ],
+      [
+       -0.1895,
+       -0.167
+      ],
+      [
+       -0.1895,
+       0.167
+      ],
+      [
+       -0.167,
+       0.1895
+      ],
+      [
+       0.167,
+       0.1895
+      ],
+      [
+       0.1895,
+       0.167
+      ],
+      [
+       0.1895,
+       -0.167
+      ],
+      [
+       0.167,
+       -0.1895
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.025,
+    "to": 0.955,
+    "taperTo": [
+     1,
+     1.24
+    ]
+   },
+   {
+    "id": "band-1",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "detail",
+    "tone": 0.38,
+    "region": "bin-ribs",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      -0.1684516129032258,
+      -0.2084516129032258
+     ],
+     [
+      -0.2084516129032258,
+      -0.1684516129032258
+     ],
+     [
+      -0.2084516129032258,
+      0.1684516129032258
+     ],
+     [
+      -0.1684516129032258,
+      0.2084516129032258
+     ],
+     [
+      0.1684516129032258,
+      0.2084516129032258
+     ],
+     [
+      0.2084516129032258,
+      0.1684516129032258
+     ],
+     [
+      0.2084516129032258,
+      -0.1684516129032258
+     ],
+     [
+      0.1684516129032258,
+      -0.2084516129032258
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.1684516129032258,
+       -0.2024516129032258
+      ],
+      [
+       -0.2024516129032258,
+       -0.1684516129032258
+      ],
+      [
+       -0.2024516129032258,
+       0.1684516129032258
+      ],
+      [
+       -0.1684516129032258,
+       0.2024516129032258
+      ],
+      [
+       0.1684516129032258,
+       0.2024516129032258
+      ],
+      [
+       0.2024516129032258,
+       0.1684516129032258
+      ],
+      [
+       0.2024516129032258,
+       -0.1684516129032258
+      ],
+      [
+       0.1684516129032258,
+       -0.2024516129032258
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.15,
+    "to": 0.168,
+    "taperTo": [
+     1,
+     1.00446
+    ]
+   },
+   {
+    "id": "band-2",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "detail",
+    "tone": 0.38,
+    "region": "bin-ribs",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      -0.18393548387096775,
+      -0.22393548387096776
+     ],
+     [
+      -0.22393548387096776,
+      -0.18393548387096775
+     ],
+     [
+      -0.22393548387096776,
+      0.18393548387096775
+     ],
+     [
+      -0.18393548387096775,
+      0.22393548387096776
+     ],
+     [
+      0.18393548387096775,
+      0.22393548387096776
+     ],
+     [
+      0.22393548387096776,
+      0.18393548387096775
+     ],
+     [
+      0.22393548387096776,
+      -0.18393548387096775
+     ],
+     [
+      0.18393548387096775,
+      -0.22393548387096776
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.18393548387096775,
+       -0.21793548387096776
+      ],
+      [
+       -0.21793548387096776,
+       -0.18393548387096775
+      ],
+      [
+       -0.21793548387096776,
+       0.18393548387096775
+      ],
+      [
+       -0.18393548387096775,
+       0.21793548387096776
+      ],
+      [
+       0.18393548387096775,
+       0.21793548387096776
+      ],
+      [
+       0.21793548387096776,
+       0.18393548387096775
+      ],
+      [
+       0.21793548387096776,
+       -0.18393548387096775
+      ],
+      [
+       0.18393548387096775,
+       -0.21793548387096776
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.45,
+    "to": 0.468,
+    "taperTo": [
+     1,
+     1.00415
+    ]
+   },
+   {
+    "id": "band-3",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "detail",
+    "tone": 0.38,
+    "region": "bin-ribs",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      -0.1978709677419355,
+      -0.2378709677419355
+     ],
+     [
+      -0.2378709677419355,
+      -0.1978709677419355
+     ],
+     [
+      -0.2378709677419355,
+      0.1978709677419355
+     ],
+     [
+      -0.1978709677419355,
+      0.2378709677419355
+     ],
+     [
+      0.1978709677419355,
+      0.2378709677419355
+     ],
+     [
+      0.2378709677419355,
+      0.1978709677419355
+     ],
+     [
+      0.2378709677419355,
+      -0.1978709677419355
+     ],
+     [
+      0.1978709677419355,
+      -0.2378709677419355
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.1978709677419355,
+       -0.2318709677419355
+      ],
+      [
+       -0.2318709677419355,
+       -0.1978709677419355
+      ],
+      [
+       -0.2318709677419355,
+       0.1978709677419355
+      ],
+      [
+       -0.1978709677419355,
+       0.2318709677419355
+      ],
+      [
+       0.1978709677419355,
+       0.2318709677419355
+      ],
+      [
+       0.2318709677419355,
+       0.1978709677419355
+      ],
+      [
+       0.2318709677419355,
+       -0.1978709677419355
+      ],
+      [
+       0.1978709677419355,
+       -0.2318709677419355
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.72,
+    "to": 0.738,
+    "taperTo": [
+     1,
+     1.00391
+    ]
+   },
+   {
+    "id": "rim",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.5,
+    "region": "bin-hdpe",
+    "profile": [
+     [
+      -0.21,
+      -0.255
+     ],
+     [
+      -0.25,
+      -0.215
+     ],
+     [
+      -0.25,
+      0.215
+     ],
+     [
+      -0.21,
+      0.255
+     ],
+     [
+      0.21,
+      0.255
+     ],
+     [
+      0.25,
+      0.215
+     ],
+     [
+      0.25,
+      -0.215
+     ],
+     [
+      0.21,
+      -0.255
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.21000000000000002,
+       -0.23500000000000001
+      ],
+      [
+       -0.23,
+       -0.21500000000000002
+      ],
+      [
+       -0.23,
+       0.21500000000000002
+      ],
+      [
+       -0.21000000000000002,
+       0.23500000000000001
+      ],
+      [
+       0.21000000000000002,
+       0.23500000000000001
+      ],
+      [
+       0.23,
+       0.21500000000000002
+      ],
+      [
+       0.23,
+       -0.21500000000000002
+      ],
+      [
+       0.21000000000000002,
+       -0.23500000000000001
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.94,
+    "to": 0.98
+   },
+   {
+    "id": "liner-collar",
+    "kind": "extrude",
+    "bone": "body",
+    "material": "ldpe-film",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "liner-film",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      -0.205,
+      -0.235
+     ],
+     [
+      -0.235,
+      -0.205
+     ],
+     [
+      -0.235,
+      0.205
+     ],
+     [
+      -0.205,
+      0.235
+     ],
+     [
+      0.205,
+      0.235
+     ],
+     [
+      0.235,
+      0.205
+     ],
+     [
+      0.235,
+      -0.205
+     ],
+     [
+      0.205,
+      -0.235
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.20499999999999996,
+       -0.21999999999999997
+      ],
+      [
+       -0.21999999999999997,
+       -0.20499999999999996
+      ],
+      [
+       -0.21999999999999997,
+       0.20499999999999996
+      ],
+      [
+       -0.20499999999999996,
+       0.21999999999999997
+      ],
+      [
+       0.20499999999999996,
+       0.21999999999999997
+      ],
+      [
+       0.21999999999999997,
+       0.20499999999999996
+      ],
+      [
+       0.21999999999999997,
+       -0.20499999999999996
+      ],
+      [
+       0.20499999999999996,
+       -0.21999999999999997
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": 0.948,
+    "to": 0.956
+   },
+   {
+    "id": "hinge-bracket-l",
+    "kind": "box",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.3,
+    "region": "bin-hdpe",
+    "size": [
+     0.026,
+     0.065,
+     0.06
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      -0.255,
+      0.9575,
+      0.19
+     ]
+    }
+   },
+   {
+    "id": "hinge-bracket-r",
+    "kind": "box",
+    "bone": "body",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.3,
+    "region": "bin-hdpe",
+    "size": [
+     0.026,
+     0.065,
+     0.06
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      -0.255,
+      0.9575,
+      -0.19
+     ]
+    }
+   },
+   {
+    "id": "lid",
+    "kind": "extrude",
+    "bone": "lid",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.55,
+    "region": "lid-hdpe",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.52,
+      0.0
+     ],
+     [
+      0.52,
+      0.006
+     ],
+     [
+      0.51458,
+      0.01684
+     ],
+     [
+      0.5,
+      0.02541
+     ],
+     [
+      0.47875,
+      0.03175
+     ],
+     [
+      0.45333,
+      0.03593
+     ],
+     [
+      0.42625,
+      0.03799
+     ],
+     [
+      0.4,
+      0.038
+     ],
+     [
+      0.12,
+      0.038
+     ],
+     [
+      0.08681,
+      0.03799
+     ],
+     [
+      0.05778,
+      0.03593
+     ],
+     [
+      0.03375,
+      0.03175
+     ],
+     [
+      0.01556,
+      0.02541
+     ],
+     [
+      0.00403,
+      0.01684
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.25,
+    "to": 0.25
+   },
+   {
+    "id": "lid-skirt",
+    "kind": "extrude",
+    "bone": "lid",
+    "material": "hdpe-plastic",
+    "role": "body",
+    "tone": 0.45,
+    "region": "lid-hdpe",
+    "profile": [
+     [
+      -0.22,
+      0.0
+     ],
+     [
+      -0.25,
+      0.03
+     ],
+     [
+      -0.25,
+      0.49
+     ],
+     [
+      -0.22,
+      0.52
+     ],
+     [
+      0.22,
+      0.52
+     ],
+     [
+      0.25,
+      0.49
+     ],
+     [
+      0.25,
+      0.03
+     ],
+     [
+      0.22,
+      0.0
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -0.22,
+       0.006000000000000005
+      ],
+      [
+       -0.244,
+       0.030000000000000006
+      ],
+      [
+       -0.244,
+       0.49
+      ],
+      [
+       -0.22,
+       0.514
+      ],
+      [
+       0.22,
+       0.514
+      ],
+      [
+       0.244,
+       0.49
+      ],
+      [
+       0.244,
+       0.030000000000000006
+      ],
+      [
+       0.22,
+       0.006000000000000005
+      ]
+     ]
+    ],
+    "plane": "zx",
+    "from": -0.028,
+    "to": 0.002
+   },
+   {
+    "id": "lid-handle",
+    "kind": "extrude",
+    "bone": "lid",
+    "material": "hdpe-plastic",
+    "role": "detail",
+    "tone": 0.35,
+    "region": "lid-hdpe",
+    "profile": [
+     [
+      0.38,
+      0.038
+     ],
+     [
+      0.38676,
+      0.04456
+     ],
+     [
+      0.39844,
+      0.04925
+     ],
+     [
+      0.4134,
+      0.05206
+     ],
+     [
+      0.43,
+      0.053
+     ],
+     [
+      0.4466,
+      0.05206
+     ],
+     [
+      0.46156,
+      0.04925
+     ],
+     [
+      0.47324,
+      0.04456
+     ],
+     [
+      0.48,
+      0.038
+     ]
+    ],
+    "plane": "xy",
+    "from": -0.05,
+    "to": 0.05
+   },
+   {
+    "id": "hinge-barrel",
+    "kind": "revolve",
+    "bone": "lid",
+    "material": "hdpe-plastic",
+    "role": "detail",
+    "tone": 0.25,
+    "region": "lid-hdpe",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.014
+     ],
+     [
+      0.26,
+      0.014
+     ],
+     [
+      0.26,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.004,
+      -0.13
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The bin is a hollow tapered shell (rounded-square ring extrusion with taper, 0.40 m at the foot to 0.496 m at the rim, 10.5 mm wall at the base) on a pedestal with a floor plate; the drawn 1:50 shell outline is a slight curve and is approximated by a straight taper. The three reinforcing bands are thin tapered rings 2 mm proud of the shell, shown to 1:100; the film liner is a thin collar ring folded over the inner rim.",
+    "de": "Der Behälter ist eine hohle konische Schale (Ringextrusion mit abgerundetem Quadrat und Verjüngung, 0,40 m am Fuss bis 0,496 m am Rand, 10,5 mm Wand am Boden) auf einem Sockel mit Bodenplatte; der gezeichnete Schalenumriss 1:50 ist leicht gekrümmt und wird durch eine gerade Verjüngung angenähert. Die drei Verstärkungsbänder sind dünne konische Ringe, 2 mm vor der Schale, bis 1:100; der Folienbeutel ist ein dünner, über den Innenrand geschlagener Kragenring."
+   },
+   {
+    "en": "The lid is an extrusion of the drawn dome outline over the full 0.5 m width with a skirt ring that overlaps the rim by 28 mm, a handle arch and a hinge barrel at the rear edge; it turns about the hinge axis (z) with the lid bone, to 100 degrees in lid-open. The two hinge brackets stand at z +-0.19 as the plan shows (the front view draws them at +-0.187, a different place).",
+    "de": "Der Deckel ist eine Extrusion des gezeichneten Wölbungsumrisses über die ganze Breite von 0,5 m mit einem Randring, der den Rand um 28 mm übergreift, einem Griffbogen und einer Scharniertrommel an der Hinterkante; er dreht mit dem Deckelknochen um die Scharnierachse (z), bis 100 Grad in lid-open. Die zwei Scharnierböcke stehen bei z +-0,19 wie die Draufsicht zeigt (die Vorderansicht zeichnet sie an einem anderen Ort)."
+   }
+  ]
+ }
+}

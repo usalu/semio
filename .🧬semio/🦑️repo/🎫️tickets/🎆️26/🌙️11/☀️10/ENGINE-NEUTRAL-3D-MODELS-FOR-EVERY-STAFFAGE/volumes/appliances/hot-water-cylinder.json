@@ -1,0 +1,722 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "feet-left",
+    "kind": "box",
+    "bone": "base",
+    "material": "powder-steel",
+    "role": "body",
+    "tone": 0.35,
+    "size": [
+     0.07,
+     0.06,
+     0.07
+    ],
+    "transform": {
+     "translation": [
+      -0.215,
+      0.03,
+      -0.215
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      0.43
+     ]
+    }
+   },
+   {
+    "id": "feet-right",
+    "kind": "box",
+    "bone": "base",
+    "material": "powder-steel",
+    "role": "body",
+    "tone": 0.35,
+    "size": [
+     0.07,
+     0.06,
+     0.07
+    ],
+    "transform": {
+     "translation": [
+      0.215,
+      0.03,
+      -0.215
+     ]
+    },
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      0,
+      0.43
+     ]
+    }
+   },
+   {
+    "id": "base-ring",
+    "kind": "revolve",
+    "bone": "base",
+    "material": "powder-steel",
+    "role": "body",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.28
+     ],
+     [
+      0.025,
+      0.28
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0.04,
+     0
+    ]
+   },
+   {
+    "id": "zone-4",
+    "kind": "revolve",
+    "bone": "zone-4",
+    "material": "foam-jacket",
+    "role": "body",
+    "tone": 0.9,
+    "region": "zone-4",
+    "profile": [
+     [
+      0,
+      0.3
+     ],
+     [
+      0.33,
+      0.3
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "zone-3",
+    "kind": "revolve",
+    "bone": "zone-3",
+    "material": "foam-jacket",
+    "role": "body",
+    "tone": 0.88,
+    "region": "zone-3",
+    "profile": [
+     [
+      0,
+      0.3
+     ],
+     [
+      0.33,
+      0.3
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "zone-2",
+    "kind": "revolve",
+    "bone": "zone-2",
+    "material": "foam-jacket",
+    "role": "body",
+    "tone": 0.86,
+    "region": "zone-2",
+    "profile": [
+     [
+      0,
+      0.3
+     ],
+     [
+      0.33,
+      0.3
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "zone-1",
+    "kind": "revolve",
+    "bone": "zone-1",
+    "material": "foam-jacket",
+    "role": "body",
+    "tone": 0.84,
+    "region": "zone-1",
+    "profile": [
+     [
+      0,
+      0.3
+     ],
+     [
+      0.33,
+      0.3
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "cap",
+    "kind": "revolve",
+    "bone": "cap",
+    "material": "cap-plastic",
+    "role": "body",
+    "tone": 0.78,
+    "region": "top-cap",
+    "profile": [
+     [
+      0.0,
+      0.3
+     ],
+     [
+      0.01736,
+      0.29544
+     ],
+     [
+      0.0342,
+      0.28191
+     ],
+     [
+      0.05,
+      0.25981
+     ],
+     [
+      0.06428,
+      0.22981
+     ],
+     [
+      0.0766,
+      0.19284
+     ],
+     [
+      0.0866,
+      0.15
+     ],
+     [
+      0.09397,
+      0.10261
+     ],
+     [
+      0.09848,
+      0.05209
+     ],
+     [
+      0.1,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "hot-out",
+    "kind": "revolve",
+    "bone": "connections",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.7,
+    "region": "connections",
+    "profile": [
+     [
+      0,
+      0.015
+     ],
+     [
+      0.048,
+      0.015
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0.2039,
+     1.43,
+     0
+    ]
+   },
+   {
+    "id": "stubs-left",
+    "kind": "revolve",
+    "bone": "connections",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.7,
+    "region": "connections",
+    "profile": [
+     [
+      0,
+      0.012
+     ],
+     [
+      0.03,
+      0.012
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     -0.33,
+     1.1977,
+     0
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      -0.4125,
+      0
+     ]
+    }
+   },
+   {
+    "id": "nuts-left",
+    "kind": "extrude",
+    "bone": "connections",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.45,
+    "region": "connections",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      1.2167,
+      0.0
+     ],
+     [
+      1.2072,
+      0.01645
+     ],
+     [
+      1.1882,
+      0.01645
+     ],
+     [
+      1.1787,
+      0.0
+     ],
+     [
+      1.1882,
+      -0.01645
+     ],
+     [
+      1.2072,
+      -0.01645
+     ]
+    ],
+    "plane": "yz",
+    "from": -0.33,
+    "to": -0.318,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      -0.4125,
+      0
+     ]
+    }
+   },
+   {
+    "id": "stubs-left-low",
+    "kind": "revolve",
+    "bone": "connections",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.7,
+    "region": "connections",
+    "profile": [
+     [
+      0,
+      0.012
+     ],
+     [
+      0.03,
+      0.012
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     -0.33,
+     0.1893,
+     0
+    ]
+   },
+   {
+    "id": "nuts-left-low",
+    "kind": "extrude",
+    "bone": "connections",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.45,
+    "region": "connections",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.2083,
+      0.0
+     ],
+     [
+      0.1988,
+      0.01645
+     ],
+     [
+      0.1798,
+      0.01645
+     ],
+     [
+      0.1703,
+      0.0
+     ],
+     [
+      0.1798,
+      -0.01645
+     ],
+     [
+      0.1988,
+      -0.01645
+     ]
+    ],
+    "plane": "yz",
+    "from": -0.33,
+    "to": -0.318
+   },
+   {
+    "id": "stubs-right",
+    "kind": "revolve",
+    "bone": "connections",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.7,
+    "region": "connections",
+    "profile": [
+     [
+      0,
+      0.012
+     ],
+     [
+      0.03,
+      0.012
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0.3,
+     0.9227,
+     0
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      -0.4125,
+      0
+     ]
+    }
+   },
+   {
+    "id": "nuts-right",
+    "kind": "extrude",
+    "bone": "connections",
+    "material": "brass",
+    "role": "body",
+    "tone": 0.45,
+    "region": "connections",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.9417,
+      0.0
+     ],
+     [
+      0.9322,
+      0.01645
+     ],
+     [
+      0.9132,
+      0.01645
+     ],
+     [
+      0.9037,
+      0.0
+     ],
+     [
+      0.9132,
+      -0.01645
+     ],
+     [
+      0.9322,
+      -0.01645
+     ]
+    ],
+    "plane": "yz",
+    "from": 0.318,
+    "to": 0.33,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0,
+      -0.4125,
+      0
+     ]
+    }
+   },
+   {
+    "id": "dial",
+    "kind": "revolve",
+    "bone": "zone-2",
+    "material": "window-glass",
+    "role": "detail",
+    "tone": 0.95,
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0,
+      0.05
+     ],
+     [
+      0.003,
+      0.05
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0.165,
+     -0.3007
+    ]
+   },
+   {
+    "id": "tick-cold",
+    "kind": "capsule",
+    "bone": "zone-2",
+    "material": "foam-jacket",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "p0": [
+     -0.0319,
+     0.1766,
+     -0.3004
+    ],
+    "p1": [
+     -0.0395,
+     0.1794,
+     -0.3004
+    ],
+    "r0": 0.0008,
+    "r1": 0.0008
+   },
+   {
+    "id": "tick-mid",
+    "kind": "capsule",
+    "bone": "zone-2",
+    "material": "foam-jacket",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "p0": [
+     0,
+     0.199,
+     -0.3004
+    ],
+    "p1": [
+     0,
+     0.207,
+     -0.3004
+    ],
+    "r0": 0.0008,
+    "r1": 0.0008
+   },
+   {
+    "id": "tick-hot",
+    "kind": "capsule",
+    "bone": "zone-2",
+    "material": "foam-jacket",
+    "role": "detail",
+    "tone": 0.4,
+    "maxDenominator": 50,
+    "p0": [
+     0.0319,
+     0.1766,
+     -0.3004
+    ],
+    "p1": [
+     0.0395,
+     0.1794,
+     -0.3004
+    ],
+    "r0": 0.0008,
+    "r1": 0.0008
+   },
+   {
+    "id": "needle",
+    "kind": "capsule",
+    "bone": "needle",
+    "material": "window-glass",
+    "role": "detail",
+    "tone": 0.2,
+    "maxDenominator": 50,
+    "p0": [
+     0,
+     0,
+     -0.3012
+    ],
+    "p1": [
+     0,
+     0.036,
+     -0.3012
+    ],
+    "r0": 0.0015,
+    "r1": 0.0015
+   },
+   {
+    "id": "label",
+    "kind": "revolve",
+    "bone": "zone-3",
+    "material": "foam-jacket",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "zone-3",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.085,
+      0.3008
+     ],
+     [
+      0.185,
+      0.3008
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "sweepRad": 0.68,
+    "transform": {
+     "rotation": [
+      0,
+      0.57728,
+      0,
+      0.81654
+     ]
+    }
+   },
+   {
+    "id": "zip",
+    "kind": "capsule",
+    "bone": "zone-3",
+    "material": "foam-jacket",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "zone-3",
+    "maxDenominator": 50,
+    "p0": [
+     0.22,
+     0.03,
+     -0.2043
+    ],
+    "p1": [
+     0.22,
+     0.3,
+     -0.2043
+    ],
+    "r0": 0.0015,
+    "r1": 0.0015
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The cylinder is a stack of four foam-jacket cylinders of 0.6 m diameter and 0.33 m height, one per thermal zone bone (zone-4 at the bottom), under a 0.1 m elliptical dome; the plan confirms the round footprint. The four 0.07 m square feet sit at (+-0.215, +-0.215), the only layout that gives the two feet seen in both side views.",
+    "de": "Der Speicher ist ein Stapel aus vier Schaumdämmzylindern von 0,6 m Durchmesser und 0,33 m Höhe, einer je thermischer Zonen-Knochen (Zone 4 unten), unter einer 0,1 m hohen elliptischen Haube; der Grundriss bestätigt die runde Grundfläche. Die vier quadratischen Füsse von 0,07 m stehen bei (+-0,215, +-0,215), die einzige Anordnung, die in beiden Seitenansichten je zwei Füsse ergibt."
+   },
+   {
+    "en": "The 2D plan omits the feet that stick out beyond the round jacket at the diagonals; they are kept because the elevation and front view both draw them. All brass connections lie on the x axis (plan and front put them at z = 0): three on the -x side, two on +x, each a 30 mm stub with a hex nut at the outer end, plus the vertical hot-water outlet at x = 0.204 on the dome.",
+    "de": "Der 2D-Grundriss lässt die Füsse weg, die auf den Diagonalen über den runden Mantel hinausragen; sie bleiben, weil Aufriss und Ansicht sie beide zeichnen. Alle Messinganschlüsse liegen auf der x-Achse (Grundriss und Ansicht setzen sie bei z = 0): drei auf der Seite -x, zwei auf +x, je ein 30 mm langer Stutzen mit Sechskantmutter am äusseren Ende, dazu der senkrechte Warmwasserabgang bei x = 0,204 auf der Haube."
+   },
+   {
+    "en": "The thermometer dial is a flush glass disc on the -z wall with three tick bars and a needle on the revolute needle bone (turns about w). The label is a 0.68 rad partial revolve (a sector of the jacket cylinder, rotated to face -z) so it follows the curved wall; the zip is a vertical bar where the elevation and front view agree (x 0.22, z -0.204). The dome seam ring is not modelled.",
+    "de": "Das Thermometer ist eine bündige Glasscheibe an der Wand -z mit drei Skalenstrichen und einer Nadel am Drehknochen Nadel (dreht um w). Das Etikett ist ein Teilrotationskörper von 0,68 rad (ein Sektor des Mantelzylinders, nach -z gedreht), der der gekrümmten Wand folgt; der Reissverschluss ist ein senkrechter Balken dort, wo Aufriss und Ansicht übereinstimmen (x 0,22, z -0,204). Der Nahtring der Haube ist nicht modelliert."
+   }
+  ]
+ }
+}

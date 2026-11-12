@@ -16,6 +16,7 @@
  */
 import type { Anchor, Bone, Slug, SupportType, Text } from "../../🧬️schema/🟦️.ts";
 import type { DiagramStation, DisplayRange, EvaluatedState, ForceQuantity, JointLoad, Legend, MemberDiagram, Point, Reaction, StructuralResult, Vec3, WorldForce } from "../🔗️contracts/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 //#region 🔢️Constants
 /** 🔢️ Sub-forces a uniform segment weight is discretised into. */
@@ -70,7 +71,7 @@ const sub = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const scaled = (a: V3, s: number): V3 => [a[0] * s, a[1] * s, a[2] * s];
 const dot = (a: V3, b: V3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const cross = (a: V3, b: V3): V3 => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const norm = (a: V3): number => Math.hypot(a[0], a[1], a[2]);
+const norm = (a: V3): number => portable.hypot(a[0], a[1], a[2]);
 const tuple = (a: Vec3): V3 => [a.x, a.y, a.z];
 const vec = (a: V3): Vec3 => ({ x: a[0], y: a[1], z: a[2] });
 const posOf = (f: WorldForce): V3 => [f.at.x, f.at.y, f.z];
@@ -185,7 +186,7 @@ function supportsOf(state: EvaluatedState, frames: Frames): Support[] {
     const type: SupportType = def.support ?? (def.kind === "contact" ? "contact" : "pin");
     const rad = ((def.normalDeg ?? 90) * Math.PI) / 180;
     const tilt = ((def.tiltDeg ?? 0) * Math.PI) / 180;
-    const n: V3 = [Math.cos(rad) * Math.cos(tilt), Math.sin(rad) * Math.cos(tilt), Math.sin(tilt)];
+    const n: V3 = [portable.cos(rad) * portable.cos(tilt), portable.sin(rad) * portable.cos(tilt), portable.sin(tilt)];
     const axis: V3 = Math.abs(n[2]) < 0.9 ? Z_AXIS : [1, 0, 0];
     const raw = cross(axis, n);
     const t = scaled(raw, 1 / norm(raw));
@@ -316,7 +317,7 @@ function reactionSolution(supports: readonly Support[], external: readonly World
     const active = live();
     const allTensile = worst !== null && active.every((s) => s.type === "contact" && !forced.has(s.anchor) && forces.get(s.anchor)!.normal < -1e-9 * scale);
     if (worst && allTensile) {
-      const keep = active.reduce((a, b) => (Math.hypot(b.at[0] - com[0], b.at[2] - com[2]) < Math.hypot(a.at[0] - com[0], a.at[2] - com[2]) ? b : a));
+      const keep = active.reduce((a, b) => (portable.hypot(b.at[0] - com[0], b.at[2] - com[2]) < portable.hypot(a.at[0] - com[0], a.at[2] - com[2]) ? b : a));
       for (const s of active) if (s !== keep) dropped.add(s.anchor);
       forced.add(keep.anchor);
       notes.push([`Every contact would pull; contact ${keep.anchor}, closest to the centre-of-mass projection, is kept active.`, `Jeder Kontakt müsste ziehen; Kontakt ${keep.anchor}, am nächsten zur Schwerpunktprojektion, bleibt aktiv.`]);
@@ -335,7 +336,7 @@ function reactionSolution(supports: readonly Support[], external: readonly World
         if (s.type !== "contact" || dropped.has(s.anchor)) continue;
         const o = forces.get(s.anchor)!;
         const cap = s.mu * Math.max(o.normal, 0);
-        const magnitude = Math.hypot(o.tangent[0], o.tangent[1]);
+        const magnitude = portable.hypot(o.tangent[0], o.tangent[1]);
         if (!sliding.has(s.anchor) && magnitude > cap + 1e-9 * scale) {
           const direction: readonly [number, number] = [o.tangent[0] / magnitude, o.tangent[1] / magnitude];
           sliding.set(s.anchor, direction);
@@ -345,7 +346,7 @@ function reactionSolution(supports: readonly Support[], external: readonly World
           const direction = sliding.get(s.anchor)!;
           const next: readonly [number, number] = [direction[0] * cap, direction[1] * cap];
           const previous = known.get(s.anchor) ?? [0, 0];
-          if (Math.hypot(next[0] - previous[0], next[1] - previous[1]) > 1e-9 * scale) {
+          if (portable.hypot(next[0] - previous[0], next[1] - previous[1]) > 1e-9 * scale) {
             known.set(s.anchor, next);
             changed = true;
           }
@@ -502,7 +503,7 @@ function memberDiagram(state: EvaluatedState, frames: Frames, bone: Bone, own: M
     const momentNm = dot(cut.m, w);
     const momentLateralNm = dot(cut.m, v);
     const sigma = section ? axialN / section.areaM2 : null;
-    const bending = section ? (Math.hypot(momentNm, momentLateralNm) * section.extremeFibreM) / section.secondMomentM4 : null;
+    const bending = section ? (portable.hypot(momentNm, momentLateralNm) * section.extremeFibreM) / section.secondMomentM4 : null;
     const at = worldOf(frames, bone.id, s, 0);
     stations.push({ s, at: { x: at[0], y: at[1] }, z: at[2], axialN, shearN: -dot(cut.f, v), shearZN: -dot(cut.f, w), torsionNm: dot(cut.m, u), momentNm, momentLateralNm, shearVector: vec(shear), momentVector: vec(cut.m), stressMinPa: sigma === null ? null : sigma - bending!, stressMaxPa: sigma === null ? null : sigma + bending! });
   };
@@ -527,8 +528,8 @@ function memberDiagram(state: EvaluatedState, frames: Frames, bone: Bone, own: M
 function planLine(points: readonly (readonly [number, number])[]): readonly [number, number] | null {
   if (points.length < 2) return null;
   const first = points[0]!;
-  const far = points.reduce((a, p) => (Math.hypot(p[0] - first[0], p[1] - first[1]) > Math.hypot(a[0] - first[0], a[1] - first[1]) ? p : a));
-  const length = Math.hypot(far[0] - first[0], far[1] - first[1]);
+  const far = points.reduce((a, p) => (portable.hypot(p[0] - first[0], p[1] - first[1]) > portable.hypot(a[0] - first[0], a[1] - first[1]) ? p : a));
+  const length = portable.hypot(far[0] - first[0], far[1] - first[1]);
   if (length < 1e-6) return null;
   const d: readonly [number, number] = [(far[0] - first[0]) / length, (far[1] - first[1]) / length];
   return points.every((p) => Math.abs((p[0] - first[0]) * d[1] - (p[1] - first[1]) * d[0]) < 1e-3) ? d : null;
@@ -671,7 +672,7 @@ export function solveStructure(state: EvaluatedState): StructuralResult {
   const line = planLine(activeSupports.map((s) => [s.at[0], s.at[2]] as const));
   const tipping = line !== null && Math.abs(residual.mxNm * line[0] + residual.mzNm * line[1]) > 1e-6 * scale;
   if (tipping) notes.push(text("Collinear supports: every active support lies on one line in plan, so a moment about that line cannot be carried and the body tips about it (castors, wheels or feet on one axis need lateral positions `z` to stand).", "Kollineare Auflager: alle aktiven Auflager liegen im Grundriss auf einer Geraden, ein Moment um diese Gerade kann nicht aufgenommen werden und der Körper kippt um sie (Rollen, Räder oder Füße auf einer Achse brauchen seitliche Positionen `z`, um zu stehen)."));
-  if (Math.hypot(residual.fxN, residual.fyN, residual.fzN) > 1e-6 * scale || Math.hypot(residual.mxNm, residual.myNm, residual.mzNm) > 1e-6 * scale) notes.push(text("Unbalanced: the active supports cannot equilibrate the loads (tipping, sliding or no support); the residual is reported unchanged.", "Nicht im Gleichgewicht: die aktiven Auflager können die Lasten nicht aufnehmen (Kippen, Gleiten oder kein Auflager); das Residuum wird unverändert ausgewiesen."));
+  if (portable.hypot(residual.fxN, residual.fyN, residual.fzN) > 1e-6 * scale || portable.hypot(residual.mxNm, residual.myNm, residual.mzNm) > 1e-6 * scale) notes.push(text("Unbalanced: the active supports cannot equilibrate the loads (tipping, sliding or no support); the residual is reported unchanged.", "Nicht im Gleichgewicht: die aktiven Auflager können die Lasten nicht aufnehmen (Kippen, Gleiten oder kein Auflager); das Residuum wird unverändert ausgewiesen."));
 
   return { gravityMS2: model.gravityMS2, dynamics: model.dynamics, centreOfMass, totalMassKg, segmentWeights: massed, inertialForces: inertials.map((p) => p.force), applied, reactions, joints, members, residual, notes };
 }

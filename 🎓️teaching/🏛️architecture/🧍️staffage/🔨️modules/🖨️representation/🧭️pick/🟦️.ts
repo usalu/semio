@@ -11,6 +11,7 @@
 import { SCALE_DENOMINATORS } from "../../../🧬️schema/🟦️.ts";
 import type { Alternative, Asset, AuthoredRepresentation, ScaleDenominator } from "../../../🧬️schema/🟦️.ts";
 import type { RepresentationResolution } from "../../🔗️contracts/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🧭️ The unprofiled decision for a requested scale. */
 export type Picked = Extract<RepresentationResolution, { readonly kind: "unavailable" }> | { readonly kind: "authored"; readonly requested: number; readonly denominator: ScaleDenominator; readonly exact: boolean; readonly representation: AuthoredRepresentation };
@@ -33,7 +34,7 @@ export function supportedScales(asset: Asset): readonly ScaleDenominator[] {
 
 /** ↪️ Scale alternatives for a request: the supported presets, nearest first by log distance. */
 export function scaleAlternatives(asset: Asset, requested: number): readonly Alternative[] {
-  return [...supportedScales(asset)].sort((a, b) => Math.abs(Math.log(a / requested)) - Math.abs(Math.log(b / requested))).map((denominator): Alternative => ({ kind: "scale", denominator }));
+  return [...supportedScales(asset)].sort((a, b) => Math.abs(portable.log(a / requested)) - Math.abs(portable.log(b / requested))).map((denominator): Alternative => ({ kind: "scale", denominator }));
 }
 
 /** 🧭️ Picks the representation for a requested denominator; see the module description. */
@@ -50,7 +51,7 @@ export function pickRepresentation(asset: Asset, requested: number): Picked {
     return requested >= range.minDenominator && requested <= range.maxDenominator;
   });
   if (inside.length > 0) {
-    const denominator = inside.reduce((best, candidate) => (Math.abs(Math.log(candidate / requested)) < Math.abs(Math.log(best / requested)) ? candidate : best));
+    const denominator = inside.reduce((best, candidate) => (Math.abs(portable.log(candidate / requested)) < Math.abs(portable.log(best / requested)) ? candidate : best));
     return { kind: "authored", requested, denominator, exact: false, representation: asset.representations[`${denominator}`] as AuthoredRepresentation };
   }
   return {

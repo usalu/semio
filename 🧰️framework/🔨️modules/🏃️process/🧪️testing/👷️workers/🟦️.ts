@@ -1,8 +1,8 @@
 import{availableParallelism,totalmem}from"node:os";
 import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import{requireHostCapacityV1,resolveHostCapacityLanguageV1,hostCapacityErrorV1,type HostPlanV1}from"../../🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
+import{resolveHostCapacityLanguageV1}from"../../🏗️build/🌡️host-capacity/📏️decision/🟦️.ts";
+import{readLiveHostCapacityPlanV1}from"../../🏗️build/🌡️host-capacity/🎫️gate/🟦️.ts";
 import{hostProfileV1}from"../../🏗️build/🌡️host-capacity/🪞️profile/🟦️.ts";
-import hostSchema from"../../🏗️build/🌡️host-capacity/🧬️schema/🔣️.json"with{type:"json"};
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import table from"./🔣️.json"with{type:"json"};
 
@@ -38,11 +38,9 @@ export function readTestWorkerPolicyV1(value:unknown=table):TestWorkerPolicyV1{
 
 /** 🔎️ Reads what the process may count on: its share (one job) of the grant its environment carries, else the host share of the policy; a plan that is not a plan is refused. */
 export function testWorkerFactsV1(environment:Readonly<Record<string,string|undefined>>,policy:TestWorkerPolicyV1=readTestWorkerPolicyV1(),host:Readonly<{cores:number;totalMegabytes:number}>=hostProfileV1(environment,{cores:availableParallelism(),totalMegabytes:Math.floor(totalmem()/1048576),declared:false})):TestWorkerFactsV1{
- const text=environment[hostSchema.definitions.Protocol.const.planEnvironment];
- if(text===undefined||text==="")return Object.freeze({source:"host",cores:host.cores,hostCores:host.cores,memoryMegabytes:Math.floor(host.totalMegabytes*policy.hostShareBasisPoints/10000)});
- let value:unknown;
- try{value=JSON.parse(text);}catch{throw hostCapacityErrorV1("planRequired",{},environment);}
- const plan=requireHostCapacityV1<HostPlanV1>("Plan",value),jobs=Math.max(1,plan.jobs);
+ const plan=readLiveHostCapacityPlanV1(environment);
+ if(plan===undefined)return Object.freeze({source:"host",cores:host.cores,hostCores:host.cores,memoryMegabytes:Math.floor(host.totalMegabytes*policy.hostShareBasisPoints/10000)});
+ const jobs=Math.max(1,plan.jobs);
  return Object.freeze({source:"grant",cores:Math.max(1,Math.floor(plan.cpu/jobs)),hostCores:host.cores,memoryMegabytes:plan.memoryMegabytes>0?Math.floor(plan.memoryMegabytes/jobs):plan.fixedMegabytes});
 }
 

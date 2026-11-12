@@ -4,6 +4,7 @@
   "namedInputs": {
     "default": [
       "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🧊️3d/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/**/*",
@@ -27,6 +28,26 @@
         "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      }
+    },
+    "export-models": {
+      "executor": "repo:script",
+      "cache": false,
+      "inputs": ["default", "^default"],
+      "outputs": ["{projectRoot}/📤️dist/🧊️models"],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts export-models --lang en",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
       }
     },
     "typecheck": {

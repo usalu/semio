@@ -1,4 +1,4 @@
-/** 🖊️ DWG export: genuine AC1024 produced by the in-repo Rust writer (`📦️packages/🦀️rust`), reached as a raw C-ABI WebAssembly module
+/** 🖊️ DWG export: genuine AC1024 produced by the dependency-free Rust writer of this repo (`📦️packages/🦀️rust`), reached as a raw C-ABI WebAssembly module
  * (no wasm-bindgen) in the browser and in Node, or as the `staffage-dwg` CLI through {@link configureDwg}. When neither is present the
  * result is an explicit `unavailable` naming the missing artifact; a DXF is never renamed to DWG.
  * <https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf> */
@@ -75,22 +75,23 @@ async function resolve(): Promise<Encoder | (DwgAvailability & { available: fals
     return await wasmEncoder(await wasmBytes(location));
   } catch (error) {
     const where = typeof location === "string" || location instanceof URL ? String(location) : "the supplied wasm bytes";
-    return missing(`${where} (staffage_dwg.wasm, built from 🖊️dwg/📦️packages/🦀️rust for wasm32-unknown-unknown) or a staffage-dwg CLI runner via configureDwg({ cli })`, `The DWG encoder module could not be loaded: ${(error as Error).message}`, `Das DWG-Encoder-Modul konnte nicht geladen werden: ${(error as Error).message}`);
+    return missing(`${where} (staffage_dwg.wasm, built from 🖊️dwg/📦️packages/🦀️rust for wasm32-unknown-unknown) or a staffage-dwg CLI runner via configureDwg({ cli })`, `The DWG encoder module could not be loaded: ${(error as Error).message}. Build it with \`repo ./📜️script.ts wasm\` in 🖊️dwg/📦️packages/🦀️rust.`, `Das DWG-Encoder-Modul konnte nicht geladen werden: ${(error as Error).message}. Bauen Sie es mit \`repo ./📜️script.ts wasm\` in 🖊️dwg/📦️packages/🦀️rust.`);
   }
 }
 
-/** 🔎️ Probes the encoder without writing anything. */
+/** 🩺️ Probes the encoder without writing anything. */
 export async function dwgAvailability(): Promise<DwgAvailability> {
   encoder ??= resolve();
   const found = await encoder;
   return "encode" in found ? { available: true, via: found.via } : found;
 }
 
-/** 🖊️ Writes `scene` as a genuine AC1024 DWG; throws {@link DwgUnavailableError} when the encoder is missing. */
+/** ✍️ Writes `scene` as a genuine AC1024 DWG; throws {@link DwgUnavailableError} when the encoder is missing. */
 export async function writeDwg(scene: ModelScene, control?: JobControl): Promise<Uint8Array> {
   control?.signal?.throwIfAborted();
   encoder ??= resolve();
   const found = await encoder;
+  control?.signal?.throwIfAborted();
   if (!("encode" in found)) throw new DwgUnavailableError(found.missing, found.reason);
   control?.progress?.(0, 1, { en: "Encoding DWG", de: "DWG wird kodiert" });
   const bytes = await found.encode(JSON.stringify(scene));

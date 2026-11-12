@@ -4144,6 +4144,393 @@
    ],
    "clinical": false
   },
+  "volume": {
+    "status": "authored",
+    "solids": [
+      {
+        "id": "deck",
+        "kind": "box",
+        "bone": "deck",
+        "material": "anodised",
+        "role": "body",
+        "tone": 0.3,
+        "region": "deck-battery",
+        "size": [0.71, 0.05, 0.17],
+        "cornerRadius": 0.02,
+        "transform": {
+          "translation": [0.025, 0.12, 0]
+        }
+      },
+      {
+        "id": "deck-rail",
+        "kind": "box",
+        "bone": "deck",
+        "material": "anodised",
+        "role": "body",
+        "tone": 0.3,
+        "region": "deck-battery",
+        "size": [0.13, 0.05, 0.043],
+        "cornerRadius": 0.015,
+        "transform": {
+          "translation": [-0.375, 0.12, 0.0635]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0, 0, -0.127]
+        }
+      },
+      {
+        "id": "grip-tape",
+        "kind": "box",
+        "bone": "deck",
+        "material": "griptape",
+        "role": "body",
+        "tone": 0.12,
+        "region": "deck-grip",
+        "size": [0.66, 0.023, 0.14],
+        "cornerRadius": 0.004,
+        "transform": {
+          "translation": [-0.03, 0.1465, 0]
+        }
+      },
+      {
+        "id": "fender-r",
+        "kind": "extrude",
+        "bone": "deck",
+        "material": "plastic",
+        "role": "body",
+        "tone": 0.55,
+        "region": "fenders",
+        "profile": [
+          [-0.30829, 0.14061],
+          [-0.31612, 0.16191],
+          [-0.32763, 0.18147],
+          [-0.34247, 0.19864],
+          [-0.36015, 0.21287],
+          [-0.38009, 0.2237],
+          [-0.40166, 0.23077],
+          [-0.42414, 0.23386],
+          [-0.44681, 0.23287],
+          [-0.46894, 0.22783],
+          [-0.4898, 0.21891],
+          [-0.50872, 0.20638],
+          [-0.52509, 0.19066],
+          [-0.53838, 0.17227],
+          [-0.54815, 0.15178],
+          [-0.55409, 0.12988],
+          [-0.54227, 0.1278],
+          [-0.5369, 0.14761],
+          [-0.52806, 0.16614],
+          [-0.51604, 0.18279],
+          [-0.50123, 0.19701],
+          [-0.4841, 0.20834],
+          [-0.46523, 0.21642],
+          [-0.44521, 0.22098],
+          [-0.4247, 0.22188],
+          [-0.40436, 0.21908],
+          [-0.38485, 0.21268],
+          [-0.3668, 0.20288],
+          [-0.35081, 0.19],
+          [-0.33738, 0.17447],
+          [-0.32696, 0.15678],
+          [-0.31988, 0.13751]
+        ],
+        "plane": "xy",
+        "from": -0.03,
+        "to": 0.03
+      },
+      {
+        "id": "fender-r-stay",
+        "kind": "capsule",
+        "bone": "deck",
+        "material": "plastic",
+        "role": "detail",
+        "tone": 0.55,
+        "region": "fenders",
+        "maxDenominator": 100,
+        "p0": [-0.43, 0.23, 0],
+        "p1": [-0.43, 0.15, 0],
+        "r0": 0.006,
+        "r1": 0.006
+      },
+      {
+        "id": "fender-r-bridge",
+        "kind": "box",
+        "bone": "deck",
+        "material": "plastic",
+        "role": "detail",
+        "tone": 0.55,
+        "region": "fenders",
+        "size": [0.04, 0.012, 0.09],
+        "cornerRadius": 0.004,
+        "transform": {
+          "translation": [-0.43, 0.236, 0]
+        }
+      },
+      {
+        "id": "rear-axle-l",
+        "kind": "capsule",
+        "bone": "wheel-r",
+        "material": "steel-disc",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brake-disc",
+        "p0": [0, 0, 0.022],
+        "p1": [0, 0, 0.0638],
+        "r0": 0.01,
+        "r1": 0.01
+      },
+      {
+        "id": "rear-axle-r",
+        "kind": "capsule",
+        "bone": "wheel-r",
+        "material": "steel-disc",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "brake-disc",
+        "p0": [0, 0, -0.022],
+        "p1": [0, 0, -0.0638],
+        "r0": 0.01,
+        "r1": 0.01
+      },
+      {
+        "id": "r-tyre",
+        "kind": "capsule",
+        "bone": "wheel-r",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "p0": [0.0855, 0, 0.0],
+        "p1": [0.08386, 0.01668, 0.0],
+        "r0": 0.0225,
+        "r1": 0.0225,
+        "repeat": {
+          "count": 32,
+          "rotationAxis": [0, 0, 1],
+          "rotationRad": 0.19635
+        }
+      },
+      {
+        "id": "r-rim",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.75,
+        "region": "tyres",
+        "profile": [[-0.02, 0.075], [0.02, 0.075]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0]
+      },
+      {
+        "id": "r-hub",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "steel-disc",
+        "role": "body",
+        "tone": 0.45,
+        "region": "brake-disc",
+        "profile": [[0.02, 0.03], [0.028, 0.03]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0]
+      },
+      {
+        "id": "f-tyre",
+        "kind": "capsule",
+        "bone": "wheel-f",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "p0": [0.0855, 0, 0.0],
+        "p1": [0.08386, 0.01668, 0.0],
+        "r0": 0.0225,
+        "r1": 0.0225,
+        "repeat": {
+          "count": 32,
+          "rotationAxis": [0, 0, 1],
+          "rotationRad": 0.19635
+        }
+      },
+      {
+        "id": "f-motor",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "motor-alloy",
+        "role": "body",
+        "tone": 0.75,
+        "region": "hub-motor",
+        "profile": [[-0.021, 0.075], [0.021, 0.075]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0]
+      },
+      {
+        "id": "f-hub",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "motor-alloy",
+        "role": "body",
+        "tone": 0.45,
+        "region": "hub-motor",
+        "profile": [[0.02, 0.035], [0.045, 0.035]],
+        "axis": [0, 0, 1],
+        "origin": [0, 0, 0]
+      },
+      {
+        "id": "f-axle",
+        "kind": "capsule",
+        "bone": "wheel-f",
+        "material": "motor-alloy",
+        "role": "detail",
+        "tone": 0.45,
+        "region": "hub-motor",
+        "p0": [0, 0, -0.02],
+        "p1": [0, 0, 0.0535],
+        "r0": 0.01,
+        "r1": 0.01
+      },
+      {
+        "id": "fork-blade",
+        "kind": "capsule",
+        "bone": "fork",
+        "material": "anodised",
+        "role": "body",
+        "tone": 0.4,
+        "region": "stem-bars",
+        "p0": [0, 0, 0],
+        "p1": [0.19858, 0, 0],
+        "r0": 0.0135,
+        "r1": 0.0135,
+        "lateralScale": 0.6296296296296297,
+        "transform": {
+          "rotation": [0, 0, -0.0067, 0.99998],
+          "translation": [-0.19431, -0.00299, 0.0535]
+        }
+      },
+      {
+        "id": "fork-crown",
+        "kind": "capsule",
+        "bone": "fork",
+        "material": "anodised",
+        "role": "body",
+        "tone": 0.4,
+        "region": "stem-bars",
+        "p0": [-0.0099, 0.00139, 0.0],
+        "p1": [-0.0099, 0.00139, 0.0535],
+        "r0": 0.0155,
+        "r1": 0.0155
+      },
+      {
+        "id": "head-block",
+        "kind": "box",
+        "bone": "fork",
+        "material": "anodised",
+        "role": "body",
+        "tone": 0.3,
+        "region": "stem-bars",
+        "size": [0.08, 0.07, 0.07],
+        "cornerRadius": 0.012,
+        "transform": {
+          "translation": [-0.0099, 0.00139, 0.0]
+        }
+      },
+      {
+        "id": "stem",
+        "kind": "capsule",
+        "bone": "stem",
+        "material": "anodised",
+        "role": "body",
+        "tone": 0.4,
+        "region": "stem-bars",
+        "p0": [0.0, 0, 0],
+        "p1": [0.8, 0, 0],
+        "r0": 0.019,
+        "r1": 0.019
+      },
+      {
+        "id": "bar",
+        "kind": "capsule",
+        "bone": "stem",
+        "material": "anodised",
+        "role": "body",
+        "tone": 0.4,
+        "region": "stem-bars",
+        "p0": [0.8, 0, -0.19],
+        "p1": [0.8, 0, 0.19],
+        "r0": 0.0145,
+        "r1": 0.0145
+      },
+      {
+        "id": "grip-l",
+        "kind": "capsule",
+        "bone": "stem",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "stem-bars",
+        "p0": [0.8, 0, 0.148],
+        "p1": [0.8, 0, 0.187],
+        "r0": 0.028,
+        "r1": 0.028
+      },
+      {
+        "id": "grip-r",
+        "kind": "capsule",
+        "bone": "stem",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "stem-bars",
+        "p0": [0.8, 0, -0.148],
+        "p1": [0.8, 0, -0.187],
+        "r0": 0.028,
+        "r1": 0.028
+      },
+      {
+        "id": "brake-lever",
+        "kind": "capsule",
+        "bone": "stem",
+        "material": "anodised",
+        "role": "detail",
+        "tone": 0.2,
+        "region": "stem-bars",
+        "maxDenominator": 100,
+        "p0": [0.77677, -0.09907, 0.17],
+        "p1": [0.80613, -0.01231, 0.17],
+        "r0": 0.0095,
+        "r1": 0.0095
+      },
+      {
+        "id": "stem-clamp",
+        "kind": "capsule",
+        "bone": "stem",
+        "material": "anodised",
+        "role": "detail",
+        "tone": 0.3,
+        "region": "stem-bars",
+        "maxDenominator": 100,
+        "p0": [0.03, 0, 0],
+        "p1": [0.1, 0, 0],
+        "r0": 0.024,
+        "r1": 0.024
+      }
+    ],
+    "decisions": [
+      {
+        "en": "The deck is a rounded box (0.79 m x 0.05 m x 0.17 m, battery pack) with a thin grip-tape slab on top; the rear 0.13 m is split into two side rails so that the rear wheel, which reaches into the deck's footprint in the drawings, runs in a slot between them.",
+        "de": "Das Deck ist ein abgerundeter Quader (0,79 m x 0,05 m x 0,17 m, Akkupaket) mit einer dünnen Griptape-Platte obenauf; die hinteren 0,13 m sind in zwei Seitenschienen geteilt, damit das Hinterrad, das in den Zeichnungen in den Grundriss des Decks hineinreicht, in einem Schlitz dazwischen läuft."
+      },
+      {
+        "en": "Wheels are rings of 32 capsule segments for the pneumatic tyres (one solid with repeat about the axle) with a solid revolve for the hub motor (front) and the rim and brake rotor (rear); the single-sided fork blade and axle sit on the left (w = +0.0535 m) as in front and plan view.",
+        "de": "Die Räder sind Ringe aus 32 Kapselsegmenten für die Luftreifen (ein Körper mit repeat um die Achse) mit einem vollen Rotationskörper für den Nabenmotor (vorn) bzw. Felge und Bremsscheibe (hinten); der einseitige Gabelarm und die Achse sitzen links (w = +0,0535 m), wie in Vorderansicht und Grundriss."
+      },
+      {
+        "en": "Stem, handlebar, grips and brake lever hang on the stem bone and the fork blade, head block and crown on the fork bone, so the stem folds about the head block and the fork turns about the steering axis; the stem tube leans 8 degrees back along the bone axis.",
+        "de": "Lenkerstange, Lenker, Griffe und Bremshebel hängen am Stangenknochen, Gabelarm, Steuerkopf und Gabelkopf am Gabelknochen, sodass die Stange um den Steuerkopf klappt und die Gabel um die Lenkachse dreht; die Lenkerstange ist 8 Grad nach hinten geneigt entlang der Knochenachse."
+      }
+    ]
+  },
   "presentation": {
    "defaultPose": "riding-cruise",
    "defaultClip": "ride-loop",
@@ -4157,7 +4544,11 @@
    "png-sequence",
    "mp4",
    "webm",
-   "component"
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
   ],
   "completion": "authored"
  }

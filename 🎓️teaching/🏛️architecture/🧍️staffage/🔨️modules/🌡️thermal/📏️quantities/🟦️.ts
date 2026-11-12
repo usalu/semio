@@ -9,6 +9,7 @@
 import type { Environment, Text } from "../../../🧬️schema/🟦️.ts";
 import { type RegionField, THERMAL_QUANTITIES, type ThermalQuantity } from "../../🔗️contracts/🟦️.ts";
 import { SIGMA, kelvin } from "../🔬️physics/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 📏️ How one quantity is read, labelled and ranged. */
 export type QuantitySpec = {
@@ -55,7 +56,7 @@ export const QUANTITY_SPECS: Readonly<Record<ThermalQuantity, QuantitySpec>> = {
     unit: "W/m²",
     digits: 0,
     pick: (r) => r.emittedRadiantWM2,
-    centre: (e) => SIGMA * kelvin(e.airTempC) ** 4,
+    centre: (e) => SIGMA * portable.fastPow(kelvin(e.airTempC), 4),
     shared: { min: 230, max: 700 },
     centreMeaning: tx("σT⁴ of a black surface at air temperature", "σT⁴ einer schwarzen Fläche bei Lufttemperatur"),
     meaning: tx("Longwave power the surface itself emits per area (what a thermal camera sees), independent of what it receives.", "Langwellige Leistung, die die Fläche selbst je Fläche abstrahlt (was eine Wärmebildkamera sieht), unabhängig vom Empfang."),

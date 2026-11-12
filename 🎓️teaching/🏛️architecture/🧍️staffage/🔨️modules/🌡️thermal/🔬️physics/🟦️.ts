@@ -6,6 +6,7 @@
  * @see https://doi.org/10.1002/9781119175957 — Incropera & DeWitt, Fundamentals of Heat and Mass Transfer (correlations)
  */
 import type { Environment, ThermalRegion } from "../../../🧬️schema/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** ⚛️ Stefan–Boltzmann constant, W/(m² K⁴) (CODATA 2018). */
 export const SIGMA = 5.670374419e-8;
@@ -39,7 +40,7 @@ export const kelvin = (tC: number): number => Math.max(1, tC + KELVIN);
 
 /** 💧️ Saturation vapour pressure of water over liquid, Pa: Magnus form of Buck (1996), within 0.05 % of IAPWS-95 between 0 and 60 °C. */
 export function saturationPressurePa(tC: number): number {
-  return 611.21 * Math.exp((18.678 - tC / 234.5) * (tC / (257.14 + tC)));
+  return 611.21 * portable.fastExp((18.678 - tC / 234.5) * (tC / (257.14 + tC)));
 }
 
 /** 💧️ Actual vapour pressure of the ambient air, Pa. */
@@ -61,22 +62,22 @@ export const airDensity = (tC: number, p: number, pv: number): number => (p - pv
  * Sutherland viscosity and a power-law conductivity fit, within 1 % of tabulated values from 250 to 400 K. */
 export function airProperties(tC: number, p: number): { readonly nu: number; readonly alpha: number; readonly k: number; readonly pr: number; readonly rho: number } {
   const t = kelvin(tC);
-  const mu = (1.458e-6 * t ** 1.5) / (t + 110.4);
-  const k = 0.0241 * (t / KELVIN) ** 0.9;
+  const mu = (1.458e-6 * portable.fastPow(t, 1.5)) / (t + 110.4);
+  const k = 0.0241 * portable.fastPow((t / KELVIN), 0.9);
   const rho = p / (R_DRY * t);
   return { nu: mu / rho, alpha: k / (rho * CP_AIR), k, pr: (mu * CP_AIR) / k, rho };
 }
 
 /** ☀️ Grey-body longwave exchange, W/m²: `ε σ (T_s⁴ − T_env⁴)`, positive = the surface loses heat. */
-export const radiationFlux = (emissivity: number, surfaceC: number, envC: number): number => emissivity * SIGMA * (kelvin(surfaceC) ** 4 - kelvin(envC) ** 4);
+export const radiationFlux = (emissivity: number, surfaceC: number, envC: number): number => emissivity * SIGMA * (portable.fastPow(kelvin(surfaceC), 4) - portable.fastPow(kelvin(envC), 4));
 
 /** ☀️ Emitted radiant flux `ε σ T⁴`, W/m². */
-export const emittedFlux = (emissivity: number, surfaceC: number): number => emissivity * SIGMA * kelvin(surfaceC) ** 4;
+export const emittedFlux = (emissivity: number, surfaceC: number): number => emissivity * SIGMA * portable.fastPow(kelvin(surfaceC), 4);
 
 /** ☀️ Secant radiation coefficient `q_r / (T_s − T_env)`, W/(m² K); the tangent `4 ε σ T³` at equality. */
 export function radiationCoefficient(emissivity: number, surfaceC: number, envC: number): number {
   const d = surfaceC - envC;
-  return Math.abs(d) < 1e-9 ? 4 * emissivity * SIGMA * kelvin(surfaceC) ** 3 : radiationFlux(emissivity, surfaceC, envC) / d;
+  return Math.abs(d) < 1e-9 ? 4 * emissivity * SIGMA * portable.fastPow(kelvin(surfaceC), 3) : radiationFlux(emissivity, surfaceC, envC) / d;
 }
 
 /** ☀️ The view factors of a surface towards the sky, the ground and the surroundings (other surfaces at the mean radiant temperature), summing to 1.
@@ -95,7 +96,7 @@ export const radiantTemperatures = (env: Environment): { readonly sky: number; r
 export function radiantEnvironmentC(env: Environment, geometry: ThermalRegion["geometry"], skyViewFactor: number): number {
   const f = viewFactors(geometry, skyViewFactor);
   const t = radiantTemperatures(env);
-  return (f.sky * kelvin(t.sky) ** 4 + f.ground * kelvin(t.ground) ** 4 + f.surroundings * kelvin(t.surroundings) ** 4) ** 0.25 - KELVIN;
+  return portable.fastPow((f.sky * portable.fastPow(kelvin(t.sky), 4) + f.ground * portable.fastPow(kelvin(t.ground), 4) + f.surroundings * portable.fastPow(kelvin(t.surroundings), 4)), 0.25) - KELVIN;
 }
 
 /** ☀️ Share of the beam irradiance (normal to the sun) a unit of surface absorbs on average, by geometry: sphere ¼ and cylinder 1/π (projected over surface area),
@@ -109,24 +110,24 @@ export const absorbedSolar = (alpha: number, env: Pick<Environment, "solarWM2" |
 export type Convection = { readonly h: number; readonly natural: number; readonly forced: number };
 
 function rayleigh(dT: number, length: number, film: ReturnType<typeof airProperties>, tFilmC: number): number {
-  return (GRAVITY * Math.abs(dT) * length ** 3) / (kelvin(tFilmC) * film.nu * film.alpha);
+  return (GRAVITY * Math.abs(dT) * portable.fastPow(length, 3)) / (kelvin(tFilmC) * film.nu * film.alpha);
 }
 
 function naturalNusselt(geometry: ThermalRegion["geometry"], ra: number, pr: number, heated: boolean): number {
-  const psi = (c: number): number => (1 + (c / pr) ** (9 / 16)) ** (8 / 27);
-  if (geometry === "vertical-plate") return (0.825 + (0.387 * ra ** (1 / 6)) / psi(0.492)) ** 2;
-  if (geometry === "cylinder") return (0.6 + (0.387 * ra ** (1 / 6)) / psi(0.559)) ** 2;
-  if (geometry === "sphere") return 2 + (0.589 * ra ** 0.25) / (1 + (0.469 / pr) ** (9 / 16)) ** (4 / 9);
+  const psi = (c: number): number => portable.fastPow((1 + portable.fastPow((c / pr), (9 / 16))), (8 / 27));
+  if (geometry === "vertical-plate") return (0.825 + (0.387 * portable.fastPow(ra, (1 / 6))) / psi(0.492)) ** 2;
+  if (geometry === "cylinder") return (0.6 + (0.387 * portable.fastPow(ra, (1 / 6))) / psi(0.559)) ** 2;
+  if (geometry === "sphere") return 2 + (0.589 * portable.fastPow(ra, 0.25)) / portable.fastPow((1 + portable.fastPow((0.469 / pr), (9 / 16))), (4 / 9));
   const facesFlow = (geometry === "horizontal-plate-up") === heated;
-  if (!facesFlow) return 0.27 * ra ** 0.25;
-  return ra < 1e7 ? 0.54 * ra ** 0.25 : 0.15 * ra ** (1 / 3);
+  if (!facesFlow) return 0.27 * portable.fastPow(ra, 0.25);
+  return ra < 1e7 ? 0.54 * portable.fastPow(ra, 0.25) : 0.15 * portable.fastPow(ra, (1 / 3));
 }
 
 function forcedNusselt(geometry: ThermalRegion["geometry"], re: number, pr: number): number {
   if (re <= 0) return 0;
-  if (geometry === "cylinder") return 0.3 + ((0.62 * re ** 0.5 * pr ** (1 / 3)) / (1 + (0.4 / pr) ** (2 / 3)) ** 0.25) * (1 + (re / 282000) ** (5 / 8)) ** (4 / 5);
-  if (geometry === "sphere") return 2 + (0.4 * re ** 0.5 + 0.06 * re ** (2 / 3)) * pr ** 0.4;
-  return re < 5e5 ? 0.664 * re ** 0.5 * pr ** (1 / 3) : (0.037 * re ** 0.8 - 871) * pr ** (1 / 3);
+  if (geometry === "cylinder") return 0.3 + ((0.62 * portable.fastPow(re, 0.5) * portable.fastPow(pr, (1 / 3))) / portable.fastPow((1 + portable.fastPow((0.4 / pr), (2 / 3))), 0.25)) * portable.fastPow((1 + portable.fastPow((re / 282000), (5 / 8))), (4 / 5));
+  if (geometry === "sphere") return 2 + (0.4 * portable.fastPow(re, 0.5) + 0.06 * portable.fastPow(re, (2 / 3))) * portable.fastPow(pr, 0.4);
+  return re < 5e5 ? 0.664 * portable.fastPow(re, 0.5) * portable.fastPow(pr, (1 / 3)) : (0.037 * portable.fastPow(re, 0.8) - 871) * portable.fastPow(pr, (1 / 3));
 }
 
 /** 🌀️ Convection coefficient of a region surface, W/(m² K): natural convection (Churchill–Chu for vertical plates and horizontal cylinders, Churchill for spheres,
@@ -142,7 +143,7 @@ export function convection(geometry: ThermalRegion["geometry"], length: number, 
   const natural = ra > 0 ? (naturalNusselt(geometry, ra, film.pr, dT > 0) * film.k) / length : 0;
   const re = (speed * length) / film.nu;
   const forced = (forcedNusselt(geometry, re, film.pr) * film.k) / length;
-  return { h: (natural ** 3 + forced ** 3) ** (1 / 3), natural, forced };
+  return { h: portable.fastPow((portable.fastPow(natural, 3) + portable.fastPow(forced, 3)), (1 / 3)), natural, forced };
 }
 
 /** 💧️ Evaporative mass-transfer coefficient from the Lewis relation, W/(m² Pa): `16.5 h_c`, pressure corrected. */

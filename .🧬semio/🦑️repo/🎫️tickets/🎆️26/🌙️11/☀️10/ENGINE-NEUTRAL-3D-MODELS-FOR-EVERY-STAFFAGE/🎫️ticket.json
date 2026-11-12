@@ -1,0 +1,56 @@
+{
+  "title": "Engine Neutral 3D Models for Every Staffage",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Extend every staffage with 3D models: procedural declarative data models, exported GLB for static poses and FBX for models with motion, through engine-neutral mechanisms, and extend the thermodynamic, structural and other representations to 3D by the same principle.",
+  "summary": "Volumes for all 152 assets, neutral model kernel, GLB and FBX encoders, viewer, seven views, axonometric, batch export and site integration are in; direct tests green except dwg-reopen; repo run never completed. See summary.md.",
+  "goal": "animate",
+  "sessions": [
+    "bd52a2e6-c416-4e13-bd7a-fcdd3d0aa0ba",
+    "50f16248-62d5-4f13-a440-0c09d7e11bb6"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-10 19:35:53",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "ff42158b9733c2ef40b30b1a47fdba2c7c77ace2",
+      "prompt": "Extend every staffage with 3D models: procedural declarative data models, exported GLB for static poses and FBX for models with motion, through engine-neutral mechanisms, and extend the thermodynamic, structural and other representations to 3D by the same principle.",
+      "llm": "fable-5-2"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-11 01:12:36",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "ff42158b9733c2ef40b30b1a47fdba2c7c77ace2",
+      "summary": "Volumes for all 152 assets, neutral model kernel, GLB and FBX encoders, viewer, seven views, axonometric, batch export and site integration are in; direct tests green except dwg-reopen; repo run never completed. See summary.md.",
+      "files": [
+        {
+          "path": "🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/README.md"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗂️WindowChrome/shared-border.ts"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-11 01:14:49",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "mac",
+      "client": "claude-code",
+      "checkpoint": "ff42158b9733c2ef40b30b1a47fdba2c7c77ace2",
+      "prompt": "Close the remaining verification gaps: DWG wasm build, Python consumer against real manim, the 15 silhouette misses, and repo run for the 3D and staffage test targets."
+    }
+  ]
+}

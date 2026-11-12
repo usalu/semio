@@ -1,0 +1,476 @@
+{
+ "document": {
+  "version": "semio.model/v1",
+  "id": "mechanism",
+  "title": {
+   "en": "mechanism",
+   "de": "mechanism"
+  },
+  "nodes": [
+   {
+    "id": "root",
+    "parent": null,
+    "translation": [
+     0,
+     0,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "id": "arm",
+    "parent": "root",
+    "translation": [
+     0,
+     0,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "revolute",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "min": -1.0,
+     "max": 1.0
+    }
+   },
+   {
+    "id": "tip",
+    "parent": "arm",
+    "translation": [
+     1,
+     0,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "id": "slider",
+    "parent": "root",
+    "translation": [
+     0,
+     0.5,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "prismatic",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "min": 0,
+     "max": 0.3
+    }
+   },
+   {
+    "id": "ball",
+    "parent": "root",
+    "translation": [
+     0,
+     0,
+     1
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "spherical",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "max": 0.5,
+     "twistMin": -0.3,
+     "twistMax": 0.3
+    }
+   },
+   {
+    "id": "locked",
+    "parent": "root",
+    "translation": [
+     0,
+     2,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "fixed",
+     "axis": [
+      0,
+      1,
+      0
+     ]
+    }
+   }
+  ],
+  "solids": [],
+  "meshes": [],
+  "skins": [],
+  "materials": [
+   {
+    "id": "skin",
+    "title": {
+     "en": "Skin",
+     "de": "Haut"
+    },
+    "baseColor": [
+     0.8,
+     0.7,
+     0.6,
+     1
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emissive": [
+     0,
+     0,
+     0
+    ],
+    "alphaMode": "opaque",
+    "doubleSided": false,
+    "unlit": false
+   }
+  ],
+  "variants": [],
+  "poses": [],
+  "animations": [
+   {
+    "id": "wave",
+    "title": {
+     "en": "wave",
+     "de": "wave"
+    },
+    "durationS": 2,
+    "loop": true,
+    "channels": [
+     {
+      "target": {
+       "node": "arm",
+       "path": "rotation"
+      },
+      "interpolation": "linear",
+      "times": [
+       0,
+       1,
+       2
+      ],
+      "values": [
+       0,
+       0.0,
+       0,
+       1.0,
+       0,
+       0.3894183423086505,
+       0,
+       0.9210609940028851,
+       0,
+       0.0,
+       0,
+       1.0
+      ]
+     },
+     {
+      "target": {
+       "node": "slider",
+       "path": "translation"
+      },
+      "interpolation": "step",
+      "times": [
+       0,
+       1
+      ],
+      "values": [
+       0,
+       0.5,
+       0,
+       0.2,
+       0.5,
+       0
+      ]
+     },
+     {
+      "target": {
+       "material": "skin",
+       "path": "baseColor"
+      },
+      "interpolation": "linear",
+      "times": [
+       0,
+       2
+      ],
+      "values": [
+       0,
+       0,
+       0,
+       1,
+       1,
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "events": [
+     {
+      "t": 1,
+      "id": "peak"
+     }
+    ]
+   },
+   {
+    "id": "overshoot",
+    "title": {
+     "en": "overshoot",
+     "de": "overshoot"
+    },
+    "durationS": 2,
+    "loop": true,
+    "channels": [
+     {
+      "target": {
+       "node": "arm",
+       "path": "rotation"
+      },
+      "interpolation": "linear",
+      "times": [
+       0,
+       1,
+       2
+      ],
+      "values": [
+       0,
+       0.0,
+       0,
+       1.0,
+       0,
+       0.6816387600233341,
+       0,
+       0.7316888688738209,
+       0,
+       0.0,
+       0,
+       1.0
+      ]
+     },
+     {
+      "target": {
+       "node": "slider",
+       "path": "translation"
+      },
+      "interpolation": "step",
+      "times": [
+       0,
+       1
+      ],
+      "values": [
+       0,
+       0.5,
+       0,
+       0.2,
+       0.5,
+       0
+      ]
+     },
+     {
+      "target": {
+       "material": "skin",
+       "path": "baseColor"
+      },
+      "interpolation": "linear",
+      "times": [
+       0,
+       2
+      ],
+      "values": [
+       0,
+       0,
+       0,
+       1,
+       1,
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "events": [
+     {
+      "t": 1,
+      "id": "peak"
+     }
+    ]
+   }
+  ]
+ },
+ "samples": [
+  {
+   "animation": "wave",
+   "timeS": 0.5,
+   "armAngleY": 0.4,
+   "sliderX": 0.0,
+   "baseColor": [
+    0.25,
+    0.25,
+    0.25,
+    1.0
+   ],
+   "issues": []
+  },
+  {
+   "animation": "wave",
+   "timeS": 1.0,
+   "armAngleY": 0.8,
+   "sliderX": 0.2,
+   "baseColor": [
+    0.5,
+    0.5,
+    0.5,
+    1.0
+   ],
+   "issues": []
+  },
+  {
+   "animation": "wave",
+   "timeS": 1.5,
+   "armAngleY": 0.4,
+   "sliderX": 0.2,
+   "baseColor": [
+    0.75,
+    0.75,
+    0.75,
+    1.0
+   ],
+   "issues": []
+  },
+  {
+   "animation": "wave",
+   "timeS": 2.5,
+   "armAngleY": 0.4,
+   "sliderX": 0.0,
+   "baseColor": [
+    0.25,
+    0.25,
+    0.25,
+    1.0
+   ],
+   "issues": []
+  },
+  {
+   "animation": "wave",
+   "timeS": -0.5,
+   "armAngleY": 0.4,
+   "sliderX": 0.2,
+   "baseColor": [
+    0.75,
+    0.75,
+    0.75,
+    1.0
+   ],
+   "issues": []
+  },
+  {
+   "animation": "overshoot",
+   "timeS": 1.0,
+   "armAngleY": 1.0,
+   "sliderX": 0.2,
+   "baseColor": [
+    0.5,
+    0.5,
+    0.5,
+    1.0
+   ],
+   "issues": [
+    "joint-limit"
+   ]
+  }
+ ],
+ "tipWorld": {
+  "description": "tip = arm rotated about +Y by the angle, then (1,0,0)",
+  "formula": "[cos(a), 0, -sin(a)]"
+ },
+ "joints": {
+  "armBeyondLimit": {
+   "angleY": 1.4,
+   "clampedAngleY": 1.0
+  },
+  "sliderBeyondLimit": {
+   "x": 0.9,
+   "clampedX": 0.3,
+   "slideNegative": -0.2,
+   "clampedNegativeX": 0.0
+  },
+  "ballTwist": {
+   "twistAboutZ": 0.6,
+   "clampedTwist": 0.3
+  },
+  "ballSwing": {
+   "swingAboutX": 0.9,
+   "clampedSwing": 0.5
+  }
+ },
+ "tolerance": 1e-09
+}

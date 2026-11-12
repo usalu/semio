@@ -1,7 +1,7 @@
 @capability-staffage-section-views
-Feature: Sectioned front and plan views are named as sections and marked in the side view
-  A representation may declare that its front or plan view is a section: `sections.front.plane` is the forward position of a vertical cut plane in metres, `sections.plan.plane` the height of a horizontal one,
-  each with a bilingual label such as A-A. Captions then read "Section A-A" / "Schnitt A-A" instead of "Front elevation" / "Vorderansicht", the side elevation at 1:100 and 1:50 shows the cut-line marker at the plane
+Feature: Sectioned side, front and plan views are named as sections and marked in the side view and the plan
+  A representation may declare that its side elevation, front or plan view is a section: `sections.elevation.plane` is the lateral position of a vertical cut plane along the forward axis in metres (seen from the right), `sections.front.plane` the forward position of a vertical cut plane across it, `sections.plan.plane` the height of a horizontal one,
+  each with a bilingual label such as A-A. Captions then read "Section A-A" / "Schnitt A-A" instead of "Front elevation" / "Vorderansicht", the side elevation at 1:100 and 1:50 shows the cut-line marker of a front or plan section at the plane, the plan the marker of an elevation section
   (thin chain line with thick ends, viewing arrows and letters), and the cast index records the section. A plane outside the asset is a validation issue in English and German.
 
   THE REFERENCE is shapely (🐍️.py): it builds the cut line, cuts the thick ends and moves the end points along the viewing direction; the hand-computed numbers of the fixture agree with it.
@@ -16,6 +16,11 @@ Feature: Sectioned front and plan views are named as sections and marked in the 
     When its side view is depicted at 1:100 and 1:50
     Then the marker items equal the shapely placement for the evaluated extent
     And no marker is drawn at 1:200, in a textless depiction or in the front view
+
+  Scenario: The plan draws the marker of an elevation section
+    Given the cooking pot with the elevation section A-A at the lateral plane 0
+    When its plan is depicted at 1:100 and 1:50
+    Then the marker items equal the shapely placement and the arrows point to the far side
 
   Scenario: Captions name the section
     Given a front view declared as section A-A and one without a section

@@ -2489,6 +2489,152 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "fin",
+          "kind": "box",
+          "bone": "fins",
+          "material": "aluminium-fin",
+          "role": "body",
+          "tone": 0.7,
+          "region": "fins",
+          "size": [0.1, 0.48, 0.009],
+          "transform": {
+            "translation": [0.0, 0.24, -0.2255]
+          },
+          "repeat": {
+            "count": 46,
+            "translation": [0.0, 0.0, 0.01]
+          }
+        },
+        {
+          "id": "end-plate-left",
+          "kind": "box",
+          "bone": "fins",
+          "material": "aluminium-fin",
+          "role": "body",
+          "tone": 0.6,
+          "region": "fins",
+          "size": [0.1, 0.48, 0.02],
+          "transform": {
+            "translation": [0.0, 0.24, 0.24]
+          }
+        },
+        {
+          "id": "end-plate-right",
+          "kind": "box",
+          "bone": "fins",
+          "material": "aluminium-fin",
+          "role": "body",
+          "tone": 0.6,
+          "region": "fins",
+          "size": [0.1, 0.48, 0.02],
+          "transform": {
+            "translation": [0.0, 0.24, -0.24]
+          }
+        },
+        {
+          "id": "tube-row-front",
+          "kind": "revolve",
+          "bone": "tubes",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.5,
+          "region": "tubes",
+          "profile": [[0.0, 0.009], [0.508, 0.009]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [-0.022, 0.02, -0.254],
+          "repeat": {
+            "count": 12,
+            "translation": [0.0, 0.04, 0.0]
+          }
+        },
+        {
+          "id": "tube-row-rear",
+          "kind": "revolve",
+          "bone": "tubes",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.5,
+          "region": "tubes",
+          "profile": [[0.0, 0.009], [0.508, 0.009]],
+          "axis": [0.0, 0.0, 1.0],
+          "origin": [0.023, 0.04, -0.254],
+          "repeat": {
+            "count": 11,
+            "translation": [0.0, 0.04, 0.0]
+          }
+        },
+        {
+          "id": "header-bottom",
+          "kind": "box",
+          "bone": "frame",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "headers",
+          "size": [0.15, 0.02, 0.5],
+          "cornerRadius": 0.006,
+          "transform": {
+            "translation": [0.0, 0.01, 0.0]
+          }
+        },
+        {
+          "id": "header-top",
+          "kind": "box",
+          "bone": "frame",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "headers",
+          "size": [0.15, 0.02, 0.5],
+          "cornerRadius": 0.006,
+          "transform": {
+            "translation": [0.0, 0.51, 0.0]
+          }
+        },
+        {
+          "id": "inlet-stub",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "headers",
+          "profile": [[0.0, 0.006], [0.06, 0.006]],
+          "axis": [1.0, 0.0, 0.0],
+          "origin": [0.07, 0.51, 0.2]
+        },
+        {
+          "id": "outlet-stub",
+          "kind": "revolve",
+          "bone": "frame",
+          "material": "copper",
+          "role": "body",
+          "tone": 0.4,
+          "region": "headers",
+          "profile": [[0.0, 0.006], [0.06, 0.006]],
+          "axis": [1.0, 0.0, 0.0],
+          "origin": [0.07, 0.01, -0.2]
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Fins are 46 aluminium plates of 9 mm at 10 mm pitch standing across the tube axis (a coarse pitch so the pack still reads as individual fins at 1:50 without more than 6 % gaps in the front and plan silhouettes); the real pitch is 2 to 3 mm.",
+          "de": "Die Lamellen sind 46 Aluminiumplatten von 9 mm im Abstand von 10 mm quer zur Rohrachse (grober Abstand, damit das Paket bei 1:50 als einzelne Lamellen lesbar bleibt und die Silhouetten in Vorderansicht und Grundriss hoechstens 6 % Luecken haben); real sind es 2 bis 3 mm."
+        },
+        {
+          "en": "The 23 tubes are two staggered rows (12 and 11, 40 mm pitch, rows 45 mm apart) written as two solids with repeat; they run through the end plates and stick out 4 mm on each side. The 2D front view draws only 11 tubes; the elevation draws all 23, which the 3D follows.",
+          "de": "Die 23 Rohre sind zwei versetzte Reihen (12 und 11, 40 mm Teilung, Reihenabstand 45 mm) als zwei Koerper mit repeat; sie laufen durch die Endplatten und stehen beidseitig 4 mm vor. Die 2D-Vorderansicht zeichnet nur 11 Rohre, die Ansicht alle 23, dem folgt das 3D."
+        },
+        {
+          "en": "Headers are rounded copper boxes (150 mm by 20 mm by 500 mm) above and below the pack as drawn in the plan; both connection stubs are cylinders on the same side (x 0.07 to 0.13), inlet on top at z +0.2, outlet at the bottom at z -0.2.",
+          "de": "Die Sammler sind abgerundete Kupferkaesten (150 mm mal 20 mm mal 500 mm) ueber und unter dem Paket wie im Grundriss; beide Anschlussstutzen sind Zylinder auf derselben Seite (x 0,07 bis 0,13), Eintritt oben bei z +0,2, Austritt unten bei z -0,2."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "hot",
       "defaultClip": "reverse",
@@ -2502,7 +2648,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

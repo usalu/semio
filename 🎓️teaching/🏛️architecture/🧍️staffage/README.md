@@ -11,7 +11,8 @@ every view, the website, the reusable component and every export.
                                                    ├─ solveThermal ─▶ ThermalField
                                                    ├─ solveStructure ─▶ StructuralResult
                                                    ├─ depict(view, scale) ─▶ DrawingScene (paper mm) ─▶ SVG · PDF · frames · MP4/WebM
-                                                   └─ modelScene ─▶ ModelScene (model metres) ─▶ DXF · DWG
+                                                   ├─ modelScene ─▶ ModelScene (model metres) ─▶ DXF · DWG
+                                                   └─ modelOf(asset, options) ─▶ ModelDocument (semio.model/v1, neutral frame) ─▶ GLB · FBX · JSON · ZIP
 ```
 
 A query is a pose, a clip at an arbitrary time, or a transition between two poses. The same state drives all seven representations — dark line,
@@ -22,14 +23,17 @@ desynchronise geometry and analysis.
 
 | Path | Content |
 |---|---|
-| `🧬️schema/🔣️.json` | `semio.staffage/v1`, the normative contract (`🟦️.ts` is its typed twin) |
+| `🧬️schema/🔣️.json` | `semio.staffage/v2`, the normative contract (`🟦️.ts` is its typed twin) |
 | `🗂️catalog/🔣️.json` | the manifest: categories, collections, one row per asset with its completion status |
 | `🗂️catalog/<category>/<slug>/🔣️.json` | the handcrafted asset `<slug>` of one category |
-| `🔨️modules/` | `🔗️contracts` · `📐️units` · `🦴️rig` · `🎞️animation` · `🧮️evaluation` · `🗂️catalog` · `🌡️thermal` · `🏗️structure` · `🎨️depiction` · `📤️export` |
+| `🔨️modules/` | `🔗️contracts` · `📐️units` · `🦴️rig` · `🎞️animation` · `🧮️evaluation` · `🗂️catalog` · `🌡️thermal` · `💨️transport` · `🏗️structure` · `🖨️representation` · `🔺️polygon` · `🏷️revision` · `🎨️depiction` · `🔭️multiview` · `🧊️volume` (asset → `semio.model/v1`) · `📤️export` (svg, pdf, dxf, dwg, frames, video, cast, sheet, cli, `🧊️glb`, `🎬️fbx`, `🗿️model`, `🗜️zip`, `📦️batch`, `🔌️tools`) |
 | `📦️packages/🟦️typescript` | library `@teaching/staffage` |
 | `🎯️targets/⚛️react/📦️packages/🟦️typescript` | `@teaching/staffage-react`: `StaffageFigure`, the `<staffage-figure>` element and the archive app |
 | `🌐️site/` | `@teaching/staffage-site`: the website shell and its Vite build |
+| `🔮️oracles/` | the registry of the third-party test oracles |
 | `🧪️tests/`, `🧫️fixtures/` | test cases (Vitest, Gherkin, Python oracles) and language-agnostic vectors |
+
+The neutral 3D model kernel is not part of this folder: `🧰️framework/🔨️modules/🧊️3d/🗿️model` (README there).
 
 ## Conventions
 
@@ -59,7 +63,9 @@ desynchronise geometry and analysis.
 
 Every authored representation draws `geometry.elevation` (side elevation), `geometry.front` (front elevation) and `geometry.plan` (plan, top view), each in rest-pose model metres bound to the same bones; the viewpoint is a depiction option (`--viewpoint elevation|front|plan`, `--views` for a sheet of the three views in the preview CLI; the viewer always offers the three views).
 
-The multiview sheet puts the three views of one evaluated state on one sheet: `--format sheet-svg|sheet-pdf|sheet-dxf|sheet-dwg --projection first|third`. Third angle (`third`): plan above the side elevation, front elevation to its right. First angle (`first`): plan below, front to the left. The projection is required with no default, the projection symbol is drawn on the sheet, and `--viewpoint` is refused with a sheet format. All cells come from one query, time, representation and scale; otherwise the sheet throws. Each output file name carries the viewpoint or the sheet projection (D14). DWG sheets are unverified on a real file: `staffage_dwg.wasm` is not built here, so the DWG path fails with `DwgUnavailableError` (pending). Source: `📝️sonnet-exports.md` in the ticket folder.
+The multiview sheet puts the three views of one evaluated state on one sheet: `--format sheet-svg|sheet-pdf|sheet-dxf|sheet-dwg --projection first|third`. Third angle (`third`): plan above the side elevation, front elevation to its right. First angle (`first`): plan below, front to the left. The projection is required with no default, the projection symbol is drawn on the sheet, and `--viewpoint` is refused with a sheet format. All cells come from one query, time, representation and scale; otherwise the sheet throws. Each output file name carries the viewpoint or the sheet projection (D14). DWG sheets are genuine AC1024 files from the crate's own writer, read back by ezdwg for all four reference assets in both projections (`🧪️tests/📑️multiview-sheet`). Source: `📝️sonnet-exports.md` in the ticket folder.
+A view drawn as a section declares it in `sections` of the representation (`elevation`, `front` or `plan`, each `{ plane, label }`). The plane is the lateral position z of a vertical cut along the forward axis seen from the right (the part at smaller z is removed) for the side elevation, the forward position x of a vertical cut across the forward axis seen from ahead (the part at larger x is removed) for the front elevation, and the height y of a horizontal cut seen from above (the part above is removed) for the plan. A section view shows the cut faces of the volume and may show everything that remains visible beyond the plane; what lies in front of the plane appears at most as a thin outline (overhead and hidden lines). The side elevation carries the cut-line marker of a front or plan section, the plan the marker of an elevation section; captions read "Section A-A" / "Schnitt A-A" and "Plan section B-B" / "Grundriss-Schnitt B-B". Guard: `🧪️tests/🧊️catalog-silhouette` compares the drawing of every view with the volume cut by that plane.
+
 Front and plan shapes are projections of one three-dimensional chain: `evaluate` carries every vertex of a front (lateral, up) or plan (ahead, lateral) shape from the rest frame of its bone to the current frame by the same transform that places the bone (`carry`), so swing, spread and twist all read right. A drawing has no depth of its own, so a vertex takes the depth it lacks from the elevation silhouette of the same bone at rest, at the height (front) or forward position (plan) of the vertex (the elevation twin of the same `id` is carried at the middle of its silhouette); a bone without elevation shapes pins its shapes at the rest depth of its origin. `followTip` therefore stretches nothing for a bone that has extent in the view; it only matters where the drawing really has no depth information: a `followTip` rect or poly on a bone that lies along the viewing direction (a wing or jib seen end-on) grows outwards from the origin to the tip by the lateral position across the shape, and a plan capsule with `followTip` follows the origin with its first end and the tip with its second. Every other part that moves out of the bone-parallel directions is a `solid`.
 
 The evaluated state carries the chain itself (`bones[id].frame`, `tip`, `anchors[id].z`, `root`, `kinematics` as 3D vectors), `timeS` is the absolute query time and `clipTimeS` the wrapped clip phase. Painting order follows the nearest point of each shape (`shapeDepth`), with the cameras of `🎨️depiction/🔭️views` as the one source of the projection.
@@ -71,9 +77,9 @@ Parts that rotate away from the bone-parallel directions (blind slats, flaps, bo
 | `solid` | Front | Plan |
 |---|---|---|
 | `{ "kind": "revolved", "axisBone", "axis": "u", "v" or "w", "axisX", "axisZ"?, "mirror"? }` an axisymmetric part about the direction `axis` of the bone-local frame of `axisBone` (u along the bone, v its normal, w lateral) through the rest origin of `axisBone`, offset by `axisX` (side-elevation x) and `axisZ` (lateral, default 0) from that origin: the axis is local to its bone and travels with it (D24) | paper x is the lateral distance from the axis, y the world height; `mirror` adds the reflection so a half profile reads as the whole body | the circle of the widest lateral reach about the axis |
-| `{ "kind": "extruded", "z0", "z1" }` a laterally prismatic part (left is +) | `z0`..`z1` by the height range of the transformed profile | forward range of the transformed profile by `z0`..`z1` |
+| `{ "kind": "extruded", "sweep": "w" or "v", "z0", "z1", "zTip"? }` a prismatic part: `sweep` is required and never defaulted (D47); `w` sweeps the profile of the bone (u, v) plane laterally (left is +), `v` sweeps a profile of the (u, w) plane along the bone normal | `w`: `z0`..`z1` by the height range of the transformed profile; `v`: the lateral range of the profile by the height of the sweep | `w`: forward range of the transformed profile by `z0`..`z1`; `v`: `z0`..`z1` ahead by the lateral range of the profile |
 
-`solid` is allowed in every viewpoint and excludes `followTip`; `axisBone` must be the shape's own bone or one of its ancestors (D21) and `z0 < z1`. Vectors: `🧫️fixtures/🧊️solid-placements`, test `🧪️tests/🧊️solid-placements` (shapely oracle).
+`solid` is allowed in every viewpoint and excludes `followTip`; `axisBone` must be the shape's own bone or one of its ancestors (D21) and `z0 < z1`. A missing or unknown `sweep` is refused: `evaluate` and the multiview resolver throw `SolidSweepError`, the validator reports `solid-sweep`, the schema requires the member. Vectors: `🧫️fixtures/🧊️solid-placements`, test `🧪️tests/🧊️solid-placements` (shapely oracle); `🧫️fixtures/🧊️solid-sweep`, test `🧪️tests/🧊️solid-sweep` (gl-matrix and ajv).
 
 ### Lateral spread
 
@@ -102,6 +108,60 @@ The rig is sagittal (forward and up), so wings spread sideways, arms raised side
 - Validator: `joint-limit` for a twist on a fixed or prismatic joint and above 180 degrees. Guard: the `spread-*` checks of the three-views test cover every pose and clip instant with a spread or twisted bone.
 - Vectors with hand-computed positions: `🧫️fixtures/🧊️axial-twist`; test `🧪️tests/🧊️axial-twist` (numpy rotation matrices and shapely); demonstration: `tower-crane` pose `parked-weathervane` (turntable twist of 60 degrees).
 
+## Volume
+
+`volume` (`Asset.volume`, `Volume`) is the declarative 3D body of an asset: `{ status: "authored", solids, decisions }`, from which the engine-neutral model, the GLB and FBX files and the axonometric view are built. It is required: every catalog asset and every asset fixture has one. A solid is bound to a `bone` and authored in that bone's rest frame in metres: `u` along the bone, `v` its normal in the sagittal plane (the `y` of an elevation shape), `w` lateral (left is +), plus the bone's own `z`; the pose of the bone carries it through every pose and clip.
+
+| `kind` | Fields (bone-local, metres) |
+|---|---|
+| `box` | `size` [u, v, w] centred on the origin, `cornerRadius` |
+| `ellipsoid` | `radii` [u, v, w] centred on the origin |
+| `capsule` | `p0`, `p1`, `r0`, `r1` (one may be 0), `lateralScale` stretches the cross-section along `w` |
+| `revolve` | `profile` [axial, radial] (simple, radial ≥ 0; open, or closed when the first point equals the last, a torus-like loop), `axis`, `origin`, `sweepRad` (default a full turn), `lateralScale` |
+| `extrude` | `profile` (simple polygon), `holes` (strictly inside, apart), `plane` `xy` (profile u,v; along w) / `yz` (v,w; along u) / `zx` (w,u; along v), `from` < `to`, `taperTo` [scaleFrom, scaleTo] |
+| `loft` | `sections` ≥ 2 of `at`, `rx` (along w), `ry` (along v for a path along u), `exponent` (2 ellipse), `rotation`; `capStart`, `capEnd` |
+
+Every solid also states `id` (unique), `material` (an asset material), `role`, `tone` (0..1), `region` or `regions` (thermal regions), optionally `maxDenominator` (the largest preset denominator that still shows it), `weights` (up to four `{ bone, weight }` summing to 1; absent = rigid to `bone`), `transform` (`scale`, `rotation` unit quaternion, `translation`, in that order) and `repeat` (`count` 1..256 copies, copy k applies the step `translation`, `rotationRad` about `rotationAxis` through `origin` k times). Validator rules (`🔨️modules/🗂️catalog/🧊️volume`): `volume-empty`, `volume-duplicate-id`, `volume-bone`, `volume-material`, `volume-region`, `volume-weights-bone|count|sum`, `volume-size`, `volume-non-finite`, `volume-extrude-range`, `volume-profile-degenerate`, `volume-profile-self-intersecting`, `volume-hole-outside`, `volume-holes-overlap`, `volume-loft-sections`, `volume-repeat`, `volume-transform`, `volume-max-denominator`. Vectors: `🧫️fixtures/🧊️volume-schema`, test `🧪️tests/🧊️volume-schema` (ajv, shapely and robust-predicates oracles); demonstration: the sample figure.
+
+`ExportFormat` gains `glb` (glTF 2.0 binary of a pose), `fbx` (FBX 7.4 binary of one clip), `model` (the engine-neutral JSON model) and `model-zip` (all of them of one asset); `Viewpoint` gains `axonometric`, the derived 3D view of the volume with no authored shapes (`PLANAR_VIEWPOINTS` are the three authored ones). `glb`, `fbx`, `model` and `model-zip` are built and every catalog asset lists them in `exports` (see 3D models).
+
+## Axonometric view
+
+`viewpoint: "axonometric"` draws the 3D volume of the asset through `depict`, `modelScene` (DXF, DWG), `resolveSheet` (optional fourth cell), the CLI (`--viewpoint axonometric [--camera isometric|dimetric|<azimuth>,<elevation>]`, sheets `--views elevation,front,plan,axonometric`) and casts, in the same seven representations, pens, tones, patterns and legends as the planar views; the colours come from the same looks as the 3D model (`🔨️modules/🎨️depiction/🧊️axonometric`). Pipeline: evaluated bone frames pose the kernel-tessellated solids (chord 0.04 paper mm, `maxDenominator` and the role pens of the representation decide the detail), exact vector hidden-surface removal (nearer-triangle clipping, depth-plane splitting, no raster) leaves convex fragments that are merged per solid and shading band, silhouette, crease and interpenetration lines get exact hidden-line removal. Solid views shade four bands by a fixed light (`shading: "flat"` switches it off); analytic views never shade.
+
+```ts
+depict(state, { ...defaultDepictionOptions("light-solid", "en", 50, "axonometric"), axonometric: { kind: "dimetric" } /* | { kind: "isometric" } | { kind: "free", azimuthDeg, elevationDeg } */, shading: "banded" }, analysis, control?)  // DrawingScene
+depictAsync(state, options, analysis, control?)  // yields between steps; control = { signal?, progress? }; loads the axonometric module first
+```
+
+The axonometric depiction (volume solids, kernel tessellation, hidden lines) is a chunk of its own: the synchronous `depict` and `modelScene` throw `AxonometricNotLoadedError` (named, English and German) for the `axonometric` viewpoint until `await loadAxonometric()` ran; `depictAsync` and `modelSceneAsync` load it themselves, the CLI, the cast exporter and the preview load it when asked for the viewpoint, the web target through its viewpoint gate. A program that draws the planar viewpoints never loads it (the site test checks the entry chunk for the volume module, the kernel and the axonometric depiction).
+
+To scale: the camera is orthographic and the vertical axis is always true (`mm = m · 1000 / denominator`). Isometric: all three axes true; dimetric (ISO 5456-3): ahead and up true, lateral axis ½; free: up true, the horizontal axes by `metadata.projection.axisScale`. Only lengths along the world axes are to scale; diagonals are not. Tests: `🧪️tests/🧊️axonometric-{projection,visibility,depiction,exports}` (three, polygon-clipping, the kernel viewer's rasteriser, sharp, pdfjs, ezdxf as oracles).
+
+## 3D models
+
+`modelOf(asset, options, operation)` (`🔨️modules/🧊️volume`) turns the volume into a procedural `semio.model/v1` document of the neutral kernel (`🧰️framework/🔨️modules/🧊️3d/🗿️model`): right-handed, +Y up, +Z ahead, +X the asset's left, metres, radians, quaternions. The staffage world (x ahead, y up, z left) maps by `(x, y, z) → (z, y, x)`; the node frame of a bone is `(u, v, -w)`, so a solid is mirrored in `w` through its own transform. Nodes are the rig bones at rest, the rig root is `free`, a revolute joint is revolute about the node's `+Z` with its limits in radians, a bone that a pose or clip spreads or twists is `spherical`, a prismatic joint slides along its axis, a fixed one is fixed. Poses are every pose, animations every clip sampled with `evaluate` at the clip fps (root motion, looping, events); no kinematics is repeated. Solids pass through unchanged apart from the frame mirror; a loft section lies in the plane of its own `rotation` (kernel semantics). `maxDenominator` filters the solids by the requested scale.
+
+The seven views are variants of one geometry: `dark-solid`, `light-solid` tone ramp; `dark-line`, `light-line` unlit paper plus feature edges; `thermal` per region colours from the very `thermalPaint` of the 2D view (shared range or `thermalSpanK`, the environment of the caller, else the reference environment, else the asset's own); `forces`, `moments` per bone colours from the very `memberPaint` of the 2D views. Glyph solids (tag `glyph`: force arrows, moment arcs, centre of mass, emitter cones) have the paper sizes of the 2D views at the requested scale and show only in their view. Analytic colours and glyphs animate with the clip.
+
+```
+repo tools exec bun -- 🔨️modules/📤️export/🎬️cli/🟦️.ts --asset <slug> --scale 50 --lang en --out <dir> --format glb --pose <slug>
+… --format fbx --clip <slug> [--view <view>]     … --format model (--pose <slug> | --clip <slug>)     … --format model-zip
+```
+
+A GLB is one static pose (all seven views inside), an FBX one clip in one view (default `light-solid`), `model` the neutral JSON, `model-zip` every pose and clip; the web target adds an owned WebGL2 orbit viewer (`viewpoint="model"`, kernel `🖥️viewer`) and offers the same files as downloads; `--environment <preset>` and `--span-k <K>` steer the thermal view; nonsensical combinations are refused by name in both languages (`ModelRequestError`). Files are named `<asset>-<pose|clip>-<view|all>-model-1to<scale>` and are not checked in. Tests: `🧪️tests/🧊️model-frame`, `-skeleton`, `-looks`, `-bounds`, `-exports`, `-catalog` (gltf-validator, three `GLTFLoader` and `FBXLoader`, the 2D depiction and `evaluate` as oracles).
+
+The files of the catalog as a build artifact (not checked in):
+
+```
+repo run @teaching/staffage:export-models [-- --lang en|de --out <dir> --scale 50 --asset a,b --view light-solid --force]
+repo tools exec bun -- 🔨️modules/📤️export/📦️batch/🟦️.ts --lang en [--out <dir>] …
+```
+
+Default output `📦️packages/🟦️typescript/📤️dist/🧊️models`: `manifest.json` (settings, assets with the SHA-256 of their catalog document, every file with asset, pose or clip, view, kind, relative path, bytes, SHA-256, triangle count) and per asset `<asset>/<asset>-<pose>-all-model-1to50.glb`, `…-<clip>-light-solid-model-1to50.fbx`, `…-<pose>-all-model-1to50.pose.json`, `…-<clip>-all-model-1to50.clip.json`, `<asset>-all-model-1to50.zip` (members `glb/`, `fbx/`, `model/`, byte-identical to `writeModelBundle`). A pose and a clip may share an id, so the model JSON ends `.pose.json` or `.clip.json`. Assets are streamed one at a time, bytes are deterministic, a run resumes (files whose bytes hash to the manifest and whose asset document and settings are unchanged are kept; `--force` after a code change), paths stay under 256 characters, SIGINT cancels with exit 130. The site serves its exports from the browser (lazy exporters, blobs), not from this directory. Tests: `🧪️tests/🧊️model-batch`, `-catalog` (all 152 assets, oracles in `🧪️tests/🧊️model-catalog/🔍️oracles`), `-digests` (sample-figure vectors), `-silhouette`, `-glyph-edges`.
+
+External programs (`ffmpeg` for MP4 and WebM, `rsvg-convert` for frames and the preview, `staffage-dwg`) are reached only through `ToolPort` (`🔨️modules/📤️export/🔌️tools`); an absent one is a `ToolMissingError` that names the program and says what to install in English and German, a cancelled export kills the running child. The DWG writer is a Rust crate with no runtime dependencies (`🔨️modules/📤️export/🖊️dwg/📦️packages/🦀️rust`, project `@teaching/staffage-dwg-rs`) that writes AC1024 (AutoCAD 2010) itself: bit codes, CRCs, the section container, the object map, LWPOLYLINE and TEXT on one layer per ModelScene layer, with insertion units set to metres. AC1024 is chosen because its container (R2004 pages with LZ77 compression, no Reed-Solomon pages as in R2007) and objects (R2010 compact object types, string and handle streams) are fully described by the Open Design Specification, current readers still accept the version, and it keeps the insertion units and the lineweights the exports need; it has not been opened in AutoCAD, the ODA tools or LibreDWG on a machine of this repo, only in the three readers below. `staffage_dwg.wasm` is git-ignored build output next to `🖊️dwg/🟦️.ts`: `repo ./📜️script.ts wasm` in the crate folder (target `@teaching/staffage-dwg-rs:wasm`) compiles it for `wasm32-unknown-unknown` through `repo cargo` with the pinned nightly of `rust-toolchain.toml`, and the tests that need it call that target themselves when the file is missing or older than a source. Without the file `writeDwg` throws `DwgUnavailableError` (bilingual, naming the build command). The files are verified by three independent readers: acadrust and ezdwg-core in `cargo test` (`repo ./📜️script.ts test` in the crate folder) and ezdwg from the locked `dwg` oracle set in the TypeScript tests (CPython 3.10 or newer).
+
 ## Course casts
 
 The course draws people, furniture, devices and machines only from this archive, through the cast manifest in
@@ -129,7 +189,7 @@ cancel the export between two frames with exit 130 and leave no partial cast (a 
 | `transportStrokeMm`, `transportTrailS` | pathline paper width (default 0.08 mm) and visible trail length in seconds (default: whole path) |
 | `mirror` | only with `viewpoint` `elevation`; flips the figure about the vertical axis of the world origin (D5); a mirror of a laterally asymmetric asset needs a reason in the guard's allowlist (D19) |
 
-A cast of a front or plan viewpoint that the asset draws as a section also writes `section` (`{ plane, label }`, as declared in `sections` of the representation) to its index.
+A cast of an elevation, front or plan viewpoint that the asset draws as a section also writes `section` (`{ plane, label }`, as declared in `sections` of the representation) to its index.
 
 The index holds the paper extents in `boundsM` (everything drawn). A cast with `transport` also writes `figureBoundsM` (the person without the air layer). `heightM` is always the physical figure height for every viewpoint, never a paper measure (D13). Playback of a cast reads `loop` and `fps` from the index: a clip with `loop: false` (fan spin,
 tealight flicker) is repeated by `fitted_staffage(..., loop=True)`.
@@ -179,6 +239,15 @@ seen in coarse steps.
 
 Meters and building stores are device casts: `gas-meter`, `electricity-meter` and `hot-water-cylinder` (`🔌️appliances`), and the
 `solar-thermal-collector` (`🏗️machinery`). Thermometers, clocks and abstract energy gauges (`energy_tank`) stay diagram glyphs.
+
+## Tests and oracles
+
+```
+bun node_modules/vitest/vitest.mjs run --configLoader native --config 🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎚️config/🟦️.ts [filter…]     # library, from the repo root
+(cd 🎯️targets/⚛️react/📦️packages/🟦️typescript && bun <root>/node_modules/vitest/vitest.mjs run --configLoader native --config ../../🧪️tests/🎚️config/🟦️.ts)   # React target (its support reads the working directory)
+```
+
+The Python oracles (shapely, numpy, scipy, svgelements, PyMuPDF, pikepdf, pypdfium2, ezdxf, reportlab, PyAV, imageio-ffmpeg, ezdwg) run from wheels that `🧪️tests/🧰️support/🐍️oracles/uv.lock` pins with hashes for macOS, Linux and Windows, through the pinned `uv`; their environments live in the machine cache of the repo, never in the worktree. `🧪️tests/🧊️model-catalog` exports every asset and checks it with Khronos `gltf-validator`, three and assimp (about 8 minutes, 2.6 GB; `SEMIO_STAFFAGE_MODELS_DIR=<output of export-models>` makes it read a finished batch instead).
 
 ## Run
 

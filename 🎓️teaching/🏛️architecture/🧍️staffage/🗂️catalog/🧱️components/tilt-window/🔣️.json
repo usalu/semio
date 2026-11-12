@@ -3298,6 +3298,198 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "sill",
+          "kind": "box",
+          "bone": "sill",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.6,
+          "region": "frame-sill",
+          "size": [0.3, 0.05, 0.9],
+          "transform": {
+            "translation": [0.15, -0.025, 0]
+          }
+        },
+        {
+          "id": "jamb",
+          "kind": "box",
+          "bone": "sill",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.6,
+          "region": "frame-timber",
+          "size": [0.3, 1.2, 0.05],
+          "transform": {
+            "translation": [0.15, 0.6, 0.425]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.85]
+          }
+        },
+        {
+          "id": "stile",
+          "kind": "box",
+          "bone": "sash",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.6,
+          "region": "frame-timber",
+          "size": [1.2, 0.09, 0.045],
+          "transform": {
+            "translation": [0.6, 0, 0.3775]
+          },
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.755]
+          }
+        },
+        {
+          "id": "rail-bottom",
+          "kind": "extrude",
+          "bone": "sash",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.6,
+          "region": "frame-timber",
+          "profile": [[0, 0.045], [0, -0.045], [0.06, -0.045], [0.06, -0.013], [0.045, -0.013], [0.045, 0.013], [0.06, 0.013], [0.06, 0.045]],
+          "plane": "xy",
+          "from": -0.355,
+          "to": 0.355
+        },
+        {
+          "id": "rail-top",
+          "kind": "extrude",
+          "bone": "sash",
+          "material": "timber",
+          "role": "body",
+          "tone": 0.6,
+          "region": "frame-timber",
+          "profile": [[1.2, 0.045], [1.2, -0.045], [1.14, -0.045], [1.14, -0.013], [1.155, -0.013], [1.155, 0.013], [1.14, 0.013], [1.14, 0.045]],
+          "plane": "xy",
+          "from": -0.355,
+          "to": 0.355
+        },
+        {
+          "id": "ig-inner-edge",
+          "kind": "extrude",
+          "bone": "sash",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.9,
+          "region": "pane-edge",
+          "profile": [[-0.355, 0.045], [-0.355, 1.155], [0.355, 1.155], [0.355, 0.045]],
+          "plane": "zx",
+          "from": 0.008,
+          "to": 0.012,
+          "holes": [
+            [[-0.275, 0.125], [-0.275, 1.075], [0.275, 1.075], [0.275, 0.125]]
+          ]
+        },
+        {
+          "id": "ig-inner-centre",
+          "kind": "box",
+          "bone": "sash",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.9,
+          "region": "pane-glass",
+          "size": [0.95, 0.004, 0.55],
+          "transform": {
+            "translation": [0.6, 0.01, 0]
+          }
+        },
+        {
+          "id": "ig-cavity-edge",
+          "kind": "extrude",
+          "bone": "sash",
+          "material": "edge-zone",
+          "role": "glazing",
+          "tone": 0.5,
+          "region": "pane-edge",
+          "profile": [[-0.355, 0.045], [-0.355, 1.155], [0.355, 1.155], [0.355, 0.045]],
+          "plane": "zx",
+          "from": -0.008,
+          "to": 0.008,
+          "holes": [
+            [[-0.275, 0.125], [-0.275, 1.075], [0.275, 1.075], [0.275, 0.125]]
+          ]
+        },
+        {
+          "id": "ig-cavity-centre",
+          "kind": "box",
+          "bone": "sash",
+          "material": "glass-unit-cavity",
+          "role": "glazing",
+          "tone": 0.9,
+          "region": "pane-glass",
+          "size": [0.95, 0.016, 0.55],
+          "transform": {
+            "translation": [0.6, 0.0, 0]
+          }
+        },
+        {
+          "id": "ig-outer-edge",
+          "kind": "extrude",
+          "bone": "sash",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.9,
+          "region": "pane-edge",
+          "profile": [[-0.355, 0.045], [-0.355, 1.155], [0.355, 1.155], [0.355, 0.045]],
+          "plane": "zx",
+          "from": -0.012,
+          "to": -0.008,
+          "holes": [
+            [[-0.275, 0.125], [-0.275, 1.075], [0.275, 1.075], [0.275, 0.125]]
+          ]
+        },
+        {
+          "id": "ig-outer-centre",
+          "kind": "box",
+          "bone": "sash",
+          "material": "glass",
+          "role": "glazing",
+          "tone": 0.9,
+          "region": "pane-glass",
+          "size": [0.95, 0.004, 0.55],
+          "transform": {
+            "translation": [0.6, -0.01, 0]
+          }
+        },
+        {
+          "id": "hinge-pin",
+          "kind": "revolve",
+          "bone": "sash",
+          "material": "timber",
+          "role": "detail",
+          "tone": 0.35,
+          "region": "frame-timber",
+          "maxDenominator": 50,
+          "profile": [[0, 0.02], [0.06, 0.02]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0.27],
+          "repeat": {
+            "count": 2,
+            "translation": [0, 0, -0.6]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The sash is bound to the tilting bone: two 45 x 90 mm stiles, a bottom and a top rail with the glass rebate (extrudes of the elevation profiles) and the insulated glass unit of 24 mm built layer by layer as the thermal view needs: inner pane 4, cavity 16, outer pane 4 mm, each as a centre box (region pane-glass) and an 80 mm edge-zone frame (extrude with a rectangular hole, region pane-edge) whose cavity layer is the edge-zone material.",
+          "de": "Der Flügel ist an den Kippknochen gebunden: zwei Holme 45 x 90 mm, ein unteres und ein oberes Querholz mit Glasfalz (Extrusionen der Ansichtsprofile) und die Isolierglaseinheit von 24 mm, Schicht für Schicht wie die thermische Ansicht es braucht: Innenscheibe 4, Zwischenraum 16, Aussenscheibe 4 mm, jede als Mittelquader (Region pane-glass) und als 80 mm Randzonenrahmen (Extrusion mit rechteckigem Loch, Region pane-edge), dessen Zwischenraumschicht das Randzonenmaterial ist."
+        },
+        {
+          "en": "The frame is drawn without a head rail in all three views, so none is modelled; the sill board and the two 50 x 1200 mm jambs sit on the sill bone, the sash rests on the sill at its hinge line and tilts about it up to 30 degrees. The 2D hinge circles disagree on the pin axis (circles in elevation, front and plan); the pins are modelled along the tilt axis (w), two of 60 mm length at z = +-0.3 (only at 1:50).",
+          "de": "Der Rahmen ist in allen drei Ansichten ohne Sturzriegel gezeichnet, daher ist keiner modelliert; Sohlbank und die zwei Pfosten 50 x 1200 mm sitzen am Sohlbank-Knochen, der Flügel liegt an seiner Scharnierlinie auf der Sohlbank und kippt darum bis 30 Grad. Die 2D-Scharnierkreise widersprechen sich in der Stiftachse (Kreise in Ansicht, Vorder- und Draufsicht); die Stifte sind längs der Kippachse (w) modelliert, zwei zu 60 mm Länge bei z = +-0,3 (nur bei 1:50)."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "closed",
       "defaultClip": "tilt-open-close",
@@ -3311,7 +3503,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

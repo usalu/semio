@@ -13,7 +13,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { Asset, AssetDocument, PrintProfile, ScaleDenominator } from "../../../🧬️schema/🟦️.ts";
-import { SCALE_DENOMINATORS, VIEWPOINTS } from "../../../🧬️schema/🟦️.ts";
+import { SCALE_DENOMINATORS, PLANAR_VIEWPOINTS } from "../../../🧬️schema/🟦️.ts";
 import { VIEWS, type EvaluationQuery, type JobControl, type Suitability } from "../../🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🧮️evaluation/🟦️.ts";
@@ -63,7 +63,7 @@ function describe(suitability: Suitability): string {
   return `${suitability.suitable ? "suitable" : "UNSUITABLE"} under ${suitability.profile.id}: min stroke ${mm(suitability.minStrokeMm)} mm, min gap ${mm(suitability.minGapMm)} mm, min feature ${mm(suitability.minFeatureMm)} mm`;
 }
 
-/** 🩺️ Checks one asset end to end: validation, suitability per authored scale, evaluation, thermal, structure and all seven views at every authored scale. */
+/** 📐️ Checks one asset end to end: validation, suitability per authored scale, evaluation, thermal, structure and all seven views at every authored scale. */
 export function checkAssetDetailed(asset: Asset, options: CheckOptions = {}, control: JobControl = {}): CheckReport {
   const samples = options.samples ?? 9;
   const physics = options.physics ?? true;
@@ -124,7 +124,7 @@ export function checkAssetDetailed(asset: Asset, options: CheckOptions = {}, con
       }
       for (const denominator of authored) {
         const state = evaluate(asset, query, { kind: "scale", scale: { denominator } });
-        for (const viewpoint of VIEWPOINTS) {
+        for (const viewpoint of PLANAR_VIEWPOINTS) {
           if (state.shapes[viewpoint].length === 0) problems.push(`${label} 1:${denominator} ${viewpoint}: no shapes`);
           for (const view of physics ? VIEWS : VIEWS.slice(0, 4)) {
             const scene = depict(state, { ...defaultDepictionOptions(view, "en", denominator, viewpoint), profile: UNCHECKED }, { ...(thermal ? { thermal } : {}), ...(structure ? { structure } : {}) });
@@ -141,7 +141,7 @@ export function checkAssetDetailed(asset: Asset, options: CheckOptions = {}, con
   return { problems, lines, issues, scales };
 }
 
-/** 🩺️ The problems of {@link checkAssetDetailed}, for callers that only need the verdict. */
+/** 📤️ The problems of {@link checkAssetDetailed}, for callers that only need the verdict. */
 export function checkAsset(asset: Asset, samples = 9, options: Omit<CheckOptions, "samples"> = {}): string[] {
   return [...checkAssetDetailed(asset, { ...options, samples }).problems];
 }

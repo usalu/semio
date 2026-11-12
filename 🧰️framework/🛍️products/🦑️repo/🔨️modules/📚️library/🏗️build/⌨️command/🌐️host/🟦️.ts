@@ -4,10 +4,13 @@ import {machineOutputV1} from "../../../../../../../🔨️modules/🏃️proces
 import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import {hostImplementationV1} from "../../🧭️invocation/🛰️plan/🟦️.ts";
 
-/** 🏠️ Runs `run` with the remote cache endpoint hosted inside the service (it starts with the service, stops with it and never fails it). */
+/** 🏠️ Runs `run` with the remote cache endpoint hosted inside the service (it starts with the service, stops with it and never fails it). While a run holds a live capacity grant (its row is touched by the heartbeat of the run) the service counts that as progress: a run whose test tool is silent for ten minutes would otherwise stop the service by the stall watchdog (exit 124) and take the cache endpoint with it, so the build tool failed at the end with a refused cache write. */
 async function withHostedRemoteCacheV1<T>(signal:AbortSignal,run:()=>Promise<T>):Promise<T>{
  const{startHostedRemoteCacheV1}=await import("../../🌐️remote-cache/🏠️hosted/🟦️.ts"),hosted=await startHostedRemoteCacheV1({environment:process.env,signal});
- try{return await run();}finally{await hosted?.stop();}
+ const{noteScriptProcessProgressV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts"),{hostCapacityDirectoryV1}=await import("../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts"),{readdirSync,statSync}=await import("node:fs"),{join}=await import("node:path");
+ const directory=join(hostCapacityDirectoryV1(process.env),"grants"),beat=setInterval(()=>{try{const now=Date.now();if(readdirSync(directory).some(name=>name.endsWith(".json")&&now-statSync(join(directory,name)).mtimeMs<120000))noteScriptProcessProgressV1();}catch{}},30000);
+ beat.unref();
+ try{return await run();}finally{clearInterval(beat);await hosted?.stop();}
 }
 
 /** 🌐️ `repo service host start|status|stop|run`: the per-host graph service. It is the only process that loads the fact index for planning; it runs pinned to the implementation it was started from for its whole life (a promoted implementation starts its own service and this one retires), and slice loads run one at a time because the generation pin they report is process state. */

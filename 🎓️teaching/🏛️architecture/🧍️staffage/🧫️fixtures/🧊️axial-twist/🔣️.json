@@ -139,6 +139,7 @@
         "tone": 0.5,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.2,
           "z1": 0.2
         },
@@ -199,6 +200,7 @@
         "tone": 0.5,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.1,
           "z1": 0.1
         },
@@ -294,6 +296,7 @@
         "tone": 0.5,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.2,
           "z1": 0.2
         },
@@ -354,6 +357,7 @@
         "tone": 0.5,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.1,
           "z1": 0.1
         },
@@ -399,6 +403,7 @@
         "closed": true,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.2,
           "z1": 0.2
         }
@@ -463,6 +468,7 @@
         "tone": 0.5,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.2,
           "z1": 0.2
         },
@@ -523,6 +529,7 @@
         "tone": 0.5,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.1,
           "z1": 0.1
         },

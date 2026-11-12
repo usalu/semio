@@ -12,8 +12,8 @@
  * @see ../../🏗️structure/📽️projection/🟦️.ts — the projection of forces and moments onto the three planes
  * @see ../../🔗️contracts/🟦️.ts — {@link StructuralResult}
  */
-import type { Slug, Text, Viewpoint } from "../../../🧬️schema/🟦️.ts";
-import type { DiagramStation, EvaluatedState, Fill, Legend, MemberDiagram, Reaction, StructuralResult, Vec3, WorldForce } from "../../🔗️contracts/🟦️.ts";
+import type { Asset, Slug, Text, Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import type { DiagramStation, DisplayRange, EvaluatedState, Fill, Legend, MemberDiagram, Reaction, StructuralResult, Vec3, WorldForce } from "../../🔗️contracts/🟦️.ts";
 import { formatNumber, formatQuantity, LABEL_TEXT_MM, ANNOTATION_TEXT_MM, ANNOTATION_PEN_MM } from "../../📐️units/🟦️.ts";
 import { bendingOf, freeBody, shearOf, structuralLegend, type StructuralQuantity } from "../../🏗️structure/🟦️.ts";
 import { magnitude, planeOf, projectForce, projectMoment, tensionSide, towardViewer } from "../../🏗️structure/📽️projection/🟦️.ts";
@@ -21,6 +21,7 @@ import { type Canvas, type Ctx, Labels, labelBudget } from "../🧱️canvas/�
 import { overlayColours, type Scale, divergingColour, legendOf, mix, toneColour, tx, type Theme } from "../🖍️palette/🟦️.ts";
 import type { AnalyticView, Prepared, Style } from "../🧩️shapes/🟦️.ts";
 import { type Vec, add, arcCommands, arrowOutline, circleCommands, commandsOf, headOutline, lerp, perp, ringsCommands, scale as scaleVec, sectorCommands, sub, unit } from "../📐️geometry/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const PATTERN_FRACTION = 0.15;
 const DIAGRAM_MM = 6;
@@ -74,29 +75,43 @@ function symmetricIfEmpty(min: number, max: number): Scale {
 
 const MIN_BONE_HEIGHT_FRACTION = 0.05;
 
-/** 🦴️ Which bones are members worth colouring: those with a section, or at least 5 % of the asset height long; foliage masses and other short bones stay neutral. */
-export function memberFilter(state: EvaluatedState): (bone: Slug) => boolean {
-  const height = Math.max(1e-6, state.bounds.maxY - state.bounds.minY);
-  const eligible = new Set(state.asset.rig.bones.filter((b) => b.section !== undefined || b.lengthM >= MIN_BONE_HEIGHT_FRACTION * height).map((b) => b.id));
+/** 🦴️ Which bones are members worth colouring: those with a section, or at least 5 % of the height `heightM` long; foliage masses and other short bones stay neutral. */
+export function eligibleBones(asset: Asset, heightM: number): (bone: Slug) => boolean {
+  const height = Math.max(1e-6, heightM);
+  const eligible = new Set(asset.rig.bones.filter((b) => b.section !== undefined || b.lengthM >= MIN_BONE_HEIGHT_FRACTION * height).map((b) => b.id));
   return (bone) => eligible.has(bone);
 }
 
-function memberView(ctx: Ctx, shapes: readonly Prepared[], result: StructuralResult, quantity: StructuralQuantity, patterns: boolean): { readonly styleOf: (p: Prepared) => Style; readonly legend: Legend } {
-  const eligible = memberFilter(ctx.state);
-  const base = structuralLegend(quantity, result, ctx.options.range, eligible);
+/** 🎨️ Which bones are members worth colouring in a state: {@link eligibleBones} at the height of the drawn extent. */
+export function memberFilter(state: EvaluatedState): (bone: Slug) => boolean {
+  return eligibleBones(state.asset, state.bounds.maxY - state.bounds.minY);
+}
+
+/** 🖌️ The value-to-colour mapping of a member view, shared by every depiction of the same structural result (the 2D force and moment views and the 3D model): the base legend, the symmetric diverging scale about zero and, per bone, its value (largest magnitude over its stations) and the colour of a value (compression warm, tension cool). */
+export type MemberPaint = { readonly eligible: (bone: Slug) => boolean; readonly base: Legend; readonly scale: Scale; readonly valueOf: (bone: Slug) => number | null; readonly colourOf: (value: number) => string };
+
+/** 🖍️ The {@link MemberPaint} of a structural result for a quantity: the single source of the structural ramp and range of the 2D views and the 3D model. */
+export function memberPaint(result: StructuralResult, quantity: StructuralQuantity, range: DisplayRange, theme: Theme, eligible: (bone: Slug) => boolean): MemberPaint {
+  const base = structuralLegend(quantity, result, range, eligible);
   const scale = symmetricIfEmpty(base.min, base.max);
+  return { eligible, base, scale, valueOf: (bone) => (quantity === "contact-pressure" ? null : memberValue(result.members[bone], quantity)), colourOf: (value) => divergingColour(value, scale, false, theme) };
+}
+
+/** 🌈️ How the member views paint shapes by bone: the style (fill, value, hatch pattern) of a shape and the legend of the quantity; independent of the viewpoint, so the 2D views and the axonometric view share it. */
+export function memberView(ctx: Ctx, shapes: readonly Prepared[], result: StructuralResult, quantity: StructuralQuantity, patterns: boolean): { readonly styleOf: (p: Prepared) => Style; readonly legend: Legend } {
+  const { eligible, base, scale, valueOf, colourOf } = memberPaint(result, quantity, ctx.options.range, ctx.theme, memberFilter(ctx.state));
   const boneTitle = (id: Slug): Text => ctx.state.asset.rig.bones.find((b) => b.id === id)?.title ?? tx(id, id);
   const regionKind = (id: Slug): string | undefined => ctx.state.asset.thermal.regions.find((r) => r.id === id)?.kind;
-  const fmt = (v: number, l: "en" | "de"): string => formatNumber(v, Math.max(0, 2 - Math.floor(Math.log10(Math.max(Math.abs(v), 1e-9)))), l);
+  const fmt = (v: number, l: "en" | "de"): string => formatNumber(v, Math.max(0, 2 - Math.floor(portable.log10(Math.max(Math.abs(v), 1e-9)))), l);
   const interpretation = tx(
     `${base.title.en} from ${fmt(scale.min, "en")} to ${fmt(scale.max, "en")} ${base.unit}; zero is grey; bones without a section and shorter than 5 % of the object height, foliage, glazing and texture are drawn neutral (ghosted). With patterns on, strong values (above 15 % of their side of the range) are also hatched: diagonal hatch = negative (warm), dots = positive (cool).`,
     `${base.title.de} von ${fmt(scale.min, "de")} bis ${fmt(scale.max, "de")} ${base.unit}; null ist grau; Stäbe ohne Querschnitt und kürzer als 5 % der Objekthöhe sowie Laub, Verglasung und Textur sind neutral (blass) gezeichnet. Mit Mustern sind starke Werte (über 15 % ihrer Seite des Bereichs) zusätzlich schraffiert: Schrägschraffur = negativ (warm), Punkte = positiv (kühl).`,
   );
-  const legend: Legend = legendOf({ title: base.title, quantity, unit: base.unit, convention: base.convention, interpretation, scale, colourAt: (v) => divergingColour(v, scale, false, ctx.theme) });
+  const legend: Legend = legendOf({ title: base.title, quantity, unit: base.unit, convention: base.convention, interpretation, scale, colourAt: colourOf });
   const styleOf = (p: Prepared): Style => {
     const glaze = p.shape.role === "glazing";
     const outlineMm = p.weightMm * 0.5;
-    const v = quantity === "contact-pressure" ? null : memberValue(result.members[p.shape.bone], quantity);
+    const v = valueOf(p.shape.bone);
     const ghost = glaze || p.shape.role === "texture" || (p.shape.region !== undefined && regionKind(p.shape.region) === "foliage");
     const neutral = { color: toneColour(ctx.theme, p.shape.tone), ...(ghost ? { opacity: 0.4 } : {}) };
     if (v === null) return { fill: neutral, outlineMm };
@@ -105,7 +120,7 @@ function memberView(ctx: Ctx, shapes: readonly Prepared[], result: StructuralRes
     const span = v < 0 ? -scale.min : scale.max;
     const strong = span > 0 && Math.abs(v) / span > PATTERN_FRACTION;
     const pattern: Fill["pattern"] | undefined = patterns && strong && quantity !== "contact-pressure" ? (v < 0 ? "compression" : "tension") : undefined;
-    return { fill: { color: divergingColour(v, scale, false, ctx.theme), ...(glaze ? { opacity: 0.6 } : {}), ...(pattern ? { pattern } : {}) }, value, outlineMm };
+    return { fill: { color: colourOf(v), ...(glaze ? { opacity: 0.6 } : {}), ...(pattern ? { pattern } : {}) }, value, outlineMm };
   };
   return { styleOf, legend };
 }
@@ -115,7 +130,7 @@ type Frame = { readonly origin: Vec; readonly up: Vec; readonly tangent: Vec };
 function frameOf(ctx: Ctx, r: Reaction): Frame {
   const anchor = ctx.state.anchors[r.anchor]?.anchor;
   const theta = ((anchor?.normalDeg ?? 90) * Math.PI) / 180;
-  const up = { x: Math.cos(theta), y: -Math.sin(theta) };
+  const up = { x: portable.cos(theta), y: -portable.sin(theta) };
   return { origin: placeOf(ctx, at3(r.at, r.z)), up, tangent: perp(up) };
 }
 
@@ -191,10 +206,10 @@ function drawSupportsProjected(canvas: Canvas, ctx: Ctx, r: Reaction, pressure: 
   } else {
     const theta = ((anchor.normalDeg ?? 90) * Math.PI) / 180;
     const tilt = ((anchor.tiltDeg ?? 0) * Math.PI) / 180;
-    const n: Vec3 = { x: Math.cos(theta) * Math.cos(tilt), y: Math.sin(theta) * Math.cos(tilt), z: Math.sin(tilt) };
+    const n: Vec3 = { x: portable.cos(theta) * portable.cos(tilt), y: portable.sin(theta) * portable.cos(tilt), z: portable.sin(tilt) };
     const axis: Vec3 = Math.abs(n.z) < 0.9 ? { x: 0, y: 0, z: 1 } : { x: 1, y: 0, z: 0 };
     const raw: Vec3 = { x: axis.y * n.z - axis.z * n.y, y: axis.z * n.x - axis.x * n.z, z: axis.x * n.y - axis.y * n.x };
-    const rawLength = Math.hypot(raw.x, raw.y, raw.z);
+    const rawLength = portable.hypot(raw.x, raw.y, raw.z);
     const t: Vec3 = { x: raw.x / rawLength, y: raw.y / rawLength, z: raw.z / rawLength };
     const t2: Vec3 = { x: n.y * t.z - n.z * t.y, y: n.z * t.x - n.x * t.z, z: n.x * t.y - n.y * t.x };
     const length = anchor.footprintLengthM ?? 0.1;
@@ -219,9 +234,19 @@ function drawSupports(canvas: Canvas, ctx: Ctx, result: StructuralResult, pressu
   }
 }
 
-function arrowLengthMm(mag: number, max: number, longest: number): number {
+/** 📏️ The paper length in millimetres of the longest force arrow of a figure whose drawn height is `heightMm`: 90 % of the height between 7 and 14 mm, the same in every view and in the 3D model. */
+export const longestArrowMm = (heightMm: number): number => Math.min(ARROW_MAX_MM, Math.max(7, heightMm * 0.9));
+
+/** 📐️ The paper length in millimetres of an arrow of magnitude `mag` when the largest is `max`: proportional, at least 1.5 mm, zero when there is no force. */
+export function arrowLengthMm(mag: number, max: number, longest: number): number {
   return max <= 0 ? 0 : Math.max(ARROW_MIN_MM, (mag / max) * longest);
 }
+
+/** ⭕️ The paper radius in millimetres of a moment symbol of magnitude `part` when the largest is `max`: 1.6 mm growing with the square root to 4.8 mm. */
+export const momentRadiusMm = (part: number, max: number): number => 1.6 + 3.2 * Math.sqrt(part / max);
+
+/** 🔄️ Moment symbols below this fraction of the largest moment are not drawn. */
+export const MOMENT_MIN_SHOWN = MOMENT_MIN_FRACTION;
 
 type ArrowSpec = { readonly id: string; readonly kind: ArrowKind; readonly head: Vec; readonly force: Vec3; readonly title: Text; readonly longest: number; readonly max: number; readonly drawn: boolean; readonly label: boolean; readonly required: boolean };
 
@@ -234,7 +259,7 @@ function crossSymbol(canvas: Canvas, id: string, centre: Vec, radius: number, sy
 function drawArrow(canvas: Canvas, ctx: Ctx, spec: ArrowSpec, labels: Labels): void {
   const projection = projectForce(ctx.options.viewpoint, spec.force);
   if (projection.total < 1e-9) return;
-  const inPlane = Math.hypot(projection.arrow.x, projection.arrow.y);
+  const inPlane = portable.hypot(projection.arrow.x, projection.arrow.y);
   const color = arrowColour(ctx.theme, spec.kind);
   const dash = ARROW_DASH[spec.kind];
   const value = { quantity: "force", value: projection.total, unit: "N", label: spec.title };
@@ -275,7 +300,7 @@ export function withResultants(items: readonly ForceItem[]): ForceItem[] {
 
 const worldPoint = (f: WorldForce): Vec3 => at3(f.at, f.z);
 
-/** 🏹️ The arrows of the force view: applied loads (distributed ones with one resultant), active reactions, total weight and, for inertial states, total inertia, all as world vectors. */
+/** 🔭️ The arrows of the force view: applied loads (distributed ones with one resultant), active reactions, total weight and, for inertial states, total inertia, all as world vectors. */
 export function forceList(state: EvaluatedState, result: StructuralResult): ForceItem[] {
   const total = (list: readonly WorldForce[]): Vec3 => sumOf(list.map(forceVec));
   const weight = total(result.segmentWeights);
@@ -298,26 +323,26 @@ function drawCentreOfMass(canvas: Canvas, ctx: Ctx, at: Vec, mass: number): void
   canvas.path("forces", "com:quadrant-b", sectorCommands(at, r, Math.PI, (3 * Math.PI) / 2), { fill: { color: ink } });
 }
 
-const totalOf = (kind: DiagramKind, s: DiagramStation): number => (kind === "axial" ? Math.abs(s.axialN) : kind === "shear" ? Math.hypot(s.shearN, s.shearZN) : Math.hypot(s.momentNm, s.momentLateralNm));
+const totalOf = (kind: DiagramKind, s: DiagramStation): number => (kind === "axial" ? Math.abs(s.axialN) : kind === "shear" ? portable.hypot(s.shearN, s.shearZN) : portable.hypot(s.momentNm, s.momentLateralNm));
 
-/** 📈️ The largest invariant magnitude of a diagram kind over all members (axial |N|, shear |V| of both components, bending the resultant of both components), the same in every view. */
+/** 🌟️ The largest invariant magnitude of a diagram kind over all members (axial |N|, shear |V| of both components, bending the resultant of both components), the same in every view. */
 export function peakOf(result: StructuralResult, kind: DiagramKind, include: (bone: Slug) => boolean = () => true): number {
   return Math.max(0, ...Object.entries(result.members).flatMap(([id, m]) => (include(id) ? m.stations.map((s) => totalOf(kind, s)) : [])));
 }
 
-/** 📈️ One filled region of a member diagram: the baseline followed by the reversed ordinate curve, and its peak (the signed in-plane value). */
+/** 💡️ One filled region of a member diagram: the baseline followed by the reversed ordinate curve, and its peak (the signed in-plane value). */
 export type DiagramPolygon = { readonly bone: Slug; readonly index: number; readonly points: readonly Vec[]; readonly peak: number; readonly peakAt: Vec };
 
-/** 📈️ A member whose diagram has a significant component along the line of sight: the symbol replaces the missing ordinate at the peak station. */
+/** 🔧️ A member whose diagram has a significant component along the line of sight: the symbol replaces the missing ordinate at the peak station. */
 export type DiagramOutOfPlane = { readonly bone: Slug; readonly at: Vec3; readonly total: number; readonly outOfPlane: number; readonly symbol: "dot" | "cross" };
 
 function directionOf(state: EvaluatedState, viewpoint: Viewpoint, bone: Slug): Vec | null {
   const u = planeOf(viewpoint, state.bones[bone]!.frame.u);
-  const len = Math.hypot(u.x, u.y);
+  const len = portable.hypot(u.x, u.y);
   return len < 1e-6 ? null : { x: u.x / len, y: u.y / len };
 }
 
-/** 📈️ The vector one station draws in a view: the shear vector, the tension-side direction of the bending moment, or the axial force along the member's left normal; model coordinates of the viewpoint. */
+/** 🧪️ The vector one station draws in a view: the shear vector, the tension-side direction of the bending moment, or the axial force along the member's left normal; model coordinates of the viewpoint. */
 function stationVector(state: EvaluatedState, viewpoint: Viewpoint, kind: DiagramKind, bone: Slug, s: DiagramStation, left: Vec): { readonly scalar: number; readonly out: number } {
   if (kind === "axial") return { scalar: s.axialN, out: 0 };
   const vector = kind === "shear" ? s.shearVector : tensionSide(s.momentVector, state.bones[bone]!.frame.u);
@@ -326,7 +351,7 @@ function stationVector(state: EvaluatedState, viewpoint: Viewpoint, kind: Diagra
   return { scalar: kind === "moment" ? -along : along, out: towardViewer(viewpoint, vector) };
 }
 
-/** 📈️ The sign-split polygons of one diagram kind for every member in one view, ordinates offset perpendicular to the projected bone by `ordinate · value / peak` on the kind's side; `yDown` selects the paper (true) or model (false) handedness. `value` is the in-plane part of the 3D vector, `peak` the invariant maximum of {@link peakOf}. */
+/** 👁️ The sign-split polygons of one diagram kind for every member in one view, ordinates offset perpendicular to the projected bone by `ordinate · value / peak` on the kind's side; `yDown` selects the paper (true) or model (false) handedness. `value` is the in-plane part of the 3D vector, `peak` the invariant maximum of {@link peakOf}. */
 export function diagramPolygons(state: EvaluatedState, result: StructuralResult, kind: DiagramKind, viewpoint: Viewpoint, peak: number, map: (p: { readonly x: number; readonly y: number }) => Vec, ordinate: number, yDown: boolean, include: (bone: Slug) => boolean = () => true): DiagramPolygon[] {
   const meta = DIAGRAM_META[kind];
   const out: DiagramPolygon[] = [];
@@ -452,7 +477,7 @@ function modelBox(shapes: readonly Prepared[], k: number): { readonly minX: numb
   return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
 }
 
-/** 🏗️ Builds the forces view: members coloured by the chosen quantity, supports, load and reaction arrows, centre of mass, optional N/V diagrams and free-body inset. */
+/** 📷️ Builds the forces view: members coloured by the chosen quantity, supports, load and reaction arrows, centre of mass, optional N/V diagrams and free-body inset. */
 export function forcesView(ctx: Ctx, shapes: readonly Prepared[], result: StructuralResult): AnalyticView {
   const { options, state } = ctx;
   const quantity = options.forceQuantity;
@@ -460,7 +485,7 @@ export function forcesView(ctx: Ctx, shapes: readonly Prepared[], result: Struct
   const forces = forceList(state, result);
   const max = Math.max(0, ...forces.map((f) => magnitude(f.force)));
   const heightMm = (state.bounds.maxY - state.bounds.minY) * ctx.k;
-  const longest = Math.min(ARROW_MAX_MM, Math.max(7, heightMm * 0.9));
+  const longest = longestArrowMm(heightMm);
   const pressureBase = structuralLegend("contact-pressure", result, options.range);
   const pmax = pressureBase.max > 0 ? pressureBase.max : 1;
   const pScale: Scale = { min: -pmax, centre: 0, max: pmax };
@@ -528,8 +553,8 @@ function momentCurl(canvas: Canvas, ctx: Ctx, id: string, at: Vec, curl: number,
   const from = -Math.PI / 2;
   const sweep = curl > 0 ? (-3 * Math.PI) / 2 : (3 * Math.PI) / 2;
   const end = from + sweep;
-  const tangent = { x: -Math.sin(end) * Math.sign(sweep), y: Math.cos(end) * Math.sign(sweep) };
-  const tip = add({ x: at.x + radius * Math.cos(end), y: at.y + radius * Math.sin(end) }, scaleVec(tangent, 0.9));
+  const tangent = { x: -portable.sin(end) * Math.sign(sweep), y: portable.cos(end) * Math.sign(sweep) };
+  const tip = add({ x: at.x + radius * portable.cos(end), y: at.y + radius * portable.sin(end) }, scaleVec(tangent, 0.9));
   canvas.path("forces", id, arcCommands(at, radius, from, sweep), { stroke: { color, widthMm: 0.3, cap: "round", ...(dash ? { dashMm: dash } : {}) }, value: { quantity: "moment", value: curl, unit: "N·m", label: title } });
   canvas.path("forces", `${id}:head`, commandsOf(headOutline(tip, tangent, 1.4, 1.1), true), { fill: { color } });
   void ctx;
@@ -537,7 +562,7 @@ function momentCurl(canvas: Canvas, ctx: Ctx, id: string, at: Vec, curl: number,
 }
 
 function momentVector(canvas: Canvas, id: string, at: Vec, vector: { readonly x: number; readonly y: number }, half: number, color: string, dash: readonly number[] | undefined, title: Text, value: number): void {
-  const len = Math.hypot(vector.x, vector.y);
+  const len = portable.hypot(vector.x, vector.y);
   const dir = unit({ x: vector.x / len, y: -vector.y / len });
   const tail = sub(at, scaleVec(dir, half));
   const head = add(at, scaleVec(dir, half));
@@ -547,7 +572,7 @@ function momentVector(canvas: Canvas, id: string, at: Vec, vector: { readonly x:
 
 type MomentItem = { readonly id: string; readonly at: Vec3; readonly m: Vec3; readonly kind: MomentKind; readonly title: Text };
 
-/** 🔄️ The moment symbols of the moment view as world vectors: joints, active reactions and applied couples. */
+/** 🔬️ The moment symbols of the moment view as world vectors: joints, active reactions and applied couples. */
 export function momentList(state: EvaluatedState, result: StructuralResult): MomentItem[] {
   const boneTitle = (id: Slug): Text => state.asset.rig.bones.find((b) => b.id === id)?.title ?? tx(id, id);
   return [
@@ -557,7 +582,7 @@ export function momentList(state: EvaluatedState, result: StructuralResult): Mom
   ];
 }
 
-/** 🔄️ Builds the moments view: members coloured by bending moment, joint, reaction and applied moments as curls (about the line of sight) and double-headed arrows (in the view plane), and the bending-moment diagram. */
+/** 🎥️ Builds the moments view: members coloured by bending moment, joint, reaction and applied moments as curls (about the line of sight) and double-headed arrows (in the view plane), and the bending-moment diagram. */
 export function momentsView(ctx: Ctx, shapes: readonly Prepared[], result: StructuralResult): AnalyticView {
   const { options, state } = ctx;
   void shapes;
@@ -576,9 +601,9 @@ export function momentsView(ctx: Ctx, shapes: readonly Prepared[], result: Struc
       const at = placeOf(ctx, a.at);
       const color = MOMENT_COLOUR(ctx.theme, a.kind);
       const dash = MOMENT_DASH[a.kind];
-      const radius = (part: number): number => 1.6 + 3.2 * Math.sqrt(part / max);
+      const radius = (part: number): number => momentRadiusMm(part, max);
       const required = a.kind === "reaction" || a === largest;
-      const inPlane = Math.hypot(projection.vector.x, projection.vector.y);
+      const inPlane = portable.hypot(projection.vector.x, projection.vector.y);
       const curl = Math.abs(projection.curl);
       if (curl > OUT_OF_PLANE_MIN * total) momentCurl(canvas, ctx, a.id, at, projection.curl, radius(curl), color, dash, a.title, total);
       if (inPlane > OUT_OF_PLANE_MIN * total) momentVector(canvas, `${a.id}:vector`, at, projection.vector, radius(inPlane), color, dash, a.title, inPlane);

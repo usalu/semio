@@ -1,0 +1,887 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "l-foot",
+    "kind": "box",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.35,
+    "region": "steel-frame",
+    "size": [
+     0.124,
+     0.05,
+     0.55
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.12,
+      0.025,
+      -0.025
+     ]
+    }
+   },
+   {
+    "id": "l-leg",
+    "kind": "loft",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steel-frame",
+    "sections": [
+     {
+      "at": [
+       0.12,
+       0.0,
+       -0.26
+      ],
+      "rx": 0.028,
+      "ry": 0.062,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.012,
+       -0.26
+      ],
+      "rx": 0.028,
+      "ry": 0.062,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.02847,
+       -0.26
+      ],
+      "rx": 0.028,
+      "ry": 0.05663,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.04925,
+       -0.26
+      ],
+      "rx": 0.02789,
+      "ry": 0.0445,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.08091,
+       -0.26
+      ],
+      "rx": 0.0275,
+      "ry": 0.03163,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.13,
+       -0.26
+      ],
+      "rx": 0.02691,
+      "ry": 0.024,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.375,
+       -0.26
+      ],
+      "rx": 0.02394,
+      "ry": 0.026,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      0.45
+     ]
+    }
+   },
+   {
+    "id": "l-brace",
+    "kind": "box",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "steel-frame",
+    "size": [
+     0.06,
+     0.022,
+     0.45
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.12,
+      0.201,
+      -0.035
+     ]
+    }
+   },
+   {
+    "id": "l-bearer",
+    "kind": "box",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.45,
+    "region": "steel-frame",
+    "size": [
+     0.08,
+     0.036,
+     0.51
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.12,
+      0.388,
+      -0.035
+     ]
+    }
+   },
+   {
+    "id": "l-post",
+    "kind": "capsule",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steel-frame",
+    "p0": [
+     0.12,
+     0.4,
+     0.19
+    ],
+    "p1": [
+     0.12,
+     0.8285,
+     0.2797
+    ],
+    "r0": 0.0155,
+    "r1": 0.0135
+   },
+   {
+    "id": "l-finial",
+    "kind": "ellipsoid",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.38,
+    "region": "steel-frame",
+    "radii": [
+     0.018,
+     0.0175,
+     0.0185
+    ],
+    "transform": {
+     "translation": [
+      0.12,
+      0.8325,
+      0.2805
+     ]
+    }
+   },
+   {
+    "id": "l-arm-post",
+    "kind": "box",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.45,
+    "region": "steel-frame",
+    "size": [
+     0.032,
+     0.2,
+     0.032
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.12,
+      0.5,
+      -0.26
+     ]
+    }
+   },
+   {
+    "id": "l-armrest",
+    "kind": "box",
+    "bone": "end-left",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.42,
+    "region": "steel-frame",
+    "size": [
+     0.09,
+     0.034,
+     0.44
+    ],
+    "cornerRadius": 0.013,
+    "transform": {
+     "translation": [
+      0.12,
+      0.617,
+      -0.08
+     ]
+    }
+   },
+   {
+    "id": "r-foot",
+    "kind": "box",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.35,
+    "region": "steel-frame",
+    "size": [
+     0.124,
+     0.05,
+     0.55
+    ],
+    "cornerRadius": 0.01,
+    "transform": {
+     "translation": [
+      0.12,
+      0.025,
+      -0.025
+     ]
+    }
+   },
+   {
+    "id": "r-leg",
+    "kind": "loft",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steel-frame",
+    "sections": [
+     {
+      "at": [
+       0.12,
+       0.0,
+       -0.26
+      ],
+      "rx": 0.028,
+      "ry": 0.062,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.012,
+       -0.26
+      ],
+      "rx": 0.028,
+      "ry": 0.062,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.02847,
+       -0.26
+      ],
+      "rx": 0.028,
+      "ry": 0.05663,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.04925,
+       -0.26
+      ],
+      "rx": 0.02789,
+      "ry": 0.0445,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.08091,
+       -0.26
+      ],
+      "rx": 0.0275,
+      "ry": 0.03163,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.13,
+       -0.26
+      ],
+      "rx": 0.02691,
+      "ry": 0.024,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     },
+     {
+      "at": [
+       0.12,
+       0.375,
+       -0.26
+      ],
+      "rx": 0.02394,
+      "ry": 0.026,
+      "exponent": 3,
+      "rotation": [
+       0.5,
+       0.5,
+       0.5,
+       -0.5
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true,
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.0,
+      0.0,
+      0.45
+     ]
+    }
+   },
+   {
+    "id": "r-brace",
+    "kind": "box",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.5,
+    "region": "steel-frame",
+    "size": [
+     0.06,
+     0.022,
+     0.45
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.12,
+      0.201,
+      -0.035
+     ]
+    }
+   },
+   {
+    "id": "r-bearer",
+    "kind": "box",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.45,
+    "region": "steel-frame",
+    "size": [
+     0.08,
+     0.036,
+     0.51
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.12,
+      0.388,
+      -0.035
+     ]
+    }
+   },
+   {
+    "id": "r-post",
+    "kind": "capsule",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.4,
+    "region": "steel-frame",
+    "p0": [
+     0.12,
+     0.4,
+     0.19
+    ],
+    "p1": [
+     0.12,
+     0.8285,
+     0.2797
+    ],
+    "r0": 0.0155,
+    "r1": 0.0135
+   },
+   {
+    "id": "r-finial",
+    "kind": "ellipsoid",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.38,
+    "region": "steel-frame",
+    "radii": [
+     0.018,
+     0.0175,
+     0.0185
+    ],
+    "transform": {
+     "translation": [
+      0.12,
+      0.8325,
+      0.2805
+     ]
+    }
+   },
+   {
+    "id": "r-arm-post",
+    "kind": "box",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.45,
+    "region": "steel-frame",
+    "size": [
+     0.032,
+     0.2,
+     0.032
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.12,
+      0.5,
+      -0.26
+     ]
+    }
+   },
+   {
+    "id": "r-armrest",
+    "kind": "box",
+    "bone": "end-right",
+    "material": "steel-painted",
+    "role": "body",
+    "tone": 0.42,
+    "region": "steel-frame",
+    "size": [
+     0.09,
+     0.034,
+     0.44
+    ],
+    "cornerRadius": 0.013,
+    "transform": {
+     "translation": [
+      0.12,
+      0.617,
+      -0.08
+     ]
+    }
+   },
+   {
+    "id": "seat-slat",
+    "kind": "box",
+    "bone": "seat",
+    "material": "oak-timber",
+    "role": "body",
+    "tone": 0.6,
+    "region": "seat-timber",
+    "size": [
+     1.8,
+     0.045,
+     0.11875
+    ],
+    "cornerRadius": 0.008,
+    "transform": {
+     "translation": [
+      0.9,
+      0.0225,
+      -0.24062
+     ]
+    },
+    "repeat": {
+     "count": 4,
+     "translation": [
+      0.0,
+      0.0,
+      0.12375
+     ]
+    }
+   },
+   {
+    "id": "back-slat",
+    "kind": "extrude",
+    "bone": "backrest",
+    "material": "oak-timber",
+    "role": "body",
+    "tone": 0.55,
+    "region": "back-timber",
+    "profile": [
+     [
+      -0.1,
+      0.1701
+     ],
+     [
+      -0.1,
+      0.2031
+     ],
+     [
+      -0.02,
+      0.2199
+     ],
+     [
+      -0.02,
+      0.1869
+     ]
+    ],
+    "plane": "yz",
+    "from": 0.0,
+    "to": 1.8,
+    "repeat": {
+     "count": 3,
+     "translation": [
+      0.0,
+      0.11,
+      0.0231
+     ]
+    }
+   },
+   {
+    "id": "back-slat-1-bolt-a",
+    "kind": "revolve",
+    "bone": "backrest",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "steel-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.004
+     ],
+     [
+      0.007,
+      0.004
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.105,
+     -0.06,
+     0.2235
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.03,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "back-slat-1-bolt-b",
+    "kind": "revolve",
+    "bone": "backrest",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "steel-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.004
+     ],
+     [
+      0.007,
+      0.004
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     1.665,
+     -0.06,
+     0.2235
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.03,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "back-slat-2-bolt-a",
+    "kind": "revolve",
+    "bone": "backrest",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "steel-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.004
+     ],
+     [
+      0.007,
+      0.004
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.105,
+     0.05,
+     0.2466
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.03,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "back-slat-2-bolt-b",
+    "kind": "revolve",
+    "bone": "backrest",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "steel-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.004
+     ],
+     [
+      0.007,
+      0.004
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     1.665,
+     0.05,
+     0.2466
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.03,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "back-slat-3-bolt-a",
+    "kind": "revolve",
+    "bone": "backrest",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "steel-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.004
+     ],
+     [
+      0.007,
+      0.004
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     0.105,
+     0.16,
+     0.2697
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.03,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "back-slat-3-bolt-b",
+    "kind": "revolve",
+    "bone": "backrest",
+    "material": "steel-painted",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "steel-frame",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0.0,
+      0.004
+     ],
+     [
+      0.007,
+      0.004
+     ]
+    ],
+    "axis": [
+     0.0,
+     0.0,
+     1.0
+    ],
+    "origin": [
+     1.665,
+     0.16,
+     0.2697
+    ],
+    "repeat": {
+     "count": 2,
+     "translation": [
+      0.03,
+      0.0,
+      0.0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Each end frame is a 0.55 m long cast foot runner carrying two legs (flared at the foot with the drawn bezier profile, loft with repeat for the pair 0.45 m apart), a cross brace, a seat bearer, a rear post inclined 12 degrees backwards with a ball finial, and a front arm post with an armrest; left and right frames are separate bones.",
+    "de": "Jeder Endrahmen ist eine 0,55 m lange gusseiserne Fusskufe mit zwei Beinen (unten mit dem gezeichneten Bezierprofil aufgeweitet, Loft mit repeat fuer das 0,45 m entfernte Paar), einer Querstrebe, einem Sitztraeger, einem 12 Grad nach hinten geneigten hinteren Pfosten mit Kugelabschluss und einem vorderen Armlehnenpfosten mit Armlehne; linker und rechter Rahmen sind eigene Knochen."
+   },
+   {
+    "en": "The seat is four oak slats of 119 mm with 5 mm gaps (the 2D draws one solid 0.49 m board), the backrest three oak slats that are exact parallelogram extrusions of the front-view outline and repeat with a 0.11 m vertical and 0.0231 m backward step; bolt heads are 8 mm discs on the slat faces.",
+    "de": "Die Sitzflaeche besteht aus vier Eichenlatten zu 119 mm mit 5 mm Fugen (das 2D zeichnet ein einziges 0,49 m breites Brett), die Lehne aus drei Eichenlatten als exakte Parallelogramm-Extrusionen des Vorderansicht-Umrisses mit 0,11 m Hoehen- und 0,0231 m Rueckversatz je Latte; Schraubenkoepfe sind 8-mm-Scheiben auf den Lattenflaechen."
+   },
+   {
+    "en": "The ground anchor bolts, web rims, scroll relief and chamfer lines of the 1:50 drawing are surface details below 10 mm and are not modelled.",
+    "de": "Die Bodenanker, Stegraender, Schneckenreliefs und Fasenlinien der 1:50-Zeichnung sind Oberflaechendetails unter 10 mm und nicht modelliert."
+   }
+  ]
+ }
+}

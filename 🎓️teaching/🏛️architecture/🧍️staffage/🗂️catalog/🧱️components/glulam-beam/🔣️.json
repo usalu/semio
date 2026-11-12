@@ -2245,6 +2245,61 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "beam",
+          "kind": "box",
+          "bone": "beam",
+          "material": "glulam",
+          "role": "body",
+          "tone": 0.6,
+          "regions": ["beam-sides", "beam-top", "beam-soffit"],
+          "size": [8, 0.6, 0.16],
+          "cornerRadius": 0.006,
+          "transform": {
+            "translation": [4, 0, 0]
+          }
+        },
+        {
+          "id": "bearing-plate-left",
+          "kind": "box",
+          "bone": "beam",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "bearing-steel",
+          "size": [0.12, 0.02, 0.16],
+          "transform": {
+            "translation": [0.06, -0.31, 0]
+          }
+        },
+        {
+          "id": "bearing-plate-right",
+          "kind": "box",
+          "bone": "beam",
+          "material": "steel",
+          "role": "body",
+          "tone": 0.3,
+          "region": "bearing-steel",
+          "size": [0.12, 0.02, 0.16],
+          "transform": {
+            "translation": [7.94, -0.31, 0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The 8 m beam is one box 600 x 160 mm with a 6 mm corner radius on every edge (the 2D outline is chamfered at all corners), tagged with the three face regions beam-sides, beam-top and beam-soffit so the thermal view can colour its skin.",
+          "de": "Der 8 m lange Träger ist ein einziger Quader 600 x 160 mm mit 6 mm Kantenradius an allen Kanten (der 2D-Umriss ist an allen Ecken gefast) und mit den drei Flächenregionen Seiten, Oberseite und Unterseite versehen, damit die thermische Ansicht seine Haut einfärben kann."
+        },
+        {
+          "en": "Glue lines (15 lamellas) and finger joints are 2D texture and joint marks and are not modelled; two 120 x 20 x 160 mm steel bearing plates sit under the soffit at both ends; the load carrier bone is a load point without volume.",
+          "de": "Klebefugen (15 Lamellen) und Keilzinken sind 2D-Textur und Stossmarkierungen und nicht modelliert; zwei Stahl-Auflagerplatten 120 x 20 x 160 mm liegen an beiden Enden unter der Unterseite; der Lastträgerknochen ist ein Lastpunkt ohne Volumen."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "distributed-live-load",
       "defaultClip": "moving-point-load",
@@ -2258,7 +2313,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

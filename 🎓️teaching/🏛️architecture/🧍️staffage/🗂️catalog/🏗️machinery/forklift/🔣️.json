@@ -8451,7 +8451,6 @@
      "operatingKey": "traction",
      "volumeFlowM3S": 0.12,
      "temperatureRiseK": 20,
-     "vapourKgPerKg": 0,
      "source": "authored-estimate"
     }
    ],
@@ -8483,6 +8482,863 @@
    ],
    "clinical": false
   },
+  "volume": {
+    "status": "authored",
+    "solids": [
+      {
+        "id": "chassis-body",
+        "kind": "extrude",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.55,
+        "region": "chassis-paint",
+        "profile": [
+          [-1.7, 0.5],
+          [-1.7, 0.58],
+          [-0.02, 0.58],
+          [0.05, 0.96],
+          [0.35, 0.92],
+          [0.43, 0.86],
+          [0.45, 0.78],
+          [0.45, 0.28],
+          [0.4, 0.19],
+          [0.33, 0.18],
+          [0.33, 0.5],
+          [-0.33, 0.5],
+          [-0.33, 0.18],
+          [-1.45, 0.18],
+          [-1.45, 0.5]
+        ],
+        "plane": "xy",
+        "from": -0.5,
+        "to": 0.5
+      },
+      {
+        "id": "drive-cover",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "drive-electronics",
+        "role": "detail",
+        "tone": 0.3,
+        "region": "drive-motor",
+        "size": [0.5, 0.1, 0.8],
+        "cornerRadius": 0.01,
+        "transform": {
+          "translation": [-0.05, 0.63, 0.0]
+        }
+      },
+      {
+        "id": "cowl-dash",
+        "kind": "extrude",
+        "bone": "chassis",
+        "material": "drive-electronics",
+        "role": "detail",
+        "tone": 0.25,
+        "region": "controller",
+        "profile": [[0.05, 0.96], [-0.02, 0.58], [-0.18, 0.6], [-0.1, 1.0]],
+        "plane": "xy",
+        "from": -0.3,
+        "to": 0.3
+      },
+      {
+        "id": "steering-column",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "interior",
+        "role": "detail",
+        "tone": 0.2,
+        "maxDenominator": 50,
+        "p0": [-0.02, 0.98, 0.0],
+        "p1": [-0.2, 1.3, 0.0],
+        "r0": 0.02,
+        "r1": 0.02
+      },
+      {
+        "id": "steering-wheel",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "interior",
+        "role": "detail",
+        "tone": 0.2,
+        "maxDenominator": 100,
+        "p0": [-0.22, 1.35, 0.17],
+        "p1": [-0.24212, 1.41115, 0.15706],
+        "r0": 0.012,
+        "r1": 0.012,
+        "repeat": {
+          "count": 16,
+          "rotationRad": 0.3927,
+          "rotationAxis": [-0.94, -0.34, 0.0],
+          "origin": [-0.22, 1.35, 0.0]
+        }
+      },
+      {
+        "id": "seat-cushion",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "interior",
+        "role": "detail",
+        "tone": 0.22,
+        "maxDenominator": 100,
+        "size": [0.5, 0.1, 0.5],
+        "cornerRadius": 0.03,
+        "transform": {
+          "translation": [-0.7, 1.1, 0.0]
+        }
+      },
+      {
+        "id": "seat-back",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "interior",
+        "role": "detail",
+        "tone": 0.22,
+        "maxDenominator": 100,
+        "size": [0.1, 0.55, 0.44],
+        "cornerRadius": 0.03,
+        "transform": {
+          "translation": [-0.96, 1.33, 0.0],
+          "rotation": [0.0, 0.0, 0.06976, 0.99756]
+        }
+      },
+      {
+        "id": "guard-post-front",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.25,
+        "region": "guard",
+        "p0": [-0.045, 0.95, 0.5],
+        "p1": [-0.105, 2.1, 0.5],
+        "r0": 0.03,
+        "r1": 0.03,
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -1.0]
+        }
+      },
+      {
+        "id": "guard-post-rear",
+        "kind": "capsule",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.25,
+        "region": "guard",
+        "p0": [-1.0, 0.58, 0.5],
+        "p1": [-1.0, 2.1, 0.5],
+        "r0": 0.03,
+        "r1": 0.03,
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -1.0]
+        }
+      },
+      {
+        "id": "guard-rail-side",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.3,
+        "region": "guard",
+        "size": [1.35, 0.05, 0.05],
+        "transform": {
+          "translation": [-0.525, 2.125, 0.525]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -1.05]
+        }
+      },
+      {
+        "id": "guard-rail-end",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "body",
+        "tone": 0.3,
+        "region": "guard",
+        "size": [0.05, 0.05, 1.0],
+        "transform": {
+          "translation": [0.125, 2.125, 0.0]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [-1.3, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "guard-slat",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.2,
+        "region": "guard",
+        "maxDenominator": 50,
+        "size": [0.03, 0.04, 1.0],
+        "transform": {
+          "translation": [-1.1, 2.125, 0.0]
+        },
+        "repeat": {
+          "count": 6,
+          "translation": [0.2, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "beacon",
+        "kind": "revolve",
+        "bone": "chassis",
+        "material": "interior",
+        "role": "detail",
+        "tone": 0.85,
+        "profile": [[0.0, 0.06], [0.11, 0.06]],
+        "axis": [0.0, 1.0, 0.0],
+        "origin": [-0.5, 2.15, 0.0]
+      },
+      {
+        "id": "battery-case",
+        "kind": "box",
+        "bone": "battery",
+        "material": "battery-case",
+        "role": "body",
+        "tone": 0.4,
+        "region": "battery-pack",
+        "size": [1.0, 0.47, 0.9],
+        "cornerRadius": 0.02,
+        "transform": {
+          "translation": [-0.05, 0.215, 0.0]
+        }
+      },
+      {
+        "id": "counterweight-body",
+        "kind": "extrude",
+        "bone": "counterweight",
+        "material": "cast-iron",
+        "role": "body",
+        "tone": 0.3,
+        "region": "counterweight",
+        "profile": [[0.25, -0.2], [0.25, 0.5], [-0.35, 0.5], [-0.45, 0.45], [-0.5, 0.3], [-0.5, -0.35], [-0.45, -0.48], [-0.35, -0.52], [0.0, -0.52], [0.0, -0.2]],
+        "plane": "xy",
+        "from": -0.55,
+        "to": 0.55
+      },
+      {
+        "id": "counterweight-vent",
+        "kind": "box",
+        "bone": "counterweight",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.2,
+        "maxDenominator": 50,
+        "size": [0.01, 0.2, 0.4],
+        "transform": {
+          "translation": [-0.505, 0.3, 0.0]
+        }
+      },
+      {
+        "id": "tilt-trunnion",
+        "kind": "box",
+        "bone": "chassis",
+        "material": "hydraulic",
+        "role": "detail",
+        "tone": 0.3,
+        "region": "hydraulics",
+        "maxDenominator": 200,
+        "size": [0.1, 0.16, 0.07],
+        "transform": {
+          "translation": [-0.55, 0.66, 0.26]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.52]
+        }
+      },
+      {
+        "id": "tilt-bracket",
+        "kind": "box",
+        "bone": "mast-outer",
+        "material": "hydraulic",
+        "role": "detail",
+        "tone": 0.3,
+        "region": "hydraulics",
+        "maxDenominator": 200,
+        "size": [0.11, 0.1, 0.07],
+        "transform": {
+          "translation": [0.92, 0.125, 0.26],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.52]
+        }
+      },
+      {
+        "id": "tilt-barrel-left",
+        "kind": "capsule",
+        "bone": "tilt-cyl",
+        "material": "hydraulic",
+        "role": "detail",
+        "tone": 0.35,
+        "region": "hydraulics",
+        "p0": [0.0, 0.0, 0.26],
+        "p1": [0.45, 0.0, 0.26],
+        "r0": 0.04,
+        "r1": 0.04
+      },
+      {
+        "id": "tilt-rod-left",
+        "kind": "capsule",
+        "bone": "tilt-rod",
+        "material": "hydraulic",
+        "role": "detail",
+        "tone": 0.8,
+        "region": "hydraulics",
+        "p0": [0.0, 0.0, 0.26],
+        "p1": [0.45, 0.0, 0.26],
+        "r0": 0.025,
+        "r1": 0.025
+      },
+      {
+        "id": "tilt-barrel-right",
+        "kind": "capsule",
+        "bone": "tilt-cyl",
+        "material": "hydraulic",
+        "role": "detail",
+        "tone": 0.35,
+        "region": "hydraulics",
+        "p0": [0.0, 0.0, -0.26],
+        "p1": [0.45, 0.0, -0.26],
+        "r0": 0.04,
+        "r1": 0.04
+      },
+      {
+        "id": "tilt-rod-right",
+        "kind": "capsule",
+        "bone": "tilt-rod",
+        "material": "hydraulic",
+        "role": "detail",
+        "tone": 0.8,
+        "region": "hydraulics",
+        "p0": [0.0, 0.0, -0.26],
+        "p1": [0.45, 0.0, -0.26],
+        "r0": 0.025,
+        "r1": 0.025
+      },
+      {
+        "id": "mast-outer-rail",
+        "kind": "box",
+        "bone": "mast-outer",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.35,
+        "region": "mast",
+        "size": [0.14, 2.05, 0.14],
+        "transform": {
+          "translation": [0.775, 0.0, 0.41],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.82]
+        }
+      },
+      {
+        "id": "mast-pivot",
+        "kind": "revolve",
+        "bone": "mast-outer",
+        "material": "steel",
+        "role": "detail",
+        "tone": 0.15,
+        "maxDenominator": 50,
+        "profile": [[0.0, 0.05], [0.96, 0.05]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, -0.48]
+      },
+      {
+        "id": "mast-inner-rail",
+        "kind": "box",
+        "bone": "mast-inner",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.45,
+        "region": "mast",
+        "size": [0.1, 1.6, 0.14],
+        "transform": {
+          "translation": [0.8, 0.0, 0.25],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.5]
+        }
+      },
+      {
+        "id": "carriage-plate",
+        "kind": "box",
+        "bone": "carriage",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.5,
+        "region": "fork-gear",
+        "size": [0.1, 0.6, 0.84],
+        "transform": {
+          "translation": [0.3, 0.0, 0.0],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        }
+      },
+      {
+        "id": "fork-heel",
+        "kind": "box",
+        "bone": "forks",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.3,
+        "region": "fork-gear",
+        "size": [0.09, 0.26, 0.12],
+        "transform": {
+          "translation": [0.13, -0.045, 0.4],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.8]
+        }
+      },
+      {
+        "id": "fork-tine",
+        "kind": "box",
+        "bone": "forks",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.3,
+        "region": "fork-gear",
+        "size": [0.98, 0.045, 0.12],
+        "transform": {
+          "translation": [0.0225, -0.58, 0.4],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.8]
+        }
+      },
+      {
+        "id": "fork-backrest-bar-outer",
+        "kind": "box",
+        "bone": "forks",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.3,
+        "region": "fork-gear",
+        "maxDenominator": 50,
+        "size": [0.09, 1.05, 0.05],
+        "transform": {
+          "translation": [0.525, -0.045, 0.525],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -1.05]
+        }
+      },
+      {
+        "id": "fork-backrest-bar-inner",
+        "kind": "box",
+        "bone": "forks",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.3,
+        "region": "fork-gear",
+        "maxDenominator": 50,
+        "size": [0.09, 1.05, 0.05],
+        "transform": {
+          "translation": [0.525, -0.045, 0.225],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        },
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.45]
+        }
+      },
+      {
+        "id": "fork-backrest-top",
+        "kind": "box",
+        "bone": "forks",
+        "material": "steel",
+        "role": "body",
+        "tone": 0.3,
+        "region": "fork-gear",
+        "size": [0.09, 0.05, 1.1],
+        "transform": {
+          "translation": [1.025, -0.045, 0.0],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        }
+      },
+      {
+        "id": "fork-backrest-rail",
+        "kind": "box",
+        "bone": "forks",
+        "material": "steel",
+        "role": "detail",
+        "tone": 0.3,
+        "region": "fork-gear",
+        "maxDenominator": 50,
+        "size": [0.09, 0.04, 1.1],
+        "transform": {
+          "translation": [0.52, -0.045, 0.0],
+          "rotation": [0.0, 0.0, -0.70711, 0.70711]
+        }
+      },
+      {
+        "id": "pallet-runner",
+        "kind": "box",
+        "bone": "pallet",
+        "material": "wood",
+        "role": "body",
+        "tone": 0.5,
+        "region": "pallet",
+        "size": [0.1, 0.1, 0.8],
+        "transform": {
+          "translation": [0.05, 0.05, 0.0]
+        },
+        "repeat": {
+          "count": 3,
+          "translation": [0.5, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "pallet-deck",
+        "kind": "box",
+        "bone": "pallet",
+        "material": "wood",
+        "role": "body",
+        "tone": 0.62,
+        "region": "pallet",
+        "size": [1.2, 0.044, 0.8],
+        "transform": {
+          "translation": [0.6, 0.122, 0.0]
+        }
+      },
+      {
+        "id": "pallet-goods",
+        "kind": "box",
+        "bone": "pallet",
+        "material": "goods",
+        "role": "body",
+        "tone": 0.78,
+        "region": "cargo",
+        "size": [1.16, 0.9, 0.76],
+        "cornerRadius": 0.02,
+        "transform": {
+          "translation": [0.6, 0.594, 0.0]
+        }
+      },
+      {
+        "id": "goods-strap-around",
+        "kind": "extrude",
+        "bone": "pallet",
+        "material": "goods",
+        "role": "detail",
+        "tone": 0.3,
+        "maxDenominator": 100,
+        "profile": [[0.14, -0.384], [1.048, -0.384], [1.048, 0.384], [0.14, 0.384]],
+        "holes": [
+          [[0.145, -0.376], [1.043, -0.376], [1.043, 0.376], [0.145, 0.376]]
+        ],
+        "plane": "yz",
+        "from": 0.39,
+        "to": 0.41,
+        "repeat": {
+          "count": 2,
+          "translation": [0.4, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "goods-strap-long",
+        "kind": "extrude",
+        "bone": "pallet",
+        "material": "goods",
+        "role": "detail",
+        "tone": 0.3,
+        "maxDenominator": 100,
+        "profile": [[0.016, 0.14], [1.184, 0.14], [1.184, 1.048], [0.016, 1.048]],
+        "holes": [
+          [[0.024, 0.145], [1.176, 0.145], [1.176, 1.043], [0.024, 1.043]]
+        ],
+        "plane": "xy",
+        "from": 0.12,
+        "to": 0.14,
+        "repeat": {
+          "count": 2,
+          "translation": [0.0, 0.0, -0.26]
+        }
+      },
+      {
+        "id": "tyre-f-left",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[-0.1, 0.0], [-0.1, 0.232], [-0.085, 0.2697], [-0.05, 0.29], [0.05, 0.29], [0.085, 0.2697], [0.1, 0.232], [0.1, 0.0]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, 0.5]
+      },
+      {
+        "id": "rim-f-left",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.6,
+        "region": "brakes",
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.17], [0.104, 0.17]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, 0.5]
+      },
+      {
+        "id": "rim-bolt-f-left",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.35,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[0.0, 0.015], [0.012, 0.015]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.102, 0.0, 0.604],
+        "repeat": {
+          "count": 6,
+          "rotationRad": 1.0472,
+          "rotationAxis": [0.0, 0.0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "hub-f-left",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.45,
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.055], [0.02, 0.055]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, 0.604]
+      },
+      {
+        "id": "tyre-f-right",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[0.1, 0.0], [0.1, 0.232], [0.085, 0.2697], [0.05, 0.29], [-0.05, 0.29], [-0.085, 0.2697], [-0.1, 0.232], [-0.1, 0.0]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, -0.5]
+      },
+      {
+        "id": "rim-f-right",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.6,
+        "region": "brakes",
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.17], [0.104, 0.17]],
+        "axis": [0.0, 0.0, -1.0],
+        "origin": [0.0, 0.0, -0.5]
+      },
+      {
+        "id": "rim-bolt-f-right",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.35,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[0.0, 0.015], [0.012, 0.015]],
+        "axis": [0.0, 0.0, -1.0],
+        "origin": [0.102, 0.0, -0.604],
+        "repeat": {
+          "count": 6,
+          "rotationRad": 1.0472,
+          "rotationAxis": [0.0, 0.0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "hub-f-right",
+        "kind": "revolve",
+        "bone": "wheel-f",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.45,
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.055], [0.02, 0.055]],
+        "axis": [0.0, 0.0, -1.0],
+        "origin": [0.0, 0.0, -0.604]
+      },
+      {
+        "id": "axle-f",
+        "kind": "revolve",
+        "bone": "axle-f",
+        "material": "steel",
+        "role": "detail",
+        "tone": 0.3,
+        "profile": [[0.0, 0.05], [1.2, 0.05]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, -0.6]
+      },
+      {
+        "id": "tyre-r-left",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[-0.08, 0.0], [-0.08, 0.184], [-0.068, 0.2139], [-0.04, 0.23], [0.04, 0.23], [0.068, 0.2139], [0.08, 0.184], [0.08, 0.0]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, 0.24]
+      },
+      {
+        "id": "rim-r-left",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.6,
+        "region": "brakes",
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.13], [0.084, 0.13]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, 0.24]
+      },
+      {
+        "id": "rim-bolt-r-left",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.35,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[0.0, 0.015], [0.012, 0.015]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.078, 0.0, 0.324],
+        "repeat": {
+          "count": 6,
+          "rotationRad": 1.0472,
+          "rotationAxis": [0.0, 0.0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "hub-r-left",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.45,
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.04], [0.02, 0.04]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, 0.324]
+      },
+      {
+        "id": "tyre-r-right",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "rubber",
+        "role": "body",
+        "tone": 0.1,
+        "region": "tyres",
+        "profile": [[0.08, 0.0], [0.08, 0.184], [0.068, 0.2139], [0.04, 0.23], [-0.04, 0.23], [-0.068, 0.2139], [-0.08, 0.184], [-0.08, 0.0]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, -0.24]
+      },
+      {
+        "id": "rim-r-right",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.6,
+        "region": "brakes",
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.13], [0.084, 0.13]],
+        "axis": [0.0, 0.0, -1.0],
+        "origin": [0.0, 0.0, -0.24]
+      },
+      {
+        "id": "rim-bolt-r-right",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "cast-iron",
+        "role": "detail",
+        "tone": 0.35,
+        "region": "brakes",
+        "maxDenominator": 100,
+        "profile": [[0.0, 0.015], [0.012, 0.015]],
+        "axis": [0.0, 0.0, -1.0],
+        "origin": [0.078, 0.0, -0.324],
+        "repeat": {
+          "count": 6,
+          "rotationRad": 1.0472,
+          "rotationAxis": [0.0, 0.0, 1],
+          "origin": [0.0, 0.0, 0.0]
+        }
+      },
+      {
+        "id": "hub-r-right",
+        "kind": "revolve",
+        "bone": "wheel-r",
+        "material": "paint",
+        "role": "detail",
+        "tone": 0.45,
+        "maxDenominator": 200,
+        "profile": [[0.0, 0.04], [0.02, 0.04]],
+        "axis": [0.0, 0.0, -1.0],
+        "origin": [0.0, 0.0, -0.324]
+      },
+      {
+        "id": "axle-r",
+        "kind": "revolve",
+        "bone": "axle-r",
+        "material": "steel",
+        "role": "detail",
+        "tone": 0.3,
+        "profile": [[0.0, 0.04], [0.64, 0.04]],
+        "axis": [0.0, 0.0, 1.0],
+        "origin": [0.0, 0.0, -0.32]
+      }
+    ],
+    "decisions": [
+      {
+        "en": "The chassis is one side-profile extrusion (z +-0.5) with wheel arches cut through it for the front and rear wheels and the battery well behind the cowl; the counterweight gets its own arch for the rear wheel, so tyres, axles and body do not interpenetrate except where the 2D views overlap (the drawn mast rails at z 0.34 to 0.48 run through the front tyres at z 0.4 to 0.6, kept as drawn).",
+        "de": "Das Fahrgestell ist eine Seitenprofil-Extrusion (z +-0,5) mit durchgeschnittenen Radkaesten fuer Vorder- und Hinterraeder und der Batteriewanne hinter der Haube; das Gegengewicht bekommt einen eigenen Radkasten fuer das Hinterrad, so durchdringen sich Reifen, Achsen und Aufbau nicht, ausser wo sich die 2D-Ansichten ueberlappen (die gezeichneten Mastschienen bei z 0,34 bis 0,48 laufen durch die Vorderreifen bei z 0,4 bis 0,6, wie gezeichnet belassen)."
+      },
+      {
+        "en": "Wheels are revolved tyres with rim, hub and six rim bolts that make rotation readable, bound to the wheel bones; the mast is two outer rails (tilting bone), two inner rails (prismatic), the carriage plate and fork heels, tines and backrest (fork bone) each on the bone that drives them; tilt cylinders are barrel and rod capsules on their own bones with trunnion and mast brackets so the hydraulic ends stay attached in every pose.",
+        "de": "Raeder sind gedrehte Reifen mit Felge, Nabe und sechs Felgenbolzen, die die Drehung lesbar machen, an den Radknochen gebunden; der Mast besteht aus zwei Aussenschienen (Kippknochen), zwei Innenschienen (Schubknochen), Hubschlitten und Gabelfersen, Zinken und Rueckenlehne (Gabelknochen), jeweils auf dem Knochen, der sie antreibt; die Neigezylinder sind Rohr- und Stangenkapseln auf eigenen Knochen mit Lager- und Mastkonsolen, damit die Hydraulikenden in jeder Pose verbunden bleiben."
+      },
+      {
+        "en": "The pallet with its load sits on the pallet bone (three runners, deck, goods block, two straps around the load and two along it). dimensions.widthM (4.07 m) is the extent in the default pose lowered-forks where the pallet slides 0.98 m back onto the forks; at rest the pallet is 5.05 m out, so judge the bounding box in the default pose.",
+        "de": "Die Palette mit Ladung sitzt auf dem Knochen pallet (drei Kufen, Deck, Ladeblock, zwei Gurte um die Ladung und zwei laengs). dimensions.widthM (4,07 m) ist die Ausdehnung in der Standardpose lowered-forks, in der die Palette 0,98 m auf die Gabeln zurueckgeschoben ist; in Ruhe ragt sie bis 5,05 m, die Bounding-Box ist deshalb in der Standardpose zu beurteilen."
+      }
+    ]
+  },
   "presentation": {
    "defaultPose": "lowered-forks",
    "defaultClip": "lift-pallet",
@@ -8496,7 +9352,11 @@
    "png-sequence",
    "mp4",
    "webm",
-   "component"
+   "component",
+   "glb",
+   "fbx",
+   "model",
+   "model-zip"
   ],
   "completion": "authored"
  }

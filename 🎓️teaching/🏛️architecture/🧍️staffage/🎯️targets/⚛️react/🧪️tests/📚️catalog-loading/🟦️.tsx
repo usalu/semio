@@ -53,6 +53,15 @@ describe("catalog store", () => {
     expect(store.getSnapshot().categories.objects).toMatchObject({ state: "ready", absent: true });
   });
 
+  it("fails a category file without revisions in both languages instead of staying in loading", async () => {
+    const store = new CatalogStore({ manifest: async () => manifest, category: async () => ({ assets: [walker] }) as unknown as CategoryDocument }, reasons);
+    await store.loadCategory("humans");
+    const humans = store.getSnapshot().categories.humans;
+    expect(humans.state).toBe("failed");
+    expect(humans.failure!.en).toMatch(/malformed/u);
+    expect(humans.failure!.de).toMatch(/fehlerhaft/u);
+  });
+
   it("returns a cancelled category to idle so it can be retried", async () => {
     let open!: () => void;
     const gate = new Promise<void>((resolve) => (open = resolve));

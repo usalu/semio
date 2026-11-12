@@ -1,0 +1,581 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "bracket-low",
+    "kind": "box",
+    "bone": "rail",
+    "material": "chrome",
+    "role": "body",
+    "tone": 0.6,
+    "region": "rail",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.035,
+     0.05
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.025,
+      0.0975,
+      0
+     ]
+    }
+   },
+   {
+    "id": "bracket-top",
+    "kind": "box",
+    "bone": "rail",
+    "material": "chrome",
+    "role": "body",
+    "tone": 0.6,
+    "region": "rail",
+    "maxDenominator": 200,
+    "size": [
+     0.05,
+     0.035,
+     0.05
+    ],
+    "cornerRadius": 0.004,
+    "transform": {
+     "translation": [
+      0.025,
+      0.7925,
+      0
+     ]
+    }
+   },
+   {
+    "id": "tube",
+    "kind": "revolve",
+    "bone": "rail",
+    "material": "chrome",
+    "role": "body",
+    "tone": 0.8,
+    "region": "rail",
+    "maxDenominator": 200,
+    "profile": [
+     [
+      0.1,
+      0.003
+     ],
+     [
+      0.10107,
+      0.007
+     ],
+     [
+      0.104,
+      0.00993
+     ],
+     [
+      0.108,
+      0.011
+     ],
+     [
+      0.782,
+      0.011
+     ],
+     [
+      0.786,
+      0.00993
+     ],
+     [
+      0.78893,
+      0.007
+     ],
+     [
+      0.79,
+      0.003
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0.06,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "elbow",
+    "kind": "box",
+    "bone": "elbow",
+    "material": "chrome",
+    "role": "body",
+    "tone": 0.7,
+    "region": "valve",
+    "maxDenominator": 100,
+    "size": [
+     0.06,
+     0.08,
+     0.06
+    ],
+    "cornerRadius": 0.006,
+    "transform": {
+     "translation": [
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "lever-boss",
+    "kind": "revolve",
+    "bone": "elbow",
+    "material": "chrome",
+    "role": "detail",
+    "tone": 0.7,
+    "region": "valve",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      -0.03,
+      0.012
+     ],
+     [
+      -0.0325,
+      0.011
+     ],
+     [
+      -0.0335,
+      0.0095
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ]
+   },
+   {
+    "id": "lever",
+    "kind": "capsule",
+    "bone": "lever",
+    "material": "chrome",
+    "role": "detail",
+    "tone": 0.85,
+    "region": "valve",
+    "maxDenominator": 50,
+    "p0": [
+     0,
+     0,
+     -0.035
+    ],
+    "p1": [
+     0.045,
+     0,
+     -0.035
+    ],
+    "r0": 0.005,
+    "r1": 0.005
+   },
+   {
+    "id": "holder",
+    "kind": "box",
+    "bone": "holder",
+    "material": "chrome",
+    "role": "body",
+    "tone": 0.7,
+    "region": "rail",
+    "maxDenominator": 100,
+    "size": [
+     0.056,
+     0.06,
+     0.056
+    ],
+    "cornerRadius": 0.008,
+    "transform": {
+     "translation": [
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "handle",
+    "kind": "capsule",
+    "bone": "shower",
+    "material": "abs-chrome",
+    "role": "body",
+    "tone": 0.82,
+    "region": "handle",
+    "maxDenominator": 200,
+    "p0": [
+     -0.03804,
+     -0.08157,
+     0
+    ],
+    "p1": [
+     0.03804,
+     0.08157,
+     0
+    ],
+    "r0": 0.0165,
+    "r1": 0.0165
+   },
+   {
+    "id": "head",
+    "kind": "box",
+    "bone": "shower",
+    "material": "abs-chrome",
+    "role": "body",
+    "tone": 0.9,
+    "region": "head",
+    "maxDenominator": 200,
+    "size": [
+     0.137,
+     0.027,
+     0.137
+    ],
+    "cornerRadius": 0.0135,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.47714,
+      0.87883
+     ],
+     "translation": [
+      0.0592,
+      0.1269,
+      0
+     ]
+    }
+   },
+   {
+    "id": "face",
+    "kind": "box",
+    "bone": "shower",
+    "material": "rubber-nozzle",
+    "role": "detail",
+    "tone": 0.4,
+    "region": "head",
+    "maxDenominator": 50,
+    "size": [
+     0.1,
+     0.0016,
+     0.1
+    ],
+    "cornerRadius": 0.0007,
+    "transform": {
+     "rotation": [
+      0,
+      0,
+      0.47714,
+      0.87883
+     ],
+     "translation": [
+      0.07052,
+      0.11955,
+      0.0
+     ]
+    }
+   },
+   {
+    "id": "hose-00",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.01,
+     -0.004,
+     0.0
+    ],
+    "p1": [
+     0.06781,
+     -0.02966,
+     -0.01712
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-01",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.06781,
+     -0.02966,
+     -0.01712
+    ],
+    "p1": [
+     0.135,
+     -0.08925,
+     -0.04596
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-02",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.135,
+     -0.08925,
+     -0.04596
+    ],
+    "p1": [
+     0.18719,
+     -0.17022,
+     -0.0773
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-03",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.18719,
+     -0.17022,
+     -0.0773
+    ],
+    "p1": [
+     0.2,
+     -0.26,
+     -0.10477
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-04",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.2,
+     -0.26,
+     -0.10477
+    ],
+    "p1": [
+     0.17156,
+     -0.32406,
+     -0.12341
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-05",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.17156,
+     -0.32406,
+     -0.12341
+    ],
+    "p1": [
+     0.13,
+     -0.3375,
+     -0.13
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-06",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.13,
+     -0.3375,
+     -0.13
+    ],
+    "p1": [
+     0.09594,
+     -0.30219,
+     -0.12341
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-07",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.09594,
+     -0.30219,
+     -0.12341
+    ],
+    "p1": [
+     0.09,
+     -0.22,
+     -0.10477
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-08",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.09,
+     -0.22,
+     -0.10477
+    ],
+    "p1": [
+     0.10441,
+     -0.07346,
+     -0.0773
+    ],
+    "r0": 0.006,
+    "r1": 0.006
+   },
+   {
+    "id": "hose-09",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.10441,
+     -0.07346,
+     -0.0773
+    ],
+    "p1": [
+     0.10775,
+     0.1123,
+     -0.04596
+    ],
+    "r0": 0.006,
+    "r1": 0.006,
+    "weights": [
+     {
+      "bone": "elbow",
+      "weight": 0.7
+     },
+     {
+      "bone": "shower",
+      "weight": 0.3
+     }
+    ]
+   },
+   {
+    "id": "hose-10",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.10775,
+     0.1123,
+     -0.04596
+    ],
+    "p1": [
+     0.0852,
+     0.31653,
+     -0.01712
+    ],
+    "r0": 0.006,
+    "r1": 0.006,
+    "weights": [
+     {
+      "bone": "elbow",
+      "weight": 0.4
+     },
+     {
+      "bone": "shower",
+      "weight": 0.6
+     }
+    ]
+   },
+   {
+    "id": "hose-11",
+    "kind": "capsule",
+    "bone": "elbow",
+    "material": "epdm-hose",
+    "role": "body",
+    "tone": 0.55,
+    "region": "hose",
+    "p0": [
+     0.0852,
+     0.31653,
+     -0.01712
+    ],
+    "p1": [
+     0.02196,
+     0.51843,
+     0.0
+    ],
+    "r0": 0.006,
+    "r1": 0.006,
+    "weights": [
+     {
+      "bone": "shower",
+      "weight": 1
+     }
+    ]
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The hose is read from the authored front and plan polylines, which share one parameter: point k gives (x, y) from plan and elevation and z from both. Twelve capsules of 12 mm diameter follow the sampled 3D curve; the last three are blended towards the handset bone so the hose end follows the handle when the head swings.",
+    "de": "Der Schlauch wird aus den gezeichneten Vorder- und Grundrisspolylinien gelesen, die einen gemeinsamen Parameter haben: Punkt k liefert (x, y) aus Grundriss und Aufriss und z aus beiden. Zwölf Kapseln von 12 mm Durchmesser folgen der abgetasteten 3D-Kurve; die letzten drei sind zum Brausenknochen hin gemischt, sodass das Schlauchende dem Griff folgt, wenn der Kopf schwenkt."
+   },
+   {
+    "en": "The spray head is a flat square plate: the elevation capsule is its edge-on view (27 mm slab) and the authored extrusion across 137 mm shows a rectangle in front and plan, so it is a fully rounded box turned about w to the capsule direction, with a rubber nozzle plate 1.6 mm thick on the face; the grip is a capsule through the bone origin.",
+    "de": "Der Brausekopf ist eine flache quadratische Platte: die Kapsel der Seitenansicht ist ihre Kantenansicht (27 mm dick), die gezeichnete Extrusion über 137 mm ergibt in Vorderansicht und Grundriss ein Rechteck; daher ein rundum abgerundeter Quader, um w in die Kapselrichtung gedreht, mit einer 1,6 mm dicken Gummidüsenplatte auf der Fläche; der Griff ist eine Kapsel durch den Knochenursprung."
+   },
+   {
+    "en": "The rail is a revolve about the vertical axis (plan: circle of 22 mm), the mixer, brackets and holder are rounded boxes of the sizes of the three views; lever and boss exist only at 1:50. The hanging hose drives the declared height of 1.12 m; the authored hose is an open stroke in the 2D views and therefore not part of the closed-shape silhouette comparison.",
+    "de": "Die Schiene ist ein Rotationskörper um die Hochachse (Grundriss: Kreis von 22 mm), Mischer, Halter und Gleiter sind abgerundete Quader in den Maßen der drei Ansichten; Hebel und Rosette gibt es nur im Maßstab 1:50. Der hängende Schlauch bestimmt die deklarierte Höhe von 1,12 m; der gezeichnete Schlauch ist in den 2D-Ansichten ein offener Strich und daher nicht Teil des Silhouettenvergleichs geschlossener Formen."
+   }
+  ]
+ }
+}

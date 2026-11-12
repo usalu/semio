@@ -8,17 +8,18 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { Asset, AuthoredRepresentation, Shape, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, Shape, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { CAMERAS } from "../../🔨️modules/🎨️depiction/🔭️views/🟦️.ts";
 import { MemberInPaperUnitsError, evaluate, shapeDepth } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, python, requireTool } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 import { catalog, extentOf } from "../🧊️three-views/🧰️.ts";
 requireTool("uv");
 
 const sample = fixture<{ asset: Asset }>("👤️sample-figure").asset;
-const VIEWS: readonly Viewpoint[] = ["elevation", "front", "plan"];
+const VIEWS: readonly PlanarViewpoint[] = ["elevation", "front", "plan"];
 const select = { kind: "scale", scale: { denominator: 50 } } as const;
 
 type Section = { kind: "rect"; w: number; h: number } | { kind: "circle"; d: number };
@@ -31,16 +32,16 @@ const withMember = (bone: string, from: End, to: End, section: Section, extra: r
   return { ...sample, representations: { ...sample.representations, "50": { ...authored, geometry } } };
 };
 
-const outline = (state: EvaluatedState, view: Viewpoint) => extentOf(state.shapes[view].filter((s) => s.shape.id === "diag"), true)!;
+const outline = (state: EvaluatedState, view: PlanarViewpoint) => extentOf(state.shapes[view].filter((s) => s.shape.id === "diag"), true)!;
 
-function oracle(state: EvaluatedState, bone: string, member: { from: End; to: End; section: Section }): Record<Viewpoint, { minX: number; maxX: number; minY: number; maxY: number }> {
+function oracle(state: EvaluatedState, bone: string, member: { from: End; to: End; section: Section }): Record<PlanarViewpoint, { minX: number; maxX: number; minY: number; maxY: number }> {
   const frames = Object.fromEntries(Object.entries(state.bones).map(([id, b]) => [id, { o: [b.frame.o.x, b.frame.o.y, b.frame.o.z], u: [b.frame.u.x, b.frame.u.y, b.frame.u.z], v: [b.frame.v.x, b.frame.v.y, b.frame.v.z], w: [b.frame.w.x, b.frame.w.y, b.frame.w.z] }]));
   const cameras = Object.fromEntries(VIEWS.map((view) => [view, [[CAMERAS[view].paperX.axis, CAMERAS[view].paperX.sign], [CAMERAS[view].paperUp.axis, CAMERAS[view].paperUp.sign]]]));
   const directory = mkdtempSync(join(tmpdir(), "staffage-member-"));
   try {
     const input = join(directory, "input.json");
     writeFileSync(input, JSON.stringify({ frames, bone, member, cameras }));
-    return JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️member-solid/🐍️.py"), ["shapely", "numpy"], [input]));
+    return JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️member-solid/🐍️.py"), "geometry", [input]));
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

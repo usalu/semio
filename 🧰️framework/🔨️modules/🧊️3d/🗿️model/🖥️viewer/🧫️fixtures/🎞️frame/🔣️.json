@@ -1,0 +1,352 @@
+{
+ "tolerance": 0.00001,
+ "rig": {
+  "jointCount": 2,
+  "nodes": [
+   "root",
+   "upper",
+   "lower",
+   "head",
+   "halo-a",
+   "halo-b",
+   "skinned"
+  ],
+  "primitives": [
+   {
+    "node": "root",
+    "mode": "triangles",
+    "material": "cloth",
+    "skin": -1,
+    "vertexCount": 24,
+    "indexCount": 36
+   },
+   {
+    "node": "root",
+    "mode": "lines",
+    "material": "ink",
+    "skin": -1,
+    "vertexCount": 24,
+    "indexCount": 24
+   },
+   {
+    "node": "head",
+    "mode": "triangles",
+    "material": "cloth",
+    "skin": -1,
+    "vertexCount": 26,
+    "indexCount": 144
+   },
+   {
+    "node": "head",
+    "mode": "lines",
+    "material": "ink",
+    "skin": -1,
+    "vertexCount": 80,
+    "indexCount": 80
+   },
+   {
+    "node": "halo-a",
+    "mode": "triangles",
+    "material": "glass",
+    "skin": -1,
+    "vertexCount": 24,
+    "indexCount": 36
+   },
+   {
+    "node": "halo-a",
+    "mode": "lines",
+    "material": "ink",
+    "skin": -1,
+    "vertexCount": 24,
+    "indexCount": 24
+   },
+   {
+    "node": "halo-b",
+    "mode": "triangles",
+    "material": "glass",
+    "skin": -1,
+    "vertexCount": 24,
+    "indexCount": 36
+   },
+   {
+    "node": "halo-b",
+    "mode": "lines",
+    "material": "ink",
+    "skin": -1,
+    "vertexCount": 24,
+    "indexCount": 24
+   },
+   {
+    "node": "skinned",
+    "mode": "triangles",
+    "material": "skin",
+    "skin": 0,
+    "vertexCount": 42,
+    "indexCount": 240
+   },
+   {
+    "node": "skinned",
+    "mode": "lines",
+    "material": "ink",
+    "skin": 0,
+    "vertexCount": 96,
+    "indexCount": 96
+   }
+  ],
+  "vertexCount": 388,
+  "indexCount": 740
+ },
+ "poses": [
+  {
+   "name": "bent",
+   "pose": "bent",
+   "palette": [
+    0.877583,
+    0.479426,
+    0,
+    0,
+    -0.479426,
+    0.877583,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0.479426,
+    0.122417,
+    0,
+    1,
+    0.980067,
+    -0.198669,
+    0,
+    0,
+    0.198669,
+    0.980067,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    -0.876764,
+    -0.082551,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "wave-0.5",
+   "pose": {
+    "animation": "wave",
+    "timeS": 0.5
+   },
+   "palette": [
+    0.921061,
+    0.389418,
+    0,
+    0,
+    -0.389418,
+    0.921061,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0.389418,
+    0.078939,
+    0,
+    1,
+    0.921061,
+    0.389418,
+    0,
+    0,
+    -0.389418,
+    0.921061,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0.389418,
+    0.078939,
+    0,
+    1
+   ]
+  }
+ ],
+ "skinnedVertices": {
+  "bent": [
+   [
+    0,
+    -0.163575,
+    -0.212273,
+    0
+   ],
+   [
+    9,
+    0.021373,
+    -0.062121,
+    0
+   ],
+   [
+    18,
+    -0.035403,
+    0.050546,
+    -0.176721
+   ],
+   [
+    27,
+    -0.480127,
+    1.882227,
+    -0.199937
+   ],
+   [
+    36,
+    -0.591239,
+    1.996709,
+    -0.098742
+   ]
+  ],
+  "wave": [
+   [
+    0,
+    0.486773,
+    -0.151326,
+    0
+   ],
+   [
+    9,
+    0.63799,
+    0.052257,
+    0
+   ],
+   [
+    18,
+    0.549756,
+    0.153514,
+    -0.176721
+   ],
+   [
+    27,
+    -0.391365,
+    1.925666,
+    -0.199937
+   ],
+   [
+    36,
+    -0.536122,
+    2.014485,
+    -0.098742
+   ]
+  ]
+ },
+ "materials": [
+  {
+   "pose": null,
+   "variant": null,
+   "material": "skin",
+   "baseColor": [
+    0.8,
+    0.6,
+    0.5,
+    1
+   ],
+   "emissive": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "animation": "wave",
+    "timeS": 0.5
+   },
+   "variant": "dark",
+   "material": "skin-dark",
+   "baseColor": [
+    0.3,
+    0.1,
+    0.1,
+    1
+   ],
+   "emissive": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "animation": "wave",
+    "timeS": 1.5
+   },
+   "variant": "dark",
+   "material": "skin-dark",
+   "baseColor": [
+    0.7,
+    0.1,
+    0.1,
+    1
+   ],
+   "emissive": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "animation": "wave",
+    "timeS": 1.5
+   },
+   "variant": "dark",
+   "material": "skin",
+   "baseColor": [
+    0.8,
+    0.6,
+    0.5,
+    1
+   ],
+   "emissive": [
+    0.5,
+    0.25,
+    0
+   ]
+  },
+  {
+   "pose": {
+    "animation": "wave",
+    "timeS": 2.5
+   },
+   "variant": null,
+   "material": "skin",
+   "baseColor": [
+    0.8,
+    0.6,
+    0.5,
+    1
+   ],
+   "emissive": [
+    0,
+    0,
+    0
+   ]
+  }
+ ],
+ "boxOf": {
+  "min": [
+   -1,
+   0,
+   -1
+  ],
+  "max": [
+   1,
+   2,
+   1
+  ]
+ }
+}

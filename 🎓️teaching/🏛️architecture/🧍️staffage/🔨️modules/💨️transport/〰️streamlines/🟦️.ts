@@ -12,6 +12,7 @@
 import type { Emitter } from "../../../🧬️schema/🟦️.ts";
 import type { EmitterState, Parcel, Streamline, Vec3 } from "../../🔗️contracts/🟦️.ts";
 import type { Ambient } from "../🌬️ambient/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 〰️ Arc-length step of a streamline (m). */
 export const STREAMLINE_STEP_M = 0.02;
@@ -22,7 +23,7 @@ const MIN_SPEED_MS = 0.005;
 export type Sink = { readonly at: Vec3; readonly diameterM: number; readonly flowM3S: number };
 
 const add = (a: Vec3, b: Vec3, s = 1): Vec3 => ({ x: a.x + b.x * s, y: a.y + b.y * s, z: a.z + b.z * s });
-const norm = (a: Vec3): number => Math.hypot(a.x, a.y, a.z);
+const norm = (a: Vec3): number => portable.hypot(a.x, a.y, a.z);
 
 function field(at: Vec3, ambient: Ambient, parcels: readonly Parcel[], sinks: readonly Sink[]): Vec3 {
   const wind = ambient.windAt(Math.max(0, at.y));
@@ -37,7 +38,7 @@ function field(at: Vec3, ambient: Ambient, parcels: readonly Parcel[], sinks: re
     const r2 = dx * dx + dy * dy + dz * dz;
     const b = Math.max(p.radiusM, 1e-3);
     if (r2 > 16 * b * b) continue;
-    const w = Math.exp(-r2 / (2 * b * b));
+    const w = portable.fastExp(-r2 / (2 * b * b));
     const pw = ambient.windAt(Math.max(0, p.at.y));
     sw += w;
     sx += w * (p.velocity.x - pw.x);
@@ -80,7 +81,7 @@ function trace(seed: Vec3, sign: 1 | -1, ambient: Ambient, parcels: readonly Par
 
 /** 🧭️ The two unit directions perpendicular to an outflow direction: one in the vertical plane through it (`up`), one horizontal (`side`); a vertical outflow takes the lateral axis and the forward axis. */
 function transverse(d: Vec3): { readonly up: Vec3; readonly side: Vec3 } {
-  const horizontal = Math.hypot(d.x, d.z);
+  const horizontal = portable.hypot(d.x, d.z);
   if (horizontal < 1e-9) return { up: { x: 1, y: 0, z: 0 }, side: { x: 0, y: 0, z: 1 } };
   const side = { x: -d.z / horizontal, y: 0, z: d.x / horizontal };
   const up = { x: d.y * (d.x / horizontal) * -1, y: horizontal, z: d.y * (d.z / horizontal) * -1 };
@@ -105,7 +106,7 @@ export function streamlineSeeds(emitters: readonly EmitterState[], definitions: 
   for (const sink of sinks) for (const axis of [{ x: 1, y: 0, z: 0 }, { x: -1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 0, y: -1, z: 0 }, { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: -1 }]) seeds.push(add(sink.at, axis, 4 * sink.diameterM));
   if (ambient.environment.windMS > 0.05 && emitters.length > 0) {
     const phi = (ambient.environment.windDirectionDeg * Math.PI) / 180;
-    const h = { x: Math.cos(phi), y: 0, z: Math.sin(phi) };
+    const h = { x: portable.cos(phi), y: 0, z: portable.sin(phi) };
     const along = (e: EmitterState): number => e.at.x * h.x + e.at.z * h.z;
     const source = emitters.reduce((best, e) => (along(e) < along(best) ? e : best));
     const base = add(source.at, h, -0.5);

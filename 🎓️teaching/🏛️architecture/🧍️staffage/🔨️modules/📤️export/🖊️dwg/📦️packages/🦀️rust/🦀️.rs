@@ -1,102 +1,65 @@
-//! 🖊️ Staffage DWG export: a `ModelScene` (metres) becomes a genuine AC1024 drawing through the in-repo Rust writer
-//! (`semio-s-artifact-stdio-dwg-write`), with insertion units set to metres and the ModelScene lineweights on the layers.
+//! 🖊️ Staffage DWG export: a `ModelScene` (metres) becomes a genuine AC1024 (AutoCAD 2010) drawing written by this crate alone, with insertion units set to metres, one layer per scene layer with its ACI colour and lineweight, LWPOLYLINE and TEXT entities in model space, and the standard tables, blocks, layouts and dictionaries readers expect.
+//! The crate has no runtime dependencies: the bit codes, checksums, compression, JSON reader and container are its own; `acadrust` and `ezdwg` are independent readers used only as test oracles.
 //! The browser reaches it through the raw C-ABI in [`wasm`], the Node CLI through `staffage-dwg`.
 //! <https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf>
 
-use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
-use semio_s_artifact_stdio_dwg_snapshot::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::tables::DwgTableRecordBody;
-use semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::DwgLogicalObjectBody;
-use semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::encode_dwg;
-use serde::Deserialize;
-
+#[path = "🧮️bits/🦀️.rs"]
+pub mod bits;
+#[path = "🔐️checksum/🦀️.rs"]
+pub mod checksum;
+#[path = "📦️container/🦀️.rs"]
+pub mod container;
+#[path = "🔣️json/🦀️.rs"]
+pub mod json;
+#[path = "🗜️lz77/🦀️.rs"]
+pub mod lz77;
+#[path = "🧱️objects/🦀️.rs"]
+pub mod objects;
+#[path = "🗂️scene/🦀️.rs"]
+pub mod scene;
+#[path = "📚️sections/🦀️.rs"]
+pub mod sections;
 #[cfg(target_arch = "wasm32")]
 #[path = "🌐️wasm/🦀️.rs"]
 pub mod wasm;
 
-/// 📍️ A model point in metres.
-#[derive(Deserialize, Clone, Copy)]
-pub struct Point {
-    pub x: f64,
-    pub y: f64,
-}
+pub use objects::lineweight_index;
+pub use scene::{Layer, ModelScene, Point, Polyline, Text};
 
-/// 〰️ An open or closed polyline.
-#[derive(Deserialize)]
-pub struct Polyline {
-    pub points: Vec<Point>,
-    pub closed: bool,
-}
+use container::Section;
 
-/// 🔤️ A single-line text.
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Text {
-    pub at: Point,
-    pub height_m: f64,
-    pub text: String,
-}
-
-/// 🗂️ A CAD layer: ACI colour, lineweight in 1/100 mm, polylines and texts.
-#[derive(Deserialize)]
-pub struct Layer {
-    pub name: String,
-    pub aci: u8,
-    pub lineweight: u32,
-    pub polylines: Vec<Polyline>,
-    pub texts: Vec<Text>,
-}
-
-/// 📐️ The JSON twin of the TypeScript `ModelScene`.
-#[derive(Deserialize)]
-pub struct ModelScene {
-    pub units: String,
-    pub layers: Vec<Layer>,
-}
-
-const LINEWEIGHTS: [u32; 24] = [0, 5, 9, 13, 15, 18, 20, 25, 30, 35, 40, 50, 53, 60, 70, 80, 90, 100, 106, 120, 140, 158, 200, 211];
-
-/// 🔢️ The DWG lineweight enumeration index of the nearest standard weight (1/100 mm).
-pub fn lineweight_index(hundredths_mm: u32) -> u8 {
-    LINEWEIGHTS.iter().enumerate().min_by_key(|(_, w)| w.abs_diff(hundredths_mm)).map_or(31, |(index, _)| index as u8)
-}
-
-fn drawing(scene: &ModelScene) -> DwgDrawing {
-    let mut drawing = DwgDrawing::default();
-    drawing.ensure_layer("0");
-    for layer in &scene.layers {
-        let index = drawing.ensure_layer(&layer.name);
-        drawing.layers[index].color = layer.aci;
-        for line in &layer.polylines {
-            let vertices: Vec<[f64; 2]> = line.points.iter().map(|p| [p.x, p.y]).collect();
-            let bulges = vec![0.0; vertices.len()];
-            drawing.entities.push(DwgEntity { layer: index, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: line.closed, elevation: 0.0, vertices, bulges } });
-        }
-        for text in &layer.texts {
-            drawing.entities.push(DwgEntity { layer: index, color: DwgColor::ByLayer, geometry: DwgGeometry::Text { at: [text.at.x, text.at.y, 0.0], height: text.height_m, rotation: 0.0, content: text.text.clone() } });
-        }
+/// 🧱️ Encodes a validated scene as AC1024 bytes; the same scene always yields the same bytes.
+pub fn encode_scene(scene: &ModelScene, identity: &[u8]) -> Result<Vec<u8>, String> {
+    let database = objects::build(scene);
+    let mut object_section = 0x0DCAu32.to_le_bytes().to_vec();
+    let mut offsets = Vec::with_capacity(database.records.len());
+    for (handle, bytes) in &database.records {
+        offsets.push((*handle, object_section.len() as u32));
+        object_section.extend_from_slice(bytes);
     }
-    drawing
-}
-
-/// 🧱️ Encodes a parsed scene as AC1024 bytes.
-pub fn encode_scene(scene: &ModelScene) -> Result<Vec<u8>, String> {
-    if scene.units != "m" {
-        return Err(format!("ModelScene units must be \"m\", got {:?}", scene.units));
-    }
-    let mut snapshot = DwgSnapshot::from_drawing(&drawing(scene))?;
-    snapshot.header.policy.insertion_units = 6;
-    for object in &mut snapshot.drawing.objects {
-        if let Some(DwgLogicalObjectBody::TableRecord(DwgTableRecordBody::Layer(record))) = object.body.as_mut() {
-            if let Some(layer) = scene.layers.iter().find(|layer| layer.name == record.common.name) {
-                record.lineweight = lineweight_index(layer.lineweight);
-            }
-        }
-    }
-    encode_dwg(&snapshot).map_err(|error| error.to_string())
+    let header = sections::header(&database, &sections::guid(identity, 1), &sections::guid(identity, 2));
+    let classes = sections::classes(database.polylines);
+    let handles = sections::handles(&offsets);
+    let (summary, app_info, dependencies, revisions) = (sections::summary(), sections::app_info(), sections::file_dependencies(), sections::revision_history());
+    let (aux, free, template) = (sections::aux_header(database.next_handle), sections::free_space(offsets.len()), sections::template());
+    let page = 0x7400;
+    let sections = [
+        Section { name: "AcDb:SummaryInfo", data: &summary, compressed: false, page: 0x100 },
+        Section { name: "AcDb:AppInfo", data: &app_info, compressed: false, page: 0x80 },
+        Section { name: "AcDb:FileDepList", data: &dependencies, compressed: false, page: 0x80 },
+        Section { name: "AcDb:RevHistory", data: &revisions, compressed: true, page },
+        Section { name: "AcDb:AcDbObjects", data: &object_section, compressed: true, page },
+        Section { name: "AcDb:ObjFreeSpace", data: &free, compressed: true, page },
+        Section { name: "AcDb:Template", data: &template, compressed: true, page },
+        Section { name: "AcDb:Handles", data: &handles, compressed: true, page },
+        Section { name: "AcDb:Classes", data: &classes, compressed: true, page },
+        Section { name: "AcDb:AuxHeader", data: &aux, compressed: true, page },
+        Section { name: "AcDb:Header", data: &header, compressed: true, page },
+    ];
+    container::write(&sections, "AcDb:SummaryInfo")
 }
 
 /// 📥️ Encodes ModelScene JSON as AC1024 bytes.
 pub fn encode_json(json: &[u8]) -> Result<Vec<u8>, String> {
-    encode_scene(&serde_json::from_slice(json).map_err(|error| format!("ModelScene JSON: {error}"))?)
+    encode_scene(&ModelScene::from_json(json)?, json)
 }

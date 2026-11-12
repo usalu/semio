@@ -1,0 +1,1306 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.model/v1",
+  "title": "Model",
+  "description": "Domain-neutral, engine-neutral 3D model: nodes, mechanism, procedural solids, meshes, skins, materials, variants, poses and animations.",
+  "$ref": "#/$defs/ModelDocument",
+  "$defs": {
+    "Slug": {
+      "description": "A kebab-case identifier, unique within its scope.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "Text": {
+      "description": "A human-readable text in every supported language; there is no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Vec2": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "Vec3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "Vec4": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "Mat4": {
+      "description": "Column-major 4x4 matrix.",
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 16,
+      "maxItems": 16
+    },
+    "TransformPatch": {
+      "description": "Optional translation, rotation quaternion [x, y, z, w] and scale; absent = identity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "translation": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/Vec4"
+        },
+        "scale": {
+          "$ref": "#/$defs/Vec3"
+        }
+      }
+    },
+    "ModelDocument": {
+      "description": "A neutral 3D model: right-handed, +Y up, +Z ahead, +X the asset's left, metres, radians, quaternions [x, y, z, w]. Procedural when it carries solids and no meshes, resolved after tessellation.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "title",
+        "nodes",
+        "solids",
+        "meshes",
+        "skins",
+        "materials",
+        "variants",
+        "poses",
+        "animations"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "version": {
+          "const": "semio.model/v1"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "provenance": {
+          "description": "Free provenance metadata.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "generator": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Text"
+              }
+            }
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Node"
+          }
+        },
+        "solids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Solid"
+          }
+        },
+        "meshes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mesh"
+          }
+        },
+        "skins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Skin"
+          }
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Material"
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Variant"
+          }
+        },
+        "poses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pose"
+          }
+        },
+        "animations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Animation"
+          }
+        }
+      }
+    },
+    "Node": {
+      "description": "A transform node; parents precede children.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parent",
+        "translation",
+        "rotation",
+        "scale"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "parent": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Slug"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "translation": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "rotation": {
+          "$ref": "#/$defs/Vec4"
+        },
+        "scale": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "joint": {
+          "$ref": "#/$defs/Joint"
+        },
+        "mesh": {
+          "$ref": "#/$defs/Slug"
+        },
+        "skin": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "Joint": {
+      "description": "The mechanism: limits in rad or m about a node-local axis.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "axis"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "fixed",
+            "revolute",
+            "prismatic",
+            "spherical",
+            "free"
+          ]
+        },
+        "axis": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "twistMin": {
+          "type": "number"
+        },
+        "twistMax": {
+          "type": "number"
+        }
+      }
+    },
+    "Solid": {
+      "description": "Procedural declarative geometry in the node-local frame.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/BoxSolid"
+        },
+        {
+          "$ref": "#/$defs/EllipsoidSolid"
+        },
+        {
+          "$ref": "#/$defs/CapsuleSolid"
+        },
+        {
+          "$ref": "#/$defs/RevolveSolid"
+        },
+        {
+          "$ref": "#/$defs/ExtrudeSolid"
+        },
+        {
+          "$ref": "#/$defs/LoftSolid"
+        }
+      ]
+    },
+    "BoxSolid": {
+      "description": "A centred box with optionally rounded edges.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "node",
+        "material",
+        "size"
+      ],
+      "properties": {
+        "kind": {
+          "const": "box"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        },
+        "transform": {
+          "$ref": "#/$defs/TransformPatch"
+        },
+        "repeat": {
+          "$ref": "#/$defs/Repeat"
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "weight"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/Slug"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "size": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "cornerRadius": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "EllipsoidSolid": {
+      "description": "A centred ellipsoid.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "node",
+        "material",
+        "radii"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ellipsoid"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        },
+        "transform": {
+          "$ref": "#/$defs/TransformPatch"
+        },
+        "repeat": {
+          "$ref": "#/$defs/Repeat"
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "weight"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/Slug"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "radii": {
+          "$ref": "#/$defs/Vec3"
+        }
+      }
+    },
+    "CapsuleSolid": {
+      "description": "The hull of two spheres (p0, r0) and (p1, r1).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "node",
+        "material",
+        "p0",
+        "p1",
+        "r0",
+        "r1"
+      ],
+      "properties": {
+        "kind": {
+          "const": "capsule"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        },
+        "transform": {
+          "$ref": "#/$defs/TransformPatch"
+        },
+        "repeat": {
+          "$ref": "#/$defs/Repeat"
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "weight"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/Slug"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "p0": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "p1": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "r0": {
+          "type": "number",
+          "minimum": 0
+        },
+        "r1": {
+          "type": "number",
+          "minimum": 0
+        },
+        "lateralScale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "RevolveSolid": {
+      "description": "A profile [axial, radial] revolved about an axis through origin.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "node",
+        "material",
+        "profile",
+        "axis",
+        "origin"
+      ],
+      "properties": {
+        "kind": {
+          "const": "revolve"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        },
+        "transform": {
+          "$ref": "#/$defs/TransformPatch"
+        },
+        "repeat": {
+          "$ref": "#/$defs/Repeat"
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "weight"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/Slug"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "profile": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 2
+        },
+        "axis": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "origin": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "sweepRad": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 6.283185307179586
+        },
+        "lateralScale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "ExtrudeSolid": {
+      "description": "A polygon (with holes) on a plane extruded from one coordinate to another, optionally tapered.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "node",
+        "material",
+        "profile",
+        "plane",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "kind": {
+          "const": "extrude"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        },
+        "transform": {
+          "$ref": "#/$defs/TransformPatch"
+        },
+        "repeat": {
+          "$ref": "#/$defs/Repeat"
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "weight"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/Slug"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "profile": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 2
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "minItems": 2
+          }
+        },
+        "plane": {
+          "enum": [
+            "xy",
+            "yz",
+            "zx"
+          ]
+        },
+        "from": {
+          "type": "number"
+        },
+        "to": {
+          "type": "number"
+        },
+        "taperTo": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    },
+    "LoftSection": {
+      "description": "One section: centre at, semi-axes rx along x and ry along y, optional superellipse exponent and optional rotation quaternion [x, y, z, w]; without rotation the section is perpendicular to the loft path.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "rx",
+        "ry"
+      ],
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "rx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ry": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "exponent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rotation": {
+          "$ref": "#/$defs/Vec4"
+        }
+      }
+    },
+    "LoftSolid": {
+      "description": "Superelliptic sections |x/rx|^n + |y/ry|^n = 1 (n = exponent, default 2 = ellipse) lofted in order. A section with rotation lies in the x, y plane of that rotation (absolute); a section without rotation lies perpendicular to the path tangent at its at (central difference of the neighbouring sections, one-sided at the ends), its x axis being the node X axis projected perpendicular to the tangent (fallback Z) and its y axis tangent x x, the same frame lateralScale uses on capsules and revolves. Sections with and without rotation may be mixed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "node",
+        "material",
+        "sections",
+        "capStart",
+        "capEnd"
+      ],
+      "properties": {
+        "kind": {
+          "const": "loft"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "uniqueItems": true
+        },
+        "transform": {
+          "$ref": "#/$defs/TransformPatch"
+        },
+        "repeat": {
+          "$ref": "#/$defs/Repeat"
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node",
+              "weight"
+            ],
+            "properties": {
+              "node": {
+                "$ref": "#/$defs/Slug"
+              },
+              "weight": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 4
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LoftSection"
+          },
+          "minItems": 2
+        },
+        "capStart": {
+          "type": "boolean"
+        },
+        "capEnd": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Repeat": {
+      "description": "The k-th copy applies the step k times.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "translation": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "rotationAxis": {
+          "$ref": "#/$defs/Vec3"
+        },
+        "rotationRad": {
+          "type": "number"
+        },
+        "origin": {
+          "$ref": "#/$defs/Vec3"
+        }
+      }
+    },
+    "Mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "primitives"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "primitives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Primitive"
+          }
+        }
+      }
+    },
+    "PrimitiveSolid": {
+      "description": "Provenance range: the solid id and the index range [first, first + count) of the primitive that it produced.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "first",
+        "count"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "first": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Primitive": {
+      "description": "Triangle or line geometry. Optional solids: which solid produced which index range; the ranges are contiguous, in solid order and cover all indices (a multiple of 3 for triangles, of 2 for lines).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "material",
+        "positions",
+        "indices"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "triangles",
+            "lines"
+          ]
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "joints": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "weights": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "solids": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PrimitiveSolid"
+          }
+        }
+      }
+    },
+    "Skin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "joints",
+        "inverseBind"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "joints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          },
+          "minItems": 1
+        },
+        "inverseBind": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mat4"
+          }
+        }
+      }
+    },
+    "Material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "baseColor",
+        "metallic",
+        "roughness",
+        "emissive",
+        "alphaMode",
+        "doubleSided",
+        "unlit"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "baseColor": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "metallic": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "roughness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "emissive": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "alphaMode": {
+          "enum": [
+            "opaque",
+            "blend"
+          ]
+        },
+        "doubleSided": {
+          "type": "boolean"
+        },
+        "unlit": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Variant": {
+      "description": "A named look of one geometry.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "bindings"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "bindings": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/Slug"
+          }
+        }
+      }
+    },
+    "Pose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "nodes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "nodes": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "additionalProperties": {
+            "description": "Optional translation, rotation quaternion [x, y, z, w] and scale; absent = identity.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [],
+            "properties": {
+              "translation": {
+                "$ref": "#/$defs/Vec3"
+              },
+              "rotation": {
+                "$ref": "#/$defs/Vec4"
+              },
+              "scale": {
+                "$ref": "#/$defs/Vec3"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Animation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "durationS",
+        "loop",
+        "channels",
+        "events"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "durationS": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Channel"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "t",
+              "id"
+            ],
+            "properties": {
+              "t": {
+                "type": "number",
+                "minimum": 0
+              },
+              "id": {
+                "$ref": "#/$defs/Slug"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "interpolation",
+        "times",
+        "values"
+      ],
+      "properties": {
+        "target": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "node",
+                "path"
+              ],
+              "properties": {
+                "node": {
+                  "$ref": "#/$defs/Slug"
+                },
+                "path": {
+                  "enum": [
+                    "translation",
+                    "rotation",
+                    "scale"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "material",
+                "path"
+              ],
+              "properties": {
+                "material": {
+                  "$ref": "#/$defs/Slug"
+                },
+                "path": {
+                  "enum": [
+                    "baseColor",
+                    "emissive"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "interpolation": {
+          "enum": [
+            "step",
+            "linear"
+          ]
+        },
+        "times": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "Operation": {
+      "description": "Progress and cancellation of one expensive operation. A behavioural interface, not data: it never appears in a document and is described here only so the schema names every exported contract of the kernel. report(fraction) receives a number in [0, 1] and returns nothing; cancelled() returns a boolean that the operation polls at a bounded interval, and a true answer makes it stop with a CancelledError and no partial result.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "report",
+        "cancelled"
+      ],
+      "properties": {
+        "report": {
+          "description": "Function (fraction: number) => void; fraction is monotone in [0, 1]."
+        },
+        "cancelled": {
+          "description": "Function () => boolean; true once the caller wants the operation to stop."
+        }
+      }
+    },
+    "Quality": {
+      "description": "Tessellation quality: maximum chord deviation in metres and the segment bounds of one full circle; deterministic.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chordM",
+        "minSegments",
+        "maxSegments"
+      ],
+      "properties": {
+        "chordM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "minSegments": {
+          "type": "integer",
+          "minimum": 3
+        },
+        "maxSegments": {
+          "type": "integer",
+          "minimum": 3
+        }
+      }
+    },
+    "Issue": {
+      "description": "One validation or pose finding; path is a JSON pointer into the document.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "code",
+        "path",
+        "message"
+      ],
+      "properties": {
+        "severity": {
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string"
+        },
+        "message": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,5 @@
 """📏️ Verify the actual live loss-record footer against independent native text bounds."""
 from pathlib import Path
-import ast
 import importlib
 import json
 import os
@@ -27,12 +26,6 @@ class ModelsFooter(unittest.TestCase):
         self.assertTrue(runtime.state_inputs_current(STATE), "Inputs changed after importing the oracle")
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])
         output.mkdir(parents=True, exist_ok=True)
-        tree = ast.parse(SOURCE.read_text(encoding="utf-8"))
-        scene_class = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == SEGMENT["scene"])
-        trace = next(node for node in scene_class.body if isinstance(node, ast.FunctionDef) and node.name == "_trace")
-        expression = next(node.value for node in trace.body if isinstance(node, ast.Assign)
-            and any(isinstance(target, ast.Name) and target.id == "footer" for target in node.targets))
-        expression = compile(ast.Expression(expression), str(SOURCE), "eval")
         analysis = module._model.translate_structure()
         totals = [len(analysis["losses"]), len(analysis["loss_groups"])]
         self.assertEqual(totals, CASES["model_counts"])
@@ -43,7 +36,7 @@ class ModelsFooter(unittest.TestCase):
                 scene = module.Beat4_PartialModels()
                 scene.analysis = analysis
                 records, kinds = mn.ValueTracker(0), mn.ValueTracker(0)
-                footer = eval(expression, vars(module), dict(self=scene, records=records, kinds=kinds))
+                footer = scene._trace_footer(records, kinds)
                 self.assertEqual(len(footer), 4)
                 counters = [footer[0], footer[2]]
                 self.assertTrue(all(counter.updaters for counter in counters))

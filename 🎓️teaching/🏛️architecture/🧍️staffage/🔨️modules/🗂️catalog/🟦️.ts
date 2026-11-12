@@ -8,18 +8,20 @@
  * @see ../../🧬️schema/🔣️.json — the normative structural contract
  * @see ../🧮️evaluation/🟦️.ts — `evaluate`, used for the extent and plant checks
  */
-import { CATEGORIES, PARAMETER_SOURCES, SCALE_DENOMINATORS, UNAVAILABLE_CAUSES, VIEWPOINTS, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
-import type { Asset, AuthoredRepresentation, BoneOffset, Environment, EnvironmentPreset, Manifest, PrintProfile, Shape, Slug, SymbolRepresentation, Text, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import { CATEGORIES, PARAMETER_SOURCES, SCALE_DENOMINATORS, UNAVAILABLE_CAUSES, PLANAR_VIEWPOINTS, operatingKeyOf } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, BoneOffset, Environment, EnvironmentPreset, Manifest, PrintProfile, Shape, Slug, SymbolRepresentation, Text, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedState } from "../🔗️contracts/🟦️.ts";
 import { VIEWPOINT_CAPTIONS } from "../🎨️depiction/✂️section/🟦️.ts";
 import { sampleClip, samplePose } from "../🎞️animation/🟦️.ts";
 import { evaluate, flattenGeometry } from "../🧮️evaluation/🟦️.ts";
+import { exportIssues, volumeIssues } from "./🧊️volume/🟦️.ts";
 import { compareRepresentations } from "../🖨️representation/🪞️copies/🟦️.ts";
 import { DEFAULT_PRINT_PROFILE, measureSuitability, measureSymbolSuitability } from "../🖨️representation/🟦️.ts";
 import { effectiveOffset, restFrames, solveChain } from "../🦴️rig/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🚨️ One validation finding. */
-/** 🚨️ One validation finding; `data` carries the measured values of findings that have them (the tilt and paper error of `lateral-ambiguous`, the scale and measurement of range and symbol suitability). */
+/** 🛑️ One validation finding; `data` carries the measured values of findings that have them (the tilt and paper error of `lateral-ambiguous`, the scale and measurement of range and symbol suitability). */
 export type Issue = { readonly path: string; readonly code: string; readonly message: Text; readonly data?: Readonly<Record<string, string | number | readonly string[]>> };
 
 /** 📏️ Relative tolerance of the default-pose extent of every authored representation against `dimensions` (2 %). */
@@ -32,9 +34,9 @@ export const EXTENT_TOLERANCE_M = 0.015;
 const TILT_SAMPLES = 9;
 
 /** 🏷️ The names of the three viewpoints in validator messages (terminology R1). */
-const VIEWPOINT_NAMES: Readonly<Record<Viewpoint, Text>> = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, { en: VIEWPOINT_CAPTIONS[viewpoint].en.toLowerCase(), de: VIEWPOINT_CAPTIONS[viewpoint].de }])) as Record<Viewpoint, Text>;
+const VIEWPOINT_NAMES: Readonly<Record<PlanarViewpoint, Text>> = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, { en: VIEWPOINT_CAPTIONS[viewpoint].en.toLowerCase(), de: VIEWPOINT_CAPTIONS[viewpoint].de }])) as Record<PlanarViewpoint, Text>;
 
-/** 📏️ The overall paper extent in millimetres from which an asset must be drawn: a scale at which the largest dimension is at least this large cannot be declared unavailable. */
+/** 🔭️ The overall paper extent in millimetres from which an asset must be drawn: a scale at which the largest dimension is at least this large cannot be declared unavailable. */
 export const UNAVAILABLE_MIN_PAPER_MM = 3;
 
 /** 🎯️ Allowed deviation in metres of the manifest height and width from the asset file, whose `dimensions` are the single source of truth (1 mm). */
@@ -106,12 +108,12 @@ function jointIssues(asset: Asset, offsets: Readonly<Record<Slug, BoneOffset>> |
     else if (joint.type === "prismatic" && ((offset.abductionDeg ?? 0) !== 0 || (offset.twistDeg ?? 0) !== 0)) bad(`Bone "${id}" has a prismatic joint and cannot spread laterally or twist.`, `Knochen "${id}" hat ein Schiebegelenk und kann weder seitlich gespreizt noch verdreht werden.`);
     else if (joint.type === "revolute" && Math.abs((offset.twistDeg ?? 0) - effective.twistDeg) > ANGLE_EPS) bad(`Twist ${offset.twistDeg} deg of bone "${id}" leaves ${joint.twistMinDeg ?? -180}..${joint.twistMaxDeg ?? 180} deg.`, `Verdrehung ${offset.twistDeg} Grad von Knochen "${id}" verlässt ${joint.twistMinDeg ?? -180}..${joint.twistMaxDeg ?? 180} Grad.`);
     else if (joint.type === "revolute" && Math.abs(offset.abductionDeg ?? 0) > 180) bad(`Lateral spread ${offset.abductionDeg} deg of bone "${id}" leaves -180..180 deg.`, `Seitliche Spreizung ${offset.abductionDeg} Grad von Knochen "${id}" verlässt -180..180 Grad.`);
-    else if (joint.type === "prismatic" && Math.hypot((offset.dx ?? 0) - effective.dx, (offset.dy ?? 0) - effective.dy) > 1e-9) bad(`Travel of bone "${id}" leaves its limits ${joint.minM ?? "-inf"}..${joint.maxM ?? "inf"} m or its axis.`, `Verschiebung von Knochen "${id}" verlässt die Grenzen ${joint.minM ?? "-inf"}..${joint.maxM ?? "inf"} m oder die Achse.`);
+    else if (joint.type === "prismatic" && portable.hypot((offset.dx ?? 0) - effective.dx, (offset.dy ?? 0) - effective.dy) > 1e-9) bad(`Travel of bone "${id}" leaves its limits ${joint.minM ?? "-inf"}..${joint.maxM ?? "inf"} m or its axis.`, `Verschiebung von Knochen "${id}" verlässt die Grenzen ${joint.minM ?? "-inf"}..${joint.maxM ?? "inf"} m oder die Achse.`);
   }
 }
 
-/** 📐️ The drawn extent in metres of one viewpoint of a state: the horizontal and the vertical span of every shape except the ground line; `null` when nothing is drawn. */
-export function viewExtent(state: EvaluatedState, viewpoint: Viewpoint): { readonly horizontal: number; readonly vertical: number } | null {
+/** 🪜️ The drawn extent in metres of one viewpoint of a state: the horizontal and the vertical span of every shape except the ground line; `null` when nothing is drawn. */
+export function viewExtent(state: EvaluatedState, viewpoint: PlanarViewpoint): { readonly horizontal: number; readonly vertical: number } | null {
   const points = state.shapes[viewpoint].filter((shape) => shape.shape.role !== "ground").flatMap((shape) => shape.rings.flat());
   if (points.length === 0) return null;
   const xs = points.map((p) => p.x);
@@ -139,6 +141,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     return true;
   };
   const absent = missing((source.thermal as { passengers?: unknown }).passengers, "thermal.passengers");
+  missing((source as { volume?: unknown }).volume, "volume");
   const asset: Asset = absent ? { ...source, thermal: { ...source.thermal, passengers: [] } } : source;
   const unique = (path: string, ids: readonly string[]): void => {
     for (const id of duplicates(ids)) add(path, "duplicate-id", `Id "${id}" is used more than once in ${path}.`, `Id "${id}" wird in ${path} mehrfach verwendet.`);
@@ -229,8 +232,8 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     need(`${path}.reference`, material.reference, references, "Reference");
   });
 
-  const tilts = new Map<Viewpoint, Map<Slug, number>>();
-  const tiltOf = (bone: Slug, viewpoint: Viewpoint): number => {
+  const tilts = new Map<PlanarViewpoint, Map<Slug, number>>();
+  const tiltOf = (bone: Slug, viewpoint: PlanarViewpoint): number => {
     let table = tilts.get(viewpoint);
     if (table === undefined) {
       table = new Map();
@@ -246,7 +249,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
           const dotWith = (a: readonly number[]): number => a[0]! * normal[0] + a[1]! * normal[1] + a[2]! * normal[2];
           const carried = [0, 1, 2].map((axis) => n.u[axis]! * dotWith(r.u) + n.v[axis]! * dotWith(r.v) + n.w[axis]! * dotWith(r.w));
           const cosine = Math.min(1, Math.max(-1, carried[0]! * normal[0] + carried[1]! * normal[1] + carried[2]! * normal[2]));
-          table.set(id, Math.max(table.get(id) ?? 0, Math.acos(cosine)));
+          table.set(id, Math.max(table.get(id) ?? 0, portable.acos(cosine)));
         }
       }
     }
@@ -320,7 +323,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
         const rings = flattenGeometry(shape).rings.flat();
         const extent = rings.length === 0 ? 0 : Math.max(Math.max(...rings.map((p) => p.x)) - Math.min(...rings.map((p) => p.x)), Math.max(...rings.map((p) => p.y)) - Math.min(...rings.map((p) => p.y)));
         const denominator = Number(/representations\.(\d+)\./u.exec(path)?.[1] ?? 0);
-        const errorMm = denominator > 0 ? (extent * Math.sin(theta) * 1000) / denominator : 0;
+        const errorMm = denominator > 0 ? (extent * portable.sin(theta) * 1000) / denominator : 0;
         if (errorMm > DEFAULT_PRINT_PROFILE.minFeatureMm) {
           const entry = ambiguous.get(shape.bone) ?? ambiguous.set(shape.bone, { ids: new Set(), where: new Set(), thetaDeg: 0, errorMm: 0 }).get(shape.bone)!;
           entry.ids.add(shape.id);
@@ -352,7 +355,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
   const withinTolerance = (measured: number, nominal: number): boolean => Math.abs(measured - nominal) <= Math.max(EXTENT_TOLERANCE * nominal, EXTENT_TOLERANCE_M);
   const viewExtentIssues = (path: string, prefix: "extent" | "symbol-extent", label: string, state: EvaluatedState): void => {
     const d = asset.dimensions;
-    const expected: readonly (readonly [Viewpoint, "horizontal" | "vertical", string, number, string, string])[] = [
+    const expected: readonly (readonly [PlanarViewpoint, "horizontal" | "vertical", string, number, string, string])[] = [
       ["front", "horizontal", "front-depth", d.depthM, "lateral width", "seitliche Breite"],
       ["front", "vertical", "front-height", d.heightM, "height", "Höhe"],
       ["plan", "horizontal", "plan-width", d.widthM, "forward length", "Länge in Gehrichtung"],
@@ -371,12 +374,13 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     const height = state.bounds.maxY - state.bounds.minY;
     const width = state.bounds.maxX - state.bounds.minX;
     const within = (measured: number, nominal: number): boolean => Math.abs(measured - nominal) <= Math.max(EXTENT_TOLERANCE * nominal, EXTENT_TOLERANCE_M);
-    for (const viewpoint of ["front", "plan"] as const) {
+    const lateral = state.shapes.plan.filter((shape) => shape.shape.role !== "ground").flatMap((shape) => shape.rings.flat().map((p) => p.y));
+    for (const viewpoint of ["elevation", "front", "plan"] as const) {
       const section = rep.sections?.[viewpoint];
       if (section === undefined) continue;
-      const [low, high, axis] = viewpoint === "front" ? [state.bounds.minX, state.bounds.maxX, "forward"] as const : [state.bounds.minY, state.bounds.maxY, "height"] as const;
-      const axisDe = viewpoint === "front" ? "Vorwärtsachse" : "Höhenachse";
-      if (!(section.plane >= low - EXTENT_TOLERANCE_M && section.plane <= high + EXTENT_TOLERANCE_M)) add(`${path}.sections.${viewpoint}.plane`, "section-plane-outside", `The ${viewpoint === "front" ? "front" : "plan"} section "${section.label.en}" cuts at ${section.plane} m on the ${axis} axis, outside the extent ${low.toFixed(3)}…${high.toFixed(3)} m of the asset.`, `Der ${viewpoint === "front" ? "Schnitt" : "Grundriss-Schnitt"} "${section.label.de}" der ${viewpoint === "front" ? "Vorderansicht" : "Draufsicht"} liegt bei ${section.plane} m auf der ${axisDe}, außerhalb der Ausdehnung ${low.toFixed(3)}…${high.toFixed(3)} m des Assets.`);
+      const [low, high, axis, axisDe] = viewpoint === "elevation" ? [Math.min(...lateral), Math.max(...lateral), "lateral", "Querachse"] as const : viewpoint === "front" ? [state.bounds.minX, state.bounds.maxX, "forward", "Vorwärtsachse"] as const : [state.bounds.minY, state.bounds.maxY, "height", "Höhenachse"] as const;
+      const nameEn = viewpoint === "elevation" ? "side" : viewpoint;
+      if (!(section.plane >= low - EXTENT_TOLERANCE_M && section.plane <= high + EXTENT_TOLERANCE_M)) add(`${path}.sections.${viewpoint}.plane`, "section-plane-outside", `The ${nameEn} section "${section.label.en}" cuts at ${section.plane} m on the ${axis} axis, outside the extent ${low.toFixed(3)}…${high.toFixed(3)} m of the asset.`, `Der ${viewpoint === "plan" ? "Grundriss-Schnitt" : "Schnitt"} "${section.label.de}" der ${viewpoint === "elevation" ? "Seitenansicht" : viewpoint === "front" ? "Vorderansicht" : "Draufsicht"} liegt bei ${section.plane} m auf der ${axisDe}, außerhalb der Ausdehnung ${low.toFixed(3)}…${high.toFixed(3)} m des Assets.`);
     }
     if (!within(height, asset.dimensions.heightM)) add(`${path}.geometry`, "extent-height", `The default-pose height ${height.toFixed(3)} m of the 1:${rep.denominator} drawing differs from dimensions.heightM ${asset.dimensions.heightM} m by more than max(2 % of the declared value, 15 mm).`, `Die Höhe ${height.toFixed(3)} m der Zeichnung 1:${rep.denominator} in der Standardpose weicht um mehr als max(2 % des deklarierten Werts, 15 mm) von dimensions.heightM ${asset.dimensions.heightM} m ab.`);
     viewExtentIssues(path, "extent", `1:${rep.denominator}`, state);
@@ -415,7 +419,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
           if (!symbols.has(alternative.symbol)) add(ap, "alternative-unresolved", `Alternative symbol "${alternative.symbol}" does not exist.`, `Alternatives Symbol "${alternative.symbol}" existiert nicht.`);
           else {
             const offered = asset.symbols.find((symbol) => symbol.id === alternative.symbol)!;
-            const lacking = VIEWPOINTS.filter((viewpoint) => ((offered.geometry as Partial<Record<Viewpoint, readonly Shape[]>>)[viewpoint] ?? []).length === 0);
+            const lacking = PLANAR_VIEWPOINTS.filter((viewpoint) => ((offered.geometry as Partial<Record<PlanarViewpoint, readonly Shape[]>>)[viewpoint] ?? []).length === 0);
             if (lacking.length > 0) add(ap, "alternative-symbol-view-missing", `Alternative symbol "${alternative.symbol}" has no geometry for the viewpoint(s) ${lacking.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].en).join(", ")}; an alternative must be drawable in side elevation, front elevation and plan (top view).`, `Alternatives Symbol "${alternative.symbol}" hat keine Geometrie für die Ansicht(en) ${lacking.map((viewpoint) => VIEWPOINT_NAMES[viewpoint].de).join(", ")}; eine Alternative muss in Seitenansicht, Vorderansicht und Draufsicht zeichenbar sein.`);
             else resolvable++;
           }
@@ -474,15 +478,15 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     checkPens(path, symbol.pens);
     const hatchIds = new Set(symbol.hatches.map((hatch) => hatch.id));
     if (!(["true-extent", "true-position", "nominal"] as readonly string[]).includes((symbol as { semantics?: string }).semantics ?? "")) add(`${path}.semantics`, "symbol-semantics-missing", `Symbol "${symbol.id}" declares no semantics (true-extent | true-position | nominal); readers must be told whether it is to scale.`, `Symbol "${symbol.id}" deklariert keine Semantik (true-extent | true-position | nominal); Leser müssen erfahren, ob es maßstäblich ist.`);
-    const geometry = symbol.geometry as Partial<Record<Viewpoint, readonly Shape[]>>;
+    const geometry = symbol.geometry as Partial<Record<PlanarViewpoint, readonly Shape[]>>;
     const viewNames = { elevation: [VIEWPOINT_NAMES.elevation.en, VIEWPOINT_NAMES.elevation.de], front: [VIEWPOINT_NAMES.front.en, VIEWPOINT_NAMES.front.de], plan: [VIEWPOINT_NAMES.plan.en, VIEWPOINT_NAMES.plan.de] } as const;
-    for (const viewpoint of VIEWPOINTS) if ((geometry[viewpoint] ?? []).length === 0) add(`${path}.geometry.${viewpoint}`, `symbol-${viewpoint}-missing`, `Symbol "${symbol.id}" has no ${viewNames[viewpoint][0]} geometry; every symbol is authored for elevation, front and plan (a symbol never borrows another view).`, `Symbol "${symbol.id}" hat keine Geometrie für die ${viewNames[viewpoint][1]}; jedes Symbol wird für Seitenansicht, Vorderansicht und Draufsicht gezeichnet (ein Symbol borgt nie eine andere Ansicht).`);
-    if (symbol.units === "paper-mm") for (const shape of VIEWPOINTS.flatMap((viewpoint) => geometry[viewpoint] ?? [])) if (shape.kind === "member") add(`${path}.geometry`, "member-in-paper-symbol", `Symbol "${symbol.id}" has units paper-mm but shape "${shape.id}" is a member; a member is a bar of physical metres between bone-local points and nothing would be drawn in paper units.`, `Symbol "${symbol.id}" hat die Einheit paper-mm, aber die Form "${shape.id}" ist ein Stab; ein Stab ist ein Balken in physikalischen Metern zwischen knochenlokalen Punkten, und in Papiereinheiten würde nichts gezeichnet.`);
-    for (const shape of VIEWPOINTS.flatMap((viewpoint) => geometry[viewpoint] ?? [])) if (shape.bone !== asset.rig.root) add(`${path}.geometry`, "symbol-bone", `Symbol shape "${shape.id}" must be bound to the rig root "${asset.rig.root}" (symbols are static).`, `Symbolform "${shape.id}" muss an die Rig-Wurzel "${asset.rig.root}" gebunden sein (Symbole sind statisch).`);
+    for (const viewpoint of PLANAR_VIEWPOINTS) if ((geometry[viewpoint] ?? []).length === 0) add(`${path}.geometry.${viewpoint}`, `symbol-${viewpoint}-missing`, `Symbol "${symbol.id}" has no ${viewNames[viewpoint][0]} geometry; every symbol is authored for elevation, front and plan (a symbol never borrows another view).`, `Symbol "${symbol.id}" hat keine Geometrie für die ${viewNames[viewpoint][1]}; jedes Symbol wird für Seitenansicht, Vorderansicht und Draufsicht gezeichnet (ein Symbol borgt nie eine andere Ansicht).`);
+    if (symbol.units === "paper-mm") for (const shape of PLANAR_VIEWPOINTS.flatMap((viewpoint) => geometry[viewpoint] ?? [])) if (shape.kind === "member") add(`${path}.geometry`, "member-in-paper-symbol", `Symbol "${symbol.id}" has units paper-mm but shape "${shape.id}" is a member; a member is a bar of physical metres between bone-local points and nothing would be drawn in paper units.`, `Symbol "${symbol.id}" hat die Einheit paper-mm, aber die Form "${shape.id}" ist ein Stab; ein Stab ist ein Balken in physikalischen Metern zwischen knochenlokalen Punkten, und in Papiereinheiten würde nichts gezeichnet.`);
+    for (const shape of PLANAR_VIEWPOINTS.flatMap((viewpoint) => geometry[viewpoint] ?? [])) if (shape.bone !== asset.rig.root) add(`${path}.geometry`, "symbol-bone", `Symbol shape "${shape.id}" must be bound to the rig root "${asset.rig.root}" (symbols are static).`, `Symbolform "${shape.id}" muss an die Rig-Wurzel "${asset.rig.root}" gebunden sein (Symbole sind statisch).`);
     checkShapes(`${path}.geometry.elevation`, symbol.geometry.elevation, hatchIds, symbol.pens as unknown as Record<string, number | null>);
     checkShapes(`${path}.geometry.front`, geometry.front ?? [], hatchIds, symbol.pens as unknown as Record<string, number | null>);
     checkShapes(`${path}.geometry.plan`, geometry.plan ?? [], hatchIds, symbol.pens as unknown as Record<string, number | null>);
-    if (symbol.semantics === "true-extent" && VIEWPOINTS.every((viewpoint) => (geometry[viewpoint] ?? []).length > 0) && !out.some((issue) => issue.code.startsWith("rig-") || issue.code === "duplicate-id")) {
+    if (symbol.semantics === "true-extent" && PLANAR_VIEWPOINTS.every((viewpoint) => (geometry[viewpoint] ?? []).length > 0) && !out.some((issue) => issue.code.startsWith("rig-") || issue.code === "duplicate-id")) {
       const state = evaluate(asset, { kind: "pose", pose: asset.presentation.defaultPose }, { kind: "symbol", symbol: symbol.id });
       viewExtentIssues(path, "symbol-extent", `symbol "${symbol.id}"`, state);
       const side = viewExtent(state, "elevation");
@@ -496,8 +500,8 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
     const satisfied = offered.some((id) => {
       const index = asset.symbols.findIndex((symbol) => symbol.id === id);
       const symbol = asset.symbols[index];
-      const geometry = symbol?.geometry as Partial<Record<Viewpoint, readonly Shape[]>> | undefined;
-      return symbol?.semantics === "true-extent" && VIEWPOINTS.every((viewpoint) => (geometry?.[viewpoint] ?? []).length > 0) && !out.some((issue) => issue.path.startsWith(`symbols[${index}]`) && issue.code.startsWith("symbol-extent")) && measureSymbolSuitability(asset, symbol, denominator, DEFAULT_PRINT_PROFILE).suitable;
+      const geometry = symbol?.geometry as Partial<Record<PlanarViewpoint, readonly Shape[]>> | undefined;
+      return symbol?.semantics === "true-extent" && PLANAR_VIEWPOINTS.every((viewpoint) => (geometry?.[viewpoint] ?? []).length > 0) && !out.some((issue) => issue.path.startsWith(`symbols[${index}]`) && issue.code.startsWith("symbol-extent")) && measureSymbolSuitability(asset, symbol, denominator, DEFAULT_PRINT_PROFILE).suitable;
     });
     if (!satisfied) add(path, "unavailable-but-drawable", `The asset measures ${paperMm.toFixed(1)} mm on paper at 1:${denominator}, at least ${UNAVAILABLE_MIN_PAPER_MM} mm: draw it, or offer a true-extent symbol that has all three views and passes the extent and print-minimum checks.`, `Das Asset misst bei 1:${denominator} ${paperMm.toFixed(1)} mm auf dem Papier, mindestens ${UNAVAILABLE_MIN_PAPER_MM} mm: zeichnen, oder ein maßstäbliches Symbol (true-extent) mit allen drei Ansichten anbieten, das die Ausdehnungs- und die Druckminimum-Prüfung besteht.`);
   }
@@ -702,6 +706,7 @@ export function validateAsset(source: Asset, context: AssetContext = {}): readon
       add("$", "evaluation-failed", `Evaluating the asset failed: ${(error as Error).message}`, `Auswerten des Assets ist fehlgeschlagen: ${(error as Error).message}`);
     }
   }
+  out.push(...volumeIssues(asset), ...exportIssues(asset));
   const { heightM, widthM, depthM, massKg } = asset.dimensions;
   if (!(heightM > 0 && widthM > 0 && depthM > 0 && massKg > 0)) add("dimensions", "dimension-invalid", "Dimensions and mass must be positive.", "Abmessungen und Masse müssen positiv sein.");
   return out;
@@ -755,7 +760,7 @@ export function validateManifest(manifest: Manifest, assets: readonly Asset[]): 
   return out;
 }
 
-/** 📏️ The print-profile findings at the ends of every declared `validRange` of an authored representation: a band is declared supported over its whole range, so its strokes, hatch spacing, gaps and feature widths are measured at the smallest and the largest denominator of the range, not only at its preset. One `range-end-<check>` issue per violation and end. Measured over all named poses and all three viewpoints, like the preset suitability. */
+/** 📁️ The print-profile findings at the ends of every declared `validRange` of an authored representation: a band is declared supported over its whole range, so its strokes, hatch spacing, gaps and feature widths are measured at the smallest and the largest denominator of the range, not only at its preset. One `range-end-<check>` issue per violation and end. Measured over all named poses and all three viewpoints, like the preset suitability. */
 export function validateRanges(asset: Asset, profile: PrintProfile): readonly Issue[] {
   const out: Issue[] = [];
   const measureAt = (denominator: number, rep: AuthoredRepresentation, end: number, at: "nominal" | "range-end"): void => {

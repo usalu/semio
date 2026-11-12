@@ -11,8 +11,8 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Asset, AuthoredRepresentation, Shape } from "../../🧬️schema/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
-requireTool("uv");
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 
 type Extent = { minX: number; maxX: number; minY: number; maxY: number };
 type Vectors = {
@@ -58,11 +58,12 @@ describe("🧊️ revolved and extruded front and plan shapes", () => {
     });
 
   it("equals the solids that shapely builds from the rotated profile", { timeout: 300_000 }, () => {
+    requireTool("uv");
     const directory = mkdtempSync(join(tmpdir(), "staffage-solids-"));
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify({ shapes: vectors.shapes, bones: vectors.bones, cases: vectors.cases }));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️solid-placements/🐍️.py"), ["shapely"], [input])) as Record<string, Record<"front" | "plan", Record<string, Extent>>>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️solid-placements/🐍️.py"), "geometry", [input])) as Record<string, Record<"front" | "plan", Record<string, Extent>>>;
       for (const c of vectors.cases) {
         const found = measured(c.pose);
         for (const view of ["front", "plan"] as const) for (const [id, extent] of Object.entries(found[view])) expectExtent(`${c.pose} ${view} ${id} (shapely)`, extent, reference[c.pose]![view][id]!, vectors.ovalToleranceM);

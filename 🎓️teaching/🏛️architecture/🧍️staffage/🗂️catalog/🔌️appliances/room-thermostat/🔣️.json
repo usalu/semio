@@ -1222,6 +1222,93 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "housing",
+          "kind": "box",
+          "bone": "housing",
+          "material": "abs-plastic",
+          "role": "body",
+          "tone": 0.9,
+          "region": "casing",
+          "size": [0.09, 0.09, 0.015],
+          "cornerRadius": 0.0072,
+          "transform": {
+            "translation": [0, 0, 0.006]
+          }
+        },
+        {
+          "id": "display",
+          "kind": "box",
+          "bone": "housing",
+          "material": "lcd-glass",
+          "role": "glazing",
+          "tone": 0.12,
+          "region": "display",
+          "maxDenominator": 50,
+          "size": [0.036, 0.021, 0.0016],
+          "transform": {
+            "translation": [0, 0.0265, -0.0023]
+          }
+        },
+        {
+          "id": "led",
+          "kind": "ellipsoid",
+          "bone": "housing",
+          "material": "led-lens",
+          "role": "detail",
+          "tone": 0.35,
+          "region": "led",
+          "maxDenominator": 50,
+          "radii": [0.0035, 0.0035, 0.002],
+          "transform": {
+            "translation": [0.0315, 0.0265, -0.0015]
+          }
+        },
+        {
+          "id": "dial",
+          "kind": "revolve",
+          "bone": "dial",
+          "material": "abs-plastic",
+          "role": "body",
+          "tone": 0.62,
+          "region": "dial",
+          "profile": [[-0.0015, 0.0205], [-0.0035, 0.021], [-0.0112, 0.021], [-0.0123, 0.0195], [-0.0125, 0.0165], [-0.0125, 0]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, 0]
+        },
+        {
+          "id": "pointer",
+          "kind": "box",
+          "bone": "dial",
+          "material": "abs-plastic",
+          "role": "detail",
+          "tone": 0.95,
+          "region": "dial",
+          "maxDenominator": 50,
+          "size": [0.011, 0.0145, 0.002],
+          "transform": {
+            "translation": [0, 0.01175, -0.0125]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The housing is a rounded box 15 mm deep; its wall side is +z, the dial and the display face -z, as in the plan view.",
+          "de": "Das Gehäuse ist ein abgerundeter Quader von 15 mm Tiefe; die Wandseite liegt bei +z, Knopf und Anzeige blicken nach -z, wie im Grundriss."
+        },
+        {
+          "en": "The set-point dial is a revolve about the lateral axis w with a rounded rim, so it turns about its own axis in every pose; the pointer is a ridge on its face (1:50 only).",
+          "de": "Der Sollwertknopf ist ein Rotationskörper um die Querachse w mit gerundetem Rand, sodass er sich in jeder Pose um seine eigene Achse dreht; der Zeiger ist ein Steg auf seiner Stirnfläche (nur 1:50)."
+        },
+        {
+          "en": "Display and LED have no front or plan outline; their depth is a 1.6 mm glass plate and a half-sunk lens, both only drawn at 1:50.",
+          "de": "Anzeige und LED haben keinen Aufriss- oder Grundrissumriss; ihre Tiefe ist eine 1,6 mm dicke Glasplatte und eine halb versenkte Linse, beide nur im Maßstab 1:50."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "calling",
       "defaultClip": "turn-up",
@@ -1235,7 +1322,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

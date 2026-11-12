@@ -985,17 +985,6 @@
       "scale": 50,
       "fps": 15
     },
-    "cooling-heating-comparison-cooler": {
-      "asset": "split-ac-indoor-unit",
-      "clip": "start-cooling",
-      "view": "thermal",
-      "environment": "indoor-warm-summer",
-      "fps": 15,
-      "viewpoint": "elevation",
-      "theme": "dark",
-      "thermalSpanK": 25,
-      "scale": 50
-    },
     "shared-watt-heater": {
       "asset": "electric-fan-heater",
       "clip": "warm-up",

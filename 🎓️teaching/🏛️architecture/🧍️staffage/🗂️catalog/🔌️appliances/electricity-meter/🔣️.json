@@ -2037,6 +2037,339 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "back-plate",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-plastic",
+          "role": "body",
+          "tone": 0.78,
+          "region": "casing",
+          "size": [0.17, 0.285, 0.03],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0, 0.0, 0.05]
+          }
+        },
+        {
+          "id": "body",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-plastic",
+          "role": "body",
+          "tone": 0.88,
+          "region": "casing",
+          "size": [0.17, 0.2425, 0.093],
+          "cornerRadius": 0.012,
+          "transform": {
+            "translation": [0.0, 0.02125, -0.0115]
+          }
+        },
+        {
+          "id": "terminals",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-plastic",
+          "role": "body",
+          "tone": 0.55,
+          "region": "casing",
+          "size": [0.144, 0.0425, 0.093],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0, -0.12125, -0.0115]
+          }
+        },
+        {
+          "id": "screws",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "abs-plastic",
+          "role": "detail",
+          "tone": 0.2,
+          "region": "casing",
+          "maxDenominator": 50,
+          "profile": [[0, 0.005], [0.001, 0.005]],
+          "axis": [0, 0, 1],
+          "origin": [-0.058, -0.121, -0.059],
+          "repeat": {
+            "count": 2,
+            "translation": [0.116, 0, 0]
+          }
+        },
+        {
+          "id": "eye",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "abs-plastic",
+          "role": "detail",
+          "tone": 0.15,
+          "region": "casing",
+          "maxDenominator": 50,
+          "profile": [[0, 0.008], [0.004, 0.008]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0.123, -0.062]
+        },
+        {
+          "id": "rim",
+          "kind": "extrude",
+          "bone": "body",
+          "material": "polycarbonate",
+          "role": "body",
+          "tone": 0.25,
+          "region": "window",
+          "profile": [
+            [0.05, 0.01],
+            [0.04957, 0.01653],
+            [0.0483, 0.02294],
+            [0.04619, 0.02913],
+            [0.0433, 0.035],
+            [0.03967, 0.04044],
+            [0.03536, 0.04536],
+            [0.03044, 0.04967],
+            [0.025, 0.0533],
+            [0.01913, 0.05619],
+            [0.01294, 0.0583],
+            [0.00653, 0.05957],
+            [0.0, 0.06],
+            [-0.00653, 0.05957],
+            [-0.01294, 0.0583],
+            [-0.01913, 0.05619],
+            [-0.025, 0.0533],
+            [-0.03044, 0.04967],
+            [-0.03536, 0.04536],
+            [-0.03967, 0.04044],
+            [-0.0433, 0.035],
+            [-0.04619, 0.02913],
+            [-0.0483, 0.02294],
+            [-0.04957, 0.01653],
+            [-0.05, 0.01],
+            [-0.04957, 0.00347],
+            [-0.0483, -0.00294],
+            [-0.04619, -0.00913],
+            [-0.0433, -0.015],
+            [-0.03967, -0.02044],
+            [-0.03536, -0.02536],
+            [-0.03044, -0.02967],
+            [-0.025, -0.0333],
+            [-0.01913, -0.03619],
+            [-0.01294, -0.0383],
+            [-0.00653, -0.03957],
+            [0.0, -0.04],
+            [0.00653, -0.03957],
+            [0.01294, -0.0383],
+            [0.01913, -0.03619],
+            [0.025, -0.0333],
+            [0.03044, -0.02967],
+            [0.03536, -0.02536],
+            [0.03967, -0.02044],
+            [0.0433, -0.015],
+            [0.04619, -0.00913],
+            [0.0483, -0.00294],
+            [0.04957, 0.00347]
+          ],
+          "plane": "xy",
+          "from": -0.065,
+          "to": -0.058,
+          "holes": [
+            [
+              [0.0465, 0.01],
+              [0.0461, 0.01607],
+              [0.04492, 0.02204],
+              [0.04296, 0.02779],
+              [0.04027, 0.03325],
+              [0.03689, 0.03831],
+              [0.03288, 0.04288],
+              [0.02831, 0.04689],
+              [0.02325, 0.05027],
+              [0.01779, 0.05296],
+              [0.01204, 0.05492],
+              [0.00607, 0.0561],
+              [0.0, 0.0565],
+              [-0.00607, 0.0561],
+              [-0.01204, 0.05492],
+              [-0.01779, 0.05296],
+              [-0.02325, 0.05027],
+              [-0.02831, 0.04689],
+              [-0.03288, 0.04288],
+              [-0.03689, 0.03831],
+              [-0.04027, 0.03325],
+              [-0.04296, 0.02779],
+              [-0.04492, 0.02204],
+              [-0.0461, 0.01607],
+              [-0.0465, 0.01],
+              [-0.0461, 0.00393],
+              [-0.04492, -0.00204],
+              [-0.04296, -0.00779],
+              [-0.04027, -0.01325],
+              [-0.03689, -0.01831],
+              [-0.03288, -0.02288],
+              [-0.02831, -0.02689],
+              [-0.02325, -0.03027],
+              [-0.01779, -0.03296],
+              [-0.01204, -0.03492],
+              [-0.00607, -0.0361],
+              [0.0, -0.0365],
+              [0.00607, -0.0361],
+              [0.01204, -0.03492],
+              [0.01779, -0.03296],
+              [0.02325, -0.03027],
+              [0.02831, -0.02689],
+              [0.03288, -0.02288],
+              [0.03689, -0.01831],
+              [0.04027, -0.01325],
+              [0.04296, -0.00779],
+              [0.04492, -0.00204],
+              [0.0461, 0.00393]
+            ]
+          ]
+        },
+        {
+          "id": "window-glass",
+          "kind": "revolve",
+          "bone": "body",
+          "material": "polycarbonate",
+          "role": "glazing",
+          "tone": 0.1,
+          "region": "window",
+          "profile": [[0, 0.0465], [0.0015, 0.0465]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0.01, -0.065]
+        },
+        {
+          "id": "counter",
+          "kind": "box",
+          "bone": "body",
+          "material": "polycarbonate",
+          "role": "body",
+          "tone": 0.1,
+          "region": "window",
+          "size": [0.09, 0.026, 0.007],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [0.0, 0.091, -0.0615]
+          }
+        },
+        {
+          "id": "digits",
+          "kind": "box",
+          "bone": "body",
+          "material": "polycarbonate",
+          "role": "detail",
+          "tone": 0.92,
+          "region": "window",
+          "maxDenominator": 50,
+          "size": [0.011, 0.018, 0.0005],
+          "transform": {
+            "translation": [-0.037, 0.091, -0.06525]
+          },
+          "repeat": {
+            "count": 5,
+            "translation": [0.0145, 0, 0]
+          }
+        },
+        {
+          "id": "digit-6",
+          "kind": "box",
+          "bone": "body",
+          "material": "polycarbonate",
+          "role": "detail",
+          "tone": 0.55,
+          "region": "window",
+          "maxDenominator": 50,
+          "size": [0.011, 0.018, 0.0005],
+          "transform": {
+            "translation": [0.0355, 0.091, -0.06525]
+          }
+        },
+        {
+          "id": "plate",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-plastic",
+          "role": "body",
+          "tone": 0.78,
+          "region": "plate",
+          "size": [0.13, 0.04, 0.007],
+          "cornerRadius": 0.003,
+          "transform": {
+            "translation": [0.0, -0.065, -0.0615]
+          }
+        },
+        {
+          "id": "plate-lines",
+          "kind": "box",
+          "bone": "body",
+          "material": "abs-plastic",
+          "role": "detail",
+          "tone": 0.25,
+          "region": "plate",
+          "maxDenominator": 50,
+          "size": [0.104, 0.001, 0.0005],
+          "transform": {
+            "translation": [0.0, -0.055, -0.06525]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0, -0.01, 0]
+          }
+        },
+        {
+          "id": "disc",
+          "kind": "revolve",
+          "bone": "disc",
+          "material": "aluminium-disc",
+          "role": "body",
+          "tone": 0.86,
+          "region": "disc",
+          "profile": [[0, 0.042], [0.001, 0.042]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, -0.0615]
+        },
+        {
+          "id": "hub",
+          "kind": "revolve",
+          "bone": "disc",
+          "material": "aluminium-disc",
+          "role": "detail",
+          "tone": 0.3,
+          "region": "disc",
+          "maxDenominator": 50,
+          "profile": [[0, 0.006], [0.002, 0.006]],
+          "axis": [0, 0, 1],
+          "origin": [0, 0, -0.0625]
+        },
+        {
+          "id": "mark",
+          "kind": "box",
+          "bone": "disc",
+          "material": "aluminium-disc",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "disc",
+          "size": [0.02, 0.01, 0.0009],
+          "transform": {
+            "translation": [0.03, 0.0, -0.06135]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "The plan and front views give the depth stack: 30 mm back plate (z 0.035..0.065), a 93 mm housing with 12 mm rounded edges, and a 7 mm raised front with the disc window (ring 0.1 m across), the counter window and the name plate (z -0.065..-0.058); the terminal block hangs below the housing at the same depth.",
+          "de": "Grundriss und Ansicht geben den Tiefenaufbau: 30 mm Rückplatte (z 0,035..0,065), ein 93 mm tiefes Gehäuse mit 12 mm gerundeten Kanten und eine 7 mm erhabene Front mit dem Scheibenfenster (Ring 0,1 m Durchmesser), dem Zählwerkfenster und dem Typenschild (z -0,065..-0,058); der Klemmenblock hängt in gleicher Tiefe unter dem Gehäuse."
+        },
+        {
+          "en": "The Ferraris disc (aluminium, 1 mm, 0.084 m across) lies behind a polycarbonate glazing pane inside the window ring and turns with the revolute disc bone about w; hub and mark are on that bone, so every pose and the run clips show the mark circling. The digits and name-plate lines are 0.5 mm printed relief on the window and plate and only appear at 1:50.",
+          "de": "Die Ferraris-Scheibe (Aluminium, 1 mm, 0,084 m Durchmesser) liegt hinter einer Polycarbonat-Scheibe im Fensterring und dreht mit dem Drehknochen Scheibe um w; Nabe und Marke liegen an diesem Knochen, sodass jede Pose und die Lauf-Clips die umlaufende Marke zeigen. Ziffern und Typenschildlinien sind 0,5 mm Reliefdruck auf Fenster und Schild und erscheinen nur bei 1:50."
+        },
+        {
+          "en": "The plan seam line between housing and back plate is the joint of the two boxes and the plan screw lines are not modelled (terminal screws are modelled as two heads on the terminal block front, from the elevation).",
+          "de": "Die Fugenlinie im Grundriss zwischen Gehäuse und Rückplatte ist die Stossfläche der beiden Quader, die Schraubenlinien im Grundriss sind nicht modelliert (Klemmenschrauben sind nach dem Aufriss als zwei Köpfe auf der Klemmenblockfront modelliert)."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "full-load",
       "defaultClip": "run",
@@ -2050,7 +2383,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

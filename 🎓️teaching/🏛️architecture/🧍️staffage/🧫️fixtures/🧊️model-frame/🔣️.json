@@ -1,0 +1,51 @@
+{
+  "description": "Language-agnostic vectors of the frame conversion between the staffage world (x ahead, y up, z left, left-handed) and the neutral model (right-handed, +Y up, +Z ahead, +X left): `points` and `pseudo` (moments and rotation axes, negated by the reflection) are hand-mapped by the rule (x, y, z) -> (z, y, x); `frames` are bone frames (o, u, v, w) with the hand-computed neutral node translation and the three basis columns X' = M u, Y' = M v, Z' = -M w (the node frame of a bone is (u, v, -w), which is right-handed); `relative` is a child frame carried into its parent's node frame; `transforms` list solid transforms and repeats whose mirrored form must put every probe point where mirroring the transformed point would; `loft` is the sample figure's torso loft whose path-following section frame is checked through the hand-computed bounding box in the bone-local frame.",
+  "points": [
+    { "name": "ahead", "staffage": [1, 0, 0], "neutral": [0, 0, 1] },
+    { "name": "up", "staffage": [0, 1, 0], "neutral": [0, 1, 0] },
+    { "name": "left", "staffage": [0, 0, 1], "neutral": [1, 0, 0] },
+    { "name": "general", "staffage": [0.3, 1.2, -0.4], "neutral": [-0.4, 1.2, 0.3] }
+  ],
+  "pseudo": [
+    { "name": "counter-clockwise in the side elevation (+mz)", "staffage": [0, 0, 1], "neutral": [-1, 0, 0] },
+    { "name": "about the up axis", "staffage": [0, 1, 0], "neutral": [0, -1, 0] },
+    { "name": "about the ahead axis (+mx)", "staffage": [1, 0, 0], "neutral": [0, 0, -1] },
+    { "name": "general", "staffage": [0.2, -0.5, 0.7], "neutral": [-0.7, 0.5, -0.2] }
+  ],
+  "frames": [
+    { "name": "bone pointing up (pelvis, torso, head)", "o": [0, 0.9, 0], "u": [0, 1, 0], "v": [-1, 0, 0], "w": [0, 0, 1], "translation": [0, 0.9, 0], "basis": [[0, 1, 0], [0, 0, -1], [-1, 0, 0]] },
+    { "name": "bone pointing ahead (foot)", "o": [0.1, 0.05, 0.09], "u": [1, 0, 0], "v": [0, 1, 0], "w": [0, 0, 1], "translation": [0.09, 0.05, 0.1], "basis": [[0, 0, 1], [0, 1, 0], [-1, 0, 0]] },
+    { "name": "bone pointing down (arm, leg)", "o": [0, 1.4, 0.2], "u": [0, -1, 0], "v": [1, 0, 0], "w": [0, 0, 1], "translation": [0.2, 1.4, 0], "basis": [[0, -1, 0], [0, 0, 1], [-1, 0, 0]] },
+    { "name": "bone pointing up twisted by 90 degrees about its axis", "o": [0, 1, 0], "u": [0, 1, 0], "v": [0, 0, -1], "w": [-1, 0, 0], "translation": [0, 1, 0], "basis": [[0, 1, 0], [-1, 0, 0], [0, 0, 1]] }
+  ],
+  "relative": [
+    {
+      "name": "torso 0.1 m along the pelvis axis",
+      "parent": { "o": [0, 0.9, 0], "u": [0, 1, 0], "v": [-1, 0, 0], "w": [0, 0, 1] },
+      "child": { "o": [0, 1.0, 0], "u": [0, 1, 0], "v": [-1, 0, 0], "w": [0, 0, 1] },
+      "translation": [0.1, 0, 0],
+      "basis": [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    },
+    {
+      "name": "arm hanging, 0.42 m up the torso, rotated half a turn about the lateral axis",
+      "parent": { "o": [0, 0.9, 0], "u": [0, 1, 0], "v": [-1, 0, 0], "w": [0, 0, 1] },
+      "child": { "o": [0, 1.32, 0], "u": [0, -1, 0], "v": [1, 0, 0], "w": [0, 0, 1] },
+      "translation": [0.42, 0, 0],
+      "basis": [[-1, 0, 0], [0, -1, 0], [0, 0, 1]]
+    }
+  ],
+  "transforms": [
+    { "name": "translation only", "transform": { "translation": [0.1, 0.2, 0.3] }, "repeat": null },
+    { "name": "scale and translation", "transform": { "translation": [0.1, -0.2, 0.3], "scale": [1, 2, 3] }, "repeat": null },
+    { "name": "quarter turn about the lateral axis, shifted", "transform": { "translation": [0, 0, 0.09], "rotation": [0, 0, 0.7071067811865476, 0.7071067811865476] }, "repeat": null },
+    { "name": "general rotation, scale and translation", "transform": { "translation": [0.3, 0.1, -0.2], "rotation": [0.18257418583505536, 0.3651483716701107, 0.5477225575051661, 0.7302967433402214], "scale": [1.5, 0.5, 2] }, "repeat": null },
+    { "name": "three buttons 0.08 m apart", "transform": { "translation": [0.1, 0, 0.01] }, "repeat": { "count": 3, "translation": [0.08, 0, 0.02] } },
+    { "name": "five teeth on a quarter-turn comb about the bone axis", "transform": null, "repeat": { "count": 5, "translation": [0.02, 0, 0.01], "rotationAxis": [1, 0, 0], "rotationRad": 0.3, "origin": [0, 0.1, 0.05] } }
+  ],
+  "probes": [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [0.37, -0.52, 0.81]],
+  "loft": {
+    "solid": "torso",
+    "boundsBoneLocal": { "min": [0, -0.1552, -0.19], "max": [0.45, 0.1552, 0.19] },
+    "toleranceM": 0.0006
+  }
+}

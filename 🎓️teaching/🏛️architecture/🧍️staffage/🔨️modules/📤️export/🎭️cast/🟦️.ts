@@ -1,7 +1,7 @@
 /** 🎭️ Cast exporter: renders the named, figure-only casts of a cast manifest into one folder per cast (`<out>/<cast-id>/🔣️.json` and `NNNN.svg`).
  * `repo tools exec bun -- 🟦️.ts --manifest file --ids a,b --out dir [--catalog dir]`. Casts are language-independent: they print no text, so no language is asked for or part of any cache key.
  *
- * Each frame is `evaluate` → `depict` (every annotation, legend and title off, transparent paper) → `writeSvg`. All frames of a cast share one
+ * A cast of the `axonometric` viewpoint draws the 3D volume through the default isometric camera. Each frame is `evaluate` → `depict` (every annotation, legend and title off, transparent paper) → `writeSvg`. All frames of a cast share one
  * viewBox and one world-origin alignment (the union of the frame extents, frames translated into it), so playing them back never jumps; `mirror`
  * flips the figure about the vertical axis of the world origin. Thermal clips and poses under an environment timeline solve through `solveThermalAt`,
  * so the temperatures at a frame equal those reached by playing; one `thermalSession` per cast lets the frames share the input history and the integrations from the same start, which changes no value. `thermalSpanK` colours the thermal view on a symmetric ±spanK range around the air temperature of the cast environment instead of the absolute shared range of −20…60 °C, so moderate sources (a 35 °C laptop in a 21 °C room) stay readable; the course casts use 25 K, one value per scene. Casts render one after the other; each frame is kept as a compact UTF-8 buffer until the shared viewBox is known, then placed, hashed and written one at a time (sixteen writes in flight) and released, so memory
@@ -21,7 +21,7 @@ import { sectionOf } from "../../🎨️depiction/✂️section/🟦️.ts";
 import { type Asset, type AuthoredRepresentation, type Environment, type EnvironmentPreset, SCALE_DENOMINATORS } from "../../../🧬️schema/🟦️.ts";
 import { DEFAULT_CATALOG_ROOT, type LoadedAsset, loadCatalogFromFiles, loadEnvironments } from "../../🗂️catalog/📥️files/🟦️.ts";
 import { evaluate, poseOf } from "../../🧮️evaluation/🟦️.ts";
-import { depict, textlessDepictionOptions } from "../../🎨️depiction/🟦️.ts";
+import { depict, loadAxonometric, textlessDepictionOptions } from "../../🎨️depiction/🟦️.ts";
 import { solveThermalAt, thermalSession } from "../../🌡️thermal/🟦️.ts";
 import { solveTransport } from "../../💨️transport/🟦️.ts";
 import { solveStructure } from "../../🏗️structure/🟦️.ts";
@@ -72,12 +72,12 @@ function framesOf(cast: Cast, asset: Asset): Frames {
   return { schedule, queries: schedule.times.map((timeS) => ({ kind: "pose", pose, timeS })) };
 }
 
-/** 🗺️ The authored representation a cast draws: exactly the authored preset scale, with geometry for the viewpoint and, for the thermal view, thermal regions. Unavailable, derived and empty combinations throw. */
+/** 🗺️ The authored representation a cast draws: exactly the authored preset scale, with geometry for the viewpoint (the axonometric viewpoint needs the asset's volume instead of authored shapes) and, for the thermal view, thermal regions. Unavailable, derived and empty combinations throw. */
 function authoredRepresentation(id: string, asset: Asset, cast: Cast): AuthoredRepresentation {
   const authored = SCALE_DENOMINATORS.filter((denominator) => asset.representations[`${denominator}`]?.status === "authored");
   const representation = asset.representations[`${cast.scale}`];
   if (representation?.status !== "authored") throw new Error(`cast ${id}: asset ${asset.id} has no authored representation at 1:${cast.scale}; authored scales: ${authored.join(", ")}`);
-  if (representation.geometry[cast.viewpoint].length === 0) throw new Error(`cast ${id}: asset ${asset.id} has no ${cast.viewpoint} geometry at 1:${cast.scale}`);
+  if (cast.viewpoint !== "axonometric" && representation.geometry[cast.viewpoint].length === 0) throw new Error(`cast ${id}: asset ${asset.id} has no ${cast.viewpoint} geometry at 1:${cast.scale}`);
   if (cast.view === "thermal" && asset.thermal.regions.length === 0) throw new Error(`cast ${id}: asset ${asset.id} has no thermal regions for the thermal view`);
   return representation;
 }
@@ -164,7 +164,7 @@ async function render(id: string, cast: Cast, asset: Asset, revision: Revision, 
     const transport = options.transport.length > 0 && cast.transportAgeS !== undefined ? solveTransport(state.asset, state.query, options.environmentTimeline ?? options.environment!, { maxAgeS: cast.transportAgeS, ...(schedule.loop ? { periodS: schedule.durationS } : {}) }) : undefined;
     const structure = cast.view === "forces" || cast.view === "moments" ? solveStructure(state) : undefined;
     if (structure) summaries.push(structuralSummary(structure, cast.mirror === true));
-    const scene = depict(state, options, { ...(thermal ? { thermal } : {}), ...(transport ? { transport } : {}), ...(structure ? { structure } : {}) });
+    const scene = depict(state, options, { ...(thermal ? { thermal } : {}), ...(transport ? { transport } : {}), ...(structure ? { structure } : {}) }, control);
     mmPerMetre ||= scene.metadata.mmPerMetre;
     drawn.push({ originX: scene.metadata.origin.xMm, originY: scene.metadata.origin.yMm, width: scene.widthMm, height: scene.heightMm, svg: Buffer.from(writeSvg(scene, { compact: true }), "utf8") });
     report();
@@ -240,6 +240,7 @@ export async function exportCast(manifest: unknown, ids: readonly string[], out:
   const checked: CastManifest = parseCastManifest(manifest);
   const unknown = ids.filter((id) => !(id in checked.casts));
   if (unknown.length > 0) throw new Error(`unknown cast ids: ${unknown.join(", ")}`);
+  if (ids.some((id) => checked.casts[id]!.viewpoint === "axonometric")) await loadAxonometric();
   const root = resolve(options.catalog ?? DEFAULT_CATALOG_ROOT);
   const catalog = await loadCatalogFromFiles(root, options.signal);
   const presets = new Map(((await loadEnvironments(root, options.signal))?.presets ?? []).map((preset) => [preset.id, preset]));

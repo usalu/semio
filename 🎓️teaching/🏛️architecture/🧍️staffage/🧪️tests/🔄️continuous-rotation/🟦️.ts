@@ -53,7 +53,8 @@ describe("🔄️ continuous rotation", () => {
   it("samples the offset with the cycle difference added", () => {
     const clip = clipOf(wheel, fixture.clip);
     expect(sampleClip(wheel, clip, 3.25).offsets[fixture.bone]!.angleDeg - sampleClip(wheel, clip, 1.25).offsets[fixture.bone]!.angleDeg).toBeCloseTo(720, 9);
-    expect(sampleClip(wheel, clip, 3.25).timeS).toBeCloseTo(1.25, 12);
+    expect(sampleClip(wheel, clip, 3.25).clipTimeS).toBeCloseTo(1.25, 12);
+    expect(sampleClip(wheel, clip, 3.25).timeS).toBe(3.25);
   });
 
   it("reports a closing key that differs on a limited joint, or by a fraction of a turn", () => {

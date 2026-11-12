@@ -1,0 +1,336 @@
+{
+  "$schema": "../../../🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🔮️ Test-only references of the 🗿️model owner's encoders, schema and geometry. Every package is a root devDependency resolved from the locked node_modules (no download at test time) and is imported only by files under 🧪️tests; no exporter, schema or runtime module of this owner can reach them.",
+  "oracles": [
+    {
+      "id": "gltf-validator-glb",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "gltf-validator",
+      "version": "2.0.0-dev.3.10",
+      "source": {
+        "repository": "https://github.com/KhronosGroup/glTF-Validator",
+        "license": "Apache-2.0"
+      },
+      "engine": {
+        "family": "khronos-gltf-validator",
+        "implementation": "Khronos glTF-Validator (Dart compiled to JavaScript)",
+        "version": "2.0.0-dev.3.10"
+      },
+      "capabilities": [
+        "model.export.glb-validity"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/KhronosGroup/glTF-Validator",
+      "rationale": "The GLB encoder is first-party. The Khronos validator is the specification authority's own conformance checker: it must report zero errors and zero warnings for every encoded vector, so a container, accessor, skin or extension fault fails against an implementation this repository did not write."
+    },
+    {
+      "id": "assimpjs-fbx",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "assimpjs",
+      "version": "0.0.10",
+      "source": {
+        "repository": "https://github.com/kovacsv/assimpjs",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "assimp",
+        "implementation": "Open Asset Import Library compiled to WebAssembly (FBX importer)",
+        "version": "0.0.10"
+      },
+      "capabilities": [
+        "model.export.fbx-readback"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/kovacsv/assimpjs",
+      "rationale": "The FBX encoder is first-party and FBX has no public specification to validate against. Assimp's FBX importer is the widely deployed independent reader, so it must load every encoded vector and agree on node hierarchy, mesh and skin content."
+    },
+    {
+      "id": "gltf-transform-glb",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "@gltf-transform/core",
+      "version": "4.5.1",
+      "packages": [
+        {
+          "package": "@gltf-transform/extensions",
+          "version": "4.5.1",
+          "license": "MIT",
+          "homepage": "https://gltf-transform.dev",
+          "role": "Reads KHR_materials_unlit, KHR_materials_variants and KHR_animation_pointer that the core package leaves as raw extensions."
+        }
+      ],
+      "source": {
+        "repository": "https://github.com/donmccurdy/glTF-Transform",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "gltf-transform",
+        "implementation": "glTF-Transform core document model with the extension readers",
+        "version": "4.5.1"
+      },
+      "capabilities": [
+        "model.export.glb-readback"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://gltf-transform.dev",
+      "rationale": "The GLB encoder is first-party. glTF-Transform parses every encoded vector into its own document graph (nodes, skins, accessors, materials, animations, KHR extensions and the extras of solid provenance), an independent reader that must agree on structure and values."
+    },
+    {
+      "id": "three-gltf-loader-glb",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "source": {
+        "repository": "https://github.com/mrdoob/three.js",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "three",
+        "implementation": "three.js GLTFLoader",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "model.export.glb-loadable"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://threejs.org",
+      "rationale": "three's GLTFLoader is the most widely deployed GLB consumer: it must load every encoded vector with its skin, animation and extras intact."
+    },
+    {
+      "id": "three-fbx-loader-fbx",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "source": {
+        "repository": "https://github.com/mrdoob/three.js",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "three",
+        "implementation": "three.js FBXLoader",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "model.export.fbx-loadable"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://threejs.org",
+      "rationale": "three's FBXLoader is an FBX reader written independently of the first-party encoder: it must load the rigged vectors and reproduce skin matrices, bones and animation curves."
+    },
+    {
+      "id": "three-solid-geometry",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "source": {
+        "repository": "https://github.com/mrdoob/three.js",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "three",
+        "implementation": "three.js geometry, math and skeleton classes",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "model.solids.tessellation",
+        "model.pose.skinning",
+        "model.viewer.projection"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://threejs.org",
+      "rationale": "The solid tessellators, polygon triangulation, feature edges, skinning, keyframe interpolation and the viewer's camera, picking and rasteriser are first-party; three's BoxGeometry, SphereGeometry, CapsuleGeometry, LatheGeometry, ExtrudeGeometry, ShapeUtils, EdgesGeometry, Skeleton, keyframe tracks, cameras and Raycaster independently produce the same volumes, counts, matrices and hits."
+    },
+    {
+      "id": "ajv-model-schema",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "source": {
+        "repository": "https://github.com/ajv-validator/ajv",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "ajv",
+        "implementation": "Ajv JSON Schema validator (draft-07)",
+        "version": "8.20.0"
+      },
+      "capabilities": [
+        "model.schema.validity"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://ajv.js.org",
+      "rationale": "The schema twin and the validator are first-party; Ajv judges every procedural and resolved document and every validation mutation against the single schema file."
+    },
+    {
+      "id": "fflate-zlib",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fflate",
+      "version": "0.8.3",
+      "source": {
+        "repository": "https://github.com/101arrowz/fflate",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "fflate",
+        "implementation": "fflate DEFLATE (with node:zlib as a second reader)",
+        "version": "0.8.3"
+      },
+      "capabilities": [
+        "model.export.fbx-deflate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/101arrowz/fflate",
+      "rationale": "The owned deflate and inflate are first-party; fflate and the platform zlib inflate every owned stream and produce streams the owned inflate must read."
+    },
+    {
+      "id": "fast-check-cancellation",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-check",
+      "version": "3.23.2",
+      "source": {
+        "repository": "https://github.com/dubzzz/fast-check",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "fast-check",
+        "implementation": "fast-check property-based testing",
+        "version": "3.23.2"
+      },
+      "capabilities": [
+        "model.operation.cancellation"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://fast-check.dev",
+      "rationale": "Progress and cancellation are first-party. fast-check chooses, independently of the authors, the poll at which each long-running function is cancelled; every choice must stop the function exactly there with a CancelledError and no result."
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [],
+  "oracleHostPackages": []
+}

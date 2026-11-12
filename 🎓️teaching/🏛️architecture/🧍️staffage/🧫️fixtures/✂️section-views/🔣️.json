@@ -1,5 +1,5 @@
 {
-  "description": "Language-agnostic vectors of the cut-line marker of a sectioned front or plan view in the side view. Paper millimetres relative to the model origin, y down; k paper millimetres per metre; the marker reaches 6 mm beyond the object, has 4 mm thick ends and 5 mm arrows. Hand-computed for an object 1.4 m wide and 3.3 m high with its origin at the lower left. Front section A-A at plane x = 0.7 m (a vertical line, arrows point backwards to -x); plan section B-B at plane y = 2.075 m (a horizontal line, arrows point down). 1:100 (k = 10): front line x = 7 from y = -33-6 = -39 to 0+6 = 6; plan line y = -20.75 from x = -6 to 14+6 = 20. 1:50 (k = 20): front x = 14 from y = -72 to 6; plan y = -41.5 from x = -6 to 28+6 = 34.",
+  "description": "Language-agnostic vectors of the cut-line marker of a sectioned front or plan view in the side view and of an elevation section in the plan (a horizontal line at the lateral plane z = 0, the arrows pointing to the far side +z, up in the plan: 1:100 line y = 0 from x = -6 to 20, tips y = -5; 1:50 line y = 0 from x = -6 to 34, tips y = -5). Paper millimetres relative to the model origin, y down; k paper millimetres per metre; the marker reaches 6 mm beyond the object, has 4 mm thick ends and 5 mm arrows. Hand-computed for an object 1.4 m wide and 3.3 m high with its origin at the lower left. Front section A-A at plane x = 0.7 m (a vertical line, arrows point backwards to -x); plan section B-B at plane y = 2.075 m (a horizontal line, arrows point down). 1:100 (k = 10): front line x = 7 from y = -33-6 = -39 to 0+6 = 6; plan line y = -20.75 from x = -6 to 14+6 = 20. 1:50 (k = 20): front x = 14 from y = -72 to 6; plan y = -41.5 from x = -6 to 28+6 = 34.",
   "toleranceMm": 0.001,
   "bounds": { "minX": 0, "maxX": 1.4, "minY": 0, "maxY": 3.3 },
   "sections": { "front": { "plane": 0.7, "label": { "en": "A-A", "de": "A-A" } }, "plan": { "plane": 2.075, "label": { "en": "B-B", "de": "B-B" } } },
@@ -7,14 +7,17 @@
     { "id": "front-100", "viewpoint": "front", "plane": 0.7, "k": 10, "line": [[7, -39], [7, 6]], "ends": [[[7, -39], [7, -35]], [[7, 2], [7, 6]]], "tips": [[2, -39], [2, 6]] },
     { "id": "plan-100", "viewpoint": "plan", "plane": 2.075, "k": 10, "line": [[-6, -20.75], [20, -20.75]], "ends": [[[-6, -20.75], [-2, -20.75]], [[16, -20.75], [20, -20.75]]], "tips": [[-6, -15.75], [20, -15.75]] },
     { "id": "front-50", "viewpoint": "front", "plane": 0.7, "k": 20, "line": [[14, -72], [14, 6]], "ends": [[[14, -72], [14, -68]], [[14, 2], [14, 6]]], "tips": [[9, -72], [9, 6]] },
-    { "id": "plan-50", "viewpoint": "plan", "plane": 2.075, "k": 20, "line": [[-6, -41.5], [34, -41.5]], "ends": [[[-6, -41.5], [-2, -41.5]], [[30, -41.5], [34, -41.5]]], "tips": [[-6, -36.5], [34, -36.5]] }
+    { "id": "plan-50", "viewpoint": "plan", "plane": 2.075, "k": 20, "line": [[-6, -41.5], [34, -41.5]], "ends": [[[-6, -41.5], [-2, -41.5]], [[30, -41.5], [34, -41.5]]], "tips": [[-6, -36.5], [34, -36.5]] },
+    { "id": "elevation-100", "viewpoint": "elevation", "plane": 0, "k": 10, "line": [[-6, 0], [20, 0]], "ends": [[[-6, 0], [-2, 0]], [[16, 0], [20, 0]]], "tips": [[-6, -5], [20, -5]] },
+    { "id": "elevation-50", "viewpoint": "elevation", "plane": 0, "k": 20, "line": [[-6, 0], [34, 0]], "ends": [[[-6, 0], [-2, 0]], [[30, 0], [34, 0]]], "tips": [[-6, -5], [34, -5]] }
   ],
   "captions": [
     { "viewpoint": "elevation", "label": null, "en": "Side elevation", "de": "Seitenansicht" },
     { "viewpoint": "front", "label": null, "en": "Front elevation", "de": "Vorderansicht" },
     { "viewpoint": "plan", "label": null, "en": "Plan (top view)", "de": "Draufsicht" },
     { "viewpoint": "front", "label": "A-A", "en": "Section A-A", "de": "Schnitt A-A" },
-    { "viewpoint": "plan", "label": "B-B", "en": "Plan section B-B", "de": "Grundriss-Schnitt B-B" }
+    { "viewpoint": "plan", "label": "B-B", "en": "Plan section B-B", "de": "Grundriss-Schnitt B-B" },
+    { "viewpoint": "elevation", "label": "A-A", "en": "Section A-A", "de": "Schnitt A-A" }
   ],
   "catalog": {
     "bookshelf": { "front": 0.4 },
@@ -22,5 +25,12 @@
     "curtain-wall-bay": { "front": 0.7, "plan": 2.075 },
     "masonry-wall-with-lintel": { "front": 1.25, "plan": 1.5 },
     "sliding-door": { "plan": 1.0 }
+  },
+  "elevationCatalog": {
+    "cooking-pot": { "50": 0, "100": 0 },
+    "retractable-bollard": { "50": 0, "100": 0 },
+    "panel-radiator": { "50": 0 },
+    "sectional-garage-door": { "50": 0, "100": 0 },
+    "solar-thermal-collector": { "50": 0, "100": 0, "200": 0, "500": 0 }
   }
 }

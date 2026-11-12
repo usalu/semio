@@ -8,6 +8,7 @@
 # from `🧬️schema/🔣️.json` next to this script; the runtime pins live in the launcher registry.
 # 🧭️Invoke from a fresh clone: `bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup` (full
 # bootstrap); `repo ./📜️script.ts setup native rust` installs only Rust and its C/C++ compiler.
+# `repo ./📜️script.ts setup native node` (`… 🐚️.sh node`) installs only the pinned Node.js.
 # Every step probes before it installs and never writes user-global tool configuration.
 # Native setup is rooted here and does not depend on devcontainer scripts.
 # #endregion 🔖️Header
@@ -110,11 +111,11 @@ resolve_repo_root() {
 REPO_ROOT="$(resolve_repo_root)"
 BOOTSTRAP_COMMAND="${1:-setup}"
 case "$BOOTSTRAP_COMMAND" in
-setup|rust)
+setup|rust|node)
   shift || true
   ;;
 *)
-  printf '%s\n' "usage: bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup|rust" >&2
+  printf '%s\n' "usage: bash 🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup|rust|node" >&2
   exit 1
   ;;
 esac
@@ -211,6 +212,7 @@ download_verified() {
     curl --proto '=https' --tlsv1.2 -fsSL --retry 3 --connect-timeout 30 --max-time 900 -o "$3" "$1" || return 1
   elif command -v python3 >/dev/null 2>&1; then
     python3 - "$1" "$3" <<'PY' || return 1
+import os
 import ssl
 import sys
 import urllib.error
@@ -226,7 +228,7 @@ class HttpsOnly(urllib.request.HTTPRedirectHandler):
             raise urllib.error.URLError("redirect left https")
         return super().redirect_request(request, response, code, message, headers, newurl)
 
-context = ssl.create_default_context()
+context = ssl.create_default_context(cafile=os.environ.get("SSL_CERT_FILE") or None)
 context.minimum_version = ssl.TLSVersion.TLSv1_2
 opener = urllib.request.build_opener(HttpsOnly, urllib.request.HTTPSHandler(context=context))
 temporary = dest + ".partial"
@@ -1013,6 +1015,7 @@ provide_curl() {
 #!/bin/sh
 exec python3 - "$@" <<'PY'
 import os
+import os
 import ssl
 import sys
 import urllib.error
@@ -1106,7 +1109,7 @@ class HttpsRedirects(urllib.request.HTTPRedirectHandler):
             raise urllib.error.URLError("redirect left https")
         return super().redirect_request(request, response, code, message, headers, newurl)
 
-context = ssl.create_default_context()
+context = ssl.create_default_context(cafile=os.environ.get("SSL_CERT_FILE") or None)
 context.minimum_version = ssl.TLSVersion.TLSv1_2
 opener = urllib.request.build_opener(HttpsRedirects, urllib.request.HTTPSHandler(context=context))
 status = 1
@@ -1317,6 +1320,11 @@ EOF
 if host_is_musl; then
   log "This Linux uses musl. The pinned Node.js, uv, rustup and Go archives are glibc builds and are not installed."
   exit 1
+fi
+if [ "$BOOTSTRAP_COMMAND" = node ]; then
+  ensure_node || exit 1
+  log "Pinned Node.js is ready."
+  exit 0
 fi
 if [ "$BOOTSTRAP_COMMAND" = rust ]; then
   ensure_rust_profile || exit 1

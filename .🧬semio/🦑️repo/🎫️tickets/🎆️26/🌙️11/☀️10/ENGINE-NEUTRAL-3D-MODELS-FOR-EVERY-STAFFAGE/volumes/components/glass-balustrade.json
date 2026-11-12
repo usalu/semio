@@ -1,0 +1,223 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "shoe",
+    "kind": "extrude",
+    "bone": "panel",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.35,
+    "region": "clamp-steel",
+    "profile": [
+     [
+      0,
+      0.15
+     ],
+     [
+      0,
+      -0.15
+     ],
+     [
+      0.1,
+      -0.15
+     ],
+     [
+      0.1,
+      -0.0275
+     ],
+     [
+      0.02,
+      -0.0275
+     ],
+     [
+      0.02,
+      0.0275
+     ],
+     [
+      0.1,
+      0.0275
+     ],
+     [
+      0.1,
+      0.15
+     ]
+    ],
+    "plane": "xy",
+    "from": -1,
+    "to": 1
+   },
+   {
+    "id": "gasket-a",
+    "kind": "box",
+    "bone": "panel",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.2,
+    "region": "clamp-steel",
+    "size": [
+     0.08,
+     0.01675,
+     2
+    ],
+    "transform": {
+     "translation": [
+      0.06,
+      0.01912,
+      0
+     ]
+    }
+   },
+   {
+    "id": "gasket-b",
+    "kind": "box",
+    "bone": "panel",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.2,
+    "region": "clamp-steel",
+    "size": [
+     0.08,
+     0.01675,
+     2
+    ],
+    "transform": {
+     "translation": [
+      0.06,
+      -0.01912,
+      0
+     ]
+    }
+   },
+   {
+    "id": "glass",
+    "kind": "box",
+    "bone": "panel",
+    "material": "glass",
+    "role": "glazing",
+    "tone": 0.92,
+    "region": "panel-glass",
+    "size": [
+     1.06,
+     0.0215,
+     1.96
+    ],
+    "transform": {
+     "translation": [
+      0.55,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "handrail",
+    "kind": "capsule",
+    "bone": "panel",
+    "material": "steel",
+    "role": "body",
+    "tone": 0.35,
+    "region": "handrail-steel",
+    "p0": [
+     1.079,
+     0,
+     -0.9788
+    ],
+    "p1": [
+     1.079,
+     0,
+     0.9788
+    ],
+    "r0": 0.0212,
+    "r1": 0.0212
+   },
+   {
+    "id": "bolt-a",
+    "kind": "revolve",
+    "bone": "panel",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "clamp-steel",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.007
+     ],
+     [
+      0.003,
+      0.007
+     ]
+    ],
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "origin": [
+     0.05,
+     0.15,
+     -0.8
+    ],
+    "repeat": {
+     "count": 5,
+     "translation": [
+      0,
+      0,
+      0.4
+     ]
+    }
+   },
+   {
+    "id": "bolt-b",
+    "kind": "revolve",
+    "bone": "panel",
+    "material": "steel",
+    "role": "detail",
+    "tone": 0.15,
+    "region": "clamp-steel",
+    "maxDenominator": 50,
+    "profile": [
+     [
+      0,
+      0.007
+     ],
+     [
+      0.003,
+      0.007
+     ]
+    ],
+    "axis": [
+     0,
+     -1,
+     0
+    ],
+    "origin": [
+     0.05,
+     -0.15,
+     -0.8
+    ],
+    "repeat": {
+     "count": 5,
+     "translation": [
+      0,
+      0,
+      0.4
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "The base shoe is a U-channel (extrude of the elevation outline along the 2 m length) whose slot is filled by two EPDM gaskets and the 21.5 mm laminated glass pane, 1.06 m high and 1.96 m long; the 42.4 mm handrail tube is a capsule whose round ends reach the 2 m line.",
+    "de": "Der Fussschuh ist ein U-Profil (Extrusion des Ansichtsumrisses über die 2 m Länge), dessen Schlitz von zwei EPDM-Dichtungen und der 21,5 mm dicken Verbundglasscheibe, 1,06 m hoch und 1,96 m lang, gefüllt ist; das Handlaufrohr 42,4 mm ist eine Kapsel, deren runde Enden die 2-m-Linie erreichen."
+   },
+   {
+    "en": "The 2D views disagree about the clamp bolts (elevation circles with axis along the length, front squares); modelled as the physical solution: five clamp bolts every 0.4 m per side with axis across the shoe and heads 3 mm proud of the shoe flanks (only at 1:50). Glass reflex lines are 2D texture.",
+    "de": "Die 2D-Ansichten widersprechen sich bei den Klemmschrauben (Kreise in der Ansicht mit Achse in Längsrichtung, Quadrate in der Vorderansicht); modelliert ist die physikalische Lösung: je Seite fünf Klemmschrauben im Abstand 0,4 m mit Achse quer zum Schuh und 3 mm vorstehenden Köpfen (nur bei 1:50). Glasreflexlinien sind 2D-Textur."
+   }
+  ]
+ }
+}

@@ -21,6 +21,7 @@ import { type Ambient, type BoundaryLayer, type Turbulence, ambientAt } from "..
 import { GRAVITY_MS2, moistFrom, specificHumidity, volumePerDryKg } from "../🌫️air/🟦️.ts";
 import { gaussianPair } from "../🎲️noise/🟦️.ts";
 import { type Emission, type World, STEPS_PER_S, emissionSteps, emissionsAt } from "../🔥️sources/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🧮️ Top-hat entrainment coefficient of a jet. */
 export const ALPHA_JET = 0.076;
@@ -31,7 +32,7 @@ export const RI_PLUME = (8 * ALPHA_PLUME) / 5;
 /** 〰️ Pathline sampling stride in grid steps (20 Hz). */
 export const PATH_STRIDE = 6;
 /** 🌬️ Standard deviation (rad) of the direction of an exhaled parcel about the nozzle axis: the half-angle of a turbulent top-hat jet, `atan(2 α_j)`, so an exhale fans out like a dispersing jet instead of piling up on one ray. */
-export const BREATH_SPREAD_RAD = Math.atan(2 * ALPHA_JET);
+export const BREATH_SPREAD_RAD = portable.atan(2 * ALPHA_JET);
 /** 🧮️ Excess thresholds below which a parcel is culled. */
 export const CULL_EXCESS_K = 0.05;
 export const CULL_VAPOUR_KGKG = 5e-5;
@@ -68,8 +69,8 @@ function derive(s: Float64Array, a: Ambient, tau: number, out: Float64Array): { 
   const m = moistFrom(s[H]!, s[WT]!, a.pressurePa);
   const v = volumePerDryKg(m.tC, m.wv, a.pressurePa);
   const volume = s[MD]! * v;
-  const speed = Math.hypot(s[UX]!, s[UY]!, s[UZ]!);
-  const ue = Math.hypot(speed, a.sigmaMS);
+  const speed = portable.hypot(s[UX]!, s[UY]!, s[UZ]!);
+  const ue = portable.hypot(speed, a.sigmaMS);
   const b = Math.sqrt(volume / (Math.PI * ue * tau));
   const buoyancy = (GRAVITY_MS2 * ((1 + a.wv) * (v / a.v) - (1 + s[WT]!))) / (1 + s[WT]!);
   const ri = (Math.abs(buoyancy) * b) / (ue * ue);
@@ -190,18 +191,18 @@ const cross = (a: readonly [number, number, number], b: readonly [number, number
 
 /** 🌬️ The velocity of an exhaled parcel: the nozzle velocity turned by independent Gaussian angles (σ = {@link BREATH_SPREAD_RAD}, clipped at 2σ) in two perpendicular planes through the nozzle axis, so a view along any axis sees the same half-angle. */
 function fanned(emission: Emission, spreadA: number, spreadB: number): [number, number, number] {
-  const speed = Math.hypot(emission.ux, emission.uy, emission.uz);
+  const speed = portable.hypot(emission.ux, emission.uy, emission.uz);
   if (speed === 0) return [0, 0, 0];
   const d: [number, number, number] = [emission.ux / speed, emission.uy / speed, emission.uz / speed];
-  const reference: [number, number, number] = Math.hypot(d[0], d[1]) > 1e-9 ? [0, 0, 1] : [0, 1, 0];
+  const reference: [number, number, number] = portable.hypot(d[0], d[1]) > 1e-9 ? [0, 0, 1] : [0, 1, 0];
   const p1 = cross(reference, d);
-  const n1 = Math.hypot(...p1);
+  const n1 = portable.hypot(...p1);
   const e1: [number, number, number] = [p1[0] / n1, p1[1] / n1, p1[2] / n1];
   const e2 = cross(d, e1);
-  const ca = Math.cos(spreadA);
-  const sa = Math.sin(spreadA);
-  const cb = Math.cos(spreadB);
-  const sb = Math.sin(spreadB);
+  const ca = portable.cos(spreadA);
+  const sa = portable.sin(spreadA);
+  const cb = portable.cos(spreadB);
+  const sb = portable.sin(spreadB);
   const turned = [0, 1, 2].map((i) => d[i]! * ca + e1[i]! * sa) as [number, number, number];
   return [0, 1, 2].map((i) => speed * (turned[i]! * cb + e2[i]! * sb)) as [number, number, number];
 }

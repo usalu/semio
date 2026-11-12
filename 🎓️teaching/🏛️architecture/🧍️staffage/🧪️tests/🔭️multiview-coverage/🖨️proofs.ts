@@ -10,7 +10,7 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { Asset, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { DrawingScene, EvaluationQuery } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { resolveViews, type MultiView } from "../../🔨️modules/🔭️multiview/🟦️.ts";
@@ -29,7 +29,7 @@ const scales = (flag("scales") ?? "500,200,100,50").split(",").map(Number);
 const assets = loadCatalog().filter((asset) => (wantedAssets === undefined || wantedAssets.includes(asset.id)) && (wantedCategories === undefined || wantedCategories.includes(asset.category)));
 const esc = (text: string): string => text.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;");
 const num = (n: number): string => (Math.round(n * 1000) / 1000).toString();
-const VIEW_LABEL: Record<Viewpoint, string> = { elevation: "side elevation", front: "front elevation", plan: "plan (top view)" };
+const VIEW_LABEL: Record<PlanarViewpoint, string> = { elevation: "side elevation", front: "front elevation", plan: "plan (top view)" };
 
 const text = (x: number, y: number, size: number, content: string, fill = "#222"): string => `<text x="${num(x)}" y="${num(y)}" font-family="Helvetica, Arial, sans-serif" font-size="${num(size)}" fill="${fill}">${esc(content)}</text>`;
 

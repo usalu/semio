@@ -1,0 +1,1798 @@
+{
+ "description": "Vectors of the declarative volume (semio.staffage/v2), language-agnostic: `valid` patches of the sample figure that both ajv and the owned rules accept; `invalid` patches that break exactly the named rule (`rule`, null when only the schema judges) and that the schema accepts or rejects as stated (`schema`); `absent` rules that must not appear; `polygons` and `polylines` with the verdict of the owned profile rule and whether a shapely `is_valid` / `is_simple` oracle agrees (`oracle`, false where the owned rule is deliberately stricter: repeated points, holes touching the outline, a polyline on the axis).",
+ "defs": [
+  "Volume",
+  "VolumeSolid",
+  "VolumeRepeat",
+  "VolumeTransform",
+  "Vector2",
+  "Vector3",
+  "Quaternion"
+ ],
+ "rules": [
+  "volume-bone",
+  "volume-duplicate-id",
+  "volume-empty",
+  "volume-extrude-range",
+  "volume-hole-outside",
+  "volume-holes-overlap",
+  "volume-loft-sections",
+  "volume-material",
+  "volume-max-denominator",
+  "volume-non-finite",
+  "volume-profile-degenerate",
+  "volume-profile-self-intersecting",
+  "volume-region",
+  "volume-repeat",
+  "volume-size",
+  "volume-transform",
+  "volume-weights-bone",
+  "volume-weights-count",
+  "volume-weights-sum"
+ ],
+ "solidKinds": [
+  "box",
+  "ellipsoid",
+  "capsule",
+  "revolve",
+  "extrude",
+  "loft"
+ ],
+ "bounds": {
+  "toleranceRelative": 0.02,
+  "toleranceM": 0.015
+ },
+ "valid": [
+  {
+   "name": "box without corner radius",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/volume/solids/id=sole-l/cornerRadius"
+    }
+   ]
+  },
+  {
+   "name": "hair swept half a turn",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=hair/sweepRad",
+     "value": 3.141592653589793
+    }
+   ]
+  },
+  {
+   "name": "extrusion along u with a taper and a hole",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/plane",
+     "value": "yz"
+    },
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/profile",
+     "value": [
+      [
+       -0.05,
+       -0.05
+      ],
+      [
+       0.05,
+       -0.05
+      ],
+      [
+       0.05,
+       0.05
+      ],
+      [
+       -0.05,
+       0.05
+      ]
+     ]
+    },
+    {
+     "op": "add",
+     "path": "/volume/solids/id=shoe-l/holes",
+     "value": [
+      [
+       [
+        -0.02,
+        -0.02
+       ],
+       [
+        0.02,
+        -0.02
+       ],
+       [
+        0.0,
+        0.02
+       ]
+      ]
+     ]
+    },
+    {
+     "op": "add",
+     "path": "/volume/solids/id=shoe-l/taperTo",
+     "value": [
+      1,
+      0.8
+     ]
+    }
+   ]
+  },
+  {
+   "name": "loft with a section rotation and no exponent",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=torso/sections/1/rotation",
+     "value": [
+      0,
+      0,
+      0.7071067811865476,
+      0.7071067811865476
+     ]
+    },
+    {
+     "op": "remove",
+     "path": "/volume/solids/id=torso/sections/0/exponent"
+    }
+   ]
+  },
+  {
+   "name": "repeat that rotates about an axis",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=buttons/repeat/rotationAxis",
+     "value": [
+      1,
+      0,
+      0
+     ]
+    },
+    {
+     "op": "add",
+     "path": "/volume/solids/id=buttons/repeat/rotationRad",
+     "value": 0.5
+    },
+    {
+     "op": "add",
+     "path": "/volume/solids/id=buttons/repeat/origin",
+     "value": [
+      0.1,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "capsule that ends in a point",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=arm-l/r1",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "transform with scale and a unit rotation",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=nose/transform/scale",
+     "value": [
+      1.5,
+      1,
+      1
+     ]
+    },
+    {
+     "op": "add",
+     "path": "/volume/solids/id=nose/transform/rotation",
+     "value": [
+      0,
+      0,
+      0.7071067811865476,
+      0.7071067811865476
+     ]
+    }
+   ]
+  },
+  {
+   "name": "coarsest scale and several regions",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=nose/maxDenominator",
+     "value": 500
+    },
+    {
+     "op": "add",
+     "path": "/volume/solids/id=nose/regions",
+     "value": [
+      "head",
+      "torso"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "single weight and tags",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=neck/weights",
+     "value": [
+      {
+       "bone": "head",
+       "weight": 1
+      }
+     ]
+    },
+    {
+     "op": "add",
+     "path": "/volume/solids/id=neck/tags",
+     "value": [
+      "skinned",
+      "glyph"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "closed revolve loop, a torus-like ring",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=hair/profile",
+     "value": [
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.12,
+       0.12
+      ],
+      [
+       0.1,
+       0.14
+      ],
+      [
+       0.08,
+       0.12
+      ],
+      [
+       0.1,
+       0.1
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "invalid": [
+  {
+   "name": "second solid with an id already used",
+   "rule": "volume-duplicate-id",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/-",
+     "value": {
+      "id": "head",
+      "kind": "ellipsoid",
+      "bone": "head",
+      "material": "skin",
+      "role": "detail",
+      "tone": 0.5,
+      "radii": [
+       0.01,
+       0.01,
+       0.01
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "solid bound to a missing bone",
+   "rule": "volume-bone",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=head/bone",
+     "value": "no-such-bone"
+    }
+   ]
+  },
+  {
+   "name": "solid with a missing material",
+   "rule": "volume-material",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=head/material",
+     "value": "no-such-material"
+    }
+   ]
+  },
+  {
+   "name": "solid with a missing region",
+   "rule": "volume-region",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=head/region",
+     "value": "tail"
+    }
+   ]
+  },
+  {
+   "name": "solid with one missing region of several",
+   "rule": "volume-region",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=head/regions",
+     "value": [
+      "head",
+      "tail"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "weights on a missing bone",
+   "rule": "volume-weights-bone",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=neck/weights/0/bone",
+     "value": "nowhere"
+    }
+   ]
+  },
+  {
+   "name": "weights that name a bone twice",
+   "rule": "volume-weights-bone",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=neck/weights/1/bone",
+     "value": "head"
+    }
+   ]
+  },
+  {
+   "name": "weights that sum to 0.8",
+   "rule": "volume-weights-sum",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=neck/weights/0/weight",
+     "value": 0.5
+    }
+   ]
+  },
+  {
+   "name": "weights with a negative entry",
+   "rule": "volume-weights-sum",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=neck/weights",
+     "value": [
+      {
+       "bone": "head",
+       "weight": 1.3
+      },
+      {
+       "bone": "torso",
+       "weight": -0.3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "weights over five bones",
+   "rule": "volume-weights-count",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=neck/weights",
+     "value": [
+      {
+       "bone": "head",
+       "weight": 0.2
+      },
+      {
+       "bone": "torso",
+       "weight": 0.2
+      },
+      {
+       "bone": "pelvis",
+       "weight": 0.2
+      },
+      {
+       "bone": "arm-l",
+       "weight": 0.2
+      },
+      {
+       "bone": "arm-r",
+       "weight": 0.2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "ellipsoid with a zero radius",
+   "rule": "volume-size",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=head/radii/1",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "box with a corner radius above half its smallest edge",
+   "rule": "volume-size",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=sole-l/cornerRadius",
+     "value": 0.05
+    }
+   ]
+  },
+  {
+   "name": "capsule with both radii zero",
+   "rule": "volume-size",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=arm-l/r0",
+     "value": 0
+    },
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=arm-l/r1",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "revolve with a zero lateral scale",
+   "rule": "volume-size",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=hair/lateralScale",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "revolve about the zero vector",
+   "rule": "volume-size",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=hair/axis",
+     "value": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "revolve with a negative radius",
+   "rule": "volume-size",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=hair/profile/1/1",
+     "value": -0.05
+    }
+   ]
+  },
+  {
+   "name": "loft section with a zero radius",
+   "rule": "volume-size",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=torso/sections/1/rx",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "extrusion with a negative taper",
+   "rule": "volume-size",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=shoe-l/taperTo",
+     "value": [
+      1,
+      -0.1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "extrusion with from above to",
+   "rule": "volume-extrude-range",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/from",
+     "value": 0.135
+    },
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/to",
+     "value": 0.045
+    }
+   ]
+  },
+  {
+   "name": "extrusion with from equal to to",
+   "rule": "volume-extrude-range",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/from",
+     "value": 0.1
+    },
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/to",
+     "value": 0.1
+    }
+   ]
+  },
+  {
+   "name": "extrusion profile on one line",
+   "rule": "volume-profile-degenerate",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/profile",
+     "value": [
+      [
+       0,
+       -0.01
+      ],
+      [
+       0.1,
+       -0.01
+      ],
+      [
+       0.2,
+       -0.01
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "extrusion profile with a repeated point",
+   "rule": "volume-profile-degenerate",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/profile",
+     "value": [
+      [
+       0,
+       0
+      ],
+      [
+       0.1,
+       0
+      ],
+      [
+       0.1,
+       0
+      ],
+      [
+       0.1,
+       0.1
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "revolve profile on the axis",
+   "rule": "volume-profile-degenerate",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=hair/profile",
+     "value": [
+      [
+       0.1,
+       0
+      ],
+      [
+       0.2,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "extrusion profile that crosses itself",
+   "rule": "volume-profile-self-intersecting",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/profile",
+     "value": [
+      [
+       0,
+       0
+      ],
+      [
+       0.2,
+       0.1
+      ],
+      [
+       0.2,
+       0
+      ],
+      [
+       0,
+       0.1
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "extrusion profile whose vertex touches an edge",
+   "rule": "volume-profile-self-intersecting",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/profile",
+     "value": [
+      [
+       0,
+       0
+      ],
+      [
+       0.2,
+       0
+      ],
+      [
+       0.2,
+       0.1
+      ],
+      [
+       0.1,
+       0
+      ],
+      [
+       0.1,
+       -0.1
+      ],
+      [
+       0,
+       -0.1
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "revolve profile that crosses itself",
+   "rule": "volume-profile-self-intersecting",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=hair/profile",
+     "value": [
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.2,
+       0
+      ],
+      [
+       0.2,
+       0.1
+      ],
+      [
+       0.1,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "hole outside the outline",
+   "rule": "volume-hole-outside",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=shoe-l/holes",
+     "value": [
+      [
+       [
+        0.3,
+        -0.05
+       ],
+       [
+        0.32,
+        -0.05
+       ],
+       [
+        0.31,
+        -0.03
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "hole crossing the outline",
+   "rule": "volume-hole-outside",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=shoe-l/holes",
+     "value": [
+      [
+       [
+        0.15,
+        -0.07
+       ],
+       [
+        0.25,
+        -0.07
+       ],
+       [
+        0.2,
+        -0.04
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "two holes that overlap",
+   "rule": "volume-holes-overlap",
+   "absent": [
+    "volume-hole-outside"
+   ],
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=shoe-l/holes",
+     "value": [
+      [
+       [
+        0.0,
+        -0.05
+       ],
+       [
+        0.06,
+        -0.05
+       ],
+       [
+        0.06,
+        -0.035
+       ],
+       [
+        0.0,
+        -0.035
+       ]
+      ],
+      [
+       [
+        0.04,
+        -0.045
+       ],
+       [
+        0.1,
+        -0.045
+       ],
+       [
+        0.1,
+        -0.03
+       ],
+       [
+        0.04,
+        -0.03
+       ]
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "loft with a single section",
+   "rule": "volume-loft-sections",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=torso/sections",
+     "value": [
+      {
+       "at": [
+        0,
+        0,
+        0
+       ],
+       "rx": 0.1,
+       "ry": 0.1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "loft with two sections at one centre",
+   "rule": "volume-loft-sections",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=torso/sections/1/at",
+     "value": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "repeat with count zero",
+   "rule": "volume-repeat",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=buttons/repeat/count",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "repeat above the bound",
+   "rule": "volume-repeat",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=buttons/repeat/count",
+     "value": 257
+    }
+   ]
+  },
+  {
+   "name": "repeat with a fractional count",
+   "rule": "volume-repeat",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=buttons/repeat/count",
+     "value": 2.5
+    }
+   ]
+  },
+  {
+   "name": "repeat that rotates without an axis",
+   "rule": "volume-repeat",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=buttons/repeat/rotationRad",
+     "value": 0.5
+    }
+   ]
+  },
+  {
+   "name": "maxDenominator that is not a preset",
+   "rule": "volume-max-denominator",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=nose/maxDenominator",
+     "value": 75
+    }
+   ]
+  },
+  {
+   "name": "rotation that is not a unit quaternion",
+   "rule": "volume-transform",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=nose/transform/rotation",
+     "value": [
+      0,
+      0,
+      0,
+      2
+     ]
+    }
+   ]
+  },
+  {
+   "name": "scale with a zero factor",
+   "rule": "volume-transform",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=nose/transform/scale",
+     "value": [
+      1,
+      0,
+      1
+     ]
+    }
+   ]
+  },
+  {
+   "name": "loft section rotation that is not a unit quaternion",
+   "rule": "volume-transform",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=torso/sections/1/rotation",
+     "value": [
+      1,
+      1,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "volume without solids",
+   "rule": "volume-empty",
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids",
+     "value": []
+    }
+   ]
+  },
+  {
+   "name": "unknown property on a solid",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/volume/solids/id=head/surprise",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "name": "solid without tone",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/volume/solids/id=head/tone"
+    }
+   ]
+  },
+  {
+   "name": "solid of an unknown kind",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=head/kind",
+     "value": "cone"
+    }
+   ]
+  },
+  {
+   "name": "extrusion on an unknown plane",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/plane",
+     "value": "ab"
+    }
+   ]
+  },
+  {
+   "name": "extrusion profile of two points",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=shoe-l/profile",
+     "value": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       1
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "name": "volume that is not authored",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/status",
+     "value": "draft"
+    }
+   ]
+  },
+  {
+   "name": "volume without decisions",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/volume/decisions"
+    }
+   ]
+  },
+  {
+   "name": "solid with a tone above 1",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=head/tone",
+     "value": 1.5
+    }
+   ]
+  },
+  {
+   "name": "solid with a bone that is not a slug",
+   "rule": null,
+   "schema": "rejects",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=head/bone",
+     "value": "Head Bone"
+    }
+   ]
+  },
+  {
+   "name": "closed revolve loop that crosses itself",
+   "rule": "volume-profile-self-intersecting",
+   "schema": "accepts",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/volume/solids/id=hair/profile",
+     "value": [
+      [
+       0.1,
+       0.1
+      ],
+      [
+       0.14,
+       0.14
+      ],
+      [
+       0.14,
+       0.1
+      ],
+      [
+       0.1,
+       0.14
+      ],
+      [
+       0.1,
+       0.1
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "polygons": [
+  {
+   "name": "square",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "verdict": "simple",
+   "oracle": true
+  },
+  {
+   "name": "L shape",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "verdict": "simple",
+   "oracle": true
+  },
+  {
+   "name": "clockwise square",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     4
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     0
+    ]
+   ],
+   "verdict": "simple",
+   "oracle": true
+  },
+  {
+   "name": "bow tie",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "verdict": "self-intersecting",
+   "oracle": true
+  },
+  {
+   "name": "vertex touching an edge",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     2,
+     -4
+    ],
+    [
+     0,
+     -4
+    ]
+   ],
+   "verdict": "self-intersecting",
+   "oracle": true
+  },
+  {
+   "name": "three points on one line",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     0
+    ],
+    [
+     2,
+     0
+    ]
+   ],
+   "verdict": "degenerate",
+   "oracle": true
+  },
+  {
+   "name": "repeated point",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ]
+   ],
+   "verdict": "degenerate",
+   "oracle": false
+  },
+  {
+   "name": "square with a hole inside",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "holes": [
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   ],
+   "verdict": "simple",
+   "holesVerdict": "ok",
+   "oracle": true
+  },
+  {
+   "name": "square with a hole outside",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "holes": [
+    [
+     [
+      5,
+      1
+     ],
+     [
+      6,
+      1
+     ],
+     [
+      6,
+      2
+     ]
+    ]
+   ],
+   "verdict": "simple",
+   "holesVerdict": "hole-outside",
+   "oracle": true
+  },
+  {
+   "name": "square with a hole crossing the outline",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "holes": [
+    [
+     [
+      3,
+      1
+     ],
+     [
+      5,
+      1
+     ],
+     [
+      5,
+      2
+     ]
+    ]
+   ],
+   "verdict": "simple",
+   "holesVerdict": "hole-outside",
+   "oracle": true
+  },
+  {
+   "name": "square with a hole touching the outline",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "holes": [
+    [
+     [
+      0,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   ],
+   "verdict": "simple",
+   "holesVerdict": "hole-outside",
+   "oracle": false
+  },
+  {
+   "name": "square with two overlapping holes",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "holes": [
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2.5,
+      1
+     ],
+     [
+      2.5,
+      2.5
+     ],
+     [
+      1,
+      2.5
+     ]
+    ],
+    [
+     [
+      2,
+      2
+     ],
+     [
+      3,
+      2
+     ],
+     [
+      3,
+      3
+     ],
+     [
+      2,
+      3
+     ]
+    ]
+   ],
+   "verdict": "simple",
+   "holesVerdict": "holes-overlap",
+   "oracle": true
+  },
+  {
+   "name": "square with one hole in another",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "holes": [
+    [
+     [
+      0.5,
+      0.5
+     ],
+     [
+      3.5,
+      0.5
+     ],
+     [
+      3.5,
+      3.5
+     ],
+     [
+      0.5,
+      3.5
+     ]
+    ],
+    [
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   ],
+   "verdict": "simple",
+   "holesVerdict": "holes-overlap",
+   "oracle": true
+  },
+  {
+   "name": "square with two apart holes",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     4,
+     0
+    ],
+    [
+     4,
+     4
+    ],
+    [
+     0,
+     4
+    ]
+   ],
+   "holes": [
+    [
+     [
+      0.5,
+      0.5
+     ],
+     [
+      1.5,
+      0.5
+     ],
+     [
+      1,
+      1.5
+     ]
+    ],
+    [
+     [
+      2.5,
+      2.5
+     ],
+     [
+      3.5,
+      2.5
+     ],
+     [
+      3,
+      3.5
+     ]
+    ]
+   ],
+   "verdict": "simple",
+   "holesVerdict": "ok",
+   "oracle": true
+  }
+ ],
+ "polylines": [
+  {
+   "name": "zigzag",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     3,
+     1
+    ]
+   ],
+   "verdict": "simple",
+   "oracle": true
+  },
+  {
+   "name": "profile of a vase",
+   "points": [
+    [
+     0,
+     1
+    ],
+    [
+     0.3,
+     1.2
+    ],
+    [
+     0.6,
+     0.8
+    ],
+    [
+     1,
+     0.5
+    ],
+    [
+     1,
+     0
+    ]
+   ],
+   "verdict": "simple",
+   "oracle": true
+  },
+  {
+   "name": "crossing",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     2,
+     2
+    ],
+    [
+     2,
+     0
+    ],
+    [
+     0,
+     2
+    ]
+   ],
+   "verdict": "self-intersecting",
+   "oracle": true
+  },
+  {
+   "name": "folding back",
+   "points": [
+    [
+     0,
+     1
+    ],
+    [
+     2,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "verdict": "self-intersecting",
+   "oracle": true
+  },
+  {
+   "name": "everything on the axis",
+   "points": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     0
+    ]
+   ],
+   "verdict": "degenerate",
+   "oracle": false
+  }
+ ]
+}

@@ -154,6 +154,10 @@
       "en": "Symbolic input group {name} of project {project} has no input list; the record carries {record}",
       "de": "Die symbolische Eingabegruppe {name} des Projekts {project} hat keine Eingabeliste; der Datensatz enthält {record}"
     },
+    "target.cache-decision-refused": {
+      "en": "Target {target} declares the cache decision {decision}, which the closed cache decision schema refuses; admitted: {admitted}",
+      "de": "Das Ziel {target} deklariert die Cache-Entscheidung {decision}, die das geschlossene Cache-Entscheidungsschema ablehnt; zulässig: {admitted}"
+    },
     "json.indent-out-of-range": {
       "en": "Indent of 0 to 10 spaces required",
       "de": "Einrückung von 0 bis 10 Leerzeichen erforderlich"

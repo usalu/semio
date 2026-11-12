@@ -46,6 +46,7 @@
   "PrintProfile",
   "PrintProfileDocument",
   "Provenance",
+  "Quaternion",
   "RectShape",
   "Reference",
   "RegionBinding",
@@ -71,7 +72,13 @@
   "ThermalModelKind",
   "ThermalRegion",
   "UnavailableRepresentation",
-  "Viewpoint"
+  "Vector2",
+  "Vector3",
+  "Viewpoint",
+  "Volume",
+  "VolumeRepeat",
+  "VolumeSolid",
+  "VolumeTransform"
  ],
  "invalid": [
   {
@@ -337,8 +344,16 @@
    "name": "unavailable without reason",
    "patch": [
     {
-     "op": "remove",
-     "path": "/representations/500/reason"
+     "op": "replace",
+     "path": "/representations/500",
+     "value": {
+      "status": "unavailable",
+      "denominator": 500,
+      "cause": "below-printable-feature",
+      "limitingFeature": { "en": "Finger width", "de": "Fingerbreite" },
+      "limitingSizeM": 0.02,
+      "alternatives": []
+     }
     }
    ]
   },
@@ -396,6 +411,36 @@
     {
      "op": "remove",
      "path": "/thermal/passengers"
+    }
+   ]
+  },
+  {
+   "name": "extruded solid without sweep",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/50/geometry/front/id=torso/solid",
+     "value": { "kind": "extruded", "z0": -0.1, "z1": 0.1 }
+    }
+   ]
+  },
+  {
+   "name": "extruded solid with an unknown sweep axis",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/50/geometry/front/id=torso/solid",
+     "value": { "kind": "extruded", "sweep": "u", "z0": -0.1, "z1": 0.1 }
+    }
+   ]
+  },
+  {
+   "name": "extruded solid with the flipped bounds missing z1",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/representations/50/geometry/front/id=torso/solid",
+     "value": { "kind": "extruded", "sweep": "w", "z0": -0.1 }
     }
    ]
   }

@@ -7,13 +7,13 @@
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { Asset, AuthoredRepresentation, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedShape, EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { STAFFAGE_ROOT } from "../🧰️support/🧰️.ts";
 
 /** 👁️ The three views every authored representation draws. */
-export const VIEWS: readonly Viewpoint[] = ["elevation", "front", "plan"];
+export const VIEWS: readonly PlanarViewpoint[] = ["elevation", "front", "plan"];
 
 /** ⏱️ The fractions of a clip's duration that are sampled; the last stays inside a non-looping clip. */
 export const CLIP_FRACTIONS: readonly number[] = [0, 0.2, 0.4, 0.6, 0.8, 0.999];
@@ -67,7 +67,7 @@ const select = (denominator: number) => ({ kind: "scale", scale: { denominator }
 const finiteExtent = (extent: Extent): boolean => Object.values(extent).every(Number.isFinite);
 
 /** 🔍️ The coverage of one authored representation: the views without any authored shape. */
-export function missingViews(asset: Asset, denominator: number): Viewpoint[] {
+export function missingViews(asset: Asset, denominator: number): PlanarViewpoint[] {
   const { geometry } = asset.representations[String(denominator) as keyof Asset["representations"]] as AuthoredRepresentation;
   return VIEWS.filter((view) => (geometry[view] ?? []).filter((shape) => shape.role !== "ground").length === 0);
 }

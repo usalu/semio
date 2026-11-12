@@ -1,0 +1,905 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "leg-left-l",
+    "kind": "loft",
+    "bone": "leg-left",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.4,
+    "region": "frame-galv",
+    "sections": [
+     {
+      "at": [
+       0.017,
+       0.0,
+       0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.64,
+       0.0,
+       0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leg-left-clamp-l",
+    "kind": "revolve",
+    "bone": "leg-left",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.04
+     ],
+     [
+      0.1,
+      0.04
+     ],
+     [
+      0.1,
+      0.0
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      2.3,
+      0.0,
+      0.56
+     ]
+    }
+   },
+   {
+    "id": "foot-left-l",
+    "kind": "box",
+    "bone": "ground",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.25,
+    "region": "frame-galv",
+    "size": [
+     0.18,
+     0.012,
+     0.1
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      0.0,
+      0.006,
+      0.54992
+     ]
+    }
+   },
+   {
+    "id": "leg-right-l",
+    "kind": "loft",
+    "bone": "leg-right",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.4,
+    "region": "frame-galv",
+    "sections": [
+     {
+      "at": [
+       0.017,
+       0.0,
+       0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.64,
+       0.0,
+       0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leg-right-clamp-l",
+    "kind": "revolve",
+    "bone": "leg-right",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.04
+     ],
+     [
+      0.1,
+      0.04
+     ],
+     [
+      0.1,
+      0.0
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      2.3,
+      0.0,
+      0.56
+     ]
+    }
+   },
+   {
+    "id": "foot-right-l",
+    "kind": "box",
+    "bone": "ground",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.25,
+    "region": "frame-galv",
+    "size": [
+     0.18,
+     0.012,
+     0.1
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      2.6,
+      0.006,
+      0.54992
+     ]
+    }
+   },
+   {
+    "id": "brace-l",
+    "kind": "capsule",
+    "bone": "brace",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.45,
+    "region": "frame-galv",
+    "p0": [
+     0.0,
+     0.0,
+     0.56
+    ],
+    "p1": [
+     1.92,
+     0.0,
+     0.56
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "brace-clamp-l1",
+    "kind": "box",
+    "bone": "brace",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.062,
+     0.064
+    ],
+    "cornerRadius": 0.005,
+    "transform": {
+     "translation": [
+      0.005,
+      0.0,
+      0.56
+     ]
+    }
+   },
+   {
+    "id": "brace-clamp-l2",
+    "kind": "box",
+    "bone": "brace",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.062,
+     0.064
+    ],
+    "cornerRadius": 0.005,
+    "transform": {
+     "translation": [
+      1.915,
+      0.0,
+      0.56
+     ]
+    }
+   },
+   {
+    "id": "leg-left-r",
+    "kind": "loft",
+    "bone": "leg-left",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.4,
+    "region": "frame-galv",
+    "sections": [
+     {
+      "at": [
+       0.017,
+       0.0,
+       -0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.64,
+       0.0,
+       -0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leg-left-clamp-r",
+    "kind": "revolve",
+    "bone": "leg-left",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.04
+     ],
+     [
+      0.1,
+      0.04
+     ],
+     [
+      0.1,
+      0.0
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      2.3,
+      0.0,
+      -0.56
+     ]
+    }
+   },
+   {
+    "id": "foot-left-r",
+    "kind": "box",
+    "bone": "ground",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.25,
+    "region": "frame-galv",
+    "size": [
+     0.18,
+     0.012,
+     0.1
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      0.0,
+      0.006,
+      -0.54992
+     ]
+    }
+   },
+   {
+    "id": "leg-right-r",
+    "kind": "loft",
+    "bone": "leg-right",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.4,
+    "region": "frame-galv",
+    "sections": [
+     {
+      "at": [
+       0.017,
+       0.0,
+       -0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     },
+     {
+      "at": [
+       2.64,
+       0.0,
+       -0.56
+      ],
+      "rx": 0.03,
+      "ry": 0.03,
+      "rotation": [
+       0.70711,
+       0.0,
+       0.70711,
+       0.0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "leg-right-clamp-r",
+    "kind": "revolve",
+    "bone": "leg-right",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.04
+     ],
+     [
+      0.1,
+      0.04
+     ],
+     [
+      0.1,
+      0.0
+     ]
+    ],
+    "axis": [
+     1,
+     0,
+     0
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      2.3,
+      0.0,
+      -0.56
+     ]
+    }
+   },
+   {
+    "id": "foot-right-r",
+    "kind": "box",
+    "bone": "ground",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.25,
+    "region": "frame-galv",
+    "size": [
+     0.18,
+     0.012,
+     0.1
+    ],
+    "cornerRadius": 0.002,
+    "transform": {
+     "translation": [
+      2.6,
+      0.006,
+      -0.54992
+     ]
+    }
+   },
+   {
+    "id": "brace-r",
+    "kind": "capsule",
+    "bone": "brace",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.45,
+    "region": "frame-galv",
+    "p0": [
+     0.0,
+     0.0,
+     -0.56
+    ],
+    "p1": [
+     1.92,
+     0.0,
+     -0.56
+    ],
+    "r0": 0.02,
+    "r1": 0.02
+   },
+   {
+    "id": "brace-clamp-r1",
+    "kind": "box",
+    "bone": "brace",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.062,
+     0.064
+    ],
+    "cornerRadius": 0.005,
+    "transform": {
+     "translation": [
+      0.005,
+      0.0,
+      -0.56
+     ]
+    }
+   },
+   {
+    "id": "brace-clamp-r2",
+    "kind": "box",
+    "bone": "brace",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "frame-galv",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.062,
+     0.064
+    ],
+    "cornerRadius": 0.005,
+    "transform": {
+     "translation": [
+      1.915,
+      0.0,
+      -0.56
+     ]
+    }
+   },
+   {
+    "id": "beam",
+    "kind": "revolve",
+    "bone": "beam",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.38,
+    "region": "frame-galv",
+    "profile": [
+     [
+      0.0,
+      0.0
+     ],
+     [
+      0.0,
+      0.05
+     ],
+     [
+      1.2,
+      0.05
+     ],
+     [
+      1.2,
+      0.0
+     ]
+    ],
+    "axis": [
+     0,
+     0,
+     1
+    ],
+    "origin": [
+     0,
+     0,
+     0
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      0.0,
+      -0.6
+     ]
+    }
+   },
+   {
+    "id": "beam-hanger-l",
+    "kind": "box",
+    "bone": "chain-left",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "chain-steel",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.03,
+     0.012
+    ],
+    "transform": {
+     "translation": [
+      0.075,
+      0.0,
+      0.23
+     ]
+    }
+   },
+   {
+    "id": "chain-l",
+    "kind": "capsule",
+    "bone": "chain-left",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.3,
+    "region": "chain-steel",
+    "p0": [
+     0.0,
+     0.0,
+     0.23
+    ],
+    "p1": [
+     1.9,
+     0.0,
+     0.23
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "chain-l-link-round",
+    "kind": "ellipsoid",
+    "bone": "chain-left",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "chain-steel",
+    "maxDenominator": 50,
+    "radii": [
+     0.05,
+     0.0075,
+     0.0055
+    ],
+    "transform": {
+     "translation": [
+      0.075,
+      0.0,
+      0.23
+     ]
+    },
+    "repeat": {
+     "count": 9,
+     "translation": [
+      0.2,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "chain-l-link-edge",
+    "kind": "ellipsoid",
+    "bone": "chain-left",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.25,
+    "region": "chain-steel",
+    "maxDenominator": 50,
+    "radii": [
+     0.05,
+     0.0035,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      0.175,
+      0.0,
+      0.23
+     ]
+    },
+    "repeat": {
+     "count": 9,
+     "translation": [
+      0.2,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "shackle-l",
+    "kind": "ellipsoid",
+    "bone": "seat",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "chain-steel",
+    "radii": [
+     0.011,
+     0.027,
+     0.011
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      -0.025,
+      0.23
+     ]
+    }
+   },
+   {
+    "id": "beam-hanger-r",
+    "kind": "box",
+    "bone": "chain-right",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "chain-steel",
+    "maxDenominator": 100,
+    "size": [
+     0.05,
+     0.03,
+     0.012
+    ],
+    "transform": {
+     "translation": [
+      0.075,
+      0.0,
+      -0.23
+     ]
+    }
+   },
+   {
+    "id": "chain-r",
+    "kind": "capsule",
+    "bone": "chain-right",
+    "material": "steel-galvanised",
+    "role": "body",
+    "tone": 0.3,
+    "region": "chain-steel",
+    "p0": [
+     0.0,
+     0.0,
+     -0.23
+    ],
+    "p1": [
+     1.9,
+     0.0,
+     -0.23
+    ],
+    "r0": 0.0035,
+    "r1": 0.0035
+   },
+   {
+    "id": "chain-r-link-round",
+    "kind": "ellipsoid",
+    "bone": "chain-right",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "chain-steel",
+    "maxDenominator": 50,
+    "radii": [
+     0.05,
+     0.0075,
+     0.0055
+    ],
+    "transform": {
+     "translation": [
+      0.075,
+      0.0,
+      -0.23
+     ]
+    },
+    "repeat": {
+     "count": 9,
+     "translation": [
+      0.2,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "chain-r-link-edge",
+    "kind": "ellipsoid",
+    "bone": "chain-right",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.25,
+    "region": "chain-steel",
+    "maxDenominator": 50,
+    "radii": [
+     0.05,
+     0.0035,
+     0.01
+    ],
+    "transform": {
+     "translation": [
+      0.175,
+      0.0,
+      -0.23
+     ]
+    },
+    "repeat": {
+     "count": 9,
+     "translation": [
+      0.2,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "shackle-r",
+    "kind": "ellipsoid",
+    "bone": "seat",
+    "material": "steel-galvanised",
+    "role": "detail",
+    "tone": 0.2,
+    "region": "chain-steel",
+    "radii": [
+     0.011,
+     0.027,
+     0.011
+    ],
+    "transform": {
+     "translation": [
+      0.0,
+      -0.025,
+      -0.23
+     ]
+    }
+   },
+   {
+    "id": "seat",
+    "kind": "box",
+    "bone": "seat",
+    "material": "rubber",
+    "role": "body",
+    "tone": 0.25,
+    "region": "seat-rubber",
+    "size": [
+     0.42,
+     0.058,
+     0.52
+    ],
+    "cornerRadius": 0.025,
+    "transform": {
+     "translation": [
+      0.0,
+      -0.069,
+      0.0
+     ]
+    }
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Two A-frames (legs of 60 mm tube cut flat at the ground, 0.1 m clamps, 0.02 m braces with clamps, 0.18 x 0.1 m foot plates) at z +-0.56 carry a 0.1 m beam along z; legs are lofts so the feet end flat, the beam is a revolve about z.",
+    "de": "Zwei A-Rahmen (Beine aus 60 mm Rohr, am Boden flach abgeschnitten, 0,1 m Klemmen, Streben 0,02 m mit Klemmen, Fussplatten 0,18 x 0,1 m) bei z +-0,56 tragen einen 0,1 m Querbalken in z; die Beine sind Lofts, damit die Füsse flach enden, der Balken ist ein Revolve um z."
+   },
+   {
+    "en": "Each chain is a thin rod plus two repeated families of elongated links (one broad in z, one broad in x) that touch each other, so the chain reads as the continuous 0.02 m strip of the front view; the swivel eye follows the chain bone, whose stub stays inside the beam in every pose. The seat is a 0.42 x 0.52 m rounded slab (plan and front agree on 0.52 m, the extrusion hint), hung from shackles inside its edge.",
+    "de": "Jede Kette ist ein dünner Stab plus zwei wiederholte Familien lang gestreckter, sich berührender Glieder (eines breit in z, eines breit in x), sodass die Kette als durchgehender 0,02 m Streifen der Vorderansicht erscheint; das Wirbelauge folgt dem Kettenknochen, dessen Stummel in jeder Pose im Balken bleibt. Die Sitzfläche ist eine abgerundete Platte 0,42 x 0,52 m (Draufsicht und Vorderansicht stimmen auf 0,52 m überein, der Extrusionshinweis), an Schäkeln innerhalb ihres Randes aufgehängt."
+   }
+  ]
+ }
+}

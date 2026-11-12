@@ -1,14 +1,14 @@
 {
-  "tag": "B3",
-  "guid": "0yoQlyTGDVUBsRS$cAaoWq",
+  "tag": "19",
+  "guid": "2bDkHNkjLTKeNozzc1V7kw",
   "material": "MAT-RC",
   "axis": [
-    10.75,
-    4.75
+    8.128,
+    12.572
   ],
-  "radius": 0.15,
+  "radius": 0.11,
   "base": 0,
-  "top": 3.25,
+  "top": 2.91,
   "first_id": 101,
   "shift": 20,
   "languages": [

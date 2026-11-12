@@ -8,6 +8,8 @@
  * | `third` | above the elevation | right of the elevation | third-angle (ISO 5456-2 method 3, ANSI) |
  * | `first` | below the elevation | left of the elevation | first-angle (ISO 5456-2 method 1, DIN, SN) |
  *
+ * An optional fourth cell holds the axonometric view of the same state in the quadrant the three views leave free: above the front in the third-angle arrangement (right of the plan), below the front in the first-angle arrangement (left of the plan), its edge flush with the column of the front and the row of the plan. It is drawn at the same paper scale (the vertical axis true; what else is to scale is stated in `sheet.axonometric.projection`).
+ *
  * All three views are drawn at one paper scale (`mmPerMetre`), share the world origins that align them, and carry overall dimensions measured on the drawn figure, the view captions, the scale bar and the projection symbol.
  * The sheet states widthM (ahead), depthM (lateral) and heightM per view in `sheet.extentsM`, measured on the drawn figure without ground.
  *
@@ -15,21 +17,22 @@
  * @see ../🖼️svg/🟦️.ts — `writeSvg` (writes the sheet metadata)
  * @see https://www.iso.org/standard/3925.html — ISO 128-30 views and ISO 5456-2 orthographic representations
  */
-import { VIEWPOINTS, type Asset, type Language, type Text, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
-import { LAYERS, type DepictionOptions, type DrawingItem, type DrawingScene, type EvaluatedState, type EvaluationQuery, type LayerId, type ModelLayer, type ModelScene, type Fidelity, type PathCommand, type View } from "../../🔗️contracts/🟦️.ts";
-import { resolveViews, type DrawOptions, type DrawingSource, type DrawingUnavailable } from "../../🔭️multiview/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type Asset, type Language, type Text, type PlanarViewpoint, type Viewpoint } from "../../../🧬️schema/🟦️.ts";
+import { LAYERS, type AxonometricProjection, type AxonometricSpec, type DepictionOptions, type DrawingItem, type DrawingScene, type EvaluatedState, type EvaluationQuery, type LayerId, type ModelLayer, type ModelScene, type Fidelity, type PathCommand, type View } from "../../🔗️contracts/🟦️.ts";
+import { resolveViewpoints, type DrawOptions, type DrawingSource, type DrawingUnavailable } from "../../🔭️multiview/🟦️.ts";
 import { Canvas } from "../../🎨️depiction/🧱️canvas/🟦️.ts";
-import { type Analysis, VIEW_TITLES, depict, modelScene } from "../../🎨️depiction/🟦️.ts";
+import { type Analysis, AXONOMETRIC_NAMES, VIEW_TITLES, depict, modelScene } from "../../🎨️depiction/🟦️.ts";
 import { THEMES, tx } from "../../🎨️depiction/🖍️palette/🟦️.ts";
 import { viewpointCaption } from "../../🎨️depiction/✂️section/🟦️.ts";
 import { scaleBarMetres } from "../../🎨️depiction/🏷️annotations/🟦️.ts";
 import { circleCommands, commandsOf } from "../../🎨️depiction/📐️geometry/🟦️.ts";
 import { ANNOTATION_PEN_MM, ANNOTATION_TEXT_MM, LABEL_TEXT_MM, formatNumber } from "../../📐️units/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 📐️ The two projection-angle arrangements. */
 export const PROJECTIONS = ["first", "third"] as const;
 
-/** 📐️ One of {@link PROJECTIONS}. */
+/** 🔭️ One of {@link PROJECTIONS}. */
 export type Projection = (typeof PROJECTIONS)[number];
 
 /** 🏷️ The localized name of a projection arrangement. */
@@ -38,7 +41,7 @@ export const PROJECTION_NAMES: Readonly<Record<Projection, Text>> = {
   third: tx("Third-angle projection (method 3)", "Projektionsmethode 3 (Amerika)"),
 };
 
-/** 🏷️ The localized statement of how a drawing relates to the real object. */
+/** 🗂️ The localized statement of how a drawing relates to the real object. */
 export const FIDELITY_NAMES: Readonly<Record<Fidelity, Text>> = {
   physical: tx("Physical drawing, to scale", "Physikalische Zeichnung, maßstäblich"),
   "conventional-symbol": tx("Conventional symbol, not to scale", "Konventionelles Symbol, nicht maßstäblich"),
@@ -50,13 +53,14 @@ export type ViewExtent = { readonly paperXM: number; readonly paperUpM: number }
 /** 🧾️ What a sheet states about its arrangement: where each world origin sits on the sheet and the measured extents. */
 export type SheetInfo = {
   readonly projection: Projection;
-  readonly viewpoints: readonly Viewpoint[];
-  readonly fidelity: Readonly<Record<Viewpoint, Fidelity>>;
-  readonly originsMm: Readonly<Record<Viewpoint, { readonly xMm: number; readonly yMm: number }>>;
+  readonly viewpoints: readonly PlanarViewpoint[];
+  readonly fidelity: Readonly<Record<PlanarViewpoint, Fidelity>>;
+  readonly originsMm: Readonly<Record<PlanarViewpoint, { readonly xMm: number; readonly yMm: number }>>;
   readonly extentsM: { readonly elevation: { readonly widthM: number; readonly heightM: number }; readonly front: { readonly depthM: number; readonly heightM: number }; readonly plan: { readonly widthM: number; readonly depthM: number } };
+  readonly axonometric?: { readonly fidelity: Fidelity; readonly originMm: { readonly xMm: number; readonly yMm: number }; readonly projection: AxonometricProjection };
 };
 
-/** 📑️ A drawing scene that is a multiview sheet. */
+/** 👁️ A drawing scene that is a multiview sheet. */
 export type SheetScene = DrawingScene & { readonly sheet: SheetInfo };
 
 /** 🔎️ Whether a scene is a multiview sheet. */
@@ -126,7 +130,7 @@ function verticalDimension(s: Sheeter, id: string, y0: number, y1: number, x: nu
 
 function scaleBar(s: Sheeter, x: number, y: number, denominator: number): number {
   const metres = scaleBarMetres(denominator);
-  const n = Math.abs(metres / 10 ** Math.floor(Math.log10(metres)) - 2) < 1e-9 ? 4 : 5;
+  const n = Math.abs(metres / 10 ** Math.floor(portable.log10(metres)) - 2) < 1e-9 ? 4 : 5;
   const step = (metres * s.k) / n;
   const height = 1.2;
   const background = THEMES.light.background;
@@ -141,10 +145,10 @@ function scaleBar(s: Sheeter, x: number, y: number, denominator: number): number
 
 /** 🔣️ The geometry of the projection-method symbol in millimetres relative to its top-left corner (y down), 8 mm high: a truncated cone seen from the side (`frustum`, four corners) and the same cone seen along its axis, two concentric circles (`circles`, centre `cx`, radii outer then inner). Following ISO 5456-2 (method 1 = first-angle, method 3 = third-angle) and the symbol as drawn there: the cone's small end points to the viewer, so the circles are the view from that end, the outer circle is the large end and the inner circle the small end. The frustum is the side view and is the same in both methods, its small end (shortest side) on the right. First-angle puts the circles left and the frustum right, so the shortest side is away from the circles; third-angle puts the frustum left and the circles right, so the shortest side is toward the circles. */
 export function projectionSymbolGeometry(projection: Projection): { readonly frustum: readonly { readonly x: number; readonly y: number }[]; readonly circles: { readonly cx: number; readonly cy: number; readonly radii: readonly [number, number] }; readonly axis: { readonly x0: number; readonly x1: number; readonly y: number } } {
-  const left = projection === "first" ? 12 : 0;
+  const left = projection === "first" ? 10 : 0;
   const frustum = [{ x: left, y: 0 }, { x: left + 8, y: 2 }, { x: left + 8, y: 6 }, { x: left, y: 8 }];
-  const cx = projection === "first" ? 4 : 18;
-  return { frustum, circles: { cx, cy: 4, radii: [4, 2] }, axis: { x0: -1.5, x1: 23.5, y: 4 } };
+  const cx = projection === "first" ? 4 : 14;
+  return { frustum, circles: { cx, cy: 4, radii: [4, 2] }, axis: { x0: -1.5, x1: 19.5, y: 4 } };
 }
 
 function projectionSymbol(s: Sheeter, x: number, y: number, projection: Projection): void {
@@ -167,12 +171,12 @@ export class SheetUnavailableError extends Error {
 /** 🧮️ The result of {@link resolveSheet}: the sheet and the one state and analysis it was composed from, for the CAD sheet of the same instant. */
 export type ResolvedSheet = { readonly sheet: SheetScene; readonly state: EvaluatedState; readonly analysis: Analysis };
 
-/** 📑️ Composes the three scenes of one state into a sheet in the given projection arrangement and language; the language has no default. */
-export function composeSheet(scenes: Readonly<Record<Viewpoint, DrawingScene>>, projection: Projection, language: Language): SheetScene {
+/** 🦄 Composes the three scenes of one state (and optionally its axonometric scene, drawn at the same scale from the same state) into a sheet in the given projection arrangement and language; the language has no default. */
+export function composeSheet(scenes: Readonly<Record<PlanarViewpoint, DrawingScene>>, projection: Projection, language: Language, axonometric?: DrawingScene): SheetScene {
   const { elevation: side, front, plan } = scenes;
   const first = projection === "first";
   const k = side.metadata.mmPerMetre;
-  for (const scene of Object.values(scenes)) {
+  for (const scene of axonometric === undefined ? Object.values(scenes) : [...Object.values(scenes), axonometric]) {
     if (scene.metadata.mmPerMetre !== k) throw new Error(`the views of a sheet share one scale, got ${scene.metadata.mmPerMetre} and ${k} mm per metre`);
     if (JSON.stringify(scene.metadata.query) !== JSON.stringify(side.metadata.query) || scene.metadata.timeS !== side.metadata.timeS || scene.metadata.view !== side.metadata.view) throw new Error("the views of a sheet are projections of one evaluated state: the same query, time and mode");
   }
@@ -184,18 +188,20 @@ export function composeSheet(scenes: Readonly<Record<Viewpoint, DrawingScene>>, 
   const columnRight = Math.max(e.right, p.right);
   const rowTop = Math.max(e.top, f.top);
   const rowBottom = Math.max(e.bottom, f.bottom);
-  const origins: Record<Viewpoint, { xMm: number; yMm: number }> = {
+  const origins: Record<PlanarViewpoint, { xMm: number; yMm: number }> = {
     elevation: { xMm: 0, yMm: 0 },
     plan: { xMm: 0, yMm: first ? rowBottom + GAP_Y_MM + p.top : -(rowTop + GAP_Y_MM + p.bottom) },
     front: { xMm: first ? -(columnLeft + GAP_X_MM + f.right) : columnRight + GAP_X_MM + f.left, yMm: 0 },
   };
+  const a = axonometric === undefined ? undefined : parts(axonometric);
+  const axoOrigin = a === undefined ? undefined : first ? { xMm: -(columnLeft + GAP_X_MM) - a.right, yMm: rowBottom + GAP_Y_MM + a.top } : { xMm: columnRight + GAP_X_MM + a.left, yMm: -(rowTop + GAP_Y_MM) - a.bottom };
   const canvas = new Canvas();
   const background = side.background ?? THEMES.light.background;
   const theme = Object.values(THEMES).find((t) => t.background === background) ?? THEMES.light;
   const s: Sheeter = { canvas, ink: theme.ink, language, k };
-  const cells = {} as Record<Viewpoint, Box>;
-  const figures = {} as Record<Viewpoint, Box>;
-  for (const viewpoint of VIEWPOINTS) {
+  const cells = {} as Record<PlanarViewpoint, Box>;
+  const figures = {} as Record<PlanarViewpoint, Box>;
+  for (const viewpoint of PLANAR_VIEWPOINTS) {
     const scene = scenes[viewpoint];
     const dx = origins[viewpoint].xMm - scene.metadata.origin.xMm;
     const dy = origins[viewpoint].yMm - scene.metadata.origin.yMm;
@@ -204,18 +210,26 @@ export function composeSheet(scenes: Readonly<Record<Viewpoint, DrawingScene>>, 
     const box = figureBox(scene);
     figures[viewpoint] = { minX: box.minX + dx, minY: box.minY + dy, maxX: box.maxX + dx, maxY: box.maxY + dy };
   }
+  let axoCell: Box | undefined;
+  if (axonometric !== undefined && axoOrigin !== undefined) {
+    const dx = axoOrigin.xMm - axonometric.metadata.origin.xMm;
+    const dy = axoOrigin.yMm - axonometric.metadata.origin.yMm;
+    place(canvas, axonometric, "axonometric", dx, dy);
+    axoCell = { minX: dx, minY: dy, maxX: dx + axonometric.widthMm, maxY: dy + axonometric.heightMm };
+  }
   const metres = (a: number, b: number): number => (b - a) / k;
   const extents = {
     elevation: { widthM: metres(figures.elevation.minX, figures.elevation.maxX), heightM: metres(figures.elevation.minY, figures.elevation.maxY) },
     front: { depthM: metres(figures.front.minX, figures.front.maxX), heightM: metres(figures.front.minY, figures.front.maxY) },
     plan: { widthM: metres(figures.plan.minX, figures.plan.maxX), depthM: metres(figures.plan.minY, figures.plan.maxY) },
   };
-  const captionOf = (viewpoint: Viewpoint): string => viewpointCaption(viewpoint, undefined, language);
-  const fidelity = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, scenes[viewpoint].metadata.fidelity])) as Record<Viewpoint, Fidelity>;
-  for (const viewpoint of VIEWPOINTS) {
+  const captionOf = (viewpoint: PlanarViewpoint): string => viewpointCaption(viewpoint, undefined, language);
+  const fidelity = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, scenes[viewpoint].metadata.fidelity])) as Record<PlanarViewpoint, Fidelity>;
+  for (const viewpoint of PLANAR_VIEWPOINTS) {
     canvas.text("annotations", `caption:${viewpoint}`, { x: cells[viewpoint].minX + 2.5, y: cells[viewpoint].minY - 2.5 }, captionOf(viewpoint), ANNOTATION_TEXT_MM, s.ink, { weight: "bold" });
     if (fidelity[viewpoint] === "conventional-symbol") canvas.text("annotations", `fidelity:${viewpoint}`, { x: cells[viewpoint].minX + 2.5, y: cells[viewpoint].minY - 6 }, FIDELITY_NAMES["conventional-symbol"][language], LABEL_TEXT_MM, s.ink);
   }
+  if (axoCell !== undefined) canvas.text("annotations", "caption:axonometric", { x: axoCell.minX + 2.5, y: axoCell.minY - 2.5 }, `${viewpointCaption("axonometric", undefined, language)} (${AXONOMETRIC_NAMES[axonometric!.metadata.projection!.kind][language]})`, ANNOTATION_TEXT_MM, s.ink, { weight: "bold" });
   const bottom = Math.max(cells.elevation.maxY, cells.front.maxY);
   horizontalDimension(s, "dimension:width", figures.elevation.minX, figures.elevation.maxX, bottom + DIMENSION_OFFSET_MM, figures.elevation.maxY, "width", extents.elevation.widthM);
   horizontalDimension(s, "dimension:depth", figures.front.minX, figures.front.maxX, bottom + DIMENSION_OFFSET_MM, figures.front.maxY, "depth", extents.front.depthM);
@@ -234,7 +248,7 @@ export function composeSheet(scenes: Readonly<Record<Viewpoint, DrawingScene>>, 
   scaleBar(s, box.minX, y, meta.scale.denominator);
   projectionSymbol(s, Math.max(box.maxX - 26, box.minX + 40), y - 8, projection);
   const done = canvas.finish(MARGIN_MM);
-  const shifted = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, { xMm: origins[viewpoint].xMm + done.origin.x, yMm: origins[viewpoint].yMm + done.origin.y }])) as Record<Viewpoint, { xMm: number; yMm: number }>;
+  const shifted = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, { xMm: origins[viewpoint].xMm + done.origin.x, yMm: origins[viewpoint].yMm + done.origin.y }])) as Record<PlanarViewpoint, { xMm: number; yMm: number }>;
   const layers = LAYERS.flatMap((id: LayerId) => done.layers.filter((layer) => layer.id === id));
   return {
     widthMm: done.widthMm,
@@ -242,50 +256,57 @@ export function composeSheet(scenes: Readonly<Record<Viewpoint, DrawingScene>>, 
     background: side.background,
     layers,
     legends: side.legends,
-    metadata: { ...meta, fidelity: VIEWPOINTS.some((viewpoint) => fidelity[viewpoint] === "conventional-symbol") ? "conventional-symbol" : "physical", origin: { xMm: shifted.elevation.xMm, yMm: shifted.elevation.yMm } },
-    sheet: { projection, viewpoints: VIEWPOINTS, fidelity, originsMm: shifted, extentsM: extents },
+    metadata: { ...meta, fidelity: PLANAR_VIEWPOINTS.some((viewpoint) => fidelity[viewpoint] === "conventional-symbol") ? "conventional-symbol" : "physical", origin: { xMm: shifted.elevation.xMm, yMm: shifted.elevation.yMm } },
+    sheet: { projection, viewpoints: PLANAR_VIEWPOINTS, fidelity, originsMm: shifted, extentsM: extents, ...(axonometric === undefined || axoOrigin === undefined ? {} : { axonometric: { fidelity: axonometric.metadata.fidelity, originMm: { xMm: axoOrigin.xMm + done.origin.x, yMm: axoOrigin.yMm + done.origin.y }, projection: axonometric.metadata.projection! } }) },
   };
 }
 
-/** 📑️ One call through the multiview resolver: one `evaluate`, one analysis solve, three viewpoints (no margins, no per-view annotations; the legend of an analytic mode is drawn under the elevation), composed in the projection arrangement. Throws {@link SheetUnavailableError} naming every view without a drawing. */
-export function resolveSheet(asset: Asset, query: EvaluationQuery, source: DrawingSource, mode: View, options: DrawOptions, projection: Projection, language: Language): ResolvedSheet {
+/** 🐙 One call through the multiview resolver: one `evaluate`, one analysis solve, three viewpoints (no margins, no per-view annotations; the legend of an analytic mode is drawn under the elevation), composed in the projection arrangement. `axonometric` (`false` or absent: none) adds the axonometric view of the same state as the fourth cell, through that camera. Throws {@link SheetUnavailableError} naming every view without a drawing. */
+export function resolveSheet(asset: Asset, query: EvaluationQuery, source: DrawingSource, mode: View, options: DrawOptions, projection: Projection, language: Language, axonometric: AxonometricSpec | false = false): ResolvedSheet {
   const quiet = (legend: boolean): DrawOptions => ({ ...options, marginMm: 0, transparent: false, annotations: { ...options.annotations, dimensions: false, scaleBar: false, labels: false, legend } }) as DrawOptions;
-  const multi = resolveViews(asset, query, source, mode, quiet(false));
-  const missing = VIEWPOINTS.flatMap((viewpoint) => (multi.views[viewpoint].kind === "unavailable" ? [multi.views[viewpoint] as DrawingUnavailable] : []));
+  const viewpoints: readonly Viewpoint[] = axonometric === false ? PLANAR_VIEWPOINTS : [...PLANAR_VIEWPOINTS, "axonometric"];
+  const multi = resolveViewpoints(asset, query, viewpoints, source, mode, axonometric === false ? quiet(false) : ({ ...quiet(false), axonometric } as DrawOptions));
+  const missing = viewpoints.flatMap((viewpoint) => (multi.views[viewpoint].kind === "unavailable" ? [multi.views[viewpoint] as DrawingUnavailable] : []));
   if (missing.length > 0 || multi.state === null) throw new SheetUnavailableError(missing);
-  const scenes = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, (multi.views[viewpoint] as { scene: DrawingScene }).scene])) as Record<Viewpoint, DrawingScene>;
+  const scenes = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, (multi.views[viewpoint] as { scene: DrawingScene }).scene])) as Record<PlanarViewpoint, DrawingScene>;
   if ((mode === "thermal" || mode === "forces" || mode === "moments") && options.annotations.legend) {
     const representation = source.kind === "symbol" ? ({ kind: "symbol", symbol: source.symbol } as const) : ({ kind: "scale", scale: { denominator: source.denominator } } as const);
     scenes.elevation = depict(multi.state, { ...quiet(true), view: mode, viewpoint: "elevation", scale: { denominator: source.denominator }, representation } as DepictionOptions, multi.analysis);
   }
-  return { sheet: composeSheet(scenes, projection, language), state: multi.state, analysis: multi.analysis };
+  const axonometricScene = axonometric === false ? undefined : (multi.views.axonometric as { scene: DrawingScene }).scene;
+  return { sheet: composeSheet(scenes, projection, language, axonometricScene), state: multi.state, analysis: multi.analysis };
 }
 
-const CAD_PREFIX: Readonly<Record<Viewpoint, string>> = { elevation: "ELEVATION", front: "FRONT", plan: "PLAN" };
+const CAD_PREFIX: Readonly<Record<PlanarViewpoint, string>> = { elevation: "ELEVATION", front: "FRONT", plan: "PLAN" };
 
-/** 📐️ The CAD model-space sheet in metres at full size: the model scenes of the three viewpoints of one state, translated into the projection arrangement with a gap of the paper gaps of the printed sheet at `denominator`, every layer prefixed by its view (`PLAN-STAFFAGE-BODY`) and one `SHEET-LABELS` layer with the localized captions at the text height of 2.5 mm paper. The ground layers stay in their views. */
-export function modelSheet(state: EvaluatedState, options: { readonly projection: Projection; readonly denominator: number; readonly language: Language; readonly analysis?: Analysis; readonly diagrams?: Parameters<typeof modelScene>[1]["diagrams"] }): ModelScene {
+/** 🪜️ The CAD model-space sheet in metres at full size: the model scenes of the three viewpoints of one state, translated into the projection arrangement with a gap of the paper gaps of the printed sheet at `denominator`, every layer prefixed by its view (`PLAN-STAFFAGE-BODY`) and one `SHEET-LABELS` layer with the localized captions at the text height of 2.5 mm paper. The ground layers stay in their views. */
+export function modelSheet(state: EvaluatedState, options: { readonly projection: Projection; readonly denominator: number; readonly language: Language; readonly analysis?: Analysis; readonly diagrams?: Parameters<typeof modelScene>[1]["diagrams"]; readonly axonometric?: AxonometricSpec | false }): ModelScene {
   const first = options.projection === "first";
-  const scenes = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, modelScene(state, { viewpoint, ...(options.analysis ? { analysis: options.analysis } : {}), ...(options.diagrams ? { diagrams: options.diagrams } : {}) })])) as Record<Viewpoint, ModelScene>;
+  const scenes = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, modelScene(state, { viewpoint, ...(options.analysis ? { analysis: options.analysis } : {}), ...(options.diagrams ? { diagrams: options.diagrams } : {}) })])) as Record<PlanarViewpoint, ModelScene>;
   const boxOf = (scene: ModelScene): Box => {
     const points = scene.layers.flatMap((layer) => layer.polylines.flatMap((line) => line.points));
     if (points.length === 0) throw new Error(`the ${scene.asset} model scene of a sheet has no outline`);
     return { minX: Math.min(...points.map((q) => q.x)), minY: Math.min(...points.map((q) => q.y)), maxX: Math.max(...points.map((q) => q.x)), maxY: Math.max(...points.map((q) => q.y)) };
   };
-  const boxes = Object.fromEntries(VIEWPOINTS.map((viewpoint) => [viewpoint, boxOf(scenes[viewpoint])])) as Record<Viewpoint, Box>;
+  const boxes = Object.fromEntries(PLANAR_VIEWPOINTS.map((viewpoint) => [viewpoint, boxOf(scenes[viewpoint])])) as Record<PlanarViewpoint, Box>;
   const gapX = (GAP_X_MM * options.denominator) / 1000;
   const gapY = (GAP_Y_MM * options.denominator) / 1000;
   const e = boxes.elevation;
   const f = boxes.front;
   const p = boxes.plan;
-  const shift: Record<Viewpoint, { x: number; y: number }> = {
+  const shift: Record<PlanarViewpoint, { x: number; y: number }> = {
     elevation: { x: 0, y: 0 },
     front: { x: first ? Math.min(e.minX, p.minX) - gapX - f.maxX : Math.max(e.maxX, p.maxX) + gapX - f.minX, y: 0 },
     plan: { x: 0, y: first ? Math.min(e.minY, f.minY) - gapY - p.maxY : Math.max(e.maxY, f.maxY) + gapY - p.minY },
   };
-  const layers: ModelLayer[] = VIEWPOINTS.flatMap((viewpoint) => scenes[viewpoint].layers.map((layer) => ({ ...layer, name: `${CAD_PREFIX[viewpoint]}-${layer.name}`, polylines: layer.polylines.map((line) => ({ closed: line.closed, points: line.points.map((q) => ({ x: q.x + shift[viewpoint].x, y: q.y + shift[viewpoint].y })) })) })));
+  const layers: ModelLayer[] = PLANAR_VIEWPOINTS.flatMap((viewpoint) => scenes[viewpoint].layers.map((layer) => ({ ...layer, name: `${CAD_PREFIX[viewpoint]}-${layer.name}`, polylines: layer.polylines.map((line) => ({ closed: line.closed, points: line.points.map((q) => ({ x: q.x + shift[viewpoint].x, y: q.y + shift[viewpoint].y })) })) })));
+  const axo = options.axonometric === undefined || options.axonometric === false ? undefined : modelScene(state, { viewpoint: "axonometric", ...(options.analysis ? { analysis: options.analysis } : {}), axonometric: options.axonometric });
+  const axoBox = axo === undefined ? undefined : boxOf(axo);
+  const axoShift = axoBox === undefined ? undefined : first ? { x: Math.min(e.minX, p.minX) - gapX - axoBox.maxX, y: Math.min(e.minY, f.minY) - gapY - axoBox.maxY } : { x: Math.max(e.maxX, p.maxX) + gapX - axoBox.minX, y: Math.max(e.maxY, f.maxY) + gapY - axoBox.minY };
+  if (axo !== undefined && axoShift !== undefined) layers.push(...axo.layers.map((layer) => ({ ...layer, name: `AXONOMETRIC-${layer.name}`, polylines: layer.polylines.map((line) => ({ closed: line.closed, points: line.points.map((q) => ({ x: q.x + axoShift.x, y: q.y + axoShift.y })) })) })));
   const height = (ANNOTATION_TEXT_MM * options.denominator) / 1000;
-  const texts = VIEWPOINTS.map((viewpoint) => ({ at: { x: boxes[viewpoint].minX + shift[viewpoint].x, y: boxes[viewpoint].maxY + shift[viewpoint].y + height }, heightM: height, text: viewpointCaption(viewpoint, undefined, options.language) }));
+  const texts = PLANAR_VIEWPOINTS.map((viewpoint) => ({ at: { x: boxes[viewpoint].minX + shift[viewpoint].x, y: boxes[viewpoint].maxY + shift[viewpoint].y + height }, heightM: height, text: viewpointCaption(viewpoint, undefined, options.language) }));
+  if (axoBox !== undefined && axoShift !== undefined) texts.push({ at: { x: axoBox.minX + axoShift.x, y: axoBox.maxY + axoShift.y + height }, heightM: height, text: viewpointCaption("axonometric", undefined, options.language) });
   layers.push({ name: "SHEET-LABELS", aci: 7, lineweight: 18, polylines: [], texts });
   const base = scenes.elevation;
   return { units: "m", asset: base.asset, timeS: base.timeS, representation: base.representation, layers };

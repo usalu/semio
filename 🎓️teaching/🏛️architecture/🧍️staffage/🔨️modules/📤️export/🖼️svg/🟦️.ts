@@ -11,9 +11,11 @@ import type { DrawingItem, DrawingScene, Fill, Legend, PathCommand } from "../..
 import { VIEW_TITLES } from "../../🎨️depiction/🟦️.ts";
 import { viewpointCaption } from "../../🎨️depiction/✂️section/🟦️.ts";
 import { FIDELITY_NAMES, PROJECTION_NAMES, isSheet } from "../📑️sheet/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const FONT_STACK = "Anta, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif";
-const NAMESPACE = "https://semio.tech/staffage/v2";
+/** 🏷️ The XML namespace of the `staffage:` metadata of every SVG the archive writes, in the library and in the web target alike; its version is that of the asset schema. */
+export const SVG_NAMESPACE = "https://semio.tech/staffage/v2";
 const PATTERN_SIZE_MM = 1.2;
 
 const num = (v: number): string => {
@@ -60,7 +62,7 @@ function compactData(commands: readonly PathCommand[]): string {
 /** 🖋️ The ink of last resort for a hatch whose item has no stroke: light or dark by the luminance of the fill. A hatch with an outline uses the outline colour, which is the ink of the scene theme, so a light-theme drawing never carries a dark-theme ink. */
 function inkFor(hex: string): string {
   const v = Number.parseInt(hex.slice(1), 16);
-  const lin = (c: number): number => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const lin = (c: number): number => ((c /= 255) <= 0.03928 ? c / 12.92 : portable.pow(((c + 0.055) / 1.055), 2.4));
   const l = 0.2126 * lin((v >> 16) & 255) + 0.7152 * lin((v >> 8) & 255) + 0.0722 * lin(v & 255);
   return l > 0.3 ? "#001117" : "#f7f3e3";
 }
@@ -138,18 +140,21 @@ export function writeSvg(scene: DrawingScene, options: SvgOptions = {}): string 
   const m = scene.metadata;
   const sheet = isSheet(scene) ? scene.sheet : undefined;
   const mode = (language: "en" | "de"): string => VIEW_TITLES[m.view][language];
-  const where = (language: "en" | "de"): string => (sheet ? { en: "plan, front elevation and side elevation", de: "Draufsicht, Vorderansicht und Seitenansicht" }[language] : viewpointCaption(m.viewpoint, undefined, language));
+  const where = (language: "en" | "de"): string => (sheet ? (sheet.axonometric ? { en: "plan, front elevation, side elevation and axonometric view", de: "Draufsicht, Vorderansicht, Seitenansicht und Axonometrie" } : { en: "plan, front elevation and side elevation", de: "Draufsicht, Vorderansicht und Seitenansicht" })[language] : viewpointCaption(m.viewpoint, undefined, language));
   const title = `${m.title.en} / ${m.title.de} — ${mode("en")} / ${mode("de")}, ${where("en")} / ${where("de")} 1:${m.scale.denominator}`;
   const projection = sheet ? ` Projection: ${PROJECTION_NAMES[sheet.projection].en} / ${PROJECTION_NAMES[sheet.projection].de}.` : "";
   const fidelity = ` Fidelity: ${FIDELITY_NAMES[m.fidelity].en} / ${FIDELITY_NAMES[m.fidelity].de}.`;
   const desc = `Architectural staffage "${m.asset}", ${queryText(scene)}, t = ${m.timeS} s, representation ${mode("en")} / ${mode("de")}, viewpoint ${where("en")} / ${where("de")}, scale 1:${m.scale.denominator}.${projection}${fidelity} Representation ${representationText(scene)} (${m.resolution}), print profile ${m.profile}. Units: paper millimetres (1 user unit = 1 mm), model metres, ${num(m.mmPerMetre)} mm per metre.`;
   const labels = `view-title-en="${esc(mode("en"))}" view-title-de="${esc(mode("de"))}" viewpoint-title-en="${esc(where("en"))}" viewpoint-title-de="${esc(where("de"))}" fidelity="${m.fidelity}" fidelity-title-en="${esc(FIDELITY_NAMES[m.fidelity].en)}" fidelity-title-de="${esc(FIDELITY_NAMES[m.fidelity].de)}"`;
   const sheetAttrs = sheet ? ` sheet="true" projection="${sheet.projection}" projection-title-en="${esc(PROJECTION_NAMES[sheet.projection].en)}" projection-title-de="${esc(PROJECTION_NAMES[sheet.projection].de)}"` : "";
-  const origins = sheet ? sheet.viewpoints.map((viewpoint) => `<staffage:view viewpoint="${viewpoint}" fidelity="${sheet.fidelity[viewpoint]}" origin-x-mm="${num(sheet.originsMm[viewpoint].xMm)}" origin-y-mm="${num(sheet.originsMm[viewpoint].yMm)}"/>`).join("") : "";
+  const origins = sheet ? sheet.viewpoints.map((viewpoint) => `<staffage:view viewpoint="${viewpoint}" fidelity="${sheet.fidelity[viewpoint]}" origin-x-mm="${num(sheet.originsMm[viewpoint].xMm)}" origin-y-mm="${num(sheet.originsMm[viewpoint].yMm)}"/>`).join("") : ""
+  const axonometric = (projection: NonNullable<typeof m.projection>): string => `axonometric-kind="${projection.kind}" azimuth-deg="${num(projection.azimuthDeg)}" elevation-deg="${num(projection.elevationDeg)}" axis-scale-ahead="${significant(projection.axisScale.x)}" axis-scale-up="${significant(projection.axisScale.y)}" axis-scale-left="${significant(projection.axisScale.z)}"`;
+  const axoView = sheet?.axonometric ? `<staffage:view viewpoint="axonometric" fidelity="${sheet.axonometric.fidelity}" origin-x-mm="${num(sheet.axonometric.originMm.xMm)}" origin-y-mm="${num(sheet.axonometric.originMm.yMm)}" ${axonometric(sheet.axonometric.projection)}/>` : "";
+  const projectionAttrs = m.projection && !sheet ? ` ${axonometric(m.projection)}` : "";
   const extents = sheet ? `<staffage:extents-m elevation-width="${significant(sheet.extentsM.elevation.widthM)}" elevation-height="${significant(sheet.extentsM.elevation.heightM)}" front-depth="${significant(sheet.extentsM.front.depthM)}" front-height="${significant(sheet.extentsM.front.heightM)}" plan-width="${significant(sheet.extentsM.plan.widthM)}" plan-depth="${significant(sheet.extentsM.plan.depthM)}"/>` : "";
-  const meta = `<staffage:scene asset="${esc(m.asset)}" query="${esc(queryText(scene))}" time-s="${m.timeS}" view="${m.view}" viewpoint="${sheet ? "elevation+front+plan" : m.viewpoint}" ${labels}${sheetAttrs} scale="1:${m.scale.denominator}" resolution="${m.resolution}" representation="${esc(representationText(scene))}" profile="${esc(m.profile)}" paper-units="mm" model-units="m" mm-per-metre="${m.mmPerMetre}" origin-x-mm="${m.origin.xMm}" origin-y-mm="${m.origin.yMm}">${origins}${extents}${legendMetadata(scene.legends)}</staffage:scene>`;
+  const meta = `<staffage:scene asset="${esc(m.asset)}" query="${esc(queryText(scene))}" time-s="${m.timeS}" view="${m.view}" viewpoint="${sheet ? (sheet.axonometric ? "elevation+front+plan+axonometric" : "elevation+front+plan") : m.viewpoint}" ${labels}${sheetAttrs}${projectionAttrs} scale="1:${m.scale.denominator}" resolution="${m.resolution}" representation="${esc(representationText(scene))}" profile="${esc(m.profile)}" paper-units="mm" model-units="m" mm-per-metre="${m.mmPerMetre}" origin-x-mm="${m.origin.xMm}" origin-y-mm="${m.origin.yMm}">${origins}${axoView}${extents}${legendMetadata(scene.legends)}</staffage:scene>`;
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:staffage="${NAMESPACE}" version="1.1" width="${num(scene.widthMm)}mm" height="${num(scene.heightMm)}mm" viewBox="0 0 ${num(scene.widthMm)} ${num(scene.heightMm)}">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:staffage="${SVG_NAMESPACE}" version="1.1" width="${num(scene.widthMm)}mm" height="${num(scene.heightMm)}mm" viewBox="0 0 ${num(scene.widthMm)} ${num(scene.heightMm)}">
 <title>${esc(title)}</title>
 <desc>${esc(desc)}</desc>
 <metadata>${meta}</metadata>

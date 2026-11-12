@@ -9,15 +9,15 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import type { Asset, AuthoredRepresentation, BoneOffset, Pose, Shape, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Asset, AuthoredRepresentation, BoneOffset, Pose, Shape, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedState } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { validateAsset } from "../../🔨️modules/🗂️catalog/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { solveFrames } from "../../🔨️modules/🦴️rig/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 import { ringArea } from "../../🔨️modules/🔺️polygon/🟦️.ts";
 import { catalog, extentOf, type Extent } from "../🧊️three-views/🧰️.ts";
-requireTool("uv");
 
 type Part = Partial<Extent> & { area?: number };
 type Measured = Extent & { area: number };
@@ -26,7 +26,7 @@ type Vectors = {
   asset: string;
   scale: number;
   poses: Record<string, { bones: Record<string, BoneOffset> }>;
-  shapes: Record<Viewpoint, Shape[]>;
+  shapes: Record<PlanarViewpoint, Shape[]>;
   cases: { name: string; pose: string; transitionAt?: number; extents: Record<string, Part>; rings?: Record<string, { count: number; vertices?: number; area: number }> }[];
   frames: { name: string; pose: string; bone: string; originWorld: { x: number; y: number }; tipWorld: { x: number; y: number }; originZ: number; tipZ: number }[];
   limits: { name: string; bone: string; joint: "revolute" | "fixed" | "prismatic"; twistMinDeg?: number; twistMaxDeg?: number; twistDeg: number; refused: boolean }[];
@@ -68,7 +68,7 @@ describe("🧊️ the vectors of the axial twist", () => {
       for (const [key, part] of Object.entries(c.extents)) expectPart(key, got[key]!, part);
       const state = stateOf(c);
       for (const [key, expected] of Object.entries(c.rings ?? {})) {
-        const [view, id] = key.split("/") as [Viewpoint, string];
+        const [view, id] = key.split("/") as [PlanarViewpoint, string];
         const rings = state.shapes[view].find((evaluated) => evaluated.shape.id === id)!.rings;
         expect(rings.length, `${key} rings`).toBe(expected.count);
         if (expected.vertices !== undefined) expect(rings[0]!.length, `${key} vertices`).toBe(expected.vertices);
@@ -113,6 +113,7 @@ describe("🧊️ the validator bounds the twist", () => {
 
 describe("🧊️ a third-party library recomputes the twisted chain and extents", () => {
   it("solves the chain with numpy and measures the shapes with shapely", { timeout: 300_000 }, () => {
+    requireTool("uv");
     const cases: Record<string, unknown> = {};
     const ours: Record<string, { extents: Record<string, Measured>; chain: Record<string, { origin: number[]; tip: number[] }> }> = {};
     for (const c of vectors.cases.filter((candidate) => candidate.transitionAt === undefined)) {
@@ -133,7 +134,7 @@ describe("🧊️ a third-party library recomputes the twisted chain and extents
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify({ rig: sample.rig.bones.map((bone) => ({ id: bone.id, parent: bone.parent, x: bone.x, y: bone.y, angleDeg: bone.angleDeg, lengthM: bone.lengthM })), cases }));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️lateral-spread/🐍️.py"), ["shapely", "numpy"], [input])) as Record<string, { bones: Record<string, { origin: number[]; tip: number[] }>; extents: Record<string, Measured> }>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🧊️lateral-spread/🐍️.py"), "geometry", [input])) as Record<string, { bones: Record<string, { origin: number[]; tip: number[] }>; extents: Record<string, Measured> }>;
       for (const [pose, got] of Object.entries(ours)) {
         for (const [bone, chain] of Object.entries(got.chain))
           for (let i = 0; i < 3; i++) {

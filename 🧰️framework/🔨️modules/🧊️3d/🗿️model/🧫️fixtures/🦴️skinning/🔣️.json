@@ -1,0 +1,241 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "pose": "bent",
+ "document": {
+  "version": "semio.model/v1",
+  "id": "skinning",
+  "title": {
+   "en": "skinning",
+   "de": "skinning"
+  },
+  "nodes": [
+   {
+    "id": "root",
+    "parent": null,
+    "translation": [
+     0,
+     0,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "id": "upper",
+    "parent": "root",
+    "translation": [
+     0,
+     1,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "revolute",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "min": -1.0,
+     "max": 1.0
+    }
+   },
+   {
+    "id": "lower",
+    "parent": "upper",
+    "translation": [
+     0,
+     1,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "revolute",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "min": -1.0,
+     "max": 1.0
+    }
+   }
+  ],
+  "solids": [
+   {
+    "id": "limb",
+    "kind": "capsule",
+    "node": "root",
+    "material": "skin",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0,
+     2,
+     0
+    ],
+    "r0": 0.2,
+    "r1": 0.2,
+    "weights": [
+     {
+      "node": "upper",
+      "weight": 1
+     },
+     {
+      "node": "lower",
+      "weight": 3
+     }
+    ]
+   },
+   {
+    "id": "hand",
+    "kind": "ellipsoid",
+    "node": "lower",
+    "material": "skin",
+    "radii": [
+     0.1,
+     0.1,
+     0.1
+    ]
+   },
+   {
+    "id": "rigid-root",
+    "kind": "box",
+    "node": "root",
+    "material": "skin",
+    "size": [
+     0.2,
+     0.2,
+     0.2
+    ]
+   }
+  ],
+  "meshes": [],
+  "skins": [],
+  "materials": [
+   {
+    "id": "skin",
+    "title": {
+     "en": "Skin",
+     "de": "Haut"
+    },
+    "baseColor": [
+     0.8,
+     0.7,
+     0.6,
+     1
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emissive": [
+     0,
+     0,
+     0
+    ],
+    "alphaMode": "opaque",
+    "doubleSided": false,
+    "unlit": false
+   }
+  ],
+  "variants": [],
+  "poses": [
+   {
+    "id": "bent",
+    "title": {
+     "en": "Bent",
+     "de": "Gebeugt"
+    },
+    "nodes": {
+     "upper": {
+      "rotation": [
+       0,
+       0,
+       0.24740395925452294,
+       0.9689124217106447
+      ]
+     },
+     "lower": {
+      "rotation": [
+       0,
+       0,
+       -0.5646424733950354,
+       0.8253356149096783
+      ]
+     }
+    }
+   }
+  ],
+  "animations": []
+ },
+ "expected": {
+  "jointOrder": [
+   "upper",
+   "lower"
+  ],
+  "weights": [
+   0.25,
+   0.75,
+   0,
+   0
+  ],
+  "skinnedMeshes": 1,
+  "rigidMeshes": [
+   "root",
+   "lower"
+  ],
+  "lowerWorldPosition": [
+   -0.479425538604203,
+   1.8775825618903728,
+   0
+  ],
+  "lowerWorldAngleZ": -0.5,
+  "issues": [
+   {
+    "code": "joint-limit",
+    "path": "/nodes/2/joint"
+   }
+  ],
+  "tolerance": 1e-09,
+  "inverseBindLowerTranslation": [
+   0,
+   -2,
+   0
+  ]
+ }
+}

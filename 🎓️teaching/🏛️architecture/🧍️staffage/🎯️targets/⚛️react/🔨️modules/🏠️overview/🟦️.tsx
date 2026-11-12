@@ -7,7 +7,7 @@
  */
 import { useEffect, useId, useMemo, type ReactElement, type ReactNode } from "react";
 import { CATEGORIES, CSS_PX_PER_MM } from "@teaching/staffage";
-import type { Asset, CategoryId, Viewpoint } from "@teaching/staffage";
+import type { Asset, CategoryId, PlanarViewpoint } from "@teaching/staffage";
 import { APP_CONFIG } from "../⚙️config/🟦️.ts";
 import { useArchive, useLocal, useRows } from "../🧭️context/🟦️.tsx";
 import { ArchiveCard, CardButton, Icon, Notice, Tag, cn, type IconName } from "../🪟️chrome/🟦️.tsx";
@@ -56,7 +56,7 @@ const LANE_CYCLES = 2;
 type Item = { readonly row: Row; readonly x: number; readonly lane: number | null; readonly width: number };
 
 /** 🧍️ A frieze: figures side by side on one ground line at one scale, walkers travelling along their lane; metre ticks name the scale. */
-export function Frieze(props: { readonly rows: readonly Row[]; readonly viewpoint?: Viewpoint; readonly label: string; readonly maxPxPerM?: number; readonly ticks?: boolean; readonly travel?: boolean; readonly className?: string }): ReactElement {
+export function Frieze(props: { readonly rows: readonly Row[]; readonly viewpoint?: PlanarViewpoint; readonly label: string; readonly maxPxPerM?: number; readonly ticks?: boolean; readonly travel?: boolean; readonly className?: string }): ReactElement {
   const { rows, label, maxPxPerM = 160, ticks = true, travel = false, className } = props;
   const { language, ambient, t } = useArchive();
   const [preferred] = usePreviewViewpoint();

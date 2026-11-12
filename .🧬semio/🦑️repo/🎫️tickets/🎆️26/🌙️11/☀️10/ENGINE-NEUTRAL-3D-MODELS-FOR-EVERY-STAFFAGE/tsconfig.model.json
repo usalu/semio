@@ -1,0 +1,1 @@
+{ "extends": "../../../../../../../tsconfig.json", "compilerOptions": { "noEmit": true, "types": ["node"] }, "exclude": ["**/node_modules/**"], "include": ["../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🟦️.ts", "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧪️tests/**/*.ts"] }

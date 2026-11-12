@@ -131,18 +131,20 @@ export function graphOwnerAdmissionV1({headroom,running,inflight,estimate,learne
 
 /**
  * 🚦️ Admits project inferences against the headroom the service has left, soundly before any cost is learned: the estimate of an in-flight owner is the larger of the learned peak of its kind (else the declared guess) and the growth observed since it started (the measured growth of the headroom split between the running owners in proportion to what each is still expected to take); one more owner starts only when the measured headroom less the remaining estimates covers its own estimate; an owner of a kind without a learned peak runs alone until one of that kind completes; the peak of a kind is learned when an owner completes and persists through the `peaks` port; one owner always runs, so nothing deadlocks.
- * @param {{workers:number;headroom:()=>number;estimateBytes?:number;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;peaks?:{read:()=>Record<string,number>;write:(peaks:Record<string,number>)=>void};sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
+ * @param {{workers:number;headroom:()=>number;attributable?:()=>number;estimateBytes?:number;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;peaks?:{read:()=>Record<string,number>;write:(peaks:Record<string,number>)=>void};sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
  */
-export function createMemoryGovernorV1({workers,headroom,estimateBytes=P.initialOwnerMegabytes*MEGABYTE,peaks,sleep=defaultSleep,now=()=>performance.now(),signal,report,decide,environment={},policy=P}){
+export function createMemoryGovernorV1({workers,headroom,attributable,estimateBytes=P.initialOwnerMegabytes*MEGABYTE,peaks,sleep=defaultSleep,now=()=>performance.now(),signal,report,decide,environment={},policy=P}){
  if(!Number.isSafeInteger(workers)||workers<1||typeof headroom!=="function"||!(estimateBytes>0))throw Error("Positive worker count, headroom reading and owner estimate required");
  const queue=[],owners=new Set(),stats={waits:0,waitedMilliseconds:0,peakOwners:0},learned=new Map(Object.entries(peaks?.read()??{}).filter(([,bytes])=>Number.isFinite(bytes)&&bytes>=0));
- let last=headroom(),timer,pumping=false,serialSaid=false,lastReport=-Infinity,lastAdmit=-Infinity;
+ let last=headroom(),own=attributable?.(),timer,pumping=false,serialSaid=false,lastReport=-Infinity,lastAdmit=-Infinity;
   const say=(key,fields)=>{decide?.({key,used:fields.used,budget:fields.budget,kind:fields.kind});for(const line of renderGraphMemoryMessagesV1(key,{running:owners.size,kind:"",...fields},environment))report?.(line);};
  const megabytes=bytes=>Math.round(bytes/MEGABYTE),peakOf=kind=>learned.has(kind)?learned.get(kind):estimateBytes;
  const sample=()=>{
   const free=headroom();
+  const grown=attributable===undefined?undefined:(()=>{const now=attributable(),change=now-own;own=now;return change;})();
   if(owners.size===0){last=free;return free;}
-  const delta=last-free;last=free;
+  let delta=last-free;last=free;
+  if(grown!==undefined)delta=delta>0?Math.min(delta,Math.max(0,grown)):Math.max(delta,Math.min(0,grown));
   const room=[...owners].map(owner=>Math.max(0,peakOf(owner.kind)-owner.taken)),open=room.reduce((sum,value)=>sum+value,0);
   [...owners].forEach((owner,index)=>{owner.net=Math.max(0,owner.net+(delta>0&&open>0?delta*room[index]/open:delta/owners.size));owner.taken=Math.max(owner.taken,owner.net);});
   return free;
@@ -190,14 +192,14 @@ export function createMemoryGovernorV1({workers,headroom,estimateBytes=P.initial
     owners.delete(owner);if(owners.size===0&&timer!==undefined){clearInterval(timer);timer=undefined;}if(queue.length)pump();
    }
   },
-  pressure:()=>headroom()<Math.max(estimateBytes*(learned.size===0?1:0),...learned.values()),
+  pressure:()=>headroom()<policy.hostAvailableFloorMegabytes*MEGABYTE,
   stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),peakOwners:stats.peakOwners,ownerCostMegabytes:megabytes(Math.max(estimateBytes*(learned.size===0?1:0),...learned.values())),kinds:Object.fromEntries([...learned].map(([kind,bytes])=>[kind,megabytes(bytes)]))}),
   dispose:()=>{signal?.removeEventListener("abort",onAbort);clearInterval(timer);timer=undefined;},
  });
 }
 
 /** 🛂️ The governor of the project inference of the service: the headroom is the cgroup headroom of the service (see {@link serviceMemoryHeadroomBytesV1}), shared by the process and its pool. */
-export function createGraphParentMemoryGovernorV1(options){return createMemoryGovernorV1({...options,headroom:options.headroom??(()=>serviceMemoryHeadroomBytesV1({policy:options.policy??P}))});}
+export function createGraphParentMemoryGovernorV1(options){return createMemoryGovernorV1({...options,headroom:options.headroom??(()=>serviceMemoryHeadroomBytesV1({policy:options.policy??P})),attributable:options.attributable??(options.headroom===undefined&&cgroupMemoryHeadroomV1()===undefined?createMemoryPortsV1().sample:undefined)});}
 
 /**
  * 🧶️ Creates a bounded table that makes equal long strings one instance: equal paths, input lists and keys of thousands of projects cost memory once. A table over its character bound is cleared, never grown.

@@ -1,0 +1,1153 @@
+{
+  "schema": "semio.model.glb-vector/v1",
+  "name": "rig-wave-quarter",
+  "document": {
+    "version": "semio.model/v1",
+    "id": "rig",
+    "title": {
+      "en": "Rig",
+      "de": "Gerüst"
+    },
+    "provenance": {
+      "generator": "glb-fixture",
+      "notes": [
+        {
+          "en": "hand-made",
+          "de": "von Hand"
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "id": "root",
+        "parent": null,
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "id": "spine",
+        "parent": "root",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "joint": {
+          "type": "fixed",
+          "axis": [
+            0,
+            1,
+            0
+          ]
+        },
+        "tags": [
+          "bone"
+        ]
+      },
+      {
+        "id": "arm",
+        "parent": "spine",
+        "translation": [
+          0,
+          0.5,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "joint": {
+          "type": "revolute",
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "min": -2,
+          "max": 2
+        },
+        "tags": [
+          "bone"
+        ]
+      },
+      {
+        "id": "body",
+        "parent": "root",
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "mesh": "body",
+        "skin": "rig"
+      },
+      {
+        "id": "outline",
+        "parent": "root",
+        "translation": [
+          0.25,
+          0,
+          0
+        ],
+        "rotation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ],
+        "mesh": "outline"
+      }
+    ],
+    "solids": [],
+    "meshes": [
+      {
+        "id": "body",
+        "primitives": [
+          {
+            "mode": "triangles",
+            "material": "skin",
+            "positions": [
+              -0.1,
+              0,
+              0,
+              0.1,
+              0,
+              0,
+              -0.1,
+              0.5,
+              0,
+              0.1,
+              0.5,
+              0,
+              -0.1,
+              1,
+              0,
+              0.1,
+              1,
+              0
+            ],
+            "normals": [
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1
+            ],
+            "colors": [
+              1,
+              0,
+              0,
+              1,
+              1,
+              0,
+              0,
+              1,
+              0,
+              1,
+              0,
+              1,
+              0,
+              1,
+              0,
+              1,
+              0,
+              0,
+              1,
+              1,
+              0,
+              0,
+              1,
+              1
+            ],
+            "joints": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0
+            ],
+            "weights": [
+              1,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0.5,
+              0.5,
+              0,
+              0,
+              0.5,
+              0.5,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0
+            ],
+            "indices": [
+              0,
+              1,
+              2,
+              1,
+              3,
+              2,
+              2,
+              3,
+              4,
+              3,
+              5,
+              4
+            ],
+            "solids": [
+              {
+                "id": "torso",
+                "first": 0,
+                "count": 6
+              },
+              {
+                "id": "belly",
+                "first": 6,
+                "count": 6
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "outline",
+        "primitives": [
+          {
+            "mode": "lines",
+            "material": "ink",
+            "positions": [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0.2,
+              1,
+              0
+            ],
+            "indices": [
+              0,
+              1,
+              1,
+              2
+            ],
+            "solids": [
+              {
+                "id": "torso",
+                "first": 0,
+                "count": 2
+              },
+              {
+                "id": "belly",
+                "first": 2,
+                "count": 2
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "skins": [
+      {
+        "id": "rig",
+        "joints": [
+          "spine",
+          "arm"
+        ],
+        "inverseBind": [
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            -0.5,
+            0,
+            1
+          ]
+        ]
+      }
+    ],
+    "materials": [
+      {
+        "id": "skin",
+        "title": {
+          "en": "Skin",
+          "de": "Haut"
+        },
+        "baseColor": [
+          0.9,
+          0.7,
+          0.6,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 0.75,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      },
+      {
+        "id": "skin-dark",
+        "title": {
+          "en": "Dark skin",
+          "de": "Dunkle Haut"
+        },
+        "baseColor": [
+          0.2,
+          0.15,
+          0.1,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 0.75,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": false
+      },
+      {
+        "id": "ink",
+        "title": {
+          "en": "Ink",
+          "de": "Tinte"
+        },
+        "baseColor": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "metallic": 0,
+        "roughness": 1,
+        "emissive": [
+          0,
+          0,
+          0
+        ],
+        "alphaMode": "opaque",
+        "doubleSided": false,
+        "unlit": true
+      },
+      {
+        "id": "ink-light",
+        "title": {
+          "en": "Light ink",
+          "de": "Helle Tinte"
+        },
+        "baseColor": [
+          1,
+          1,
+          1,
+          0.5
+        ],
+        "metallic": 0,
+        "roughness": 1,
+        "emissive": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "alphaMode": "blend",
+        "doubleSided": true,
+        "unlit": true
+      }
+    ],
+    "variants": [
+      {
+        "id": "light-solid",
+        "title": {
+          "en": "Light solid",
+          "de": "Hell massiv"
+        },
+        "bindings": {}
+      },
+      {
+        "id": "dark-solid",
+        "title": {
+          "en": "Dark solid",
+          "de": "Dunkel massiv"
+        },
+        "bindings": {
+          "skin": "skin-dark",
+          "ink": "ink-light"
+        }
+      }
+    ],
+    "poses": [
+      {
+        "id": "bent",
+        "title": {
+          "en": "Bent",
+          "de": "Gebeugt"
+        },
+        "nodes": {
+          "arm": {
+            "rotation": [
+              0,
+              0,
+              0.7071067811865476,
+              0.7071067811865476
+            ]
+          },
+          "outline": {
+            "translation": [
+              0.5,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    ],
+    "animations": [
+      {
+        "id": "wave",
+        "title": {
+          "en": "Wave",
+          "de": "Winken"
+        },
+        "durationS": 1,
+        "loop": true,
+        "channels": [
+          {
+            "target": {
+              "node": "arm",
+              "path": "rotation"
+            },
+            "interpolation": "linear",
+            "times": [
+              0,
+              0.5,
+              1
+            ],
+            "values": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0.7071067811865476,
+              0.7071067811865476,
+              0,
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "target": {
+              "node": "spine",
+              "path": "translation"
+            },
+            "interpolation": "step",
+            "times": [
+              0,
+              1
+            ],
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0.1,
+              0
+            ]
+          },
+          {
+            "target": {
+              "node": "outline",
+              "path": "scale"
+            },
+            "interpolation": "linear",
+            "times": [
+              0,
+              1
+            ],
+            "values": [
+              1,
+              1,
+              1,
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "target": {
+              "material": "skin",
+              "path": "baseColor"
+            },
+            "interpolation": "linear",
+            "times": [
+              0,
+              1
+            ],
+            "values": [
+              0.9,
+              0.7,
+              0.6,
+              1,
+              0.5,
+              0.3,
+              0.2,
+              1
+            ]
+          },
+          {
+            "target": {
+              "material": "skin",
+              "path": "emissive"
+            },
+            "interpolation": "step",
+            "times": [
+              0,
+              0.5
+            ],
+            "values": [
+              0,
+              0,
+              0,
+              0.5,
+              0.25,
+              0
+            ]
+          }
+        ],
+        "events": [
+          {
+            "t": 0.5,
+            "id": "peak"
+          }
+        ]
+      }
+    ]
+  },
+  "options": {
+    "pose": {
+      "animation": "wave",
+      "timeS": 0.25
+    },
+    "animations": false,
+    "variants": true
+  },
+  "expected": {
+    "glbByteLength": 4552,
+    "jsonChunkByteLength": 3968,
+    "binChunkByteLength": 556,
+    "sha256": "c7f6a687772dbdcfb1a9db971a38993daecf0404e954d96c5073b432275b010e",
+    "accessorCounts": [
+      "VEC3:6",
+      "VEC3:6",
+      "VEC4:6",
+      "VEC4:6",
+      "VEC4:6",
+      "SCALAR:12",
+      "VEC3:3",
+      "SCALAR:4",
+      "MAT4:2"
+    ],
+    "json": {
+      "asset": {
+        "version": "2.0",
+        "generator": "semio.model glb/v1",
+        "extras": {
+          "schema": "semio.model/v1",
+          "id": "rig",
+          "title": {
+            "en": "Rig",
+            "de": "Gerüst"
+          },
+          "provenance": {
+            "generator": "glb-fixture",
+            "notes": [
+              {
+                "en": "hand-made",
+                "de": "von Hand"
+              }
+            ]
+          }
+        }
+      },
+      "scene": 0,
+      "scenes": [
+        {
+          "name": "rig",
+          "nodes": [
+            0,
+            3
+          ],
+          "extras": {
+            "title": {
+              "en": "Rig",
+              "de": "Gerüst"
+            }
+          }
+        }
+      ],
+      "extensionsUsed": [
+        "KHR_materials_unlit",
+        "KHR_materials_variants"
+      ],
+      "extensions": {
+        "KHR_materials_variants": {
+          "variants": [
+            {
+              "name": "light-solid",
+              "extras": {
+                "title": {
+                  "en": "Light solid",
+                  "de": "Hell massiv"
+                }
+              }
+            },
+            {
+              "name": "dark-solid",
+              "extras": {
+                "title": {
+                  "en": "Dark solid",
+                  "de": "Dunkel massiv"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "nodes": [
+        {
+          "name": "root",
+          "children": [
+            1,
+            4
+          ]
+        },
+        {
+          "name": "spine",
+          "children": [
+            2
+          ],
+          "extras": {
+            "joint": {
+              "type": "fixed",
+              "axis": [
+                0,
+                1,
+                0
+              ]
+            },
+            "tags": [
+              "bone"
+            ]
+          }
+        },
+        {
+          "name": "arm",
+          "translation": [
+            0,
+            0.5,
+            0
+          ],
+          "rotation": [
+            0,
+            0,
+            0.3826834323650898,
+            0.9238795325112867
+          ],
+          "extras": {
+            "joint": {
+              "type": "revolute",
+              "axis": [
+                0,
+                0,
+                1
+              ],
+              "min": -2,
+              "max": 2
+            },
+            "tags": [
+              "bone"
+            ]
+          }
+        },
+        {
+          "name": "body",
+          "mesh": 0,
+          "skin": 0,
+          "extras": {
+            "parent": "root"
+          }
+        },
+        {
+          "name": "outline",
+          "translation": [
+            0.25,
+            0,
+            0
+          ],
+          "scale": [
+            1.25,
+            1.25,
+            1.25
+          ],
+          "mesh": 1
+        }
+      ],
+      "meshes": [
+        {
+          "name": "body",
+          "primitives": [
+            {
+              "attributes": {
+                "POSITION": 0,
+                "NORMAL": 1,
+                "COLOR_0": 2,
+                "JOINTS_0": 3,
+                "WEIGHTS_0": 4
+              },
+              "indices": 5,
+              "material": 0,
+              "mode": 4,
+              "extras": {
+                "solids": [
+                  {
+                    "id": "torso",
+                    "first": 0,
+                    "count": 6
+                  },
+                  {
+                    "id": "belly",
+                    "first": 6,
+                    "count": 6
+                  }
+                ]
+              },
+              "extensions": {
+                "KHR_materials_variants": {
+                  "mappings": [
+                    {
+                      "material": 1,
+                      "variants": [
+                        1
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "outline",
+          "primitives": [
+            {
+              "attributes": {
+                "POSITION": 6
+              },
+              "indices": 7,
+              "material": 2,
+              "mode": 1,
+              "extras": {
+                "solids": [
+                  {
+                    "id": "torso",
+                    "first": 0,
+                    "count": 2
+                  },
+                  {
+                    "id": "belly",
+                    "first": 2,
+                    "count": 2
+                  }
+                ]
+              },
+              "extensions": {
+                "KHR_materials_variants": {
+                  "mappings": [
+                    {
+                      "material": 3,
+                      "variants": [
+                        1
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "skins": [
+        {
+          "name": "rig",
+          "joints": [
+            1,
+            2
+          ],
+          "inverseBindMatrices": 8
+        }
+      ],
+      "materials": [
+        {
+          "name": "skin",
+          "pbrMetallicRoughness": {
+            "baseColorFactor": [
+              0.8,
+              0.6,
+              0.5,
+              1
+            ],
+            "metallicFactor": 0,
+            "roughnessFactor": 0.75
+          },
+          "alphaMode": "OPAQUE",
+          "doubleSided": false,
+          "extras": {
+            "title": {
+              "en": "Skin",
+              "de": "Haut"
+            }
+          }
+        },
+        {
+          "name": "skin-dark",
+          "pbrMetallicRoughness": {
+            "baseColorFactor": [
+              0.2,
+              0.15,
+              0.1,
+              1
+            ],
+            "metallicFactor": 0,
+            "roughnessFactor": 0.75
+          },
+          "alphaMode": "OPAQUE",
+          "doubleSided": false,
+          "extras": {
+            "title": {
+              "en": "Dark skin",
+              "de": "Dunkle Haut"
+            }
+          }
+        },
+        {
+          "name": "ink",
+          "pbrMetallicRoughness": {
+            "baseColorFactor": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "metallicFactor": 0,
+            "roughnessFactor": 1
+          },
+          "alphaMode": "OPAQUE",
+          "doubleSided": false,
+          "extras": {
+            "title": {
+              "en": "Ink",
+              "de": "Tinte"
+            }
+          },
+          "extensions": {
+            "KHR_materials_unlit": {}
+          }
+        },
+        {
+          "name": "ink-light",
+          "pbrMetallicRoughness": {
+            "baseColorFactor": [
+              1,
+              1,
+              1,
+              0.5
+            ],
+            "metallicFactor": 0,
+            "roughnessFactor": 1
+          },
+          "emissiveFactor": [
+            0.1,
+            0.1,
+            0.1
+          ],
+          "alphaMode": "BLEND",
+          "doubleSided": true,
+          "extras": {
+            "title": {
+              "en": "Light ink",
+              "de": "Helle Tinte"
+            }
+          },
+          "extensions": {
+            "KHR_materials_unlit": {}
+          }
+        }
+      ],
+      "buffers": [
+        {
+          "byteLength": 556
+        }
+      ],
+      "bufferViews": [
+        {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 72,
+          "target": 34962
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 72,
+          "byteLength": 72,
+          "target": 34962
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 144,
+          "byteLength": 96,
+          "target": 34962
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 240,
+          "byteLength": 24,
+          "target": 34962
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 264,
+          "byteLength": 96,
+          "target": 34962
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 360,
+          "byteLength": 24,
+          "target": 34963
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 384,
+          "byteLength": 36,
+          "target": 34962
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 420,
+          "byteLength": 8,
+          "target": 34963
+        },
+        {
+          "buffer": 0,
+          "byteOffset": 428,
+          "byteLength": 128
+        }
+      ],
+      "accessors": [
+        {
+          "bufferView": 0,
+          "componentType": 5126,
+          "count": 6,
+          "type": "VEC3",
+          "min": [
+            -0.10000000149011612,
+            0,
+            0
+          ],
+          "max": [
+            0.10000000149011612,
+            1,
+            0
+          ]
+        },
+        {
+          "bufferView": 1,
+          "componentType": 5126,
+          "count": 6,
+          "type": "VEC3"
+        },
+        {
+          "bufferView": 2,
+          "componentType": 5126,
+          "count": 6,
+          "type": "VEC4"
+        },
+        {
+          "bufferView": 3,
+          "componentType": 5121,
+          "count": 6,
+          "type": "VEC4"
+        },
+        {
+          "bufferView": 4,
+          "componentType": 5126,
+          "count": 6,
+          "type": "VEC4"
+        },
+        {
+          "bufferView": 5,
+          "componentType": 5123,
+          "count": 12,
+          "type": "SCALAR"
+        },
+        {
+          "bufferView": 6,
+          "componentType": 5126,
+          "count": 3,
+          "type": "VEC3",
+          "min": [
+            0,
+            0,
+            0
+          ],
+          "max": [
+            0.20000000298023224,
+            1,
+            0
+          ]
+        },
+        {
+          "bufferView": 7,
+          "componentType": 5123,
+          "count": 4,
+          "type": "SCALAR"
+        },
+        {
+          "bufferView": 8,
+          "componentType": 5126,
+          "count": 2,
+          "type": "MAT4"
+        }
+      ]
+    }
+  }
+}

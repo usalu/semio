@@ -6,6 +6,8 @@ import { dirname, join, resolve } from "node:path";
 
 import { existsSync, mkdirSync } from "node:fs";
 
+import { provisionNative } from "./📦️packages/🐍️python/🧱️native/🟦️.ts";
+
 const root = import.meta.dir;
 
 let workspace = root;
@@ -131,9 +133,17 @@ const outputRoot = resolve(workspace, process.env.SEMIO_TEACHING_OUTPUT_ROOT ?? 
 
 if (outputRoot) mkdirSync(outputRoot, { recursive: true });
 
-const env = { ...process.env, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEST_MANIM: command === "test" ? "1" : process.env.SEMIO_TEST_MANIM,
+const native = await provisionNative({ onProgress: ({ step, fraction }) => { if (fraction === undefined || fraction === 1) console.error(`[native] ${step}`); } });
 
-  UV_PROJECT_ENVIRONMENT: process.env.SEMIO_TEACHING_ENV ?? join(cache, "python"),
+const environment = process.env.SEMIO_TEACHING_ENV ?? join(cache, "python");
+
+const env = { ...process.env, ...native?.environment, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEST_MANIM: command === "test" ? "1" : process.env.SEMIO_TEST_MANIM, SEMIO_TEACHING_LANGUAGE: command === "test" ? process.env.SEMIO_TEACHING_LANGUAGE ?? "en" : process.env.SEMIO_TEACHING_LANGUAGE,
+
+  UV_PROJECT_ENVIRONMENT: environment,
+
+  SEMIO_TOOL_PYTHON: process.env.SEMIO_TOOL_PYTHON ?? join(environment, process.platform === "win32" ? "Scripts" : "bin", process.platform === "win32" ? "python.exe" : "python"),
+
+  UV_BUILD_CONSTRAINT: join(project, "build-constraints.txt"),
 
   SEMIO_TEACHING_CACHE_DIR: process.env.SEMIO_TEACHING_CACHE_DIR ?? join(cache, "fonts"),
 

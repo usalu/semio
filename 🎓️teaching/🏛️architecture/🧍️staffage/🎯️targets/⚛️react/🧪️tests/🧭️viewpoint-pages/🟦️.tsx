@@ -26,7 +26,7 @@ const manifest = {
   collections: [],
   entries: [{ id: walker.id, category: "humans", title: walker.title, heightM: walker.dimensions.heightM, widthM: walker.dimensions.widthM, poses: [], clips: [], representations: { "500": "unavailable", "200": "authored", "100": "authored", "50": "authored" }, symbols: [{ id: "position-dot", semantics: "true-position" }, { id: "figure-block", semantics: "true-extent" }], analytics: ["thermal", "structural"], exports: [], distinction: walker.summary, completion: "authored" }],
 } as unknown as Manifest;
-const source = () => new CatalogStore({ manifest: async () => manifest, category: async () => ({ assets: [walker] }) as unknown as CategoryDocument });
+const source = () => new CatalogStore({ manifest: async () => manifest, category: async () => ({ assets: [walker], revisions: {} }) satisfies CategoryDocument });
 
 async function open(page: "compare" | "playground", hash = ""): Promise<ArchiveStore> {
   window.location.hash = `#/${page}${hash}`;
@@ -140,7 +140,7 @@ describe("🧪️ playground selector, position and yaw", () => {
 });
 
 describe("📤️ export snippet and vocabulary", () => {
-  const capabilities = { svg: { available: true }, pdf: { available: true }, dxf: { available: true }, dwg: { available: false }, "png-sequence": { available: false }, mp4: { available: false }, webm: { available: false } } as never;
+  const capabilities = { svg: { available: true }, pdf: { available: true }, dxf: { available: true }, dwg: { available: false }, "png-sequence": { available: false }, mp4: { available: false }, webm: { available: false }, glb: { available: true }, fbx: { available: true }, model: { available: true }, "model-zip": { available: true } } as never;
   it("puts representation, viewpoint and scale in the embed snippet and the lede", async () => {
     const store = new ArchiveStore(memoryStorage(), VIEWS);
     const catalog = source();

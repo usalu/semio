@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { VIEWS, type DrawingItem, type DrawingScene } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depictAll } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { readFileSync } from "node:fs";
-import { VIEWPOINTS, type Asset } from "../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type Asset } from "../../🧬️schema/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
 import { toneColour } from "../../🔨️modules/🎨️depiction/🖍️palette/🟦️.ts";
 import { labelBudget } from "../../🔨️modules/🎨️depiction/🧱️canvas/🟦️.ts";
@@ -24,7 +24,7 @@ const modelGeometry = (scene: DrawingScene): Map<string, number[]> => {
 
 describe("view synchrony", () => {
   for (const denominator of [100, 50])
-   for (const viewpoint of VIEWPOINTS) {
+   for (const viewpoint of PLANAR_VIEWPOINTS) {
     const scenes = depictAll(sampleState("carry-bag", denominator), { ...plainOptions("light-line", "en", denominator, viewpoint) });
     it(`shares fill geometry across all seven views in the ${viewpoint} viewpoint at 1:${denominator}`, () => {
       const reference = modelGeometry(scenes["light-solid"]);
@@ -41,7 +41,7 @@ describe("view synchrony", () => {
       }
     });
   }
-  for (const viewpoint of VIEWPOINTS)
+  for (const viewpoint of PLANAR_VIEWPOINTS)
    it(`keeps label text from overlapping and from reading raw floats in the ${viewpoint} viewpoint`, () => {
     const scenes = depictAll(sampleState("carry-bag", 50), { ...plainOptions("forces", "en", 50, viewpoint) });
     for (const view of ["forces", "moments", "thermal"] as const) {

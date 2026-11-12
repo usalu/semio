@@ -1,0 +1,15 @@
+import { tessellateSolid } from "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🔺️tessellation/🟦️.ts";
+const q = { chordM: 0.001, minSegments: 24, maxSegments: 48 };
+const ext = (s: any) => { const g: any = tessellateSolid({ ...s, node: "n", id: "t", material: "m" } as never, q); const mn=[1e9,1e9,1e9], mx=[-1e9,-1e9,-1e9]; for (let i=0;i<g.positions.length;i+=3) for(let k=0;k<3;k++){mn[k]=Math.min(mn[k],g.positions[i+k]);mx[k]=Math.max(mx[k],g.positions[i+k]);} return mn.map((m,k)=>+(mx[k]-m).toFixed(3)); };
+console.log("cap along u", ext({kind:"capsule",p0:[0,0,0],p1:[1,0,0],r0:.1,r1:.1,lateralScale:2}));
+console.log("cap along v", ext({kind:"capsule",p0:[0,0,0],p1:[0,1,0],r0:.1,r1:.1,lateralScale:2}));
+console.log("cap along w", ext({kind:"capsule",p0:[0,0,0],p1:[0,0,1],r0:.1,r1:.1,lateralScale:2}));
+console.log("rev about u", ext({kind:"revolve",profile:[[0,0.1],[1,0.1]],axis:[1,0,0],origin:[0,0,0],lateralScale:2}));
+console.log("rev about v", ext({kind:"revolve",profile:[[0,0.1],[1,0.1]],axis:[0,1,0],origin:[0,0,0],lateralScale:2}));
+console.log("rev about w", ext({kind:"revolve",profile:[[0,0.1],[1,0.1]],axis:[0,0,1],origin:[0,0,0],lateralScale:2}));
+console.log("loft along v", ext({kind:"loft",sections:[{at:[0,0,0],rx:.1,ry:.05},{at:[0,1,0],rx:.1,ry:.05}],capStart:true,capEnd:true}));
+console.log("loft along u", ext({kind:"loft",sections:[{at:[0,0,0],rx:.1,ry:.05},{at:[1,0,0],rx:.1,ry:.05}],capStart:true,capEnd:true}));
+console.log("loft along w", ext({kind:"loft",sections:[{at:[0,0,0],rx:.1,ry:.05},{at:[0,0,1],rx:.1,ry:.05}],capStart:true,capEnd:true}));
+console.log("extrude xy 0.2..0.5", ext({kind:"extrude",profile:[[0,0],[1,0],[1,0.1],[0,0.1]],plane:"xy",from:0.2,to:0.5}));
+console.log("extrude zx", ext({kind:"extrude",profile:[[0,0],[1,0],[1,0.1],[0,0.1]],plane:"zx",from:0.2,to:0.5}));
+console.log("extrude yz", ext({kind:"extrude",profile:[[0,0],[1,0],[1,0.1],[0,0.1]],plane:"yz",from:0.2,to:0.5}));

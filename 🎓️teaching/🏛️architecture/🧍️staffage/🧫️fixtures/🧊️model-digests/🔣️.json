@@ -1,0 +1,255 @@
+{
+ "scale": 50,
+ "glb": {
+  "stand": {
+   "byteLength": 511008,
+   "sha256": "9100d3d02cb8f27e2f219d253745073e89aa12aa33720128377d2266668d3bdd",
+   "triangles": 16026,
+   "segments": 3714,
+   "primitives": 69,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 37,
+   "meshes": 34,
+   "materials": 105,
+   "skins": 1,
+   "animations": 0,
+   "accessors": 182
+  },
+  "stride-left-forward": {
+   "byteLength": 476520,
+   "sha256": "392e0a3d0093161b0dee19b254b5d2eb7cd136b946a58287893b77c30cc2b801",
+   "triangles": 14982,
+   "segments": 3406,
+   "primitives": 63,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 33,
+   "meshes": 31,
+   "materials": 105,
+   "skins": 1,
+   "animations": 0,
+   "accessors": 167
+  },
+  "passing-left-stance": {
+   "byteLength": 476696,
+   "sha256": "efdb67927a675bb555d6815247170e60e8fc307097f1bda11d5bc8904e96dd8f",
+   "triangles": 14982,
+   "segments": 3406,
+   "primitives": 63,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 33,
+   "meshes": 31,
+   "materials": 105,
+   "skins": 1,
+   "animations": 0,
+   "accessors": 167
+  },
+  "stride-right-forward": {
+   "byteLength": 476520,
+   "sha256": "8d2112e47a4bda9f99982d0dbd05c4d8552a882d9805efcf7cc414d858d0c08b",
+   "triangles": 14982,
+   "segments": 3406,
+   "primitives": 63,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 33,
+   "meshes": 31,
+   "materials": 105,
+   "skins": 1,
+   "animations": 0,
+   "accessors": 167
+  },
+  "passing-right-stance": {
+   "byteLength": 476696,
+   "sha256": "30e4309f8dd2358b7558e6c7f407c5fa4d7a4285150cdd2a7b2071df39a207a8",
+   "triangles": 14982,
+   "segments": 3406,
+   "primitives": 63,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 33,
+   "meshes": 31,
+   "materials": 105,
+   "skins": 1,
+   "animations": 0,
+   "accessors": 167
+  },
+  "carry-bag": {
+   "byteLength": 548000,
+   "sha256": "ff641dac4dccce3b681d50bf286ff348bd91ac406cf1119227f09b9f0ff08227",
+   "triangles": 17070,
+   "segments": 4022,
+   "primitives": 75,
+   "variants": [
+    "dark-line",
+    "dark-solid",
+    "light-line",
+    "light-solid",
+    "thermal",
+    "forces",
+    "moments"
+   ],
+   "extensionsUsed": [
+    "KHR_materials_unlit",
+    "KHR_materials_variants"
+   ],
+   "nodes": 41,
+   "meshes": 37,
+   "materials": 111,
+   "skins": 1,
+   "animations": 0,
+   "accessors": 197
+  }
+ },
+ "fbx": {
+  "walk": {
+   "byteLength": 134476,
+   "sha256": "9b712c50f5b1d7c71dbf672fc504084e74558a3b3f0aded40a35059557ae2df0",
+   "objectCounts": {
+    "AnimationCurve": 30,
+    "AnimationCurveNode": 10,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 8,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
+   },
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned",
+    "events-dropped:walk"
+   ]
+  },
+  "idle-breathing": {
+   "byteLength": 121212,
+   "sha256": "0d5edaa9d7c0770f0dc7aeb452409f5e70f699397b9b3a6359baa70cd9d25fbb",
+   "objectCounts": {
+    "AnimationCurve": 9,
+    "AnimationCurveNode": 3,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 8,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
+   },
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned"
+   ]
+  },
+  "bag-swing": {
+   "byteLength": 120508,
+   "sha256": "e5c67bc20f20b393bfa654633e1dc9751db707260607008af653c1aa1f6f35b3",
+   "objectCounts": {
+    "AnimationCurve": 12,
+    "AnimationCurveNode": 4,
+    "AnimationLayer": 1,
+    "AnimationStack": 1,
+    "Deformer": 3,
+    "Geometry": 12,
+    "Material": 8,
+    "Model": 14,
+    "NodeAttribute": 2,
+    "Pose": 1
+   },
+   "notices": [
+    "solids-as-property:pelvis",
+    "solids-as-property:torso",
+    "solids-as-property:head",
+    "solids-as-property:arm-l",
+    "solids-as-property:thigh-l",
+    "solids-as-property:shank-l",
+    "solids-as-property:foot-l",
+    "solids-as-property:arm-r",
+    "solids-as-property:thigh-r",
+    "solids-as-property:shank-r",
+    "solids-as-property:foot-r",
+    "solids-as-property:skinned",
+    "events-dropped:bag-swing"
+   ]
+  }
+ }
+}

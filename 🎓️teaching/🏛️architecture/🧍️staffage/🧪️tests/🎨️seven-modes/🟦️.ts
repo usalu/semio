@@ -5,7 +5,7 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { VIEWPOINTS, type AssetDocument } from "../../🧬️schema/🟦️.ts";
+import { PLANAR_VIEWPOINTS, type AssetDocument } from "../../🧬️schema/🟦️.ts";
 import { VIEWS, type DrawingScene } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { defaultDepictionOptions, depict, depictAll } from "../../🔨️modules/🎨️depiction/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
@@ -18,7 +18,7 @@ const geometry = (scene: DrawingScene): string => JSON.stringify(scene.layers.fl
 const widths = (scene: DrawingScene, layer: string): number[] => scene.layers.filter((l) => l.id === layer).flatMap((l) => l.items.flatMap((i) => (i.kind === "path" && i.stroke ? [i.stroke.widthMm] : [])));
 
 describe("🎨️ seven modes", () => {
-  for (const viewpoint of VIEWPOINTS)
+  for (const viewpoint of PLANAR_VIEWPOINTS)
     it(`draws the same fill shapes in every mode and different shapes per scale in the ${viewpoint} viewpoint`, () => {
       const sets = new Map<number, string>();
       for (const denominator of [200, 100, 50] as const) {

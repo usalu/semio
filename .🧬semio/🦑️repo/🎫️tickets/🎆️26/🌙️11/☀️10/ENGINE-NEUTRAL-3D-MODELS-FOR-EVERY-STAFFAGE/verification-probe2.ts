@@ -1,0 +1,17 @@
+import { readFileSync } from "node:fs";
+import { writeGlb } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🧊️glb/🟦️.ts";
+import { writeFbx } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎬️fbx/🟦️.ts";
+import { modelOf } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🧊️volume/🟦️.ts";
+import { loadFbx, loadGlb } from "/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧰️support/🧊️.ts";
+import loadAssimp from "assimpjs";
+const [cat, slug] = process.argv.slice(2);
+const a = JSON.parse(readFileSync(`/Users/ueli/Documents/semio/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/${cat}/${slug}/🔣️.json`, "utf8")).asset;
+console.log("rig keys", Object.keys(a.rig), "bones", a.rig.bones?.length);
+const doc = await modelOf(a, { scale: 50, views: ["light-solid"], poses: [], clips: [] });
+console.log("nodes", doc.nodes.length, "skins", doc.skins.map((s: any) => s.joints.length));
+const g = await writeGlb(a, { pose: a.poses.find((p: any) => !p.key).id, scale: 50 });
+const j = (await loadGlb(g)); console.log("variants", JSON.stringify(j.parser.json.extensions?.KHR_materials_variants), Object.keys(j.parser.json));
+const c = a.clips[0]; const f = await writeFbx(a, { clip: c.id, scale: 50 });
+const o = loadFbx(f); let bones = 0; o.traverse((x: any) => { if (x.isBone) bones++; }); console.log("fbx bones", bones, "anim", o.animations.length, o.animations[0].duration, o.animations[0].tracks.length, c.durationS);
+const ai = await (loadAssimp as any)(); const list = new ai.FileList(); list.AddFile("m.fbx", f); const r = ai.ConvertFileList(list, "assjson"); console.log(r.IsSuccess(), r.GetErrorCode());
+const s = JSON.parse(new TextDecoder().decode(r.GetFile(0).GetContent())); console.log(Object.keys(s), s.meshes.length, s.meshes.map((m: any) => (m.bones ?? []).length), s.animations?.[0] && { n: s.animations[0].name, d: s.animations[0].duration, tps: s.animations[0].tickspersecond, ch: s.animations[0].channels.length });

@@ -11,6 +11,7 @@ import type { Environment } from "../../../🧬️schema/🟦️.ts";
 import type { EnvironmentTimeline, Vec3 } from "../../🔗️contracts/🟦️.ts";
 import { environmentAt } from "../../🌡️thermal/🌤️environment/🟦️.ts";
 import { enthalpy, humidityRatio, saturationPressurePa, volumePerDryKg } from "../🌫️air/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 🌬️ A log boundary layer: aerodynamic roughness length and the height at which the environment's wind speed is reached. */
 export type BoundaryLayer = { readonly z0M: number; readonly referenceHeightM: number };
@@ -35,9 +36,9 @@ export function ambientAt(source: Environment | EnvironmentTimeline, timeS: numb
   const environment = environmentAt(source, timeS);
   const wv = humidityRatio(environment.relativeHumidity * saturationPressurePa(environment.airTempC), environment.pressurePa);
   const phi = (environment.windDirectionDeg * Math.PI) / 180;
-  const ux = environment.windMS * Math.cos(phi);
-  const uz = environment.windMS * Math.sin(phi);
-  const gain = (y: number): number => (layer === null ? 1 : Math.log(Math.max(y, layer.z0M) / layer.z0M) / Math.log(layer.referenceHeightM / layer.z0M));
+  const ux = environment.windMS * portable.cos(phi);
+  const uz = environment.windMS * portable.sin(phi);
+  const gain = (y: number): number => (layer === null ? 1 : portable.fastLog(Math.max(y, layer.z0M) / layer.z0M) / portable.fastLog(layer.referenceHeightM / layer.z0M));
   return {
     environment,
     tC: environment.airTempC,

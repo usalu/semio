@@ -24,6 +24,7 @@ import { type Ambient, ENCLOSED_EXPOSURE, NO_DRAW, type RadiationSplit, type Reg
 import { MET_WM2, latentHeatJkg, radiantEnvironmentC } from "./🔬️physics/🟦️.ts";
 import { QUANTITY_SPECS } from "./📏️quantities/🟦️.ts";
 import { historyPlan, relax } from "./⏳️transient/🟦️.ts";
+import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 export { environmentAt, isTimeline, type EnvironmentInput } from "./🌤️environment/🟦️.ts";
 export { absorbedSolar, convection, emittedFlux, radiationCoefficient, radiationFlux, saturationPressurePa, specificHumidity, vapourPressurePa, humidityRatio, latentHeatJkg, airDensity, SIGMA } from "./🔬️physics/🟦️.ts";
@@ -127,7 +128,7 @@ function instantOf(sys: System, sample: ThermalSample, env: Environment): Instan
   const amb = ambientOf(env);
   const theta = (env.windDirectionDeg * Math.PI) / 180;
   const c = sample.comVelocity ?? { x: 0, y: 0, z: 0 };
-  const rel = Math.hypot(env.windMS * Math.cos(theta) - c.x, -c.y, env.windMS * Math.sin(theta) - c.z);
+  const rel = portable.hypot(env.windMS * portable.cos(theta) - c.x, -c.y, env.windMS * portable.sin(theta) - c.z);
   const activities = sys.regions.map((s) => {
     const met = subjectInputs(sample.inputs, s.region.body?.subject ?? null).activityMet;
     return 0.0052 * Math.max(0, (met > 0 ? met : 1) * MET_WM2 - 58);
@@ -147,7 +148,7 @@ function instantOf(sys: System, sample: ThermalSample, env: Environment): Instan
       contactTempC: b?.contact?.tempC ?? env.groundTempC ?? env.airTempC,
       wettedness: b?.wettedness ?? s.wetDefault,
       sunlit,
-      speed: r.model === "body" ? Math.hypot(rel, activities[j]!) : rel,
+      speed: r.model === "body" ? portable.hypot(rel, activities[j]!) : rel,
       envC: envOf(s, env),
       solar: solarOf(s, env, sunlit),
       stomatalMS: stomataOf(s, env, sunlit),
@@ -235,7 +236,7 @@ function stepRamped(f: RegionFrame, amb: Ambient, level: number, temp: number, d
   const a = at(fromC);
   const b = at(toC);
   const x = dtS / b.tau;
-  const decay = Math.exp(-x);
+  const decay = portable.fastExp(-x);
   return b.target + (temp - b.target) * decay + (b.target - a.target) * (decay - (x > 1e-9 ? (1 - decay) / x : 1));
 }
 

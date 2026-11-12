@@ -30,8 +30,23 @@ def _convex_oracle(a,b):
         return np.dot(x[:3]-x[3:],x[:3]-x[3:])
     def jacobian(x):
         return np.r_[2*(x[:3]-x[3:]),2*(x[3:]-x[:3])]
-    result=minimize(objective,np.r_[a.mean(axis=0),b.mean(axis=0)],jac=jacobian,constraints=[LinearConstraint(matrix,-np.inf,upper)],method="SLSQP",options={"ftol":1e-14,"maxiter":200})
-    if not result.success or np.max(matrix@result.x-upper)>1e-7:
+    def certified(x):
+        """🛡️ Accept a feasible point only with a supporting-plane certificate of optimality, independent of the solver status."""
+        gap=x[:3]-x[3:]
+        distance=float(np.linalg.norm(gap))
+        if np.max(matrix@x-upper)>1e-7:
+            return False
+        if distance<1e-9:
+            return True
+        normal=gap/distance
+        return bool((a@normal).min()>=normal@x[:3]-1e-7 and (b@normal).max()<=normal@x[3:]+1e-7)
+    start=np.r_[a.mean(axis=0),b.mean(axis=0)]
+    for tolerance in (1e-14,1e-11):
+        result=minimize(objective,start,jac=jacobian,constraints=[LinearConstraint(matrix,-np.inf,upper)],method="SLSQP",options={"ftol":tolerance,"maxiter":500})
+        if certified(result.x):
+            break
+        start=result.x
+    else:
         raise AssertionError("Independent convex distance failed: "+result.message)
     return {"distance":float(np.linalg.norm(result.x[:3]-result.x[3:])),"a_point":(result.x[:3]+origin).tolist(),"b_point":(result.x[3:]+origin).tolist()}
 
@@ -193,15 +208,20 @@ class OccupiedClashContract(unittest.TestCase):
 
     def test_source_hosted_conduits_do_not_create_false_clashes(self):
         rows=api.clash_check(include_passed=True)
-        self.assertEqual({r["a_tag"] for r in rows},{"DP-1","DP-2","DP-1-OUTLET","DP-2-OUTLET"})
-        for row in rows:
+        hosted=[row for row in rows if row["policy"]=="reserved_void"]
+        self.assertEqual({r["a_tag"] for r in hosted},{"DP-1","DP-2","DP-1-OUTLET","DP-2-OUTLET"})
+        for row in hosted:
             self.assertEqual(row["status"],"ok")
-            self.assertEqual(row["policy"],"reserved_void")
             self.assertEqual(row["required"],0)
             self.assertGreater(row["distance"],.009)
             self.assertLess(row["distance"],.011)
             self.assertFalse(row["intersects"])
             self.assertNotIn("clearance",row)
+            self.assertAlmostEqual(math.dist(row["a_point"],row["b_point"]),row["distance"],places=7)
+        for row in (row for row in rows if row not in hosted):
+            self.assertEqual(row["status"],"ok")
+            self.assertEqual(row["policy"],"separation")
+            self.assertGreaterEqual(row["distance"],row["required"])
             self.assertAlmostEqual(math.dist(row["a_point"],row["b_point"]),row["distance"],places=7)
 
     def test_host_relations_do_not_hide_filled_bore_interference(self):

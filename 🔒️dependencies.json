@@ -155,12 +155,32 @@
       "name": "@gltf-transform/core",
       "version": "4.5.1",
       "kinds": [
-        "repository-tooling"
+        "repository-tooling",
+        "test-oracle"
       ],
       "users": [
+        "package.json",
         "✏️s/package.json"
       ],
-      "productionReachable": false
+      "productionReachable": false,
+      "oracleIds": [
+        "gltf-transform-glb"
+      ]
+    },
+    {
+      "ecosystem": "js",
+      "name": "@gltf-transform/extensions",
+      "version": "4.5.1",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "gltf-transform-glb"
+      ]
     },
     {
       "ecosystem": "js",
@@ -1241,6 +1261,21 @@
     },
     {
       "ecosystem": "js",
+      "name": "assimpjs",
+      "version": "0.0.10",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "assimpjs-fbx"
+      ]
+    },
+    {
+      "ecosystem": "js",
       "name": "base64-js",
       "version": "1.5.1",
       "kinds": [
@@ -2098,6 +2133,7 @@
       ],
       "productionReachable": false,
       "oracleIds": [
+        "fast-check-cancellation",
         "forms-change-block-field-fast-check",
         "replication-supersede-fold-fast-check",
         "store-tool-transaction-fast-check",
@@ -2194,14 +2230,18 @@
       "name": "fflate",
       "version": "0.8.3",
       "kinds": [
-        "repository-tooling"
+        "repository-tooling",
+        "test-oracle"
       ],
       "users": [
         "package.json",
         "✏️s/package.json",
         "🌎️hub/package.json"
       ],
-      "productionReachable": false
+      "productionReachable": false,
+      "oracleIds": [
+        "fflate-zlib"
+      ]
     },
     {
       "ecosystem": "js",
@@ -2276,6 +2316,21 @@
         "🏢️semio-tech/🎡️play/package.json"
       ],
       "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
+      "name": "gltf-validator",
+      "version": "2.0.0-dev.3.10",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "gltf-validator-glb"
+      ]
     },
     {
       "ecosystem": "js",
@@ -3370,7 +3425,8 @@
       "version": "^0.182.0",
       "kinds": [
         "production-runtime",
-        "repository-tooling"
+        "repository-tooling",
+        "test-oracle"
       ],
       "users": [
         "package.json",
@@ -3390,10 +3446,13 @@
         "manifold3d-three",
         "three-carrier-reader",
         "three-damp",
+        "three-fbx-loader-fbx",
         "three-fem2d-mesh-reader",
         "three-fem3d-mesh-reader",
         "three-gltf-2-0-mutate-reader",
-        "three-obj-3-0-document-reader"
+        "three-gltf-loader-glb",
+        "three-obj-3-0-document-reader",
+        "three-solid-geometry"
       ]
     },
     {

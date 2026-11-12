@@ -1,4 +1,7 @@
-/** 🧍️ `StaffageFigure`: one evaluated asset drawn as inline SVG in true paper size or fitted to its parent, with hover and keyboard inspection and a table alternative to colour.
+/** 🧍️ `StaffageFigure`: one evaluated asset drawn as inline SVG in true paper size or fitted to its parent, with hover and keyboard inspection and a table alternative to colour; or, for the viewpoint `model`, shown as an interactive 3D model.
+ *
+ * The planar viewpoints (`elevation`, `front`, `plan`) and `axonometric` are drawings made by the library's `depict`; the axonometric drawing is made by the library like the others and names in words why an asset without volume has none. `model` mounts the owned WebGL2 viewer (loaded on demand): the representation is a variant of the model, the pose or clip is the query, the clock drives the time,
+ * the scale is the level of detail and the environment colours the thermal view; see {@link ../🧊️spatial/🖥️stage/🟦️.ts}.
  *
  * `fit="paper"` sizes the element to the scene in CSS millimetres times `zoom` (zoom 1 is print size on screen); `fit="contain"` fills the parent box and never reports the scene's size back to it, so a walking figure cannot resize the card around it.
  * Only analytic views solve thermal or structural analyses; results are memoised by (asset, query, time, environment) across all figures.
@@ -7,13 +10,19 @@
  * @see ../🧮️pipeline/🟦️.ts — the memoised evaluator
  * @see ../🗣️labels/🟦️.ts — the spoken description
  */
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import type { CSSProperties, KeyboardEvent, PointerEvent, ReactElement } from "react";
+import { Component, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import type { CSSProperties, KeyboardEvent, PointerEvent, ReactElement, ReactNode } from "react";
 import type { SceneFrame } from "../🧮️pipeline/🟦️.ts";
 import type { Asset, DepictionOptions, DisplayRange, DrawingScale, DrawingScene, Environment, EvaluatedState, EvaluationQuery, ForceQuantity, ItemValue, Language, RepresentationSelector, StructuralResult, ThermalField, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
 import type { StaffageClock } from "../⏱️clock/🧱️core/🟦️.ts";
 import { describeScene, valueText, valuedItems, word } from "../🗣️labels/🟦️.ts";
+import { translator } from "../🌐️i18n/🟦️.ts";
 import { defaultQuery, figureFrame, inlineSvg, queryAt } from "../🧮️pipeline/🟦️.ts";
+import { ViewpointGate } from "../🧮️pipeline/🦥️lazy/⚛️hook/🟦️.tsx";
+import { SpatialFigure } from "../🧊️spatial/🚪️gate/🟦️.tsx";
+import type { CameraPresetName } from "../🧊️spatial/🟦️.ts";
+import { DEFAULT_CAMERA } from "../🧊️spatial/🟦️.ts";
+import { refusalOf, type ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
 
 /** ⚙️ The props of {@link StaffageFigure}. */
 export type StaffageFigureProps = {
@@ -22,7 +31,11 @@ export type StaffageFigureProps = {
   clock?: StaffageClock;
   view: View;
   scale: DrawingScale;
-  viewpoint: Viewpoint;
+  viewpoint: ViewpointKey;
+  preset?: CameraPresetName;
+  onPreset?: (preset: CameraPresetName) => void;
+  background?: string | null;
+  toolbar?: boolean;
   representation?: RepresentationSelector;
   theme?: "light" | "dark";
   frame?: SceneFrame;
@@ -106,8 +119,75 @@ function match(target: EventTarget | null, ids: ReadonlySet<string>, root: HTMLE
   return null;
 }
 
-/** 🧍️ Renders one staffage asset in one view at one scale. */
+/** 🚫️ Shows the named, bilingual refusal of a depiction that cannot be made (an axonometric view of an asset without volume) in place of the drawing; any other error goes on to the next boundary. */
+class Refusals extends Component<{ readonly language: Language; readonly viewpoint: Viewpoint; readonly children: ReactNode }, { readonly error: unknown }> {
+  override state = { error: null as unknown };
+
+  static getDerivedStateFromError(error: unknown): { error: unknown } {
+    return { error };
+  }
+
+  override render(): ReactNode {
+    const { error } = this.state;
+    if (error === null) return this.props.children;
+    const reason = refusalOf(error, this.props.viewpoint);
+    if (reason === null) throw error;
+    const t = translator(this.props.language);
+    return (
+      <div role="alert" lang={this.props.language} data-refusal={this.props.viewpoint} data-staffage-figure="" style={{ display: "block", border: "1px dashed currentColor", padding: "0.5em" }}>
+        <b>{t("viewpoints.unavailable", { view: t(`viewpoints.phrase.${this.props.viewpoint}`) })}</b>
+        <p style={{ margin: 0 }}>{reason[this.props.language]}</p>
+        <p style={{ margin: 0 }}>{t("viewpoints.nothingInstead")}</p>
+      </div>
+    );
+  }
+}
+
+/** 📏️ Renders one staffage asset in one view at one scale, as a drawing or, for the viewpoint `model`, as an interactive 3D model. */
 export function StaffageFigure(props: StaffageFigureProps): ReactElement {
+  const { viewpoint, preset, onPreset, background, toolbar, ...drawn } = props;
+  if (viewpoint === "model") return <ModelFace {...props} />;
+  return (
+    <ViewpointGate viewpoint={viewpoint} language={props.language}>
+      <Refusals key={`${props.asset.id}:${viewpoint}`} language={props.language} viewpoint={viewpoint}>
+        <DrawnFigure {...drawn} viewpoint={viewpoint} />
+      </Refusals>
+    </ViewpointGate>
+  );
+}
+
+/** 🧊️ The interactive 3D model of a figure: pose or clip from the query (the asset's default clip when a clock runs, else its default pose), time from the clock, everything else from the props. */
+function ModelFace(props: StaffageFigureProps): ReactElement {
+  const { asset, clock, language, fit = "paper", className } = props;
+  const query = props.query ?? defaultQuery(asset, clock === undefined ? null : 0);
+  const sized: CSSProperties = fit === "paper" ? { position: "relative", inlineSize: "100%", blockSize: "var(--staffage-model-height, 24rem)" } : { position: "absolute", inset: 0, inlineSize: "100%", blockSize: "100%" };
+  return (
+    <div className={className} lang={language} data-staffage-figure="" data-fit={fit} data-asset={asset.id} data-view={props.view} data-viewpoint="model" style={{ display: "block", minInlineSize: 0, ...sized }}>
+      <SpatialFigure
+        asset={asset}
+        query={query}
+        clock={clock ?? null}
+        view={props.view}
+        scale={props.scale.denominator}
+        language={language}
+        preset={props.preset ?? DEFAULT_CAMERA}
+        {...(props.onPreset === undefined ? {} : { onPreset: props.onPreset })}
+        {...(props.environment === undefined ? {} : { environment: props.environment })}
+        {...(props.thermalQuantity === undefined ? {} : { thermalQuantity: props.thermalQuantity })}
+        {...(props.forceQuantity === undefined ? {} : { forceQuantity: props.forceQuantity })}
+        {...(props.range === undefined ? {} : { range: props.range })}
+        {...(props.theme === undefined ? {} : { theme: props.theme })}
+        {...(props.background === undefined ? {} : { background: props.background })}
+        {...(props.toolbar === undefined ? {} : { toolbar: props.toolbar })}
+      />
+    </div>
+  );
+}
+
+type DrawnProps = Omit<StaffageFigureProps, "viewpoint" | "preset" | "onPreset" | "background" | "toolbar"> & { viewpoint: Viewpoint };
+
+/** 🖼️ A drawing of one staffage asset in one view at one scale. */
+function DrawnFigure(props: DrawnProps): ReactElement {
   const { asset, clock, language, zoom = 1, fit = "paper", live = false, onEvaluated, onInspect, className, title } = props;
   const [ref, visible] = useVisible(live);
   const timeS = useFrameTime(clock, visible);

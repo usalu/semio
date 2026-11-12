@@ -12,7 +12,8 @@ import { describe, expect, it } from "vitest";
 import type { Asset, AuthoredRepresentation, Shape } from "../../🧬️schema/🟦️.ts";
 import { outlineRuns, prepare, sourceOf } from "../../🔨️modules/🎨️depiction/🧩️shapes/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 requireTool("uv");
 
 type Vectors = { scale: number; paperMmPerM: number; pose: string; toleranceMm: number; shapes: Shape[]; expectedMm: Record<string, number> };
@@ -46,7 +47,7 @@ describe("🔗️ same-region merge", () => {
     try {
       const input = join(directory, "input.json");
       writeFileSync(input, JSON.stringify({ shapes: vectors.shapes, paperMmPerM: vectors.paperMmPerM }));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🔗️region-merge/🐍️.py"), ["shapely"], [input])) as Record<string, number>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🔗️region-merge/🐍️.py"), "geometry", [input])) as Record<string, number>;
       const found = visibleMm();
       for (const [id, length] of Object.entries(reference)) if (id !== "cover") expect(Math.abs(found[id]! - length), `${id}`).toBeLessThanOrEqual(vectors.toleranceMm);
     } finally {

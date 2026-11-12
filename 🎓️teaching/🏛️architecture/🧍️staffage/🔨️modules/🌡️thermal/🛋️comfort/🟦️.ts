@@ -12,6 +12,7 @@
  * @see https://pythermalcomfort.readthedocs.io/en/latest/documentation/models.html — pythermalcomfort `pmv_ppd_iso`, the oracle of 🧪️tests/🛋️pmv-comfort
  */
 import type { Asset, Environment, Slug } from "../../../🧬️schema/🟦️.ts";
+import * as portable from "../../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 /** 👕️ Thermal resistance of one clo in m² K/W (ISO 9920). */
 export const CLO_M2KW = 0.155;
@@ -54,7 +55,7 @@ export type Comfort = {
 };
 
 /** 💧️ Water-vapour partial pressure in Pa as used by ISO 7730 Annex D, `rh · 10 · exp(16.6536 − 4030.183/(t + 235))`. */
-export const vapourPressureIsoPa = (airTempC: number, relativeHumidity: number): number => relativeHumidity * 100 * 10 * Math.exp(16.6536 - 4030.183 / (airTempC + 235));
+export const vapourPressureIsoPa = (airTempC: number, relativeHumidity: number): number => relativeHumidity * 100 * 10 * portable.fastExp(16.6536 - 4030.183 / (airTempC + 235));
 
 /** 🔬️ Sensation class of a PMV (rounded to the nearest vote). */
 export function sensationOf(pmv: number): Sensation {
@@ -91,15 +92,15 @@ export function pmvPpd(i: ComfortInputs): Comfort {
   const p2 = p1 * 3.96;
   const p3 = p1 * 100;
   const p4 = p1 * taa;
-  const p5 = 308.7 - 0.028 * mw + p2 * (tra / 100) ** 4;
+  const p5 = 308.7 - 0.028 * mw + p2 * portable.fastPow((tra / 100), 4);
   let xn = (taa + (35.5 - ta) / (3.5 * icl + 0.1)) / 100;
   let xf = xn * 2;
   let hc = hcf;
   let rounds = 0;
   while (Math.abs(xn - xf) > 0.00015) {
     xf = (xf + xn) / 2;
-    hc = Math.max(hcf, 2.38 * Math.abs(100 * xf - taa) ** 0.25);
-    xn = (p5 + p4 * hc - p2 * xf ** 4) / (100 + p3 * hc);
+    hc = Math.max(hcf, 2.38 * portable.fastPow(Math.abs(100 * xf - taa), 0.25));
+    xn = (p5 + p4 * hc - p2 * portable.fastPow(xf, 4)) / (100 + p3 * hc);
     if (++rounds > 150) throw new RangeError("pmvPpd: the clothing surface temperature iteration did not converge");
   }
   const tcl = 100 * xn - 273;
@@ -107,11 +108,11 @@ export function pmvPpd(i: ComfortInputs): Comfort {
   const hl2 = mw > MET_WM2_ISO ? 0.42 * (mw - MET_WM2_ISO) : 0;
   const hl3 = 1.7e-5 * m * (5867 - pa);
   const hl4 = 0.0014 * m * (34 - ta);
-  const hl5 = 3.96 * fcl * (xn ** 4 - (tra / 100) ** 4);
+  const hl5 = 3.96 * fcl * (portable.fastPow(xn, 4) - portable.fastPow((tra / 100), 4));
   const hl6 = fcl * hc * (tcl - ta);
-  const pmv = (0.303 * Math.exp(-0.036 * m) + 0.028) * (mw - hl1 - hl2 - hl3 - hl4 - hl5 - hl6);
+  const pmv = (0.303 * portable.fastExp(-0.036 * m) + 0.028) * (mw - hl1 - hl2 - hl3 - hl4 - hl5 - hl6);
   const violations = comfortViolations(i, pmv);
-  return { pmv, ppdPercent: 100 - 95 * Math.exp(-0.03353 * pmv ** 4 - 0.2179 * pmv ** 2), sensation: sensationOf(pmv), clothingSurfaceC: tcl, convectiveCoefficientWM2K: hc, valid: violations.length === 0, violations };
+  return { pmv, ppdPercent: 100 - 95 * portable.fastExp(-0.03353 * portable.fastPow(pmv, 4) - 0.2179 * pmv ** 2), sensation: sensationOf(pmv), clothingSurfaceC: tcl, convectiveCoefficientWM2K: hc, valid: violations.length === 0, violations };
 }
 
 /** 👕️ Skin-area-weighted intrinsic clothing insulation in clo of the body of an asset (`subject` null) or one passenger: per body region the clothing layers' resistance referred to the outer area divided by the area factor `f_cl = outer area / skin area` (the `I_cl · f_cl` convention of the schema) over `0.155`. Fur, feathers and hair are not clothing. `null` when the asset has no such body. */

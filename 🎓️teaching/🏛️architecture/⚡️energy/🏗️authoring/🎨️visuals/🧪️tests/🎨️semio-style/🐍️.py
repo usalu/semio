@@ -163,7 +163,7 @@ class ClipStyleTest(unittest.TestCase):
         self.assertGreaterEqual(len(drawing), 20)
         segment, state = next(iter(drawing.values()))
         self.assertTrue(all(key == staffage.cast_key(staffage._entry(cast)) for cast, key in state["casts"].items()))
-        with mock.patch.object(staffage, "_source_digest", lambda root=None: "exporter-changed"):
+        with mock.patch.object(staffage, "_source_digest", mock.Mock(return_value="exporter-changed")):
             changed = runtime.segment_state(segment, settings)
         self.assertEqual(sorted(changed["casts"]), sorted(state["casts"]))
         self.assertTrue(all(changed["casts"][cast] != key for cast, key in state["casts"].items()))

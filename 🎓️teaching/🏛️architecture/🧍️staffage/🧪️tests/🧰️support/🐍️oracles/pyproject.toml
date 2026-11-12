@@ -1,0 +1,24 @@
+[project]
+name = "staffage-oracles"
+version = "0.0.0"
+description = "Third-party test oracles of the staffage suite (never imported by product code); locked with hashes in uv.lock."
+requires-python = ">=3.9"
+dependencies = []
+
+[dependency-groups]
+geometry = ["shapely", "numpy", "scipy", "svgelements"]
+documents = ["pymupdf==1.26.5", "lxml", "ezdxf", "reportlab<5", "pikepdf", "pypdfium2", "pillow"]
+media = ["av", "imageio-ffmpeg"]
+dwg = ["ezdwg==0.19.2; python_full_version >= '3.10'"]
+
+[tool.uv]
+package = false
+no-build = true
+exclude-newer = "2026-11-10T00:00:00Z"
+required-environments = [
+  "sys_platform == 'darwin' and platform_machine == 'arm64'",
+  "sys_platform == 'darwin' and platform_machine == 'x86_64'",
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "sys_platform == 'linux' and platform_machine == 'aarch64'",
+  "sys_platform == 'win32' and platform_machine == 'AMD64'",
+]

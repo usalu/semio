@@ -22,7 +22,8 @@ import { type DistanceWindow, featureWidthMm, makeScratch, squaredDistanceTransf
 import { solveThermalAt, thermalSession } from "../../🔨️modules/🌡️thermal/🟦️.ts";
 import type { EvaluationQuery } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 import { evaluate } from "../../🔨️modules/🧮️evaluation/🟦️.ts";
-import { STAFFAGE_ROOT, fixture, requireTool, python } from "../🧰️support/🧰️.ts";
+import { STAFFAGE_ROOT, fixture, requireTool } from "../🧰️support/🧰️.ts";
+import { python } from "../🧰️support/🐍️.ts";
 requireTool("uv");
 
 type Distance = { name: string; image: string[]; squared: number[][] | null };
@@ -33,7 +34,7 @@ type Vectors = { distance: Distance[]; featureWidth: Shape[]; castDigests: Diges
 const vectors = fixture<Vectors>("🚀️export-performance");
 const castVectors = fixture<{ manifest: CastManifest }>("🎭️cast-export");
 const INF = 1e20;
-const engineIndependent = (svg: string): string => svg.replace(/data-value="([^"]*)"/gu, (_, v: string) => `data-value="${Number(Number(v).toPrecision(4))}"`);
+const engineIndependent = (svg: string): string => svg.replace(/"revision": "sha256:[0-9a-f]{64}"/gu, '"revision": "sha256:0"').replace(/data-value="([^"]*)"/gu, (_, v: string) => `data-value="${Number(Number(v).toPrecision(4))}"`);
 
 const sourcesOf = (image: readonly string[]): { source: Uint8Array; nx: number; ny: number } => {
   const nx = image[0]!.length;
@@ -138,7 +139,7 @@ describe("🚀 feature width", () => {
     try {
       const input = join(directory, "shapes.json");
       writeFileSync(input, JSON.stringify(vectors.featureWidth));
-      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🚀️export-performance/🐍️.py"), ["numpy", "scipy", "shapely"], ["--widths", input])) as Record<string, number>;
+      const reference = JSON.parse(python(join(STAFFAGE_ROOT, "🧪️tests/🚀️export-performance/🐍️.py"), "geometry", ["--widths", input])) as Record<string, number>;
       for (const shape of vectors.featureWidth) expect(Math.abs(shape.referenceMm - reference[shape.name]!), `${shape.name}: ${shape.referenceMm} against ${reference[shape.name]}`).toBeLessThanOrEqual(Math.max(0.03 * reference[shape.name]!, 0.05));
     } finally {
       rmSync(directory, { recursive: true, force: true });
@@ -214,6 +215,10 @@ describe("🚀 exported frames", { timeout: 300_000 }, () => {
         expect(index.frames, index.cast).toEqual(pinned.frames);
         const files = readdirSync(join(out, index.cast)).sort();
         expect(files, index.cast).toEqual(Object.keys(pinned.sha256).sort());
+        const boxes = new Set(files.filter((name) => name.endsWith(".svg")).map((name) => /<svg [^>]*width="([0-9.]+)mm" height="([0-9.]+)mm" viewBox="0 0 ([0-9.]+) ([0-9.]+)"/u.exec(readFileSync(join(out, index.cast, name), "utf8"))!.slice(1).join(" ")));
+        expect(boxes.size, `${index.cast}: one shared size in millimetres, the viewBox equal to it`).toBe(1);
+        const [width, height, viewWidth, viewHeight] = [...boxes][0]!.split(" ");
+        expect([viewWidth, viewHeight], index.cast).toEqual([width, height]);
         for (const name of files) expect(createHash("sha256").update(engineIndependent(readFileSync(join(out, index.cast, name), "utf8"))).digest("hex"), `${index.cast}/${name}`).toBe(pinned.sha256[name]);
       }
       expect(readdirSync(out).sort()).toEqual([...ids].sort());

@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {createRequire} from "node:module";
 import {fileURLToPath} from "node:url";
-import {launchBrowser} from "../🧰️tools.mjs";
+import {browserLaunchOptions,finishTransitions,launchBrowser} from "../🧰️tools.mjs";
 
 const root=process.cwd(),output=path.resolve(process.argv[2]??""),here=path.dirname(fileURLToPath(import.meta.url));
 assert(output.startsWith(root+path.sep)&&output.length<220);
@@ -23,11 +23,11 @@ let browser;
 const abort=()=>{cancellation.abort();process.exitCode=130;void browser?.close().catch(()=>{})};
 process.once("SIGINT",abort);process.once("SIGTERM",abort);
 try{
-  browser=await launchBrowser({launch:()=>chromium.launch({headless:true}),provision:()=>playwrightV1(["install","chromium"],{cwd:root,heavy:false,signal:cancellation.signal,stdout:"stderr",onProgress:event=>console.error("[DEBUG] Chromium provision "+event.phase)}),signal:cancellation.signal});
+  browser=await launchBrowser({launch:()=>chromium.launch(browserLaunchOptions),provision:()=>playwrightV1(["install","chromium"],{cwd:root,heavy:false,signal:cancellation.signal,stdout:"stderr",onProgress:event=>console.error("[DEBUG] Chromium provision "+event.phase)}),signal:cancellation.signal});
   if(cancellation.signal.aborted)throw Error("Seam browser rendering cancelled");
   const page=await browser.newPage({viewport:{width:400,height:250},deviceScaleFactor:1,reducedMotion:"reduce"});
   await page.setContent('<html class="dark"><body style="margin:0;background:#000"><div id="root"></div></body></html>');
-  await page.addStyleTag({content:compiler.build(scanner.scan())+'\npath[data-shared-border-state="active"]{stroke:rgb(255,0,0)!important}path[data-shared-border-state="hover"]{stroke:rgb(0,255,0)!important}'});
+  await page.addStyleTag({content:compiler.build(scanner.scan())+'\npath[data-shared-border-state="active"]{stroke:rgb(255,0,0)!important}:root,html.dark,.semio-scope,html.dark .semio-scope{--border-emphasized-color:rgb(0,255,0)!important}'});
   await page.addScriptTag({content:bundle.outputFiles[0].text});
   const measure=()=>page.evaluate(()=>{
     const left=document.querySelector('[data-seam-window="left"]'),right=document.querySelector('[data-seam-window="right"]'),a=left.getBoundingClientRect(),b=right.getBoundingClientRect();
@@ -40,6 +40,7 @@ try{
     if(cancellation.signal.aborted)throw Error("Seam browser rendering cancelled");
     if(sample.id==="hover")await page.locator('[data-seam-window="left"]').hover({position:{x:20,y:80}});
     await page.waitForFunction(()=>document.querySelector('[data-shared-border-root]')&&!document.querySelector('[data-shared-border-pending]'));
+    await finishTransitions(page);
     const actual=await measure();assert(actual.gap<0.01);assert.deepEqual(actual.owners,[{owner:sample.owner,state:sample.state}],sample.id);
     await page.screenshot({path:path.join(output,sample.id+".png")});results.push({id:sample.id,...actual});
   }

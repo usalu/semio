@@ -1,0 +1,1381 @@
+{
+ "volume": {
+  "status": "authored",
+  "solids": [
+   {
+    "id": "petiole-r1",
+    "kind": "capsule",
+    "bone": "petiole-r1",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.16,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-r1",
+    "kind": "loft",
+    "bone": "blade-r1",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.4,
+    "region": "blades-outer",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0.02285
+      ],
+      "rx": 0.02921,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04658,
+       0,
+       0.02285
+      ],
+      "rx": 0.09348,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1242,
+       0,
+       0.02285
+      ],
+      "rx": 0.11685,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.21735,
+       0,
+       0.02285
+      ],
+      "rx": 0.09348,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.28566,
+       0,
+       0.02285
+      ],
+      "rx": 0.04674,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3105,
+       0,
+       0.02285
+      ],
+      "rx": 0.00935,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-r1",
+    "kind": "capsule",
+    "bone": "blade-r1",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.3105,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-r2",
+    "kind": "capsule",
+    "bone": "petiole-r2",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.21,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-r2",
+    "kind": "loft",
+    "bone": "blade-r2",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.4,
+    "region": "blades-outer",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0.02085
+      ],
+      "rx": 0.02924,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04658,
+       0,
+       0.02085
+      ],
+      "rx": 0.09356,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1242,
+       0,
+       0.02085
+      ],
+      "rx": 0.11695,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.21735,
+       0,
+       0.02085
+      ],
+      "rx": 0.09356,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.28566,
+       0,
+       0.02085
+      ],
+      "rx": 0.04678,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3105,
+       0,
+       0.02085
+      ],
+      "rx": 0.00936,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-r2",
+    "kind": "capsule",
+    "bone": "blade-r2",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.3105,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-r3",
+    "kind": "capsule",
+    "bone": "petiole-r3",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.26,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-r3",
+    "kind": "loft",
+    "bone": "blade-r3",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.55,
+    "region": "blades-inner",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0.0169
+      ],
+      "rx": 0.02925,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04657,
+       0,
+       0.0169
+      ],
+      "rx": 0.0936,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1242,
+       0,
+       0.0169
+      ],
+      "rx": 0.117,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.21735,
+       0,
+       0.0169
+      ],
+      "rx": 0.0936,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.28566,
+       0,
+       0.0169
+      ],
+      "rx": 0.0468,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3105,
+       0,
+       0.0169
+      ],
+      "rx": 0.00936,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-r3",
+    "kind": "capsule",
+    "bone": "blade-r3",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.3105,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-r4",
+    "kind": "capsule",
+    "bone": "petiole-r4",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.3,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-r4",
+    "kind": "loft",
+    "bone": "blade-r4",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.55,
+    "region": "blades-inner",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       0.01005
+      ],
+      "rx": 0.02946,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04347,
+       0,
+       0.01005
+      ],
+      "rx": 0.09428,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.11592,
+       0,
+       0.01005
+      ],
+      "rx": 0.11785,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.20286,
+       0,
+       0.01005
+      ],
+      "rx": 0.09428,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.26662,
+       0,
+       0.01005
+      ],
+      "rx": 0.04714,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2898,
+       0,
+       0.01005
+      ],
+      "rx": 0.00943,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-r4",
+    "kind": "capsule",
+    "bone": "blade-r4",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.2898,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-l1",
+    "kind": "capsule",
+    "bone": "petiole-l1",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.17,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-l1",
+    "kind": "loft",
+    "bone": "blade-l1",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.4,
+    "region": "blades-outer",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       -0.02195
+      ],
+      "rx": 0.02916,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04502,
+       0,
+       -0.02195
+      ],
+      "rx": 0.09332,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.12004,
+       0,
+       -0.02195
+      ],
+      "rx": 0.11665,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.21007,
+       0,
+       -0.02195
+      ],
+      "rx": 0.09332,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.27609,
+       0,
+       -0.02195
+      ],
+      "rx": 0.04666,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3001,
+       0,
+       -0.02195
+      ],
+      "rx": 0.00933,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-l1",
+    "kind": "capsule",
+    "bone": "blade-l1",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.3001,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-l2",
+    "kind": "capsule",
+    "bone": "petiole-l2",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.2,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-l2",
+    "kind": "loft",
+    "bone": "blade-l2",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.4,
+    "region": "blades-outer",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       -0.0205
+      ],
+      "rx": 0.02923,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04657,
+       0,
+       -0.0205
+      ],
+      "rx": 0.09352,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.1242,
+       0,
+       -0.0205
+      ],
+      "rx": 0.1169,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.21735,
+       0,
+       -0.0205
+      ],
+      "rx": 0.09352,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.28566,
+       0,
+       -0.0205
+      ],
+      "rx": 0.04676,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3105,
+       0,
+       -0.0205
+      ],
+      "rx": 0.00935,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-l2",
+    "kind": "capsule",
+    "bone": "blade-l2",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.3105,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-l3",
+    "kind": "capsule",
+    "bone": "petiole-l3",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.25,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-l3",
+    "kind": "loft",
+    "bone": "blade-l3",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.55,
+    "region": "blades-inner",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       -0.0157
+      ],
+      "rx": 0.0292,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04502,
+       0,
+       -0.0157
+      ],
+      "rx": 0.09344,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.12004,
+       0,
+       -0.0157
+      ],
+      "rx": 0.1168,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.21007,
+       0,
+       -0.0157
+      ],
+      "rx": 0.09344,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.27609,
+       0,
+       -0.0157
+      ],
+      "rx": 0.04672,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.3001,
+       0,
+       -0.0157
+      ],
+      "rx": 0.00934,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-l3",
+    "kind": "capsule",
+    "bone": "blade-l3",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.3001,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-l4",
+    "kind": "capsule",
+    "bone": "petiole-l4",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.29,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-l4",
+    "kind": "loft",
+    "bone": "blade-l4",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.55,
+    "region": "blades-inner",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       -0.01015
+      ],
+      "rx": 0.02944,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.04191,
+       0,
+       -0.01015
+      ],
+      "rx": 0.0942,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.11176,
+       0,
+       -0.01015
+      ],
+      "rx": 0.11775,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.19558,
+       0,
+       -0.01015
+      ],
+      "rx": 0.0942,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.25705,
+       0,
+       -0.01015
+      ],
+      "rx": 0.0471,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2794,
+       0,
+       -0.01015
+      ],
+      "rx": 0.00942,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-l4",
+    "kind": "capsule",
+    "bone": "blade-l4",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.2794,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   },
+   {
+    "id": "petiole-c1",
+    "kind": "capsule",
+    "bone": "petiole-c1",
+    "material": "hosta-petiole",
+    "role": "body",
+    "tone": 0.35,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.32,
+     0,
+     0
+    ],
+    "r0": 0.016,
+    "r1": 0.012
+   },
+   {
+    "id": "blade-c1",
+    "kind": "loft",
+    "bone": "blade-c1",
+    "material": "hosta-blade",
+    "role": "body",
+    "tone": 0.55,
+    "region": "blades-inner",
+    "sections": [
+     {
+      "at": [
+       0,
+       0,
+       -0.00185
+      ],
+      "rx": 0.02969,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.03726,
+       0,
+       -0.00185
+      ],
+      "rx": 0.095,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.09936,
+       0,
+       -0.00185
+      ],
+      "rx": 0.11875,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.17388,
+       0,
+       -0.00185
+      ],
+      "rx": 0.095,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.22853,
+       0,
+       -0.00185
+      ],
+      "rx": 0.0475,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     },
+     {
+      "at": [
+       0.2484,
+       0,
+       -0.00185
+      ],
+      "rx": 0.0095,
+      "ry": 0.004,
+      "exponent": 2.2,
+      "rotation": [
+       0.70711,
+       0,
+       0.70711,
+       0
+      ]
+     }
+    ],
+    "capStart": true,
+    "capEnd": true
+   },
+   {
+    "id": "midrib-c1",
+    "kind": "capsule",
+    "bone": "blade-c1",
+    "material": "hosta-petiole",
+    "role": "detail",
+    "tone": 0.3,
+    "region": "petioles",
+    "p0": [
+     0,
+     0,
+     0
+    ],
+    "p1": [
+     0.2484,
+     0,
+     0
+    ],
+    "r0": 0.005,
+    "r1": 0.003,
+    "maxDenominator": 50
+   }
+  ],
+  "decisions": [
+   {
+    "en": "Hosta: nine petioles (tapered capsules) each carry a lamina loft: a flat leaf of 0.23 m width and 0.28 to 0.31 m length with an elliptical outline (widest at 40 percent), 8 mm thick, centred on the lateral offset of the plan outline; the midrib is a thin capsule on top. The rest pose is a flat fan in the sagittal plane; the spread to depth 0.9 m appears only in the default pose through the abduction and twist of the petiole bones, so the bounding box is judged in that pose.",
+    "de": "Funkie: neun Blattstiele (verjüngte Kapseln) tragen je einen Spreitenloft: ein flaches Blatt mit 0,23 m Breite und 0,28 bis 0,31 m Länge, elliptischem Umriss (am breitesten bei 40 Prozent), 8 mm dick, mittig auf dem Seitenversatz des Umrisses der Draufsicht; die Mittelrippe ist eine dünne Kapsel obenauf. Die Ruhelage ist ein flacher Fächer in der Längsebene; die Auffächerung auf 0,9 m Tiefe entsteht nur in der Standardpose durch Abduktion und Verdrehung der Stielknochen, daher wird die Bounding Box in dieser Pose beurteilt."
+   }
+  ]
+ }
+}

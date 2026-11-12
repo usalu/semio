@@ -1,0 +1,1675 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "cases": [
+  {
+   "name": "cylinder",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "cyl",
+    "title": {
+     "en": "cyl",
+     "de": "cyl"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0,
+         0,
+         0.5
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.12566370614359174,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.2,
+      0
+     ],
+     "max": [
+      0.2,
+      0.2,
+      1
+     ]
+    },
+    "closed": true,
+    "oracle": "CylinderGeometry"
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "frustum",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "frustum",
+    "title": {
+     "en": "frustum",
+     "de": "frustum"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.3
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.1,
+        "ry": 0.1
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.1361356816555577,
+    "bounds": {
+     "min": [
+      -0.3,
+      -0.3,
+      0
+     ],
+     "max": [
+      0.3,
+      0.3,
+      1
+     ]
+    },
+    "closed": true,
+    "oracle": "CylinderGeometry"
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "superellipse",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "super",
+    "title": {
+     "en": "super",
+     "de": "super"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.2,
+        "exponent": 4
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.3,
+        "ry": 0.2,
+        "exponent": 4
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.22248896127616474,
+    "bounds": {
+     "min": [
+      -0.3,
+      -0.2,
+      0
+     ],
+     "max": [
+      0.3,
+      0.2,
+      1
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "reversed-direction",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "rev",
+    "title": {
+     "en": "rev",
+     "de": "rev"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.12566370614359174,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.2,
+      0
+     ],
+     "max": [
+      0.2,
+      0.2,
+      1
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "open-tube",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "tube",
+    "title": {
+     "en": "tube",
+     "de": "tube"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       }
+      ],
+      "capStart": false,
+      "capEnd": false
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": null,
+    "bounds": {
+     "min": [
+      -0.2,
+      -0.2,
+      0
+     ],
+     "max": [
+      0.2,
+      0.2,
+      1
+     ]
+    },
+    "closed": false
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "along-x",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "along-x",
+    "title": {
+     "en": "along-x",
+     "de": "along-x"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0.5,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         1,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.0942477796076938,
+    "bounds": {
+     "min": [
+      0.0,
+      -0.1,
+      -0.3
+     ],
+     "max": [
+      1.0,
+      0.1,
+      0.3
+     ]
+    },
+    "closed": true,
+    "frames": [
+     {
+      "x": [
+       -0.0,
+       -0.0,
+       1.0
+      ],
+      "y": [
+       0.0,
+       -1.0,
+       0.0
+      ]
+     },
+     {
+      "x": [
+       -0.0,
+       -0.0,
+       1.0
+      ],
+      "y": [
+       0.0,
+       -1.0,
+       0.0
+      ]
+     },
+     {
+      "x": [
+       -0.0,
+       -0.0,
+       1.0
+      ],
+      "y": [
+       0.0,
+       -1.0,
+       0.0
+      ]
+     }
+    ]
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "along-y",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "along-y",
+    "title": {
+     "en": "along-y",
+     "de": "along-y"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0,
+         1,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.0942477796076938,
+    "bounds": {
+     "min": [
+      -0.3,
+      0.0,
+      -0.1
+     ],
+     "max": [
+      0.3,
+      1.0,
+      0.1
+     ]
+    },
+    "closed": true,
+    "frames": [
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     },
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     }
+    ]
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "diagonal",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "diagonal",
+    "title": {
+     "en": "diagonal",
+     "de": "diagonal"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0.3,
+         0.4,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0.6,
+         0.8,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.0942477796076938,
+    "bounds": {
+     "min": [
+      -0.23999999999999996,
+      -0.18,
+      -0.1
+     ],
+     "max": [
+      0.84,
+      0.98,
+      0.1
+     ]
+    },
+    "closed": true,
+    "frames": [
+     {
+      "x": [
+       0.7999999999999999,
+       -0.6,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     },
+     {
+      "x": [
+       0.7999999999999999,
+       -0.6,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     },
+     {
+      "x": [
+       0.7999999999999999,
+       -0.6,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     }
+    ]
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "diagonal-circle",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "diagonal-circle",
+    "title": {
+     "en": "diagonal-circle",
+     "de": "diagonal-circle"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0.3,
+         0.4,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       },
+       {
+        "at": [
+         0.6,
+         0.8,
+         0
+        ],
+        "rx": 0.2,
+        "ry": 0.2
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.12566370614359174,
+    "bounds": {
+     "min": [
+      -0.16,
+      -0.12,
+      -0.2
+     ],
+     "max": [
+      0.76,
+      0.92,
+      0.2
+     ]
+    },
+    "closed": true,
+    "frames": [
+     {
+      "x": [
+       0.7999999999999999,
+       -0.6,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     },
+     {
+      "x": [
+       0.7999999999999999,
+       -0.6,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     },
+     {
+      "x": [
+       0.7999999999999999,
+       -0.6,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     }
+    ],
+    "oracle": "CylinderGeometry"
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "bent-path",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "bent-path",
+    "title": {
+     "en": "bent-path",
+     "de": "bent-path"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0,
+         1,
+         1
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": null,
+    "bounds": {
+     "min": [
+      -0.3,
+      -0.1,
+      0.0
+     ],
+     "max": [
+      0.3,
+      1.0,
+      1.1
+     ]
+    },
+    "closed": true,
+    "frames": [
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       1.0,
+       -0.0
+      ]
+     },
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.7071067811865475,
+       -0.7071067811865475
+      ]
+     },
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     }
+    ]
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "mixed-twist",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "mixed-twist",
+    "title": {
+     "en": "mixed-twist",
+     "de": "mixed-twist"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0,
+         0,
+         0.5
+        ],
+        "rx": 0.3,
+        "ry": 0.1,
+        "rotation": [
+         0.0,
+         0.0,
+         0.25881904510252074,
+         0.9659258262890683
+        ]
+       },
+       {
+        "at": [
+         0,
+         0,
+         1
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": null,
+    "bounds": {
+     "min": [
+      -0.3,
+      -0.1732050807568877,
+      0.0
+     ],
+     "max": [
+      0.3,
+      0.1732050807568877,
+      1.0
+     ]
+    },
+    "closed": true,
+    "frames": [
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       1.0,
+       -0.0
+      ]
+     },
+     {
+      "x": [
+       0.8660254037844387,
+       0.49999999999999994,
+       0.0
+      ],
+      "y": [
+       -0.49999999999999994,
+       0.8660254037844387,
+       0.0
+      ]
+     },
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       1.0,
+       -0.0
+      ]
+     }
+    ]
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "mixed-consistent",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "mixed-consistent",
+    "title": {
+     "en": "mixed-consistent",
+     "de": "mixed-consistent"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "l",
+      "kind": "loft",
+      "node": "root",
+      "material": "skin",
+      "sections": [
+       {
+        "at": [
+         0,
+         0,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       },
+       {
+        "at": [
+         0,
+         1,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1,
+        "rotation": [
+         -0.7071067811865475,
+         -0.0,
+         -0.0,
+         0.7071067811865476
+        ]
+       },
+       {
+        "at": [
+         0,
+         2,
+         0
+        ],
+        "rx": 0.3,
+        "ry": 0.1
+       }
+      ],
+      "capStart": true,
+      "capEnd": true
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.1884955592153876,
+    "bounds": {
+     "min": [
+      -0.3,
+      0.0,
+      -0.1
+     ],
+     "max": [
+      0.3,
+      2.0,
+      0.1
+     ]
+    },
+    "closed": true,
+    "frames": [
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     },
+     {
+      "x": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "y": [
+       0.0,
+       2.220446049250313e-16,
+       -1.0
+      ]
+     },
+     {
+      "x": [
+       1.0,
+       -0.0,
+       -0.0
+      ],
+      "y": [
+       0.0,
+       0.0,
+       -1.0
+      ]
+     }
+    ]
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  }
+ ]
+}

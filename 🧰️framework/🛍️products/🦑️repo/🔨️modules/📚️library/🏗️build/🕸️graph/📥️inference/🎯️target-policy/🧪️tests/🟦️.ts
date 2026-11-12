@@ -21,7 +21,7 @@ await (inference as any).libraryBootstrap;
 const python=requireTestToolV1("python"),oracleFile=join(import.meta.dir,"./🐍️oracle/🐍️.py");
 const ask=(requests:unknown[]):any[]=>{const run=spawnSync(python,["-I",oracleFile],{input:JSON.stringify({cacheSchema,executionSchema,requests}),encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);return JSON.parse(run.stdout);};
 const plain=<T>(value:T):T=>value===undefined?value:JSON.parse(JSON.stringify(value));
-const outcome=(action:()=>unknown):{result?:unknown;error?:string}=>{try{return{result:plain(action())};}catch(error){return{error:(error as Error).message};}};
+const outcome=(action:()=>unknown):{result?:unknown;error?:string}=>{try{return{result:plain(action())};}catch(error){const refusal=error as Error&{key?:string;values?:{decision?:string}};return{error:refusal.key==="build.target.cache-decision-refused"?`Repository target cache decision refused: ${refusal.values?.decision}`:refusal.message};}};
 const ajv=new Ajv({strict:false}),validDecision=ajv.compile(cacheSchema as object);
 
 test("the corpus is closed by its schema",()=>{

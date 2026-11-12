@@ -1,0 +1,197 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "cases": [
+  {
+   "name": "ellipsoid",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "ellipsoid",
+    "title": {
+     "en": "ellipsoid",
+     "de": "ellipsoid"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "e",
+      "kind": "ellipsoid",
+      "node": "root",
+      "material": "skin",
+      "radii": [
+       0.3,
+       0.5,
+       0.2
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.1256637061435917,
+    "bounds": {
+     "min": [
+      -0.3,
+      -0.5,
+      -0.2
+     ],
+     "max": [
+      0.3,
+      0.5,
+      0.2
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  },
+  {
+   "name": "sphere",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "sphere",
+    "title": {
+     "en": "sphere",
+     "de": "sphere"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "e",
+      "kind": "ellipsoid",
+      "node": "root",
+      "material": "skin",
+      "radii": [
+       0.25,
+       0.25,
+       0.25
+      ]
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.06544984694978735,
+    "bounds": {
+     "min": [
+      -0.25,
+      -0.25,
+      -0.25
+     ],
+     "max": [
+      0.25,
+      0.25,
+      0.25
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.01,
+   "boundsTolerance": 0.002
+  }
+ ]
+}

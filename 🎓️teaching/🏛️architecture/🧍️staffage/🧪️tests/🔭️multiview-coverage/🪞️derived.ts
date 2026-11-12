@@ -6,13 +6,13 @@
  * @see ./🧰️.ts — the matrix column
  * @see ../../🧫️fixtures/🔭️multiview-coverage/🔣️.json — the allowlist of genuinely symmetric bodies
  */
-import type { Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedShape, Point } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 
 /** 📏️ The normalised Hausdorff distance below which two different views count as the same drawing. */
 export const NEAR_MATCH = 0.03;
 
-/** 📏️ The normalised distance below which the same view of two bands counts as a copy. */
+/** 🔭️ The normalised distance below which the same view of two bands counts as a copy. */
 export const COPY = 0.005;
 
 /** 🔢️ The most points a sample keeps per view. */
@@ -66,7 +66,7 @@ function directed(a: readonly Point[], b: readonly Point[]): number {
 /** 📐️ The symmetric Hausdorff distance of two point sets. */
 export const hausdorff = (a: readonly Point[], b: readonly Point[]): number => Math.max(directed(a, b), directed(b, a));
 
-/** 🪞️ The best transform of `b` onto `a` and its distance. */
+/** 🧮️ The best transform of `b` onto `a` and its distance. */
 export function bestTransform(a: readonly Point[], b: readonly Point[]): { readonly name: string; readonly distance: number } {
   let best = { name: "identity", distance: Number.POSITIVE_INFINITY };
   for (const { name, m } of TRANSFORMS) {
@@ -78,13 +78,13 @@ export function bestTransform(a: readonly Point[], b: readonly Point[]): { reado
 }
 
 /** 🚩️ One flagged near-match. */
-export type DerivedFlag = { readonly view: Viewpoint; readonly against: string; readonly transform: string; readonly distance: number };
+export type DerivedFlag = { readonly view: PlanarViewpoint; readonly against: string; readonly transform: string; readonly distance: number };
 
 /** 🔎️ The flags of the front and plan views of one drawing: each equal (under a candidate transform) to the elevation, the front to the plan, or the same view of another band (`others`, keyed by a band label, only the copy threshold applies). */
-export function derivedFlags(views: Readonly<Record<Viewpoint, readonly EvaluatedShape[]>>, others: Readonly<Record<string, Readonly<Record<Viewpoint, readonly EvaluatedShape[]>>>> = {}): DerivedFlag[] {
-  const sets = Object.fromEntries((["elevation", "front", "plan"] as const).map((view) => [view, pointSet(views[view])])) as Record<Viewpoint, Point[] | undefined>;
+export function derivedFlags(views: Readonly<Record<PlanarViewpoint, readonly EvaluatedShape[]>>, others: Readonly<Record<string, Readonly<Record<PlanarViewpoint, readonly EvaluatedShape[]>>>> = {}): DerivedFlag[] {
+  const sets = Object.fromEntries((["elevation", "front", "plan"] as const).map((view) => [view, pointSet(views[view])])) as Record<PlanarViewpoint, Point[] | undefined>;
   const flags: DerivedFlag[] = [];
-  const compare = (view: Viewpoint, against: string, other: Point[] | undefined, threshold: number, transforms = true): void => {
+  const compare = (view: PlanarViewpoint, against: string, other: Point[] | undefined, threshold: number, transforms = true): void => {
     const mine = sets[view];
     if (mine === undefined || other === undefined) return;
     const best = transforms ? bestTransform(mine, other) : { name: "identity", distance: hausdorff(mine, other) };

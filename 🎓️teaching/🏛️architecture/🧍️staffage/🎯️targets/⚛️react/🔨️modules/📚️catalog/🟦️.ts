@@ -13,7 +13,7 @@ import type { Asset, AssetDocument, CategoryEntry, Revision, CategoryId, Issue, 
 import manifestDocument from "../../../../🗂️catalog/🔣️.json";
 import { namedPoses, type Row } from "../🔎️search/🟦️.ts";
 
-/** 📚️ The assets of one category folder, gathered from its one-file-per-asset documents. */
+/** 🗂️ The assets of one category folder, gathered from its one-file-per-asset documents. */
 export type CategoryDocument = { readonly assets: readonly Asset[]; readonly revisions: Readonly<Record<Slug, Revision>> };
 
 /** 🔌️ Where catalog documents come from; the app bundles them, tests inject their own. */
@@ -167,6 +167,7 @@ export class CatalogStore {
     try {
       const document = await this.#source.category(entry, signal);
       signal.throwIfAborted();
+      if (document !== null && (!Array.isArray(document.assets) || document.revisions === null || typeof document.revisions !== "object")) return this.#category(id, { state: "failed", done: 0, total: 0, failure: tx("The category file is malformed: it needs a list of assets and a record of revisions.", "Die Kategoriedatei ist fehlerhaft: sie braucht eine Liste der Assets und eine Zuordnung der Revisionen.") });
       if (document === null) {
         this.#loaded.set(id, { revisions: {}, assets: new Map(), allAssets: new Map(), invalid: new Map(), extra: [] });
         return this.#category(id, { state: "ready", done: planned, total: planned, absent: true });

@@ -74,6 +74,7 @@
         "h": 0.05,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.05,
           "z1": 0.05
         }
@@ -92,6 +93,7 @@
         "h": 0.01,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.05,
           "z1": 0.05
         }
@@ -125,6 +127,7 @@
         "h": 0.05,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.05,
           "z1": 0.05
         }
@@ -143,6 +146,7 @@
         "h": 0.1,
         "solid": {
           "kind": "extruded",
+          "sweep": "w",
           "z0": -0.05,
           "z1": 0.05
         }

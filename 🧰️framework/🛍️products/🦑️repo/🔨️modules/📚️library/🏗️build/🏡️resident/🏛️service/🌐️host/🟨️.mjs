@@ -1,5 +1,6 @@
 import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 /** 🌐 The per-host graph service: one process per user holds the fact index once and answers plan and status requests from every agent, worktree and workspace over one local socket or pipe. */
+
 import {createServer,connect} from "node:net";
 import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
 import {createHash,randomBytes} from "node:crypto";
@@ -11,6 +12,13 @@ import {workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/�
 import {BusyErrorV1,createGovernorV1} from "../🚦️governor/🟨️.mjs";
 import {createIndexPoolV1} from "./🧊️pool/🟨️.mjs";
 import {boundedCacheStatsV1} from "../../../🧊️bounded/🟨️.mjs";
+/** 🏃 Whether a build or test run of this machine still holds a live capacity grant (its row is touched by the run's heartbeat): the service hosts the cache endpoint of that run, so a silent run, a long test suite that prints nothing, is not idle time, and the service must outlive it. */
+async function runInFlightV1(){
+ try{
+  const{hostCapacityDirectoryV1}=await import("../../../../../../../../🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🟦️.ts"),directory=join(hostCapacityDirectoryV1(process.env),"grants"),at=Date.now();
+  return readdirSync(directory).some(name=>name.endsWith(".json")&&at-statSync(join(directory,name)).mtimeMs<120000);
+ }catch{return false;}
+}
 
 const jsc=await import("bun:jsc").catch(()=>undefined);
 const RELEVANT_OBJECT_TYPES=16,mebibytes=bytes=>Math.round(bytes/(1024*1024)*10)/10;
@@ -326,7 +334,7 @@ export function createHostServiceV1(options){
    if(existsSync(runtime.key))rootKey=readFileSync(runtime.key);
    else{rootKey=createRootKeyV1();try{writeFileSync(runtime.key,rootKey,{flag:"wx",mode:0o600});}catch{rootKey=readFileSync(runtime.key);}}
    await listen();writeDescriptor();
-   idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>policy.idleShutdownMilliseconds)void drainAndExit("idle");},Math.max(250,Math.min(policy.idleShutdownMilliseconds/4,30000)));idleTimer.unref?.();
+   idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>policy.idleShutdownMilliseconds)void runInFlightV1().then(running=>{if(running)lastActivity=now();else if(connections.size===0&&governor.inFlight===0)void drainAndExit("idle");});},Math.max(250,Math.min(policy.idleShutdownMilliseconds/4,30000)));idleTimer.unref?.();
    residentTimer=setInterval(sweep,Math.max(50,policy.residentCheckMilliseconds));residentTimer.unref?.();
    return{instance,endpoint:runtime.endpoint};
   },

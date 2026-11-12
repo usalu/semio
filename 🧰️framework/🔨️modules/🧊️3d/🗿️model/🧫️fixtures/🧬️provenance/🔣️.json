@@ -1,0 +1,415 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "angleDeg": 30,
+ "document": {
+  "version": "semio.model/v1",
+  "id": "provenance",
+  "title": {
+   "en": "provenance",
+   "de": "provenance"
+  },
+  "nodes": [
+   {
+    "id": "root",
+    "parent": null,
+    "translation": [
+     0,
+     0,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ]
+   },
+   {
+    "id": "arm",
+    "parent": "root",
+    "translation": [
+     0,
+     1,
+     0
+    ],
+    "rotation": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "scale": [
+     1,
+     1,
+     1
+    ],
+    "joint": {
+     "type": "revolute",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "min": -1,
+     "max": 1
+    }
+   }
+  ],
+  "solids": [
+   {
+    "id": "b-one",
+    "kind": "box",
+    "node": "root",
+    "material": "skin",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "transform": {
+     "translation": [
+      0,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "b-many",
+    "kind": "box",
+    "node": "root",
+    "material": "skin",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "transform": {
+     "translation": [
+      0,
+      3,
+      0
+     ]
+    },
+    "repeat": {
+     "count": 3,
+     "translation": [
+      3,
+      0,
+      0
+     ]
+    }
+   },
+   {
+    "id": "cloth-box",
+    "kind": "box",
+    "node": "root",
+    "material": "cloth",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "transform": {
+     "translation": [
+      0,
+      6,
+      0
+     ]
+    }
+   },
+   {
+    "id": "arm-box",
+    "kind": "box",
+    "node": "arm",
+    "material": "skin",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "transform": {
+     "translation": [
+      0,
+      9,
+      0
+     ]
+    }
+   },
+   {
+    "id": "skinned-a",
+    "kind": "box",
+    "node": "root",
+    "material": "skin",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "transform": {
+     "translation": [
+      0,
+      0,
+      3
+     ]
+    },
+    "weights": [
+     {
+      "node": "arm",
+      "weight": 1
+     }
+    ]
+   },
+   {
+    "id": "skinned-b",
+    "kind": "box",
+    "node": "root",
+    "material": "skin",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "transform": {
+     "translation": [
+      3,
+      0,
+      3
+     ]
+    },
+    "weights": [
+     {
+      "node": "arm",
+      "weight": 1
+     }
+    ]
+   },
+   {
+    "id": "skinned-cloth",
+    "kind": "box",
+    "node": "root",
+    "material": "cloth",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "transform": {
+     "translation": [
+      6,
+      0,
+      3
+     ]
+    },
+    "weights": [
+     {
+      "node": "arm",
+      "weight": 1
+     }
+    ]
+   }
+  ],
+  "meshes": [],
+  "skins": [],
+  "materials": [
+   {
+    "id": "skin",
+    "title": {
+     "en": "Skin",
+     "de": "Haut"
+    },
+    "baseColor": [
+     0.8,
+     0.7,
+     0.6,
+     1
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emissive": [
+     0,
+     0,
+     0
+    ],
+    "alphaMode": "opaque",
+    "doubleSided": false,
+    "unlit": false
+   },
+   {
+    "id": "cloth",
+    "title": {
+     "en": "Cloth",
+     "de": "Stoff"
+    },
+    "baseColor": [
+     0.8,
+     0.7,
+     0.6,
+     1
+    ],
+    "metallic": 0,
+    "roughness": 0.8,
+    "emissive": [
+     0,
+     0,
+     0
+    ],
+    "alphaMode": "opaque",
+    "doubleSided": false,
+    "unlit": false
+   }
+  ],
+  "variants": [],
+  "poses": [],
+  "animations": []
+ },
+ "expected": {
+  "boxIndices": 36,
+  "boxEdgeSegments": 12,
+  "meshes": {
+   "root": [
+    {
+     "material": "skin",
+     "solids": [
+      {
+       "id": "b-one",
+       "first": 0,
+       "count": 36
+      },
+      {
+       "id": "b-many",
+       "first": 36,
+       "count": 108
+      }
+     ]
+    },
+    {
+     "material": "cloth",
+     "solids": [
+      {
+       "id": "cloth-box",
+       "first": 0,
+       "count": 36
+      }
+     ]
+    }
+   ],
+   "arm": [
+    {
+     "material": "skin",
+     "solids": [
+      {
+       "id": "arm-box",
+       "first": 0,
+       "count": 36
+      }
+     ]
+    }
+   ],
+   "skinned": [
+    {
+     "material": "skin",
+     "solids": [
+      {
+       "id": "skinned-a",
+       "first": 0,
+       "count": 36
+      },
+      {
+       "id": "skinned-b",
+       "first": 36,
+       "count": 36
+      }
+     ]
+    },
+    {
+     "material": "cloth",
+     "solids": [
+      {
+       "id": "skinned-cloth",
+       "first": 0,
+       "count": 36
+      }
+     ]
+    }
+   ]
+  },
+  "edges": {
+   "root": [
+    {
+     "material": "skin",
+     "solids": [
+      {
+       "id": "b-one",
+       "first": 0,
+       "count": 24
+      },
+      {
+       "id": "b-many",
+       "first": 24,
+       "count": 72
+      }
+     ]
+    },
+    {
+     "material": "cloth",
+     "solids": [
+      {
+       "id": "cloth-box",
+       "first": 0,
+       "count": 24
+      }
+     ]
+    }
+   ],
+   "arm": [
+    {
+     "material": "skin",
+     "solids": [
+      {
+       "id": "arm-box",
+       "first": 0,
+       "count": 24
+      }
+     ]
+    }
+   ],
+   "skinned": [
+    {
+     "material": "skin",
+     "solids": [
+      {
+       "id": "skinned-a",
+       "first": 0,
+       "count": 24
+      },
+      {
+       "id": "skinned-b",
+       "first": 24,
+       "count": 24
+      }
+     ]
+    },
+    {
+     "material": "cloth",
+     "solids": [
+      {
+       "id": "skinned-cloth",
+       "first": 0,
+       "count": 24
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

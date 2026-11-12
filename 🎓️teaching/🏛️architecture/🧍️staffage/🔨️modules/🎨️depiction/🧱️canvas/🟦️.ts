@@ -11,6 +11,7 @@ import { LAYERS, type DepictionOptions, type DrawingItem, type DrawingLayer, typ
 import { textWidthMm } from "../../📐️units/🟦️.ts";
 import { tx, type Theme, type ThemeColours } from "../🖍️palette/🟦️.ts";
 import type { Box, Vec } from "../📐️geometry/🟦️.ts";
+import type { AxonometricCamera } from "../🔭️views/🟦️.ts";
 
 const LAYER_TITLES = {
   background: tx("Background", "Hintergrund"),
@@ -30,16 +31,16 @@ const LAYER_TITLES = {
 /** 🔤️ The room reserved around measured text relative to its Helvetica width, covering renderers that fall back to a slightly wider sans-serif. */
 export const TEXT_SLACK = 1.04;
 
-/** 🧭️ What every view builder needs: state, options, scale factor and the model-to-paper mapping `(x, y) → (x·k, −y·k)`. */
-export type Ctx = { readonly state: EvaluatedState; readonly options: DepictionOptions; readonly language: Language; readonly k: number; readonly theme: Theme; readonly colours: ThemeColours; readonly paper: (p: Point) => Vec; readonly labels: Labels };
+/** 🧭️ What every view builder needs: state, options, scale factor and the model-to-paper mapping `(x, y) → (x·k, −y·k)`; `camera` is the axonometric camera of an axonometric depiction. */
+export type Ctx = { readonly state: EvaluatedState; readonly options: DepictionOptions; readonly language: Language; readonly k: number; readonly theme: Theme; readonly colours: ThemeColours; readonly paper: (p: Point) => Vec; readonly labels: Labels; readonly camera?: AxonometricCamera };
 
 /** 🧩️ The optional parts of a path item. */
 export type PathOptions = { readonly stroke?: Stroke; readonly fill?: Fill; readonly value?: ItemValue; readonly bone?: Slug; readonly region?: Slug };
 
-/** 🔤️ The optional parts of a text item. */
+/** 📝️ The optional parts of a text item. */
 export type TextOptions = { readonly anchor?: "start" | "middle" | "end"; readonly weight?: "normal" | "bold" };
 
-/** 🧱️ Layer store with extent tracking. */
+/** 📤️ Layer store with extent tracking. */
 export class Canvas {
   private readonly layers = new Map<LayerId, DrawingItem[]>();
   private readonly used = new Map<string, number>();
@@ -69,7 +70,7 @@ export class Canvas {
     this.push(layer, { kind: "path", id: this.unique(id), commands, ...options });
   }
 
-  /** 🔤️ Adds a text item and grows the extent over its estimated box. */
+  /** 💬️ Adds a text item and grows the extent over its estimated box. */
   text(layer: LayerId, id: string, at: Vec, text: string, sizeMm: number, color: string, options: TextOptions = {}): void {
     const anchor = options.anchor ?? "start";
     const w = textWidthMm(text, sizeMm, options.weight === "bold") * TEXT_SLACK;
@@ -108,7 +109,7 @@ export function labelBudget(denominator: number): number {
 /** 🏷️ How important a label is: required labels (reactions, the largest moment) are always printed, the rest compete by magnitude. */
 export type LabelRank = { readonly required: boolean; readonly magnitude: number };
 
-/** 🏷️ Deferred value labels placed into a column with leader lines, so labels never sit on the drawing or on each other, within a budget. */
+/** 🌟️ Deferred value labels placed into a column with leader lines, so labels never sit on the drawing or on each other, within a budget. */
 export class Labels {
   private readonly pending: { readonly id: string; readonly at: Vec; readonly text: string; readonly rank: LabelRank }[] = [];
 
@@ -122,7 +123,7 @@ export class Labels {
     return this.pending.length;
   }
 
-  /** 🏁️ Keeps the required labels plus the largest others up to `budget`, places them top-down in one column at `x` (at least one line apart) with leaders; returns how many requests were left out. */
+  /** 💡️ Keeps the required labels plus the largest others up to `budget`, places them top-down in one column at `x` (at least one line apart) with leaders; returns how many requests were left out. */
   flush(canvas: Canvas, layer: LayerId, x: number, sizeMm: number, color: string, leaderMm: number, budget: number): number {
     const required = this.pending.filter((l) => l.rank.required);
     const rest = this.pending.filter((l) => !l.rank.required).sort((a, b) => b.rank.magnitude - a.rank.magnitude);

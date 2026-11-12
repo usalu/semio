@@ -1,0 +1,367 @@
+{
+ "quality": {
+  "chordM": 0.0005,
+  "minSegments": 24,
+  "maxSegments": 128
+ },
+ "cases": [
+  {
+   "name": "translation-steps",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "rep-t",
+    "title": {
+     "en": "rep-t",
+     "de": "rep-t"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       0.2,
+       0.2,
+       0.2
+      ],
+      "repeat": {
+       "count": 4,
+       "translation": [
+        0.5,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.032,
+    "bounds": {
+     "min": [
+      -0.1,
+      -0.1,
+      -0.1
+     ],
+     "max": [
+      1.6,
+      0.1,
+      0.1
+     ]
+    },
+    "closed": true,
+    "triangles": 48
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "rotation-steps",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "rep-r",
+    "title": {
+     "en": "rep-r",
+     "de": "rep-r"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "box",
+      "node": "root",
+      "material": "skin",
+      "size": [
+       0.2,
+       0.2,
+       0.2
+      ],
+      "transform": {
+       "translation": [
+        1,
+        0,
+        0
+       ]
+      },
+      "repeat": {
+       "count": 6,
+       "rotationAxis": [
+        0,
+        1,
+        0
+       ],
+       "rotationRad": 1.0471975511965976
+      }
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.048,
+    "bounds": {
+     "min": [
+      -1.1,
+      -0.1,
+      -1.0026279441628827
+     ],
+     "max": [
+      1.1,
+      0.1,
+      1.0026279441628825
+     ]
+    },
+    "closed": true,
+    "copyCenters": [
+     [
+      1.0,
+      0,
+      0.0
+     ],
+     [
+      0.5000000000000001,
+      0,
+      -0.8660254037844386
+     ],
+     [
+      -0.49999999999999983,
+      0,
+      -0.8660254037844387
+     ],
+     [
+      -1.0,
+      0,
+      -1.2246467991473532e-16
+     ],
+     [
+      -0.5000000000000004,
+      0,
+      0.8660254037844384
+     ],
+     [
+      0.5000000000000001,
+      0,
+      0.8660254037844386
+     ]
+    ]
+   },
+   "volumeRelativeTolerance": 1e-06,
+   "boundsTolerance": 1e-06
+  },
+  {
+   "name": "sphere-steps",
+   "document": {
+    "version": "semio.model/v1",
+    "id": "rep-s",
+    "title": {
+     "en": "rep-s",
+     "de": "rep-s"
+    },
+    "nodes": [
+     {
+      "id": "root",
+      "parent": null,
+      "translation": [
+       0,
+       0,
+       0
+      ],
+      "rotation": [
+       0,
+       0,
+       0,
+       1
+      ],
+      "scale": [
+       1,
+       1,
+       1
+      ]
+     }
+    ],
+    "solids": [
+     {
+      "id": "b",
+      "kind": "ellipsoid",
+      "node": "root",
+      "material": "skin",
+      "radii": [
+       0.1,
+       0.1,
+       0.1
+      ],
+      "repeat": {
+       "count": 3,
+       "translation": [
+        0,
+        1,
+        0
+       ],
+       "rotationAxis": [
+        0,
+        1,
+        0
+       ],
+       "rotationRad": 1.0,
+       "origin": [
+        0.5,
+        0,
+        0
+       ]
+      }
+     }
+    ],
+    "meshes": [],
+    "skins": [],
+    "materials": [
+     {
+      "id": "skin",
+      "title": {
+       "en": "Skin",
+       "de": "Haut"
+      },
+      "baseColor": [
+       0.8,
+       0.7,
+       0.6,
+       1
+      ],
+      "metallic": 0,
+      "roughness": 0.8,
+      "emissive": [
+       0,
+       0,
+       0
+      ],
+      "alphaMode": "opaque",
+      "doubleSided": false,
+      "unlit": false
+     }
+    ],
+    "variants": [],
+    "poses": [],
+    "animations": []
+   },
+   "expected": {
+    "volume": 0.012566370614359173,
+    "bounds": {
+     "min": [
+      -0.1,
+      -0.1,
+      -0.1
+     ],
+     "max": [
+      0.8080734182735712,
+      2.1,
+      0.5546487134128409
+     ]
+    },
+    "closed": true
+   },
+   "volumeRelativeTolerance": 0.02,
+   "boundsTolerance": 0.002
+  }
+ ]
+}

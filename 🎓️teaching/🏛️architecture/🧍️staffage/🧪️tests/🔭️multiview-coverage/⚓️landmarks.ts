@@ -6,16 +6,16 @@
  *
  * @see ./🧰️.ts — the matrix
  */
-import type { Anchor, Viewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Anchor, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
 import type { EvaluatedShape, EvaluatedState, Point } from "../../🔨️modules/🔗️contracts/🟦️.ts";
 
 /** 🧾️ One disagreement. */
 export type BoneFinding = { readonly tier: "bone" | "group"; readonly check: string; readonly bone: string; readonly pair: string; readonly deltaMm: number; readonly message: string };
 
-/** 🧾️ One anchor that does not lie on its bone's drawn shapes. */
-export type AnchorFinding = { readonly view: Viewpoint; readonly anchor: string; readonly bone: string; readonly deltaMm: number; readonly message: string };
+/** 🔭️ One anchor that does not lie on its bone's drawn shapes. */
+export type AnchorFinding = { readonly view: PlanarViewpoint; readonly anchor: string; readonly bone: string; readonly deltaMm: number; readonly message: string };
 
-/** ⚓️ The anchor kinds that must sit on drawn geometry. */
+/** 📤️ The anchor kinds that must sit on drawn geometry. */
 export const LANDMARK_KINDS: readonly Anchor["kind"][] = ["contact", "attachment", "emitter"];
 
 type Range = readonly [number, number];
@@ -34,7 +34,7 @@ const byBone = (shapes: readonly EvaluatedShape[]): Map<string, EvaluatedShape[]
 export function boneSync(state: EvaluatedState, toleranceM: number): BoneFinding[] {
   const views = { elevation: byBone(state.shapes.elevation), front: byBone(state.shapes.front), plan: byBone(state.shapes.plan) };
   const findings: BoneFinding[] = [];
-  const compare = (name: string, a: Viewpoint, aAxis: "x" | "y", b: Viewpoint, bAxis: "x" | "y"): void => {
+  const compare = (name: string, a: PlanarViewpoint, aAxis: "x" | "y", b: PlanarViewpoint, bAxis: "x" | "y"): void => {
     for (const [bone, left] of views[a]) {
       const right = views[b].get(bone);
       const ra = rangeOf(left, aAxis);
@@ -83,13 +83,13 @@ export function distanceToShapes(p: Point, shapes: readonly EvaluatedShape[]): n
   return best;
 }
 
-/** ⚓️ The anchors that do not lie on the drawn shapes of their bone in a view where the bone is drawn. */
+/** 👁️ The anchors that do not lie on the drawn shapes of their bone in a view where the bone is drawn. */
 export function anchorLandmarks(state: EvaluatedState, toleranceM: number): AnchorFinding[] {
   const views = { elevation: byBone(state.shapes.elevation), front: byBone(state.shapes.front), plan: byBone(state.shapes.plan) };
   const findings: AnchorFinding[] = [];
   for (const [id, { anchor, at, z }] of Object.entries(state.anchors)) {
     if (!LANDMARK_KINDS.includes(anchor.kind)) continue;
-    const points: Record<Viewpoint, Point> = { elevation: { x: at.x, y: at.y }, front: { x: z, y: at.y }, plan: { x: at.x, y: z } };
+    const points: Record<PlanarViewpoint, Point> = { elevation: { x: at.x, y: at.y }, front: { x: z, y: at.y }, plan: { x: at.x, y: z } };
     for (const view of ["elevation", "front", "plan"] as const) {
       const shapes = views[view].get(anchor.bone);
       if (shapes === undefined) continue;

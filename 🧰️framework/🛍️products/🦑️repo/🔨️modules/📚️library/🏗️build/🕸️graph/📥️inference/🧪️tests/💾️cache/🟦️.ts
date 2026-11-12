@@ -36,7 +36,7 @@ test("the repository contract admits exactly the decisions the independent schem
     const value = row.value as Record<string, unknown>;
     if (value.version !== 1 || Object.keys(value).sort().join() !== "class,reason,version") continue;
     if (admitted) expect(api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toEqual(decision);
-    else expect(() => api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toThrow("Repository target cache decision refused");
+    else expect(() => api.cacheDecisionV1(value.class as string, value.reason as string), row.id).toThrow("invalid build.target.cache-decision-refused");
   }
   expect(api.cacheDecisionV1("continuous", "serves-until-stopped")).toBe(api.cacheDecisionV1("continuous", "serves-until-stopped"));
 });
@@ -58,8 +58,17 @@ test("a replayed producer declares its outputs and a target nothing classifies n
     expect(decisionOf(target), row.id).toEqual(row.expect.decision);
     if (row.expect.decision) expect(validateDecision(target.metadata.semio.cache), row.id).toBe(true);
   }
-  expect(() => api.targetPolicy("unheard-of-kind", { metadata: { semio: { cache: { version: 1, class: "cacheable", reason: "pure-function-of-inputs" } } } }), "an open declared class").toThrow("Repository target cache decision refused");
-  expect(() => api.targetPolicy("unheard-of-kind", { metadata: { semio: { cache: { version: 1, class: "deterministic", reason: "pure-function-of-inputs", note: "x" } } } }), "a declared decision with an extra key").toThrow("Repository target cache decision refused");
+  expect(() => api.targetPolicy("unheard-of-kind", { metadata: { semio: { cache: { version: 1, class: "cacheable", reason: "pure-function-of-inputs" } } } }), "an open declared class").toThrow("invalid build.target.cache-decision-refused");
+  expect(() => api.targetPolicy("unheard-of-kind", { metadata: { semio: { cache: { version: 1, class: "deterministic", reason: "pure-function-of-inputs", note: "x" } } } }), "a declared decision with an extra key").toThrow("invalid build.target.cache-decision-refused");
+});
+
+test("a refused declared cache decision is a named refusal that names the target and the reasons its class admits", () => {
+  let refusal: any;
+  try { api.targetPolicy("export-models", { cache: false, metadata: { semio: { cache: { version: 1, class: "side-effecting", reason: "writes-build-output" } } } }, undefined, "@scope/staffage:export-models"); } catch (error) { refusal = error; }
+  expect(refusal?.name).toBe("RepoError");
+  expect(refusal.code).toBe("invalid");
+  expect(refusal.key).toBe("build.target.cache-decision-refused");
+  expect(refusal.values).toEqual({ target: "@scope/staffage:export-models", decision: "side-effecting/writes-build-output", admitted: "publishes-live-state, publishes-remote, mutates-workspace, mutates-host-store" });
 });
 
 test("the emoji prefix of a target name never hides it from its class", () => {

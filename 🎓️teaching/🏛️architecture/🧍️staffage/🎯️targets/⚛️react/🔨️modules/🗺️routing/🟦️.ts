@@ -2,15 +2,17 @@
  *
  * Route: `#/` overview · `#/all` · `#/<category>` · `#/<category>/<asset>` · `#/collections[/<id>]` · `#/compare` · `#/playground`.
  * Parameters carry only what differs from the default, in a stable order, so `format(parse(x))` is canonical and a link reproduces the state: filters (`q cat an h root done sort dir`),
- * the viewer (`view vp vl scale pose|clip t zoom pan bg th tq fq range pat dg air mrt rh wind sun`), the comparison (`p` per pane) and the playground (`p` per placement, `len`).
+ * the viewer (`view vp cam vl scale pose|clip t zoom pan bg th tq fq range pat dg air mrt rh wind sun`; `vp` is `elevation`, `front`, `plan`, `axonometric` or `model`, `cam` the camera preset of the 3D model), the comparison (`p` per pane) and the playground (`p` per placement, `len`).
  * The reader's own preferences — language, theme — are never part of a link.
  *
  * @see ../🔎️search/🟦️.ts — filter parameters
  * @see ../💾️persistence/🟦️.ts — the local state that is not shared
  */
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { CATEGORIES, FORCE_QUANTITIES, THERMAL_QUANTITIES, VIEWPOINTS, VIEWS } from "@teaching/staffage";
-import type { CategoryId, DisplayRange, ForceQuantity, Slug, Text, ThermalQuantity, View, Viewpoint } from "@teaching/staffage";
+import { CATEGORIES, FORCE_QUANTITIES, THERMAL_QUANTITIES, PLANAR_VIEWPOINTS, VIEWS } from "@teaching/staffage";
+import type { CategoryId, DisplayRange, ForceQuantity, Slug, Text, ThermalQuantity, View, PlanarViewpoint } from "@teaching/staffage";
+import { CAMERA_PRESETS, DEFAULT_CAMERA, isCameraPreset, type CameraPresetName } from "../🧊️spatial/🟦️.ts";
+import { isViewpointKey, type ViewpointKey } from "../🔭️viewpoints/🟦️.ts";
 import { BACKGROUNDS, DEFAULT_LENGTH_M, type Background, type Placement, type Playground, type Selection } from "../💾️persistence/🟦️.ts";
 
 /** 📍️ A page of the archive. */
@@ -119,7 +121,8 @@ export type DiagramToggles = { readonly axial: boolean; readonly shear: boolean;
 /** 🎛️ Everything the viewer shows besides the asset: view, scale, what is posed or played, zoom and analytic options. */
 export type ViewerState = {
   readonly view: View;
-  readonly viewpoint: Viewpoint;
+  readonly viewpoint: ViewpointKey;
+  readonly camera: CameraPresetName;
   readonly layout: "single" | "all";
   readonly scale: number;
   readonly selection: Selection | null;
@@ -145,6 +148,7 @@ export type ViewerState = {
 export const DEFAULT_VIEWER: ViewerState = {
   view: "dark-line",
   viewpoint: "elevation",
+  camera: DEFAULT_CAMERA,
   layout: "single",
   scale: 100,
   selection: null,
@@ -166,8 +170,10 @@ export const DEFAULT_VIEWER: ViewerState = {
   durationS: null,
 };
 
+/** 📐️ The viewpoint of the surfaces that draw planar viewpoints only (comparison, playground): the side elevation. */
+const PLANAR_DEFAULT: PlanarViewpoint = "elevation";
 const DIAGRAM_CODES = { n: "axial", v: "shear", m: "moment", fb: "freeBody" } as const;
-const isViewpoint = (value: string | null): value is Viewpoint => (VIEWPOINTS as readonly string[]).includes(value ?? "");
+const isViewpoint = (value: string | null): value is PlanarViewpoint => (PLANAR_VIEWPOINTS as readonly string[]).includes(value ?? "");
 const isView = (value: string | null): value is View => (VIEWS as readonly string[]).includes(value ?? "");
 const number = (value: string | null): number | null => {
   const parsed = value === null || value.trim() === "" ? Number.NaN : Number(value);
@@ -181,6 +187,7 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
   const base = DEFAULT_VIEWER;
   const view = params.get("view");
   const viewpoint = params.get("vp");
+  const camera = params.get("cam");
   const scale = number(params.get("scale"));
   const pose = params.get("pose");
   const clip = params.get("clip");
@@ -197,7 +204,8 @@ export function viewerFromParams(params: URLSearchParams): ViewerState {
   const env = { airTempC: number(params.get("air")), meanRadiantTempC: number(params.get("mrt")), relativeHumidity: number(params.get("rh")), windMS: number(params.get("wind")), solarWM2: number(params.get("sun")) };
   return {
     view: isView(view) ? view : base.view,
-    viewpoint: isViewpoint(viewpoint) ? viewpoint : base.viewpoint,
+    viewpoint: isViewpointKey(viewpoint) ? viewpoint : base.viewpoint,
+    camera: isCameraPreset(camera) ? camera : base.camera,
     layout: params.get("vl") === "all" ? "all" : base.layout,
     scale: scale !== null && scale >= 1 && scale <= 100000 ? scale : base.scale,
     selection: isSlug(pose ?? undefined) ? { kind: "pose", pose: pose as Slug } : isSlug(clip ?? undefined) ? { kind: "clip", clip: clip as Slug } : null,
@@ -231,6 +239,7 @@ export function viewerToParams(viewer: ViewerState, into: URLSearchParams = new 
   const base = DEFAULT_VIEWER;
   if (viewer.view !== base.view) into.set("view", viewer.view);
   if (viewer.viewpoint !== base.viewpoint) into.set("vp", viewer.viewpoint);
+  if (viewer.camera !== base.camera) into.set("cam", viewer.camera);
   if (viewer.layout !== base.layout) into.set("vl", viewer.layout);
   if (viewer.scale !== base.scale) into.set("scale", String(round(viewer.scale, 2)));
   if (viewer.selection?.kind === "pose") into.set("pose", viewer.selection.pose);
@@ -264,7 +273,7 @@ export function viewerToParams(viewer: ViewerState, into: URLSearchParams = new 
 
 //#region ⚖️Compare
 /** ⚖️ One pane of the comparison: an asset in a representation and a viewpoint, optionally at its own pose or clip. */
-export type ComparePane = { readonly asset: Slug; readonly view: View; readonly viewpoint: Viewpoint; readonly selection: Selection | null };
+export type ComparePane = { readonly asset: Slug; readonly view: View; readonly viewpoint: PlanarViewpoint; readonly selection: Selection | null };
 
 /** 🆚️ The comparison: two to four panes on one clock at one scale. */
 export type CompareState = { readonly panes: readonly ComparePane[]; readonly scale: number; readonly timeS: number | null; readonly rate?: number; readonly loop?: boolean };
@@ -284,7 +293,7 @@ export function compareFromParams(params: URLSearchParams): CompareState {
     .getAll("p")
     .flatMap((token): ComparePane[] => {
       const [asset, view, selection, viewpoint] = token.split("~");
-      return isSlug(asset) ? [{ asset, view: isView(view ?? null) ? (view as View) : DEFAULT_VIEWER.view, viewpoint: isViewpoint(viewpoint ?? null) ? (viewpoint as Viewpoint) : DEFAULT_VIEWER.viewpoint, selection: selectionFrom(selection) }] : [];
+      return isSlug(asset) ? [{ asset, view: isView(view ?? null) ? (view as View) : DEFAULT_VIEWER.view, viewpoint: isViewpoint(viewpoint ?? null) ? (viewpoint as PlanarViewpoint) : PLANAR_DEFAULT, selection: selectionFrom(selection) }] : [];
     })
     .slice(0, COMPARE_LIMITS.max);
   const scale = number(params.get("scale"));
@@ -295,7 +304,7 @@ export function compareFromParams(params: URLSearchParams): CompareState {
 
 /** 📝️ Writes a comparison into a query. */
 export function compareToParams(compare: CompareState, into: URLSearchParams = new URLSearchParams()): URLSearchParams {
-  for (const pane of compare.panes) into.append("p", [pane.asset, pane.view, selectionToken(pane.selection), pane.viewpoint === DEFAULT_VIEWER.viewpoint ? "" : pane.viewpoint].join("~").replace(/~+$/u, ""));
+  for (const pane of compare.panes) into.append("p", [pane.asset, pane.view, selectionToken(pane.selection), pane.viewpoint === PLANAR_DEFAULT ? "" : pane.viewpoint].join("~").replace(/~+$/u, ""));
   if (compare.scale !== DEFAULT_VIEWER.scale) into.set("scale", String(round(compare.scale, 2)));
   if (compare.timeS !== null) into.set("t", String(round(compare.timeS, 3)));
   if (compare.rate !== undefined && compare.rate !== 1) into.set("rate", String(compare.rate));
@@ -319,14 +328,14 @@ export function playgroundFromParams(params: URLSearchParams): Playground | null
     const [asset, x, pick, offset, mirrored, z, yaw] = token.split("~");
     return isSlug(asset) ? [{ id: `url-${index}`, asset, xM: clamp(number(x ?? null) ?? 0, 0, lengthM), zM: clamp(number(z ?? null) ?? 0, -lengthM / 2, lengthM / 2), yawDeg: clamp(number(yaw ?? null) ?? 0, -180, 180), pick: selectionFrom(pick), offsetS: number(offset ?? null) ?? 0, mirrored: mirrored === "m" && sideElevation }] : [];
   });
-  return { scale: scale !== null && scale >= 1 ? scale : 100, view: isView(view) ? view : "dark-line", viewpoint: isViewpoint(viewpoint) ? viewpoint : DEFAULT_VIEWER.viewpoint, background: (BACKGROUNDS as readonly string[]).includes(bg ?? "") ? (bg as Background) : "paper", lengthM, placements };
+  return { scale: scale !== null && scale >= 1 ? scale : 100, view: isView(view) ? view : "dark-line", viewpoint: isViewpoint(viewpoint) ? viewpoint : PLANAR_DEFAULT, background: (BACKGROUNDS as readonly string[]).includes(bg ?? "") ? (bg as Background) : "paper", lengthM, placements };
 }
 
 /** 🧩️ Writes a playground into a query. */
 export function playgroundToParams(playground: Playground, into: URLSearchParams = new URLSearchParams()): URLSearchParams {
   if (playground.scale !== 100) into.set("scale", String(round(playground.scale, 2)));
   if (playground.view !== "dark-line") into.set("view", playground.view);
-  if (playground.viewpoint !== DEFAULT_VIEWER.viewpoint) into.set("vp", playground.viewpoint);
+  if (playground.viewpoint !== PLANAR_DEFAULT) into.set("vp", playground.viewpoint);
   if (playground.background !== "paper") into.set("bg", playground.background);
   if (playground.lengthM !== DEFAULT_LENGTH_M) into.set("len", String(round(playground.lengthM, 1)));
   for (const placement of playground.placements) into.append("p", [placement.asset, round(placement.xM, 2), selectionToken(placement.pick), placement.offsetS === 0 ? "" : round(placement.offsetS, 2), placement.mirrored ? "m" : "", placement.zM === 0 ? "" : round(placement.zM, 2), placement.yawDeg === 0 ? "" : round(placement.yawDeg, 1)].join("~").replace(/~+$/u, ""));
@@ -336,6 +345,8 @@ export function playgroundToParams(playground: Playground, into: URLSearchParams
 
 //#region 🚨️Problems
 const PROBLEM_WORDS = {
+  planarOnly: (value: string): Text => ({ en: `The link names the viewpoint "${value}", which this page cannot show; the side elevation is shown.`, de: `Der Link nennt die Blickrichtung "${value}", die diese Seite nicht zeigen kann; die Seitenansicht wird gezeigt.` }),
+  camera: (value: string): Text => ({ en: `The link names an unknown camera "${value}"; the perspective view is shown. Use ${CAMERA_PRESETS.join(", ")}.`, de: `Der Link nennt eine unbekannte Kamera "${value}"; die Perspektive wird gezeigt. Gültig sind ${CAMERA_PRESETS.join(", ")}.` }),
   viewpoint: (value: string): Text => ({ en: `The link names an unknown viewpoint "${value}"; the side elevation is shown. Use elevation, front or plan.`, de: `Der Link nennt eine unbekannte Blickrichtung "${value}"; die Seitenansicht wird gezeigt. Gültig sind elevation, front und plan.` }),
   mirror: { en: "The link mirrors placements, but mirroring applies to the side elevation only; they are drawn unmirrored.", de: "Der Link spiegelt Platzierungen, Spiegeln gilt aber nur in der Seitenansicht; sie werden ungespiegelt gezeichnet." } as Text,
   layout: (value: string): Text => ({ en: `The link names an unknown layout "${value}"; one viewpoint is shown. Use all for three views.`, de: `Der Link nennt ein unbekanntes Layout "${value}"; eine Blickrichtung wird gezeigt. Gültig ist all für drei Ansichten.` }),
@@ -348,13 +359,16 @@ export function addressProblems(params: URLSearchParams, page: "asset" | "compar
   const viewpoint = params.get("vp");
   const layout = params.get("vl");
   const view = params.get("view");
-  if (viewpoint !== null && !isViewpoint(viewpoint)) problems.push(PROBLEM_WORDS.viewpoint(viewpoint));
+  const camera = params.get("cam");
+  const known = page === "asset" ? isViewpointKey(viewpoint) : isViewpoint(viewpoint);
+  if (viewpoint !== null && !known) problems.push(isViewpointKey(viewpoint) ? PROBLEM_WORDS.planarOnly(viewpoint) : PROBLEM_WORDS.viewpoint(viewpoint));
+  if (page === "asset" && camera !== null && !isCameraPreset(camera)) problems.push(PROBLEM_WORDS.camera(camera));
   if (page === "asset" && layout !== null && layout !== "all") problems.push(PROBLEM_WORDS.layout(layout));
   if (view !== null && !isView(view)) problems.push(PROBLEM_WORDS.view(view));
   if (page === "playground" && isViewpoint(viewpoint) && viewpoint !== "elevation" && params.getAll("p").some((token) => token.split("~")[4] === "m")) problems.push(PROBLEM_WORDS.mirror);
   for (const token of page === "compare" ? params.getAll("p") : []) {
     const named = token.split("~")[3];
-    if (named !== undefined && named !== "" && !isViewpoint(named)) problems.push(PROBLEM_WORDS.viewpoint(named));
+    if (named !== undefined && named !== "" && !isViewpoint(named)) problems.push(isViewpointKey(named) ? PROBLEM_WORDS.planarOnly(named) : PROBLEM_WORDS.viewpoint(named));
   }
   return problems;
 }

@@ -3688,6 +3688,776 @@
       ],
       "clinical": false
     },
+    "volume": {
+      "status": "authored",
+      "solids": [
+        {
+          "id": "c1-foot",
+          "kind": "box",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.35,
+          "region": "crate-1",
+          "size": [0.54, 0.02, 0.3],
+          "transform": {
+            "translation": [0.0, 0.01, 0.0]
+          }
+        },
+        {
+          "id": "c1-floor",
+          "kind": "box",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.45,
+          "region": "crate-1",
+          "size": [0.56, 0.012, 0.34],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0, 0.026, 0.0]
+          }
+        },
+        {
+          "id": "c1-body",
+          "kind": "extrude",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.45,
+          "region": "crate-1",
+          "profile": [
+            [-0.15500000000000003, -0.28],
+            [-0.17, -0.265],
+            [-0.17, 0.265],
+            [-0.15500000000000003, 0.28],
+            [0.15500000000000003, 0.28],
+            [0.17, 0.265],
+            [0.17, -0.265],
+            [0.15500000000000003, -0.28]
+          ],
+          "holes": [
+            [[-0.154, -0.276], [-0.166, -0.264], [-0.166, 0.264], [-0.154, 0.276], [0.154, 0.276], [0.166, 0.264], [0.166, -0.264], [0.154, -0.276]]
+          ],
+          "plane": "zx",
+          "from": 0.02,
+          "to": 0.28,
+          "taperTo": [1, 1.09]
+        },
+        {
+          "id": "c1-rim",
+          "kind": "extrude",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.55,
+          "region": "crate-1",
+          "profile": [
+            [-0.18000000000000002, -0.31],
+            [-0.2, -0.29],
+            [-0.2, 0.29],
+            [-0.18000000000000002, 0.31],
+            [0.18000000000000002, 0.31],
+            [0.2, 0.29],
+            [0.2, -0.29],
+            [0.18000000000000002, -0.31]
+          ],
+          "holes": [
+            [
+              [-0.17099999999999999, -0.296],
+              [-0.186, -0.28099999999999997],
+              [-0.186, 0.28099999999999997],
+              [-0.17099999999999999, 0.296],
+              [0.17099999999999999, 0.296],
+              [0.186, 0.28099999999999997],
+              [0.186, -0.28099999999999997],
+              [0.17099999999999999, -0.296]
+            ]
+          ],
+          "plane": "zx",
+          "from": 0.28,
+          "to": 0.3
+        },
+        {
+          "id": "c1-slot-a",
+          "kind": "box",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-1",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, 0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c1-slot-b",
+          "kind": "box",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-1",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, -0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c1-slot-c",
+          "kind": "box",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-1",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c1-slot-d",
+          "kind": "box",
+          "bone": "crate-1",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-1",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [-0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c2-foot",
+          "kind": "box",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.44999999999999996,
+          "region": "crate-2",
+          "size": [0.54, 0.02, 0.3],
+          "transform": {
+            "translation": [0.0, 0.01, 0.0]
+          }
+        },
+        {
+          "id": "c2-floor",
+          "kind": "box",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.55,
+          "region": "crate-2",
+          "size": [0.56, 0.012, 0.34],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0, 0.026, 0.0]
+          }
+        },
+        {
+          "id": "c2-body",
+          "kind": "extrude",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.55,
+          "region": "crate-2",
+          "profile": [
+            [-0.15500000000000003, -0.28],
+            [-0.17, -0.265],
+            [-0.17, 0.265],
+            [-0.15500000000000003, 0.28],
+            [0.15500000000000003, 0.28],
+            [0.17, 0.265],
+            [0.17, -0.265],
+            [0.15500000000000003, -0.28]
+          ],
+          "holes": [
+            [[-0.154, -0.276], [-0.166, -0.264], [-0.166, 0.264], [-0.154, 0.276], [0.154, 0.276], [0.166, 0.264], [0.166, -0.264], [0.154, -0.276]]
+          ],
+          "plane": "zx",
+          "from": 0.02,
+          "to": 0.28,
+          "taperTo": [1, 1.09]
+        },
+        {
+          "id": "c2-rim",
+          "kind": "extrude",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.65,
+          "region": "crate-2",
+          "profile": [
+            [-0.18000000000000002, -0.31],
+            [-0.2, -0.29],
+            [-0.2, 0.29],
+            [-0.18000000000000002, 0.31],
+            [0.18000000000000002, 0.31],
+            [0.2, 0.29],
+            [0.2, -0.29],
+            [0.18000000000000002, -0.31]
+          ],
+          "holes": [
+            [
+              [-0.17099999999999999, -0.296],
+              [-0.186, -0.28099999999999997],
+              [-0.186, 0.28099999999999997],
+              [-0.17099999999999999, 0.296],
+              [0.17099999999999999, 0.296],
+              [0.186, 0.28099999999999997],
+              [0.186, -0.28099999999999997],
+              [0.17099999999999999, -0.296]
+            ]
+          ],
+          "plane": "zx",
+          "from": 0.28,
+          "to": 0.3
+        },
+        {
+          "id": "c2-slot-a",
+          "kind": "box",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-2",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, 0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c2-slot-b",
+          "kind": "box",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-2",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, -0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c2-slot-c",
+          "kind": "box",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-2",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c2-slot-d",
+          "kind": "box",
+          "bone": "crate-2",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-2",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [-0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c3-foot",
+          "kind": "box",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.35,
+          "region": "crate-3",
+          "size": [0.54, 0.02, 0.3],
+          "transform": {
+            "translation": [0.0, 0.01, 0.0]
+          }
+        },
+        {
+          "id": "c3-floor",
+          "kind": "box",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.45,
+          "region": "crate-3",
+          "size": [0.56, 0.012, 0.34],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0, 0.026, 0.0]
+          }
+        },
+        {
+          "id": "c3-body",
+          "kind": "extrude",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.45,
+          "region": "crate-3",
+          "profile": [
+            [-0.15500000000000003, -0.28],
+            [-0.17, -0.265],
+            [-0.17, 0.265],
+            [-0.15500000000000003, 0.28],
+            [0.15500000000000003, 0.28],
+            [0.17, 0.265],
+            [0.17, -0.265],
+            [0.15500000000000003, -0.28]
+          ],
+          "holes": [
+            [[-0.154, -0.276], [-0.166, -0.264], [-0.166, 0.264], [-0.154, 0.276], [0.154, 0.276], [0.166, 0.264], [0.166, -0.264], [0.154, -0.276]]
+          ],
+          "plane": "zx",
+          "from": 0.02,
+          "to": 0.28,
+          "taperTo": [1, 1.09]
+        },
+        {
+          "id": "c3-rim",
+          "kind": "extrude",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.55,
+          "region": "crate-3",
+          "profile": [
+            [-0.18000000000000002, -0.31],
+            [-0.2, -0.29],
+            [-0.2, 0.29],
+            [-0.18000000000000002, 0.31],
+            [0.18000000000000002, 0.31],
+            [0.2, 0.29],
+            [0.2, -0.29],
+            [0.18000000000000002, -0.31]
+          ],
+          "holes": [
+            [
+              [-0.17099999999999999, -0.296],
+              [-0.186, -0.28099999999999997],
+              [-0.186, 0.28099999999999997],
+              [-0.17099999999999999, 0.296],
+              [0.17099999999999999, 0.296],
+              [0.186, 0.28099999999999997],
+              [0.186, -0.28099999999999997],
+              [0.17099999999999999, -0.296]
+            ]
+          ],
+          "plane": "zx",
+          "from": 0.28,
+          "to": 0.3
+        },
+        {
+          "id": "c3-slot-a",
+          "kind": "box",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-3",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, 0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c3-slot-b",
+          "kind": "box",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-3",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, -0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c3-slot-c",
+          "kind": "box",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-3",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c3-slot-d",
+          "kind": "box",
+          "bone": "crate-3",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-3",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [-0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c4-foot",
+          "kind": "box",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.44999999999999996,
+          "region": "crate-4",
+          "size": [0.54, 0.02, 0.3],
+          "transform": {
+            "translation": [0.0, 0.01, 0.0]
+          }
+        },
+        {
+          "id": "c4-floor",
+          "kind": "box",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.55,
+          "region": "crate-4",
+          "size": [0.56, 0.012, 0.34],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0, 0.026, 0.0]
+          }
+        },
+        {
+          "id": "c4-body",
+          "kind": "extrude",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.55,
+          "region": "crate-4",
+          "profile": [
+            [-0.15500000000000003, -0.28],
+            [-0.17, -0.265],
+            [-0.17, 0.265],
+            [-0.15500000000000003, 0.28],
+            [0.15500000000000003, 0.28],
+            [0.17, 0.265],
+            [0.17, -0.265],
+            [0.15500000000000003, -0.28]
+          ],
+          "holes": [
+            [[-0.154, -0.276], [-0.166, -0.264], [-0.166, 0.264], [-0.154, 0.276], [0.154, 0.276], [0.166, 0.264], [0.166, -0.264], [0.154, -0.276]]
+          ],
+          "plane": "zx",
+          "from": 0.02,
+          "to": 0.28,
+          "taperTo": [1, 1.09]
+        },
+        {
+          "id": "c4-rim",
+          "kind": "extrude",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.65,
+          "region": "crate-4",
+          "profile": [
+            [-0.18000000000000002, -0.31],
+            [-0.2, -0.29],
+            [-0.2, 0.29],
+            [-0.18000000000000002, 0.31],
+            [0.18000000000000002, 0.31],
+            [0.2, 0.29],
+            [0.2, -0.29],
+            [0.18000000000000002, -0.31]
+          ],
+          "holes": [
+            [
+              [-0.17099999999999999, -0.296],
+              [-0.186, -0.28099999999999997],
+              [-0.186, 0.28099999999999997],
+              [-0.17099999999999999, 0.296],
+              [0.17099999999999999, 0.296],
+              [0.186, 0.28099999999999997],
+              [0.186, -0.28099999999999997],
+              [0.17099999999999999, -0.296]
+            ]
+          ],
+          "plane": "zx",
+          "from": 0.28,
+          "to": 0.3
+        },
+        {
+          "id": "c4-slot-a",
+          "kind": "box",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-4",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, 0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c4-slot-b",
+          "kind": "box",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-4",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, -0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c4-slot-c",
+          "kind": "box",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-4",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c4-slot-d",
+          "kind": "box",
+          "bone": "crate-4",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-4",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [-0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c5-foot",
+          "kind": "box",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.35,
+          "region": "crate-5",
+          "size": [0.54, 0.02, 0.3],
+          "transform": {
+            "translation": [0.0, 0.01, 0.0]
+          }
+        },
+        {
+          "id": "c5-floor",
+          "kind": "box",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.45,
+          "region": "crate-5",
+          "size": [0.56, 0.012, 0.34],
+          "cornerRadius": 0.004,
+          "transform": {
+            "translation": [0.0, 0.026, 0.0]
+          }
+        },
+        {
+          "id": "c5-body",
+          "kind": "extrude",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.45,
+          "region": "crate-5",
+          "profile": [
+            [-0.15500000000000003, -0.28],
+            [-0.17, -0.265],
+            [-0.17, 0.265],
+            [-0.15500000000000003, 0.28],
+            [0.15500000000000003, 0.28],
+            [0.17, 0.265],
+            [0.17, -0.265],
+            [0.15500000000000003, -0.28]
+          ],
+          "holes": [
+            [[-0.154, -0.276], [-0.166, -0.264], [-0.166, 0.264], [-0.154, 0.276], [0.154, 0.276], [0.166, 0.264], [0.166, -0.264], [0.154, -0.276]]
+          ],
+          "plane": "zx",
+          "from": 0.02,
+          "to": 0.28,
+          "taperTo": [1, 1.09]
+        },
+        {
+          "id": "c5-rim",
+          "kind": "extrude",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "body",
+          "tone": 0.55,
+          "region": "crate-5",
+          "profile": [
+            [-0.18000000000000002, -0.31],
+            [-0.2, -0.29],
+            [-0.2, 0.29],
+            [-0.18000000000000002, 0.31],
+            [0.18000000000000002, 0.31],
+            [0.2, 0.29],
+            [0.2, -0.29],
+            [0.18000000000000002, -0.31]
+          ],
+          "holes": [
+            [
+              [-0.17099999999999999, -0.296],
+              [-0.186, -0.28099999999999997],
+              [-0.186, 0.28099999999999997],
+              [-0.17099999999999999, 0.296],
+              [0.17099999999999999, 0.296],
+              [0.186, 0.28099999999999997],
+              [0.186, -0.28099999999999997],
+              [0.17099999999999999, -0.296]
+            ]
+          ],
+          "plane": "zx",
+          "from": 0.28,
+          "to": 0.3
+        },
+        {
+          "id": "c5-slot-a",
+          "kind": "box",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-5",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, 0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c5-slot-b",
+          "kind": "box",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-5",
+          "maxDenominator": 50,
+          "size": [0.1, 0.04, 0.002],
+          "transform": {
+            "translation": [-0.17, 0.14, -0.1805]
+          },
+          "repeat": {
+            "count": 3,
+            "translation": [0.17, 0, 0]
+          }
+        },
+        {
+          "id": "c5-slot-c",
+          "kind": "box",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-5",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [0.2955, 0.14, 0.0]
+          }
+        },
+        {
+          "id": "c5-slot-d",
+          "kind": "box",
+          "bone": "crate-5",
+          "material": "hdpe-crate",
+          "role": "detail",
+          "tone": 0.1,
+          "region": "crate-5",
+          "maxDenominator": 50,
+          "size": [0.002, 0.04, 0.14],
+          "transform": {
+            "translation": [-0.2955, 0.14, 0.0]
+          }
+        }
+      ],
+      "decisions": [
+        {
+          "en": "Each crate is an open-top hollow body: a foot slab, a floor, a 4 mm tapered wall (extrusion of a rounded-rectangle ring with taper, 0.56 x 0.34 m at the floor to 0.61 x 0.37 m at the rim, the single uniform taper factor cannot reach the drawn 0.60 x 0.38 m exactly) and a 20 mm rim ring of 0.62 x 0.40 m, so a crate sinking into the one below (poses half and low, 0.22 m) nests as drawn.",
+          "de": "Jede Kiste ist ein oben offener Hohlkörper: eine Fussplatte, ein Boden, eine 4 mm starke konische Wand (Extrusion eines abgerundeten Rechteckrings mit Verjüngung, 0,56 x 0,34 m am Boden bis 0,61 x 0,37 m am Rand; der eine einheitliche Verjüngungsfaktor trifft die gezeichneten 0,60 x 0,38 m nicht genau) und ein 20 mm Randring von 0,62 x 0,40 m, sodass eine in die untere einsinkende Kiste (Posen half und low, 0,22 m) wie gezeichnet verschachtelt."
+        },
+        {
+          "en": "The hand slots are dark plates 2 mm proud of the walls (three on each long side as one repeated solid, one on each end) shown to 1:50 only; the ribs drawn on the front are not modelled. The stack is five crates, each bound to its own bone, with the odd/even tone alternation of the drawing.",
+          "de": "Die Grifflöcher sind dunkle Platten, 2 mm vor den Wänden (drei je Längsseite als ein wiederholter Körper, eines je Stirnseite) und nur bis 1:50 gezeigt; die an der Vorderseite gezeichneten Rippen sind nicht modelliert. Der Stapel besteht aus fünf Kisten, je an ihren eigenen Knochen gebunden, mit dem Tonwechsel ungerade/gerade der Zeichnung."
+        }
+      ]
+    },
     "presentation": {
       "defaultPose": "high",
       "defaultClip": "unload-stack",
@@ -3701,7 +4471,11 @@
       "png-sequence",
       "mp4",
       "webm",
-      "component"
+      "component",
+      "glb",
+      "fbx",
+      "model",
+      "model-zip"
     ],
     "completion": "authored"
   }

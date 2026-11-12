@@ -6,7 +6,7 @@
  * @see ../🧭️context/🟦️.tsx — the ambient clock
  */
 import { Component, useEffect, useMemo, useState, type ErrorInfo, type ReactElement, type ReactNode } from "react";
-import type { Asset, EvaluationQuery, View, Viewpoint } from "@teaching/staffage";
+import type { Asset, EvaluationQuery, View, PlanarViewpoint } from "@teaching/staffage";
 import { StaffageFigure } from "../🧍️figure/🟦️.tsx";
 import { useArchive } from "../🧭️context/🟦️.tsx";
 import { type StaffageClock } from "../⏱️clock/🟦️.ts";
@@ -28,7 +28,7 @@ export function useDarkSurface(): boolean {
   return dark;
 }
 
-/** 🖼️ The drawing view that reads on the current surface. */
+/** 🔭️ The drawing view that reads on the current surface. */
 export const surfaceView = (dark: boolean, solid = false): View => (dark ? (solid ? "dark-solid" : "dark-line") : solid ? "light-solid" : "light-line");
 
 /** 🧯️ Catches a figure that fails to draw and shows why, so one broken asset never takes a page down. */
@@ -115,7 +115,7 @@ function usePreviewClock(asset: Asset, clock: StaffageClock): StaffageClock {
   return useMemo(() => (durationS > 0 ? loopedClock(clock, durationS) : clock), [clock, durationS]);
 }
 
-function ReadyPreview(props: { readonly asset: Asset; readonly viewpoint: Viewpoint; readonly solid?: boolean; readonly scale: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
+function ReadyPreview(props: { readonly asset: Asset; readonly viewpoint: PlanarViewpoint; readonly solid?: boolean; readonly scale: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
   const { asset, viewpoint, solid, scale, query, className, compact, view } = props;
   const { language, ambient } = useArchive();
   const dark = useDarkSurface();
@@ -131,8 +131,8 @@ function ReadyPreview(props: { readonly asset: Asset; readonly viewpoint: Viewpo
   );
 }
 
-/** 🖼️ The live preview of a row, fitted to its box. */
-export function RowPreview(props: { readonly row: Row; readonly viewpoint: Viewpoint; readonly solid?: boolean; readonly scale?: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
+/** 👁️ The live preview of a row, fitted to its box. */
+export function RowPreview(props: { readonly row: Row; readonly viewpoint: PlanarViewpoint; readonly solid?: boolean; readonly scale?: number; readonly query?: EvaluationQuery; readonly className?: string; readonly compact?: boolean; readonly view?: View }): ReactElement {
   const { row, viewpoint, solid, scale = 100, query, className, compact, view } = props;
   const { language } = useArchive();
   if (row.status !== "ready" || row.asset === undefined) return row.status === "pending" ? <div role="status" aria-busy="true" aria-label={row.entry.title[language]} className={cn("h-full min-h-12 w-full animate-pulse bg-muted/60 motion-reduce:animate-none", className)} /> : <UnavailableNotice row={row} compact className={cn("h-full", className)} />;
