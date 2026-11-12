@@ -57,7 +57,8 @@ impl EncodeBank{
  pub(crate) fn post_interrupt(&self)->Arc<std::sync::atomic::AtomicBool>{self.interrupt_post.clone()}
  pub(crate) fn stock(&self)->Stock{*self.stock.lock().unwrap()}
  pub(crate) fn finish(self)->Stock{let stock=self.stock();assert!(self.work.into_recipient().is_ok());assert!(self.physical.into_recipient().is_ok());assert!(self.allocation.into_port().is_ok());assert!(self.span.into_port().is_ok());assert!(self.checkpoint.into_port().is_ok());stock}
- pub(crate) fn run<T>(&mut self,capacity:usize,depth:usize,operation:impl FnOnce(&OriginalSourceTurn,&mut NativeEncodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{let turn=&self.turn;self.allocation.with_send_loan(&mut turn.clone(),|allocation|self.work.with_loan(&mut turn.clone(),|work|self.physical.with_loan(&mut turn.clone(),|physical|self.span.with_send_loan(&mut turn.clone(),|span|self.checkpoint.with_send_loan(&mut turn.clone(),|checkpoint|{let mut control=NativeEncodeControl::new_recorded_source(capacity,depth,turn.witness(),allocation,span,checkpoint)?;control.with_work_recipient(work,|control|control.with_construction_recipient(physical,|control|operation(turn,control)))}))?)?)?)??}
+ pub(crate) fn run_cancelable<T>(&mut self,capacity:usize,depth:usize,cancel:Option<&mut dyn FnMut(NativeEncodeProgress)->bool>,operation:impl FnOnce(&OriginalSourceTurn,&mut NativeEncodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{let turn=&self.turn;self.allocation.with_send_loan(&mut turn.clone(),|allocation|self.work.with_loan(&mut turn.clone(),|work|self.physical.with_loan(&mut turn.clone(),|physical|self.span.with_send_loan(&mut turn.clone(),|span|self.checkpoint.with_send_loan(&mut turn.clone(),|checkpoint|{let mut control=NativeEncodeControl::new_recorded_source(capacity,depth,turn.witness(),allocation,span,checkpoint)?;if let Some(cancel)=cancel{control.bind_cancel(cancel);}control.with_work_recipient(work,|control|control.with_construction_recipient(physical,|control|operation(turn,control)))}))?)?)?)??}
+ pub(crate) fn run<T>(&mut self,capacity:usize,depth:usize,operation:impl FnOnce(&OriginalSourceTurn,&mut NativeEncodeControl<'_>)->Result<T,ValueError>)->Result<T,ValueError>{self.run_cancelable(capacity,depth,None,operation)}
 }
 #[derive(Default)]
 pub(crate) struct Payment{pub(crate) physical:Option<OriginalConstructionAction>,pub(crate) work:Option<OriginalWorkActionIdentity>,receipt:Option<OriginalWorkPerformedReceipt>,claim:Option<Result<u128,ValueError>>,partial:Option<OriginalWorkPartialOutcome>,pub(crate) proof:Option<OriginalWorkActionProof>,actual:Option<usize>,progress:Option<RetainedCloneProgress>,maximum:u64}
@@ -125,6 +126,22 @@ producer.begin_close();let mut close=Some(OriginalEffectAuthority::new(ProducerC
 }
 /// 📝️ Returns the actual paged output after the original producer loan and projection close.
 pub(crate) fn encode_success<S:value::paged_text::TextReadSource+value::RetireOwned+Sync,const N:usize>(original:&semio_framework_value_clone_source::RetainedCloneSource<S>,control:&mut NativeEncodeControl<'_>,turn:&OriginalSourceTurn,maximum:usize,prefix:&'static str,suffix:&'static str)->Result<value::paged_text::PagedText<N>,ValueError>{encode_output(original,control,turn,maximum,prefix,suffix,false)?.0.ok_or_else(||ValueError::invariant("actual paged output is absent"))}
+/// 🛑️ Drives the same inline or paged encode but returns the partially built owner with the refusal, so a cancelled encode keeps its physical allocations for the caller to retain.
+pub(crate) fn encode_inline_retaining<S:value::paged_text::TextReadSource+value::RetireOwned+Sync,const N:usize>(original:&semio_framework_value_clone_source::RetainedCloneSource<S>,control:&mut NativeEncodeControl<'_>,turn:&OriginalSourceTurn,maximum:usize,prefix:&'static str,suffix:&'static str)->((Option<value::paged_text::PagedText<N>>,Option<value::paged_text::InlineTextBuffer>),Option<ValueError>){
+ use value::paged_text::{PagedTextEncodeProducer,PagedTextEncodeFrame};
+ let mut output=None;let mut inline=None;let mut failure=None;
+ {
+  let mut producer=match PagedTextEncodeProducer::<_,N>::new_inline(turn.witness(),original.borrow(),&mut output,&mut inline,maximum,prefix,suffix){Ok(producer)=>producer,Err(error)=>return((None,None),Some(error))};
+  {
+   match PagedTextEncodeFrame::new(control,turn,&mut producer){
+    Ok(mut frame)=>{if let Err(error)=drive_frame(&mut frame,control,turn).and_then(|()|return_loan(&mut frame,control,turn)){failure=Some(error);}drop(frame);}
+    Err(error)=>failure=Some(error),
+   }
+  }
+  if let Err(error)=close_producer(&mut producer,control,turn){failure=failure.or(Some(error));}
+ }
+ ((output,inline),failure)
+}
 /// 🧩️ Returns the selected real inline or paged output after paid producer return.
 pub(crate) fn encode_inline_success<S:value::paged_text::TextReadSource+value::RetireOwned+Sync,const N:usize>(original:&semio_framework_value_clone_source::RetainedCloneSource<S>,control:&mut NativeEncodeControl<'_>,turn:&OriginalSourceTurn,maximum:usize,prefix:&'static str,suffix:&'static str)->Result<(Option<value::paged_text::PagedText<N>>,Option<value::paged_text::InlineTextBuffer>),ValueError>{encode_output(original,control,turn,maximum,prefix,suffix,true)}
 

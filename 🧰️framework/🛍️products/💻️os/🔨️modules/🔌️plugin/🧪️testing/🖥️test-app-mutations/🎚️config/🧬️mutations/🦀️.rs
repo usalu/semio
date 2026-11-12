@@ -2,23 +2,13 @@
 pub mod change_test_config_selection;
 pub use crate::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
 #[doc(hidden)]
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot=crate::test_app_mutation_fixture::config::TestConfig,diff=crate::test_app_mutation_fixture::config::TestConfigDiff,schema="plugin.testkit.config", reference = crate::test_app_mutation_fixture::config::TestConfig, reference_diff = crate::test_app_mutation_fixture::config::TestConfigDiff)]
 pub enum TestConfigMutation {
     ChangeTestConfigSelection(ChangeTestConfigSelection),
-}
-impl semio_framework_value::retirement::RetireOwned for TestConfigMutation {
-    type RetirementCursor = <ChangeTestConfigSelection as semio_framework_value::retirement::RetireOwned>::RetirementCursor;
-    fn retirement_ready(&self) -> bool {
-        match self { Self::ChangeTestConfigSelection(value) => value.retirement_ready() }
-    }
-    fn retirement_seed(self) -> Self::RetirementCursor {
-        match self { Self::ChangeTestConfigSelection(value) => value.retirement_seed() }
-    }
-    fn controlled_retirement_supported() -> bool { true }
 }
 impl protocol::OpText for TestConfigMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

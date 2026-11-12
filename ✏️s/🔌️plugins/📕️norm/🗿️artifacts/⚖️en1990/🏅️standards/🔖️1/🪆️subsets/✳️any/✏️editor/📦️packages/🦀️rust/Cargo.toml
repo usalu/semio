@@ -35,6 +35,9 @@ semio-s-artifact-norm-en1990-io = { workspace = true }
 semio-s-artifact-norm-en1990-model = { workspace = true }
 semio-s-artifact-norm-en1990-mutations = { workspace = true }
 semio-s-artifact-norm-en1990-scene = { workspace = true }
+semio-s-artifact-norm-en1990-scene-combinations = { workspace = true }
+semio-s-artifact-norm-en1990-scene-diagrams = { workspace = true }
+semio-s-artifact-norm-en1990-scene-kit = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-results-config = { workspace = true }

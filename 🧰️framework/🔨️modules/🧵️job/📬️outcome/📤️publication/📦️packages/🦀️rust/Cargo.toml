@@ -15,16 +15,22 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = ["semio-framework-job/testkit"]
+
 [dependencies]
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }
 serde_json = { workspace = true }
 
 [[test]]
 name = "original-source-publication"
+required-features = ["testkit"]
 path = "../../🧪️tests/🦀️.rs"

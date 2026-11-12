@@ -246,7 +246,7 @@ test("cleanup removes by recency inside its bounds, keeps a lane with a live mar
  expect((await session(workspace,cache,"g1",["-p","l1"],inner)).code).toBe(0);expect((await session(workspace,cache,"g2",["-p","l1"],inner)).code).toBe(0);
  const live=enterLaneV1(cache,"g2");
  try{
-  expect((await import("../../../../🏗️build/🗄️cas/🗃️store/🟦️.ts")).casUsageV1(join(directory,"cas"))).resolves.toMatchObject({objects:expect.any(Number)});
+  expect((await import("../../../../🏗️build/🗄️cas/🗃️store/📏️usage/🟦️.ts")).casUsageV1(join(directory,"cas"))).resolves.toMatchObject({objects:expect.any(Number)});
   const run=spawnSync(process.execPath,[script,"--semio-unit-cache","gc","--root",cache,"--capacity","4000"],{encoding:"utf8"});expect(run.status,run.stderr).toBe(0);
   const result=JSON.parse(run.stdout) as {plan:{removeLanes:string[]};applied:{lanes:number}};
   expect(result.plan.removeLanes).toContain("g1");expect(result.plan.removeLanes).not.toContain("g2");

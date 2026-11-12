@@ -54,8 +54,7 @@ use protocol::{Mutation, MutationDiff, OpText};
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `StepMutation` variant ordinal, same 0-9 order `print_step_mutation`'s own keyword match uses
-/// (shifted down by one from the pre-migration 1-10 numbering: `NoMutation`'s tag `0` had no
-/// leaf and is gone with the variant).
+/// (tag 0 has no leaf and is retired).
 /// Reuses `StepDiff`'s `pub(crate)` recursive `enc_value_bin`/`enc_entity_bin`/
 /// `write_str_bin` primitives (`../../🔺️diff/🦀️.rs`, imported
 /// above) — same intra-artifact-reuse split the TEXT codec above already uses.

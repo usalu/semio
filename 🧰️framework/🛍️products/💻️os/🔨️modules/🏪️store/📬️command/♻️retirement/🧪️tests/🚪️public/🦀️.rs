@@ -1,8 +1,7 @@
 //! 🚪️ Exercises the original command's production retirement provider at its public boundary.
 pub use semio_os_kernel::os_store;
 
-#[global_allocator]
-static ORIGINAL_OWNER_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[path = "../🦀️.rs"]
 mod command;

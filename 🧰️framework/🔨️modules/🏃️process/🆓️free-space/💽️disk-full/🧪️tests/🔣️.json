@@ -1,0 +1,14 @@
+{
+  "$comment": "💽️ Authored failures and whether they say that the disk is full. Read by the TypeScript classification test and by the independent Python oracle.",
+  "cases": [
+    {"name": "errno ENOSPC", "code": "ENOSPC", "message": "write failed", "full": true},
+    {"name": "errno EDQUOT", "code": "EDQUOT", "message": "write failed", "full": true},
+    {"name": "bun sqlite text without a code", "message": "database or disk is full", "full": true},
+    {"name": "sqlite result name", "code": "SQLITE_FULL", "message": "statement failed", "full": true},
+    {"name": "runtime text", "message": "No space left on device (os error 28)", "full": true},
+    {"name": "cause chain", "message": "outer", "cause": {"message": "inner", "cause": {"code": "ENOSPC", "message": "write"}}, "full": true},
+    {"name": "cause chain beyond the depth bound", "message": "a", "cause": {"message": "b", "cause": {"message": "c", "cause": {"message": "d", "cause": {"message": "e", "cause": {"code": "ENOSPC", "message": "f"}}}}}, "full": false},
+    {"name": "permission", "code": "EACCES", "message": "permission denied", "full": false},
+    {"name": "plain failure", "message": "unexpected token", "full": false}
+  ]
+}

@@ -408,6 +408,114 @@
           }
         }
       }
+    },
+    "verify-framework-retained-pack-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-retained-pack-ownership"
+          ]
+        }
+      }
+    },
+    "verify-framework-retained-pack-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-outer-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership outer-native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-catalog-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership catalog-native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-value": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership value",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-value-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership value-native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-diagnostic": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership diagnostic",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-diagnostic-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership diagnostic-native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-inflater": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership inflater",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-retained-pack-ownership-inflater-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-retained-pack-ownership inflater-native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

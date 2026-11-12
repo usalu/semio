@@ -3,9 +3,8 @@
 //! pattern borrowed from `🎨️svg`'s `SvgMutation` (own types throughout).
 //!
 //! Leaf-per-variant shape mirrored from `🖼️tiff`'s `TiffBaselineMutation` (ticket
-//! `26/08/29/S-END-TO-END`): `NoMutation` was dropped (`#[derive(dsl::Mutations)]` requires every
-//! variant to wrap exactly one leaf payload and a unit variant wraps none; `no` is not an approved
-//! semantic verb either), and every remaining variant now wraps its own `dsl::MutationLeaf` struct
+//! `26/08/29/S-END-TO-END`): `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
+//! leaf payload, so no unit variant exists and every variant wraps its own `dsl::MutationLeaf` struct
 //! instead of carrying its fields as a struct-literal directly. `#[value(tag = "mutation", ...)]`
 //! is kept (unlike tiff, which has none) so the wire shape this artifact's committed fixtures and
 //! `OpText`/`OpBinary` already depend on stays byte-for-byte identical — serde's internally-tagged

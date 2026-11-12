@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }

@@ -48,10 +48,12 @@ fn law<T: FromValue + ToValue + std::fmt::Debug + PartialEq>(row: &serde_json::V
     let actual = actual.unwrap();
     assert_eq!(projection(&actual.to_value()), row["expected"], "{}", row["id"]);
     let admitted = control.owned_bytes();
-    let mut exact = NativeDecodeControl::new(admitted, &mut accept);
+    let mut accept_exact = |_| true;
+    let mut exact = NativeDecodeControl::new(admitted, &mut accept_exact);
     assert_eq!(T::from_value_controlled(&input, &mut exact).unwrap(), actual);
     if admitted > 0 {
-        let mut narrow = NativeDecodeControl::new(admitted - 1, &mut accept);
+        let mut accept_narrow = |_| true;
+        let mut narrow = NativeDecodeControl::new(admitted - 1, &mut accept_narrow);
         refusal(T::from_value_controlled(&input, &mut narrow).unwrap_err(), "ownership");
         assert!(narrow.owned_bytes() < admitted);
     }

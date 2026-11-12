@@ -94,7 +94,7 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
   if self.outputs.is_some()||self.outputs_close.is_some(){return plugin_typed_owner_demand(&self.outputs,&self.outputs_close,body)}
   if self.snapshot.is_some(){return Ok(demand(size_of::<Arc<A::Snapshot>>()))}
   if let Some(lease)=self.lease.as_ref(){return Ok(if lease.terminal_is_empty(){demand(1)}else{lease.retirement_demands()})}
-  if self.metadata.is_some()||self.metadata_close.is_some(){return plugin_typed_owner_demand(&self.metadata,&self.metadata_close,body)}Ok(Default::default())
+  if self.metadata.is_some()||self.metadata_close.is_some(){return plugin_typed_owner_demand(&self.metadata,&self.metadata_close,body)}self.construction.close_demand(body)
  }
  fn close_unit(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{
   let grant=effect.grant();let d=self.close_demand(grant.maximum_copy_bytes)?;if grant.maximum_items==0||!plugin_grant_funds(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}let item=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
@@ -106,6 +106,7 @@ impl<A:ArtifactApp> NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDsl
   if let Some(lease)=self.lease.as_mut(){if lease.terminal_is_empty(){self.lease.take();return Ok(RetainedCloneStep::Progress(item))}return lease.close_step(grant)}
   if self.metadata.is_some()||self.metadata_close.is_some(){return settle_close_poll(plugin_typed_owner_original(&mut self.metadata,&mut self.metadata_close,effect))}Ok(RetainedCloneStep::Complete(Default::default()))
  }
+ fn custody_is_empty(&self)->bool{self.cursor.is_none()&&self.page.is_none()&&self.snapshot.is_none()&&self.lease.is_none()&&self.outputs.is_none()&&self.outputs_close.is_none()&&self.metadata.is_none()&&self.metadata_close.is_none()&&self.pending.is_none()&&self.pending_close.is_none()&&self.publication.terminal_is_empty()&&!self.delivered}
 }
 impl<A:ArtifactApp> InteractiveJob for NativeSnapshotPackExportJob<A> where A::Snapshot:BorrowedDslRecord+FieldProjectionSource{
  fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_return_claim:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(self.step_turn(cx))}

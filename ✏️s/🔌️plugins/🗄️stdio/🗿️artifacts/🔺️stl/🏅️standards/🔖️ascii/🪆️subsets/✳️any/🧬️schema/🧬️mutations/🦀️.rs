@@ -20,7 +20,7 @@
 //! 🧬️ Ticket 26/08/29/S-END-TO-END (mutation-leaf migration): `protocol::Mutation<P>` now requires
 //! `DESCRIPTORS`/`descriptor()`, which only `#[derive(dsl::Mutations)]` synthesizes. Every variant
 //! moved to its own mutation-leaf folder beside this file (`../🖼️tiff/…/🧱️baseline/🧬️schema/🧬️mutations/`
-//! is the reference shape). `NoMutation` was dropped: the derive requires every variant to wrap
+//! is the reference shape). The derive requires every variant to wrap
 //! exactly one leaf payload (a unit variant wraps none), and `"no"` is not an `APPROVED_VERB`
 //! (`🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`) a derived `SEMANTICS.verb`
 //! could hold anyway.
@@ -46,7 +46,7 @@ pub mod set_triangle_normal;
 pub mod set_triangle_vertices;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

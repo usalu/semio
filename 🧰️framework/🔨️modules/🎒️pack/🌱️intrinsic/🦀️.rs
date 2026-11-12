@@ -6,8 +6,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 /// 📦️ The caller declares the physical framing instead of retrying a different decoder.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

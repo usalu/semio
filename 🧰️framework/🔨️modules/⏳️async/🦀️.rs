@@ -80,7 +80,7 @@ use cancel_waiters::CancelWaiters;
 
 #[path="🛑️cancel/♻️retirement/🦀️.rs"]
 mod cancellation_retirement;
-pub use cancellation_retirement::{CancelTokenRetirement,CancelTokenRetirementError,CancelTokenRetirementBlocked};
+pub use cancellation_retirement::{CancelTokenRetirement,CancelTokenRetirementCursor,CancelTokenRetirementError,CancelTokenRetirementBlocked};
 #[path="♻️cancel-return/📬️claim/🦀️.rs"]
 mod publication_claim;
 pub use publication_claim::{PublicationClaim,PublicationClaimHandle,PublicationPermit};

@@ -1,7 +1,7 @@
 A="semio-framework-value-testing-allocator"
 import tomllib,subprocess,os,re,sys,json
 root=os.getcwd()
-tomls=subprocess.run(["find","✏️s","🧰️framework","🌎️hub","🧪️tests","🧫️fixtures","-name","Cargo.toml","-not","-path","*/target/*","-not","-path","*/node_modules/*","-not","-path","*/.cache/*"],capture_output=True,text=True).stdout.split("\n")
+tomls=[t for t in subprocess.run(["git","-c","core.quotepath=off","ls-files","--cached","--others","--exclude-standard","--","*Cargo.toml"],capture_output=True,text=True).stdout.split("\n") if not t.startswith(".🧬semio/")]
 pk={}
 for t in tomls:
     if not t:continue
@@ -94,18 +94,52 @@ def targets(p,d):
         for t in d.get(k,[]):
             if "path" in t:out.append(t["path"])
     return [os.path.normpath(os.path.join(base,x)) for x in out]
-pat=re.compile(r'#\[path\s*=\s*"([^"]+)"\]')
-inc=re.compile(r'\binclude!\(\s*"([^"]+\.rs)"\s*\)')
-files=[os.path.abspath(f) for f in subprocess.run(["grep","-rl","--include=*.rs","global_allocator","✏️s","🧰️framework","🌎️hub","🧪️tests","🧫️fixtures","--exclude-dir=target","--exclude-dir=.cache","--exclude-dir=node_modules"],capture_output=True,text=True).stdout.split("\n") if f]
+ESC=re.compile(r'\\u\{([0-9a-fA-F]+)\}')
+def unescape(x):return ESC.sub(lambda m:chr(int(m.group(1),16)),x)
+def strip(s):
+    s=re.sub(r'/\*.*?\*/',lambda m:"\n"*m.group(0).count("\n"),s,flags=re.S)
+    return re.sub(r'(?m)(?<!:)//[^\n]*','',s)
+TOK=re.compile(r'\bmod\s+([A-Za-z_][A-Za-z0-9_]*)\s*(\{|;)|([{}])|#\[path\s*=\s*"([^"]+)"\]|\binclude!\(\s*"([^"]+\.rs)"\s*\)')
+def children(f,rootlike):
+    s=strip(open(f,errors="ignore").read())
+    d=os.path.dirname(f);stem=os.path.splitext(os.path.basename(f))[0]
+    modrs=rootlike or os.path.basename(f) in("lib.rs","main.rs","mod.rs")
+    base=d if modrs else os.path.join(d,stem)
+    out=[];stack=[];pathattr=None
+    for m in TOK.finditer(s):
+        if m.group(3)=="{":stack.append(None)
+        elif m.group(3)=="}":
+            if stack:stack.pop()
+        elif m.group(4):pathattr=unescape(m.group(4))
+        elif m.group(5):out.append(os.path.normpath(os.path.join(d,unescape(m.group(5)))))
+        elif m.group(1):
+            comps=[x for x in stack if x]
+            if m.group(2)=="{":
+                stack.append(pathattr if pathattr else m.group(1));pathattr=None;continue
+            if pathattr:
+                out.append(os.path.normpath(os.path.join(*([base]+comps+[pathattr]))) if comps else os.path.normpath(os.path.join(d,pathattr)))
+            else:
+                sub=os.path.join(*([base]+comps))
+                out.extend(c for c in (os.path.join(sub,m.group(1)+".rs"),os.path.join(sub,m.group(1),"mod.rs")) if os.path.isfile(c))
+            pathattr=None
+    return out
 owner={}
 for n,(p,d) in pk.items():
-    stack=targets(p,d);seen=set()
+    roots=targets(p,d);stack=[(r,True) for r in roots];seen=set()
+    base=os.path.dirname(p)
+    for k in("test","example","bench"):
+        sub=os.path.join(base,k+"s")
+        if os.path.isdir(sub):
+            for e in os.listdir(sub):
+                if e.endswith(".rs"):stack.append((os.path.join(sub,e),True))
+                elif os.path.isfile(os.path.join(sub,e,"main.rs")):stack.append((os.path.join(sub,e,"main.rs"),True))
     while stack:
-        f=stack.pop()
+        f,rl=stack.pop()
         if f in seen or not os.path.isfile(f):continue
         seen.add(f);owner.setdefault(f,set()).add(n)
-        s=open(f,errors="ignore").read()
-        for q in pat.findall(s)+inc.findall(s):stack.append(os.path.normpath(os.path.join(os.path.dirname(f),q)))
+        for q in children(f,rl):stack.append((q,False))
+files=[os.path.abspath(f) for f in subprocess.run(["git","-c","core.quotepath=off","grep","--untracked","-l","-e","#\\[global_allocator\\]","--","*.rs"],capture_output=True,text=True).stdout.split("\n") if f and not f.startswith(".🧬semio/")]
+if os.environ.get("ALLOC_FILES"):files=[os.path.abspath(f) for f in open(os.environ["ALLOC_FILES"],encoding="utf-8").read().split("\n") if f]
 for f in files:
     rel=os.path.relpath(f,root)
     ow=owner.get(f)

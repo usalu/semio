@@ -1,7 +1,6 @@
 //! ⚖️ Collection owners retire under quoted grants: every collection mutation passes the typed-command input lane, and a tree edit applies, undoes and redoes through the bounded catalog the OS host installs on its collection store.
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 use semio_framework_test_typed_input_law as typed_input_law;
 

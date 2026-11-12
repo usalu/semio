@@ -48,23 +48,30 @@ impl JobPayloadSlot {
     /// 🚒️ See `README.md`.
     pub fn return_original(&mut self)->Option<RetainedJobPayload>{if !self.present{return None;}self.present=false;Some(unsafe{self.original.assume_init_read()})}
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{let Some(payload)=self.original()else{return Ok(Default::default());};if payload.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})}else{parent(payload.retirement_demands()?)}}
+    /// ⛽️ The slot's own metadata removal costs one unit; otherwise its payload quotes the work.
+    pub fn retirement_work(&self)->Result<u64,ValueError>{let Some(payload)=self.original()else{return Ok(0)};if payload.terminal_is_empty(){Ok(1)}else{payload.retirement_work()}}
     pub fn close_step(&mut self,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let grant=effect.grant();
         if self.is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
         if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
         let Some(payload)=self.original_mut()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("step payload owner is absent")),work:0}};
-        if payload.terminal_is_empty(){unsafe{self.original.assume_init_drop();}self.present=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
+        if payload.terminal_is_empty(){match pay_metadata_removal(effect){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(turn)=>return turn}unsafe{self.original.assume_init_drop();}self.present=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
         let turn=payload.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
     }
 }
 impl std::fmt::Debug for JobPayloadSlot{fn fmt(&self,formatter:&mut std::fmt::Formatter<'_>)->std::fmt::Result{formatter.debug_struct("JobPayloadSlot").field("original",&self.original()).finish()}}
 impl Drop for JobPayloadSlot{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"job payload slot abandoned its original carrier");}}
 
+/// ⛽️ Pays the one counted unit a terminal slot spends removing its own metadata, so its reported work equals its performed receipt.
+fn pay_metadata_removal(effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->Result<bool,RetainedWorkOutcome>{let remaining=effect.remaining_work_units().map_err(|error|RetainedWorkOutcome{result:Err(error),work:0})?;if remaining<1{return Ok(false)}match effect.performed(1){Ok(true)=>Ok(true),Ok(false)=>Err(RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::WorkLimit,"job payload metadata removal exceeded its original Work grant")),work:1}),Err(error)=>Err(RetainedWorkOutcome{result:Err(error),work:0})}}
+
 fn parent(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"job payload parent depth overflow"))?;Ok(demand)}
 
 
 impl StepOutcome {
     pub fn next_close_byte_demand(&self)->usize{self.retirement_demands().expect("original job outcome demand").release_bytes}
+    /// ⛽️ A terminal-empty outcome removes nothing; otherwise its selected payload quotes the work.
+    pub fn retirement_work(&self)->Result<u64,ValueError>{let child=match self{Self::Yield|Self::Cancelled=>return Ok(0),Self::PreviewReady(payload)=>payload,Self::CheckpointReady(checkpoint)=>&checkpoint.state,Self::Complete(candidate)if !candidate.state.terminal_is_empty()=>&candidate.state,Self::Complete(candidate)=>&candidate.output,Self::Fault(fault)=>&fault.detail};if self.terminal_is_empty(){Ok(0)}else{child.retirement_work()}}
     /// 📏️ See `README.md`.
     pub fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{let child=match self{Self::Yield|Self::Cancelled=>return Ok(Default::default()),Self::PreviewReady(payload)=>payload,Self::CheckpointReady(checkpoint)=>&checkpoint.state,Self::Complete(candidate)if !candidate.state.terminal_is_empty()=>&candidate.state,Self::Complete(candidate)=>&candidate.output,Self::Fault(fault)=>&fault.detail};if self.terminal_is_empty(){Ok(Default::default())}else{parent(child.retirement_demands()?)}}
     /// 📪️ See `README.md`.
@@ -84,13 +91,16 @@ pub fn step_outcome_slot_retirement_demands(slot:&JobOutcomeSlot)->Result<Retire
     parent(outcome.retirement_demands()?)
 }
 
+/// ⛽️ The outcome slot's own metadata removal costs one unit; otherwise its outcome quotes the work.
+pub fn step_outcome_slot_retirement_work(slot:&JobOutcomeSlot)->Result<u64,ValueError>{let Some(outcome)=slot.original()else{return Ok(0)};if outcome.terminal_is_empty(){Ok(1)}else{outcome.retirement_work()}}
+
 /// 📭️ See `README.md`.
 pub fn close_step_outcome_slot(slot:&mut JobOutcomeSlot,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{let grant=effect.grant();
     if slot.is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
     let demand=match step_outcome_slot_retirement_demands(slot){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
     if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
     let Some(outcome)=slot.original_mut()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("step outcome owner is absent")),work:0}};
-    if outcome.terminal_is_empty(){slot.remove_terminal();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
+    if outcome.terminal_is_empty(){match pay_metadata_removal(effect){Ok(true)=>{},Ok(false)=>return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(turn)=>return turn}slot.remove_terminal();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
     let turn=outcome.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
 }
 

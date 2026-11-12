@@ -13,7 +13,7 @@ pub mod set_compression_params;
 pub mod set_payload;
 #[path = "📖set-preset-dictionary/🦀️.rs"]
 pub mod set_preset_dictionary;
-/// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
+/// 🧭️ `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
 /// one leaf payload (a unit variant wraps none) and asserts `is_approved_verb(SEMANTICS.verb)`,
 /// and `no` is not an approved verb.
 ///

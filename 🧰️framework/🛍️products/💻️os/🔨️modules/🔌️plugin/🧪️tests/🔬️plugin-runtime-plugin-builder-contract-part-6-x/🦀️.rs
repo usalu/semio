@@ -244,7 +244,7 @@ async fn a_childless_whole_document_archive_replaces_the_live_document() {
     assert_eq!(app.snapshot().expect("initial projection").label, "initial");
     let original_document_id = app.stores.store.envelope().id.clone();
     let archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() })).await;
-    PluginApp::begin_document_archive_load(&mut app, 91, archive).expect("whole-document archive admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 91, archive, &mut cx).expect("whole-document archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 91, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "whole-document archive replacement failed: {}", archive_fault_text(&status));
     PluginApp::acknowledge_document_archive_load(&mut app, 91).expect("whole-document archive acknowledgement");
@@ -268,7 +268,7 @@ async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
     let effects = Box::pin(semio_plugin_testing_laws::artifact_app_laws::fixture_pending_effects(&mut app, None)).await.unwrap().expect("the refresh poll lane retained instead of publishing");
     let Some(Effect::LoadDocument { pack, spr }) = effects.first().cloned() else { panic!("the refresh poll lane dropped the LoadDocument effect: {effects:?}") };
     let archive = protocol::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
-    PluginApp::begin_document_archive_load(&mut app, 94, archive).expect("polled archive admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 94, archive, &mut cx).expect("polled archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 94, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "the refresh poll lane emitted an unstamped LoadDocument: {}", archive_fault_text(&status));
     PluginApp::acknowledge_document_archive_load(&mut app, 94).expect("polled archive acknowledgement");
@@ -288,7 +288,7 @@ async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
     let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let live_id = app.stores.store.envelope().id.clone();
     let archive = Box::pin(raw_single_document_archive(&live_id, &TestSnapshot { count: 9, label: "unstamped".into(), slot: Vec::new() })).await;
-    PluginApp::begin_document_archive_load(&mut app, 93, archive).expect("unstamped archive admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 93, archive, &mut cx).expect("unstamped archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 93, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Fault);
     assert!(archive_fault_text(&status).contains("Identity"), "an unstamped log must be refused as an identity mismatch: {}", archive_fault_text(&status));
@@ -312,7 +312,7 @@ async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
     let mut archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 7, label: "foreign".into(), slot: Vec::new() })).await;
     let foreign = Box::pin(store::os_store::text_format::empty_document_spr(&envelope_id, "semio.test.some-other-app/v1")).await;
     archive.parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&foreign, &envelope_id, "semio.test.some-other-app/v1", &dialect, None)).await.expect("foreign stamp");
-    PluginApp::begin_document_archive_load(&mut app, 92, archive).expect("foreign-schema archive admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 92, archive, &mut cx).expect("foreign-schema archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 92, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Fault);
     let text = archive_fault_text(&status);
@@ -333,7 +333,7 @@ async fn original_lifecycle_archive_pending_status_observation_preserves_retaine
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧾️document-archive-load-legs/🧫️fixtures/🔣️.json")).unwrap();
     let mut app=Box::pin(VcsArtifactApp::<SingleDocumentApp,TestMembers>::new(SingleDocumentApp,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let operation=law["operation"].as_u64().unwrap();let archive=Box::pin(stamped_single_document_archive(&app,&TestSnapshot{count:42,label:"example".into(),slot:Vec::new()})).await;
-    PluginApp::begin_document_archive_load(&mut app,operation,archive).unwrap();
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app,operation,archive, &mut cx).unwrap();
     let mut identity=semio_plugin_testing_laws::artifact_app_laws::fixture_identity();
     let first=semio_framework_async::poll::resolve_ready(PluginApp::poll_document_archive_load(&mut app,operation,&mut identity, &mut cx)).unwrap();assert_eq!(first.state,protocol::DocumentArchiveLoadState::Pending);
     for _ in 0..law["observations"].as_u64().unwrap(){

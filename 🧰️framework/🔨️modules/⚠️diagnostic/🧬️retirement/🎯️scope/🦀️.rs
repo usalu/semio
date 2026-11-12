@@ -30,11 +30,13 @@ impl ScopeBoxRetirement{
 impl Drop for ScopeBoxRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"diagnostic scope cursor retains its original allocation")}}
 pub(super) fn demands()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<ScopeBoxRetirement>(),depth:1,..Default::default()}}
 /// 🛡️ A fallible exact cursor owns the Box before transferring each distinct initialized field once.
-pub(super) fn admit(original:&mut Option<BoxOriginal<FaultScope>>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,P)>>{
+pub(super) fn admit(original:&mut Option<BoxOriginal<FaultScope>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,P)>>{
  if original.is_none(){return RetainedWorkOutcome{result:Ok(None),work:0}}
  if !match original.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("original absent").into()),work:0}}.is_initialized(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"diagnostic scope requires its initialized original Box")),work:0}}
- let demand=demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(None),work:0}}
- let layout=std::alloc::Layout::new::<ScopeBoxRetirement>();let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<ScopeBoxRetirement>())else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"diagnostic scope cursor allocation refused")),work:1}};
+ let grant=effect.grant();let demand=demands();if effect.maximum_work_units()==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(None),work:0}}
+ if effect.actual().is_some(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"diagnostic cursor allocation marker is already occupied")),work:0}}
+ let work=match semio_framework_value::retirement::record_retirement_work(effect,1){Ok(work)=>work,Err((error,work))=>return RetainedWorkOutcome{result:Err(error),work}};
+ let layout=std::alloc::Layout::new::<ScopeBoxRetirement>();*effect.actual()=Some(0);let raw=unsafe{std::alloc::alloc(layout)};if !raw.is_null(){*effect.actual()=Some(layout.size())}let Some(pointer)=std::ptr::NonNull::new(raw.cast::<ScopeBoxRetirement>())else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"diagnostic scope cursor allocation refused")),work}};
  let mut cursor=unsafe{pointer.as_ptr().write(ScopeBoxRetirement{source:None,ordinal:0,text:None});Box::from_raw(pointer.as_ptr())};cursor.source=original.take();
- RetainedWorkOutcome{result:Ok(Some((cursor,P{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()}))),work:1}
+ RetainedWorkOutcome{result:Ok(Some((cursor,P{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()}))),work}
 }

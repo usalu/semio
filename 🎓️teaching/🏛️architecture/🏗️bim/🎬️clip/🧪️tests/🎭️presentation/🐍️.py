@@ -58,15 +58,10 @@ class BimPresentationContract(unittest.TestCase):
         """🎞️ Exercise real animation setup, interpolation, cleanup and Cairo in both languages."""
         from unittest.mock import patch
         import os
-        import time
 
         import numpy as np
         from manim import tempconfig
         from PIL import Image
-
-        def timing(phase, started, **values):
-            """⏱️ Flush actual native work durations without changing execution or assertions."""
-            print('[DEBUG] native-timing '+json.dumps({'phase':phase,'seconds':time.perf_counter()-started,**values}),flush=True)
 
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])
         output.mkdir(parents=True, exist_ok=True)
@@ -87,15 +82,10 @@ class BimPresentationContract(unittest.TestCase):
 
                     def play(scene, *animations, **kwargs):
                         """🎬 Run native lifecycle at three interpolation points without video output."""
-                        started = time.perf_counter()
                         compiled = scene.compile_animations(*animations, **kwargs)
-                        timing("animation-compile",started,count=len(compiled))
-                        started = time.perf_counter()
                         scene.add_mobjects_from_animations(compiled)
                         scene.animations = compiled
                         scene.begin_animations()
-                        timing("animation-begin",started,count=len(compiled))
-                        started = time.perf_counter()
                         for animation in compiled:
                             pending = [animation]
                             while pending:
@@ -107,13 +97,10 @@ class BimPresentationContract(unittest.TestCase):
                                 animation.update_mobjects(0.25)
                                 animation.interpolate(alpha)
                             scene.update_mobjects(0.25)
-                        timing("animation-interpolation",started,count=len(compiled))
-                        started = time.perf_counter()
                         for animation in compiled:
                             animation.finish()
                             animation.clean_up_from_scene(scene)
                         scene.update_mobjects(0)
-                        timing("animation-cleanup",started,count=len(compiled))
                         scene.renderer.time += max((animation.run_time for animation in compiled), default=0)
 
                     def wait(scene, duration=1, **kwargs):
@@ -128,18 +115,14 @@ class BimPresentationContract(unittest.TestCase):
                         caption = set(scene._caption.get_family())
                         body = [member for member in scene.mobjects if member not in caption]
                         self.assertTrue(any(len(member.points) for item in body for member in item.get_family()), key)
-                        started = time.perf_counter()
                         scene.camera.reset()
                         scene.camera.capture_mobjects(body)
-                        timing("cairo-body",started,key=key)
                         body_pixels = scene.camera.pixel_array
                         self.assertTrue(np.any(body_pixels != body_pixels[0, 0]), key)
                         for member in scene.get_mobject_family_members():
                             self.assertTrue(np.isfinite(member.points).all(), key)
-                        started = time.perf_counter()
                         scene.camera.reset()
                         scene.camera.capture_mobjects(scene.mobjects)
-                        timing("cairo-caption",started,key=key)
                         Image.fromarray(scene.camera.pixel_array).save(
                             output / (chapter["topic"] + "-" + language + "-" + key + ".png"))
                         return result

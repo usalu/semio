@@ -22,8 +22,10 @@ def run(case):
                 victims[key(e)]="area";need-=e["size"]
     left=[e for e in entries if key(e) not in victims]
     after=case["externalBytes"]+sum(e["size"] for e in left)
-    if after>cap*hi:
-        need=after-cap*lo
+    planned=sum(e["size"] for e in entries if key(e) in victims)
+    cap_need=after-cap*lo if after>cap*hi else 0
+    need=max(cap_need,max(0,case.get("partitionNeedBytes",0)-planned))
+    if need>0:
         for e in sorted([e for e in left if not e["protected"]],key=lambda e:(e["access"],e["i"])):
             if need<=0:break
             victims[key(e)]="host";need-=e["size"]

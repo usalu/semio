@@ -36,7 +36,9 @@ semio-framework-value = { path = "../../../../../../🌱️value/📦️packages
 semio-framework-async = { path = "../../../../../../⏳️async/📦️packages/🦀️rust" }
 semio-framework-job-payload = { workspace = true }
 
+semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker = { path = "../../../../../../🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }

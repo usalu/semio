@@ -95,6 +95,46 @@
       "options": {
         "command": "repo ./📜️script.ts test"
       }
+    },
+    "dev-mcp": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6274,
+              "portEnv": "CLIENT_PORT",
+              "printed": true
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts dev mcp",
+        "forwardAllArgs": true,
+        "cwd": "."
+      }
+    },
+    "dev-mcp-repo": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6274,
+              "portEnv": "CLIENT_PORT",
+              "printed": true
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📜️script.ts dev mcp repo",
+        "forwardAllArgs": true,
+        "cwd": "."
+      }
     }
   }
 }

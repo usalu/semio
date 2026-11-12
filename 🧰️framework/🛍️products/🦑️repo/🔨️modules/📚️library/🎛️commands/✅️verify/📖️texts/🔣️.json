@@ -618,10 +618,6 @@
       "en": "Expected verify canonical-architecture",
       "de": "Erwartet: verify canonical-architecture"
     },
-    "run.browser-actor-host-context-worker": {
-      "en": "Browser actor host context worker test failed",
-      "de": "Der Worker-Test des Browser-Actor-Host-Kontexts ist fehlgeschlagen"
-    },
     "run.artifact-schema-owner-required": {
       "en": "Artifact schema owner required",
       "de": "Eigentümer des Artefakt-Schemas erforderlich"
@@ -633,26 +629,6 @@
     "run.artifact-contract-ownership-artifact-crates": {
       "en": "[verify artifact-contract-ownership] {packages} artifact crates and their tests compile.",
       "de": "[verify artifact-contract-ownership] {packages} Artefakt-Crates und ihre Tests lassen sich kompilieren."
-    },
-    "run.window-config-provisioning-lifecycle-accepts": {
-      "en": "window-config-provisioning-lifecycle accepts no arguments",
-      "de": "window-config-provisioning-lifecycle nimmt keine Argumente an"
-    },
-    "run.window-config-retained-pack-load": {
-      "en": "window-config-retained-pack-load requires native",
-      "de": "window-config-retained-pack-load erfordert native"
-    },
-    "run.framework-viewport-projection-accepts-only": {
-      "en": "framework-viewport-projection accepts only the optional native phase",
-      "de": "framework-viewport-projection akzeptiert nur die optionale Phase native"
-    },
-    "run.node-graph-viewport-ownership-accepts": {
-      "en": "node-graph-viewport-ownership accepts native with the optional renderer-host or consumers phase",
-      "de": "node-graph-viewport-ownership akzeptiert native mit der optionalen Phase renderer-host oder consumers"
-    },
-    "run.window-config-pack-identity-accepts": {
-      "en": "window-config-pack-identity accepts only optional native",
-      "de": "window-config-pack-identity akzeptiert nur das optionale native"
     },
     "run.artifact-field-parity-missing-extra": {
       "en": "[verify artifact-field-parity] {path}: missing={missing} extra={extra}",

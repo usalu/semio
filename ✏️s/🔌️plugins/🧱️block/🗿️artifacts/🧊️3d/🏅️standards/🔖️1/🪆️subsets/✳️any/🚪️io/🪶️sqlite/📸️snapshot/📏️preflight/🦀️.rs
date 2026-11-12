@@ -9,7 +9,7 @@ pub(crate)fn check(value:&Block3dSnapshot,encoding:SnapshotEncoding,control:&mut
  let maximum=limits.max_file_bytes.checked_sub(prefix).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native preflight ceiling cannot contain declared envelope"))?;
  control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint,allocation|{
   let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total);
-  let mut native_allocation=|request:semio_framework_value::native_encoding::NativeAllocationRequest|allocation(request.bytes);let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut progress,&mut native_allocation);
+  let mut native=allocation.encode(remaining,&mut progress);
   let result=(||{
    let body=match encoding{
     SnapshotEncoding::Text=>semio_framework_dsl_record::measure_print_borrowed(value,&crate::snapshot::preflight::borrowed::spec(),usize::MAX,&mut native)?,

@@ -30,7 +30,7 @@ pub enum NaturalFileDecodeStep<T> {
 pub trait NaturalFileDecodeCursor<T>: Send {
     fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<NaturalFileDecodeStep<T>, MediaError>;
     fn begin_close(&mut self);
-    fn close_step(&mut self, grant:RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault>;
+    fn close_step(&mut self, effect:&mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<PluginLifecycleStep, ValueError>;
     fn retirement_demands(&self, body:usize) -> Result<RetirementDemand,ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }

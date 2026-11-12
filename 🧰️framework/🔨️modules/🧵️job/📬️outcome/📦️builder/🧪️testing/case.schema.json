@@ -6,7 +6,6 @@
     "scope",
     "stock",
     "maximumTurns",
-    "authorityBirthWork",
     "metadataCopyBytes",
     "oneBank",
     "renewal"
@@ -26,9 +25,6 @@
     },
     "maximumTurns": {
       "const": 1024
-    },
-    "authorityBirthWork": {
-      "const": 1
     },
     "metadataCopyBytes": {
       "const": 0

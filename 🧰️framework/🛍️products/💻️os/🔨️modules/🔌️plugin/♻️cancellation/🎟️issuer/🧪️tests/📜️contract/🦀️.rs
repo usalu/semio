@@ -21,7 +21,7 @@ impl Fixture{
         assert!(lease.is_none());cursor.expect("paid original lease cursor")
     }
     fn cursor_step(&mut self,cursor:&mut crate::ToolCancellationLeaseRetirement){
-        self.caller.turn(phase(),|cx|{let step=cursor.close_step(&self.issuer,cx.retained_grant())?;cx.consume_retained(step.progress())?;if step.progress().copied_items>0{cx.consume_fuel(1)}Ok(())}).unwrap();
+        self.caller.turn(phase(),|cx|{let handle=self.issuer.handle().unwrap();let demand=cursor.retirement_demands(handle,cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_effect_step(cx,demand,|effect|cursor.close_step(handle,effect))?;Ok(())}).unwrap();
     }
     fn close_cursor(&mut self,mut cursor:Box<crate::ToolCancellationLeaseRetirement>){
         for _ in 0..128{if cursor.terminal_is_empty(){break}self.cursor_step(&mut cursor)}

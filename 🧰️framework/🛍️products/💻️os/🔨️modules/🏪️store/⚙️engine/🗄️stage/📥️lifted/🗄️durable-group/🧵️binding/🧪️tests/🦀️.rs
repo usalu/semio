@@ -1,8 +1,7 @@
 //! 🧪️ Native original candidates keep their issuer pair and addresses until funded cancellation.
 use super::*;
 
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 fn close(owner:&mut DurableStorePreparedOwnerV1<bool,bool>,grant:RetainedCloneGrant)->bool{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.retire_originals_step(grant));let done=result.unwrap();assert!(owner.retirement_progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(owner.retirement_progress.retained_capacity_bytes,owner.retirement_progress.released_bytes));done}
 

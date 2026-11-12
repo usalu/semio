@@ -70,7 +70,7 @@ impl OriginalTextSpliceComposer{
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(true)}self.validate(cx)?;if !self.owners.terminal_is_empty(){let d=self.owners.next_demand(cx.retained_grant().maximum_copy_bytes)?;let body=cx.retained_grant().maximum_copy_bytes;let step=close_original_effect_step(cx,d,|effect|self.owners.step(body,effect))?;if step.progress()!=RetainedCloneProgress::default(){self.closing=true;}return Ok(false)}
   if !self.construction.terminal_is_empty(){self.construction.close_step(cx)?;return Ok(false)}
-  let d=fixed();close_original_retained_step(cx,d,|_|{self.binding=None;self.closing=true;RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}})?;Ok(self.terminal_is_empty())
+  let d=fixed();close_original_retained_step(cx,d,|_|{self.binding=None;self.closing=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}})?;Ok(self.terminal_is_empty())
  }
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.owners.terminal_is_empty()&&self.construction.terminal_is_empty()}
  pub fn release_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<Self>>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}

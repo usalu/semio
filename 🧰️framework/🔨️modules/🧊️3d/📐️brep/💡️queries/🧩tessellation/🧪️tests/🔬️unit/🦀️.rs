@@ -1,5 +1,5 @@
 use super::*;
-use crate::test_support::{observe_tessellation_system, MESH_RELEASES, OBSERVED_MESH, OBSERVED_RELEASE_BYTES, OBSERVED_SAMPLE, SAMPLE_RELEASES};
+use crate::test_support::{observe_tessellation_system, watch_released_pointers, MESH_RELEASES, OBSERVED_MESH, OBSERVED_RELEASE_BYTES, OBSERVED_SAMPLE, SAMPLE_RELEASES};
 use {semio_framework_3d_brep_construction::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
 use semio_framework_3d_brep_construction::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
 use semio_framework_3d_brep_representation::arena::ArenaId;
@@ -530,7 +530,7 @@ fn tessellation_cancel_preserves_original_allocations_until_retirement_grants() 
     let mut job=TessellationJob::new(0.1);
     while job.transfer.position.is_empty() { assert!(matches!(job.step(&body,TessellationInput::Solid(solid),1).unwrap(),TessellationStep::Working(_))); }
     let sample=job.edge_cache.values().next().unwrap();
-    OBSERVED_SAMPLE.store(sample.as_ptr() as usize,SeqCst);OBSERVED_MESH.store(job.transfer.position.as_ptr() as usize,SeqCst);
+    watch_released_pointers();OBSERVED_SAMPLE.store(sample.as_ptr() as usize,SeqCst);OBSERVED_MESH.store(job.transfer.position.as_ptr() as usize,SeqCst);
     SAMPLE_RELEASES.store(0,SeqCst);MESH_RELEASES.store(0,SeqCst);OBSERVED_RELEASE_BYTES.store(0,SeqCst);
     job.cancel();
     assert_eq!(SAMPLE_RELEASES.load(SeqCst),fixture["cancel"]["releasesAtSignal"].as_u64().unwrap() as usize,"cancel must retain the original sample allocation");

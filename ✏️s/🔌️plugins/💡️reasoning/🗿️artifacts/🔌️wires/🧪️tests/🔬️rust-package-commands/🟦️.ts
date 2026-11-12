@@ -17,5 +17,13 @@ if (segments[0] === "wires-window-transient") {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "window_transient", "--", "--nocapture"], join(context.repoRoot, "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust"));
     return;
   }
+    if (segments[0] === "wires-pointer-move") {
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "--lib", "wires_pointer_move_", "--", "--nocapture"], context.repoRoot);
+      return;
+    }
+    if (segments[0] === "wires-reset-document-ownership") {
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-reasoning-wires", "--lib", "reset_document_ownership", "--", "--nocapture"], context.repoRoot);
+      return;
+    }
   throw new Error('Unknown owned verification '+segments.join(' '));
 }

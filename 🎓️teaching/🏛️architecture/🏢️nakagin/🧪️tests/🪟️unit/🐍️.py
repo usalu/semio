@@ -104,7 +104,6 @@ class WindowUnit(unittest.TestCase):
         oracle=importlib.import_module('🎓️teaching.🏛️architecture.🏢️nakagin.🧪️tests.🔧️mounts.🐍️')
         for family in C['families']:
             for detail in ('full','exterior'):
-                print('[DEBUG] window contacts',family,detail,flush=True)
                 for index in C['contact_states']:
                     state=C['states'][index]
                     parts={p.key:p for p in M.capsule_window_unit('A',family,state,detail).parts}

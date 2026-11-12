@@ -5,7 +5,7 @@
 //! 🪆️ Migrated to `#[derive(dsl::Mutations)]` over one mutation-leaf module per variant
 //! (mutation-leaf migration recipe, mirroring the stdio.tiff baseline subset's own
 //! `🧬️schema/🧬️mutations/🦀️.rs`) to satisfy `protocol::Mutation<P>`'s new
-//! `DESCRIPTORS`/`descriptor()` requirement (E0046). `NoMutation` was dropped: the derive requires
+//! `DESCRIPTORS`/`descriptor()` requirement (E0046). The derive requires
 //! every variant to wrap exactly one leaf payload, a wrapped variant cannot be `#[default]`, and
 //! `"no"` is not an `APPROVED_VERBS` entry. each leaf's own `MutationKind` impl owns its `diff` and concrete `inverse`.
 //!
@@ -70,7 +70,7 @@ pub mod set_row_property;
 //#region 🔖️Leaves
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

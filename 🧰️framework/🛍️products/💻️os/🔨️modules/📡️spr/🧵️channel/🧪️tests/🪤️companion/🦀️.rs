@@ -3,8 +3,7 @@
 //! 🧭️ The tests are mounted unchanged from the production tree and reach the production crate through its public API only.
 #![cfg(test)]
 
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 pub use semio_os_channel::*;
 use protocol::wire::command_ingress::{FixedCommandPage, CommandPageSet, PagedCommand, COMMAND_PAGE_MAXIMUM_BYTES, INVOCATION_RESULT_PACK_MAXIMUM_BYTES};

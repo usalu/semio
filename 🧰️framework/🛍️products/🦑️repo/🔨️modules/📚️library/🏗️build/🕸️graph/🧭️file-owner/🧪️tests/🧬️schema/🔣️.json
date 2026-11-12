@@ -3,7 +3,8 @@
   "additionalProperties": false,
   "required": [
     "version",
-    "worlds"
+    "worlds",
+    "withheldWorlds"
   ],
   "properties": {
     "version": {
@@ -59,6 +60,46 @@
                 "string",
                 "null"
               ]
+            }
+          }
+        }
+      }
+    },
+    "withheldWorlds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "roots",
+          "files",
+          "deepest"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "roots": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "deepest": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -1
             }
           }
         }

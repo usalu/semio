@@ -25,6 +25,7 @@ import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packa
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../../🎚️axes/📜️script.ts";
 import { isMainModuleV1 } from "../../../⚙️runtime/🏁️main/🟦️.ts";
+import { OwnedVerifyScript } from "../../🧪️tests/🔬️owned-verify/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -61,7 +62,7 @@ class TestScript extends BundleScript {
       return;
     }
     if (segments[0] === "wgpu-engine") {
-      await (new ScriptRouter(this.root, this.repoRoot).register("wgpu-engine", TestWgpuEngineScript)).run(segments, this.invocation);
+      await (new ScriptRouter(this.root, this.repoRoot).register("verify", OwnedVerifyScript).register("wgpu-engine", TestWgpuEngineScript)).run(segments, this.invocation);
       return;
     }
     if (segments[0] === "worker-retirement") {

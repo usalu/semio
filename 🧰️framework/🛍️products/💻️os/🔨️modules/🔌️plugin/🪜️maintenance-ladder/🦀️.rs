@@ -128,7 +128,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
 
     fn maintenance_stage_step(&mut self,stage:u8,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if stage==26{return self.pending.close_document_window_admission(cx, false)}
-        if stage==17{let before=cx.retained_progress();if let Some((advanced,performed))=cx.with_original_effect(grant,|_,effect|self.tools.latest_wins_keys.advance(effect))?{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));cx.consume_retained(advanced?.progress())?;}return Ok(PluginLifecycleStep::Progress(semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
+        if stage==17{return semio_plugin_ownership::bounded_ownership::plugin_effect_close(cx,grant,|effect|self.tools.latest_wins_keys.advance(effect).map_err(semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)).map(progressed)}
         if stage==18{
             let before=cx.retained_progress();let complete=self.tools.tool_cancellations.cleanup_slot(self.maintenance.maintenance_cancellation_cursor,cx,true)?;
             let progress=semio_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
@@ -195,7 +195,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
         let result=(||->Result<PluginLifecycleStep,Fault>{
         let value_fault = plugin_retirement_fault;
-        let polled=|exit:semio_framework_value::RetirementPollExit|match exit{semio_framework_value::RetirementPollExit::Pending(_)=>Ok(RetainedCloneStep::Progress(Default::default())),semio_framework_value::RetirementPollExit::Failed(failure)=>Err(value_fault(semio_plugin_ownership::bounded_ownership::plugin_failure_error(failure)))};
         match stage {
             MAINTENANCE_CHILD_ROOT_STAGE => unreachable!("original child retirement handled before the fault-only ladder"),
             5 => {
@@ -224,8 +223,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             6 => {
                 let Some((index, generation)) = self.roster.presence_peer_retirements.next_id_from(self.maintenance.maintenance_presence_peer_cursor) else { return Ok(idle()) };
                 let authority = || maintenance_fault("interactive-job.maintenance-presence-peer-authority", "live app-typed presence retirement authority changed during one fixed step");
-                let Some(closed)=Self::effected(cx,grant,|effect|self.roster.presence_peer_retirements.get_mut(generation).map(|owner|owner.close_step(effect)))? else { return Ok(idle()) };
-                match closed.ok_or_else(authority)?.or_else(polled)? {
+                let Some(closed)=Self::effected(cx,grant,|effect|self.roster.presence_peer_retirements.get_mut(generation).map(|owner|{let result=owner.close_step(effect);semio_plugin_ownership::bounded_ownership::plugin_settle_value(semio_framework_value::RetirementPollExit::settle(effect,result))}))? else { return Ok(idle()) };
+                match closed.ok_or_else(authority)?.map_err(value_fault)? {
                     RetainedCloneStep::Progress(progress) => {
                         self.maintenance.maintenance_presence_peer_cursor = if progress == RetainedCloneProgress::default() { (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS } else { index };
                         Ok(PluginLifecycleStep::Progress(progress))
@@ -252,7 +251,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             18 => unreachable!("original cancellation cleanup requires its actual caller"),
             19 => match Self::effected(cx,grant,|effect|self.stores.presence_store.maintenance_local_reads_step(effect))? { Some(poll) => semio_plugin_ownership::bounded_ownership::plugin_settle_value(poll).map(progressed).map_err(value_fault), None => Ok(idle()) },
             MAINTENANCE_CHILD_MEMBER_STAGE => unreachable!("original child retirement handled before the fault-only ladder"),
-            21 => self.retire_document_windows_step(cx, grant, false),
+            21 => match Self::effected(cx,grant,|effect|self.retire_document_windows_step(effect,false))? { Some(step) => step, None => Ok(idle()) },
             22 => match Self::effected(cx,grant,|effect|self.stores.window_transient_store.maintenance_step(effect))? { Some(step) => step, None => Ok(idle()) },
 
             24 => unreachable!("original archive handled before the fault-only ladder"),
@@ -431,7 +430,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
                 active.state = State::RetiringRejectedMembers;
                 Ok(PluginLifecycleStep::Progress(item))
             }
-            State::ValidatingClosure => active.drive_closure(grant,cx.replacement_capture().ok_or_else(||maintenance_fault("interactive-job.replacement-identity","owned document replacement closure requires its current replacement identity"))?).map_err(Into::into),
+            State::ValidatingClosure => { let current = active.replacement_identity(); active.drive_closure(grant, current).map_err(Into::into) }
             State::PreparingCandidateViews => active.drive_candidate_views(grant).map_err(Into::into),
             State::RetiringRejectedMembers | State::RetiringCommittedMembers => {
                 if active.retained_store.is_some() && active.retained_disposer.is_none() {

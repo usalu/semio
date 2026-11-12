@@ -4,7 +4,7 @@ use super::*;
 mod effect_turn;
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(value,(heap.requested_bytes,heap.released_bytes))}
 fn policy()->RetainedCloneGrant{let law:serde_json::Value=serde_json::from_str(crate::text("🛑️cancel/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let p=&law["policy"];RetainedCloneGrant{maximum_items:p["items"].as_u64().unwrap()as usize,maximum_copy_bytes:p["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:p["release"].as_u64().unwrap()as usize,maximum_depth:p["depth"].as_u64().unwrap()as usize}}
-fn identity(owner:&CancelTokenRetirement)->Option<(u8,usize)>{if let Some(current)=owner.current.as_ref(){Some((0,Arc::as_ptr(&current.0)as usize))}else{owner.node.as_ref().map(|node|(1,node as*const CancelNode as usize))}}
+fn identity(owner:&CancelTokenRetirement)->Option<(u8,usize)>{if let Some(current)=owner.current(){Some((0,Arc::as_ptr(&current.0)as usize))}else{owner.node().map(|node|(1,node as*const CancelNode as usize))}}
 fn close(mut owner:CancelTokenRetirement,physical:usize)->usize{
  let mut tn=effect_turn::Turn::new();
  let grant=policy();let mut released=0;let mut turns=0;
@@ -22,7 +22,7 @@ fn cancel_token_retirement_original_ancestor_nodes_release_without_recursive_dro
 fn cancel_token_retirement_shared_weak_and_registered_waiter_keep_exact_original(){
  let mut tn=effect_turn::Turn::new();
  for kind in 0..3{let((mut owner,mut shared,mut weak),heap)=observe(||{let token=CancelToken::root_now();let shared=(kind==0).then(||token.clone());let weak=(kind==1).then(||Arc::downgrade(&token.0));if kind==2{let mut waiters=token.0.waiters.lock();waiters.try_reserve_exact(8).unwrap();assert_eq!(waiters.capacity(),8);waiters.push((1,Waker::noop().clone()));}(CancelTokenRetirement::from_token(token),shared,weak)});let pointer=identity(&owner);let grant=policy();let(turn,blocked)=observe(||tn.run(grant,|e|owner.close_step(e)));assert_eq!(turn.work,1);let error=turn.result.unwrap_err();assert_eq!(blocked,(0,0));assert_eq!(identity(&owner),pointer);let expected=match kind{0=>CancelTokenRetirementBlocked::SharedAlias,1=>CancelTokenRetirementBlocked::WeakAlias,_=>CancelTokenRetirementBlocked::RegisteredWaiter};assert!(matches!(error,CancelTokenRetirementError::Blocked(actual)if actual==expected));
-  let(_,cleared)=observe(||{drop(shared.take());drop(weak.take());if kind==2{owner.current.as_ref().unwrap().0.waiters.lock().clear();}});assert_eq!(cleared,(0,0));let turns=close(owner,heap.0-heap.1);assert_eq!(turns,if kind==2{3}else{2});
+  let(_,cleared)=observe(||{drop(shared.take());drop(weak.take());if kind==2{owner.current().unwrap().0.waiters.lock().clear();}});assert_eq!(cleared,(0,0));let turns=close(owner,heap.0-heap.1);assert_eq!(turns,if kind==2{3}else{2});
  }
 }
 
@@ -54,16 +54,16 @@ fn cancel_token_borrowed_alias_return_concurrent_weak_and_strong_peers_never_rel
 }
 #[test]
 fn cancel_token_retire_owned_erases_the_typed_ladder_and_refuses_registered_waiters(){
- use semio_framework_value::retirement::{RetireOwned,RetirementStep};
+ use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
  let grant=policy();
  let expected=2*shared_retirement_allocation_bytes::<CancelNode>();
- let mut cursor=CancelToken::root_now().child_now().retirement();let mut released=0;let mut turns=0;
- while !cursor.terminal_is_empty(){turns+=1;assert!(turns<=16);match cursor.close_step(grant){RetirementStep::Progress(progress,_)=>released+=progress.released_bytes,RetirementStep::Complete(_)=>break,_=>panic!("original cancellation retirement turn")}}
+ let mut cursor=Box::new(CancelToken::root_now().child_now().retirement_seed())as Box<dyn RetirementCursor>;let mut released=0;let mut turns=0;
+ while !cursor.terminal_is_empty(){turns+=1;assert!(turns<=16);match effect_turn::close_step(grant,cursor.as_mut()).0{RetirementStep::Progress(progress,_)=>released+=progress.released_bytes,RetirementStep::Complete(_)=>break,_=>panic!("original cancellation retirement turn")}}
  assert_eq!(released,expected);assert!(cursor.terminal_is_empty());
- let waiting=CancelToken::root_now();waiting.0.waiters.lock().push((1,Waker::noop().clone()));let weak=Arc::downgrade(&waiting.0);let mut cursor=waiting.retirement();
- assert!(matches!(cursor.close_step(grant),RetirementStep::Failure(error,_)if error.primary().unwrap().kind==ValueRefusalKind::UnsupportedOwner));assert!(!cursor.terminal_is_empty());
+ let waiting=CancelToken::root_now();waiting.0.waiters.lock().push((1,Waker::noop().clone()));let weak=Arc::downgrade(&waiting.0);let mut cursor=Box::new(waiting.retirement_seed())as Box<dyn RetirementCursor>;
+ assert!(matches!(effect_turn::close_step(grant,cursor.as_mut()).0,RetirementStep::Failure(error,_)if error.primary().unwrap().kind==ValueRefusalKind::UnsupportedOwner));assert!(!cursor.terminal_is_empty());
  weak.upgrade().unwrap().waiters.lock().clear();drop(weak);
- while !cursor.terminal_is_empty(){turns+=1;assert!(turns<=32);match cursor.close_step(grant){RetirementStep::Progress(_,_)=>{}, RetirementStep::Complete(_)=>break,_=>panic!("cleared cancellation retirement turn")}}
+ while !cursor.terminal_is_empty(){turns+=1;assert!(turns<=32);match effect_turn::close_step(grant,cursor.as_mut()).0{RetirementStep::Progress(_,_)=>{}, RetirementStep::Complete(_)=>break,_=>panic!("cleared cancellation retirement turn")}}
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn original_owned_node_quote_does_not_lock_waiter_storage(){
  let capacity=quote["capacity"].as_u64().unwrap() as usize;let token=CancelToken::root_now();token.0.waiters.lock().try_reserve_exact(capacity).unwrap();assert_eq!(token.0.waiters.lock().capacity(),capacity);
  let mut owner=CancelTokenRetirement::from_token(token);
  let turn=tn.run(policy(),|e|owner.close_step(e));assert_eq!(turn.work,1);turn.result.unwrap();
- let node=owner.node.as_ref().expect("original node captured");let held=node.waiters.lock();
+ let node=owner.node().expect("original node captured");let held=node.waiters.lock();
  let release=quote["releaseElements"].as_u64().unwrap() as usize*size_of::<(u64,Waker)>();assert_eq!(owner.retirement_demands().unwrap().release_bytes,release);drop(held);
- let cursor=Cursor(owner);assert_eq!(cursor.next_computational_work(1).unwrap(),1);close(cursor.0,release);
+ let mut cursor=owner.into_cursor();assert_eq!(cursor.next_computational_work(1).unwrap(),1);let mut released=0;while !cursor.terminal_is_empty(){if let(RetirementStep::Progress(progress,_),_)=effect_turn::close_step(policy(),&mut cursor){released+=progress.released_bytes}}assert_eq!(released,release);
 }

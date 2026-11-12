@@ -14,7 +14,7 @@ pub mod replace_byte_range;
 #[path = "🔪️truncate-at/🦀️.rs"]
 pub mod truncate_at;
 
-/// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
+/// 🧭️ `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
 /// one leaf payload (a unit variant wraps none) and asserts `is_approved_verb(SEMANTICS.verb)`,
 /// and `no` is not an approved verb.
 ///

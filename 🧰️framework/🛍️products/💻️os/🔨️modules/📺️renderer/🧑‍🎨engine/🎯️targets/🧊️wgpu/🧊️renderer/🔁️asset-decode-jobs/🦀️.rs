@@ -399,7 +399,7 @@ impl RendererAssetDecodeSession {
             }
             return Ok(true);
         }
-        if self.session.as_ref().is_some_and(|session|session.terminal_is_empty()) { close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.session=None;semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(true); }
+        if self.session.as_ref().is_some_and(|session|session.terminal_is_empty()) { close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.session=None;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(true); }
         let Some(session) = self.session.as_mut() else { return Ok(false); };
         if self.closing {
             if self.boundary.is_none() {

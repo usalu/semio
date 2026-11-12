@@ -418,7 +418,8 @@
         "operation": "build"
       },
       "role": "native",
-      "optLevel": "0"
+      "optLevel": "0",
+      "debug": 1
     },
     {
       "name": "prototype-descriptor-emitter",
@@ -430,7 +431,8 @@
         "operation": "build"
       },
       "role": "descriptor",
-      "optLevel": "0"
+      "optLevel": "0",
+      "debug": 0
     },
     {
       "name": "prototype-wasm-component",
@@ -442,7 +444,8 @@
         "operation": "build"
       },
       "role": "component",
-      "optLevel": "1"
+      "optLevel": "1",
+      "debug": 0
     },
     {
       "name": "prototype-browser-canvas",
@@ -454,7 +457,8 @@
         "operation": "build"
       },
       "role": "browser",
-      "optLevel": "1"
+      "optLevel": "1",
+      "debug": 0
     },
     {
       "name": "release-artifact",
@@ -466,7 +470,8 @@
         "operation": "build"
       },
       "role": "native",
-      "optLevel": "3"
+      "optLevel": "3",
+      "debug": 0
     },
     {
       "name": "release-descriptor-emitter",
@@ -478,7 +483,8 @@
         "operation": "build"
       },
       "role": "descriptor",
-      "optLevel": "3"
+      "optLevel": "3",
+      "debug": 0
     },
     {
       "name": "release-wasm-component",
@@ -490,7 +496,8 @@
         "operation": "build"
       },
       "role": "component",
-      "optLevel": "s"
+      "optLevel": "s",
+      "debug": 0
     },
     {
       "name": "release-browser-canvas",
@@ -502,7 +509,8 @@
         "operation": "build"
       },
       "role": "browser",
-      "optLevel": "s"
+      "optLevel": "s",
+      "debug": 0
     }
   ],
   "policyRejected": [

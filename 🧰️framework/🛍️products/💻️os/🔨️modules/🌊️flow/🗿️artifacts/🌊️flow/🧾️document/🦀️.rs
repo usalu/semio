@@ -15,8 +15,7 @@ pub use vcs::*;
 mod dsl_native_snapshot_tests;
 
 #[cfg(test)]
-#[global_allocator]
-static RETAINED_CLONE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[cfg(test)]
 #[path="../🧬️schema/📸️snapshot/🧪️tests/🧬️retained-clone/🦀️.rs"]

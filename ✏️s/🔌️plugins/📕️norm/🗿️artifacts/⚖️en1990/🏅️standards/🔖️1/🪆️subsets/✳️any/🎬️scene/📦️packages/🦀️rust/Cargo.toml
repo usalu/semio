@@ -19,10 +19,14 @@ path = "../../🦀️.rs"
 semio-s-artifact-norm-en1990-checks = { workspace = true }
 semio-s-artifact-norm-en1990-inferences = { workspace = true }
 semio-s-artifact-norm-en1990-model = { workspace = true }
+semio-s-artifact-norm-en1990-scene-combinations = { workspace = true }
+semio-s-artifact-norm-en1990-scene-kit = { workspace = true }
+semio-s-artifact-norm-en1990-scene-layout = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-plugin-norm-structural-scene = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-norm-en1990-scene-diagrams = { workspace = true }
 semio-s-artifact-norm-en1990-examples = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 serde_json = { workspace = true }

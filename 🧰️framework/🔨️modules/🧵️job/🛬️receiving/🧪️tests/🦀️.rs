@@ -3,7 +3,7 @@ use semio_framework_job_context::*;
 use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
 use semio_framework_value_testing_allocator as _;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedWorkOutcome,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneSource}};
-use semio_framework_value_control_contract::{RetainedAllocationEffect,RetainedWorkPoll};
+use semio_framework_value::{RetainedAllocationEffect,RetainedWorkPoll};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value_native_owned::{NativeReceive,NativeReceiver,OriginalReceivingPrimary};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeRetirementDecodeControl,NativePreparedDecodeControl,NativeReceivingEffect,NativeReceivingEffectError,NativeReceivingEffectPoll,OriginalEffectReply,OriginalEffectReplyComplete};

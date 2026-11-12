@@ -77,11 +77,11 @@ export function endpointsV1(root,environment=process.env,platform=process.platfo
  const id=worktreeIdV1(root),owner=user??(()=>{try{return String(userInfo().uid);}catch{return"0";}})();
  if(platform==="win32"){
   const base=join(environment.LOCALAPPDATA||tmpdir(),"semio","repo",id);
-  return{id,directory:base,endpoint:"\\\\.\\pipe\\semio-repo-"+owner+"-"+id,key:join(base,"key"),descriptor:join(base,"service.json"),state:join(base,"state.json"),lock:join(base,"service.lock"),audit:join(base,"audit.jsonl"),revoked:join(base,"revoked.jsonl")};
+  return{id,directory:base,endpoint:"\\\\.\\pipe\\semio-repo-"+owner+"-"+id,key:join(base,"key"),descriptor:join(base,"service.json"),state:join(base,"state.json"),lock:join(base,"service.lock"),audit:join(base,"audit.jsonl"),log:join(base,"service.log"),revoked:join(base,"revoked.jsonl")};
  }
  let directory=join(environment.XDG_RUNTIME_DIR||(environment.TMPDIR||"/tmp").replace(/\/+$/u,""),"semio-repo-"+owner,id);
  if(Buffer.byteLength(join(directory,"s"))>96)directory=join("/tmp","semio-repo-"+owner,id);
- return{id,directory,endpoint:join(directory,"s"),key:join(directory,"key"),descriptor:join(directory,"service.json"),state:join(directory,"state.json"),lock:join(directory,"service.lock"),audit:join(directory,"audit.jsonl"),revoked:join(directory,"revoked.jsonl")};
+ return{id,directory,endpoint:join(directory,"s"),key:join(directory,"key"),descriptor:join(directory,"service.json"),state:join(directory,"state.json"),lock:join(directory,"service.lock"),audit:join(directory,"audit.jsonl"),log:join(directory,"service.log"),revoked:join(directory,"revoked.jsonl")};
 }
 
 /** 📌 The private state directory of one worktree and user that no per-process variable moves: below `XDG_RUNTIME_DIR` when that names one, else below the user cache directory of the account database (never `TMPDIR`, which a nested build action sets to its own scratch), so that every process of the worktree reaches the same change journal. */

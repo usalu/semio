@@ -1,11 +1,10 @@
 //! 🧪️ The original publisher backing stays with its one finite Source throughout birth.
 use semio_framework_job_return_escrow_publication::{OriginalEscrowPublisher,OriginalEscrowPublisherBirth};
 use semio_framework_value_testing_effect_bank::{EffectBank,Wallet,RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,RetainedWorkPoll,OriginalEffectReply,ValueError};
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 #[test]
 fn bounded_birth_and_paid_release_use_the_same_source(){
- let law:serde_json::Value=serde_json::from_str(include_str!("case.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("case.json")).unwrap();let source_rows:serde_json::Value=serde_json::from_str(include_str!("../../../../📦️builder/🪙️return-escrow/🧪️tests/🌱️birth/case.json")).unwrap();
  let capacity=std::mem::size_of::<OriginalEscrowPublisher>();
  let stock=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:16384,maximum_capacity_bytes:capacity,maximum_release_bytes:capacity,maximum_depth:4};
  let mut bank=EffectBank::new(Wallet::new(stock,32));let mut foreign=EffectBank::new(Wallet::new(stock,32));let mut birth=OriginalEscrowPublisherBirth::new();let mut output=None;
@@ -18,7 +17,7 @@ fn bounded_birth_and_paid_release_use_the_same_source(){
   if index==0{
    let d=birth.demand();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
    let (turn,marker)=foreign.run(grant,1,|effect|{let mut slot=None;birth.advance_into(&mut output,effect,OriginalEffectReply::borrow(&mut slot).unwrap());RetainedWorkPoll::Complete(RetainedWorkOutcome{result:slot.unwrap(),work:effect.performed_work()})});
-   let RetainedWorkPoll::Complete(turn)=turn else{panic!("foreign Source must record refusal")};assert!(turn.result.is_err());assert_eq!(turn.work>0,law[2]["performed"].as_bool().unwrap());assert_eq!(marker,None);assert!(output.is_none());assert!(!birth.is_empty());assert!(foreign.is_idle());
+   let RetainedWorkPoll::Complete(turn)=turn else{panic!("foreign Source must record refusal")};assert!(turn.result.is_err());assert_eq!(turn.work>0,source_rows[2]["performed"].as_bool().unwrap());assert_eq!(marker,None);assert!(output.is_none());assert!(!birth.is_empty());assert!(foreign.is_idle());
    let denied=RetainedCloneGrant{maximum_copy_bytes:0,..grant};let (turn,marker)=bank.run(denied,1,|effect|{let mut slot=None;birth.advance_into(&mut output,effect,OriginalEffectReply::borrow(&mut slot).unwrap());RetainedWorkPoll::Complete(RetainedWorkOutcome{result:slot.unwrap(),work:effect.performed_work()})});
    let RetainedWorkPoll::Complete(turn)=turn else{panic!("denial must record its unchanged result")};assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());assert_eq!(marker,None);assert!(output.is_none());assert!(!birth.is_empty());
   }

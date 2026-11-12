@@ -9,7 +9,7 @@
 //!
 //! Ticket 26/08/29/S-END-TO-END: migrated to `#[derive(dsl::Mutations)]` (mutation-leaf shape,
 //! `../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️29/S-END-TO-END/📓️plan-mutation-leaf-migration.md`),
-//! matching `stdio.tiff`'s baseline subset and `stdio.csv`. `NoMutation` was dropped: the derive
+//! matching `stdio.tiff`'s baseline subset and `stdio.csv`. The derive
 //! requires every variant to wrap exactly one leaf payload, a unit variant wraps none, and `no` is
 //! not an `APPROVED_VERBS` entry the derive's own const assertion would accept.
 

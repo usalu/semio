@@ -95,6 +95,8 @@ semio-os-mcp-plugin-runtime = { path = "../../⚙️plugin-runtime/📦️packag
 semio-os-mcp-routing = { path = "../../🧲️channel-routing/📦️packages/🦀️rust", features = ["testkit"] }
 semio-os-mcp-hub-remote = { path = "../../🌍️hub-remote/📦️packages/🦀️rust", features = ["testkit"] }
 
+semio-framework-value-testing-allocator = { path = "../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
 [features]
 testkit = []
 

@@ -23,7 +23,7 @@ name = "semio_framework_tool_run_tick_wire"
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:semio-framework-trace"]
 
 [dependencies]
 semio-framework-tool-run = { path = "../../../📦️packages/🦀️rust" }
@@ -31,9 +31,12 @@ semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }

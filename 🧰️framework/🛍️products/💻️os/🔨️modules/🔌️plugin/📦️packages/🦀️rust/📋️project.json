@@ -35,6 +35,36 @@
     "family:os-plugin"
   ],
   "targets": {
+    "child-group-pins": {
+      "executor": "repo:script",
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/**/*",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📌️pins/📋️.json"
+      ],
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📌️pins",
+        "command": "repo ./📜️.ts write"
+      }
+    },
+    "child-group-pins-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/**/*",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📌️pins",
+        "command": "repo ./📜️.ts check"
+      }
+    },
     "test-original-fixture-close-source": {
       "executor": "repo:script",
       "inputs": [

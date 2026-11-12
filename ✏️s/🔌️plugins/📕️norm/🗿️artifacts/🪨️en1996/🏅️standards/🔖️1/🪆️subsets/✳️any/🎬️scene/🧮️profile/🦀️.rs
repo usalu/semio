@@ -1,9 +1,13 @@
 //! 🧮️ Profile: the vertical state of one wall under one load case (design actions at top, middle and bottom, eccentricities, reduction factors Φ and utilisation per station),
 //! computed through the same public `masonry` functions and the same EN 1990 combinations as the compression checks, so zones and diagrams agree with the report.
 
-use super::masonry as m;
-use super::model::{En1996Snapshot, MasonryWall, WallLoadCase};
-use super::norm::{AnnexChoice, DesignSituation};
+extern crate semio_s_artifact_norm_en1996_model as model;
+extern crate semio_s_artifact_norm_en1996_schema as schema;
+extern crate semio_s_plugin_norm_compliance as norm;
+
+use model::{ConcentratedLoad, En1996Snapshot, MasonryWall, WallLoadCase};
+use norm::{AnnexChoice, DesignSituation};
+use schema::checks::masonry as m;
 
 /// ⚖️ One EN 1990 combination: vertical design force `n` at top, middle and bottom, design shear `v` and design wind pressure `w`.
 #[derive(Clone, Debug, PartialEq)]
@@ -18,7 +22,7 @@ fn exceptional(lc: &WallLoadCase, default: DesignSituation) -> bool {
 }
 
 /// ⚖️ The ULS combinations of a load case for the annex: the design effects of the shared EN 1990 combination (`m::design_effects`) at top, middle and bottom.
-pub fn effects(annex: AnnexChoice, wall: &MasonryWall, lc: &WallLoadCase, default: DesignSituation, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> Vec<Effects> {
+pub fn effects(annex: AnnexChoice, wall: &MasonryWall, lc: &WallLoadCase, default: DesignSituation, reliability_class: norm::ReliabilityClass) -> Vec<Effects> {
     m::design_effects(annex, wall, lc, default, reliability_class).into_iter().map(|d| Effects { n: [d.n_top, d.n_mid, d.n_bot], v: d.v, w: d.w_pa }).collect()
 }
 
@@ -149,4 +153,11 @@ pub fn lateral(document: &En1996Snapshot, wall: &MasonryWall) -> Option<Lateral>
         l_ef: m::effective_length_m(wall),
         w_ed: yq * lc.q_p_wind_pa * lc.c_pe.abs(),
     })
+}
+
+/// 📐️ The bearing area A_b, the effective area A_ef = l_efm·t (60° spread to mid-height, clipped to the effective wall length) and the enhancement β of Eq. 6.10 of a concentrated load, the same terms the check evaluates.
+pub fn bearing_terms(wall: &MasonryWall, c: &ConcentratedLoad) -> (f64, f64, f64) {
+    let ab = if c.bearing_area_m2 > 0.0 { c.bearing_area_m2 } else { c.bearing_length_m * wall.thickness_m };
+    let a_ef = (c.bearing_length_m + wall.height_m / 3f64.sqrt()).min(m::effective_length_m(wall)) * wall.thickness_m;
+    (ab, a_ef, m::concentrated_beta(c.distance_a1_m.max(0.0), wall.height_m, ab, a_ef))
 }

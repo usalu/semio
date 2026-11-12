@@ -1,7 +1,8 @@
 //! 🎞️ Combination track: scrubs the generated combination columns; every action glyph carries one factor field per column (γ·ψ of the action in that column, 0 outside it), so the scalar field of the viewport follows the selected combination.
 
 use super::combinations::Column;
-use super::kit::{projection_kit::tracks, Out};
+use super::kit::Out;
+use super::scene::projection_kit::tracks;
 use super::scene::*;
 
 pub(crate) const TRACK_COMBINATION: &str = "combination";

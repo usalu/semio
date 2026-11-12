@@ -12,7 +12,7 @@
             test_restart_register::<RETAINED, TOOLS>(registry)
         }
 
-        fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,_construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{test_restart_build::<RETAINED,TOOLS>(request,output,cx)}
+        fn build_tool_job(request:&mut Option<ArtifactOwnedToolJobRequest<Self>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{test_restart_build::<RETAINED,TOOLS>(request,output,construction,cx)}
 
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             if RETAINED {
@@ -196,11 +196,11 @@
             view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![semio_ui_layout::layout::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
         }
 
-        fn build_reserved_tool_job(request: semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
-            if !matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") {
-                return Ok(None);
+        fn build_reserved_tool_job(request: &mut Option<semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<Self>>, body: &mut Option<Box<dyn semio_plugin_decl_app::tool_contract::ArtifactReservedJob + Send>>, construction: &mut semio_framework_job::OriginalConstructionAdmission, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+            if body.is_none() && !request.as_ref().is_some_and(|request| matches!(request.tool_id.as_str(), "copy" | "cut" | "paste")) {
+                return Ok(false);
             }
-            Ok(Some(ArtifactReservedToolJob::new(TestClipboardJob::<RETAINED, TOOLS>::new(request)?)))
+            semio_plugin_decl_app::tool_contract::admit_reserved_work::<Self, TestClipboardJob<RETAINED, TOOLS>>(request, body, construction, cx)
         }
 
         async fn clipboard_media_type() -> Option<MediaType> {

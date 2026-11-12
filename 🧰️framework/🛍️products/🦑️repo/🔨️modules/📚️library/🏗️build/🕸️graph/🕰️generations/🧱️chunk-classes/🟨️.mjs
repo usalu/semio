@@ -28,8 +28,8 @@ export function addOwnerRunsV1(interner,numbers,count,owner){
  for(let at=0;at<count;at++)if(at===count-1||interner.cuts(numbers[at])){interner.add(numbers,from,at+1,owner);from=at+1;}
 }
 
-/** 🗃️ The classes of an index over `rowCount` rows from the interned runs: rows -> runs -> classes (rows with equal owner sets merge, sorted by their first row), the same partition the expanded construction gives. */
-export function classesOfChunksV1(rowCount,interner){
+/** 🗃️ The classes of an index over `rowCount` rows from the interned runs (with `typed`, the consumers of a class that unites several runs are merged in typed lists, four bytes per consumer, instead of a set and a list per class): rows -> runs -> classes (rows with equal owner sets merge, sorted by their first row), the same partition the expanded construction gives. */
+export function classesOfChunksV1(rowCount,interner,{typed=false}={}){
  const{chunks,holders}=interner,first=new Uint32Array(rowCount+1);
  for(const ids of chunks)for(const id of ids)first[id+1]++;
  for(let id=0;id<rowCount;id++)first[id+1]+=first[id];
@@ -48,7 +48,9 @@ export function classesOfChunksV1(rowCount,interner){
  const merged=new Map(),classes=[];
  for(const group of groups){
   const[from,to]=group.span;let o;
-  if(to-from===1)o=holders[held[from]];else{const set=new Set();for(let at=from;at<to;at++)for(const owner of holders[held[at]])set.add(owner);o=[...set].sort((a,b)=>a-b);}
+  if(to-from===1)o=holders[held[from]];
+  else if(typed){let total=0;for(let at=from;at<to;at++)total+=holders[held[at]].length;const all=new Uint32Array(total);let fill=0;for(let at=from;at<to;at++){all.set(holders[held[at]],fill);fill+=holders[held[at]].length;}all.sort();let unique=0;for(let at=0;at<total;at++)if(at===0||all[at]!==all[at-1])all[unique++]=all[at];o=all.subarray(0,unique);}
+  else{const set=new Set();for(let at=from;at<to;at++)for(const owner of holders[held[at]])set.add(owner);o=[...set].sort((a,b)=>a-b);}
   let hash=o.length;for(const owner of o)hash=(Math.imul(hash,0x9e3779b1)^owner)>>>0;
   let chain=merged.get(hash),found;
   if(chain===undefined)merged.set(hash,chain=[]);
@@ -71,4 +73,21 @@ export function bulkUpsertClassesV1({upserts,ownerIds,idOfRow,rowCount,classes})
   if(!count)classes.push({r:[],o:[owner]});
  }
  interner.chunks.forEach((ids,chunk)=>classes.push({r:Array.from(ids).sort((a,b)=>a-b),o:interner.holders[chunk].slice().sort((a,b)=>a-b)}));
+}
+
+/** 🚿️ The classes of a streamed upsert, pushed as typed arrays: every owner's rows arrive as batches (`rowBatches(name)`, an async iterable of arrays that may load them on demand, or of `Uint32Array`s that already hold the row numbers of the index), so only one owner's distinct row numbers and the interned runs are held, never the rows of all owners at once. With `bulk` the rows are cut into runs like `bulkUpsertClassesV1`, otherwise every owner gets one class of all its rows. */
+export async function streamUpsertClassesV1({names,rowBatches,ownerIds,idOfRow,rowCount,classes,bulk,pause}){
+ const interner=createChunkInternerV1();let seen=new Int32Array(rowCount+P.scratchSlackRows),scratch=new Uint32Array(P.scratchInitialEntries),stamp=0;
+ for(const name of names){
+  const owner=ownerIds.get(name);stamp++;let count=0;
+  for await(const batch of rowBatches(name)){
+   if(scratch.length<count+batch.length){const grown=new Uint32Array(Math.max(count+batch.length,scratch.length*2));grown.set(scratch.subarray(0,count));scratch=grown;}
+   const numbered=batch instanceof Uint32Array;
+   for(const item of batch){const id=numbered?item:idOfRow(item);if(id>=seen.length){const grown=new Int32Array(Math.max(seen.length*2,id+P.scratchSlackRows));grown.set(seen);seen=grown;}if(seen[id]!==stamp){seen[id]=stamp;scratch[count++]=id;}}
+   await pause?.();
+  }
+  if(!count){classes.push({r:new Uint32Array(0),o:Uint32Array.of(owner)});continue;}
+  if(bulk)addOwnerRunsV1(interner,scratch,count,owner);else classes.push({r:scratch.slice(0,count).sort(),o:Uint32Array.of(owner)});
+ }
+ interner.chunks.forEach((ids,chunk)=>classes.push({r:ids.sort(),o:Uint32Array.from(interner.holders[chunk]).sort()}));
 }

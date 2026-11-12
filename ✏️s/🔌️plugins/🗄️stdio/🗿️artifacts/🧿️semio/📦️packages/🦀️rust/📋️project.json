@@ -289,6 +289,16 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts composition check"
       }
+    },
+    "verify-stdio-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify stdio-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

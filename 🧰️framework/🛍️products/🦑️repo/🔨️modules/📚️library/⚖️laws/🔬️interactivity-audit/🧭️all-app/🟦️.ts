@@ -27,7 +27,7 @@ const INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE = "🧰️framework/🛍️prod
 const INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE = "📋️project.json";
 /** 🔌️ Every tree whose depth-4 and extension `🔣️.json` files are plugin descriptors. */
 const INTERACTIVITY_ALL_APP_DESCRIPTOR_ROOTS: readonly string[] = ["✏️s/🔌️plugins", "🌎️hub/🧩️compositions"];
-/** ⚖️ Verification gates the dashboard must be able to start: each one is `workspace:verify` with these free arguments.
+/** ⚖️ Verification gates the dashboard must be able to start: each one is `repo-policy:verify` with these free arguments.
  *
  * The dashboard is the only control plane, so a verification verb that no declared command reaches is a
  * verb no dev can run. The workspace `verify` target forwards free arguments to `📜️script.ts verify`; the law
@@ -256,12 +256,12 @@ export function interactivityAllAppGateFailures(manifestSource: string, schemaSo
   if (!Object.hasOwn(record(record(record(schema.$defs).Parameter).properties), "valuePositional")) failures.push(`${INTERACTIVITY_ALL_APP_REGISTRY_SCHEMA_FILE}: the Parameter schema declares no valuePositional`);
   if (manifest.name !== "workspace") failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: the root project must be named workspace`);
   const verify = record(record(manifest.targets).verify);
-  if (Object.keys(verify).length === 0) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: target workspace:verify is missing, so no verification gate is a dashboard command`);
+  if (Object.keys(verify).length === 0) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: target repo-policy:verify is missing, so no verification gate is a dashboard command`);
   const options = record(verify.options);
-  if (typeof options.command !== "string" || !options.command.endsWith("📜️script.ts verify") || options.forwardAllArgs !== true) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: workspace:verify must forward free arguments to 📜️script.ts verify`);
+  if (typeof options.command !== "string" || !options.command.endsWith("📜️script.ts verify") || options.forwardAllArgs !== true) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: repo-policy:verify must forward free arguments to 📜️script.ts verify`);
   const parameters = record(record(record(verify.metadata).semio).dashboard).parameters;
   const positional = (Array.isArray(parameters) ? parameters : []).map(record).filter((parameter) => parameter.kind === "text" && parameter.valuePositional === true);
-  if (positional.length !== 1) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: workspace:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found ${positional.length}`);
+  if (positional.length !== 1) failures.push(`${INTERACTIVITY_ALL_APP_ROOT_MANIFEST_FILE}: repo-policy:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found ${positional.length}`);
   const seen = new Set<string>();
   for (const gate of gates) {
     const key = gate.check.join(" ");

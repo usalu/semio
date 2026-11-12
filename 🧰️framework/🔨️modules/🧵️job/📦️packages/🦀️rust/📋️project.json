@@ -278,6 +278,24 @@
         "command": "repo ./📜️script.ts test-original-page-return native"
       },
       "cache": true
+    },
+    "verify-framework-job-physical-close": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-job-physical-close",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-job-physical-close"
+          ]
+        }
+      }
     }
   }
 }

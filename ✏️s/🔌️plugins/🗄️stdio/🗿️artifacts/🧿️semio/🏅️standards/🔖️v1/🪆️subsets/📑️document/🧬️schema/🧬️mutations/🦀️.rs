@@ -6,7 +6,7 @@
 //! images by `DocImage::id`.
 //!
 //! 🧪️ Per f6-final-summary.md §4.3/§4.4: `#[derive(dsl::DslOps)]` would fail here for the same
-//! reasons `DocxMutation` hit — `SetSnapshot{snapshot}` reaches the data-carrying `DocBlockDiff`
+//! reasons `DocxMutation` hit — a whole-snapshot payload reaches the data-carrying `DocBlockDiff`
 //! enum transitively; `InsertBlock`/`SetBlockContent`'s bare `block: DocBlock` fails directly
 //! (`DocBlock: DslField` not satisfied — it's a data-carrying enum); `style: RunStyle`/
 //! `path: DocBlockPath` also fail (`DslField` not satisfied, neither is `#[derive(DslRecord)]`).
@@ -77,7 +77,7 @@ pub mod set_style_based_on;
 pub mod set_style_name;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]

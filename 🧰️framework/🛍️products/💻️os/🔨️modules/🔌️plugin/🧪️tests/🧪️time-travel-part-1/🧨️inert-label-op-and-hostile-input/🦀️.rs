@@ -122,6 +122,39 @@ async fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnap
     panic!("the replay never completed");
 }
 
+/// ⏳️ LAW: a replay step whose turn cannot fund it answers `Unfunded` however often it repeats, consumes nothing, and the next funded turns still complete the same replay.
+#[semio_framework_async_macros::async_test]
+async fn an_unfunded_replay_step_defers_without_consuming_the_replay() {
+    use time_travel::{TimeTravelReplayStep, TimeTravelStoreCommand, TimeTravelStoreOutput, TimeTravelStoreState};
+    let (mounted_policy,maximum_identity_bytes)=original_time_travel_fixture_caller();let grant=mounted_policy.preparation;
+    let mut receiving_job=semio_plugin_testing_laws::artifact_app_laws::FixtureOriginalJob::new(semio_framework::kernel::RetainedTurnInput{operation:71,generation:3,epoch:1,work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant:mounted_policy.close});
+    let mut observer=|_|true;
+    let mut identity=semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes,&mut observer as &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let (mut document, ids) = inert_document(mounted_policy, &mut identity).await;
+    let mut owners = TimeTravelStoreState::<TestSnapshot, InertLabelOp>::new(|_| LocalizedLabel::data("operation"));
+    let drafts = protocol::HistoryInputDrafts::new();
+    let started = owners.run(&mut document, TimeTravelStoreCommand::StartReplay { drafts: drafts.clone(), from: ids[0].clone() },None).await.expect("the replay starts");
+    assert!(matches!(started, TimeTravelStoreOutput::ReplayStarted(true)), "the store starts the replay");
+    for starved in [semio_framework_value::RetainedCloneGrant{maximum_items:0,..grant},semio_framework_value::RetainedCloneGrant{maximum_depth:0,..grant}] {
+        for _ in 0..3 {
+            let idle=receiving_job.receive(starved,|receiving|semio_framework_async::poll::resolve_ready(owners.run(&mut document, TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us,grant:starved },Some(receiving)))).expect("an underfunded replay step answers");
+            assert!(matches!(idle, TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Unfunded)), "an underfunded turn defers the replay");
+            assert!(time_travel::TimeTravelOwners::replaying(&owners), "an unfunded step leaves the replay owner in place");
+        }
+    }
+    let mut report = None;
+    for _ in 0..65_536 {
+        match receiving_job.receive(grant,|receiving|semio_framework_async::poll::resolve_ready(owners.run(&mut document, TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us,grant },Some(receiving)))).expect("a replay slice") {
+            TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Completed(done,_)) => { report = Some(done); break }
+            TimeTravelStoreOutput::Stepped(TimeTravelReplayStep::Pending { .. }|TimeTravelReplayStep::Unfunded) => {}
+            _ => panic!("the replay faulted"),
+        }
+    }
+    let report = report.expect("the funded turns complete the deferred replay");
+    assert!(!report.blocks_finalize() && !report.outcomes.is_empty(), "the deferred replay reports every operation: {report:?}");
+    close_inert(owners, document,mounted_policy);
+}
+
 /// 🌰️ The schema id of the [`InertLabelOp`] documents.
 const INERT_SCHEMA: &str = "semio.test.inert-label/v1";
 

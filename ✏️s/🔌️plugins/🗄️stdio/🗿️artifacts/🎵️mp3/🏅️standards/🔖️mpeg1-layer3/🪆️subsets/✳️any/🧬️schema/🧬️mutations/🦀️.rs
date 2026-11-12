@@ -22,7 +22,7 @@ use protocol::Mutation;
 
 
 //#region 🔖️Mutation
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

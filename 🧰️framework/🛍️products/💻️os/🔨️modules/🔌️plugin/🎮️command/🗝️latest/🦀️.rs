@@ -62,6 +62,15 @@ impl ToolLatestWinsKeyCopy {
     }
     pub fn close_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:self.key.as_ref().map_or(0,String::capacity),depth:usize::from(self.key.is_some()),..Default::default()}}
     pub fn terminal_is_empty(&self)->bool{self.key.is_none()}
+    /// 🪙️ Releases the unfinished key backing inside an enclosing effect lane that already pays the unit.
+    pub fn close_granted(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedCloneStep{
+        let idle=semio_framework_value::RetainedCloneProgress::default();
+        if self.key.is_none(){return semio_framework_value::RetainedCloneStep::Complete(idle)}
+        let demand=self.close_demands();
+        if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_release_bytes<demand.release_bytes{return semio_framework_value::RetainedCloneStep::Progress(idle)}
+        drop(self.key.take());
+        semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle})
+    }
     /// ♻️ Releases the unfinished key backing in one paid retirement turn.
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         if self.key.is_none(){return Ok(true);}

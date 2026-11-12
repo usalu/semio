@@ -114,12 +114,17 @@ pub fn plugin_unit_step<T,E:From<ValueError>>(effect:&mut semio_framework_value:
  match effect.performed(1){Ok(true)=>result,Ok(false)=>result.and_then(|_|Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original lifecycle closer exceeds its work grant").into())),Err(error)=>Err(error.into())}
 }
 
-/// 🪙️ Runs one effect-shaped closer inside the context's own performed-work effect and debits its performed work once; a refused quote advances nothing.
-pub fn plugin_effect_close<E:From<ValueError>>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,E>)->Result<semio_framework_value::RetainedCloneStep,E>{
- match cx.with_original_effect(grant,|_,effect|close(effect)).map_err(E::from)?{
+/// 🪙️ Runs one effect-shaped closer inside the context's own performed-work effect and debits its performed work once; a refused quote advances nothing and yields `idle`, a refused effect becomes `refused`.
+pub fn plugin_effect_idle<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,idle:T,refused:impl FnOnce(ValueError)->E,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<T,E>)->Result<T,E>{
+ match cx.with_original_effect(grant,|_,effect|close(effect)).map_err(refused)?{
   Some((result,performed))=>{cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));result}
-  None=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))
+  None=>Ok(idle)
  }
+}
+
+/// 🪙️ Runs one effect-shaped closer that returns a plain retained step; a refused quote makes no progress.
+pub fn plugin_effect_close<E:From<ValueError>>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,close:impl FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<semio_framework_value::RetainedCloneStep,E>)->Result<semio_framework_value::RetainedCloneStep,E>{
+ plugin_effect_idle(cx,grant,semio_framework_value::RetainedCloneStep::Progress(Default::default()),E::from,close)
 }
 
 /// 🧾️ Projects one effect-recorded retirement poll into a work outcome that keeps the work it settled.

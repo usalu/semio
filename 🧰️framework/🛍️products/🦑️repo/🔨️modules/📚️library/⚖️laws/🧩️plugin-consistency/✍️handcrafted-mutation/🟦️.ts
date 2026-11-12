@@ -747,7 +747,7 @@ export function policySemanticVocabularyBreaches(repoRoot: string): BreachRecord
         kind: "mutation-migration/semantic-vocabulary",
         scope: relPath,
         priority: "medium",
-        reason: "Set* is the generic verb this overhaul retires in favor of the closed APPROVED_VERBS vocabulary (rename/change/move/flatten/connect/group/…) — advisory (unallowlisted) until the fan-out wave rewrites dispatch enums.",
+        reason: "Set* is the generic verb this overhaul retires in favor of the closed APPROVED_VERBS vocabulary (rename/change/move/flatten/connect/group/…) — advisory until the fan-out wave rewrites dispatch enums.",
         solution: `Rename the Set* variant(s) in ${relPath} to a semantic verb-entity name backed by a MutationKind payload.`,
       });
     }

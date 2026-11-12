@@ -44,3 +44,4 @@ semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/�
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
 semio-framework-dsl-record-derive = { path = "../../../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -1,16 +1,20 @@
 //! 📍️ Layout: where every member stands. Persisted placements win; otherwise the documented default rule applies (golden-tested):
 //! members run along `+X` left to right with a 1.5 m gap, all on the ground line `y = 0`.
 
-use super::checks::catalogue::En1990Cases;
-use super::kit::{member_frame, v3};
-use super::model::En1990Snapshot;
-use super::scene::{Frame, Vec3};
+extern crate semio_s_artifact_norm_en1990_checks as checks;
+extern crate semio_s_artifact_norm_en1990_model as model;
+extern crate semio_s_plugin_norm_structural_scene as scene;
+
+use checks::catalogue::En1990Cases;
+use model::En1990Snapshot;
+use scene::projection_kit::design_case::forms::{self, CasePose};
+use scene::projection_kit::rotate_yaw as rotate;
+use scene::projection_kit::{member_frame, v3, Placement};
+use scene::{Frame, Vec3};
 use std::collections::BTreeMap;
 
-pub use super::scene::projection_kit::Placement;
-pub use super::scene::projection_kit::design_case::forms::CasePose;
-use super::scene::projection_kit::design_case::forms;
-use super::scene::projection_kit::rotate_yaw as rotate;
+/// 📍️ The first row of cases lies behind the analysis lanes.
+pub const ROW_CASES: f64 = 20.0;
 
 pub const MEMBER_GAP: f64 = 1.5;
 
@@ -41,7 +45,7 @@ impl Layout {
             cursor += member.span + MEMBER_GAP;
             layout.members.insert(member.id.clone(), MemberPose { frame: member_frame(&origin, &direction), length: member.span });
         }
-        for (id, spot) in forms::origins::<En1990Cases>(&document.cases, 0.0, super::cases::ROW_CASES) {
+        for (id, spot) in forms::origins::<En1990Cases>(&document.cases, 0.0, ROW_CASES) {
             let pose = placed(&id).map_or(CasePose { origin: spot, yaw: 0.0 }, |p| CasePose { origin: p.origin.clone(), yaw: p.yaw });
             layout.cases.insert(id, pose);
         }
@@ -61,7 +65,7 @@ impl Layout {
     }
 
     pub fn point_on(&self, member: &str, distance: f64) -> Option<Vec3> {
-        self.member(member).map(|m| super::kit::along(&m.frame.origin, &m.frame.x, distance))
+        self.member(member).map(|m| scene::projection_kit::along(&m.frame.origin, &m.frame.x, distance))
     }
 
     pub fn members(&self) -> impl Iterator<Item = (&String, &MemberPose)> {

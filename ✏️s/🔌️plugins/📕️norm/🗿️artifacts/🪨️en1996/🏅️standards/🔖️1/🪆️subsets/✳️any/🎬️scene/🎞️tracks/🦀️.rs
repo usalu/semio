@@ -1,5 +1,6 @@
 //! 🎞️ Tracks: the fire-time track of the EN 1996 scene; each keyframe binds the field `fire-demand@R`, the tabulated minimum thickness of EN 1996-1-2 for the fire class R over the actual wall thickness, on a thin face overlay of every wall with a fire requirement.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, WallPose};
 use super::masonry as m;

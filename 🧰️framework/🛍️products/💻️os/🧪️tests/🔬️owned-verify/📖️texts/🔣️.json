@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "id": "verify-os",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "run.browser-actor-host-context-worker": {
+      "en": "Browser actor host context worker test failed",
+      "de": "Der Worker-Test des Browser-Actor-Host-Kontexts ist fehlgeschlagen"
+    },
+    "run.window-config-pack-identity-accepts": {
+      "en": "window-config-pack-identity accepts only optional native",
+      "de": "window-config-pack-identity akzeptiert nur das optionale native"
+    },
+    "run.window-config-provisioning-lifecycle-accepts": {
+      "en": "window-config-provisioning-lifecycle accepts no arguments",
+      "de": "window-config-provisioning-lifecycle nimmt keine Argumente an"
+    },
+    "run.window-config-retained-pack-load": {
+      "en": "window-config-retained-pack-load requires native",
+      "de": "window-config-retained-pack-load erfordert native"
+    }
+  }
+}

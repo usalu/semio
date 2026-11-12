@@ -8,7 +8,7 @@ use semio_s_artifact_draw_drawing_scene_mounted as geometry_session;
     use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
     use semio_s_artifact_draw_drawing_editor::image_job::DrawingImageCommandJobFactory;
     use semio_s_artifact_draw_drawing_editor::path_job::DrawingPathCommandJobFactory;
-    use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, set_snapshot, toggle_layer_visible};
+    use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, replace_document, toggle_layer_visible};
     use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
     use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas as canvas_window;
     use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};
@@ -75,7 +75,7 @@ use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PL
 use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession, canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
 use semio_s_artifact_draw_drawing_editor::image_job::DrawingImageCommandJobFactory;
 use semio_s_artifact_draw_drawing_editor::path_job::DrawingPathCommandJobFactory;
-use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, set_snapshot, toggle_layer_visible};
+use semio_s_artifact_draw_drawing_editor_commands::{add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, edit_fill, edit_path, edit_selection, engagement_input, engagement_submit, export_document, import_image, load_document_json, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, set_selected_opacity, replace_document, toggle_layer_visible};
 use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas as canvas_window;
 use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_down, nudge_selection_down_fast, nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast};

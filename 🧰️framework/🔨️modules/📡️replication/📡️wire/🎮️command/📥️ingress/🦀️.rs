@@ -254,5 +254,4 @@ pub enum CommandIngressStatus {
 mod unit_tests;
 
 #[cfg(test)]
-#[global_allocator]
-static COMMAND_PAGE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;

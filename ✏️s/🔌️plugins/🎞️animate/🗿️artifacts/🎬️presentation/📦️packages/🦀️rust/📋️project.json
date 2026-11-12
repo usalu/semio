@@ -68,6 +68,16 @@
           ]
         }
       }
+    },
+    "verify-presentation-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify presentation-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

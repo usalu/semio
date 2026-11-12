@@ -10,6 +10,15 @@ pub use captured::CapturedProjectionField;
 #[path="📦️owned/🦀️.rs"]
 mod owned;
 pub use owned::OwnedFieldProjection;
+/// 🧪️ Observes how often projection fields advance on the calling thread.
+#[cfg(feature="testkit")]
+pub mod testkit{
+ use std::cell::Cell;
+ thread_local!{static ADVANCES:Cell<usize>=const{Cell::new(0)};}
+ pub(crate) fn record_field_advance(){ADVANCES.with(|count|count.set(count.get()+1));}
+ /// 🔢️ Returns and clears the number of projection field advances on this thread.
+ pub fn take_field_advances()->usize{ADVANCES.with(|count|count.replace(0))}
+}
 mod output_placement{pub trait Sealed<T>{}impl<T> Sealed<T> for T{}impl<T> Sealed<T> for Box<T>{}}
 /// 🪑️ Only the firstparty value and boxed-value output forms can initialize an admitted field.
 /// The private seal fixes placement behavior; refusals return the same owner and leave the destination unchanged.

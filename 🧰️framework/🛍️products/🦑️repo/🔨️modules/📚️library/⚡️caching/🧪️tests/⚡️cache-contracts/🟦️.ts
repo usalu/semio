@@ -580,7 +580,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { resolveNxInvocation } = await import("../../🚀️bootstrap/📜️script.ts");
     assert.deepEqual(resolveNxInvocation(["run", "workspace:build", "--graph=stdout", "--", "assets"]).args, ["run", "@semio-tech/assets:build", "--graph=stdout"]);
     assert.deepEqual(resolveNxInvocation(["show", "projects"]).args, ["show", "projects"]);
-    assert.deepEqual(resolveNxInvocation(["run", "workspace:cpp", "--", "build"]).args, ["run", "workspace:cpp-build"]);
+    assert.deepEqual(resolveNxInvocation(["run", "@semio-tech/repo-lib:cpp", "--", "build"]).args, ["run", "@semio-tech/repo-lib:cpp-build"]);
     const cppSource = ts.createSourceFile("cmake.ts", readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts"),"utf8"), ts.ScriptTarget.Latest, true);
     const cpp = cppSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "CppScript");
     const configure = cpp.members.find((node: any) => node.name?.getText(cppSource) === "runConfigure").getText(cppSource);

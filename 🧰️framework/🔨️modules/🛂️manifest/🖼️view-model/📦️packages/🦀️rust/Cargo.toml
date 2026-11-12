@@ -34,3 +34,4 @@ semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/�
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

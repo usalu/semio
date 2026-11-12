@@ -212,7 +212,9 @@ const rowTableV1=createRowTableV1({maximumRows:OBSERVATION_LIMITS_V1.rowStoreRow
 
 /** 🗺️ The JSON text of one observation row, serialised once per row object: a header costs concatenation, not the repeated serialisation of rows that thousands of projects share. */
 const observationJsons=new WeakMap();
-function observationRowsJsonV1(rows){return "["+rows.map(row=>{let text=observationJsons.get(row);if(text===undefined){text=JSON.stringify(row);observationJsons.set(row,text);}return text;}).join(",")+"]";}
+/** 🗺️ The JSON text of one observation row, serialised once per row object for as long as the row lives: a list that shares its rows with other lists costs the concatenation of their texts, never another serialisation of the rows. */
+export function observationRowJsonV1(row){let text=observationJsons.get(row);if(text===undefined){text=JSON.stringify(row);observationJsons.set(row,text);}return text;}
+function observationRowsJsonV1(rows){return "["+rows.map(observationRowJsonV1).join(",")+"]";}
 function internObservationsV1(rows){return rows.map(row=>rowTableV1.canonical(row.kind,row.path,row.fact,path=>{if(typeof row.path==="string")row.path=path;return row;}));}
 const rowPoolV1=createRowPoolV1();
 
@@ -411,11 +413,11 @@ export function registerClosureProviderV1(provider){
  if(!provider||typeof provider.answer!=="function"||typeof provider.settle!=="function")throw refuseBuildV1("invalid","observation.closure-provider-incomplete");
  closureProviderV1=provider;
 }
-/** 🛎️ Brings the closure entries named by the `closure` facts among `rows` up to date, so the synchronous checks that follow can answer. */
+/** 🛎️ Brings the closure entries named by the `closure` facts among `rows` up to date, so the synchronous checks that follow can answer; the provider is asked even when no row is a closure fact, because it also readies what every stored fact is checked against (the registered source analyses of a fresh process). */
 export async function settleClosureRowsV1(rows,value){
  if(!closureProviderV1)return;
  const paths=new Set();for(const row of rows)if(row.kind==="closure")paths.add(row.path);
- if(paths.size)await closureProviderV1.settle([...paths],value);
+ await closureProviderV1.settle([...paths],value);
 }
 /** 🪡️ Records the answer one closure entry gave to the running inference. */
 export function recordClosureFactV1(path,answer){record("closure",path,answer);}

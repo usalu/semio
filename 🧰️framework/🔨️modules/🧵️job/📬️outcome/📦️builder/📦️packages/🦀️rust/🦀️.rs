@@ -18,10 +18,6 @@ pub trait JobPayloadStep {
     fn consume_retained(&mut self, progress: RetainedCloneProgress) -> Result<(), ValueError>;
 }
 
-#[path = "../../🎟️step-outcome/🦀️.rs"]
-mod original_step_outcome;
-pub use original_step_outcome::{Checkpoint,CommitCandidate,JobFault,StepOutcome,InteractiveJobCloseStep};
-
 #[path = "../../🪙️return-escrow/🦀️.rs"]
 pub mod original_return_escrow;
 pub use original_return_escrow::{original_retained_delta,original_retained_remaining,original_retained_min,original_retained_is_subset,OriginalReturnEscrowMessages,require_return_structure,OriginalReturnStructure,OriginalReturnEscrowAccounting,OriginalReturnRedemptionPlan,OriginalReturnClaimPlan,OriginalReturnBudgetSnapshot,OriginalReturnLedgerIssue,OriginalReturnEscrowAmounts,OriginalReturnEscrowIdentity,OriginalReturnEscrowRow,OriginalReturnEscrowStage,OriginalReturnEscrowTable,OriginalReturnEscrowBirth,OriginalReturnGuardPermit,OriginalReturnGuardDemand,OriginalReturnGuardPlan,OriginalReturnGuardSettlementPlan,ORIGINAL_RETURN_ESCROW_CELLS,ORIGINAL_RETURN_ESCROW_HEADER_BYTES,ORIGINAL_RETURN_ESCROW_ROW_BYTES,ORIGINAL_RETURN_ESCROW_RECLAIM_COPY_BYTES};

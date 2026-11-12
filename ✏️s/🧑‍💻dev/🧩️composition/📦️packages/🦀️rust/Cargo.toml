@@ -97,6 +97,8 @@ fnv = "1.0.7"
 ui_scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-ui-scene" }
 semio-ui-declaration = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
+semio-framework-value-testing-allocator = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
 [[test]]
 name = "generation3d-example-geometry"
 path = "../../🧪️tests/🧩️generation3d-example-geometry/🦀️.rs"

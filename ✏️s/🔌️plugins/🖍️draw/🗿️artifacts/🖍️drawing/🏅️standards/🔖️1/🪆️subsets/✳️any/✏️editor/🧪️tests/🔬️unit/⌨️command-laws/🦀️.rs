@@ -11,7 +11,7 @@ use semio_plugin::ArtifactEditor;
 /// assertion. Permanent wire guard: appending a variant is safe, reordering breaks the format.
 fn every_command() -> Vec<DrawingCommand> {
     vec![
-        DrawingCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: default_drawing_document("cmd-doc", None) }),
+        DrawingCommand::ReplaceDocument(replace_document::ReplaceDocument { snapshot: default_drawing_document("cmd-doc", None) }),
         DrawingCommand::CommitDocument(commit_document::CommitDocument { snapshot: default_drawing_document("cmd-doc-2", None) }),
         DrawingCommand::LoadDocumentJson(load_document_json::LoadDocumentJson { json: "{}".into() }),
         DrawingCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
@@ -100,7 +100,7 @@ fn hex_bytes(hex: &str) -> Vec<u8> {
 async fn every_command_row_prints_starting_with_its_wire_keyword() {
     use protocol::OpText;
     let expected_keywords = [
-        "set-snapshot",
+        "replace-document",
         "commit-document",
         "document-json",
         "active-example",

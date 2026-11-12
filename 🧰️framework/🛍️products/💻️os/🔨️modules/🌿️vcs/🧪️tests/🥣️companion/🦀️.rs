@@ -8,8 +8,7 @@ pub use semio_os_vcs::*;
 pub use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 
-#[global_allocator]
-static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 #[path = "../../🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

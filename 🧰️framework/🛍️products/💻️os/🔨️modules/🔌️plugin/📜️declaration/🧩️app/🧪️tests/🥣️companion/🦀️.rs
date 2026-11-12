@@ -1,7 +1,6 @@
 //! 🧪️ Public declaration contracts are exercised independently of their production source boundary.
 #![cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 extern crate semio_os_kernel as store;
 use semio_framework_diagnostic::{Fault,FaultOrigin};
 use semio_plugin_decl_app::completion_fault::*;

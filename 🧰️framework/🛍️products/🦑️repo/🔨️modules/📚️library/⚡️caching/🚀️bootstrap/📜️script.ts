@@ -625,11 +625,12 @@ export function resolveNxInvocation(segments: string[], environment: NodeJS.Proc
 //#endregion 🔖️NxScript
 
 
-/** 🌳️ Runs a newly owned outer Nx invocation whose resources come from the current process environment, within the caller's remaining deadline. */
+/** 🌳️ Runs a newly owned outer Nx invocation whose resources come from the current process environment, within the caller's remaining deadline. The run holds the per-host graph service open for its whole length, because the remote cache endpoint it writes its task results to lives in that service and a long task must not let the idle rule retire it. */
 export async function runOwnedNxInvocationV1(root:string,args:readonly string[],parent:ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void>{
  const{projectOwnedNxProcessEnvelopeV1}=await import("../../🏗️build/🔧️tools/🧶️nx/📨️envelope/🟦️.ts");projectOwnedNxProcessEnvelopeV1(root,parent,resolveNxInvocation([...args],{...process.env,SEMIO_BUILD_MODE:readNativeCallerAuthorityV1(parent.capabilities).original.buildMode},root).args);
  const priorExitCode=process.exitCode;process.exitCode=undefined;
- await new NxScript(root,root,parent).runIssued([...args],phaseControl);
+ const[{holdHostV1},{hostImplementationV1}]=await Promise.all([import("../../🏗️build/🏡️resident/🟨️.mjs"),import("../../🏗️build/🧭️invocation/🛰️plan/🟦️.ts")]),release=await holdHostV1({implementation:hostImplementationV1(root,process.env),environment:process.env,agent:"nx-run"});
+ try{await new NxScript(root,root,parent).runIssued([...args],phaseControl);}finally{await release();}
  const status=process.exitCode;process.exitCode=priorExitCode;
  if(status!==undefined&&status!==0)throw new Error(`Owned Nx invocation failed (${status}): nx ${args.join(" ")}`);
 }

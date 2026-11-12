@@ -143,14 +143,14 @@ test("a governor leaves no abort listener on a long-lived signal once disposed: 
 });
 
 /** 🚦️ Runs `workers` owners of `ownerMegabytes` against a modeled cgroup and answers how many ran at once. */
-async function peakOwners(row:typeof fixture.headroom[number],estimateMegabytes?:number){
+async function peakOwners(row:typeof fixture.headroom[number],estimateMegabytes?:number,count=row.workers*2){
  const time=new FakeTime(),limit=row.limitMegabytes*MEGABYTE,margin=limit*memory.GRAPH_MEMORY_POLICY_V1.safetyMarginBasisPoints/10000;
  let live=0,running=0,peak=0,done=0;
  const headroom=()=>limit-row.currentMegabytes*MEGABYTE-live-margin;
  const governor=memory.createMemoryGovernorV1({workers:row.workers,headroom,estimateBytes:(estimateMegabytes??row.ownerMegabytes)*MEGABYTE,now:time.now,sleep:time.sleep});
  const task=async()=>{running++;peak=Math.max(peak,running);live+=row.ownerMegabytes*MEGABYTE;await time.sleep(5000);live-=row.ownerMegabytes*MEGABYTE;running--;done++;};
- const all=Array.from({length:row.workers*2},()=>governor.run(task));
- await time.drive(()=>done===row.workers*2);await Promise.all(all);governor.dispose();
+ const all=Array.from({length:count},()=>governor.run(task));
+ await time.drive(()=>done===count);await Promise.all(all);governor.dispose();
  return{peak,cost:governor.stats().ownerCostMegabytes};
 }
 
@@ -164,7 +164,7 @@ test("with a 4 GB cgroup, 2.5 GB in use and 200 MB owners more than one owner ru
 });
 
 test("the peak of an owner is learned from the headroom the running owners consume, and a wrong first guess is corrected",async()=>{
- const row=fixture.headroom[0]!,low=await peakOwners(row,20),high=await peakOwners(row,900);
+ const row=fixture.headroom[0]!,window=memory.GRAPH_MEMORY_POLICY_V1.peakSamples,low=await peakOwners(row,20,window),high=await peakOwners(row,900,window);
  expect(low.cost,"a first guess below the truth is raised to the consumed headroom").toBe(row.ownerMegabytes);
  expect(high.peak,"a first guess above the headroom still runs one owner and then learns").toBeGreaterThanOrEqual(1);
 });
@@ -188,7 +188,7 @@ test("the admission law of one more owner equals the independent model on every 
 });
 
 /** 🚦️ Runs the tasks of a scenario through a governor against a modeled cgroup; every task takes the same time and grows the usage by its growth while it runs. */
-async function runScenario(row:typeof fixture.scenarios[number],peaks:Record<string,number>){
+async function runScenario(row:typeof fixture.scenarios[number],peaks:Record<string,number[]>){
  const time=new FakeTime(),limit=row.limitMegabytes*MEGABYTE,margin=limit*memory.GRAPH_MEMORY_POLICY_V1.safetyMarginBasisPoints/10000,total=limit-margin-row.currentMegabytes*MEGABYTE;
  let live=0,running=0,peak=0,done=0,maximumLive=0;
  const governor=memory.createMemoryGovernorV1({workers:row.workers,headroom:()=>total-live,estimateBytes:row.guessMegabytes*MEGABYTE,peaks:{read:()=>({...peaks}),write:value=>{for(const key of Object.keys(peaks))delete peaks[key];Object.assign(peaks,value);}},now:time.now,sleep:time.sleep});
@@ -202,16 +202,16 @@ test("owners of a kind without a learned peak run alone, learned and persisted p
  try{
   const expected=oracle(["expect",written(directory,"fixture.json",fixture)]);
   for(const[index,row]of fixture.scenarios.entries()){
-   const peaks=Object.fromEntries(Object.entries(row.persisted).map(([kind,megabytes])=>[kind,megabytes*MEGABYTE])),{peak,maximumLive,total}=await runScenario(row,peaks);
+   const peaks:Record<string,number[]>=Object.fromEntries(Object.entries(row.persisted).map(([kind,megabytes])=>[kind,[megabytes*MEGABYTE]])),{peak,maximumLive,total}=await runScenario(row,peaks);
    expect(peak,row.name).toBe(row.expectPeak);expect(expected.scenarios[index].peak,row.name).toBe(row.expectPeak);
-   expect(Object.fromEntries(Object.entries(peaks).map(([kind,bytes])=>[kind,Math.round(bytes/MEGABYTE)])),row.name).toEqual(row.expectLearned);expect(expected.scenarios[index].learned,row.name).toEqual(row.expectLearned);
+   expect(Object.fromEntries(Object.entries(peaks).map(([kind,samples])=>[kind,Math.round(Math.max(...samples)/MEGABYTE)])),row.name).toEqual(row.expectLearned);expect(expected.scenarios[index].learned,row.name).toEqual(row.expectLearned);
    if(row.tasks.every(task=>task.growthMegabytes*MEGABYTE<=total))expect(maximumLive,row.name).toBeLessThanOrEqual(total);
   }
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
 
 test("the learned peaks of one governor persist into the next, which then admits concurrently at once",async()=>{
- const row=fixture.scenarios[0]!,peaks:Record<string,number>={};
+ const row=fixture.scenarios[0]!,peaks:Record<string,number[]>={};
  expect((await runScenario({...row,persisted:{}},peaks)).peak).toBe(row.expectPeak);
  const second=await runScenario({...row,tasks:row.tasks.slice(0,2)},peaks);
  expect(second.peak).toBe(2);
@@ -222,7 +222,7 @@ test("the learned owner peaks persist in a file, a missing or damaged file reads
  try{
   const path=join(directory,"deep","peaks.json"),store=memory.createGraphOwnerPeaksFileV1(path);
   expect(store.read()).toEqual({});
-  store.write({"language:cargo":262144000});expect(memory.createGraphOwnerPeaksFileV1(path).read()).toEqual({"language:cargo":262144000});
+  store.write({"language:cargo":[262144000,1048576]});expect(memory.createGraphOwnerPeaksFileV1(path).read()).toEqual({"language:cargo":[262144000,1048576]});
   writeFileSync(path,"{broken");expect(store.read()).toEqual({});
  }finally{rmSync(directory,{recursive:true,force:true});}
 });
@@ -235,7 +235,7 @@ test("a declared memory limit replaces the cgroup and charges the resident memor
 
 test("the governor reports pressure only when the host floor is crossed, never because a learned peak is large: a poisoned peak must not flush the shared state after every owner",()=>{
  const floor=memory.GRAPH_MEMORY_POLICY_V1.hostAvailableFloorMegabytes;let free=(floor+1000)*MEGABYTE;
- const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>free,estimateBytes:300*MEGABYTE,peaks:{read:()=>({rust:5000*MEGABYTE}),write:()=>undefined}});
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>free,estimateBytes:300*MEGABYTE,peaks:{read:()=>({rust:[5000*MEGABYTE]}),write:()=>undefined}});
  expect(governor.pressure(),"a headroom far below the learned peak but above the floor").toBe(false);
  free=(floor-1)*MEGABYTE;expect(governor.pressure()).toBe(true);free=(floor+1)*MEGABYTE;expect(governor.pressure()).toBe(false);
  const unlearned=memory.createMemoryGovernorV1({workers:2,headroom:()=>(floor-200)*MEGABYTE,estimateBytes:300*MEGABYTE});expect(unlearned.pressure()).toBe(true);
@@ -264,4 +264,22 @@ test("on a host that reports only machine-wide headroom the peak of an owner is 
  };
  expect(await learn(false),"without the own counter the noise of other processes is charged to the owner").toBeGreaterThanOrEqual(1000);
  expect(await learn(true),"with the own counter only the growth of this process is charged").toBe(50);
+});
+
+test("the learned peak of a kind is the largest of its last samples: an outlier leaves after the window, the persisted samples never outgrow it, and a root project kind does not decide for the crates",async()=>{
+ const window=memory.GRAPH_MEMORY_POLICY_V1.peakSamples,time=new FakeTime(),stored:{value:Record<string,number[]>}={value:{"language:cargo":[3000*MEGABYTE],"root:language:cargo":[4600*MEGABYTE]}};
+ let live=0,done=0;
+ const governor=memory.createMemoryGovernorV1({workers:4,headroom:()=>3000*MEGABYTE-live,estimateBytes:256*MEGABYTE,peaks:{read:()=>stored.value,write:value=>{stored.value=structuredClone(value);}},now:time.now,sleep:time.sleep});
+ const crate=async()=>{live+=100*MEGABYTE;await time.sleep(1000);live-=100*MEGABYTE;done++;};
+ const all=Array.from({length:window+3},()=>governor.run(crate,{kind:"language:cargo"}));
+ await time.drive(()=>done===window+3);await Promise.all(all);governor.dispose();
+ expect(stored.value["language:cargo"]!.length).toBe(window);
+ expect(Math.max(...stored.value["language:cargo"]!)).toBe(100*MEGABYTE);
+ expect(stored.value["root:language:cargo"]).toEqual([4600*MEGABYTE]);
+ expect(governor.stats().kinds).toEqual({"language:cargo":100,"root:language:cargo":4600});
+});
+
+test("a malformed learned entry reads as nothing learned for that kind and keeps the valid ones",()=>{
+ const governor=memory.createMemoryGovernorV1({workers:2,headroom:()=>1000*MEGABYTE,peaks:{read:()=>({rust:4492472320,ts:[100*MEGABYTE]}) as never,write:()=>undefined}});
+ expect(governor.stats().kinds).toEqual({ts:100});governor.dispose();
 });

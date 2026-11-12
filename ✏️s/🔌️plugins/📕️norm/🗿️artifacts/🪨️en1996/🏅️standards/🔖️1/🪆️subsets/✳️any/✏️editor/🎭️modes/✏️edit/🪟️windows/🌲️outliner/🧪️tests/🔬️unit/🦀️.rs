@@ -12,7 +12,7 @@ async fn definition_declares_this_windows_body_key() {
 async fn lists_the_first_entity_of_the_document_with_a_select_row() {
     let mut app = context::app_with_registry().await;
     let tree = semio_framework_value::ToValue::to_value(&app.snapshot().expect("projection"));
-    let id = semio_s_artifact_norm_en1996_scene::ENTITY_KINDS
+    let id = semio_s_artifact_norm_en1996_scene_kit::ENTITY_KINDS
         .iter()
         .find_map(|kind| match tree.get(kind.collection) {
             Some(DslValue::Array(items)) => items.first().and_then(|item| match item.get("id") {

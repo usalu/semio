@@ -73,4 +73,4 @@ pub(crate)use native_material_row;
 #[path="🩹️patch/🦀️.rs"]pub mod patch;
 #[path="🧬️schema/◻️2d/🦀️.rs"]pub mod planar;
 #[path="🧬️schema/🧊️3d/🦀️.rs"]pub mod volumetric;
-#[cfg(test)]#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+#[cfg(test)]use semio_framework_value_testing_allocator as _;

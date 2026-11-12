@@ -31,8 +31,7 @@
 #[path = "../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
 pub(crate) mod test_allocation;
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 use db_durability::Frontier;
 use db_durability::{DurabilityClass, FrontierDelta, ResumeToken};

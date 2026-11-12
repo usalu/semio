@@ -6,7 +6,7 @@
     "changeCounter",
     "changeStatus",
     "changeNotes",
-    "noMutation",
+    "noOperation",
     "canvasPointerDown",
     "canvasPointerMove",
     "canvasPointerUp",

@@ -4,8 +4,7 @@ use crate::flat_position::infer_jack_flat_position;
 use crate::topology::infer_jack_topology;
 use serde_json::Value;
 use std::cell::Cell;
-#[global_allocator]
-static ORIGINAL_QUERY_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 struct FixtureGraph {
     identity: [String; 5],

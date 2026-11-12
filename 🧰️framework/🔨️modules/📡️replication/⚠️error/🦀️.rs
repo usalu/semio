@@ -1,8 +1,7 @@
 //! 🚨️ Protocol error identity and paid cause retirement below wire codecs.
 
 #[cfg(test)]
-#[global_allocator]
-static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 /// ❌️ The one error type every `protocol_*` public fn returns; never leaks `std::io::Error`.
 #[derive(Debug, Clone, PartialEq)]

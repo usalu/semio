@@ -2,10 +2,8 @@
   "operation": 443,
   "generation": 9,
   "deniedWork": 0,
-  "admittedWork": 1,
   "cachedWork": 0,
   "receiptRefusalRetainsLoan": true,
-  "copiedBytes": 0,
   "stock": {
     "items": 100000,
     "copyBytes": 33554432,

@@ -233,7 +233,7 @@ impl RetainedRecordBodyCursor {
         else{match self.close_phase{
             RetainedRecordBodyClosePhase::ValueLogical=>RetirementDemand{depth:if self.value.is_some(){2}else{1},..Default::default()},
             RetainedRecordBodyClosePhase::SymbolsLogical=>{let mut next=self.symbols.retirement_demands()?;next.copy_bytes=0;next.release_bytes=0;next},
-            RetainedRecordBodyClosePhase::SymbolsPhysical=>{let mut next=self.symbols.retirement_demands()?;next.copy_bytes=0;next},
+            RetainedRecordBodyClosePhase::SymbolsPhysical=>self.symbols.retirement_demands()?,
             RetainedRecordBodyClosePhase::ValuePhysical=>RetirementDemand{release_bytes:self.value.as_ref().and_then(RetainedValueCursor::next_release_allocation_bytes).unwrap_or(0),depth:2,..Default::default()},
         }};
         demand.depth=demand.depth.checked_add(1).ok_or(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"record-body source physical depth"})?;Ok(demand)

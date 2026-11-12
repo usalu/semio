@@ -128,13 +128,16 @@ pub async fn test_retained_keyed_dispatch<A, F, R>(
             let id = *app.tools.latest_wins_order.items.front().unwrap();
             let pending = app.tools.latest_wins_commands.get_mut(id).unwrap();
             let copy = pending.key_copy.take();
-            let key = pending.key.take();
-            pending.retired_key = Some(fixture["keyRetirement"]["text"].as_str().unwrap().into());
-            let pointer=pending.retired_key.as_ref().unwrap().as_ptr();let capacity=pending.retired_key.as_ref().unwrap().capacity();
-            for denied in[RetainedCloneGrant{maximum_items:0,..mounted_policy.close},RetainedCloneGrant{maximum_release_bytes:capacity-1,..mounted_policy.close},RetainedCloneGrant{maximum_depth:0,..mounted_policy.close}]{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||pending.close_key_step(denied).unwrap());assert_eq!(step.progress().unwrap(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(pending.retired_key.as_ref().unwrap().as_ptr(),pointer);}
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||pending.close_key_step(mounted_policy.close).unwrap());assert_eq!(step.progress().unwrap().released_bytes,capacity);assert_eq!(step.progress().unwrap().copied_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,capacity));assert_eq!(serde_json::json!(capacity),fixture["keyRetirement"]["utf8Bytes"]);
+            let pointer = pending.key.as_ref().map(|key| std::ptr::from_ref(key) as usize);
+            for denied in [RetainedCloneGrant { maximum_items: 0, ..mounted_policy.close }, RetainedCloneGrant { maximum_depth: 0, ..mounted_policy.close }] {
+                let mut bank = semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::new(denied, 1 << 20));
+                let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, denied, 1 << 20, |effect| { let result = pending.close_key_step(effect); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() }) });
+                assert!(bank.into_wallet().is_ok());
+                let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("a denied key close stayed pending") };
+                assert_eq!(turn.result.unwrap().progress().unwrap(), Default::default());
+                assert_eq!(pending.key.as_ref().map(|key| std::ptr::from_ref(key) as usize), pointer);
+            }
             pending.key_copy = copy;
-            pending.key = key;
             let slot = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
             let foreign = id + ARTIFACT_LIVE_OUTPUT_SLOTS as u64;
             app.tools.typed_operation_reservations[slot] = case["foreignReservation"].as_bool().unwrap().then_some(foreign);
@@ -164,7 +167,14 @@ pub async fn test_retained_keyed_dispatch<A, F, R>(
                 if app.close_terminal_is_empty() {
                     break;
                 }
-                let _ = fixture_close_receipt(&mut app, mounted_policy, cx).unwrap();
+                let key_open = app.tools.latest_wins_commands.get(id).is_some_and(|pending| pending.key.is_some());
+                let quote = app.close_retirement_demands(mounted_policy.close.maximum_copy_bytes).unwrap();
+                let step = fixture_close_receipt(&mut app, mounted_policy, cx).unwrap();
+                if let (true, PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress)) = (key_open, &step) {
+                    if progress.released_bytes > 0 {
+                        assert_eq!(progress.released_bytes, quote.release_bytes, "a retained key close releases exactly what its close quote names");
+                    }
+                }
                 plugin_job_yield_once().await;
             }
             assert!(app.close_terminal_is_empty());

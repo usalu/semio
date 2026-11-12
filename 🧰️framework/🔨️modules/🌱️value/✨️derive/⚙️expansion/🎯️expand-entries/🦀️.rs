@@ -2,7 +2,7 @@
 
 use quote::quote;
 use syn::{Data, DeriveInput, Fields};
-use super::{container_crate_path, controlled_from_body, controlled_semantic_admission, controlled_retirement_body, controlled_to_body, deny_unknown_keys, enum_edit_path_body, enum_key_at_path_body, enum_to_path_body, field_wire_name, from_value_struct_fields, generics_with_bound, named_fields, parse_container_attrs, parse_field_attrs, parse_variant_attrs, struct_edit_path_body, struct_key_at_path_body, struct_to_path_body, to_value_object_entries, variant_destructure_patterns, variant_field_from_value_read, variant_field_to_value_push, variant_wire_name};
+use super::{container_crate_path, controlled_from_body, controlled_semantic_admission, controlled_retirement_body, controlled_to_body, deny_unknown_keys, enum_edit_path_body, enum_key_at_path_body, enum_to_path_body, field_wire_name, from_value_struct_fields, generics_with_bound, named_fields, parse_container_attrs, parse_field_attrs, parse_variant_attrs, struct_edit_path_body, struct_key_at_path_body, struct_to_path_body, to_value_object_entries, variant_destructure_patterns, variant_field_from_value_read, variant_field_from_value_release, variant_field_to_value_push, variant_wire_name};
 
 //#region 🔖️Expand
 pub fn expand_to_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
@@ -335,12 +335,14 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                                     variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
                                 })
                                 .collect::<syn::Result<Vec<_>>>()?;
+                            let releases = named.named.iter().map(|field| variant_field_from_value_release(&parse_field_attrs(&field.attrs).unwrap_or_default(), &field.ident.clone().expect("named field"))).collect::<Vec<_>>();
                             let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
                             Ok(quote! {
                                 #wire_variant => {
                                     let __variant_entries = #value_crate::DslValue::into_object(__payload)?;
                                     #deny_check
                                     #(#reads)*
+                                    #(#releases)*
                                     Self::#variant_ident { #(#idents),* }
                                 },
                             })
@@ -457,12 +459,14 @@ pub fn expand_from_value(input: &DeriveInput) -> syn::Result<proc_macro2::TokenS
                                     variant_field_from_value_read(field, &field_attrs, &wire_name, &ident, &entries_ident, &value_crate)
                                 })
                                 .collect::<syn::Result<Vec<_>>>()?;
+                            let releases = named.named.iter().map(|field| variant_field_from_value_release(&parse_field_attrs(&field.attrs).unwrap_or_default(), &field.ident.clone().expect("named field"))).collect::<Vec<_>>();
                             let idents = named.named.iter().map(|field| field.ident.clone().expect("named field"));
                             Ok(quote! {
                                 #wire_variant => {
                                     let __variant_entries = #source;
                                     #deny_check
                                     #(#reads)*
+                                    #(#releases)*
                                     Self::#variant_ident { #(#idents),* }
                                 },
                             })

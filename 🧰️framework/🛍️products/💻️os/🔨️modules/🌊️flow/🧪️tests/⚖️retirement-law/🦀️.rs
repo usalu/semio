@@ -1,7 +1,6 @@
 //! ⚖️ Flow owners retire under quoted grants: a retained mesh encoding job retires mid-flight, and a map delta retires its keyed entries, both through the typed-command input lane.
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 use semio_framework_test_typed_input_law as typed_input_law;
 

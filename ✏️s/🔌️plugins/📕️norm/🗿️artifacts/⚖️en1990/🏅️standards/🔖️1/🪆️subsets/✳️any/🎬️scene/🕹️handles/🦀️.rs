@@ -2,10 +2,11 @@
 //!
 //! 📏️ Span and pre-camber for members, the magnitude of every action (the grip height is the magnitude over a scale of N per metre) and the combination selector, whose write path `view.activeCombination` is view state and not a document leaf.
 
+use super::scene::projection_kit::{along, base_id, entity_ref, loc, mul, v3, Placement};
 use super::actions::{affected, lift, present_groups, rows, selector_anchor, GROUP_LANE};
 use super::analyses;
-use super::kit::{along, base_id, entity_ref, loc, member_depth, mul, v3, COMBINATION_ENTITY};
-use super::layout::{Layout, Placement};
+use super::kit::{member_depth, COMBINATION_ENTITY};
+use super::layout::Layout;
 use super::members::exaggeration;
 use super::model::{self, En1990Snapshot};
 use super::scene::*;

@@ -45,6 +45,26 @@
           ]
         }
       }
+    },
+    "verify-norm-results-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify norm-results-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-norm-results-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/📕️norm/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify norm-results-window-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

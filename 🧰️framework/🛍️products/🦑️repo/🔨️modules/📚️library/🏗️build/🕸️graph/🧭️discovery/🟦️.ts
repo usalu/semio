@@ -1,19 +1,21 @@
 import type {BuildGraphPartStubV1,BuildGraphPartV1,BuildGraphRowV1,BuildGraphV1,BuildUnavailableProjectV1} from "../📋️model/🟦️.ts";
 import {pinnedAuthorityReadV1} from "../../📥️inputs/🔏️revision/🟨️.mjs";
 import * as observationV1 from "../../👁️observation/🟨️.mjs";
-import {createProjectFileIndexV1} from "../🧭️file-owner/🟨️.mjs";
+import {createProjectFileIndexV1,createWithheldRootIndexV1} from "../🧭️file-owner/🟨️.mjs";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "../🚪️admission/🟦️.ts";
 import {readFile,lstat} from "node:fs/promises";
 import {join,dirname} from "node:path";
 import {createHash} from "node:crypto";
+import {tmpdir} from "node:os";
 import {advanceScriptInvocation,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {discoverTestOwnersV1,selectTestFeaturesV1} from "../🎯️test-owners/🟨️.mjs";
 import {CLAIMS_POLICY_V1} from "../🕰️generations/🧩️claims/🟨️.mjs";
 import {withholdDanglingTestProjectsV1} from "../🕰️generations/🔌️load/🟨️.mjs";
 import {deriveEnvironmentV1} from "../🕰️generations/🌍️environment/🟨️.mjs";
 import {createEdgeReadsRecorderV1} from "../🕰️generations/🧵️edge-reads/🟨️.mjs";
-import {rowKeyV1} from "../🕰️generations/🧮️fact-rows/🟨️.mjs";
+import {createRowLogV1,type RowLogListV1} from "../🕰️generations/🗃️row-log/🟨️.mjs";
+import {repositoryBuildGraphWriterDirectoryV1} from "../../📥️inputs/💾️storage/🟨️.mjs";
 import {withClosurePassV1} from "../📥️inference/🧭️script-inputs/🟨️.mjs";
 import type {EnvironmentStoredPartsV1} from "../🕰️generations/🧵️edge-reads/🟨️.mjs";
 import {requireBuildOwnerRegistryAuthorityV1,graphDeclarationV1,javascriptManagerV1} from "../🔐️authority/🟦️.ts";
@@ -22,6 +24,13 @@ import {neutralBuildTargetV1,readBuildGraphV1} from "../📜️contract/🟦️.
 import {setupShareV1,edgeConsumersOfPartV1,edgeRefreshOwnersV1} from "../🤝️prefetch/🟦️.ts";
 import {taggedOwnersRetainedV1,TEST_TAG_V1,POLICY_TAG_V1} from "../🏷️retention/🟦️.ts";
 
+
+
+/** 🛢️ Where the rows of one graph slice are spilled: the inference data directory of the running graph writer (a disk, never a memory file system), else a directory of the host temporary files. */
+function rowLogDirectoryV1(root:string):string{
+  try{return join(repositoryBuildGraphWriterDirectoryV1(root,"inference"),"rl");}
+  catch{return join(tmpdir(),"semio-row-logs");}
+}
 
 /** 🚧️ The digest of the bytes of one workspace file as the snapshot observes them; a file that vanished while the graph was built has the digest of no bytes. */
 function observedFileDigestV1(root:string,file:string):string{
@@ -55,8 +64,8 @@ export async function discoverBuildGraphV1(root:string,selection:BuildGraphSelec
   }
   withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling:tests.danglingTestDependenciesV1(projects),digest:file=>observedFileDigestV1(root,file)});
   const ownerOf=createProjectFileIndexV1(projects),projectFileMap:Record<string,{file:string}[]>=Object.fromEntries(Object.keys(projects).map(name=>[name,[]]));
-  const withheld=[...unavailable.keys()];
-  for(const file of files){const owner=ownerOf(file);if(owner!==undefined&&!withheld.some(root=>file.startsWith(root+"/")&&root.length>projects[owner]!.root.length)){const entries=projectFileMap[owner];if(!entries)throw Error("Discovered project file owner is missing");entries.push({file});}}
+  const withheldDepth=createWithheldRootIndexV1(unavailable.keys());
+  for(const file of files){const owner=ownerOf(file);if(owner!==undefined&&withheldDepth(file)<=projects[owner]!.root.length){const entries=projectFileMap[owner];if(!entries)throw Error("Discovered project file owner is missing");entries.push({file});}}
   const context={workspaceRoot:root,projects,fileMap:{projectFileMap},invocation,phaseControl,selection,registry,completeSourceImports:selection.kind!=="all"};
   const testEdges:unknown=await tests.discoverTestBuildDependenciesV1({},context);if(!Array.isArray(testEdges))throw Error("Test dependency DATA array required");const edges=[...await owner.discoverBuildDependenciesV1(options,context),...testEdges];
   const metadata=await owner.createMetadata({nodes:Object.fromEntries(Object.entries(projects).map(([name,data])=>[name,{name,type:"lib",data}]))},options,context);
@@ -75,10 +84,10 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
   const [owner,tests,policies]=await Promise.all([import("../📥️inference/🟨️.mjs"),import("../../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("../📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);
-  const sharedRows=new Map<string,BuildGraphRowV1>(),edgeReads=createEdgeReadsRecorderV1(),nodeRows:Record<string,BuildGraphRowV1[]>={},derivedFacts=new Map<string,{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}>(),context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
+  const rowLog=createRowLogV1<BuildGraphRowV1>({path:join(rowLogDirectoryV1(root),"rl-"+process.pid+"-"+Date.now().toString(36)+".rows")}),edgeReads=createEdgeReadsRecorderV1(),nodeRows:Record<string,RowLogListV1<BuildGraphRowV1>>={},derivedFacts=new Map<string,{readonly row:BuildGraphRowV1;readonly support:Iterable<BuildGraphRowV1>}>(),context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}},stat=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const captured=await withClosurePassV1(()=>observationV1.captureObservedSourceInputsV1(async()=>{
-    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,...(part.cold?{}:{ownerRoots:part.roots}),...(part.ownerRunning?{onOwnerRunning:part.ownerRunning}:{}),onOwnerObservations:(name:string,rows:BuildGraphRowV1[],derived?:{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}[])=>{nodeRows[name]=rows.map(row=>{const key=rowKeyV1(row),known=sharedRows.get(key);if(known!==undefined)return known;sharedRows.set(key,row);return row;});part.ownerDone?.();for(const fact of derived??[])derivedFacts.set(fact.row.path+"\0"+fact.row.fact,fact);}};
+    const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,...(part.cold?{}:{ownerRoots:part.roots}),...(part.ownerRunning?{onOwnerRunning:part.ownerRunning}:{}),rowLog,onOwnerObservations:(name:string,rows:Iterable<BuildGraphRowV1>&{length:number},derived?:{readonly row:BuildGraphRowV1;readonly support:Iterable<BuildGraphRowV1>&{length:number}}[])=>{nodeRows[name]=Array.isArray(rows)?rowLog.append(rows):rows as RowLogListV1<BuildGraphRowV1>;part.ownerDone?.();for(const fact of derived??[])derivedFacts.set(fact.row.path+"\0"+fact.row.fact,{row:fact.row,support:Array.isArray(fact.support)?rowLog.append(fact.support):fact.support});}};
     const primary=await owner.discoverBuildProjectsV1(files.filter(file=>file.endsWith("📋️project.json")||file.endsWith("Cargo.toml")||javascriptManagerV1.lockFileNames().includes(file)||file.endsWith(".patch")),options,context);
     if(invocation)await advanceScriptInvocation(invocation,"build:infer","running");
     const projects:Record<string,any>={},externalNodes:Record<string,unknown>={},unavailable=new Map<string,BuildUnavailableProjectV1>(),tags:Record<string,string>={},configs:Record<string,string>={},primaryNames=new Set<string>(),testNames=new Set<string>();
@@ -111,7 +120,8 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
     const consumers=part.cold||env.digest===part.previousEnv?undefined:edgeConsumersOfPartV1({previousEnvironment:part.previousEnv,previousParts:part.previousParts,previousOwners:part.previousOwners??[],parts:env.parts,stubs:part.stubs,inferred:new Set(Object.keys(projects)),roots:part.roots}),refresh=edgeRefreshOwnersV1({cold:part.cold,environment:env.digest,previousEnvironment:part.previousEnv,roots:part.roots,stubs:part.stubs,inferred:new Set(Object.keys(projects)),...(consumers?{consumers}:{})}),edgeNames=refresh.projects,processed=new Set([...Object.keys(projects),...edgeNames]);
     const contextProjects:Record<string,any>={...Object.fromEntries([...kept,...keptTagged.filter(([,stub])=>stub.kind==="project")].map(([name,stub])=>[name,{name,root:stub.root,targets:Object.fromEntries(stub.targets.map(target=>[target,{}])),...(stub.nativeRoot?{metadata:{nativeRoot:stub.nativeRoot}}:{})}])),...projects};
     const ownerOf=createProjectFileIndexV1(contextProjects),withheld=[...unavailable.keys(),...stubs.filter(([name,stub])=>(!stub.tag||keptNames.has(name))&&stub.kind==="unavailable"&&!part.roots.has(stub.root)).map(([,stub])=>stub.root)],projectFileMap:Record<string,{file:string}[]>=Object.fromEntries([...processed].map(name=>[name,[]]));
-    for(const file of files){const found=ownerOf(file);if(found!==undefined&&projectFileMap[found]&&!withheld.some(withheldRoot=>file.startsWith(withheldRoot+"/")&&withheldRoot.length>contextProjects[found].root.length))projectFileMap[found]!.push({file});}
+    const withheldDepth=createWithheldRootIndexV1(withheld);
+    for(const file of files){const found=ownerOf(file);if(found!==undefined&&projectFileMap[found]&&withheldDepth(file)<=contextProjects[found].root.length)projectFileMap[found]!.push({file});}
     const streamed=new Set<string>(edgeNames),direct=Object.fromEntries([...processed].filter(name=>!streamed.has(name)).map(name=>[name,projectFileMap[name]!]));
     const graphContext={workspaceRoot:root,projects:contextProjects,fileMap:{projectFileMap:direct},invocation,phaseControl,selection:{kind:"all"},registry,edgeReads,completeSourceImports:false,moduleGraphProjects:new Set(Object.keys(projects)),edgeChunkOwners:CLAIMS_POLICY_V1.chunkOwners};
     const testEdges:unknown=retained?[]:await discoveredForTests(()=>tests.discoverTestBuildDependenciesV1({},graphContext));if(!Array.isArray(testEdges))throw Error("Test dependency DATA array required");
@@ -127,6 +137,6 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
       owners:[...Object.entries(neutral).map(([name,node]:[string,any])=>({name,root:node.root as string,nativeRoot:node.metadata?.nativeRoot as string|undefined,config:configs[name],...(tags[name]?{tag:tags[name]}:{}),...(tags[name]||!edgeReads.finish(name)?{}:{reads:edgeReads.finish(name)}),node,nodeRows:tags[name]===TEST_TAG_V1?testNodeRows(name):tags[name]?tagRows:nodeRows[name]})),...rows.filter(row=>row.project!==undefined).map(row=>({name:row.project!,root:row.root,config:row.source,...(tags[row.project!]?{tag:tags[row.project!]}:{}),unavailable:row,nodeRows:tags[row.project!]===TEST_TAG_V1?testNodeRows(row.project!):tags[row.project!]?tagRows:nodeRows[row.project!]}))],
       edgeOnly:[...edgeNames.map(name=>streamed.has(name)?{name,streamed:true as const}:{name}),...refresh.withheld.map(name=>({name}))],reEdge:streaming&&((name:string,fragment:{node?:any})=>streaming.edgesOf(name,fragment.node)),readsOf:(name:string)=>edgeReads.finish(name),carried:refresh.carried,derived:[...derivedFacts.values()],edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:retained?[]:incremental?["policy",POLICY_TAG_V1]:["tests","policy",TEST_TAG_V1,POLICY_TAG_V1],
     };
-  },undefined,false));
-  return {...captured.value,rows:[...captured.observations] as BuildGraphRowV1[]};
+  },undefined,false)).catch(error=>{rowLog.close();throw error;});
+  return {...captured.value,rows:[...captured.observations] as BuildGraphRowV1[],dispose:()=>rowLog.close()};
 }

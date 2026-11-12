@@ -6,8 +6,7 @@ use semio_framework_value::{DslValue,ValueError,ValueRefusalKind,RetirementDeman
 use semio_framework_pack_json::{JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonError,JsonBorrowedWriteCursor,JsonWriteSource,JsonWriteNode};
 use std::mem::{ManuallyDrop,size_of};
 #[cfg(test)]
-#[global_allocator]
-static HOST_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]

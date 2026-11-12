@@ -14,6 +14,7 @@ import { advanceScriptInvocation, scriptInvocationBudget } from "../../../../�
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📦️publication/🟦️.ts";
 import { InstalledServiceCheckScript, DocumentOpeningAttemptCheckScript } from "../../🧪️tests/🔬️typescript-package-commands/🟦️.ts";
 import { runtimeTypeEnvironmentV1 } from "../../../../🔨️modules/⚙️runtime/🏷️identity/🟦️.ts";
+import { OwnedVerifyScript } from "../../🧪️tests/🔬️owned-verify/🟦️.ts";
 
 
 /** 🧱️ Replays pure service admission and explicit wire ownership with strict source and independent runtime witnesses. */
@@ -117,7 +118,7 @@ class TypecheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dirname)
+const router = new ScriptRouter(import.meta.dirname).register("verify", OwnedVerifyScript)
   .register("test", TestScript)
   .register("test-media-transport", MediaTransportTestScript)
   .register("test-scene-wire-source",SceneWireSourceScript)

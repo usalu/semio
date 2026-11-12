@@ -9,7 +9,7 @@ use semio_plugin::PluginApp;
 const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";
 
 /// 🌱️ Decodes the `Effect::LoadDocument` pack every whole-document-replace command now
-/// emits (`SetSnapshot` is banned — see `reset_document_effect`'s doc comment) — the standard
+/// emits (whole-snapshot replace is banned — see `reset_document_effect`'s doc comment) — the standard
 /// way this file's tests observe a replaced document, mirroring `📐️cad`'s own
 /// `import_cad_file_action_imports_...` tests.
 fn loaded_document(result: &semio_plugin::InvocationResult) -> WriterSnapshot {
@@ -166,7 +166,7 @@ async fn commit_rename_renames_all_spans_at_the_config_selection() {
     assert_eq!(text.matches("a:Piece").count(), 0);
 }
 
-/// 🌱️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright) —
+/// 🌱️ Whole-document replace is not an in-history mutation (whole-snapshot replace is banned outright) —
 /// `setActiveExample` now surfaces as a `Effect::LoadDocument` carrying the replacement
 /// document's pack bytes, exactly like `📐️cad`'s `importCadFile` (`reset_document_effect`).
 /// 📚️ `"demo"` is the ONE example id this subset PUBLISHES (`📚️examples/🎬️demo`), and the document it

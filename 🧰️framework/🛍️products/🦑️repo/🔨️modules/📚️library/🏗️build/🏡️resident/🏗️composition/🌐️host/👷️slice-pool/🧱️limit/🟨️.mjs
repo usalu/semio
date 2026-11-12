@@ -20,10 +20,10 @@ export function hostAvailableBytesV1(read=path=>readFileSync(path,"utf8")){
  const free=freemem();return Number.isFinite(free)&&free>0?free:undefined;
 }
 
-/** 📏 The policy of one load given the service's own limit and usage, or undefined where the service has no limit. A host with more memory available than the service limit leaves is let lend the load `hostShareBasisPoints` of it (above `hostFloorMegabytes`), never beyond `maximumMegabytes` and never below what the service limit leaves. */
-export function sliceLimitPolicyV1({limitBytes,currentBytes,availableBytes},marginMegabytes=0,{maximumMegabytes=0,hostShareBasisPoints=0,hostFloorMegabytes=0}={}){
+/** 📏 The policy of one load, which never reserves less than the peak earlier loads of this host were seen to need (`learnedMegabytes`, capped by the elasticity maximum), so builds that start while a plan runs queue behind the real use of the plan instead of shrinking the limit the next plan is given: given the service's own limit and usage, or undefined where the service has no limit. A host with more memory available than the service limit leaves is let lend the load `hostShareBasisPoints` of it (above `hostFloorMegabytes`), never beyond `maximumMegabytes` and never below what the service limit leaves. */
+export function sliceLimitPolicyV1({limitBytes,currentBytes,availableBytes},marginMegabytes=0,{maximumMegabytes=0,hostShareBasisPoints=0,hostFloorMegabytes=0}={},learnedMegabytes=0){
  if(!Number.isFinite(limitBytes))return undefined;
  const declared=Math.floor((limitBytes-currentBytes)/MiB)-marginMegabytes,lent=Number.isFinite(availableBytes)?Math.min(maximumMegabytes,Math.floor(availableBytes*hostShareBasisPoints/10000/MiB)-hostFloorMegabytes):0;
- const megabytes=Math.max(SLICE_LIMIT_FLOOR_MEGABYTES_V1,declared,lent);
+ const megabytes=Math.max(SLICE_LIMIT_FLOOR_MEGABYTES_V1,declared,lent,Math.min(maximumMegabytes||Infinity,learnedMegabytes));
  return{kind:"job",memoryMegabytes:megabytes,swapMegabytes:0,cpuShares:100,pids:0,softRatioBasisPoints:SLICE_LIMIT_SOFT_BASIS_POINTS_V1,enforcement:"hard"};
 }

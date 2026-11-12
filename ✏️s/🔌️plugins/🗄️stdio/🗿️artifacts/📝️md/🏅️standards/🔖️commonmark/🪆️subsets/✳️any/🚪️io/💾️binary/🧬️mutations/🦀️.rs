@@ -97,9 +97,8 @@ pub(crate) fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdP
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the `MdMutation`
-/// variant ordinal, same 1-5 order `print_md_mutation`'s own keyword match uses (0 was
-/// `NoMutation`'s, dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration; the remaining
-/// tags are left as they were rather than renumbered down, since nothing needs them contiguous).
+/// variant ordinal, same 1-5 order `print_md_mutation`'s own keyword match uses (tag 0 is retired; the
+/// remaining tags are not renumbered down, since nothing needs them contiguous).
 impl protocol::OpBinary for MdMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {

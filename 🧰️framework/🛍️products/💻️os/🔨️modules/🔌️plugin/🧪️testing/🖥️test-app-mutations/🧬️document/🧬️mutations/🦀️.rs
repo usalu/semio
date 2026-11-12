@@ -10,7 +10,7 @@ pub use crate::test_app_mutation_fixture::document::mutations::set_label::SetLab
 pub use crate::test_app_mutation_fixture::document::mutations::set_slot_children::SetSlotChildren;
 
 #[doc(hidden)]
-#[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslReceiving)]
+#[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, dsl::Mutations)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
@@ -22,7 +22,7 @@ pub enum TestMutation {
 }
 
 
-dsl::original_ordinal_operation_receiving!(TestMutation);
+semio_os_kernel::original_ordinal_operation_receiving!(TestMutation);
 
 impl protocol::OpText for TestMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

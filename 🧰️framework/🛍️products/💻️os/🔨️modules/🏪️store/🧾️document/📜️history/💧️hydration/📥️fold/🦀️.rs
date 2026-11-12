@@ -66,7 +66,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
   if self.original_failure.is_some()||self.original_context_failure.is_some()||!self.fold_protocol.terminal_is_empty()||!self.mutation_domain.terminal_is_empty(){return Ok(false)}
   cx.with_original_retirement(|cx|{
    if cx.retirement_should_yield()||cx.fuel_remaining()==0{return Ok(false)}
-   if self.mutation_admission.has_failure()&&self.mutation_refusal.is_none(){if self.mutation_admission.take_failure_into_step(&mut self.mutation_refusal,cx)?{return Ok(false)}}
+   if self.mutation_admission.failure_untaken()&&self.mutation_refusal.is_none(){if self.mutation_admission.take_failure_into_step(&mut self.mutation_refusal,cx)?{return Ok(false)}}
    if self.mutation_constructing||!self.mutation_admission.terminal_is_empty(){self.mutation_constructing=false;self.mutation_admission.close_step(cx)?;return Ok(false)}
    let grant=cx.retained_grant();let available_work=cx.fuel_remaining();
    if let Some(job)=self.fold_job.as_mut(){

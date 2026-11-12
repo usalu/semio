@@ -9,16 +9,21 @@
 //! whose descriptor declares `"editable": false` is withdraw-only (design §22.20) and never a case. One macro call, [`history_edit_acceptance_law!`](crate::history_edit_acceptance_law), wires it into a
 //! plugin crate's test target; every failure names the plugin, the leaf and the fixture case.
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 extern crate semio_os_kernel as store;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 extern crate semio_os_kernel as protocol;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 extern crate semio_os_kernel as pack;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_emission::{ActionMeta, Emit};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::kernel::{ActorId, MutationId};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_app_builder::App;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_app::ArtifactApp;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use store::os_store::store_schema::ArtifactCommand;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
@@ -27,92 +32,135 @@ use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 pub use semio_plugin_decl_surface::{ArtifactEditor as __ArtifactEditor, EditorApp as __EditorApp};
 #[cfg(test)]
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use pack::snapshot::ArtifactPack;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use std::collections::BTreeSet;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_command::CATALOGUE_EXAMPLE_ACTION_ID;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_value::{DslValue, ValueError};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_app_builder::ExampleSource;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::{Fault, ViewModel};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use std::future::Future;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use protocol::{LOCAL_ACTOR_ID, OpBinary, OpText};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_ui_locale::{Locale, LocalizedLabel, Terminology};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_reactor_app::PluginApp;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use serde_json::Value;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_instance_app::VcsArtifactApp;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_window_config::WindowConfigOwner;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_ui_layout::layout::WindowMeasure;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_window_transient::window_transient::WindowTransientOwner;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_testing_laws::{artifact_app_laws, with_authoring_identity};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use store::os_store::document_materialize::create_document_envelope;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate as history_edit_acceptance;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_time_travel as time_travel;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_ui_contract::*;
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "🚧️acceptance-error-limits-and-verdicts/🦀️.rs"]
 mod acceptance_error_limits_and_verdicts;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use acceptance_error_limits_and_verdicts::{
     AcceptanceError, AcceptanceSeedFault, AcceptanceVerdict, ACCEPTANCE_ACTOR,
     ACCEPTANCE_ALTERNATIVE, ACCEPTANCE_CASCADE_BLOCKERS, ACCEPTANCE_CASCADE_CASES,
     ACCEPTANCE_CASCADE_UNBUILT, ACCEPTANCE_CASES_PER_LEAF, ACCEPTANCE_CHANGES_PER_LEAF,
     ACCEPTANCE_CONTROL_KINDS, ACCEPTANCE_DOWNSTREAM_PER_LEAF, ACCEPTANCE_KIND_ATTEMPTS,
 };
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use acceptance_error_limits_and_verdicts::AcceptanceCase;
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "📚️acceptance-fixtures-cases-and-change-buckets/🦀️.rs"]
 mod acceptance_fixtures_cases_and_change_buckets;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use acceptance_fixtures_cases_and_change_buckets::{acceptance_json, acceptance_text_difference};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use acceptance_fixtures_cases_and_change_buckets::{
     acceptance_cases, acceptance_change_buckets, acceptance_changes, acceptance_example_cases,
 };
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "🎛️acceptance-policy-pump-and-drive/🦀️.rs"]
 mod acceptance_policy_pump_and_drive;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use acceptance_policy_pump_and_drive::{
     acceptance_close, acceptance_drive, acceptance_head, acceptance_meta, acceptance_policy,
     acceptance_pump, acceptance_seeded, acceptance_verb,
 };
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "🔁️withdraw-restore-and-alternative-scenarios/🦀️.rs"]
 mod withdraw_restore_and_alternative_scenarios;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use withdraw_restore_and_alternative_scenarios::{acceptance_first_pass, acceptance_scenario};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use withdraw_restore_and_alternative_scenarios::acceptance_withdraw_only_kinds;
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "🔢️end-to-end-assertion-census-and-search/🦀️.rs"]
 mod end_to_end_assertion_census_and_search;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use end_to_end_assertion_census_and_search::assert_history_edits_end_to_end;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use end_to_end_assertion_census_and_search::{acceptance_search, AcceptanceSearch};
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "💾️reload-and-child-history-scenarios/🦀️.rs"]
 mod reload_and_child_history_scenarios;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use reload_and_child_history_scenarios::{acceptance_reloaded, acceptance_reloaded_head};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use reload_and_child_history_scenarios::{
     assert_child_history_edits_end_to_end, assert_documents_reload_identically,
 };
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "📐️input-schema-resolution-and-conflict-classification/🦀️.rs"]
 mod input_schema_resolution_and_conflict_classification;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use input_schema_resolution_and_conflict_classification::{
     assert_input_schemas_resolve, input_schema_resolution_failures,
 };
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use input_schema_resolution_and_conflict_classification::{
     acceptance_applied_ids, acceptance_blocks, acceptance_classified, acceptance_overwrite_folds,
     acceptance_resolve, acceptance_withdraw_accept,
 };
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path = "⚔️cascade-withdraw-edit-and-conflict-resolution/🦀️.rs"]
 mod cascade_withdraw_edit_and_conflict_resolution;
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use cascade_withdraw_edit_and_conflict_resolution::{
     assert_history_conflicts_resolve, block_on_acceptance,
 };
 
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::kernel::{HistoryTimeTravelReview, HistoryTimeTravelStage};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::{ActionArgDef, ArgSchema};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::history_edit::{HISTORY_EDIT_ACCEPT_ACTION_ID, HISTORY_EDIT_ARG_MUTATION_ID, HISTORY_EDIT_ARG_STORE, HISTORY_EDIT_BEGIN_ACTION_ID, HISTORY_EDIT_CHOICE_OVERWRITE, HISTORY_EDIT_COMMIT_ACTION_ID, HISTORY_EDIT_EXIT_ACTION_ID, HISTORY_EDIT_FINALIZE_ACTION_ID, HISTORY_EDIT_INPUT_ACTION_ID, HISTORY_EDIT_RESTORE_ACTION_ID, HISTORY_EDIT_WITHDRAW_ACTION_ID};
 
 /// 🔌️ Wires [`assert_history_edits_end_to_end`] into a plugin crate's test target for one editor: `plugin` names the failure,

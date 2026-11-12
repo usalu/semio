@@ -31,9 +31,9 @@ fn utf8(source:ByteSpan<'_>,control:&mut NativeDecodeControl<'_>)->Result<(),Pac
     let mut position=0;
     while position<source.len(){
         control.checkpoint()?;
-        let first=source[position];let length=match first{0..=127=>1,194..=223=>2,224..=239=>3,240..=244=>4,_=>return Err(malformed(position,"invalid original UTF-8 lead octet"))};
+        let first=source.get(position).ok_or_else(||malformed(position,"incomplete original UTF-8 scalar"))?;let length=match first{0..=127=>1,194..=223=>2,224..=239=>3,240..=244=>4,_=>return Err(malformed(position,"invalid original UTF-8 lead octet"))};
         let mut scalar=[0;4];
-        for(index,target)in scalar[..length].iter_mut().enumerate(){*target=*source.get(position+index).ok_or_else(||malformed(position,"incomplete original UTF-8 scalar"))?;}
+        for(index,target)in scalar[..length].iter_mut().enumerate(){*target=source.get(position+index).ok_or_else(||malformed(position,"incomplete original UTF-8 scalar"))?;}
         if std::str::from_utf8(&scalar[..length]).is_err(){return Err(malformed(position,"invalid original UTF-8 scalar"))}
         position+=length;control.advance(length)?;
     }

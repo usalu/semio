@@ -306,6 +306,22 @@
       "en": "Internal error: {message}",
       "de": "Interner Fehler: {message}"
     },
+    "disk.full": {
+      "en": "The disk is full: partition {partition} has {free} free. Nothing was lost, but the write could not finish. Free space with `{command}` (it works on a full disk), then run the command again.",
+      "de": "Der Datenträger ist voll: Partition {partition} hat noch {free} frei. Es ging nichts verloren, aber das Schreiben konnte nicht enden. Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
+    },
+    "disk.full-unmeasured": {
+      "en": "The disk is full: partition {partition} cannot take the write (its free space cannot be read). Free space with `{command}` (it works on a full disk), then run the command again.",
+      "de": "Der Datenträger ist voll: Partition {partition} kann das Schreiben nicht aufnehmen (ihr freier Platz ist nicht lesbar). Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
+    },
+    "disk.collecting": {
+      "en": "Partition {partition} is {usedPercent}% used (limit {limitPercent}%): freeing the least recently used cache objects before the command starts.",
+      "de": "Partition {partition} ist zu {usedPercent} % belegt (Grenze {limitPercent} %): die am längsten ungenutzten Cache-Objekte werden freigegeben, bevor der Befehl startet."
+    },
+    "disk.low-space": {
+      "en": "Partition {partition} has only {free} free ({usedPercent}% used, limit {limitPercent}%), so no build or cache write starts before space is freed. Free space with `{command}`, then run the command again.",
+      "de": "Partition {partition} hat nur noch {free} frei ({usedPercent} % belegt, Grenze {limitPercent} %), daher startet kein Build und kein Cache-Schreiben, bevor Platz frei ist. Schaffe Platz mit `{command}` und führe den Befehl erneut aus."
+    },
     "source.boundary-exceeded": {
       "en": "Rust crate {crate} exceeds its source boundary before the compiler: {files} of {maxFiles} files, {bytes} of {maxBytes} bytes",
       "de": "Rust-Crate {crate} überschreitet vor dem Compiler seine Quellgrenze: {files} von {maxFiles} Dateien, {bytes} von {maxBytes} Bytes"

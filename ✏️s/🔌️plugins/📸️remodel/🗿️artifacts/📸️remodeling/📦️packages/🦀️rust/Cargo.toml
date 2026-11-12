@@ -31,6 +31,7 @@ semio-s-artifact-remodel-remodeling-io = { workspace = true }
 semio-s-artifact-remodel-remodeling-model = { workspace = true }
 semio-s-artifact-remodel-remodeling-model-diff = { workspace = true }
 semio-s-artifact-remodel-remodeling-mutations = { workspace = true }
+semio-s-artifact-remodel-remodeling-mutations-leaves = { workspace = true }
 semio-s-artifact-remodel-remodeling-read = { workspace = true }
 semio-s-artifact-remodel-remodeling-schema = { workspace = true }
 semio-s-artifact-remodel-remodeling-viewer = { workspace = true }

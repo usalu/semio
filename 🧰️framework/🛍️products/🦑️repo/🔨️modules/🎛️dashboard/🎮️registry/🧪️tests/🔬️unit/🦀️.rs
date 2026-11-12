@@ -171,10 +171,10 @@ fn a_target_resolves_axes_then_parameters_then_extra_arguments_after_the_double_
 #[test]
 fn a_required_parameter_must_be_chosen_and_a_choice_must_be_one_of_its_values() {
     let (_, registry) = fixture("required");
-    assert!(registry.resolve_with("workspace:verify", &Request::default(), RunPolicy::default()).unwrap_err().contains("\"rule\" is required"));
-    assert!(registry.resolve_with("workspace:verify", &request(&[("rule", "nope")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose dependencies, literal-external"));
-    assert_eq!(resolve(&registry, "workspace:verify", &request(&[("rule", "literal-external")], &[], &[])).processes[0].args, ["run", "workspace:verify", "--", "dependencies", "literal-external"]);
-    assert!(registry.resolve_with("workspace:verify", &request(&[("rule", "dependencies"), ("ghost", "1")], &[], &[]), RunPolicy::default()).unwrap_err().contains("unknown parameter \"ghost\""));
+    assert!(registry.resolve_with("repo-policy:verify", &Request::default(), RunPolicy::default()).unwrap_err().contains("\"rule\" is required"));
+    assert!(registry.resolve_with("repo-policy:verify", &request(&[("rule", "nope")], &[], &[]), RunPolicy::default()).unwrap_err().contains("choose dependencies, literal-external"));
+    assert_eq!(resolve(&registry, "repo-policy:verify", &request(&[("rule", "literal-external")], &[], &[])).processes[0].args, ["run", "repo-policy:verify", "--", "dependencies", "literal-external"]);
+    assert!(registry.resolve_with("repo-policy:verify", &request(&[("rule", "dependencies"), ("ghost", "1")], &[], &[]), RunPolicy::default()).unwrap_err().contains("unknown parameter \"ghost\""));
 }
 
 #[test]

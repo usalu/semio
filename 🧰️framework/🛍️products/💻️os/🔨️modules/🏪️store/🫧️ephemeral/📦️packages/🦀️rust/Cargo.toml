@@ -56,3 +56,4 @@ semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modu
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

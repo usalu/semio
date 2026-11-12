@@ -14,6 +14,9 @@
     "semanticActions",
     "seedParts",
     "cancelAfter",
+    "settledCancelActions",
+    "settledCancelBaseWork",
+    "unreportedWorkCharged",
     "stock"
   ],
   "properties": {
@@ -49,6 +52,15 @@
     },
     "seedParts": {
       "const": 80
+    },
+    "settledCancelBaseWork": {
+      "const": 1
+    },
+    "unreportedWorkCharged": {
+      "const": true
+    },
+    "settledCancelActions": {
+      "const": 2
     },
     "cancelAfter": {
       "const": 3

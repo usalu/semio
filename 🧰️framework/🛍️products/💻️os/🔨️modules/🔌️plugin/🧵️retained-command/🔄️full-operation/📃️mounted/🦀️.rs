@@ -47,12 +47,12 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  pub fn reserve_result_intent(&mut self,intent:PublicationPageIntent,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   if self.page_publication_pending()||self.result_page.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted result intent requires empty custody").into())}
   let d=RetirementDemand{copy_bytes:size_of::<Option<PublicationPagePlan>>(),depth:1,..Default::default()};let mut captured=false;
-  semio_framework_job::close_original_retained_step::<ValueError>(cx,d,|_|{self.page_publication.plan=Some(PublicationPagePlan{token:self.next_token(),intent});captured=true;RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}})?;Ok(captured)
+  semio_framework_job::close_original_retained_step(cx,d,|_|{self.page_publication.plan=Some(PublicationPagePlan{token:self.next_token(),intent});captured=true;RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}})?;Ok(captured)
  }
  /// 🏪️ The retained Store receipt, rather than a replayed commit, defines the delivered generation.
  pub fn reserve_store_result(&mut self,lane:TypedOperationResultLane,receipt:store::os_store::presence::LaneItemReceipt,revision:Option<[u8;32]>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
   let d=RetirementDemand{copy_bytes:size_of::<Option<PublicationPagePlan>>()+8*size_of::<u64>()+2*size_of::<[u8;32]>()+3*size_of::<bool>()+size_of::<Option<store::os_store::presence::LaneItemReceipt>>(),depth:1,..Default::default()};
-  let mut captured=false;cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step::<ValueError>(cx,d,|_|{
+  let mut captured=false;cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{
    match lane{TypedOperationResultLane::Artifact=>{self.published_artifact=true;self.artifact_generation=receipt.generation_after;self.operation.generation=semio_framework_job::Generation(receipt.generation_after);if let Some(revision)=revision{self.canonical_revision=revision;self.operation.base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));}},TypedOperationResultLane::Config=>{self.published_config=true;self.config_generation=receipt.generation_after;},TypedOperationResultLane::Draft=>self.draft_generation=receipt.generation_after,TypedOperationResultLane::Presence=>self.presence_generation=receipt.generation_after,TypedOperationResultLane::Transient=>self.transient_generation=receipt.generation_after,TypedOperationResultLane::WindowConfig=>{self.published_window_config=true;self.pending_window_config_receipt=None;},TypedOperationResultLane::WindowTransient=>{if let Some(authority)=self.window_transient_authority.as_mut(){authority.generation=receipt.generation_after;}},_=>unreachable!("accepted Store lane")};
    assert!(!self.page_publication_pending());self.page_publication.plan=Some(PublicationPagePlan{token:self.next_token(),intent:PublicationPageIntent::LaneReceipt{lane,generation_before:receipt.generation_before,generation_after:receipt.generation_after}});captured=true;RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
   })?;Ok(())})?;Ok(captured)
@@ -60,7 +60,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  /// 🛑️ Cancellation changes the result selector only after custody from accepted actions has drained.
  pub fn reserve_cancelled_result(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
   let d=RetirementDemand{copy_bytes:size_of::<Option<PublicationPagePlan>>()+size_of::<bool>(),depth:1,..Default::default()};
-  cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step::<ValueError>(cx,d,|_|{
+  cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|_|{
    let lane=if self.terminal_fault.is_some(){TypedOperationResultLane::Fault}else{semio_plugin_decl_app::cancellation_result_lane(self.user_cancel_requested,false)};
    let reason=if self.terminal_fault.is_some(){PublicationRawReason::Fault}else if lane==TypedOperationResultLane::Terminal{PublicationRawReason::Empty}else{PublicationRawReason::Cancelled};
    self.page_publication.plan=Some(PublicationPagePlan{token:self.next_token(),intent:PublicationPageIntent::Raw{lane,reason}});self.ui_pending=false;RetainedWorkOutcome{work:1,result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
@@ -105,12 +105,12 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
   };
   let raw=matches!(plan.intent,PublicationPageIntent::Raw{..});let page=&mut self.page_publication;let stage=&mut self.stage;
   if raw{
-   cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step::<ValueError>(cx,d,|g|{
+   cx.with_original_retirement(|cx|{semio_framework_job::close_original_retained_step(cx,d,|g|{
     let overhead=error_copy;
     let turn=page.owner.as_mut().unwrap().write_raw_step(&source,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-overhead,..g});
     let mut p=turn.progress;
     if let Err(failure)=turn.result{page.failure=Some(failure);*stage=MountedTypedCommandFullOperationStage::Retiring;p.copied_bytes+=error_copy;}
-    RetainedWorkOutcome::<RetainedCloneStep,ValueError>{work:u128::from(turn.work),result:Ok(RetainedCloneStep::Progress(p))}
+    RetainedWorkOutcome{work:u128::from(turn.work),result:Ok(RetainedCloneStep::Progress(p))}
    })?;Ok(())})?;
   }else{
    let grant=cx.retained_grant();let maximum_work=cx.fuel_remaining();let mut actual=None;

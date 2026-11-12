@@ -59,10 +59,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     async fn advance_original_reserved_mount(&mut self,verb:&str,meta:&ActionMeta,finished:&mut Option<semio_framework_job::Operation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use semio_plugin_retained_command::typed_operation::original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier};
         use semio_plugin_job::original_emission::OriginalEmissionReceipt;
-        use semio_framework_job::{close_original_retained_step};
+        use semio_framework_job::{close_original_retained_turn,close_original_retained_step};
         use semio_framework_value::{RetirementDemand,RetainedCloneStep,RetainedWorkOutcome};
         if self.media.reserved_mount.is_none(){
-            if let Some(receipt)=self.media.reserved_receipt{let operation=receipt.operation(cx)?;if self.pending.reserved_preparation.is_some()||self.pending.reserved_birth.is_some(){cx.with_original_retirement(|cx|semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::close_slot(&mut self.pending.reserved_preparation,&mut self.pending.reserved_birth,&*self.tools.tool_jobs,cx))?;return Ok(false)}let bytes=size_of::<Option<OriginalEmissionReceipt>>()+size_of::<bool>();let d=RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{self.media.reserved_receipt=None;*finished=Some(operation);RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(finished.is_some())}
+            if let Some(receipt)=self.media.reserved_receipt{let operation=receipt.operation(cx)?;if self.pending.reserved_preparation.is_some()||self.pending.reserved_birth.is_some(){cx.with_original_retirement(|cx|semio_plugin_instance_jobs::reserved_preparation::ReservedPreparation::<A>::close_slot(&mut self.pending.reserved_preparation,&mut self.pending.reserved_birth,&*self.tools.tool_jobs,cx))?;return Ok(false)}let bytes=size_of::<Option<OriginalEmissionReceipt>>()+size_of::<bool>();let d=RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_turn(cx,d,|_|{self.media.reserved_receipt=None;*finished=Some(operation);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(finished.is_some())}
             let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
             if let Some((_,original))=self.media.pending_reserved_producer_permit.as_ref(){if *original!=source{return Ok(false)}}else{let Some(permit)=self.admit_reserved_emit_producer(verb,meta,cx)?else{return Ok(false)};*self.media.pending_reserved_producer_permit=Some((permit,source));return Ok(false)}            OriginalEmissionAdmission::<A>::admit(cx,&mut self.media.reserved_mount_construction,&mut self.media.reserved_mount)?;return Ok(false)
         }
@@ -74,7 +74,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             5=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.window_transient.as_ref().is_some_and(|capture|capture.handoff_complete()){owner.advance_phase(5,6,cx)?;}else{owner.capture_window_transient(&mut self.stores.window_transient_store,cx)?;}},
             6=>{let owner=self.media.reserved_mount.as_mut().unwrap();if owner.mounted.as_ref().unwrap().captured_child_content.is_some(){owner.advance_phase(6,7,cx)?;return Ok(false)}let mounted=owner.mounted.as_mut().unwrap();crate::original_emission::capture_child_content(&*self.child_composition.child_content_root,self.child_composition.child_content_generation,mounted,cx)?;},
             7=>{let owner=self.media.reserved_mount.as_ref().unwrap();if owner.mounted.is_none(){self.media.reserved_mount.as_mut().unwrap().advance_phase(7,8,cx)?;return Ok(false)}let mounted=owner.mounted.as_ref().unwrap();let operation=owner.operation.ok_or_else(||ValueError::invariant("reserved mount lost its operation"))?;let id=operation.operation.0;if mounted.canonical_revision!=self.stores.store.content_revision_now()||mounted.artifact_generation!=self.stores.store.generation_now()||mounted.config_generation!=self.stores.config_store.generation_now()||mounted.draft_generation!=self.stores.draft_store.generation_now()||mounted.captured_child_content_generation!=self.child_composition.child_content_generation||!self.tools.tool_operations.can_insert(id)||self.tools.typed_operation_reservations[id as usize%semio_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(ValueError::invariant("reserved mount changed its original destination or frontier").into())}let receipt=OriginalEmissionReceipt::capture(operation,cx)?;let mut output=None;if self.media.reserved_mount.as_mut().unwrap().take_mounted_into(&mut output,cx)?{self.tools.tool_operations.insert_admitted(id,output.unwrap());self.tools.release_reserved_emit_slot(id);self.media.reserved_receipt=Some(receipt);}},
-            8=>{let owner=self.media.reserved_mount.as_mut().unwrap();if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&self.tools.tool_cancellations,cx))?;return Ok(false)}let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{self.media.reserved_mount.take();RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;},            _=>return Err(ValueError::invariant("reserved mount has an invalid original phase").into())
+            8=>{let owner=self.media.reserved_mount.as_mut().unwrap();if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&self.tools.tool_cancellations,cx))?;return Ok(false)}let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_turn(cx,d,|_|{self.media.reserved_mount.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;},            _=>return Err(ValueError::invariant("reserved mount has an invalid original phase").into())
         }Ok(false)
     }
     pub async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
@@ -182,32 +182,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let permit=permit.expect("original cut producer admission");let id=permit.operation.operation;permit.lease.cancel();
         let retained=permit.operation.operation==id&&self.tools.typed_operation_reservations[id.0 as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]==Some(id.0);
         self.tools.finish_reserved_emit_producer(&mut self.pending,permit);caller.retire(grant);retained
-    }
-
-
-    /// 🧫️ Observes busy original completion retention without exposing producer authority.
-    #[cfg(test)]
-    pub async fn test_reserved_emit_busy_completion_owner(&mut self, meta: &ActionMeta, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
-        let  mut permit=None;for _ in 0..128{permit=self.admit_reserved_emit_producer("cut",meta,cx).expect("fixture cut admission");if permit.is_some(){break}}let permit=permit.expect("fixture original cut permit");
-        let id=permit.operation.operation.0;
-        let completion=ArtifactToolCompletion::<A>::new();
-        let mut emit=Emit::default();emit.artifact_mutations=Vec::with_capacity(3);
-        completion.complete(Ok(emit),EphemeralEmit::default()).expect("fixture original completion");
-        let original=completion.inner.clone();
-        let guard=original.lock().expect("fixture original lock");
-        let result=self.commit_framework_clipboard_completion("cut",Some(completion),meta,permit, cx).await;
-        let retained=result.is_ok()&&self.tools.tool_operations.get(id).is_some_and(|owner|owner.completion.as_ref().is_some_and(|cell|cell.inner.same_cell(&original))&&owner.terminal_fault.is_some()&&owner.cancellation_lease.as_ref().is_some_and(|lease|lease.token.is_cancelled_now()));
-        drop(guard);
-        let mut original=semio_framework_value::retirement::controlled::ControlledRetirement::new(ArtifactToolCompletion::<A>{inner:original}).unwrap_or_else(|(_,original)|{let _original=std::mem::ManuallyDrop::new(original);panic!("original completion observation alias retirement was refused");});
-        for _ in 0..100000 {
-            if original.terminal_is_empty(){break;}
-            let copy=original.next_copy_byte_demand().expect("original completion alias copy quote").max(4096);
-            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:original.next_capacity_byte_demand(copy).expect("original completion alias capacity quote"),maximum_release_bytes:original.next_release_byte_demand().expect("original completion alias release quote"),maximum_depth:original.next_depth_demand().expect("original completion alias depth quote")};
-            assert!(original.step(grant).expect("funded original completion alias closure").progress().fits(grant));
-        }
-        assert!(original.terminal_is_empty(),"original completion observation alias remains in custody");
-        if !retained {self.tools.release_reserved_emit_slot(id);}
-        retained
     }
 
     /// 🧷️ Drives the stepped clipboard `cut` mount until its producer settles into its admitted operation, or `None` while the turns stay unfunded.

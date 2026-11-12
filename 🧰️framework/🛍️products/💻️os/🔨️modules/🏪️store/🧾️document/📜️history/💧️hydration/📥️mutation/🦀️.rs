@@ -13,7 +13,7 @@ where P:ArtifactPack+semio_os_store_text_io::ArtifactStoreSnapshot+semio_os_spr:
     if !cursor.terminal_is_empty(){let demand=match cursor.close_demands(cx.retained_grant().maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>{*self.original_failure=Some(error.into());return false}};
      if let Err(error)=cx.with_original_retirement(|cx|close_original_effect_step(cx,demand,|effect|cursor.close_step(effect))){*self.original_context_failure=Some(error)}return false}
     let release=std::mem::size_of::<M::Receiving>();let copy=std::mem::size_of_val(&self.mutation_receiving);let demand=RetirementDemand{copy_bytes:copy,release_bytes:release,depth:1,..Default::default()};
-    if let Err(error)=cx.with_original_retirement(|cx|close_original_retained_step(cx,demand,|_|{self.mutation_receiving.take();semio_framework_value::RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()})),work:1}})){*self.original_context_failure=Some(error)}return false
+    if let Err(error)=cx.with_original_retirement(|cx|close_original_retained_step(cx,demand,|_|{self.mutation_receiving.take();semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:release,..Default::default()})),work:1}})){*self.original_context_failure=Some(error)}return false
    }return true
   }
   let history=self.history.as_ref().expect("the original History remains while a mutation is receiving");let edit=&history.edits[self.edit_index];let payloads=if self.phase==Phase::DecodeForward{&edit.ops}else{&edit.inverse};

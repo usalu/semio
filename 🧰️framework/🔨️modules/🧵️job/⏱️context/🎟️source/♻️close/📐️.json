@@ -1,18 +1,8 @@
 {
   "operation": 99208,
   "generation": 7,
-  "actualWork": [
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1
-  ],
   "deniedWork": 0,
   "cachedWork": 0,
-  "copyBytes": 0,
   "stock": {
     "items": 10000,
     "copyBytes": 1048576,

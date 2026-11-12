@@ -188,16 +188,19 @@ impl crate::app_contract::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNa
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<semio_plugin_ownership::bounded_ownership::PluginLifecycleStep, semio_framework_value::ValueError> {
         if self.retirement.is_some() {
-            let step=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant).result.map_err(|error|Fault::from(error.into_message()))?;
+            let body=effect.grant().maximum_copy_bytes;
+            let step=semio_framework_value_snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,body,effect))?;
             return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()));
         }
-        if let Some(original)=self.bytes.take(){
-            return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{
-                Ok((owner,progress))=>{self.retirement=Some(owner);Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress))},
-                Err((error,original))=>{self.bytes=Some(original);Err(Fault::from(error.into_message()))},
+        if self.bytes.is_some(){
+            let progress=match semio_framework_value::retirement::admit_owned_retirement(&mut self.bytes,effect).result{
+                Ok(Some((owner,progress)))=>{self.retirement=Some(owner);progress},
+                Ok(None)=>Default::default(),
+                Err(error)=>return Err(error),
             };
+            return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress));
         }
         Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
     }

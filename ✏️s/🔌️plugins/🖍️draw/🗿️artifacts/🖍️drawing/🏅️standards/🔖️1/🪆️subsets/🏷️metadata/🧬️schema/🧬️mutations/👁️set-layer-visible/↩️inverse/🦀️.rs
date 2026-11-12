@@ -1,5 +1,5 @@
 //! ↩️ Inverse for `SetLayerVisible` — real logic reconstructing the undo from BASE state, never
-//! from post-state. Missing target ⇒ `Vec::new()` (the semantic replacement for `NoMutation`).
+//! from post-state. Missing target ⇒ `Vec::new()` (no inverse steps needed).
 
 use semio_s_artifact_draw_drawing_model::{find_drawing_layer, layer_base};
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;

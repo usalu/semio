@@ -1,6 +1,6 @@
 use semio_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
 #[doc(hidden)]
-pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64,semio_framework_job::OriginalJobFixtureCaller) {
+pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64,semio_framework_job::OriginalJobFixtureCaller) {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     assert_eq!(fixture["acknowledgement"]["preserveOwnedChildDuringProducerRetirement"],true);
     assert_eq!(fixture["acknowledgement"]["chargeReceiptExactlyOnce"],true);
@@ -23,12 +23,12 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: Referenc
             if lease.is_some(){break}
         }
         let lease=lease.expect("original owned-child cancellation lease admitted");
-        let completion=ArtifactToolCompletion::<A>::new();
+        let completion=semio_plugin_decl_app::tool_contract::ArtifactToolCompletion::<A>::new();
         let mut observer=|_:semio_framework_value::native_encoding::NativeEncodeProgress|!lease.token.is_cancelled_now()&&!lease.publication_claim.is_cancelled();
         let identity=semio_framework_value::NativeEncodeControl::new(1<<20,&mut observer).pause().unwrap();
         drop(observer);
         completion.install_authoring_identity(identity,&lease).unwrap();
-        let mut mounted = MountedTypedCommandFullOperation::<A> {
+        let mut mounted = MountedTypedCommandFullOperation::<A> { reserved_construction: Default::default(),
             source_identity:source_identity.unwrap(),
             original_emission_caller:None,original_emission_decoder:None,original_emission_body:None,
             verb: "compositeEdit".into(), meta, operation, canonical_revision: revision,
@@ -37,7 +37,7 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: Referenc
             session: None, session_rejected: None,producer_source:None,producer_request:None,producer_request_retirement:None, reserved_producer: None, completion: Some(completion), completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input: None, output_chunks: None, cancellation_lease: Some(lease), identity: None, identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 }, worker_semantic_pending: false, worker_outcome_pending: false, worker_fault_capture: None, terminal_seen: true, worker_resume_pending: false,
             publication: Some(ArtifactToolCompletionValue::Emit(Ok(emit), EphemeralEmit::default())), tool_stage:semio_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None,publication_failure:Default::default(), pending_stream_abort:None,stream_abort_resident:Default::default(), stream_abort_completed:false, pending_publication_outcome: PendingPublicationOutcome::new(), pending_window_config_receipt: None, cancellation_retirement: None, pending_child_publication: None,
             owned_child_group: None, owned_child_committed: false, owned_child_result_pending: false,
-            captured_child_content: Some(std::sync::Arc::new(ChildContentView::clone(&app.child_composition.child_content_root))), captured_child_content_generation: app.child_composition.child_content_generation,
+            captured_child_content: Some(semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(ChildContentView::clone(&app.child_composition.child_content_root))), captured_child_content_generation: app.child_composition.child_content_generation,
             page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None, result_page_presented: false, result_sequence: 0, publication_progress: 0, publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_plugin_mounted_owner::actor_capture::ActorCapture::new(), publication_attempt: 0,
             ui_pending: true, progress: None, progress_pending: false, user_cancel_requested: false, published_artifact: false, published_config: false, published_window_config: false,
             command_logged: false, interaction_revalidated: false, retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault: None, stage: MountedTypedCommandFullOperationStage::Publishing,
@@ -105,11 +105,11 @@ pub async fn test_mounted_original_owned_publication<A: ArtifactApp, M: Referenc
 }
 
 /// 🎟️ Polls the actual mounted publisher once under its transaction's original paid fixture caller.
-fn test_mounted_publication_original_turn<A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static>(app:&mut VcsArtifactApp<A,M>,mounted:&mut MountedTypedCommandFullOperation<A>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,closing:bool)->Result<(),semio_framework_job::OriginalTurnFailure>{
+fn test_mounted_publication_original_turn<A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static>(app:&mut VcsArtifactApp<A,M>,mounted:&mut MountedTypedCommandFullOperation<A>,caller:&mut semio_framework_job::OriginalJobFixtureCaller,closing:bool)->Result<(),semio_framework_job::OriginalTurnFailure>{
     let grant=if closing{app.mounted_policy.close}else{app.mounted_policy.maintenance};
     caller.turn(grant,|cx|{let before=cx.retained_progress();let mut task=std::task::Context::from_waker(std::task::Waker::noop());
-        let result:Result<(),semio_framework_job::OriginalTurnFailure>=if closing{let mut turn=std::pin::pin!(app.typed_ctx().publish_mounted_owned_child_operation_unit(mounted,cx));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private close suspended inside its original caller")}}
-        else{let mut turn=std::pin::pin!(app.typed_ctx().publish_mounted_typed_operation_run(mounted,cx,grant));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private publication suspended inside its original caller")}};
+        let result:Result<(),semio_framework_job::OriginalTurnFailure>=if closing{let mut ctx=app.typed_ctx();let mut turn=std::pin::pin!(ctx.publish_mounted_owned_child_operation_unit(mounted,cx));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private close suspended inside its original caller")}}
+        else{let mut ctx=app.typed_ctx();let mut turn=std::pin::pin!(ctx.publish_mounted_typed_operation_run(mounted,cx,grant));match std::future::Future::poll(turn.as_mut(),&mut task){std::task::Poll::Ready(result)=>result.map_err(Into::into),std::task::Poll::Pending=>panic!("private publication suspended inside its original caller")}};
         result?;
         if let Some((returned,progress))=mounted.publication_ownership_progress.take(){
             assert!(progress.fits(returned)&&progress.fits(grant));

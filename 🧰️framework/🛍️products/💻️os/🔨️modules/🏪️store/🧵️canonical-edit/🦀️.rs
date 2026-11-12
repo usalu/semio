@@ -490,8 +490,7 @@ impl ArtifactCanonicalJsonCursor {
 //#endregion 🧪️CanonicalLaws
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 #[path="🔏️borrowed-digest/🦀️.rs"]
 mod borrowed_digest;
 pub use borrowed_digest::ArtifactCanonicalRecordDigest;

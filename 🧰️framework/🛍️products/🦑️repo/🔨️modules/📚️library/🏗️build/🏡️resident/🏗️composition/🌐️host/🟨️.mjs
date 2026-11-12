@@ -15,9 +15,9 @@ import {appendServiceExitRowV1} from "../../🧾️exit-log/🟨️.mjs";
 export function writeHostServiceLogV1(event,detail){process.stderr.write(new Date().toISOString()+" "+event+(detail===undefined?"":" "+detail)+"\n");}
 
 /** ▶ Runs the host service until it closes; resolves the exit code (75 when the memory bound forced a restart, else 0). `loadGraph({root,signal})` returns the neutral build graph of one workspace. */
-export async function runHostForegroundV1({implementation,loadGraph,loadSlice,identify,stale,capture,taskState,environment=process.env,platform=process.platform,policy,signal,log=()=>{},admission,workerMemory=()=>[],workerBusy=()=>0}){
+export async function runHostForegroundV1({implementation,loadGraph,loadSlice,identify,stale,capture,taskState,environment=process.env,platform=process.platform,policy,signal,log=()=>{},admission,workerMemory=()=>[],workerBusy=()=>0,cache}){
  const runtime=hostEndpointsV1(implementation,environment,platform);
- const service=createHostServiceV1({runtime:{...runtime},implementation,policy,log,ports:{planner:createGraphPlannerPortV1({loadGraph,loadSlice,identify,stale,capture,taskState}),...(admission?{admission}:{}),workers:{memory:workerMemory,active:workerBusy}}});
+ const service=createHostServiceV1({runtime:{...runtime},implementation,policy,log,ports:{planner:createGraphPlannerPortV1({loadGraph,loadSlice,identify,stale,capture,taskState}),...(admission?{admission}:{}),workers:{memory:workerMemory,active:workerBusy},cache:cache??{tick:async signal=>{const[{casEnforceTickV1},{casRootV1}]=await Promise.all([import("../../../🗄️cas/🚦️guard/🟦️.ts"),import("../../../🗄️cas/🗃️store/🟦️.ts")]);await casEnforceTickV1({root:casRootV1(environment,platform),signal});}}}});
  let stopping,recorded=false;
  const record=row=>{if(recorded)return;recorded=true;const usage=process.memoryUsage();appendServiceExitRowV1(runtime.directory,{event:"exit",at:Date.now(),pid:process.pid,rssMegabytes:Math.round(usage.rss/1048576),heapMegabytes:Math.round(usage.heapUsed/1048576),workers:workerMemory(),workersBusy:workerBusy(),...row});releaseOwnServiceGroupV1();};
  const crash=error=>{record({reason:"crash",error:error?.stack??String(error)});};

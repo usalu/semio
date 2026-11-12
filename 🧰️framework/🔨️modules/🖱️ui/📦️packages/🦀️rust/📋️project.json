@@ -453,6 +453,110 @@
           ]
         }
       }
+    },
+    "verify-framework-viewport-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-viewport-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-viewport-ownership"
+          ]
+        }
+      }
+    },
+    "verify-framework-viewport-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-viewport-ownership native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-viewport-projection": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-viewport-projection",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-viewport-projection"
+          ]
+        }
+      }
+    },
+    "verify-framework-viewport-projection-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-viewport-projection native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-node-graph-viewport-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "node-graph-viewport-ownership"
+          ]
+        }
+      }
+    },
+    "verify-node-graph-viewport-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-node-graph-viewport-ownership-native-renderer-host": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership native renderer-host",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-node-graph-viewport-ownership-native-consumers": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify node-graph-viewport-ownership native consumers",
+        "forwardAllArgs": true
+      }
     }
   }
 }

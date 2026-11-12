@@ -8,9 +8,9 @@
 //! mutable snapshot fields the target completeness table lists, so a complete mutation API needs
 //! a setter for each (see report deviations).
 //!
-//! 🧬️ Mutation-leaf migration (ticket 26/08/29/S-END-TO-END): `NoMutation` is dropped —
-//! `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one leaf payload, and a unit
-//! variant wraps none. Every former `None => vec![BcfMutation::NoMutation]` inverse fallback below
+//! 🧬️ Mutation-leaf migration (ticket 26/08/29/S-END-TO-END): `#[derive(dsl::Mutations)]`
+//! requires every variant to wrap exactly one leaf payload, and a unit
+//! variant wraps none. Every inverse fallback below
 //! is now `None => Vec::new()` (no inverse steps needed for a mutation that never found its
 //! target), mirroring `tiff`'s own `RemoveTileTags`/`RemoveStripOffsets` "_ => return Vec::new()"
 //! precedent (`../../../../🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
@@ -109,7 +109,7 @@ pub mod set_viewpoint_components;
 pub mod set_viewpoint_snapshot;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for `stdio.bcf`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
+/// 📐️ Typed mutation for `stdio.bcf`. `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

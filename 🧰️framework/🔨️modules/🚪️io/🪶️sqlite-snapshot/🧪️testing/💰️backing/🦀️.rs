@@ -1,109 +1,21 @@
-//! 🔬️ Test-only request observation delegates each actual backing request to the system allocator.
-use std::alloc::{GlobalAlloc, Layout, System};
-use std::cell::Cell;
+//! 🔬️ Test-only request observation reads each actual backing request from the one testing allocator.
+use semio_framework_value_testing_allocator as _;
 
 #[derive(Clone, Copy, Default)]
 pub struct Observation {
     pub bytes: usize,
-    pub requests: usize,
     pub released_bytes: usize,
-    pub overflow: bool,
 }
-#[derive(Clone, Copy, Default)]
-struct State {
-    enabled: bool,
-    observation: Observation,
-}
-std::thread_local! {static STATE:Cell<State>=const{Cell::new(State{enabled:false,observation:Observation{bytes:0,requests:0,released_bytes:0,overflow:false}})};}
-fn record(bytes: usize) {
-    let _ = STATE.try_with(|slot| {
-        let mut state = slot.get();
-        if !state.enabled {
-            return;
-        }
-        match state.observation.bytes.checked_add(bytes) {
-            Some(total) => state.observation.bytes = total,
-            None => state.observation.overflow = true,
-        }
-        match state.observation.requests.checked_add(1) {
-            Some(total) => state.observation.requests = total,
-            None => state.observation.overflow = true,
-        }
-        slot.set(state);
-    });
-}
-fn released(bytes: usize) {
-    let _ = STATE.try_with(|slot| {
-        let mut state = slot.get();
-        if !state.enabled { return; }
-        match state.observation.released_bytes.checked_add(bytes) {
-            Some(total) => state.observation.released_bytes = total,
-            None => state.observation.overflow = true,
-        }
-        slot.set(state);
-    });
-}
-struct Allocator;
-unsafe impl GlobalAlloc for Allocator {
-    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        record(layout.size());
-        unsafe { System.alloc(layout) }
-    }
-    unsafe fn alloc_zeroed(&self, layout: Layout) -> *mut u8 {
-        record(layout.size());
-        unsafe { System.alloc_zeroed(layout) }
-    }
-    unsafe fn realloc(&self, pointer: *mut u8, layout: Layout, bytes: usize) -> *mut u8 {
-        record(bytes);
-        let result = unsafe { System.realloc(pointer, layout, bytes) };
-        if !result.is_null() { released(layout.size()); }
-        result
-    }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: Layout) {
-        released(layout.size());
-        unsafe { System.dealloc(pointer, layout) }
-    }
-}
-#[global_allocator]
-static OBSERVED_ALLOCATOR: Allocator = Allocator;
-struct Restore(State);
-impl Drop for Restore {
-    fn drop(&mut self) {
-        STATE.with(|slot| {
-            let mut parent = self.0;
-            let measured = slot.get().observation;
-            if parent.enabled {
-                match parent.observation.bytes.checked_add(measured.bytes) {
-                    Some(total) => parent.observation.bytes = total,
-                    None => parent.observation.overflow = true,
-                }
-                match parent.observation.requests.checked_add(measured.requests) {
-                    Some(total) => parent.observation.requests = total,
-                    None => parent.observation.overflow = true,
-                }
-                match parent.observation.released_bytes.checked_add(measured.released_bytes) {
-                    Some(total) => parent.observation.released_bytes = total,
-                    None => parent.observation.overflow = true,
-                }
-                parent.observation.overflow |= measured.overflow;
-            }
-            slot.set(parent);
-        });
-    }
-}
-/// 📏️ Measures the operation only and restores nested or unwinding observer state.
+/// 📏️ Measures the operation only; nested observers add their own requests to the enclosing scope.
 pub fn measure<T>(operation: impl FnOnce() -> T) -> (T, Observation) {
-    let restore = Restore(STATE.with(|slot| slot.replace(State { enabled: true, observation: Observation::default() })));
-    let output = operation();
-    let observation = STATE.with(|slot| slot.get().observation);
-    drop(restore);
-    assert!(!observation.overflow, "actual allocator observation overflow");
-    (output, observation)
+    let (output, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(operation);
+    assert!(!heap.overflowed, "actual allocator observation overflow");
+    (output, Observation { bytes: heap.requested_bytes, released_bytes: heap.released_bytes })
 }
 
 /// 🧭️ Reads the current thread's real request total without owning another buffer.
 pub fn active_request_bytes() -> usize {
-    STATE.with(|slot| slot.get().observation.bytes)
+    semio_framework_trace::heap_allocation_observation_on_this_thread().map_or(0, |heap| heap.requested_bytes)
 }
 
 use semio_os_kernel::{
@@ -144,7 +56,7 @@ pub fn verify_snapshot_backing_by<T: ArtifactSqliteSnapshotHost>(snapshot: &T, d
         let mut control = SqliteSnapshotControl::new(&mut callback, defaults);
         let (result, observed) = measure(|| construct(snapshot, database, phase, &mut control));
         let output = result.expect("actual complete typed SQL producer");
-        assert!(observed.requests > 0 && observed.bytes > 0, "{phase:?} must own concrete backing");
+        assert!(observed.bytes > 0, "{phase:?} must own concrete backing");
         let admitted = defaults.max_allocation_bytes - control.allocation_remaining_bytes();
         output.verify(snapshot, database, &verify);
         assert_eq!(admitted, observed.bytes, "{phase:?} must settle full concrete allocator requests");

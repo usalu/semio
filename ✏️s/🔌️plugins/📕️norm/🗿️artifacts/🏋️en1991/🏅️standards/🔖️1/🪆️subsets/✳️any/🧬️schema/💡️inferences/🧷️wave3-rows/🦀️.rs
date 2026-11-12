@@ -1,8 +1,11 @@
 //! 🧷 Checks of the four wave 3 collections: road fatigue load models (EN 1991-2, 4.6), vehicle collision on supports (EN 1991-2, 4.7), localised fires (EN 1991-1-2, Annex C) and snow guards (EN 1991-1-3, 6.3).
 //! Registry values are unverified and cited by every covering check; a row with an input outside the domain is an invalid input without a fallback.
 
-use super::hazard_checks::{covers, first_non_positive, positive};
-use super::*;
+use semio_s_artifact_norm_en1991_checks::{assess_covers, copy, force_n as force, part_1_2, part_1_3, part_2, pressure_pa as pressure, raise_force_remedy, raise_power_remedy, raise_pressure_remedy, temp_k as temp};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, ClauseId, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+use semio_s_artifact_norm_en1991_inferences_rail_silo::{covers, first_non_positive, positive};
 use semio_s_artifact_norm_en1991_model::{FatigueModel, LocalFire, SnowGuard, StructureKind, SupportCollision};
 use semio_s_plugin_norm_compliance::{ndp_common, AnnexChoice};
 
@@ -15,7 +18,7 @@ fn raise_line_load(subject: SubjectRef, current: f64, required: f64) -> Remedy {
 }
 
 /// 🧷 The row checks of the four collections, in the order of the units of [`En1991Units`].
-pub(super) fn check_rows(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport, scope: Scope<'_>) {
+pub fn check_rows(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport, scope: Scope<'_>) {
     for (_, row) in document.fatigue_models.iter().enumerate().filter(|(i, _)| scope.admits("fatigueModels", *i)) { check_fatigue_model(document, annex, report, row); }
     for (_, row) in document.support_collisions.iter().enumerate().filter(|(i, _)| scope.admits("supportCollisions", *i)) { check_support_collision(document, annex, report, row); }
     for (_, row) in document.local_fires.iter().enumerate().filter(|(i, _)| scope.admits("localFires", *i)) { check_local_fire(annex, report, row); }

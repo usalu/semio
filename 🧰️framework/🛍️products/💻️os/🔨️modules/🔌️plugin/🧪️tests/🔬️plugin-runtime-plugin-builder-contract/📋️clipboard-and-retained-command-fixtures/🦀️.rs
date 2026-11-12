@@ -1,14 +1,9 @@
 // 📋️ Clipboard and retained command fixtures: the clipboard job, the retained command work, factory and payload, the command ids and the reducer of the test app.
 
     //#region 📋️ContractClipboardFixture
-    /// 📋️ The exact reserved clipboard producer of the contract app: `copy` and `cut` author the clipboard write, `paste` the placed label, each through its one completion cell, and every original request owner retires under paid turns.
+    /// 📋️ The exact reserved clipboard work of the contract app: `copy` and `cut` author the clipboard write, `paste` the placed label, each through the request's one completion cell, and the work's own custody retires under paid turns while the shared request job retires the request.
     #[doc(hidden)]
 pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
-        pub tool: String,
-        pub label: String,
-        pub args: Option<DslValue>,
-        pub read: Option<store::os_store::snapshot_read::SnapshotRead<TestSnapshot>>,
-        pub completion: Option<ArtifactToolCompletion<TestApp<RETAINED, TOOLS>>>,
         pub rejected: Option<semio_plugin_decl_app::tool_contract::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
         pub retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
         pub outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes,
@@ -16,28 +11,29 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
         pub closing: bool,
     }
 
-    impl<const RETAINED: bool, const TOOLS: u8> TestClipboardJob<RETAINED, TOOLS> {
-        pub fn new(request: semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Self, Fault> {
-            let semio_plugin_decl_app::tool_contract::ArtifactReservedToolInput::Action { args, .. } = request.input else { return Err(Fault::from("the contract clipboard requires an action input")) };
-            Ok(Self { tool: request.tool_id, label: request.snapshot.label.clone(), args, read: Some(request.snapshot_read), completion: Some(request.completion), rejected: None, retirement: None, outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(), completed: false, closing: false })
-        }
+    impl<const RETAINED: bool, const TOOLS: u8> Default for TestClipboardJob<RETAINED, TOOLS> {
+        fn default() -> Self { Self { rejected: None, retirement: None, outcomes: Default::default(), completed: false, closing: false } }
+    }
 
-        pub fn emit(&self) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
+    impl<const RETAINED: bool, const TOOLS: u8> TestClipboardJob<RETAINED, TOOLS> {
+        pub fn emit(request: &semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
+            let Some(semio_plugin_decl_app::tool_contract::ArtifactReservedToolInput::Action { args, .. }) = request.input.as_ref() else { return Err(Fault::from("the contract clipboard requires an action input")) };
+            let (tool, label) = (request.tool_id.as_str(), request.snapshot.label.clone());
             let media_type = MediaType { class: MediaClass::Data, form: MediaForm::Value };
-            if self.tool != "paste" {
-                if self.label.is_empty() {
+            if tool != "paste" {
+                if label.is_empty() {
                     return Ok(Emit::default());
                 }
-                let fragment = ClipboardFragment { schema: TestApp::<false>::DOCUMENT_SCHEMA.to_string(), media_type, dsl_text: self.label.clone(), pack_bytes: None, source_app: TestApp::<false>::APP_ID.to_string(), label: self.label.clone() };
+                let fragment = ClipboardFragment { schema: TestApp::<false>::DOCUMENT_SCHEMA.to_string(), media_type, dsl_text: label.clone(), pack_bytes: None, source_app: TestApp::<false>::APP_ID.to_string(), label };
                 let mut emit = Emit::effect(Effect::ClipboardWrite { fragment });
-                if self.tool == "cut" {
+                if tool == "cut" {
                     emit.artifact_mutations = vec![TestMutation::SetLabel(SetLabel { value: String::new() })];
                 }
                 return Ok(emit);
             }
-            let Some(fragment) = self.args.as_ref().and_then(|args| args.get("fragment")) else { return Ok(Emit::default()) };
+            let Some(fragment) = args.as_ref().and_then(|args| args.get("fragment")) else { return Ok(Emit::default()) };
             let text = fragment.get("dslText").and_then(DslValue::as_str).ok_or_else(|| Fault::from("the contract paste fragment carries no text"))?;
-            let anchor = match self.args.as_ref().and_then(|args| args.get("anchor")).and_then(DslValue::as_str) {
+            let anchor = match args.as_ref().and_then(|args| args.get("anchor")).and_then(DslValue::as_str) {
                 None | Some("original") => PasteAnchor::Original,
                 Some("middle") => PasteAnchor::Middle,
                 Some("centroid") => PasteAnchor::Centroid,
@@ -51,18 +47,7 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
             Ok(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value })]))
         }
 
-        pub fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-            if !self.outcomes.terminal_is_empty() { return self.outcomes.close_demands(); }
-            if let Some(active) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
-            if self.rejected.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.rejected); }
-            if self.read.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.read); }
-            if self.completion.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion); }
-            Ok(Default::default())
-        }
-    }
-
-    impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob for TestClipboardJob<RETAINED, TOOLS> {
-        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        fn step_value<'a>(&'a mut self, request: &mut semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
             if cx.is_cancelled() { return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from); }
             if self.outcomes.is_delivered() {
                 self.outcomes.retire(cx)?;
@@ -71,9 +56,8 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
             if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "the contract clipboard completion remains rejected").into()); }
             if cx.should_yield() { return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from); }
             if !self.completed {
-                let emit = self.emit().map_err(|fault| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, fault.message))?;
-                let completion = self.completion.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "the contract clipboard lost its completion authority"))?;
-                if let Err(rejected) = completion.complete(Ok(emit), EphemeralEmit::default()) {
+                let emit = Self::emit(request).map_err(|fault| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, fault.message))?;
+                if let Err(rejected) = request.completion.complete(Ok(emit), EphemeralEmit::default()) {
                     self.rejected = Some(rejected);
                     return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "the contract clipboard completion was rejected").into());
                 }
@@ -82,15 +66,30 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
             semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from)
         }
 
+        pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+            if !self.outcomes.terminal_is_empty() { return self.outcomes.close_demands(); }
+            if let Some(active) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
+            if self.rejected.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.rejected); }
+            Ok(Default::default())
+        }
+    }
+
+    impl<const RETAINED: bool, const TOOLS: u8> semio_plugin_decl_app::tool_contract::ArtifactReservedWork<TestApp<RETAINED, TOOLS>> for TestClipboardJob<RETAINED, TOOLS> {
+        fn step<'a>(&'a mut self, request: &'a mut semio_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>, cx: &mut semio_framework_job::StepContext<'_>, _return_claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+            semio_framework_job::InteractiveJobStep::from_callback(self.step_value(request, cx))
+        }
+
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
             self.outcomes.borrow_outcome(descriptor)
         }
 
         fn begin_close(&mut self) { self.closing = true; }
 
+        fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
+
         fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
             if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
-            let original=cx.retained_grant();let demand=self.close_demands(original.maximum_copy_bytes)?;
+            let original=cx.retained_grant();let demand=self.demands(original.maximum_copy_bytes)?;
             let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{
                 use semio_framework_value::RetirementPollExit as Exit;
                 let body=effect.grant().maximum_copy_bytes;
@@ -98,8 +97,6 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
                     if !self.outcomes.terminal_is_empty(){return Ok(self.outcomes.close_step(effect)?)}
                     if self.retirement.is_some(){Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,body,effect))}
                     else if self.rejected.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected,&mut self.retirement,effect).result?)}
-                    else if self.read.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read,&mut self.retirement,effect).result?)}
-                    else if self.completion.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.retirement,effect).result?)}
                     else{Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))}
                 })();
                 Exit::settle(effect,result)
@@ -107,17 +104,10 @@ pub struct TestClipboardJob<const RETAINED: bool, const TOOLS: u8> {
             step.admit(original,self.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)
         }
 
-        fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
-        fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }
-        fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.release_bytes) }
-        fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.depth) }
-
         fn terminal_is_empty(&self) -> bool {
-            self.closing && self.read.is_none() && self.completion.is_none() && self.rejected.is_none() && self.retirement.is_none() && self.outcomes.terminal_is_empty()
+            self.closing && self.rejected.is_none() && self.retirement.is_none() && self.outcomes.terminal_is_empty()
         }
     }
-
-    impl<const RETAINED: bool, const TOOLS: u8> semio_plugin_decl_app::tool_contract::ArtifactReservedJob for TestClipboardJob<RETAINED, TOOLS> {}
     //#endregion 📋️ContractClipboardFixture
 
     #[doc(hidden)]

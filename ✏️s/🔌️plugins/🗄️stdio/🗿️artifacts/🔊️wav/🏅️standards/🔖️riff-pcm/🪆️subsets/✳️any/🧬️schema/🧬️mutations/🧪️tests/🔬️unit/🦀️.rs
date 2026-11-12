@@ -74,7 +74,7 @@ fn kind_of(m: &WavMutation) -> &'static str {
 /// in the mutation catalog's declared `kinds` — the framework never parses Rust, so this test is
 /// what keeps the manifest honest. The check is containment, not equality: the manifest also
 /// declares `no-mutation`, the identity scenario the `🥒️.feature` still exercises against the
-/// independent oracle even though `NoMutation` is no longer an enum variant (`no` is not an
+/// independent oracle even though the identity scenario is not an enum variant (`no` is not an
 /// approved semantic verb for `#[derive(dsl::Mutations)]`) — the same split
 /// `🎛️mutate-mp3-mpeg1-layer3`'s own `kinds_match_the_committed_catalog` makes for its sibling
 /// vocabulary.

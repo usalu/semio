@@ -1,8 +1,7 @@
 //! 🔬️ Unit tests of os-store-initialization-runtime; the work package moves the tests of its sources here.
 use crate::lifted_store::{ArtifactStoreInitializationEditIndex,ArtifactStoreInitializationEditAdmission};
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 #[test]
 fn original_initializer_index_matches_json_oracle_and_closes_every_cancelled_birth(){

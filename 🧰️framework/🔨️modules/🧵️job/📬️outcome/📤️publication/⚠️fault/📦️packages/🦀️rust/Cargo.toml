@@ -22,6 +22,7 @@ semio-framework-diagnostic = { path = "../../../../../../⚠️diagnostic/📦�
 semio-framework-value = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-testing-effect-bank = { path = "../../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 semio-framework-async = { workspace = true }

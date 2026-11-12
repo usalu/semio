@@ -54,9 +54,9 @@ fn archive_retirement_failure(error:semio_framework_value::OriginalRetirementFai
  };
  PluginLifecycleFailure{effects:progress,primary,receipt_refusal:None,context_refusal:None,work_refusal:None}
 }
-fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T,semio_framework_value::OriginalRetirementFailure>,progress:RetainedCloneProgress,observed:u128)->Result<T,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+fn receive_archive<T>(cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,turn:semio_framework_value::RetainedWorkOutcome<T,semio_framework_value::OriginalRetirementFailure>,progress:RetainedCloneProgress,observed:u64)->Result<T,semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
  use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued};
- let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:u64::try_from(turn.work).unwrap_or(u64::MAX)},u64::try_from(observed).unwrap_or(u64::MAX)); match (outcome.value,outcome.receiving_refusal) {
+ let outcome=OriginalNativeDecodeSource::receive_observed_work(cx,grant,fuel,OriginalNativeDecodeIssued{value:turn.result,grant,progress,work:u64::try_from(turn.work).unwrap_or(u64::MAX)},observed); match (outcome.value,outcome.receiving_refusal) {
   (Ok(value),None)=>Ok(value),
   (Ok(_),Some(failure))=>{let mut failure:semio_plugin_ownership::bounded_ownership::PluginLifecycleFailure=failure.into();failure.effects=progress;Err(failure)},
   (Err(error),receiving)=>Err(archive_retirement_failure(error,receiving,progress)),

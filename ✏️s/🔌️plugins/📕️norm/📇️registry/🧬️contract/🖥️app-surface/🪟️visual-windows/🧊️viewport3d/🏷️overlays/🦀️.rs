@@ -43,6 +43,9 @@ pub fn presentation(kind: QuantityKind, unit: LengthUnit) -> (f64, &'static str,
         QuantityKind::Velocity => (1.0, "m/s", 3),
         QuantityKind::Frequency => (1.0, "Hz", 3),
         QuantityKind::Stiffness => (1.0e-3, "kN/m", 2),
+        QuantityKind::VentilationRate => (3600.0, "m³/h", 1),
+        QuantityKind::HeatTransferCoefficient => (1.0, "W/(m²·K)", 2),
+        QuantityKind::Power => (1.0e-3, "kW", 2),
         QuantityKind::Dimensionless => (1.0, "", 3),
     }
 }

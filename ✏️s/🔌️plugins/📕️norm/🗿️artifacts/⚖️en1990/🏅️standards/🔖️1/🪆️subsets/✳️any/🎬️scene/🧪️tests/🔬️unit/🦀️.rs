@@ -1,4 +1,6 @@
 use super::*;
+use diagrams::diagrams;
+use kit::{check_owner, entity_kind_of, focus_of_outcome, owner_entity, route_of, CheckRoute, CHECK_OWNERS, COMBINATION_ENTITY, DOCUMENT_CHECKS, ENTITY_KINDS};
 use scene::projection_kit::test_support::{revision, entity, assert_diagram_laws, assert_handle_laws, assert_scene_laws};
 use scene::{canonical_json, Validate};
 use semio_s_artifact_norm_en1990_examples as examples;

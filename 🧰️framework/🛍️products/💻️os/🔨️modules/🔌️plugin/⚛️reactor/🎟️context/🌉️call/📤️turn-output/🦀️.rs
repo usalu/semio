@@ -44,21 +44,21 @@ impl OriginalTurnOutput{
   if !self.encoder.terminal_is_empty(){self.encoder.close_step(cx)?;return Ok(false)}
   if self.encoded.is_some(){
    let demand=RetirementDemand{copy_bytes:size_of::<Option<Vec<u8>>>()+size_of::<Option<ControlledRetirement<Vec<u8>>>>(),depth:1,..Default::default()};
-   close_original_retained_step(cx,demand,|_|{let value=self.encoded.take().expect("retained encoded turn");*self.encoded_retirement=Some(ControlledRetirement::retain(value));RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;return Ok(false)
+   close_original_retained_step(cx,demand,|_|{let value=self.encoded.take().expect("retained encoded turn");*self.encoded_retirement=Some(ControlledRetirement::retain(value));RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;return Ok(false)
   }
   if let Some(owner)=self.encoded_retirement.as_mut(){
    if !owner.terminal_is_empty(){retire_step(owner,cx)?;return Ok(false)}
-   let demand=RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<Vec<u8>>>>(),depth:1,..Default::default()};close_original_retained_step(cx,demand,|_|{self.encoded_retirement.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;return Ok(false)
+   let demand=RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<Vec<u8>>>>(),depth:1,..Default::default()};close_original_retained_step(cx,demand,|_|{self.encoded_retirement.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;return Ok(false)
   }
   if self.value.is_some(){
    if !TurnResult::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"turn result has an unsupported original descendant").into())}
    let demand=RetirementDemand{copy_bytes:size_of::<Option<TurnResult>>()+size_of::<Option<ControlledRetirement<TurnResult>>>(),depth:1,..Default::default()};
-   close_original_retained_step(cx,demand,|_|{let value=self.value.take().expect("retained turn output");*self.retirement=Some(ControlledRetirement::retain(value));RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;return Ok(false)
+   close_original_retained_step(cx,demand,|_|{let value=self.value.take().expect("retained turn output");*self.retirement=Some(ControlledRetirement::retain(value));RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;return Ok(false)
   }
   if let Some(owner)=self.retirement.as_mut(){if !owner.terminal_is_empty(){retire_step(owner,cx)?;return Ok(false)}}
   if self.input.is_none()&&self.binding.is_none(){return Ok(self.is_empty())}
   let demand=RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<TurnResult>>>()+size_of::<Option<semio_framework_actor::RetainedTurnInput>>()+size_of::<Option<OriginalSourceBinding>>()+size_of::<usize>()+size_of::<usize>(),depth:1,..Default::default()};
-  close_original_retained_step(cx,demand,|_|{self.retirement.take();self.input=None;self.binding=None;self.home_address=0;self.source_identity=0;RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;Ok(self.is_empty())
+  close_original_retained_step(cx,demand,|_|{self.retirement.take();self.input=None;self.binding=None;self.home_address=0;self.source_identity=0;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;Ok(self.is_empty())
  }
 }
 impl Drop for OriginalTurnOutput{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"resident turn output reached Drop before original acknowledgement")}}

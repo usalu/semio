@@ -13,7 +13,6 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snap
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::ownership::{XmlDocumentView};
 use semio_s_artifact_stdio_zip::opc::sqlite::{append_opc_package, measure_opc_package};
 use semio_framework_value::native_encoding::NativeEncodeProgress;
-use semio_framework_value::NativeEncodeControl;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 
 struct MaterializedDocument {
@@ -45,7 +44,7 @@ fn materialize_package(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotCont
     control
         .allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress,allocation|{
             let mut callback = |event: NativeEncodeProgress| progress(event.completed, event.total);
-            let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
+            let mut native=allocation.encode(remaining,&mut callback);
             let result = snapshot.opc.materialize_package(&mut native);
             let owned = native.owned_bytes();
             (result, owned)
@@ -62,7 +61,7 @@ pub(crate) fn project(snapshot: &DocxSnapshot, control: &mut SqliteSnapshotContr
         }
         let document = control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot, |remaining, progress,allocation|{
             let mut callback = |event: NativeEncodeProgress| progress(event.completed, event.total);
-            let mut native=NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
+            let mut native=allocation.encode(remaining,&mut callback);
             let result = match native.allocate_vec::<XmlNode>(part.document.nodes.len()) {
                 Ok(retirement) => part.materialize_document(&mut native).map(|document| MaterializedDocument { document: Some(document), retirement }),
                 Err(error) => Err(error),

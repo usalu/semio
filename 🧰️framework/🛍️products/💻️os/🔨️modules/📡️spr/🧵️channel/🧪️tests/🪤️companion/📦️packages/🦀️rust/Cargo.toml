@@ -33,3 +33,4 @@ semio-framework-io-control = { path = "../../../../../../../../../🔨️modules
 [dev-dependencies]
 semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

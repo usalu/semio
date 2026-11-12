@@ -1,4 +1,7 @@
 //! 🎟️ Original descriptor, request and semantic ownership prepares bounded immutable inspector pages.
+#[macro_use]
+mod funding;
+
 mod pagination;
 pub use pagination::*;
 

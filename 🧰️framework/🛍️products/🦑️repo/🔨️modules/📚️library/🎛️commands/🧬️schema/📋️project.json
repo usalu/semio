@@ -1,0 +1,186 @@
+{
+  "name": "repo-schema-commands",
+  "$schema": "../../🏗️build/🧬️schema/📋️project/🔣️.json",
+  "targets": {
+    "schema-generate": {
+      "executor": "repo:script",
+      "inputs": [
+        "schemaSources"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json"
+      ],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema generate",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "cache": true
+    },
+    "schema-docs": {
+      "executor": "repo:script",
+      "inputs": [
+        "schemaSources"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md"
+      ],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema docs",
+        "cwd": "."
+      },
+      "cache": true
+    },
+    "schema-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "schemaSources"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema check",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "cache": true
+    },
+    "schema-fixture-boundary": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧪️tests/🎚️config/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts",
+        "schemaSources"
+      ],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema check --fixture-boundary",
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "schema-verify": {
+      "executor": "repo:script",
+      "inputs": [
+        "sharedGlobals",
+        "{workspaceRoot}/🧪️tests/🎚️config/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts",
+        "schemaSources"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema verify",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "cache": true
+    },
+    "schema-audit": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema audit",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "schema-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema oracle",
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "schema-compile": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema compile",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "schema-entries": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema entries",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "schema-test": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema test",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "schema-parsers-report": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema parsers report",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "schema-parsers-apply": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema parsers apply --closing --formats 🟦️typescript",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
+    "schema-parsers-restate": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema parsers apply --closing --formats 🟦️typescript --restate all",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
+    "schema-parsers-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/📜️script.ts schema parsers check",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": []
+    }
+  }
+}

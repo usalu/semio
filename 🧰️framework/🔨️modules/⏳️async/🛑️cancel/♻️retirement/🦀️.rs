@@ -62,6 +62,18 @@ impl CancelTokenRetirement{
         RetainedWorkOutcome{result,work}
     }
 }
+#[cfg(feature="testkit")]
+impl CancelTokenRetirement{
+    /// 🔬️ Borrows the original token still held before its node is captured.
+    #[doc(hidden)]
+    pub fn current(&self)->Option<&CancelToken>{self.current.as_ref()}
+    /// 🔬️ Borrows the captured original node.
+    #[doc(hidden)]
+    pub fn node(&self)->Option<&CancelNode>{self.node.as_ref()}
+    /// 🔬️ Erases this custody behind the typed retirement ladder cursor.
+    #[doc(hidden)]
+    pub fn into_cursor(self)->CancelTokenRetirementCursor{CancelTokenRetirementCursor(self)}
+}
 impl Drop for CancelTokenRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"cancellation retirement abandoned its original node");}}
 /// 🪜️ Erases original cancellation custody behind the typed retirement ladder of owning containers.
 #[doc(hidden)]

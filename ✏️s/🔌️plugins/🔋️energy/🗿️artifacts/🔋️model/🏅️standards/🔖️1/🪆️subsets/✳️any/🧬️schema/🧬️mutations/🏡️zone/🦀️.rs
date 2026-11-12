@@ -113,5 +113,4 @@ pub use change_zone_floor_area_participation::{change_zone_floor_area_participat
 pub use change_zone_volume::{change_zone_volume, ChangeZoneVolume};
 
 #[path="🧳️retained/🦀️.rs"]pub mod retained;
-#[cfg(test)]#[global_allocator]
-static ORIGINAL_ZONE_MUTATION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+#[cfg(test)]use semio_framework_value_testing_allocator as _;

@@ -48,7 +48,7 @@ use protocol::OpText;
 /// instruction ("hand-roll all diff/op codecs — do not fight the derive"), every variant is
 /// handcrafted rather than mixed derive/hand-roll. One space-free token per op: `tag` then `:`
 /// then comma-separated positional fields (bracket-depth-aware, reusing the shared
-/// `engine::triples` split/strip helpers so a nested `[...]` payload — e.g. `SetSnapshot`'s whole
+/// `engine::triples` split/strip helpers so a nested `[...]` payload — e.g. a whole
 /// snapshot — never confuses the top-level split).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_snapshot(s: &SemioImageSnapshot) -> String {

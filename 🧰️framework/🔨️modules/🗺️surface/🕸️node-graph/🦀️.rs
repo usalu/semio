@@ -115,5 +115,4 @@ mod scene_retained_tests;
 #[path="🧪️tests/🔌️ports/🦀️.rs"]
 mod ports_tests;
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;

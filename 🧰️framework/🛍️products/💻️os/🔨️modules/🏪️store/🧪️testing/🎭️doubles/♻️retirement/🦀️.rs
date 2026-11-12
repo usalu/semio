@@ -20,7 +20,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_pack_json_retained_schema::testing::{OWNED_SCHEMA_TEST_FIELDS, owned_schema_test_cursor, drive_owned_schema, schema_test_close_grant};
 use semio_framework_value::testing::physical_test_close_grant;
 use crate::store::ArtifactStore;
-use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
+use semio_framework_value::retirement::arc_custody::original::{SharedOriginalRelease, SharedOriginalStorage};
 
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -64,11 +64,11 @@ impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
         let demand=self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth<demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"counted original close requires supplied depth").into()); }
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if let Some(owner)=self.owner.take() {
-            match owner.try_owner() {
-                Ok(mut elected)=>{*self.value=elected.take_value();return Ok(RetainedCloneStep::Progress(unsafe{elected.release_empty(grant)}));},
-                Err(original)=>{*self.owner=Some(original);return Ok(RetainedCloneStep::Progress(empty));}
-            }
+        if let Some(owner)=self.owner.as_ref() {
+            if owner.aliases()!=1||!owner.physically_unique() { return Ok(RetainedCloneStep::Progress(empty)); }
+            let SharedOriginalRelease::Original(mut original)=self.owner.take().unwrap().retire() else { return Err(ValueError::invariant("counted original snapshot lost its unique owner").into()); };
+            *self.value=Some(original.take_value().ok_or_else(||ValueError::invariant("counted original snapshot lost its unique payload"))?);
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1,released_bytes: demand.release_bytes,..empty }));
         }
         let child_grant=RetainedCloneGrant { maximum_items: 1,maximum_depth: grant.maximum_depth-1,..grant };
         if self.value.is_some() {
@@ -223,7 +223,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitnes
         let release_bytes=if let Some(root)=state.root.as_ref() { if Arc::strong_count(root)==1 { demo_snapshot_frame_bytes() } else { 0 } } else if state.weak.as_ref().is_some_and(|weak|weak.strong_count()==0) { demo_snapshot_frame_bytes() } else { 0 };
         Ok(semio_framework_value::RetirementDemand { release_bytes,depth:usize::from(state.weak.is_some()||state.root.is_some()),..Default::default() })
     }
-    fn close_state_step(state:&mut Self::CloseState,_:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll {
+    fn close_state_step(state:&mut Self::CloseState,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll {
         let result=Self::close_state_result(state,effect.grant()).map_err(semio_framework_value::RetirementPollExit::from);
         semio_framework_value::RetirementPollExit::settle(effect,result)
     }

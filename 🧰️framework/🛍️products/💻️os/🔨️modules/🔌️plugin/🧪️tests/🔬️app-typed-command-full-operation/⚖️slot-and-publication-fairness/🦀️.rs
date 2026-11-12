@@ -53,7 +53,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
             };
             app.tools.tool_operations.insert_admitted(
                 id,
-                Box::new(MountedTypedCommandFullOperation::<A> {
+                Box::new(MountedTypedCommandFullOperation::<A> { reserved_construction: Default::default(), publication_failure: Default::default(),
                     source_identity: semio_framework_job::OriginalSourceBinding::borrow(cx),
                     original_emission_caller: None,
                     original_emission_decoder: None,
@@ -91,7 +91,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     owned_child_group: None,
                     owned_child_committed: false,
                     owned_child_result_pending: false,
-                    captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
+                    captured_child_content: Some(semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
                     page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,
                     result_page_presented: false,
@@ -145,7 +145,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
             let page = TypedOperationResultPage::try_new(TypedOperationResultToken { receiver: 7, operation: id, generation: 0, sequence: 0, attempt: 1 }, TypedOperationResultLane::Terminal, b"presented ACK waiter").unwrap();
             app.tools.tool_operations.insert_admitted(
                 id,
-                Box::new(MountedTypedCommandFullOperation::<A> {
+                Box::new(MountedTypedCommandFullOperation::<A> { reserved_construction: Default::default(),
                     source_identity: semio_framework_job::OriginalSourceBinding::borrow(cx),
                     original_emission_caller: None,
                     original_emission_decoder: None,
@@ -179,7 +179,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
                     owned_child_group: None,
                     owned_child_committed: false,
                     owned_child_result_pending: false,
-                    captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
+                    captured_child_content: Some(semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
                     page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page: Some(page),
                     result_page_presented: true,
@@ -248,7 +248,7 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
         let result_sequence = page.token.sequence;
         let revision = [0; 32];
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(0), semio_framework_job::Generation(page.token.generation), 17);
-        MountedTypedCommandFullOperation::<A> {
+        MountedTypedCommandFullOperation::<A> { reserved_construction: Default::default(),
                     source_identity: semio_framework_job::OriginalSourceBinding::borrow(cx),
                     original_emission_caller: None,
                     original_emission_decoder: None,
@@ -332,8 +332,8 @@ pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: Artifa
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns() {
             if page.terminal_is_empty() { return; }
             let demand = page.next_close_demand(grant.maximum_copy_bytes).unwrap();
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_plugin_ownership::bounded_ownership::original_lifecycle_step(cx, grant, demand, |_, grant| {
-                let step = page.close_step(grant)?;
+            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_plugin_ownership::bounded_ownership::original_lifecycle_effect_step(cx, grant, demand, |_, effect| {
+                let step = page.close_step(effect)?;
                 let complete = page.terminal_is_empty();
                 Ok((if complete { PluginLifecycleStep::Complete(step.progress()) } else { PluginLifecycleStep::Progress(step.progress()) }, complete))
             }));

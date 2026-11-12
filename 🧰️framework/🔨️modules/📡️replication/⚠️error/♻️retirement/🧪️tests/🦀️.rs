@@ -2,6 +2,8 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
+use semio_framework_value::{OriginalRetirementFailure,RetainedCloneProgress,retirement::{RetirementCursor,RetirementStep}};
+use semio_framework_value_clone_source_testing::drive::drive_reply;
 use semio_framework_pack_error::{PackError,PackRefusal,PackRetryDisposition,PackTransportCategory,TransportAdmission,reserve_transport};
 use semio_framework_diagnostic::{TextError,TextSpan};
 fn owned(row:&serde_json::Value,index:usize)->String{
@@ -104,13 +106,22 @@ fn protocol_borrowed_cause_closure_matches_original_owned_slot_without_hidden_re
  }
 }
 
+/// 🪙️ Closes one cursor turn under a real original action, quoting its work from the cursor, and returns the receipted heap checked against its progress.
+fn close_step(grant:RetainedCloneGrant,cursor:&mut dyn RetirementCursor)->(RetirementStep,(usize,usize)){
+ let units=cursor.next_computational_work(0).unwrap();
+ let progress=|reply:&Result<RetirementStep,OriginalRetirementFailure>|match reply{Ok(RetirementStep::Progress(progress,_)|RetirementStep::ChildProgress(_,progress,_))=>*progress,Err(failure)=>failure.retained_progress(),_=>RetainedCloneProgress::default()};
+ let turn=drive_reply::<RetirementStep,OriginalRetirementFailure>(grant,units,progress,|effect,reply,recover|if recover{cursor.recover_close_into(0,effect,reply)}else{cursor.close_into(0,effect,reply)});
+ let receipt=progress(&turn.result);let step=match turn.result{Ok(step)=>step,Err(failure)=>RetirementStep::Failure(failure,turn.work)};
+ (step,(receipt.retained_capacity_bytes,receipt.released_bytes))
+}
+
 #[test]
 fn protocol_typed_original_retirement_preserves_fixture_denials_and_exact_physical_frontier(){
  use semio_framework_value::retirement::RetireOwned;
  let law:serde_json::Value=serde_json::from_str(fixture_text!("../../♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for row in law["cases"].as_array().unwrap(){
-  let original=cause(row);let expected=remaining_capacity(&Some(cause(row)));let birth=original.retirement_birth_bytes().unwrap();let(mut cursor,heap)=observe_heap_allocations_on_this_thread(||original.retirement());assert_eq!((heap.requested_bytes,heap.released_bytes),(birth,0));let mut released=0;
-  for _ in 0..128{if cursor.terminal_is_empty(){break}let(d,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand(0).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(denied));assert!(matches!(step,semio_framework_value::retirement::RetirementStep::Progress(p,_) if p==Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cursor.next_demand(0).unwrap(),d)}let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(grant));let semio_framework_value::retirement::RetirementStep::Progress(p,_)=step else{panic!("original typed cause omitted its admitted receipt")};assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));released+=p.released_bytes;
+  let original=cause(row);let expected=remaining_capacity(&Some(cause(row)));let birth=original.retirement_birth_bytes().unwrap();let(mut cursor,heap)=observe_heap_allocations_on_this_thread(||Box::new(original.retirement_seed())as Box<dyn RetirementCursor>);assert_eq!((heap.requested_bytes,heap.released_bytes),(birth,0));let mut released=0;
+  for _ in 0..128{if cursor.terminal_is_empty(){break}let(d,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand(0).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(step,heap)=close_step(denied,&mut *cursor);assert!(matches!(step,semio_framework_value::retirement::RetirementStep::Progress(p,_) if p==Default::default()));assert_eq!(heap,(0,0));assert_eq!(cursor.next_demand(0).unwrap(),d)}let(step,heap)=close_step(grant,&mut *cursor);let semio_framework_value::retirement::RetirementStep::Progress(p,_)=step else{panic!("original typed cause omitted its admitted receipt")};assert!(p.fits(grant));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));released+=p.released_bytes;
   }
   assert!(cursor.terminal_is_empty());assert_eq!(released,expected);assert_eq!(cursor.terminal_release_bytes(),Some(birth));let((),heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,birth));
  }

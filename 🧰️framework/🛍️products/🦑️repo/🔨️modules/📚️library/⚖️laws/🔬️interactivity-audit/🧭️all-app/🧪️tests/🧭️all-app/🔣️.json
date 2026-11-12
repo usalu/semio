@@ -1306,9 +1306,9 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json: the Parameter schema declares no text kind",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json: the Parameter schema declares no valuePositional",
     "📋️project.json: the root project must be named workspace",
-    "📋️project.json: target workspace:verify is missing, so no verification gate is a dashboard command",
-    "📋️project.json: workspace:verify must forward free arguments to 📜️script.ts verify",
-    "📋️project.json: workspace:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 0"
+    "📋️project.json: target repo-policy:verify is missing, so no verification gate is a dashboard command",
+    "📋️project.json: repo-policy:verify must forward free arguments to 📜️script.ts verify",
+    "📋️project.json: repo-policy:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 0"
    ]
   },
   {
@@ -1322,9 +1322,9 @@
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json: the Parameter schema declares no text kind",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json: the Parameter schema declares no valuePositional",
     "📋️project.json: the root project must be named workspace",
-    "📋️project.json: target workspace:verify is missing, so no verification gate is a dashboard command",
-    "📋️project.json: workspace:verify must forward free arguments to 📜️script.ts verify",
-    "📋️project.json: workspace:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 0"
+    "📋️project.json: target repo-policy:verify is missing, so no verification gate is a dashboard command",
+    "📋️project.json: repo-policy:verify must forward free arguments to 📜️script.ts verify",
+    "📋️project.json: repo-policy:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 0"
    ]
   },
   {
@@ -1335,7 +1335,7 @@
     "{\"$defs\":{\"Parameter\":{\"properties\":{\"kind\":{\"enum\":[\"text\",\"number\"]},\"valuePositional\":{\"type\":\"boolean\"}}}}}"
    ],
    "expect": [
-    "📋️project.json: workspace:verify must forward free arguments to 📜️script.ts verify"
+    "📋️project.json: repo-policy:verify must forward free arguments to 📜️script.ts verify"
    ]
   },
   {
@@ -1355,7 +1355,7 @@
     "{\"$defs\":{\"Parameter\":{\"properties\":{\"kind\":{\"enum\":[\"text\",\"number\"]},\"valuePositional\":{\"type\":\"boolean\"}}}}}"
    ],
    "expect": [
-    "📋️project.json: workspace:verify must forward free arguments to 📜️script.ts verify"
+    "📋️project.json: repo-policy:verify must forward free arguments to 📜️script.ts verify"
    ]
   },
   {
@@ -1366,7 +1366,7 @@
     "{\"$defs\":{\"Parameter\":{\"properties\":{\"kind\":{\"enum\":[\"text\",\"number\"]},\"valuePositional\":{\"type\":\"boolean\"}}}}}"
    ],
    "expect": [
-    "📋️project.json: workspace:verify must forward free arguments to 📜️script.ts verify"
+    "📋️project.json: repo-policy:verify must forward free arguments to 📜️script.ts verify"
    ]
   },
   {
@@ -1377,7 +1377,7 @@
     "{\"$defs\":{\"Parameter\":{\"properties\":{\"kind\":{\"enum\":[\"text\",\"number\"]},\"valuePositional\":{\"type\":\"boolean\"}}}}}"
    ],
    "expect": [
-    "📋️project.json: workspace:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 2"
+    "📋️project.json: repo-policy:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 2"
    ]
   },
   {
@@ -1388,7 +1388,7 @@
     "{\"$defs\":{\"Parameter\":{\"properties\":{\"kind\":{\"enum\":[\"text\",\"number\"]},\"valuePositional\":{\"type\":\"boolean\"}}}}}"
    ],
    "expect": [
-    "📋️project.json: workspace:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 0"
+    "📋️project.json: repo-policy:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found 0"
    ]
   },
   {

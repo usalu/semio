@@ -40,6 +40,8 @@ semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules
 serde_json = "1"
 semio-os-space-testing-sqlite-native-caller = { path = "../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }
 
+semio-framework-value-testing-allocator = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }

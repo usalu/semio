@@ -1,0 +1,1118 @@
+{
+  "version": 1,
+  "uniqueObligations": 16,
+  "activeInstances": 16,
+  "preservedFromInstances": 32,
+  "assertions": 425,
+  "debugStatements": 0,
+  "crates": [
+    {
+      "package": "semio-plugin-child-group-source-retention-laws",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/♻️source-retention-laws/📦️packages/🦀️rust/Cargo.toml",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/♻️source-retention-laws/🦀️.rs",
+      "laws": [
+        {
+          "name": "child_complete_actual_authored_paged_source8194_frame8202_physical4096",
+          "sha256": "86765d836fddb518badb929191967f94a62928fcc2a473408845fc60ec7dfebc",
+          "assertions": 45
+        },
+        {
+          "name": "child_complete_actual_authored_typed_source_event_observer_matches_system_backing",
+          "sha256": "eadf55e27a6ff8009237824b552d9a233c254dc7a3117f95bda061c05a587fb8",
+          "assertions": 12
+        },
+        {
+          "name": "child_complete_actual_authored_typed_source_physical8194_grant4096",
+          "sha256": "413b9321f079ef02a6ceef5f94709f25573ff607d7c78b96e0d8ba9e1345fd6f",
+          "assertions": 29
+        }
+      ],
+      "closure": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/♻️source-retention-laws/🦀️.rs",
+          "bytes": 14673,
+          "nonblank": 94,
+          "sha256": "c252a28bbbfa0848c66fbdc5363d675a69d7eaa85f83afbd8ebc0f56126e62d8"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations/🦀️.rs",
+          "bytes": 2214,
+          "nonblank": 23,
+          "sha256": "523e63b1e6265e085c16772155fe769b901bd91ffab9dbafc6107aa5e370adde"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🦀️.rs",
+          "bytes": 4665,
+          "nonblank": 96,
+          "sha256": "5017e8cfb9c2a907dd16c241ccf0728cfac3b3f9242e24eb3fb5cfbd10977b5e"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🧬️preparation/🦀️.rs",
+          "bytes": 14462,
+          "nonblank": 74,
+          "sha256": "979fa326ddacb203603001dcd92c334f179145886d1de23cddbb6b5b40a35ae2"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs",
+          "bytes": 2480,
+          "nonblank": 38,
+          "sha256": "270f7e9be62e722ecf513a8bb52607df93d4601bef6da897f030fd6f2576922a"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🦀️.rs",
+          "bytes": 3762,
+          "nonblank": 71,
+          "sha256": "9f84b6cc82af8ad0054d2aa0710bd2d267df4ba3a8666621d6c7a0831efb0f7a"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs",
+          "bytes": 9331,
+          "nonblank": 95,
+          "sha256": "b332ab21f2ca7ce558e8308c7940a2fded7a36888a892423ee18e312ee9e0446"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 540,
+          "nonblank": 8,
+          "sha256": "49fc61fafb21274b1ff49425faea57ead5362ea373397e581a7b2659d5d3f8ce"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs",
+          "bytes": 15304,
+          "nonblank": 230,
+          "sha256": "1edb45a2fe04117ef7ff09655334b403cc0598bcf405fdbaf126892f8c2ed184"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs",
+          "bytes": 4009,
+          "nonblank": 63,
+          "sha256": "1d93b354a2141e85b7ff79ddc2813d4e4cc3fcf4ad3f798b05ef220bdbfcac07"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🦀️.rs",
+          "bytes": 1923,
+          "nonblank": 36,
+          "sha256": "fdebd46a4c6c62838258304d81c724f20d8bc6f3bc076da61a88714e471e927a"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📝️test-app-document-set-count-unit/🦀️.rs",
+          "bytes": 489,
+          "nonblank": 10,
+          "sha256": "7ba208b2e070e9b11f437df99b210dac152856c37c1946bffd2fe354598513e9"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 492,
+          "nonblank": 9,
+          "sha256": "97e904acebe99ffaa4713e88f3a49f1eb7a2b9d75dda57dbeb46f5c027b1ebf6"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🦀️.rs",
+          "bytes": 7059,
+          "nonblank": 75,
+          "sha256": "f0e49f49988f50e16a3c2e49a9c4240ed1a33a1d1d010d6273bb98821de068a0"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🏷️test-app-document-set-label-unit/🦀️.rs",
+          "bytes": 542,
+          "nonblank": 11,
+          "sha256": "24ab97d2e4d670305aa4e7ebbf57e4c4fcc9cbb6a42f6499fe9457a5021e6ab5"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 516,
+          "nonblank": 9,
+          "sha256": "ef1a9808d35d60390dc029ba6119a3123ed3e3d9c8d0bb02d6c31c95c3dfa470"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🦀️.rs",
+          "bytes": 2954,
+          "nonblank": 52,
+          "sha256": "a0b86da17e21bd35a1ff79c5d9806f5ebfe4e6adc5091a3c40b55362c3bae1b5"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧒️test-app-document-set-slot-children-unit/🦀️.rs",
+          "bytes": 549,
+          "nonblank": 10,
+          "sha256": "a49d4ec7c31b9dbc3b7ef83b2858d747bb46b8158e57edcdc89e304ee92215f3"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 1320,
+          "nonblank": 18,
+          "sha256": "c9c0e35e7b04463684c03df0fdaa8d0a84494c73535eb0bcfd609fbe3b5a6c29"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️test-app-document-mutation-roster-unit/🦀️.rs",
+          "bytes": 1620,
+          "nonblank": 23,
+          "sha256": "ea98ed4f436010b1bd70fb6efac87d99fef0381c280776b839f2c7631bee869f"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧫️fixture-json/🦀️.rs",
+          "bytes": 786,
+          "nonblank": 9,
+          "sha256": "763a4b9d7cff3b2c29b9451f625f094f8d83ccc942a0ec774f1ba364d7fa8f07"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🏦️granted/🦀️.rs",
+          "bytes": 4275,
+          "nonblank": 31,
+          "sha256": "2e57e85f56e7104e49bbae631de93674025805e77052df9d2df22b73c6a98ebe"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/native-rig.rs",
+          "bytes": 15489,
+          "nonblank": 85,
+          "sha256": "c6647e341e71dce98f6817dc4d99982b91f8ee82b8fb2d8cf20380ad1a274d71"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/encoder-rig.rs",
+          "bytes": 32071,
+          "nonblank": 148,
+          "sha256": "821c4a37235dec5baf889ce40b93989977f820bb96ad0d22893f2c812cf91bbd"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs",
+          "bytes": 18388,
+          "nonblank": 122,
+          "sha256": "f213f2e40ff1e65f945cb1ae7f10fcf6f5c52ef404b83d276486eab8d1e8668b"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs",
+          "bytes": 44508,
+          "nonblank": 282,
+          "sha256": "ba31d094f4287d126d2a09ee7aecd7a01127dd68717e7da718da2929e10ab4e1"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📖️reader/🦀️.rs",
+          "bytes": 10431,
+          "nonblank": 104,
+          "sha256": "aafd1eadda2dee2990f0812af3644714cdb7fd5d10ffcb2fd6559c29a7e3e1ab"
+        }
+      ],
+      "dependencies": [
+        "semio-framework-artifact-reference",
+        "semio-framework-async-macros",
+        "semio-framework-diagnostic",
+        "semio-framework-dsl-record",
+        "semio-framework-dsl-record-derive",
+        "semio-framework-pack-json",
+        "semio-framework-replication",
+        "semio-framework-schema-composition",
+        "semio-framework-schema-state",
+        "semio-framework-test-fixtures",
+        "semio-framework-tool-machine",
+        "semio-framework-trace",
+        "semio-framework-value",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-clone-source-testing",
+        "semio-framework-value-derive",
+        "semio-framework-value-native-encoding",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-ordered",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-persistent",
+        "semio-framework-value-retirement",
+        "semio-framework-value-testing-admission",
+        "semio-framework-value-testing-allocator",
+        "semio-framework-value-testing-effect-bank",
+        "semio-os-command",
+        "semio-os-kernel",
+        "semio-os-store-one-item",
+        "semio-plugin-decl-emission",
+        "semio-ui-locale",
+        "serde",
+        "serde_json"
+      ]
+    },
+    {
+      "package": "semio-plugin-child-group-authored-laws",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/✍️authored-laws/📦️packages/🦀️rust/Cargo.toml",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/✍️authored-laws/🦀️.rs",
+      "laws": [
+        {
+          "name": "child_complete_actual_authored_label_producer_preserves_all_axes_and_retained_source",
+          "sha256": "debfd54bc30af607e2399d0dc284e79c14b41f5b39128ad9da7866a389def289",
+          "assertions": 19
+        },
+        {
+          "name": "child_complete_actual_authored_label_receipt_joins_original8194_source_and_prefix",
+          "sha256": "6c449b3596a9ff2a5d3c837e961a4f9e8df4cecf398d8526720b4d9a554a6ccd",
+          "assertions": 16
+        },
+        {
+          "name": "child_complete_actual_authored_operation_producer_joins_original_projection_and_retained_receipt",
+          "sha256": "c7fa724973acb6ba024c96dcb906fb172bee0370deba46ae530499083c79d6a5",
+          "assertions": 31
+        }
+      ],
+      "closure": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/✍️authored-laws/🦀️.rs",
+          "bytes": 13203,
+          "nonblank": 71,
+          "sha256": "c837f0000efebbdbcf3e67141e6dc5e4d78ed11b078e6dca7b5626e902967cda"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations/🦀️.rs",
+          "bytes": 2214,
+          "nonblank": 23,
+          "sha256": "523e63b1e6265e085c16772155fe769b901bd91ffab9dbafc6107aa5e370adde"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🦀️.rs",
+          "bytes": 4665,
+          "nonblank": 96,
+          "sha256": "5017e8cfb9c2a907dd16c241ccf0728cfac3b3f9242e24eb3fb5cfbd10977b5e"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-config/🧬️preparation/🦀️.rs",
+          "bytes": 14462,
+          "nonblank": 74,
+          "sha256": "979fa326ddacb203603001dcd92c334f179145886d1de23cddbb6b5b40a35ae2"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/🦀️.rs",
+          "bytes": 2480,
+          "nonblank": 38,
+          "sha256": "270f7e9be62e722ecf513a8bb52607df93d4601bef6da897f030fd6f2576922a"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🦀️.rs",
+          "bytes": 3762,
+          "nonblank": 71,
+          "sha256": "9f84b6cc82af8ad0054d2aa0710bd2d267df4ba3a8666621d6c7a0831efb0f7a"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs",
+          "bytes": 9331,
+          "nonblank": 95,
+          "sha256": "b332ab21f2ca7ce558e8308c7940a2fded7a36888a892423ee18e312ee9e0446"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🎚️config/🧬️mutations/📝️change-test-config/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 540,
+          "nonblank": 8,
+          "sha256": "49fc61fafb21274b1ff49425faea57ead5362ea373397e581a7b2659d5d3f8ce"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs",
+          "bytes": 15304,
+          "nonblank": 230,
+          "sha256": "1edb45a2fe04117ef7ff09655334b403cc0598bcf405fdbaf126892f8c2ed184"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs",
+          "bytes": 4009,
+          "nonblank": 63,
+          "sha256": "1d93b354a2141e85b7ff79ddc2813d4e4cc3fcf4ad3f798b05ef220bdbfcac07"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🦀️.rs",
+          "bytes": 1923,
+          "nonblank": 36,
+          "sha256": "fdebd46a4c6c62838258304d81c724f20d8bc6f3bc076da61a88714e471e927a"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📝️test-app-document-set-count-unit/🦀️.rs",
+          "bytes": 489,
+          "nonblank": 10,
+          "sha256": "7ba208b2e070e9b11f437df99b210dac152856c37c1946bffd2fe354598513e9"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/📝️set-test-count/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 492,
+          "nonblank": 9,
+          "sha256": "97e904acebe99ffaa4713e88f3a49f1eb7a2b9d75dda57dbeb46f5c027b1ebf6"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🦀️.rs",
+          "bytes": 7059,
+          "nonblank": 75,
+          "sha256": "f0e49f49988f50e16a3c2e49a9c4240ed1a33a1d1d010d6273bb98821de068a0"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🏷️test-app-document-set-label-unit/🦀️.rs",
+          "bytes": 542,
+          "nonblank": 11,
+          "sha256": "24ab97d2e4d670305aa4e7ebbf57e4c4fcc9cbb6a42f6499fe9457a5021e6ab5"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🏷️set-label/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 516,
+          "nonblank": 9,
+          "sha256": "ef1a9808d35d60390dc029ba6119a3123ed3e3d9c8d0bb02d6c31c95c3dfa470"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🦀️.rs",
+          "bytes": 2954,
+          "nonblank": 52,
+          "sha256": "a0b86da17e21bd35a1ff79c5d9806f5ebfe4e6adc5091a3c40b55362c3bae1b5"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧒️test-app-document-set-slot-children-unit/🦀️.rs",
+          "bytes": 549,
+          "nonblank": 10,
+          "sha256": "a49d4ec7c31b9dbc3b7ef83b2858d747bb46b8158e57edcdc89e304ee92215f3"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🧒️set-slot-children/🧪️tests/🧪️sum-law/🦀️.rs",
+          "bytes": 1320,
+          "nonblank": 18,
+          "sha256": "c9c0e35e7b04463684c03df0fdaa8d0a84494c73535eb0bcfd609fbe3b5a6c29"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️test-app-document-mutation-roster-unit/🦀️.rs",
+          "bytes": 1620,
+          "nonblank": 23,
+          "sha256": "ea98ed4f436010b1bd70fb6efac87d99fef0381c280776b839f2c7631bee869f"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧫️fixture-json/🦀️.rs",
+          "bytes": 786,
+          "nonblank": 9,
+          "sha256": "763a4b9d7cff3b2c29b9451f625f094f8d83ccc942a0ec774f1ba364d7fa8f07"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🏦️granted/🦀️.rs",
+          "bytes": 4275,
+          "nonblank": 31,
+          "sha256": "2e57e85f56e7104e49bbae631de93674025805e77052df9d2df22b73c6a98ebe"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/native-rig.rs",
+          "bytes": 15489,
+          "nonblank": 85,
+          "sha256": "c6647e341e71dce98f6817dc4d99982b91f8ee82b8fb2d8cf20380ad1a274d71"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/encoder-rig.rs",
+          "bytes": 32071,
+          "nonblank": 148,
+          "sha256": "821c4a37235dec5baf889ce40b93989977f820bb96ad0d22893f2c812cf91bbd"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs",
+          "bytes": 18388,
+          "nonblank": 122,
+          "sha256": "f213f2e40ff1e65f945cb1ae7f10fcf6f5c52ef404b83d276486eab8d1e8668b"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs",
+          "bytes": 44508,
+          "nonblank": 282,
+          "sha256": "ba31d094f4287d126d2a09ee7aecd7a01127dd68717e7da718da2929e10ab4e1"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📖️reader/🦀️.rs",
+          "bytes": 10431,
+          "nonblank": 104,
+          "sha256": "aafd1eadda2dee2990f0812af3644714cdb7fd5d10ffcb2fd6559c29a7e3e1ab"
+        }
+      ],
+      "dependencies": [
+        "semio-framework-artifact-reference",
+        "semio-framework-async-macros",
+        "semio-framework-diagnostic",
+        "semio-framework-dsl-record",
+        "semio-framework-dsl-record-derive",
+        "semio-framework-pack-json",
+        "semio-framework-replication",
+        "semio-framework-schema-composition",
+        "semio-framework-schema-state",
+        "semio-framework-test-fixtures",
+        "semio-framework-tool-machine",
+        "semio-framework-trace",
+        "semio-framework-value",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-clone-source-testing",
+        "semio-framework-value-derive",
+        "semio-framework-value-native-encoding",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-ordered",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-persistent",
+        "semio-framework-value-retirement",
+        "semio-framework-value-testing-admission",
+        "semio-framework-value-testing-allocator",
+        "semio-framework-value-testing-effect-bank",
+        "semio-os-command",
+        "semio-os-kernel",
+        "semio-os-store-one-item",
+        "semio-plugin-decl-emission",
+        "semio-ui-locale",
+        "serde",
+        "serde_json"
+      ]
+    },
+    {
+      "package": "semio-plugin-child-group-wire-laws",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🎒️wire-laws/📦️packages/🦀️rust/Cargo.toml",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🎒️wire-laws/🦀️.rs",
+      "laws": [
+        {
+          "name": "child_complete_group_source_candidate_direct_producer_and_parent",
+          "sha256": "ed525c97cb5f8895918621a29d399d3b337d67dc3a8eb3086717a6c8ba046abf",
+          "assertions": 29
+        },
+        {
+          "name": "child_complete_group_source_candidate_matches_independent_wire",
+          "sha256": "131cc6076f711ff01a1362e76007419c747a2011f03fe41776d648885de1e3e4",
+          "assertions": 11
+        },
+        {
+          "name": "child_complete_group_source_candidate_paged_semantic8194_metadata_and_labels",
+          "sha256": "2a617a4540636f9c0471691461163dbd6246d074e0808cbc1856c7bde1b4b8ed",
+          "assertions": 26
+        },
+        {
+          "name": "child_complete_group_source_candidate_reader_retains_actual_partial8194_pages",
+          "sha256": "54f1b7da4decfa5ddf7d70d2b8bfc091470b2f475848b2dcf1a7b81d373701cd",
+          "assertions": 15
+        },
+        {
+          "name": "child_complete_group_source_candidate_refuses_partial_last_locale_before_commit",
+          "sha256": "8df37e32529f815143d8ba201df046def0f0a6e09473c5cf44b66a6ced2c18ed",
+          "assertions": 16
+        },
+        {
+          "name": "child_complete_group_source_candidate_repeated_prefix_preserves_accepted_owners",
+          "sha256": "11545bd0afbb483f944e18c4eeec969f4aa1e670cc00e144747b3506c809adcf",
+          "assertions": 28
+        },
+        {
+          "name": "child_complete_original_semantic_metadata8194_grant4096",
+          "sha256": "23e9dfd503adc072aa0b19feee5dd89961c4b9c261137caf6717cbca520c11c7",
+          "assertions": 13
+        }
+      ],
+      "closure": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🎒️wire-laws/🦀️.rs",
+          "bytes": 36913,
+          "nonblank": 185,
+          "sha256": "9b0edc75de4f76aa1935ecd862ec52bce050bee44c0d1ec7f3de21b63d04b177"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧫️fixture-json/🦀️.rs",
+          "bytes": 786,
+          "nonblank": 9,
+          "sha256": "763a4b9d7cff3b2c29b9451f625f094f8d83ccc942a0ec774f1ba364d7fa8f07"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🏦️granted/🦀️.rs",
+          "bytes": 4275,
+          "nonblank": 31,
+          "sha256": "2e57e85f56e7104e49bbae631de93674025805e77052df9d2df22b73c6a98ebe"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/native-rig.rs",
+          "bytes": 15489,
+          "nonblank": 85,
+          "sha256": "c6647e341e71dce98f6817dc4d99982b91f8ee82b8fb2d8cf20380ad1a274d71"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/encoder-rig.rs",
+          "bytes": 32071,
+          "nonblank": 148,
+          "sha256": "821c4a37235dec5baf889ce40b93989977f820bb96ad0d22893f2c812cf91bbd"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs",
+          "bytes": 18388,
+          "nonblank": 122,
+          "sha256": "f213f2e40ff1e65f945cb1ae7f10fcf6f5c52ef404b83d276486eab8d1e8668b"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs",
+          "bytes": 44508,
+          "nonblank": 282,
+          "sha256": "ba31d094f4287d126d2a09ee7aecd7a01127dd68717e7da718da2929e10ab4e1"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧩️projection/🦀️.rs",
+          "bytes": 6231,
+          "nonblank": 83,
+          "sha256": "adfeb38e4144d5ccdb0f1f46ea4d764a75f32031fdf1babd4d4f5c074b65faa9"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📖️reader/🦀️.rs",
+          "bytes": 10431,
+          "nonblank": 104,
+          "sha256": "aafd1eadda2dee2990f0812af3644714cdb7fd5d10ffcb2fd6559c29a7e3e1ab"
+        }
+      ],
+      "dependencies": [
+        "semio-framework-artifact-reference",
+        "semio-framework-async-macros",
+        "semio-framework-diagnostic",
+        "semio-framework-dsl-record",
+        "semio-framework-dsl-record-derive",
+        "semio-framework-pack-json",
+        "semio-framework-replication",
+        "semio-framework-schema-composition",
+        "semio-framework-schema-state",
+        "semio-framework-test-fixtures",
+        "semio-framework-tool-machine",
+        "semio-framework-trace",
+        "semio-framework-value",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-clone-source-testing",
+        "semio-framework-value-derive",
+        "semio-framework-value-native-encoding",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-ordered",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-persistent",
+        "semio-framework-value-retirement",
+        "semio-framework-value-testing-allocator",
+        "semio-framework-value-testing-effect-bank",
+        "semio-os-command",
+        "semio-os-kernel",
+        "semio-os-store-one-item",
+        "semio-plugin-decl-emission",
+        "semio-ui-locale",
+        "serde",
+        "serde_json"
+      ]
+    },
+    {
+      "package": "semio-plugin-child-group-publication-laws",
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication-laws/📦️packages/🦀️rust/Cargo.toml",
+      "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication-laws/🦀️.rs",
+      "laws": [
+        {
+          "name": "child_complete_candidate_retirement_keeps_currencies_independent",
+          "sha256": "dc3a4d115ac2afcfda348a4dbde50cda611205ae86b8c58d204aeccdb29bce2e",
+          "assertions": 23
+        },
+        {
+          "name": "child_complete_group_source_candidate_accepted_ledger_retains_original_registry_sources",
+          "sha256": "5bdbf1ef400896f388416ec0ee0ed396d942721878732dfb91e45631e541c602",
+          "assertions": 67
+        },
+        {
+          "name": "child_complete_group_source_candidate_owned_publication_preserves_empty_original_and_parent",
+          "sha256": "ba25e258c1e208f4642a4088261b980df09a1ba3688b9e8eb759d94234d726c9",
+          "assertions": 45
+        }
+      ],
+      "closure": [
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication-laws/🦀️.rs",
+          "bytes": 23974,
+          "nonblank": 114,
+          "sha256": "0881d46d7e692fb8a9748f0fa6eb1f00082f0f4970c2adc113eba43870f3857c"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🧫️fixture-json/🦀️.rs",
+          "bytes": 786,
+          "nonblank": 9,
+          "sha256": "763a4b9d7cff3b2c29b9451f625f094f8d83ccc942a0ec774f1ba364d7fa8f07"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🏦️granted/🦀️.rs",
+          "bytes": 4275,
+          "nonblank": 31,
+          "sha256": "2e57e85f56e7104e49bbae631de93674025805e77052df9d2df22b73c6a98ebe"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/native-rig.rs",
+          "bytes": 15489,
+          "nonblank": 85,
+          "sha256": "c6647e341e71dce98f6817dc4d99982b91f8ee82b8fb2d8cf20380ad1a274d71"
+        },
+        {
+          "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/encoder-rig.rs",
+          "bytes": 32071,
+          "nonblank": 148,
+          "sha256": "821c4a37235dec5baf889ce40b93989977f820bb96ad0d22893f2c812cf91bbd"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🛫️encoder/🦀️.rs",
+          "bytes": 18388,
+          "nonblank": 122,
+          "sha256": "f213f2e40ff1e65f945cb1ae7f10fcf6f5c52ef404b83d276486eab8d1e8668b"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🫙️owner/🦀️.rs",
+          "bytes": 44508,
+          "nonblank": 282,
+          "sha256": "ba31d094f4287d126d2a09ee7aecd7a01127dd68717e7da718da2929e10ab4e1"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📖️reader/🦀️.rs",
+          "bytes": 10431,
+          "nonblank": 104,
+          "sha256": "aafd1eadda2dee2990f0812af3644714cdb7fd5d10ffcb2fd6559c29a7e3e1ab"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/📢️publication/🦀️.rs",
+          "bytes": 8770,
+          "nonblank": 53,
+          "sha256": "b11c0677c9530e696fa24fbcfb8497b665db1ea8647fa6946c6bec02f54b80eb"
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/🪪️registry/🦀️.rs",
+          "bytes": 8543,
+          "nonblank": 49,
+          "sha256": "e631b4a3658e740229090de737977853ed29a323c1b8f7623ad093d139b6ed49"
+        }
+      ],
+      "dependencies": [
+        "semio-framework-artifact-reference",
+        "semio-framework-async-macros",
+        "semio-framework-diagnostic",
+        "semio-framework-dsl-record",
+        "semio-framework-dsl-record-derive",
+        "semio-framework-pack-json",
+        "semio-framework-replication",
+        "semio-framework-schema-composition",
+        "semio-framework-schema-state",
+        "semio-framework-test-fixtures",
+        "semio-framework-tool-machine",
+        "semio-framework-trace",
+        "semio-framework-value",
+        "semio-framework-value-clone-source",
+        "semio-framework-value-clone-source-testing",
+        "semio-framework-value-derive",
+        "semio-framework-value-native-encoding",
+        "semio-framework-value-native-owned",
+        "semio-framework-value-ordered",
+        "semio-framework-value-paged-text",
+        "semio-framework-value-persistent",
+        "semio-framework-value-retirement",
+        "semio-framework-value-testing-allocator",
+        "semio-framework-value-testing-effect-bank",
+        "semio-os-command",
+        "semio-os-kernel",
+        "semio-os-store-one-item",
+        "semio-plugin-decl-emission",
+        "semio-ui-locale",
+        "serde",
+        "serde_json"
+      ]
+    }
+  ],
+  "host": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
+  "original": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+  "remaining": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/⚖️slot-and-publication-fairness/🦀️.rs",
+      "sha256": "433cba0eebb21a1caae641950889c06c6e57b853bfb77a2e96155aebc9be4a39",
+      "functions": [
+        {
+          "name": "retained_latest_wins_slot_and_publication_fairness",
+          "sha256": "2716095312a409147e594de4bae3da47dfe3d70c993ef9af4b0df3d454de06f0"
+        },
+        {
+          "name": "ack_page_only_operation",
+          "sha256": "eda23eb4b959808557d92d06ee24e1ff2d35f5f1df6db17d77a7a8cff2767e63"
+        },
+        {
+          "name": "ack_fixture_token",
+          "sha256": "99a5e02a90e61eac26088aec102cc62c54b657b549c3587364be0d57a1fdf95b"
+        },
+        {
+          "name": "original_ack_page",
+          "sha256": "77701e96d1610a1dc8fd40677de5a707485ce310d3a6b16f0920ec40b8cc8e88"
+        },
+        {
+          "name": "close_ack_receiver",
+          "sha256": "b2a56b63343a67b24a6276802b899a8b05bb1d6c6ee4402bbeb803077d55d534"
+        },
+        {
+          "name": "verify_original_ack_case",
+          "sha256": "26fddd722436deb525343b949b4b1647a9890f6b5008c8c56a4979cb05e63c8d"
+        },
+        {
+          "name": "original_ack_page_laws",
+          "sha256": "8aa64fd6e75e721183aa106b8d7cb1eef54fea68122f9f317fa9e14929c1be38"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🌐️neutral-hostile-rows/🦀️.rs",
+      "sha256": "1a89e7d692ca53f8981e289b061007229e15a4a37489420dd30c4c1da0603f5a",
+      "functions": [
+        {
+          "name": "language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle",
+          "sha256": "65d00db34eabaa34f55e806f16b85c05effd6a917fe8ec9c05268469b5cea4b5"
+        },
+        {
+          "name": "every_language_neutral_hostile_row_executes_the_owned_state_machine_and_serde_oracle",
+          "sha256": "d2fd3d0833e962db31a4e04a9e38ab4c7c38f340ea92986e98ccdb970dde80cb"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/👪️child-genesis-wire-and-group-owner/🦀️.rs",
+      "sha256": "b057dec8b19f74f566708d4d0b462aa6fa432379e2fc365560e877d2faea329e",
+      "functions": [
+        {
+          "name": "document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root",
+          "sha256": "1b839aab5a1d33be818e0dc5bc7b4c135e68653dcf1765270a35c2c6d79c88db"
+        },
+        {
+          "name": "private_child_genesis_wire_retains_exact_identity_and_indivisible_backing",
+          "sha256": "f66f351eda04df25b72dc9207e51c07fba31e7a6ac7df3765bab2a12aa08c93a"
+        },
+        {
+          "name": "retained_child_wire_rejection_retires_nested_owners_under_the_production_grant",
+          "sha256": "ecce1c4724790523d356b693b3749fe9f21534e2685ecbaa4b2bb70dbf6eb351"
+        },
+        {
+          "name": "typed_child_publication_has_one_retained_async_group_owner_and_never_clone_publishes",
+          "sha256": "91ec4edaf8b5a20b56713b9c52a31d2d673a85068eec6778ac97328036e1b4d4"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/📌️document-cancellation-and-latest-wins-keys/🦀️.rs",
+      "sha256": "3622bb422cd46d6d58cccbcbaa89e180e1c6be10ede7dc47f0ece212722b5234",
+      "functions": [
+        {
+          "name": "retained_document_cancellation",
+          "sha256": "b4527adf2152e9e823b524680ba64bb6f3812dfc598a1b6d07510a197b4a4de7"
+        },
+        {
+          "name": "open",
+          "sha256": "e98b8966d4c872ed808a258e5a7a7d6974edb510b05b8f197fecf4bd115d2848"
+        },
+        {
+          "name": "begin",
+          "sha256": "ae68b7a2d09e6bf06d1ab184c440b46ea03097058a482d19557dd8f520bcda73"
+        },
+        {
+          "name": "begin_keyed",
+          "sha256": "e118b09046349601eb1399e47cf4c44b26e66fd7f60254a7a5d7e937aee8bfa0"
+        },
+        {
+          "name": "handle",
+          "sha256": "3063fbe27db8a8fdda634b21f094a5632e57286225bc581b0ab62ce98a01df97"
+        },
+        {
+          "name": "cleanup",
+          "sha256": "11b005352d1885218bc6993c9e2ded247d23b62548297ea3ed465d99de12742d"
+        },
+        {
+          "name": "close_lease",
+          "sha256": "1a417acd05a679fe4b9d7c92e34e33fb6cc48180029a9d8e6d76cb45a59e6691"
+        },
+        {
+          "name": "close",
+          "sha256": "f5334565ba362dd5b69745a1f5a253903484602494d27a7f1a32b310d2706d2e"
+        },
+        {
+          "name": "retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire",
+          "sha256": "9465de860da34ae464587c6c0769894ffc537179209d6f72a92b45a2377c0886"
+        },
+        {
+          "name": "retained_latest_wins_producer_child_cannot_bypass_document_or_app_publication_claim",
+          "sha256": "b02e907e04594cc851a05d7a5a1ec8a16dad3f525903aced70acfc0e7f3421d4"
+        },
+        {
+          "name": "retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement",
+          "sha256": "56aec9fd071fe45aa5c05864ee12508699bbcb8c31b2e7bcbfd21e50f41d4f76"
+        },
+        {
+          "name": "retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority",
+          "sha256": "3df8cdc7ca25753b31984369fc50c54d8a0df3ff14624166871b5ff490b55b8b"
+        },
+        {
+          "name": "retained_latest_wins_full_registry_reclaims_completed_targets_before_admission",
+          "sha256": "2f5a4bbaa5c4be2de85fb02bbf9d610c4910820f6bb1f8e5e5ea7147eead080e"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔎️census-oracles-and-fixture-machine/🦀️.rs",
+      "sha256": "92237a991143f37a181d68fbfc6c783ce6089e7a6586a67ddf424cc5a5fb1f6f",
+      "functions": [
+        {
+          "name": "decide",
+          "sha256": "bb2589ed331fa8b3240e4f3390763d1b08cfaecd80e26dacdeeb83ae4421ce87"
+        },
+        {
+          "name": "decide",
+          "sha256": "58b04d8d8a0bdd7b65e4399d83a64ca56adbcd66864e33ba2717b060b674e391"
+        },
+        {
+          "name": "new",
+          "sha256": "c6ebf941ec30c035b0b6291624d28fb718a4c4718d383f52c56653c89277f876"
+        },
+        {
+          "name": "grant",
+          "sha256": "03eee553c9848180414a1683debf8e8cf0243ba0a29739d730ce5ef8c08b413f"
+        },
+        {
+          "name": "freshness",
+          "sha256": "79ac545fe53eca3c5e1918c1477dac3fd29df6e3733347fb5fd2b70da9c81c67"
+        },
+        {
+          "name": "admission",
+          "sha256": "188cd4b83c994099aafbc6bed6b90d8131023115976f66a1577a8f91db5cc997"
+        },
+        {
+          "name": "publish",
+          "sha256": "82c5f7d8ae3bba5916128c5fde62694fc19fc3f4d1cae2ee7e1af2c0f442e1f6"
+        },
+        {
+          "name": "close_scalar",
+          "sha256": "fb327899511db15203ca2ecf2f7d78476c8f4a2ee687da1a7f1fac42f2f9c48f"
+        },
+        {
+          "name": "close_owner",
+          "sha256": "993a652ffedadfe00f1e55f69dfd64bf0d86e2a0436593179cb0bd9236bc41e3"
+        },
+        {
+          "name": "transition",
+          "sha256": "f81bbdf8d14f42f98d2637cb52d3643c618af61745f1f156f44043b9b07db339"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔐️two-turn-presence-and-root-retirement/🦀️.rs",
+      "sha256": "37825b24030de7ddcb4cea30b505d51369871d19ac8a5a5710f28e649b04e645",
+      "functions": [
+        {
+          "name": "preflight",
+          "sha256": "6323d5dd146c8c1e064215eea65ed26e6b822b50fde5be8086aa54323243ab80"
+        },
+        {
+          "name": "begin",
+          "sha256": "cdb2effaabee3082360393d816988c6fbfd6ffb19ddac9d878b1144914db0d7d"
+        },
+        {
+          "name": "advance",
+          "sha256": "4df15ecc345fd404d2a5120e8ee5fd2a77e405b49f610c1b66ebe74f5d94ed16"
+        },
+        {
+          "name": "checkpoint",
+          "sha256": "0b8da284c56fd05b299cd3d25d129d140ded243b5e796e870e02c957762b0f2b"
+        },
+        {
+          "name": "prepared",
+          "sha256": "ee0ff174439c245bc46eb51eca746079d06ba6e6cd9c170d3e7525536054350f"
+        },
+        {
+          "name": "take_prepared",
+          "sha256": "926be3fe7e7261d39fb4a516f77221c7fb5645ac2beaa7a2887166171c455b7c"
+        },
+        {
+          "name": "cancel",
+          "sha256": "8c4d77f75772e7a631b0db12b27ed10c9575e5f77ee905392eaf341604ca5145"
+        },
+        {
+          "name": "begin_close",
+          "sha256": "3fbc69b4d196ef662c66b335cd15a2a244ba989c783ed74eecd0831eb9f86e66"
+        },
+        {
+          "name": "close_step",
+          "sha256": "305c1c46c362aaea1150829ba29db9c8f96ecb6a81ed398465e74ee028b96e11"
+        },
+        {
+          "name": "next_close_copy_byte_demand",
+          "sha256": "b255a62620325a69caed31b12ae1c7a1633dff8df929128c0d7f5d311743153b"
+        },
+        {
+          "name": "next_close_capacity_byte_demand",
+          "sha256": "33433e31594a61ccf1e68b4b6fba6b060072f6c7b02516f5c60a383ed1182916"
+        },
+        {
+          "name": "next_close_release_byte_demand",
+          "sha256": "be7a46280321d3e42126da680a5cc6c4baf3b9de871de563594cd7b6367c3b2c"
+        },
+        {
+          "name": "next_close_depth_demand",
+          "sha256": "ca1650d7652b5103ca9fb0460891a4de2ca6feb966466d4ad72571ddbdb2cbf0"
+        },
+        {
+          "name": "terminal_is_empty",
+          "sha256": "08b1f2912cbffea61deccca819be55e4390bc82c7d18faf6718e1a32d13ec26a"
+        },
+        {
+          "name": "close_mounted",
+          "sha256": "88d18e6edacedb7dacb1afad20f45264186b72aea11a1ffa4a1d81d8e7ccd92d"
+        },
+        {
+          "name": "close_app",
+          "sha256": "93a61c0134a3dc37dcf55d1a54329dfcf06c3c9c45708ce589aabb63f6ae235f"
+        },
+        {
+          "name": "advance_registry",
+          "sha256": "ac17ee97a9f8b38b7eab37bf9042348befbe787d9907a642cfe4b9997cd89984"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🚫️cancellation-publication-boundaries/🦀️.rs",
+      "sha256": "173fe65e70b7b8b9694e8e87c91840cad3d991a57002f43d54bff6e896c62ccf",
+      "functions": [
+        {
+          "name": "advance_cancellation_presence",
+          "sha256": "175185fb2ede2286811ff71523d3efc3bfb04abb69510231fd79772241abad18"
+        },
+        {
+          "name": "close_cancellation_presence_publication",
+          "sha256": "c9c8011aba924ed453079c3c3bc8c5f983fb424a6c377a3e1c94ee0063fb2609"
+        },
+        {
+          "name": "retained_cancellation_publication_boundaries",
+          "sha256": "d4bf13403c3a4d2ca0227f348485a36a67884b676c5c64da62a011218892879e"
+        },
+        {
+          "name": "fixture_latest_wins_key",
+          "sha256": "568083be3645eea2366c49c0232e1f00126fff589ceafe9511ded1e2214b4e80"
+        },
+        {
+          "name": "latest_wins_owned_key_retains_zero_and_subexact_headers",
+          "sha256": "c26b635ad208690b93f1eda560483949e046a88685e253f2e0c393a913e1a2c1"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
+      "sha256": "61e9e6dde76be1d192a833b83f733e5bbb7a53d3b2acac4f1591602889d21ea6",
+      "functions": [
+        {
+          "name": "module_source",
+          "sha256": "45fce375e92fda8004bf7cad6956ac0cfe55455a541dbf7ed6e11f2718b81c90"
+        },
+        {
+          "name": "instance_source",
+          "sha256": "50322eed692fa6472d91d5cbdbcb4f4ee106434296f8986332567692d9acc716"
+        },
+        {
+          "name": "publish_mounted_fixture_unit",
+          "sha256": "dba924996c7caae8b9e4dda07fcc78083b31ecb9a5678954a90d58c8b8803b01"
+        },
+        {
+          "name": "present_mounted_page",
+          "sha256": "f5b2731ef0e8c1eefde3f0fd61850f7a6f738515d05cd153494f8a60bdbddb82"
+        },
+        {
+          "name": "retire_acknowledged_mounted_page",
+          "sha256": "282f3b06dde38ccdb90218263b77b03450f79fed67f9fd2e919f32a51d6aac79"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧾️source-rejection-anchors-and-host-lane/🦀️.rs",
+      "sha256": "44ded390f0d08c997d608676b7f38edb002ad2325fb44fa1cc119f10ef941797",
+      "functions": [
+        {
+          "name": "full_operation_source_rejects_generic_reducers_and_old_monolithic_shells",
+          "sha256": "e1ff29f108b5984389e8c08b1c5432fb294fc8b1fba6e4858cdeaa8d92b6f767"
+        },
+        {
+          "name": "fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers",
+          "sha256": "838878a7399b3e3a90fdde64f369988f51c727ceff2140bb939d17a5b1fdf42d"
+        },
+        {
+          "name": "language_neutral_renderer_page_and_exact_ack_have_bounded_stable_wire_fields",
+          "sha256": "8590256a028db8ee9edc3aecddead39dd9dd875248037214ab29a32efbd2e6c7"
+        },
+        {
+          "name": "host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate",
+          "sha256": "254f488838ed4881b24225c466f4e7beafcefd830d961a3cadd5cd5188340244"
+        },
+        {
+          "name": "retained_command_job_retires_completion_before_the_boxed_context",
+          "sha256": "9ec884ba865604d44db32400adc307adbbd4d64cb8ad1ee5d62dd8ac54e9911d"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
+      "sha256": "66af1e7be4823de906108d9015e4577fac427ca609cd78ebae41baa38b7696a2",
+      "functions": [
+        {
+          "name": "test_retained_keyed_dispatch",
+          "sha256": "1835c57558b2c3193a6f555f54af24b5e3959150aa3c260c02b354557a429076"
+        },
+        {
+          "name": "test_typed_operation_slot_preadmission",
+          "sha256": "5335a5f8366f04be9a0ca3d34c4d4ee7e6fd7525a8416d5108ef997eed4f7974"
+        },
+        {
+          "name": "test_typed_operation_slot_retirement_under_storm",
+          "sha256": "d438ab5d4c938cf731fdfaecf659b3897c6a6cf488b0134c0b15e721fb9f17ac"
+        },
+        {
+          "name": "test_typed_operation_slot_release_on_every_outcome",
+          "sha256": "3fde427036dfb54c11a6e55f7e5bc9d93de6bdd7c4436b633167c20291814c90"
+        },
+        {
+          "name": "fixture_cancellation_lease",
+          "sha256": "c9e0067d1431fe2835c12b285bec9b9c2b8de103f76e7e860dd509a89d20a6d8"
+        },
+        {
+          "name": "retire_fixture_invocation",
+          "sha256": "eeca3b45f3788ff6e0ab0a8f63dfa1b533344500e4ebf0973c3a8191bf917da2"
+        },
+        {
+          "name": "admit_fixture_typed_action",
+          "sha256": "fe03419aca1ae983316b06b23e07d03a05aaca84d8aae06395319f6f76936edc"
+        },
+        {
+          "name": "drive_host_typed_continuations",
+          "sha256": "44d393e48ca53ddac9c4fa50983e89f402aaf44c9b0d9cece41fcc9f9345848e"
+        },
+        {
+          "name": "drive_host_call_with_deferred_acks",
+          "sha256": "3cf2bdc5f3d0eff6ddf5f968e58f69305ff1c71aabd56c082e5bd4c0426fe7d3"
+        },
+        {
+          "name": "assert_landing_terminal_lane",
+          "sha256": "c1c25debf2cd883b619843c3e1e4ecd581f91da150d8e231098f6b4173ab691b"
+        },
+        {
+          "name": "test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work",
+          "sha256": "4c7971c20a122c73829818f51ef90c0c032061bee17bf49f15a47923fffbe24d"
+        },
+        {
+          "name": "test_typed_operation_completes_under_a_status_only_host_call",
+          "sha256": "ddf51965dd2e64d678a168a5445e59f04b57019fe7c21a75109b0e27897b3d43"
+        },
+        {
+          "name": "test_typed_operation_lands_its_edit_inside_the_admitting_call",
+          "sha256": "56fe05ef2adbc84c63ef3d34ed1bb544a090b8b8a332b0db925d7463dc15d5bf"
+        },
+        {
+          "name": "released_slot_census",
+          "sha256": "f215fb0ce8ba6de1dbfb1cf9d1a0c291a4c0e810fb229450ffd751e673f15269"
+        },
+        {
+          "name": "fixture_close_receipt",
+          "sha256": "1f2e88dc4758763c5670683e22816159d5e79b37cea9efcbea303cd8621d60ce"
+        },
+        {
+          "name": "close_fixture_app_to_terminal_emptiness",
+          "sha256": "e90310df11bd83325b2ad8897493098bed5ef6364449a6f5268a3ec5657b28a6"
+        },
+        {
+          "name": "test_retained_cancellation_publication_boundaries",
+          "sha256": "cc67b0c4b97995abab5047d9adb2caa6a4d357652124ab5797c61278cb414afc"
+        },
+        {
+          "name": "fixture_close_turn",
+          "sha256": "5931cd7edda7670b0c675bc6dacd1e01bdff1b9d63f0e61bbf855c19b9e08d38"
+        },
+        {
+          "name": "fixture_maintenance_turn",
+          "sha256": "2e476c2caf003b57c4d4c565de6afbf3b4abad920715bcb8126b941a641018a8"
+        },
+        {
+          "name": "test_retained_latest_wins_slot_and_publication_fairness",
+          "sha256": "1f3b94ccebe103bc9902ce519460576f8c6a2403f1d77d02ae4ed1ea190bde9d"
+        },
+        {
+          "name": "test_retained_document_cancellation",
+          "sha256": "660d4933bec8e51e02e51bfff6653313b56fe5b20486cb1463e14771149ccb1b"
+        }
+      ]
+    }
+  ]
+}

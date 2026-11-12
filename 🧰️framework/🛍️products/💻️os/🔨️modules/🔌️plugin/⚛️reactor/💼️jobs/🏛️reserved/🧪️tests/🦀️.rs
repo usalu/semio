@@ -3,13 +3,23 @@ use super::*;
 use std::mem::size_of;
 use semio_plugin_testing_laws::OriginalWorkFixture;
 use crate::{BoundedJob,JobStep};
-use semio_framework_job::{OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
+use semio_framework_job::{OriginalConstructionDemand,OriginalConstructionAdmission,admit_original_construction_settled,original_construction_settled_quote,close_original_retained_step};
 use semio_framework_value::RetainedCloneStep;
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:100000,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128}}
 fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:128}}
 fn caller()->OriginalWorkFixture{OriginalWorkFixture::with_source(semio_framework_job::OperationId(71),semio_framework_job::Generation(3),stock(),||Some(1),1000000,100000)}
 fn difference(after:RetainedCloneProgress,before:RetainedCloneProgress)->RetainedCloneProgress{RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}}
-fn birth(owner:&mut OriginalWorkFixture,input:Vec<u8>)->Box<FrameworkReservedBoundedJob>{let mut output=None;owner.work_turn(grant(),1,|cx|{let binding=semio_framework_job::OriginalSourceBinding::borrow(cx);admit_original_construction(cx,&mut output,OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:size_of::<FrameworkReservedBoundedJob>(),release_bytes:0,depth:1},|_|semio_framework_value::RetainedWorkOutcome{result:Ok((Box::new(FrameworkReservedBoundedJob::new(input,None,binding)),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:size_of::<FrameworkReservedBoundedJob>(),..Default::default()})),work:1})?;Ok(())}).unwrap();output.unwrap()}
+fn birth(owner:&mut OriginalWorkFixture,input:Vec<u8>)->Box<FrameworkReservedBoundedJob>{
+ let demand=OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:size_of::<FrameworkReservedBoundedJob>(),release_bytes:0,depth:1};
+ let(quote,fuel)=original_construction_settled_quote::<Box<FrameworkReservedBoundedJob>>(demand,1).unwrap();
+ let turn=RetainedCloneGrant{maximum_items:quote.items,maximum_copy_bytes:quote.copy_bytes,maximum_capacity_bytes:quote.capacity_bytes,maximum_release_bytes:quote.release_bytes,maximum_depth:quote.depth};
+ let(mut output,mut admission,mut input)=(None,OriginalConstructionAdmission::default(),Some(input));
+ for _ in 0..16{
+  let settled=owner.work_turn(turn,fuel,|cx|{let binding=semio_framework_job::OriginalSourceBinding::borrow(cx);admit_original_construction_settled(cx,&mut admission,&mut output,demand,1,|_,_|semio_framework_value::RetainedWorkOutcome{result:Ok((Box::new(FrameworkReservedBoundedJob::new(input.take().expect("one construction call"),None,binding)),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:size_of::<FrameworkReservedBoundedJob>(),..Default::default()})),work:1})}).unwrap();
+  if settled{return output.take().unwrap()}
+ }
+ panic!("the reserved body must settle within its quoted turns")
+}
 fn close_body(owner:&mut OriginalWorkFixture,body:&mut Option<Box<FrameworkReservedBoundedJob>>){
  for _ in 0..10000{if body.as_ref().unwrap().terminal_drop_is_shallow(){break}let(progress,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.work_turn(grant(),1,|cx|cx.with_original_retirement(|cx|{let before=cx.retained_progress();body.as_mut().unwrap().close_step(cx)?;Ok(difference(cx.retained_progress(),before))})).unwrap());assert!(progress.fits(grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
  assert!(body.as_ref().unwrap().terminal_drop_is_shallow());let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.work_turn(grant(),1,|cx|cx.with_original_retirement(|cx|{close_original_retained_step(cx,RetirementDemand{release_bytes:size_of::<FrameworkReservedBoundedJob>(),depth:1,..Default::default()},|_|{drop(body.take());semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:size_of::<FrameworkReservedBoundedJob>(),..Default::default()})),work:1}})?;Ok(())})).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,size_of::<FrameworkReservedBoundedJob>()));

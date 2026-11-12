@@ -30,15 +30,20 @@ pub fn funded<E:Into<OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:Retire
  if overrun{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original effect performed more work than it settled").into())}Ok(Some(step))
 }
 fn scope_refusal(scope:&OriginalNativeReceivingOutcome)->Result<(),OriginalTurnFailure>{let cause=scope.call.as_ref().err().and_then(|call|call.operation.clone().or_else(||call.context.clone()).or_else(||call.receipt_refusal.clone())).or_else(||scope.source_refusal.clone());match cause{Some(error)=>Err(error.with_retained_progress(scope.retained_progress()).into()),None=>Ok(())}}
+/// 🧾️ Widens a semantic step receipt to the physical spend its open receiving scope already accepted, so the receipt omits no original construction.
+pub fn covering_child<E>(cx:&StepContext<'_>,turn:RetainedWorkOutcome<RetainedCloneStep,E>)->RetainedWorkOutcome<RetainedCloneStep,E>{
+ let child=cx.receiving_child_progress();let widen=|p:RetainedCloneProgress|RetainedCloneProgress{copied_items:p.copied_items.max(child.copied_items),copied_bytes:p.copied_bytes.max(child.copied_bytes),retained_capacity_bytes:p.retained_capacity_bytes.max(child.retained_capacity_bytes),released_bytes:p.released_bytes.max(child.released_bytes)};
+ RetainedWorkOutcome{result:turn.result.map(|step|match step{RetainedCloneStep::Progress(p)=>RetainedCloneStep::Progress(widen(p)),RetainedCloneStep::Complete(p)=>RetainedCloneStep::Complete(widen(p))}),work:turn.work}
+}
 /// 🫴️ Runs one native-bound forward step inside the decoder's persistent receiving scope, the one Work scope that outlives a turn, so a cursor keeps the Work binding its birth recorded.
 pub fn scoped<E:Into<OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<RetainedCloneStep,E>)->Result<Option<RetainedCloneStep>,OriginalTurnFailure>{
  if cx.should_yield()||!retained_clone_grant_admits(cx.retained_grant(),demand){return Ok(None)}
  let units=receiving_units(cx.fuel_remaining());let(mut scope,mut ran)=(None,None);
- if !cx.with_native_receiving_quoted(&mut scope,{let(grant,work)=receiving_quote(demand,units);semio_framework_value::invocation_extent(grant,work)?},|control,_|{ran=control.with_allocated_effect(demand,units,|_,effect|{let poll=run(effect);(poll,effect.performed_work())})?;Ok(())})?{return Ok(None)}
+ if !cx.with_native_receiving_quoted(&mut scope,{let(grant,work)=(semio_framework_job::original_receiving_scope_quote(demand),units);semio_framework_value::invocation_extent(grant,work)?},|control,_|{ran=control.with_allocated_effect(demand,units,|_,effect|{let poll=run(effect);(poll,effect.performed_work())})?;Ok(())})?{return Ok(None)}
  scope_refusal(&scope.ok_or_else(||ValueError::invariant("original receiving scope vanished"))?)?;
  let Some((poll,performed))=ran else{return Ok(None)};
  let turn=match poll{RetainedWorkPoll::Complete(turn)=>turn,RetainedWorkPoll::Pending{work}=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work}};
- let overrun=performed>turn.work;let step=receive_original_receiving_work(cx,turn)?;
+ let turn=covering_child(cx,turn);let overrun=performed>turn.work;let step=receive_original_receiving_work(cx,turn)?;
  if overrun{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original effect performed more work than it settled").into())}Ok(Some(step))
 }
 /// ♻️ Retires one native-bound owner inside the decoder's persistent retirement scope, the same Work scope its forward steps ran in.
@@ -81,10 +86,6 @@ pub fn receiver_close<I:Sync+'static,T:NativeReceive<I>,A:RetireOwned+Sync>(rece
 }
 /// 🪙️ The work one receiving scope is quoted: half of the turn's fuel, the framework's own unquoted scope rule, so the held scope never starves the turn that drives it.
 pub fn receiving_units(fuel:u64)->u64{fuel.div_ceil(2)}
-/// 🧮️ The construction actions one nested record level acknowledges per step: its original action, its Post and its release.
-pub const ACKNOWLEDGEMENT_ACTIONS:usize=3;
-/// 🪙️ The scope quote of one receiving step: its exact physical demand as a single action and the work its receiver may spend.
-pub fn receiving_quote(demand:RetirementDemand,units:u64)->(semio_framework_value::RetainedCloneGrant,u64){(semio_framework_value::RetainedCloneGrant{maximum_items:ACKNOWLEDGEMENT_ACTIONS*demand.depth.max(1),maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth},units)}
 /// 🔀️ The smallest demand that funds both of two alternative steps of one turn.
 pub fn widened(a:RetirementDemand,b:RetirementDemand)->RetirementDemand{RetirementDemand{copy_bytes:a.copy_bytes.max(b.copy_bytes),capacity_bytes:a.capacity_bytes.max(b.capacity_bytes),release_bytes:a.release_bytes.max(b.release_bytes),depth:a.depth.max(b.depth)}}
 /// 📐️ The wallet every test caller of this crate is born with. Its capacity, release and depth are not the bound under test: the bound is each turn's grant, derived from the owner's own quote by [`step_grant`].
@@ -124,8 +125,6 @@ pub fn born<O>(cx:&mut StepContext<'_>,output:&mut Option<O>,admission:&mut Orig
  let status=admit_original_construction(cx,output,admission,construction(d),1,|native,_|{let result=construct(native).map(|owner|(owner,receipt(d)));RetainedWorkOutcome{work:u128::from(result.is_ok()),result}})?;
  match status{OriginalConstructionStatus::Ready=>admission.reset_step(cx),OriginalConstructionStatus::Pending=>Ok(false),OriginalConstructionStatus::Failed=>{if !admission.take_failure_into_step(failure,cx)?{return Ok(false)}Err(ValueError::invariant("original construction failed; its causes remain retained").into())}}
 }
-/// 🪙️ The exact one-item grant that funds one demand.
-pub fn grant_of(d:RetirementDemand)->semio_framework_value::RetainedCloneGrant{semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 /// 🎟️ The exact grant of one turn that births one owner of demand `d` over its own output slot and settles it in that turn.
 pub fn birth_grant<O>(d:RetirementDemand)->Result<semio_framework_value::RetainedCloneGrant,ValueError>{
  let(complete,_)=semio_framework_job::original_construction_reserve::<O>(construction(d),1)?;let(items,copy,_)=semio_framework_job::original_construction_settle_overhead();
@@ -146,3 +145,15 @@ pub fn forward<E:Into<OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:Retir
 pub fn forward_receiving(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkPoll<RetainedCloneStep,semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary>)->Result<(),OriginalTurnFailure>{close_original_effect_step(cx,demand,|effect|match advance(effect){RetainedWorkPoll::Pending{work}=>RetainedWorkPoll::Pending{work},RetainedWorkPoll::Complete(turn)=>RetainedWorkPoll::Complete(RetainedWorkOutcome{result:turn.result.map_err(OriginalTurnPrimary::Receiving),work:turn.work})}).map(drop)}
 /// 🧾️ A reply-shaped close that fails with a retirement failure.
 pub type Retirement=RetainedWorkPoll<RetainedCloneStep,OriginalRetirementFailure>;
+/// 📬️ Runs one native receiving turn under its original scope and reconciles the reported work with the caller; `None` while the scope is unfunded.
+pub fn native_received<T>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T,ValueError>,progress:impl FnOnce(&T)->RetainedCloneProgress)->Result<Option<T>,OriginalTurnFailure>{
+ let lost=||ValueError::invariant("original native receiving scope left no result");
+ let mut outcome=None;let mut ran=None;
+ if !cx.with_native_receiving(&mut outcome,|control,_|{ran=Some(run(control));Ok(())})?{return Ok(None)}
+ let outcome=outcome.ok_or_else(lost)?;
+ if outcome.source_refusal.is_some()||outcome.call.is_err(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original native receiving scope refused").with_retained_progress(outcome.retained_progress()).into())}
+ match ran.ok_or_else(lost)?{
+  Ok(value)=>{let p=progress(&value);receive_original_receiving_work(cx,RetainedWorkOutcome{result:Ok::<_,ValueError>(RetainedCloneStep::Progress(p)),work:u128::from(p.copied_items as u64)})?;Ok(Some(value))}
+  Err(error)=>match receive_original_receiving_work(cx,RetainedWorkOutcome{result:Err::<RetainedCloneStep,_>(error),work:0}){Err(failure)=>Err(failure),Ok(_)=>Err(lost().into())},
+ }
+}

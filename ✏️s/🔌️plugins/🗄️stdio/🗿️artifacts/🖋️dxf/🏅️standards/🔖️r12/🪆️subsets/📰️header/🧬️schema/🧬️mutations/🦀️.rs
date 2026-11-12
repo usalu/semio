@@ -96,7 +96,7 @@ pub mod set_linetype;
 pub mod set_style;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed content mutation for `stdio.dxf`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
+/// 📐️ Typed content mutation for `stdio.dxf`. `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no`
 /// is not an approved semantic verb.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

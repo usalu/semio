@@ -12,7 +12,7 @@ fn const_composition_equals_the_ordered_concatenation() {
 
 #[test]
 fn composition_matches_the_language_neutral_corpus() {
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧵️composition/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧵️composition/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let segments: Vec<&str> = case["segments"].as_array().unwrap().iter().map(|segment| segment.as_str().unwrap()).collect();
         let total = sqlite_schema_len(&segments);

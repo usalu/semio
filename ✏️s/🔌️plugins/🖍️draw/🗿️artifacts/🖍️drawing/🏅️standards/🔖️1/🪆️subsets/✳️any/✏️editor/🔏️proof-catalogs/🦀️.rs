@@ -76,7 +76,7 @@ impl DrawingBoundedProofs {
         factory_type: DrawingBoundedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
-            "setSnapshot", "commitDocument", "loadDocumentJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
+            "replaceDocument", "commitDocument", "loadDocumentJson", "setActiveExample", "setSelectedOpacity", "engagementSubmit",
             "addLayer", "dropLayerKind", "moveLayer", "deleteLayer", "duplicateLayer", "toggleLayerVisible", "combineBoolean",
             "patchLayer", "patchLayers", "setCamera", "setCameraZoom", "engagementInput", "editSelection", "editFill",
             "deleteSelection",

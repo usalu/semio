@@ -1,0 +1,13 @@
+import {policySemanticVocabularyBreaches,policyListSemanticVocabularyScanFiles} from "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
+import {policyDiscoveredAllowlist} from "/home/deck/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔒️allowlist/🟦️.ts";
+import {existsSync} from "node:fs";
+const root=process.cwd(),b=policySemanticVocabularyBreaches(root),files=policyListSemanticVocabularyScanFiles(root),allow=policyDiscoveredAllowlist(root,"semantic-vocabulary");
+const high=b.filter(x=>x.priority==="high");
+console.log("reg3-scanned",files.length,"breaches",b.length,"high",high.length,"allow",allow.size,"dead",[...allow].filter(p=>!existsSync(p)).length);
+const scopes=new Set(b.map(x=>x.scope));
+console.log("reg3-allow-live-not-breaching",[...allow].filter(p=>existsSync(p)&&!scopes.has(p)).length,"reg3-breach-not-allowed",[...scopes].filter(s=>!allow.has(s)).length);
+for(const x of high.slice(0,40))console.log("reg3-high",x.scope,x.summary.slice(-90));
+const ns=[...scopes].filter(s=>!allow.has(s));for(const s of ns.slice(0,15))console.log("reg3-unallowed",s);
+const hs=new Set(high.map(x=>x.scope));
+console.log("reg3-high-scopes",hs.size,"high-allowed",[...hs].filter(s=>allow.has(s)).length,"high-in-norm",[...hs].filter(s=>s.includes("📕️norm")).length);
+console.log("reg3-allow-live-nonbreach-sample",[...allow].filter(p=>existsSync(p)&&!scopes.has(p)).slice(0,3).join(" | "));

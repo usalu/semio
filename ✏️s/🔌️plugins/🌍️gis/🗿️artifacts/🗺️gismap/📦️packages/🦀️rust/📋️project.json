@@ -213,6 +213,36 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "outputs": []
+    },
+    "verify-map-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify map-document-contract native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-gis-map-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify gis-map-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-gis-map-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify gis-map-window-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

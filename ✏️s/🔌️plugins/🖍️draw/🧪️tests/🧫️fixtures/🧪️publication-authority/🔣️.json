@@ -51,7 +51,7 @@
           ]
         },
         {
-          "id": "setSnapshot",
+          "id": "replaceDocument",
           "lanes": [
             "host-only"
           ]

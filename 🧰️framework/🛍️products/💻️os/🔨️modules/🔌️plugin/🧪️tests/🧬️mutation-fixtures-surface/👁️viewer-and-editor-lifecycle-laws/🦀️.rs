@@ -80,7 +80,7 @@ async fn registered_editor_consumes_intrinsic_natural_bytes_through_the_real_med
         data,
     };
     let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    semio_plugin::artifact_app_laws::consume_media(&mut app, crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
+    crate::app_testing::artifact_app_laws::consume_media(&mut app, crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
     let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("natural-file import settles");
     let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
     assert_eq!(loads.len(), 1, "natural-file Open publishes exactly one document load, no mutation");
@@ -114,7 +114,7 @@ async fn registered_editor_natural_bytes_stay_untaken_while_unfunded_and_settle_
         data,
     };
     let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    semio_plugin::artifact_app_laws::consume_media_refused_then_funded(&mut app, crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
+    crate::app_testing::artifact_app_laws::consume_media_refused_then_funded(&mut app, crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
     let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("natural-file import settles");
     let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
     assert_eq!(loads.len(), 1, "natural-file Open publishes exactly one document load, no mutation");

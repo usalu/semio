@@ -184,6 +184,26 @@
         "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts preview-generated"
       }
+    },
+    "verify-writer-window-state-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify writer-window-state oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-writer-window-state-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify writer-window-state native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

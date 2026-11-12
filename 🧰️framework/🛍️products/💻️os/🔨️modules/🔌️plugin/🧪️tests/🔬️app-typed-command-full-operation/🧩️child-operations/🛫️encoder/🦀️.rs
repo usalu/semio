@@ -16,6 +16,11 @@ impl ChildTextView<'_>{
 }
 fn fault(kind:ValueRefusalKind,detail:&'static str)->ValueError{ValueError::new(kind,detail)}
 
+/// 🧾️ A fixture owner settles one funded step as a complete poll whose work is one unit per progressed item.
+pub fn settled_poll(step:Result<RetainedCloneStep,ValueError>)->semio_framework_value::OriginalRetirementPoll{
+    let work=step.as_ref().map_or(0,|step|u128::from(step.progress()!=RetainedCloneProgress::default()));
+    semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:step.map_err(Into::into),work})
+}
 /// 🎟️ A nested owner receives one item and one level less depth than its parent, with every byte axis unchanged.
 pub fn nested_grant(grant:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth.saturating_sub(1),..grant}}
 /// 🚦️ An under-granted axis yields, while a depth below the quote is refused.
@@ -37,9 +42,9 @@ pub fn settle(step:RetainedCloneStep)->RetainedCloneStep{RetainedCloneStep::Prog
 /// 📏️ Quotes the removal of the retained tail element.
 pub fn pop_demand<T,const N:usize>(list:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{depth:list.next_pop_depth_demand().map_err(ValueError::from)?,..Default::default()})}
 /// 📏️ Quotes the physical release of the next whole empty backing allocation.
-pub fn release_demand<T,const N:usize>(list:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{release_bytes:list.next_release_allocation_bytes().map_err(ValueError::from)?,depth:list.next_release_depth_demand().map_err(ValueError::from)?,..Default::default()})}
+pub fn release_demand<T,const N:usize>(list:&PagedList<T,N>)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:list.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:list.next_release_allocation_bytes().map_err(ValueError::from)?,depth:list.next_release_depth_demand().map_err(ValueError::from)?,..Default::default()})}
 /// ♻️ Releases one whole empty backing allocation under the granted release axis.
-pub fn release_page<T,const N:usize>(list:&mut PagedList<T,N>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=list.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()}))}
+pub fn release_page<T,const N:usize>(list:&mut PagedList<T,N>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let step=list.release_empty_page_leased(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..Default::default()}))}
 
 /// 🏷️ Locale and terminology fields borrow exact semantic owners rather than synthesizing strings.
 pub trait PagedChildLabels:Send+Sync{fn len(&self)->usize;fn text(&self,label:usize,terminology:Terminology,locale:Locale)->Option<ChildTextView<'_>>;}
@@ -63,7 +68,7 @@ impl ChildSymbolOwner{
     fn note(&mut self,groups:&dyn PagedChildGroups,ordinal:TextOrdinal,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
         let text=view(groups,ordinal)?;control.scoped_stage(|control|{control.begin_stage(text.len())?;for index in 0..text.len(){text.byte(index)?;control.step()?;}Ok::<_,ValueError>(())})?;
         let(mut low,mut high)=(0,self.entries.len());while low<high{let middle=low+(high-low)/2;match compare(view(groups,self.entries[middle])?,text,control)?{Ordering::Less=>low=middle+1,Ordering::Greater=>high=middle,Ordering::Equal=>{self.entries.get_mut(middle).unwrap().repeated=true;return Ok(())}}}
-        while !self.entries.has_reserved_slot(){let required=self.entries.next_allocation_bytes().map_err(ValueError::from)?;if required>4096{return Err(fault(ValueRefusalKind::OwnershipLimit,"child symbol page exceeds its physical grant"))}control.charge(required)?;let step=self.entries.reserve_one(4096).map_err(|error|ValueError::from(error.refusal()))?;if !step.progressed||step.allocated_bytes!=required{return Err(fault(ValueRefusalKind::InvariantViolated,"child symbol page differs from exact admission"))}}
+        while !self.entries.has_reserved_slot(){let required=self.entries.next_allocation_bytes().map_err(ValueError::from)?;if required>4096{return Err(fault(ValueRefusalKind::OwnershipLimit,"child symbol page exceeds its physical grant"))}control.charge(required)?;let step=self.entries.reserve_one_cold(4096).map_err(|error|ValueError::from(error.refusal()))?;if !step.progressed||step.allocated_bytes!=required{return Err(fault(ValueRefusalKind::InvariantViolated,"child symbol page differs from exact admission"))}}
         self.entries.push_reserved(ordinal).map_err(|_|fault(ValueRefusalKind::InvariantViolated,"child symbol lost admitted slot"))?;
         for index in (low+1..self.entries.len()).rev(){control.step()?;let previous=self.entries[index-1];*self.entries.get_mut(index).unwrap()=previous;}*self.entries.get_mut(low).unwrap()=ordinal;Ok(())
     }
@@ -77,12 +82,13 @@ impl ChildSymbolOwner{
     pub fn allocated_bytes(&self)->usize{self.entries.allocated_bytes()}
 }
 impl ChildSymbolOwner{
- fn demands(&self,_:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.entries.is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<TextOrdinal>(),depth:1,..Default::default()})}Ok(RetirementDemand{release_bytes:self.entries.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
+ fn demands(&self,_:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.entries.is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<TextOrdinal>(),depth:1,..Default::default()})}Ok(RetirementDemand{copy_bytes:self.entries.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:self.entries.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
 }
 impl ErasedSnapshotRetirement for ChildSymbolOwner{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.entries.pop().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.entries.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let grant=effect.grant();let step=self.advance_granted(grant,effect);settled_poll(step)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.entries.terminal_is_empty()}
 
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -118,4 +124,8 @@ pub fn encode_paged_groups_into(groups:&dyn PagedChildGroups,options:&PackEncode
             for label in 0..group.labels.len(){writer.byte(16,control)?;writer.count(Terminology::COUNT,control)?;for terminology in Terminology::ALL{writer.key(groups,symbols,terminology.as_str(),control)?;writer.byte(16,control)?;writer.count(Locale::COUNT,control)?;for locale in Locale::ALL{writer.key(groups,symbols,locale.as_str(),control)?;let text=group.labels.text(label,terminology,locale).ok_or_else(||fault(ValueRefusalKind::InvariantViolated,"encoded child locale ordinal changed"))?;writer.text(groups,symbols,text,false,control)?;}}}
         }Ok(writer.completed)
     })
+}
+
+impl ChildSymbolOwner{
+ fn advance_granted(&mut self,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.entries.pop().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.entries.release_empty_page_leased(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
 }

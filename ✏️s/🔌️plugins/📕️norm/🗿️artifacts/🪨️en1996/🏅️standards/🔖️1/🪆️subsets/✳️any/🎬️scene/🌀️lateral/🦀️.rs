@@ -1,6 +1,7 @@
 //! 🌀️ Lateral: the wall under out-of-plane load as a deflected one-metre strip from the shared mechanics kernel ([`mechanics`]), the resultant eccentricity at mid-height, the cracked zones where the eccentricity leaves the middle third,
 //! the shear flanges at the wall and the bearing stress block under each concentrated load.
 
+use super::scene::projection_kit::{loc, v3};
 use super::kit::*;
 use super::layout::{solid_rects, Layout, WallPose, EPS};
 use super::mechanics::member_modes::{deflection, Curve, Ends, Loads, Props};
@@ -17,7 +18,6 @@ const E_OVER_F_K: f64 = 1000.0;
 const PROUD: f64 = 0.004;
 const STRESS_BLOCK_MAX_HEIGHT: f64 = 0.6;
 pub(crate) const STRIP_TAG: &str = "lateral-strip";
-pub(crate) const FLANGE_TAG: &str = "flange-";
 pub(crate) const CRACKED_TAG: &str = "cracked-";
 pub(crate) const STRESS_TAG: &str = "stress-block-";
 
@@ -99,7 +99,7 @@ fn cracked(input: &SceneInput, wall: &MasonryWall, pose: &WallPose, prof: &profi
         let points = mesh.points().to_vec();
         let mut spec = Spec::new(EntityKind::Solid, format!("{}:{CRACKED_TAG}{tag}", wall.id), mesh.solid(), MaterialRole::Neutral, LAYER_PATTERNS, loc("Cracked zone", "Gerissene Zone"));
         spec.detail = loc(&format!("Eccentricity {:.1} mm exceeds t/6 = {:.1} mm: the section is cracked over {:.0} mm of {:.0} mm", e * 1000.0, t / 6.0 * 1000.0, depth * 1000.0, t * 1000.0), &format!("Ausmitte {:.1} mm überschreitet t/6 = {:.1} mm: der Querschnitt ist auf {:.0} mm von {:.0} mm gerissen", e * 1000.0, t / 6.0 * 1000.0, depth * 1000.0, t * 1000.0));
-        spec.binding = binding_of(input.report, &super::walls::compression_id(&wall.id, &prof.load_case, station));
+        spec.binding = binding_of(input.report, &compression_id(&wall.id, &prof.load_case, station));
         spec.opacity = 0.55;
         spec.hatch = Some(Hatch::Diagonal);
         spec.channel = Some(ColourChannel::Role);

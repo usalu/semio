@@ -49,7 +49,7 @@ impl InteractiveJob for FixtureJob {
         assert_eq!(Some(cx.original_source_parent()?.source_identity()?), self.source);
         if !self.close_open.load(Ordering::SeqCst) { return Ok(InteractiveJobCloseStep::Blocked); }
         semio_framework_job::close_original_granted_step(cx, |grant| {
-            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
+            if grant.maximum_items == 0 || grant.maximum_depth == 0 { return RetainedWorkOutcome::<_, ValueError> { result: Ok(InteractiveJobCloseStep::Pending { progress: Default::default() }), work: 0 }; }
             self.source = None;
             self.closes.fetch_add(1, Ordering::SeqCst);
             RetainedWorkOutcome { result: Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }), work: 1 }

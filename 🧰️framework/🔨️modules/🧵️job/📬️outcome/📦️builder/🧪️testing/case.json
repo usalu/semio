@@ -8,7 +8,6 @@
     "depth": 128
   },
   "maximumTurns": 1024,
-  "authorityBirthWork": 1,
   "metadataCopyBytes": 0,
   "oneBank": true,
   "renewal": false

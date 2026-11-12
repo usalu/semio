@@ -24,3 +24,5 @@ semio-framework-io-base64 = { path = "../../../../🔤️base64/📦️packages/
 base64 = "0.22.1"
 percent-encoding = "2.3.2"
 serde_json.workspace = true
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }

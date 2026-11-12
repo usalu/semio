@@ -86,8 +86,7 @@ impl Drop for OriginalHistoryBranchMetadata{fn drop(&mut self){assert!(self.term
 pub mod origin;
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[path="📜️transitions/ids.rs"]
 pub mod transition_ids;

@@ -50,7 +50,7 @@ pub mod drag_nodes;
 /// 📐️ Typed content mutation for `s.stdio.semio.flow`. Addresses `nodes`/`edges` by `id` (both
 /// id-keyed collections) and a node's own `params` by `(id, key)`.
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none (the
 /// stdio mutation-leaf migration recipe's hard constraint #1 — `no` is also not an approved
 /// semantic verb). The `#[value(tag = "mutation", rename_all = "camelCase")]` container attribute

@@ -132,6 +132,15 @@ export function resolvePlanV1(reply,runtime){
  return JSON.parse(body);
 }
 
+/** 🔗 Holds one open, request-free connection to a running host service for as long as the caller works on something that lives off the service (the remote cache endpoint it hosts): an open connection keeps the idle rule from retiring the service. Resolves a release function, or a no-op when no service runs; losing the connection is no error here, the service ending for another reason ends the work's cache access on its own. */
+export async function holdHostV1({implementation,environment=process.env,platform=process.platform,agent="hold"}){
+ const runtime=hostEndpointsV1(implementation,environment,platform),socket=await tryConnect(runtime.endpoint);
+ if(!socket)return async()=>{};
+ socket.on("error",()=>{});
+ socket.write(encodeFrameV1({t:"hello",v:1,client:{name:"repo",pid:process.pid,lane:agent},languages:["en"],implementation}));
+ return async()=>{socket.destroy();};
+}
+
 /** 📊 Asks a running service for its status; resolves undefined when none runs. */
 export async function requestHostStatusV1({implementation,environment=process.env,platform=process.platform}){
  const runtime=hostEndpointsV1(implementation,environment,platform),socket=await tryConnect(runtime.endpoint);

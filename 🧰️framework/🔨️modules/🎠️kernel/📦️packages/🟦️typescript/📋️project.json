@@ -79,6 +79,118 @@
           }
         }
       }
+    },
+    "verify-media-export-encoding": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify media-export-encoding",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "media-export-encoding"
+          ]
+        }
+      }
+    },
+    "verify-media-export-encoding-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify media-export-encoding native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-file-open-import": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify file-open-import",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "file-open-import"
+          ]
+        }
+      }
+    },
+    "verify-file-open-import-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify file-open-import native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-ui-dirty-scope": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify ui-dirty-scope",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "ui-dirty-scope"
+          ]
+        }
+      }
+    },
+    "verify-ui-dirty-scope-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify ui-dirty-scope native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-spawned-job-drive": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify spawned-job-drive",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "spawned-job-drive"
+          ]
+        }
+      }
+    },
+    "verify-spawned-job-drive-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify spawned-job-drive native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

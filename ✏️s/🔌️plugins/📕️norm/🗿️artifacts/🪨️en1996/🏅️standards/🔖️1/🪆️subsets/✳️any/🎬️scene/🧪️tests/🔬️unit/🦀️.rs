@@ -1,4 +1,6 @@
 use super::*;
+use diagrams::diagrams;
+use kit::{entity_kind_of, ENTITY_KINDS};
 use scene::projection_kit::test_support::{revision, entity, assert_handle_laws};
 use scene::{canonical_json, Validate};
 use std::collections::BTreeSet;
@@ -461,7 +463,7 @@ fn walls_json(document: &En1996Snapshot) -> String {
     let wall = |w: &model::MasonryWall| {
         let openings: Vec<String> = w.openings.iter().map(|o| format!("{{\"id\":\"{}\",\"width\":{},\"height\":{},\"sill\":{}}}", o.id, o.width_m, o.height_m, o.sill_height_m)).collect();
         let loads: Vec<String> = w.load_cases.iter().flat_map(|lc| lc.concentrated.iter().map(move |c| {
-            let (ab, a_ef, _) = spreading::bearing_terms(w, c);
+            let (ab, a_ef, _) = profile::bearing_terms(w, c);
             format!("{{\"id\":\"{}-{}\",\"bearingLength\":{},\"ab\":{ab},\"aEf\":{a_ef},\"a1\":{}}}", lc.id, c.id, c.bearing_length_m, c.distance_a1_m)
         })).collect();
         format!("{{\"id\":\"{}\",\"length\":{},\"height\":{},\"thickness\":{},\"unitHeight\":{},\"unitLength\":{},\"joint\":{},\"openings\":[{}],\"concentrated\":[{}],\"clayGroup1\":{}}}", w.id, w.length_m, w.height_m, w.thickness_m, w.unit_height_m, w.unit_length_m, w.bed_joint_thickness_m, openings.join(","), loads.join(","), matches!((w.unit_material, w.unit_group, w.mortar_type), (model::UnitMaterial::Clay, model::UnitGroup::Group1, model::MortarType::GeneralPurpose)))
@@ -556,7 +558,7 @@ fn the_wall_projects_a_ramped_strip_a_flange_and_a_stress_block() {
         assert!(overlay.samples.len() >= 3);
     }
     for flange in &wall.flanges {
-        assert!(scene.entities.iter().any(|e| e.entity.id == format!("{}:{}{}", wall.id, lateral::FLANGE_TAG, flange.id)));
+        assert!(scene.entities.iter().any(|e| e.entity.id == format!("{}:{}{}", wall.id, kit::FLANGE_TAG, flange.id)));
     }
 }
 
@@ -847,18 +849,18 @@ fn the_concentrated_load_terms_follow_eq_6_9_and_6_10() {
     let h = wall.height_m;
     load.distance_a1_m = 0.5;
     load.bearing_area_m2 = 0.0;
-    let (ab, a_ef, beta) = spreading::bearing_terms(wall, &load);
+    let (ab, a_ef, beta) = profile::bearing_terms(wall, &load);
     assert!((ab - load.bearing_length_m * wall.thickness_m).abs() < 1e-12);
     let reach = (load.bearing_length_m + h / 3f64.sqrt()).min(masonry::effective_length_m(wall));
     assert!((a_ef - reach * wall.thickness_m).abs() < 1e-12);
     let eq = (1.0 + 0.3 * 0.5 / h) * (1.5 - 1.1 * ab / a_ef);
     assert!((beta - eq.min(1.25 + 0.5 / (2.0 * h)).min(1.5).max(1.0)).abs() < 1e-12);
     load.distance_a1_m = 100.0;
-    assert!((spreading::bearing_terms(wall, &load).2 - 1.5).abs() < 1e-12);
+    assert!((profile::bearing_terms(wall, &load).2 - 1.5).abs() < 1e-12);
     load.distance_a1_m = 0.0;
-    assert!(spreading::bearing_terms(wall, &load).2 <= 1.25 + 1e-12);
+    assert!(profile::bearing_terms(wall, &load).2 <= 1.25 + 1e-12);
     load.bearing_area_m2 = 0.5 * a_ef;
-    assert!((spreading::bearing_terms(wall, &load).2 - 1.0).abs() < 1e-12);
+    assert!((profile::bearing_terms(wall, &load).2 - 1.0).abs() < 1e-12);
 }
 
 #[test]
@@ -1079,7 +1081,7 @@ fn the_enhancement_diagram_plots_beta_over_the_distance_with_the_design_point() 
     let diagram = all.iter().find(|d| d.id == format!("beta:{}-{}-{}", wall.id, wall.load_cases[0].id, c.id)).expect("beta diagram");
     assert_eq!(diagram.validate(), Ok(()));
     assert!(diagram.table_twin.rows() > 0 && !diagram.title.en.is_empty() && !diagram.title.de.is_empty());
-    let (ab, a_ef, beta) = spreading::bearing_terms(wall, c);
+    let (ab, a_ef, beta) = profile::bearing_terms(wall, c);
     let marker = &diagram.markers[0];
     assert!((marker.at.y - beta).abs() < 1e-12 && (marker.at.x - c.distance_a1_m / wall.height_m).abs() < 1e-12);
     let drag = marker.binding.as_ref().expect("a1 binding");

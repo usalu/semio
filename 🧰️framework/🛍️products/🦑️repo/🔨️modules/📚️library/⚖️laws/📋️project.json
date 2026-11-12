@@ -1,0 +1,716 @@
+{
+  "name": "repo-policy",
+  "$schema": "../🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "policyEngine": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "sharedGlobals"
+    ],
+    "tsSources": [
+      "{workspaceRoot}/**/*.{ts,tsx}",
+      "{workspaceRoot}/**/package.json",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/bun.lock"
+    ],
+    "rsSources": [
+      "{workspaceRoot}/**/*.rs",
+      "{workspaceRoot}/**/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/rust-toolchain.toml",
+      "{workspaceRoot}/rustfmt.toml"
+    ],
+    "projectFiles": [
+      "{workspaceRoot}/**/📋️project.json",
+      "{workspaceRoot}/📋️build-owners.json",
+      "{workspaceRoot}/**/package.json"
+    ],
+    "dependencyFiles": [
+      "{workspaceRoot}/🔒️dependencies.json",
+      "{workspaceRoot}/**/package.json",
+      "{workspaceRoot}/**/Cargo.toml",
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum",
+      "{workspaceRoot}/**/go.mod",
+      "{workspaceRoot}/pyproject.toml",
+      "{workspaceRoot}/uv.lock"
+    ],
+    "schemaFiles": [
+      "{workspaceRoot}/**/🧬️schema/**/*",
+      "{workspaceRoot}/**/🏅️standards/**/*.{ts,rs,json}",
+      "{workspaceRoot}/**/Cargo.toml"
+    ]
+  },
+  "targets": {
+    "mutation-outcome-law": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "workspace:test-outcome-law-gate"
+      ],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify mutation-outcome-law",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "semantic-vocabulary": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify semantic-vocabulary",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "policyEngine",
+        "tsSources",
+        "rsSources"
+      ]
+    },
+    "verify": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "check",
+                "kind": "text",
+                "valuePositional": true
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "policyEngine"
+      ]
+    },
+    "verify-gate": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [
+        "mutation-outcome-law"
+      ],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify gate",
+        "cwd": "."
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
+        }
+      },
+      "inputs": [
+        "policyEngine"
+      ]
+    },
+    "verify-build-parity": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify build-parity",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
+        }
+      },
+      "inputs": [
+        "policyEngine"
+      ]
+    },
+    "verify-rust-warnings": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify rust-warnings",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "rsSources"
+      ]
+    },
+    "verify-taxonomy-report": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify taxonomy report",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "tsSources",
+        "rsSources"
+      ]
+    },
+    "verify-taxonomy-enforce": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify taxonomy enforce",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "tsSources",
+        "rsSources"
+      ]
+    },
+    "verify-taxonomy-implementation-report": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify taxonomy implementation report",
+        "cwd": "."
+      },
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "tsSources",
+        "rsSources"
+      ]
+    },
+    "verify-taxonomy-implementation-enforce": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify taxonomy implementation enforce",
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "tsSources",
+        "rsSources"
+      ]
+    },
+    "verify-package-purity": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify package-purity",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "policyEngine",
+        "tsSources"
+      ]
+    },
+    "verify-generated-corruption": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify generated-corruption",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "policyEngine",
+        "tsSources",
+        "rsSources"
+      ]
+    },
+    "verify-build-owners": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify build-owners",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true,
+      "inputs": [
+        "policyEngine",
+        "projectFiles"
+      ]
+    },
+    "verify-zero-touch": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify zero-touch",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🧾️taxonomy-lanes/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🛗️zero-touch-closure/🟦️.ts"
+          ]
+        }
+      },
+      "inputs": [
+        "policyEngine",
+        "projectFiles"
+      ]
+    },
+    "verify-build-owners-sync": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify build-owners sync",
+        "cwd": "."
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
+        }
+      },
+      "inputs": [
+        "policyEngine",
+        "projectFiles"
+      ]
+    },
+    "verify-typescript-project": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify typescript project",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      },
+      "inputs": [
+        "policyEngine",
+        "tsSources"
+      ]
+    },
+    "verify-typescript": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify typescript check",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "tsSources"
+      ]
+    },
+    "verify-interactivity": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify interactivity",
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "tsSources"
+      ]
+    },
+    "verify-dependencies-freeze": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify dependencies",
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "dependencyFiles"
+      ]
+    },
+    "verify-dependencies-literal-external": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify dependencies literal-external",
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "dependencyFiles"
+      ]
+    },
+    "verify-dependencies-locks": {
+      "executor": "repo:script",
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify dependencies locks",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "dependencyFiles"
+      ]
+    },
+    "verify-dependencies-freeze-write-baseline": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/🔒️dependencies.json"
+      ],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify dependencies write-baseline",
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "dependencyFiles"
+      ]
+    },
+    "verify-abstraction-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify abstraction-ownership",
+        "forwardAllArgs": true,
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-artifact-builder": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach artifact-builder",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-artifact-decomposer": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach artifact-decomposer",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-schema-representation": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach schema-representation",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-io-serializer-matrix": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach io-serializer-matrix",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-io-terminality": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach io-terminality",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-codec-fidelity": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach codec-fidelity",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-standards-coverage": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach standards-coverage",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-artifact-analyzer": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach artifact-analyzer",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-artifact-composer": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach artifact-composer",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-artifact-builder-migrated": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach artifact-builder-migrated",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-plugin-dependency-parity": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach plugin-dependency-parity",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-policy-breach-contribution-target": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify policy-breach contribution-target",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "test-abstraction-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify abstraction-ownership test",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "verify-canonical-architecture": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify canonical-architecture",
+        "cwd": "."
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
+        }
+      },
+      "inputs": [
+        "policyEngine",
+        "tsSources"
+      ]
+    },
+    "verify-layering": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify layering",
+        "cwd": "."
+      },
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "reenters-build-tool"
+          }
+        }
+      },
+      "inputs": [
+        "policyEngine",
+        "tsSources"
+      ]
+    },
+    "verify-artifact-contract-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify artifact-contract-ownership",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "test-artifact-contract-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify artifact-contract-ownership test",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "artifact-field-parity-test": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify artifact-field-parity test",
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "artifact-field-parity-report": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify artifact-field-parity report",
+        "cwd": "."
+      },
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    },
+    "artifact-field-parity-enforce": {
+      "executor": "repo:script",
+      "cache": true,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/📜️script.ts verify artifact-field-parity enforce",
+        "cwd": "."
+      },
+      "outputs": [],
+      "inputs": [
+        "policyEngine",
+        "schemaFiles"
+      ]
+    }
+  }
+}

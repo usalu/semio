@@ -21,6 +21,7 @@ import { memoizedObservedAsyncComputationV1, memoizedObservedComputationV1, obse
 import { readCargoExecutionContractV1, selectCargoExecutionOperationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { REVISION_POLICY_V1 } from "../../../📥️inputs/🔏️revision/🟨️.mjs";
 import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
+import { ROW_LOG_POLICY_V1 } from "../../🕰️generations/🗃️row-log/🟨️.mjs";
 import { rowPathsV1, rowTouchedV1 } from "../../🧮️derived-nodes/🧩️closure-kinds/🧭️row-paths/🟨️.mjs";
 import { validateJsonSchemaSubset } from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { GlobV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌐️glob/🟦️.ts";
@@ -1005,7 +1006,9 @@ const CLOSURE_QUERIES_V1 = new Map([
 /** 🌂️ Registers a pure query over the closure a recipe produces (the inferrer that owns the question, such as the whole-workspace key check, registers it). */
 export function registerClosureQueryV1(name, query) { CLOSURE_QUERIES_V1.set(name, query); }
 
-const closureEntryCacheV1 = maxBytes => createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * entry.rows.length + 2 * (entry.valueBytes ??= JSON.stringify(entry.value).length) });
+const closureEntryCacheV1 = maxBytes => createBoundedCacheV1({ name: "inference:closure-entries", maxEntries: INFERENCE_LIMITS_V1.closureEntryCacheEntries, maxBytes, sizeOf: entry => INFERENCE_LIMITS_V1.closureEntryBaseBytes + INFERENCE_LIMITS_V1.closureEntryRowBytes * entry.rows.length + INFERENCE_LIMITS_V1.closureEntryValueItemBytes * closureValueItemsV1(entry.value) });
+/** 🔢️ How many items one closure value holds: the files of a list, or the files and the other lists of a closure record, without serialising it. */
+const closureValueItemsV1 = value => Array.isArray(value) ? value.length : Object.values(value ?? {}).reduce((sum, part) => sum + (Array.isArray(part) ? part.length : 1), 1);
 let closureEntriesV1 = closureEntryCacheV1(INFERENCE_LIMITS_V1.closureEntryCacheBytes);
 const closureScriptsV1 = createBoundedCacheV1({ name: "inference:closure-scripts", maxEntries: 16, maxBytes: 16 }),
   closureStoresV1 = createBoundedCacheV1({ name: "inference:closure-stores", maxEntries: 16, maxBytes: 16 }),
@@ -1019,17 +1022,32 @@ export function closureEntryCountsV1() { return { ...closureCountsV1 }; }
 
 const closureEntryBytesV1 = entry => JSON.stringify([entry.value, entry.rows]).length + 8 * entry.layers.length;
 const closureSidecarV1 = layers => ({ facts: layers.map(layer => walkFactsV1.get(layer) ?? null), members: layers.map(layer => { const walks = walkMembersV1.get(layer); return walks ? [...walks] : null; }) });
-const closureLayersV1 = entry => {
-  if (entry.layers) return entry.layers;
-  const layers = entry.store.layers(entry.digests);
-  if (layers === undefined) throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: "layers" });
-  layers.forEach((layer, at) => {
+const walkFactsByDigestV1 = new Map(), walkMembersByDigestV1 = new Map(), layerListsV1 = new WeakMap();
+/** 🧱️ The shared layers of an entry as views: a derived entry names its parsed arrays, a stored entry only the digests of its layers (read from the store when a view is consumed, never cached parsed) with the walk facts and members its sidecar and every other stored entry of the process recorded for them. */
+const closureLayerViewsV1 = entry => {
+  if (entry.layers) return entry.layers.map(layer => ({ key: layer, rows: layer, fact: walkFactsV1.get(layer), members: walkMembersV1.get(layer) }));
+  if (entry.digests === undefined) throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: "layers" });
+  return entry.digests.map((digest, at) => {
     const fact = entry.sidecar?.facts[at], members = entry.sidecar?.members[at];
-    if (fact && !walkFactsV1.has(layer)) walkFactsV1.set(layer, fact);
-    if (members) { let walks = walkMembersV1.get(layer); if (!walks) walkMembersV1.set(layer, walks = new Set()); for (const walk of members) walks.add(walk); }
+    if (fact && !walkFactsByDigestV1.has(digest)) walkFactsByDigestV1.set(digest, fact);
+    if (members) { let walks = walkMembersByDigestV1.get(digest); if (!walks) walkMembersByDigestV1.set(digest, walks = new Set()); for (const walk of members) walks.add(walk); }
+    return { key: digest, digest, store: entry.store, fact: walkFactsByDigestV1.get(digest), members: walkMembersByDigestV1.get(digest) };
   });
-  return layers;
 };
+/** 🚰️ The batches of one layer view: its array, or the batches the store streams. */
+function* closureLayerBatchesV1(view) {
+  if (view.rows) { yield view.rows; return; }
+  try { yield* view.store.layerBatchesSync(view.digest, ROW_LOG_POLICY_V1.batchRows); }
+  catch (error) { if (error?.code === "CLOSURE_LAYER_LOST") throw refuseBuildV1("invalid", "closure.provider-entry-stale", { port: "layers" }); throw error; }
+}
+/** 🗂️ The rows of one layer view as a list in `log`, written once per layer and log; the rows of a layer exist in memory one batch at a time. */
+function closureLayerListV1(log, view) {
+  let lists = layerListsV1.get(log); if (!lists) layerListsV1.set(log, lists = { digests: new Map(), arrays: new WeakMap() });
+  const table = typeof view.key === "string" ? lists.digests : lists.arrays;
+  let list = table.get(view.key);
+  if (list === undefined) { const builder = log.builder(); for (const batch of closureLayerBatchesV1(view)) builder.add(batch); list = builder.finish(); table.set(view.key, list); }
+  return list;
+}
 const closureStoreBindingsV1 = new Map();
 /** 📁️ The directory of the durable closure entries of a workspace: the graph's inference data directory of the running writer, or undefined where no graph writer is running (the entries then live in this process only). */
 export function closureStoreDirectoryV1(workspaceRoot) { try { return join(workspaceDataDirectory(workspaceRoot), "ce"); } catch { return undefined; } }
@@ -1088,14 +1106,34 @@ function cooperativeStepV1(scripts, phase) {
   };
 }
 
+/** ⚖️ The verdict on one stored layer of an entry: read from the store batch by batch (no layer is cached parsed), checked row by row, remembered per validation round and digest so every entry that names the layer reads it once; a lost layer does not hold. */
+const layerVerdictsV1 = new WeakMap();
+async function storedLayerHoldsAsyncV1(entry, digest, step) {
+  const round = closurePassV1 ?? observationRoundV1(), verdicts = round ? layerVerdictsV1.get(round) ?? layerVerdictsV1.set(round, new Map()).get(round) : undefined, known = verdicts?.get(digest);
+  if (known !== undefined) return known;
+  let holds = true;
+  try { for (const batch of entry.store.layerBatchesSync(digest, ROW_LOG_POLICY_V1.batchRows)) if (!await observationLayerHoldsAsyncV1(batch, step)) { holds = false; break; } } catch (error) { if (error?.code !== "CLOSURE_LAYER_LOST") throw error; holds = false; }
+  verdicts?.set(digest, holds);
+  return holds;
+}
+function storedLayerHoldsV1(entry, digest) {
+  const round = closurePassV1 ?? observationRoundV1(), verdicts = round ? layerVerdictsV1.get(round) ?? layerVerdictsV1.set(round, new Map()).get(round) : undefined, known = verdicts?.get(digest);
+  if (known !== undefined) return known;
+  let holds = true;
+  try { for (const batch of entry.store.layerBatchesSync(digest, ROW_LOG_POLICY_V1.batchRows)) if (!observationLayerHoldsV1(batch)) { holds = false; break; } } catch (error) { if (error?.code !== "CLOSURE_LAYER_LOST") throw error; holds = false; }
+  verdicts?.set(digest, holds);
+  return holds;
+}
+
 /** 🫧️ The verdict of {@link closureEntryHoldsV1}, checked row by row with cooperative steps and remembered for the round, so a stored entry of tens of thousands of rows never blocks the event loop. */
 async function closureEntryHoldsAsyncV1(entry, scripts) {
   const round = closurePassV1 ?? observationRoundV1();
   if (round && entry.checked?.round === round) return entry.checked.holds;
   closureCountsV1.checked++;
-  const step = cooperativeStepV1(scripts, "build:closure-entry-rows"), layers = entry.layers ?? entry.store.layers(entry.digests);
-  let holds = layers !== undefined && await observationRowsHoldAsyncV1(entry.rows, step);
-  if (holds) for (const layer of layers) if (!await observationLayerHoldsAsyncV1(layer, step)) { holds = false; break; }
+  const step = cooperativeStepV1(scripts, "build:closure-entry-rows");
+  let holds = (entry.layers !== undefined || entry.digests !== undefined) && await observationRowsHoldAsyncV1(entry.rows, step);
+  if (holds && entry.layers) for (const layer of entry.layers) if (!await observationLayerHoldsAsyncV1(layer, step)) { holds = false; break; }
+  if (holds && !entry.layers) for (const digest of entry.digests) if (!await storedLayerHoldsAsyncV1(entry, digest, step)) { holds = false; break; }
   if (round) entry.checked = { round, holds };
   return holds;
 }
@@ -1103,7 +1141,7 @@ async function closureEntryHoldsAsyncV1(entry, scripts) {
 const closureEntryHoldsV1 = entry => {
   const round = closurePassV1 ?? observationRoundV1();
   if (round && entry.checked?.round === round) return entry.checked.holds;
-  const layers = entry.layers ?? entry.store.layers(entry.digests), holds = layers !== undefined && observationRowsHoldV1(entry.rows) && layers.every(observationLayerHoldsV1);
+  const holds = (entry.layers !== undefined || entry.digests !== undefined) && observationRowsHoldV1(entry.rows) && (entry.layers ? entry.layers.every(observationLayerHoldsV1) : entry.digests.every(digest => storedLayerHoldsV1(entry, digest)));
   if (round) entry.checked = { round, holds };
   return holds;
 };
@@ -1131,10 +1169,10 @@ async function produceClosureEntryV1(workspaceRoot, recipe) {
   return flight;
 }
 
-/** 🫧️ Releases what one finished owner left behind in the cache shared by the owners: the source reads, closure walks and command dependency memos of the call and half of the in-process closure entries, which a later owner reads again from the durable store; the shared provider designation and the generated imports stay. */
-export function releaseOwnerStateV1(scripts) {
-  scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.walkNodes?.clear();
-  closureEntriesV1.shrink(0.5);
+/** 🫧️ Releases what one finished owner left behind in the cache shared by the owners, so the memory of the owner phase is flat per owner: the source reads, closure walks, command dependency memos, declared module and TypeScript program memos and workspace path names of the call, which a later owner reads or derives again, and, when `shrink` (the host is short of memory), half of the in-process closure entries, which a later owner reads again from the durable store; the shared provider designation and the generated imports stay. */
+export function releaseOwnerStateV1(scripts, { shrink = true } = {}) {
+  scripts.files.clear(); scripts.closures.clear(); scripts.commandDependencies.clear(); scripts.declared.clear(); scripts.paths.clear(); scripts.walkNodes?.clear();
+  if (shrink) closureEntriesV1.shrink(0.5);
 }
 
 /** 📋️ The recipes every owner reads and none depends on its own target: the native command inputs, the group of every provider port in every view and every tool closure. */
@@ -1200,6 +1238,7 @@ registerClosureProviderV1({
     return answer === undefined ? "!stale" : JSON.stringify(answer);
   },
   async settle(paths, value) {
+    prepareSourceAnalysesV1();
     for (const [key, recipe] of Object.entries(value?.closureRecipes ?? {})) knownClosureRecipesV1.set(key, recipe);
     for (const [digest, inputs] of Object.entries(value?.closureInputs ?? {})) knownClosureInputsV1.set(digest, inputs);
     const wanted = new Map();
@@ -1262,11 +1301,12 @@ export function closureApiV1(scripts, workspaceRoot) {
       for (const key of [...new Set([...keys, ...used.keys()])].sort()) { const recipe = closureRecipeByKeyV1(key); closureRecipes[key] = recipe; for (const digest of [recipe.target?.inputsDigest, recipe.fallback?.target?.inputsDigest]) if (digest) closureInputs[digest] = knownClosureInputsV1.get(digest); }
       return { closureRecipes, closureInputs };
     },
-    async resolve(recipes) {
-      const rows = [], seen = new Set(), layers = new Set(), values = new Map(), derived = new Map(), walked = new Set(), take = row => { const key = rowKeyV1(row); if (!seen.has(key)) { seen.add(key); rows.push(row); } };
-      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); entry.rows.forEach(take); for (const layer of closureLayersV1(entry)) { layers.add(layer); const fact = walkFactsV1.get(layer); if (fact) { const row = view === undefined ? fact.row : fact.views?.[view] ?? fact.row; derived.set(row.path, { row, support: layer }); walked.add(fact.row.path); } } }
-      for (const layer of layers) { if (walkFactsV1.has(layer)) continue; const walks = walkMembersV1.get(layer); if (!walks || ![...walks].some(question => walked.has(question))) layer.forEach(take); }
-      return { values, rows, derived: [...derived.values()] };
+    async resolve(recipes, log) {
+      const values = new Map(), derived = new Map(), walked = new Set(), layers = new Map(), seen = new Set(), rows = [], take = row => { const key = rowKeyV1(row); if (!seen.has(key)) { seen.add(key); rows.push(row); } };
+      const builder = log?.builder(), addRows = items => { if (builder) builder.add(items); else for (const row of items) take(row); }, addLayer = view => { if (builder) builder.addList(closureLayerListV1(log, view)); else for (const batch of closureLayerBatchesV1(view)) addRows(batch); }, supportOf = view => log ? closureLayerListV1(log, view) : view.rows ?? [...closureLayerBatchesV1(view)].flat();
+      for (const [key, recipe] of recipes) { const entry = await ensureClosureEntryV1(workspaceRoot, recipe), view = walkViewOfRecipeV1(recipe); values.set(key, entry.value); addRows(entry.rows); for (const layer of closureLayerViewsV1(entry)) { layers.set(layer.key, layer); if (layer.fact) { const row = view === undefined ? layer.fact.row : layer.fact.views?.[view] ?? layer.fact.row; derived.set(row.path, { row, support: supportOf(layer) }); walked.add(layer.fact.row.path); } } }
+      for (const layer of layers.values()) { if (layer.fact) continue; if (!layer.members || ![...layer.members].some(question => walked.has(question))) addLayer(layer); }
+      return { values, rows: builder ? builder.finish() : rows, derived: [...derived.values()] };
     },
   });
 }

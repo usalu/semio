@@ -62,6 +62,13 @@ impl Authorities{
         *self.grant.lock().unwrap()=g;
         self.construction.with_loan(&mut (),|loan|self.work.with_loan(&mut (),|work_loan|control.with_work_recipient(work_loan,|control|control.with_construction_recipient(loan,|control|control.with_effect(g,work,|_,effect|f(effect)))))).unwrap().unwrap().unwrap()
     }
+    /// 🎟️ Runs one funded effect that also lends the wired native control, so a receiving cursor can step under the same persistent authorities; an unadmitted quote ran nothing and yields `None`.
+    pub fn step_effect<R>(&mut self,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant,work:u64,f:impl FnOnce(&mut NativeDecodeControl<'_>,&mut RetainedAllocationEffect<'_>)->R)->Option<R>{
+        *self.grant.lock().unwrap()=g;
+        self.construction.with_loan(&mut (),|loan|self.work.with_loan(&mut (),|work_loan|control.with_work_recipient(work_loan,|control|control.with_construction_recipient(loan,|control|control.with_effect(g,work,|control,effect|f(control,effect)))))).unwrap().unwrap().unwrap()
+    }
+    /// 🧾️ Reads the physical progress the resident construction recipient has accepted so far.
+    pub fn submitted(&self)->RetainedCloneProgress{self.construction.inspect(|turn|turn.submitted)}
     pub fn new()->Self{let issuer=OriginalSourceTurnIssuer::new();let turn=issuer.issue().expect("fixture Source dispatch");let identity=turn.identity();let grant=std::sync::Arc::new(std::sync::Mutex::new(RetainedCloneGrant::default()));let accepted=std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));Self{turn,construction:OriginalConstructionAuthority::new(ConstructionTurn{original:grant.clone(),accepted,submitted:Default::default(),turn:identity}),work:OriginalWorkAuthority::new(ConstructionWork{turn:identity}),grant}}
     pub fn nested<T,E>(&mut self,control:&mut NativeDecodeControl<'_>,g:RetainedCloneGrant,f:impl FnOnce(&mut NativeDecodeControl<'_>,OriginalSourceTurnWitness<'_>)->RetainedWorkPoll<T,E>)->RetainedWorkPoll<T,E>{
         *self.grant.lock().unwrap()=g;let witness=self.turn.witness();let bound=unsafe{&*std::ptr::from_ref(&self.turn)}.witness();let mut poll=None;

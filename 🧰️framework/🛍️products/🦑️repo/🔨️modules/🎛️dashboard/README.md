@@ -63,9 +63,9 @@ an owner target or typed dashboard declaration.
 | Test a project | `test` plus the owner name | Select `<project>:test`; choose the test level in the form. `workspace:test` runs the workspace suite. |
 | Test one Bun file | `tool:workspace/bun-test` | Choose an owner or search source suggestions; selecting a file fills its current owner. |
 | Check one TypeScript project | `@semio-tech/repo-lib:typecheck-project` | Select an authored configuration and diagnostic detail. The current compiler owner manages state, progress and cancellation. |
-| Check, lint and format | `workspace:verify`, `workspace:lint`, `workspace:format` | Choose the check when offered, then inspect the exit code and output. Search `check` or `typecheck` plus the owner for scoped checks. |
+| Check, lint and format | `repo-policy:verify`, `workspace:lint`, `workspace:format` | Choose the check when offered, then inspect the exit code and output. Search `check` or `typecheck` plus the owner for scoped checks. |
 | Build and publish | `workspace:build`, `workspace:publish` or `build` plus the owner | Choose the build mode and scope offered by the form; output identifies the artifacts. |
-| Serve and preview | `playground:s`, `os-hub:dev`, `workspace:dev-storybook` or `dev` plus the owner | Choose renderer/example/user slot when offered; wait for readiness, then choose **Open ready address** (`Ctrl+B u`). |
+| Serve and preview | `playground:s`, `os-hub:dev`, `repo-storybook:dev-storybook` or `dev` plus the owner | Choose renderer/example/user slot when offered; wait for readiness, then choose **Open ready address** (`Ctrl+B u`). |
 | Inspect a failure | **Task overview** (`Ctrl+B h`) | Select the task to see its status, exit code and retained output. Restore a hidden output view with `Ctrl+B s`. |
 | Retry or cancel | Selected task menu | **Restart** (`Ctrl+B r`), **Stop** (`Ctrl+B c`) or **Kill** (`Ctrl+B k`) controls the task and descendants. Closing its view keeps it running. |
 | Set up native debugging | `@semio-tech/repo-developer-tools:setup-debugger` | **Set Up Native Debugger** verifies LLDB and its Python runtime before installing anything, then repairs the fixed host packages when required. |
@@ -231,8 +231,8 @@ names the problem on stderr.
 
 `repo dashboard --help` prints the usage and keyboard help. The dashboard has no other
 verbs and forwards nothing to another script: every task of the monorepo is a registry command. The routes of
-the root script are targets of the root project, so `repo dashboard run workspace:test`, `repo dashboard run workspace:verify
---param check=taxonomy`, `repo dashboard run workspace:dev-storybook`, `repo dashboard run workspace:os -- run <bundle>.studio`,
+the root script are targets of the root project, so `repo dashboard run workspace:test`, `repo dashboard run repo-policy:verify
+--param check=taxonomy`, `repo dashboard run repo-storybook:dev-storybook`, `repo dashboard run workspace:os -- run <bundle>.studio`,
 `repo dashboard run workspace:semio -- inspect <path>` and `repo dashboard run workspace:examples -- list` start them as daemon
 tasks (`repo dashboard commands workspace` lists them). Agent skills use declared repository owner targets for authored operations. Any other verb is an
 error that prints the usage and exits with status 2.

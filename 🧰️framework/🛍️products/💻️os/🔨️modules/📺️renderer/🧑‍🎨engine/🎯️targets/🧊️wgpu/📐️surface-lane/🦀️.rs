@@ -156,7 +156,7 @@ impl InteractiveJob for SurfaceResizeJob {
         let demand = RetirementDemand { copy_bytes: self.next_close_copy_byte_demand()?, depth: 1, ..Default::default() };
         semio_framework_job::close_original_retained_step(cx, demand, |_| {
             if self.candidate.is_some() { self.candidate = None; } else { self.request = None; }
-            RetainedWorkOutcome::<_, ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
         })
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(if self.candidate.is_some() { size_of::<Option<PreparedSurfaceResize>>() } else if self.request.is_some() { size_of::<Option<SurfaceResizeRequest>>() } else { 0 }) }
@@ -270,7 +270,7 @@ impl MountedSurfaceResizeLane {
             source.close_step(cx)?;
             return Ok(true);
         }
-        if self.session.as_ref().is_some_and(|session|session.terminal_is_empty()) { semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.session=None;self.session_closing=false;semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(true); }
+        if self.session.as_ref().is_some_and(|session|session.terminal_is_empty()) { semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.session=None;self.session_closing=false;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(true); }
         let Some(session) = self.session.as_mut() else { self.session_closing = false; return Ok(false); };
         let witness = cx.borrowed_original_cancel_token()?;
         match session.has_original_cancel_alias_witness(witness) {
@@ -323,7 +323,7 @@ impl MountedSurfaceResizeLane {
             if self.ready.take().is_none() && self.pending.take().is_none() {
                 if let Some(token) = self.token.take() { let slot = token.slot as usize; if SURFACE_LANE_GENERATIONS[slot].load(Ordering::Acquire) == token.generation { SURFACE_LANE_OCCUPIED[slot].store(false, Ordering::Release); } } else { self.operation = None; }
             }
-            semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })),work:1}
+            semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })),work:1}
         })?;
         Ok(self.terminal_is_empty())
     }
@@ -392,7 +392,7 @@ impl SurfaceResizeAuthority {
             Self::Mounted(lane) => lane.close_step(cx),
             Self::Rejected(rejected) => {
                 if rejected.terminal_is_empty() { return Ok(true); }
-                semio_framework_job::close_original_retained_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |_| { rejected.close_step(); RetainedWorkOutcome::<_, ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 } })?;
+                semio_framework_job::close_original_retained_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |_| { rejected.close_step(); RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 } })?;
                 Ok(rejected.terminal_is_empty())
             }
         }

@@ -12,8 +12,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️SetText
 //#endregion 🔖️SetText
 
-//#region 🔖️SetSnapshot
-//#endregion 🔖️SetSnapshot
+//#region 🔖️WholeSnapshot
+//#endregion 🔖️WholeSnapshot
 
 //#region 🔖️OpenDocument
 //#endregion 🔖️OpenDocument

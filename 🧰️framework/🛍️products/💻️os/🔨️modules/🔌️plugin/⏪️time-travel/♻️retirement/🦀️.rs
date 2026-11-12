@@ -72,16 +72,14 @@ impl<A:ArtifactApp> TimeTravelLedger<A> {
 }
 
 #[doc(hidden)]
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 #[path="🧪️tests/🦀️.rs"]
 pub mod tests;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use crate::original_retirement::tests::assert_session_original;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use crate::original_retirement::tests::assert_pending_command_original;
-#[cfg(test)]
-pub use crate::original_retirement::tests::assert_discard_publication_original;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use crate::original_retirement::tests::native_original_actor_grant;
 impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_os_kernel::StoreState,Mu: ::semio_os_kernel::StoreMutationFor<P> {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{

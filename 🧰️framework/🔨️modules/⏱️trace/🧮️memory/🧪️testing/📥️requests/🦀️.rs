@@ -1,7 +1,6 @@
 //! 🧫️ Test-only cumulative allocation requests with inclusive, stack-owned observation scopes.
 //!
-//! 🧷️ The single owner of the requested-byte observer. A test binary installs [`RequestedAllocator`] explicitly with
-//! `#[global_allocator] static OBSERVER: RequestedAllocator = RequestedAllocator;` (exactly once per binary) and reads the
+//! 🧷️ The single owner of the requested-byte observer. It is not installed by any test binary itself: `semio-framework-value-testing-allocator` wraps [`RequestedAllocator`] in the one global allocator of every test binary, and tests read the
 //! requests through [`observe`], [`observe_backing`] and [`observed_requested_bytes`].
 use std::{alloc::{GlobalAlloc, Layout}, cell::Cell, ptr::null_mut};
 use semio_framework_trace::HeapWitness;

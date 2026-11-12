@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { CATALOG_LANGUAGES_V1, handleTextV1, qualifiedKeyV1, type CatalogHandleV1, type TextValuesV1 } from "../📖️catalog/🟦️.ts";
 import { isRepoErrorV1, renderRepoErrorV1, repoErrorExitCodeV1, type RepoErrorV1 } from "../🚨️error/🟦️.ts";
 import { resolveLanguageV1, type LanguageEnvironmentV1, type OsLanguageListV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
+import { refuseDiskFullV1 } from "../../💽️disk/🟦️.ts";
 import { writeDiagnosticLineV1 } from "../../📤️output/🟦️.ts";
 import { isOwnedCommandFailureV1, ownedCommandExitCodeV1, type OwnedCommandFailure } from "../../../🎛️owned-execution/📪️outcome/🟦️.ts";
 import { refuseProcessV1 } from "../../../📖️texts/🟦️.ts";
@@ -79,10 +80,10 @@ const isBilingualRefusalV1 = (value: unknown): value is BilingualRefusalV1 => {
   return typeof value === "object" && row !== null && row.name === "CargoLockRefused" && typeof row.texts === "object" && row.texts !== null;
 };
 
-/** 🧯️ Turns anything that is not a typed refusal into the internal-error refusal, which keeps the original message and never the stack; an expired resource loan is classified as such, not as an internal fault. */
+/** 🧯️ Turns anything that is not a typed refusal into a refusal that keeps the original message and never the stack: an expired resource loan is classified as such, a full disk (`ENOSPC`, `database or disk is full`) becomes the typed disk refusal that names the partition, its free bytes and the command that frees space, and only the rest is an internal fault. */
 export const refuseInternalV1 = (error: unknown): RepoErrorV1 => error instanceof Error && error.name === "ResourceLoanDeadlineExhausted"
   ? refuseProcessV1("failed", "execution.loan-expired", { label: "repo", message: error.message }, { cause: error })
-  : refuseProcessV1("failed", "error.internal", { message: error instanceof Error ? error.message : String(error) }, { cause: error });
+  : refuseDiskFullV1(error) ?? refuseProcessV1("failed", "error.internal", { message: error instanceof Error ? error.message : String(error) }, { cause: error });
 
 /** 🚪️ Reports a refusal at the CLI boundary: a `RepoErrorV1` is rendered in the resolved language to the standard error and sets the exit status of its class; a failed child command is rendered as a refusal and passes on its own exit status; anything else is not handled and answers `false`. */
 export function reportRepoErrorV1(error: unknown, options: RefusalOptionsV1 = {}): boolean {

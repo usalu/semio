@@ -1,6 +1,6 @@
 //! 🧪️ Unit proofs of the paged mesh authority, native resource custody and exact physical retirement receipts.
 
-use super::testkit::{admit_mesh, allocate_mesh, close_mesh, mesh_test_attempt, mesh_test_attempt_controlled, observe_retirement_allocations, ownership_test_grant, paged_mesh_fixture, test_box_mesh, LegacyMeshOracleData, ObservedAllocator};
+use super::testkit::{admit_mesh, allocate_mesh, close_mesh, mesh_test_attempt, mesh_test_attempt_controlled, observe_retirement_allocations, ownership_test_grant, paged_mesh_fixture, test_box_mesh, LegacyMeshOracleData};
 use super::*;
 use semio_ui_scene_algebra::vec3_new_m;
 use std::collections::{BTreeMap, BTreeSet};
@@ -416,8 +416,6 @@ fn instance_model_from_trs_translates_and_scales_point() {
     assert!((point.y - 2.0).abs() < 1e-5, "y={}", point.y);
     assert!((point.z - 3.0).abs() < 1e-5, "z={}", point.z);
 }
-#[global_allocator]
-static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
 
 #[test]
 fn mesh3d_owner_contention_is_an_explicit_temporary_refusal(){

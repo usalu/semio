@@ -12,7 +12,7 @@ export function scriptProcessStallDecisionV1(state:ScriptProcessStallStateV1,sta
  if(state.liveChildren===0)return"stalled";
  return state.treeIdleMilliseconds>=idleTreeMilliseconds?"tree-stalled":"healthy";
 }
-let lastProgress=Date.now(),lastActivity=lastProgress,activityDemanded=false,outputObserved=false,ticket=0,episodeStart=0,lastWaitEnd=0;const waits=new Map<number,number>();
+let serving=0,lastProgress=Date.now(),lastActivity=lastProgress,activityDemanded=false,outputObserved=false,ticket=0,episodeStart=0,lastWaitEnd=0;const waits=new Map<number,number>();
 const naturalV1=(name:string):number|undefined=>{const value=Number(process.env[name]);return Number.isSafeInteger(value)&&value>=1000?value:undefined;};
 /** ⏸️ Waits that are younger than the wait ceiling: a queue wait counts as waiting for that long, a wait that outlives the ceiling (a queue nobody serves any more) is stalled like anything else. */
 export function activeScriptProcessWaitsV1(now:number=Date.now(),ceilingMilliseconds:number=naturalV1(policy.waitCeilingEnvironment)??policy.waitCeilingMilliseconds):number{let count=0;for(const since of waits.values())if(now-since<ceilingMilliseconds)count++;return count;}
@@ -26,6 +26,10 @@ const announceWaitEdge=(waiting:boolean,since:number):void=>{for(const listener 
 export function enterScriptProcessWaitV1():()=>void{const id=++ticket,now=Date.now();if(waits.size===0&&now-lastWaitEnd>policy.waitEpisodeGapMilliseconds)episodeStart=now;const first=waits.size===0;waits.set(id,now);lastProgress=now;lastActivity=now;if(first)announceWaitEdge(true,episodeStart);return()=>{if(waits.delete(id)){lastProgress=Date.now();lastActivity=lastProgress;lastWaitEnd=lastProgress;if(waits.size===0)announceWaitEdge(false,lastProgress);}};}
 /** ⚙️ How long this process has been in one continuous wait episode, i.e. inside declared waits that follow each other with gaps shorter than `waitEpisodeGapMilliseconds` (the polls of one queue); 0 when it is not waiting. A process that only waits can lend its capacity grant back. */
 export function scriptProcessWaitEpisodeV1(now:number=Date.now()):number{return waits.size===0&&now-lastWaitEnd>policy.waitEpisodeGapMilliseconds?0:Math.max(1,now-episodeStart);}
+/** 🛎️ Declares that this process is a service host that answers requests for as long as the returned function is not called: a serving process is never stalled, because an idle service is its normal state and its own lifecycle (retirement, cancellation) ends it, not the no-progress rule of a one-shot script. */
+export function enterScriptProcessServiceV1():()=>void{let left=false;serving++;lastProgress=Date.now();return()=>{if(left)return;left=true;serving--;lastProgress=Date.now();};}
+/** 🔢️ How many service declarations of this process are open. */
+export function scriptProcessServiceCountV1():number{return serving;}
 /** 🌡️ Records that real work happened: child CPU time, child output, a finished observation step. Unlike progress this is never a heartbeat the process writes about itself, so an idle window it renews cannot be kept alive by a hung action. */
 export function noteScriptProcessActivityV1(at:number=Date.now()):void{if(at>lastActivity)lastActivity=at;}
 /** 💤️ The milliseconds since this process last did observable work; 0 while it sits in a declared wait. */
@@ -80,6 +84,7 @@ export function startScriptProcessWatchdogV1(options:Readonly<{onStall:(idleMill
  const now=options.now??Date.now,children=options.children??liveChildPidsV1,cpu=options.cpu??treeCpuMillisecondsV1,natural=naturalV1,stall=options.stallMilliseconds??natural(policy.stallEnvironment)??policy.stallMilliseconds,idleTree=options.idleTreeMilliseconds??natural(policy.idleTreeEnvironment)??policy.idleTreeMilliseconds;let observed=now(),treeCpu:number|undefined,treeSince=observed;lastProgress=observed;
  const timer=setInterval(()=>{
   const clock=now(),idle=clock-Math.max(lastProgress,observed);
+  if(serving>0){observed=clock;return;}
   const waiting=activeScriptProcessWaitsV1(clock);if(waiting>0){observed=clock;return;}
   if(idle<stall)return;
   const pids=children();

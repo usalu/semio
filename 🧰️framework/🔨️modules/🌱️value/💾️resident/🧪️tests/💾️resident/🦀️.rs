@@ -1,8 +1,6 @@
 use super::{ResidentCapacity, ResidentFault, ResidentResources, RESIDENT_MAXIMUM_COUNT};
 
 //#region 🔎️AllocationObservation
-struct ObservedAllocator;
-
 thread_local! {
     static COUNT_ALLOCATIONS: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
     static ALLOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
@@ -10,54 +8,47 @@ thread_local! {
     static ALLOCATION_LAYOUTS: std::cell::Cell<[(usize, usize, usize); 8]> = const { std::cell::Cell::new([(0, 0, 0); 8]) };
     static DEALLOCATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     static DEALLOCATION_LAYOUTS: std::cell::Cell<[(usize, usize); 8]> = const { std::cell::Cell::new([(0, 0); 8]) };
-    static FAIL_NEXT_ALLOCATION: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
-unsafe impl std::alloc::GlobalAlloc for ObservedAllocator {
-    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
-        COUNT_ALLOCATIONS.with(|enabled| {
-            if enabled.get() {
-                ALLOCATIONS.with(|count| {
-                    let index = count.get();
-                    if index < 8 {
-                        ALLOCATION_LAYOUTS.with(|events| {
-                            let mut values = events.get();
-                            values[index] = (ALLOCATION_PHASE.with(std::cell::Cell::get), layout.size(), layout.align());
-                            events.set(values);
-                        });
-                    }
-                    count.set(index + 1);
-                });
-            }
-        });
-        let failed = FAIL_NEXT_ALLOCATION.with(|value| value.replace(false));
-        let pointer = if failed { std::ptr::null_mut() } else { unsafe { std::alloc::GlobalAlloc::alloc(&std::alloc::System, layout) } };
-        pointer
-    }
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: std::alloc::Layout) {
-        let _ = COUNT_ALLOCATIONS.try_with(|enabled| {
-            if enabled.get() {
-                DEALLOCATIONS.with(|count| {
-                    let index = count.get();
-                    if index < 8 {
-                        DEALLOCATION_LAYOUTS.with(|events| {
-                            let mut values = events.get();
-                            values[index] = (layout.size(), layout.align());
-                            events.set(values);
-                        });
-                    }
-                    count.set(index + 1);
-                });
-            }
-        });
-        unsafe {
-            std::alloc::GlobalAlloc::dealloc(&std::alloc::System, ptr, layout);
+fn record_requested_allocation(layout: std::alloc::Layout) {
+    COUNT_ALLOCATIONS.with(|enabled| {
+        if enabled.get() {
+            ALLOCATIONS.with(|count| {
+                let index = count.get();
+                if index < 8 {
+                    ALLOCATION_LAYOUTS.with(|events| {
+                        let mut values = events.get();
+                        values[index] = (ALLOCATION_PHASE.with(std::cell::Cell::get), layout.size(), layout.align());
+                        events.set(values);
+                    });
+                }
+                count.set(index + 1);
+            });
         }
-    }
+    });
 }
-
-#[global_allocator]
-static ALLOCATOR: ObservedAllocator = ObservedAllocator;
+fn record_released_allocation(_pointer: *mut u8, layout: std::alloc::Layout) {
+    let _ = COUNT_ALLOCATIONS.try_with(|enabled| {
+        if enabled.get() {
+            DEALLOCATIONS.with(|count| {
+                let index = count.get();
+                if index < 8 {
+                    DEALLOCATION_LAYOUTS.with(|events| {
+                        let mut values = events.get();
+                        values[index] = (layout.size(), layout.align());
+                        events.set(values);
+                    });
+                }
+                count.set(index + 1);
+            });
+        }
+    });
+}
+fn count_allocations(enabled: bool) {
+    static INSTALLED: std::sync::Once = std::sync::Once::new();
+    INSTALLED.call_once(|| semio_framework_value_testing_allocator::install_allocation_tap(record_requested_allocation, record_released_allocation));
+    COUNT_ALLOCATIONS.with(|value| value.set(enabled));
+}
 //#endregion 🔎️AllocationObservation
 
 //#region 🧪️Capacity
@@ -138,9 +129,9 @@ fn resident_capacity_constructor_owns_no_heap_backing() {
     let total = resources(&fixture["capacity"]).unwrap();
     let control = resources(&fixture["capacity"]["control"]).unwrap();
     ALLOCATIONS.with(|count| count.set(0));
-    COUNT_ALLOCATIONS.with(|enabled| enabled.set(true));
+    count_allocations(true);
     let value = ResidentCapacity::new(total, control);
-    COUNT_ALLOCATIONS.with(|enabled| enabled.set(false));
+    count_allocations(false);
     let allocations = ALLOCATIONS.with(std::cell::Cell::get);
     assert!(value.is_ok());
     assert_eq!(allocations, 0, "capacity vocabulary must not allocate a hidden ledger or backing");
@@ -236,9 +227,9 @@ fn retire_parent_probe(source: &mut Option<ResidentDropProbe>) {
 fn resident_admission_native_layout_has_one_fixed_root_and_separate_move_costs() {
     let capacity = admission_capacity();
     ALLOCATIONS.with(|count| count.set(0));
-    COUNT_ALLOCATIONS.with(|enabled| enabled.set(true));
+    count_allocations(true);
     let root = ResidentLedgerRoot::new(capacity);
-    COUNT_ALLOCATIONS.with(|enabled| enabled.set(false));
+    count_allocations(false);
     assert_eq!(ALLOCATIONS.with(std::cell::Cell::get), 0, "the retained bootstrap root is inline, not a hidden shared heap directory");
     let layout = root.native_layout::<ResidentDropProbe, ResidentDropProbe>();
     assert_eq!(layout.root_bytes, std::mem::size_of::<ResidentLedgerRoot>() as u64);
@@ -272,9 +263,9 @@ fn resident_admission_short_and_foreign_refusals_preserve_live_consumer() {
     let mut refusal_allocations = [0usize; 2];
     for (index, grant) in [ResidentGrant::new(0, 4096).unwrap(), admission_grant(layout.admission_page_bytes - 1)].into_iter().enumerate() {
         ALLOCATIONS.with(|count| count.set(0));
-        COUNT_ALLOCATIONS.with(|enabled| enabled.set(true));
+        count_allocations(true);
         let step = ledger.prepare_admission(&consumer, ResidentPartition::Data, grant).unwrap();
-        COUNT_ALLOCATIONS.with(|enabled| enabled.set(false));
+        count_allocations(false);
         refusal_allocations[index] = ALLOCATIONS.with(std::cell::Cell::get);
         assert_eq!(step.kind, ResidentStepKind::Blocked);
         assert_eq!(root.allocated_bytes().unwrap(), original_backing);
@@ -462,7 +453,7 @@ fn resident_admission_first_access_refusal_allocation_boundary() {
     let short = ResidentGrant::new(0, 4096).unwrap();
     ALLOCATIONS.with(|value| value.set(0));
     ALLOCATION_LAYOUTS.with(|value| value.set([(0, 0, 0); 8]));
-    COUNT_ALLOCATIONS.with(|value| value.set(true));
+    count_allocations(true);
     ALLOCATION_PHASE.with(|value| value.set(1));
     let root = ResidentLedgerRoot::new(capacity);
     let after_root = ALLOCATIONS.with(std::cell::Cell::get);
@@ -472,7 +463,7 @@ fn resident_admission_first_access_refusal_allocation_boundary() {
     ALLOCATION_PHASE.with(|value| value.set(3));
     let second = root.prepare_consumer::<u64>(ResidentPartition::Data, short);
     let after_second = ALLOCATIONS.with(std::cell::Cell::get);
-    COUNT_ALLOCATIONS.with(|value| value.set(false));
+    count_allocations(false);
     let events = ALLOCATION_LAYOUTS.with(std::cell::Cell::get);
     close_admission_root(&root);
     eprintln!("resident first-access root={after_root} first={} second={} layouts={events:?}", after_first - after_root, after_second - after_first);
@@ -487,11 +478,11 @@ fn resident_admission_busy_access_preserves_original_root_without_allocation() {
     let root = ResidentLedgerRoot::new(admission_capacity());
     let held = root.state.try_lock().ok().unwrap();
     ALLOCATIONS.with(|value| value.set(0));
-    COUNT_ALLOCATIONS.with(|value| value.set(true));
+    count_allocations(true);
     let prepare = root.prepare_consumer::<u64>(ResidentPartition::Data, ResidentGrant::new(1, 4096).unwrap());
     let close = root.begin_close();
     let observed = root.allocated_bytes();
-    COUNT_ALLOCATIONS.with(|value| value.set(false));
+    count_allocations(false);
     let allocations = ALLOCATIONS.with(std::cell::Cell::get);
     drop(held);
     close_admission_root(&root);
@@ -605,7 +596,7 @@ fn resident_admission_exact_layout_and_partial_consumer_cancel_release_once() {
         DEALLOCATIONS.with(|value| value.set(0));
         ALLOCATION_LAYOUTS.with(|value| value.set([(0, 0, 0); 8]));
         DEALLOCATION_LAYOUTS.with(|value| value.set([(0, 0); 8]));
-        COUNT_ALLOCATIONS.with(|value| value.set(true));
+        count_allocations(true);
         for _ in 0..=frontier {
             root.prepare_consumer::<AlignedResident>(ResidentPartition::Data, grant).unwrap();
         }
@@ -619,7 +610,7 @@ fn resident_admission_exact_layout_and_partial_consumer_cancel_release_once() {
             }
             root.close_step(grant).unwrap();
         }
-        COUNT_ALLOCATIONS.with(|value| value.set(false));
+        count_allocations(false);
         let allocations = ALLOCATIONS.with(std::cell::Cell::get);
         let deallocations = DEALLOCATIONS.with(std::cell::Cell::get);
         let allocated_layouts = ALLOCATION_LAYOUTS.with(std::cell::Cell::get);
@@ -646,8 +637,8 @@ fn resident_admission_injected_allocation_failure_preserves_original_reservation
     let root = ResidentLedgerRoot::new(admission_capacity());
     root.prepare_consumer::<AlignedResident>(ResidentPartition::Data, grant).unwrap();
     let consumer_charge = root.usage(ResidentPartition::Data).unwrap();
-    FAIL_NEXT_ALLOCATION.with(|value| value.set(true));
-    let consumer_failed = root.prepare_consumer::<AlignedResident>(ResidentPartition::Data, grant);
+    let (consumer_failed, refused) = semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(|| root.prepare_consumer::<AlignedResident>(ResidentPartition::Data, grant));
+    assert_eq!(refused, 1);
     let consumer_retained = (root.usage(ResidentPartition::Data).unwrap(), root.allocated_bytes().unwrap());
     close_admission_root(&root);
     assert_eq!(consumer_failed, Err(ResidentFault::Allocation));
@@ -671,9 +662,10 @@ fn resident_admission_injected_allocation_failure_preserves_original_reservation
             ledger.claim_admission(&consumer, cell.as_ref().unwrap(), grant).unwrap();
         }
         let before = (root.usage(ResidentPartition::Data).unwrap(), root.allocated_bytes().unwrap());
-        FAIL_NEXT_ALLOCATION.with(|value| value.set(true));
-        let failure =
-            if record_failure { ledger.reserve_record::<ResidentDropProbe, AlignedResident>(cell.as_ref().unwrap(), ResidentResources::new(64, 1, 1).unwrap(), grant) } else { ledger.prepare_admission(&consumer, ResidentPartition::Data, grant) };
+        let (failure, refused) = semio_framework_value_testing_allocator::refuse_one_allocation_on_this_thread(|| {
+            if record_failure { ledger.reserve_record::<ResidentDropProbe, AlignedResident>(cell.as_ref().unwrap(), ResidentResources::new(64, 1, 1).unwrap(), grant) } else { ledger.prepare_admission(&consumer, ResidentPartition::Data, grant) }
+        });
+        assert_eq!(refused, 1);
         let after = (root.usage(ResidentPartition::Data).unwrap(), root.allocated_bytes().unwrap());
         let same_source = consumer.read().unwrap().unwrap().pointer() == original;
         let drops_before_recovery = drops.load(Ordering::SeqCst);
@@ -770,7 +762,7 @@ fn resident_admission_all_three_page_backings_use_exact_layout_and_short_grants(
     DEALLOCATIONS.with(|value| value.set(0));
     ALLOCATION_LAYOUTS.with(|value| value.set([(0, 0, 0); 8]));
     DEALLOCATION_LAYOUTS.with(|value| value.set([(0, 0); 8]));
-    COUNT_ALLOCATIONS.with(|value| value.set(true));
+    count_allocations(true);
     let mut refused = [ResidentStepKind::Pending; 8];
     let mut short_consumer_allocations = 0;
     let mut consumer_unchanged = true;
@@ -818,7 +810,7 @@ fn resident_admission_all_three_page_backings_use_exact_layout_and_short_grants(
         }
         root.close_step(grant).unwrap();
     }
-    COUNT_ALLOCATIONS.with(|value| value.set(false));
+    count_allocations(false);
     let allocations = ALLOCATIONS.with(std::cell::Cell::get);
     let deallocations = DEALLOCATIONS.with(std::cell::Cell::get);
     let allocation_layouts = ALLOCATION_LAYOUTS.with(std::cell::Cell::get);

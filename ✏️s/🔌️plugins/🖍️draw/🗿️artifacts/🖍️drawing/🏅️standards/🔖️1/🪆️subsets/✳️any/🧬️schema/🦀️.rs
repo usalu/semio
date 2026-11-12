@@ -93,7 +93,7 @@ impl DrawingArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: DrawingSnapshot) {
+    pub fn replace_document(&mut self, snapshot: DrawingSnapshot) {
         self.schema = snapshot.schema;
         self.id = snapshot.id;
         self.title = snapshot.title;

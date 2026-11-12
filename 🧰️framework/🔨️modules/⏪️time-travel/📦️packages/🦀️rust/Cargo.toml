@@ -30,3 +30,4 @@ semio-framework-value-derive = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

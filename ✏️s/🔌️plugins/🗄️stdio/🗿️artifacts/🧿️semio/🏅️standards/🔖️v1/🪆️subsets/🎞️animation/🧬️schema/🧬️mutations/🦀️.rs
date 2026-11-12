@@ -1,5 +1,5 @@
 //! 🧬️ SemioAnimationMutation — full named-variant vocabulary (gif 89a / docx precedent), replacing
-//! the W1b `SetSnapshot`-only scaffold. Every variant's `diff()`/`inverse()` is HAND-WRITTEN
+//! the whole-snapshot-only scaffold. Every variant's `diff()`/`inverse()` is HAND-WRITTEN
 //! (apply-and-capture is banned per `🧬️schema-design.md`'s svg infinite-recursion warning) —
 //! `diff()` builds the exact sparse `SemioAnimationDiff` directly via the `diff_*` helpers below,
 //! never by diffing a mutated clone against `base`.
@@ -8,7 +8,7 @@
 //! its own `dsl::MutationLeaf` payload type (`🧬️mutations/<emoji><kind>/🦀️.rs`), and
 //! `#[derive(dsl::Mutations)]` synthesizes `DESCRIPTORS`/`descriptor()` from that leaf roster —
 //! required by `protocol::Mutation<P>` (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs:105`).
-//! `NoMutation` is dropped: the derive requires every variant to wrap exactly one leaf payload, and
+//! The derive requires every variant to wrap exactly one leaf payload, and
 //! `no` is not an approved semantic verb.
 
 use crate::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
@@ -40,7 +40,7 @@ pub mod set_keyframe_value;
 pub mod set_timeline_name;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]

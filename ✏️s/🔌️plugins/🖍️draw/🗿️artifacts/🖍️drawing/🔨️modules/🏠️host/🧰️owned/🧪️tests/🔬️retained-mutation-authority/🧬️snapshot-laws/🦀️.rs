@@ -269,8 +269,7 @@ fn paged_native_drawing_snapshot_clone_preserves_the_neutral_schema() {
     }
 }
 
-#[global_allocator]
-static DRAWING_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 pub(super) fn drawing_snapshot_heap_grant(turn: usize, bytes: usize) -> semio_framework_value::retained_clone::RetainedCloneGrant {
     assert_eq!(bytes, DRAWING_OWNED_FIELD_BYTES);

@@ -22,7 +22,7 @@ use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_command_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::NoMutation(NoMutation {}));
+    store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::NoOperation(NoOperation {}));
     store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}));
     store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: Vec::new() }));
     store::os_store::test_support::assert_op_line_round_trip(&VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }));

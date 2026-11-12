@@ -35,6 +35,8 @@ impl OriginalReceivingRetryWitness<'_>{
  pub fn validates(&self,loan:&semio_framework_value_control_contract::OriginalConstructionLoan<'_>)->Result<bool,ValueError>{Ok(self.owner.receipt_retry_witness(loan,self.refusal)?.is_some())}
 }
 impl OriginalReceivingPrimary {
+    /// 🔎️ Reports the closed kind of the first actual refusal this receiving owner retains.
+    pub fn refusal_kind(&self)->Option<crate::ValueRefusalKind>{[&self.primary,&self.quote_refusal,&self.allocation_refusal,&self.work_refusal,&self.work_overrun,&self.receipt_refusal].into_iter().flatten().next().map(|error|error.kind)}
     /// 🪹️ Reports whether every independent receiving cause and receipt is absent.
     pub fn is_empty(&self)->bool{self.primary.is_none()&&self.quote_refusal.is_none()&&self.allocation_refusal.is_none()&&self.work_refusal.is_none()&&self.work_overrun.is_none()&&self.retirement_failure.is_none()&&self.allocation_failure.is_none()&&self.native_allocation.is_none()&&self.receipt_refusal.is_none()&&self.receipt_completion_data.is_none()&&self.receipt_completion_live.is_none()&&self.receipt_completion_payout.is_none()&&self.receipt_completion_work.is_none()&&self.receipt_completion_binding.is_none()&&self.receipt_completion_progress.is_none()&&self.progress==RetainedCloneProgress::default()}
     /// 🌱️ Creates an empty inline receiving owner without allocating.

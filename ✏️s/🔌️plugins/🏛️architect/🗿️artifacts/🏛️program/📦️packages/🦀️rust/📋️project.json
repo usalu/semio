@@ -199,6 +199,36 @@
         "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts verify physical-codecs"
       }
+    },
+    "verify-architect-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify architect-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-architect-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify architect-window-ownership native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-program-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify program-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

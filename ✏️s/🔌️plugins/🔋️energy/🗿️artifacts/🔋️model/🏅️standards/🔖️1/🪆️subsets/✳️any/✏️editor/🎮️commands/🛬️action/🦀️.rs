@@ -115,6 +115,7 @@ impl<C:EnergyOriginalCommand<M>,M:RetireOwned+Send+Sync+'static> ArtifactOrigina
  fn take_demands(&self)->Result<RetirementDemand,ValueError>{if !self.ready(){return Err(invalid())}Ok(fixed::<(Option<Box<C>>,Option<Box<C>>,Option<RetainedToolWireInput>,Option<RetainedToolWireInput>,u8)>())}
  fn take_into(&mut self,command:&mut Option<Box<C>>,wire:&mut Option<RetainedToolWireInput>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if command.is_some()||wire.is_some(){return Err(invalid().into())}let d=self.take_demands()?;stepped(cx,&mut self.construction,&mut self.unit,d,||{*command=self.command.take();*wire=self.input.take();self.phase=TAKEN;Ok(receipt(d))})?;Ok(self.phase==TAKEN)}
  fn close_demands(&self,_body:usize)->Result<RetirementDemand,ValueError>{self.close_quote()}
+ fn close_items(&self)->usize{1}
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.terminal_is_empty(){return Ok(true)}
   if !self.closing{let d=fixed::<bool>();retired(cx,d,|effect|unit(effect,||{self.closing=true;RetainedCloneStep::Progress(receipt(d))}))?;return Ok(false)}

@@ -4,8 +4,8 @@ pub(super) const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:20000
 pub(super) struct Fixture<J:InteractiveJob>{pub owner:OriginalWorkerJobAuthority<J>,pub caller:OriginalJobFixtureCaller}
 impl<J:InteractiveJob> Fixture<J>{
  pub fn admit(job:J,mut params:BatchJobParams)->Self{
-  let mut caller=OriginalJobFixtureCaller::admit(params.operation,params.generation,STOCK,logical_now_us,u64::MAX,20000);
-  let old=std::mem::replace(&mut params.cancel,caller.admit_alias(STOCK));let mut old=semio_framework_async::CancelTokenRetirement::from_token(old);while !old.terminal_is_empty(){old.close_step(STOCK).result.unwrap();}
+  let mut caller=OriginalJobFixtureCaller::admit(params.operation,params.generation,STOCK,params.now_us,u64::MAX,20000);
+  let old=std::mem::replace(&mut params.cancel,caller.admit_alias(STOCK));let mut old=semio_framework_async::CancelTokenRetirement::from_token(old);while !old.terminal_is_empty(){caller.with_effect(STOCK,|effect|old.close_step(effect)).unwrap_or_else(|_|panic!("original fixture root alias close is affordable")).result.unwrap();}
   let mut job=Some(job);let mut params=Some(params);let mut admission=OriginalWorkerJobAdmission::<J>::new();let mut owner=None;
   for _ in 0..512{
    caller.turn(STOCK,|cx|{if owner.is_some(){if !admission.terminal_is_empty(){admission.close_step(cx)?;}}else if !admission.ready(){admission.advance(&mut job,&mut params,cx)?;}else{admission.take_ready(&mut owner,cx)?;}Ok(())}).unwrap();

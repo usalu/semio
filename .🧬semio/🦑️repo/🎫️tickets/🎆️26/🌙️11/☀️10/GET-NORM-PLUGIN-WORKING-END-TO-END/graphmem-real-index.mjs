@@ -1,0 +1,22 @@
+import{readFileSync}from"node:fs";import{brotliDecompressSync,brotliCompressSync}from"node:zlib";
+const G=process.cwd()+"/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/";
+const gen=await import(G+"🟨️.mjs"),codec=await import(G+"🧮️fact-codec/🟨️.mjs"),sp=await import(G+"🌊️stream-patch/🟨️.mjs");
+const mb=()=>Math.round(process.resourceUsage().maxRSS/1024);const cur=()=>Math.round(process.memoryUsage().rss/1e6);
+const raw=brotliDecompressSync(readFileSync(process.argv[2]),{maxOutputLength:2**31});
+const view=codec.openFactIndexV1(raw,{maximumBytes:2**31});
+const n=Number(process.argv[3]??2000);
+const names=view.owners.filter(o=>o.startsWith("@derived:")).slice(0,n);
+const ids=new Map(names.map(x=>[view.owners.indexOf(x),x]));
+const classesOf=new Map(names.map(x=>[x,[]]));let inc=0;
+for(let c=0;c<view.classes.length;c++){const cls=view.classes[c];for(const o of cls.o){const nm=ids.get(o);if(nm){classesOf.get(nm).push(c);inc+=cls.r.length;}}}
+console.log("owners",names.length,"incidences",inc,"rss now",cur(),"peak",mb());
+const rowObj=new Map(),obj=id=>{let r=rowObj.get(id);if(r===undefined){r=structuredClone(view.rows[id]);rowObj.set(id,r);}return r;};
+const up=new Map(names.map(nm=>[nm,{length:classesOf.get(nm).reduce((s,c)=>s+view.classes[c].r.length,0),batches:async function*(){for(const c of classesOf.get(nm)){const r=view.classes[c].r;for(let i=0;i<r.length;i+=5000)yield r.slice(i,i+5000).map(obj);}}}]));
+if(process.env.ARRAYS){for(const[nm,src]of[...up]){const all=[];for await(const b of src.batches())for(const r of b)all.push(r);up.set(nm,all);}}else for(const src of up.values())for await(const b of src.batches());Bun.gc(true);console.log("materialized rows",rowObj.size,"rss",cur());
+const before=cur(),t0=performance.now();let peakSeen=0;const poll=setInterval(()=>{peakSeen=Math.max(peakSeen,Math.round(process.memoryUsage().rss/1e6));},50);
+const out=await sp.patchFactIndexBytesV1(view,{upserts:up},{maximumBytes:2**31});
+console.log("patched bytes",out.length,"old",raw.length,"secs",((performance.now()-t0)/1000).toFixed(1),"rssPeakSeen",peakSeen,"growthSeen",peakSeen-before,"maxRSS",mb(),"rssBefore",before);clearInterval(poll);
+const v2=codec.openFactIndexV1(out,{maximumBytes:2**31});
+console.log("rows",v2.rows.length,view.rows.length,"owners",v2.owners.length,view.owners.length,"classes",v2.classes.length,view.classes.length);
+const dec=codec.decodeFactIndexV1(out,{maximumBytes:2**31});console.log("strict decode ok",dec.rows.length);
+const t1=performance.now(),re=codec.encodeFactIndexV1(dec,{maximumBytes:2**31});console.log("canonical",Buffer.compare(re,out)===0,((performance.now()-t1)/1000).toFixed(1));

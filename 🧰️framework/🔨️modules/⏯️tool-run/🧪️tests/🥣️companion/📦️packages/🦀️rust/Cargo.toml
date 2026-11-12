@@ -35,3 +35,6 @@ semio-ui-locale = { path = "../../../../../🖱️ui/🌐️locale/📦️packag
 semio-framework-value = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-tool-run-entities = { path = "../../../../👥️entities/📦️packages/🦀️rust" }

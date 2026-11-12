@@ -4,8 +4,7 @@ extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as protocol;
 
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 /// 🧮️ Fixed-width source text for parameter refusal diagnostics; retained custody and grants belong to the preparation that holds it.
 pub struct RetainedParameterNumericText {

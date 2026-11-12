@@ -2,7 +2,7 @@
 use crate::standards::v_rfc4180::subsets::any::schema::snapshot::CsvSnapshot;
 use crate::store;
 use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedRecordSpec as R,BorrowedShape as H,RecordLayout};
-use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind as K,native_encoding::NativeEncodeProgress};
+use semio_framework_value::{ValueError,ValueRefusalKind as K,native_encoding::NativeEncodeProgress};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
 fn text()->H{H::Text}
 static FIELD:[F;2]=[F::new(0,"value",H::Text),F::new(1,"quoted",H::Bool)];
@@ -19,7 +19,7 @@ pub(crate)fn decode(payload:&store::io_schema::IoPayload,control:&mut SqliteSnap
 }
 pub(crate) fn preflight(snapshot:&CsvSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  crate::standards::v_rfc4180::subsets::any::io::sqlite::snapshot::semantic(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;let limits=control.limits();let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};let maximum=limits.max_file_bytes.checked_sub(store::semio_format::declared_envelope_prefix_len("stdio.csv",component,1)?).ok_or_else(||ValueError::new(K::OwnershipLimit,"CSV file ceiling cannot contain its declared envelope"))?;
- control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint,allocation|{let mut progress=|event:NativeEncodeProgress|checkpoint(event.completed,event.total);let mut native=NativeEncodeControl::new_forwarded(remaining,&mut progress,allocation);let result=match encoding{SnapshotEncoding::Text=>semio_framework_dsl_record::measure_print_borrowed(snapshot,&spec(),usize::MAX,&mut native),SnapshotEncoding::Binary=>{let options=pack::record::EncodeOptions::default();pack::record::measure_document_borrowed(snapshot,&spec(),&options,&mut native)}}.and_then(|length|if length>maximum{Err(ValueError::new(K::OwnershipLimit,"CSV exact native output exceeds file byte ceiling"))}else{Ok(())});(result,native.owned_bytes())})?
+ control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint,allocation|{let mut progress=|event:NativeEncodeProgress|checkpoint(event.completed,event.total);let mut native=allocation.encode(remaining,&mut progress);let result=match encoding{SnapshotEncoding::Text=>semio_framework_dsl_record::measure_print_borrowed(snapshot,&spec(),usize::MAX,&mut native),SnapshotEncoding::Binary=>{let options=pack::record::EncodeOptions::default();pack::record::measure_document_borrowed(snapshot,&spec(),&options,&mut native)}}.and_then(|length|if length>maximum{Err(ValueError::new(K::OwnershipLimit,"CSV exact native output exceeds file byte ceiling"))}else{Ok(())});(result,native.owned_bytes())})?
 }
 pub(crate) fn encode(snapshot:&CsvSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_os_kernel::NativeSnapshotEncodeOwner<'_, '_>,output:&mut Option<store::os_store::serialization::SnapshotReceivingOutput<store::io_schema::IoPayload>>)->store::os_store::serialization::SnapshotReceivingOutcome{
  if let Err(error)=preflight(snapshot,encoding,control){return semio_framework_value::RetainedWorkOutcome{result:Err(store::sqlite_snapshot::SqliteStageFailure::NotStarted(error)),work:0}}

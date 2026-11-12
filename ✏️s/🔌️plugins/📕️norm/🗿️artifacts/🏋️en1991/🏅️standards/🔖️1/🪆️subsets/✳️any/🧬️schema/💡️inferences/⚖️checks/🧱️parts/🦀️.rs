@@ -13,6 +13,7 @@ pub fn pa_to_kn_m2(pa: f64) -> f64 { pa / 1000.0 }
 pub fn kn_to_n(kn: f64) -> f64 { kn * 1000.0 }
 pub fn ndp(id: &str) -> f64 { semio_s_plugin_norm_compliance::ndp_common(id) }
 pub fn copy(en: &str, de: &str) -> LocalizedCopy { LocalizedCopy::new(en, de) }
+pub fn ratio(required: f64, assumed: f64) -> f64 { if required <= 0.0 { 0.0 } else { required / assumed.max(1e-9) } }
 
 /// 🩹 Remedy raising an assumed pressure to the required value.
 pub fn raise_pressure_remedy(path: &str, entity_id: &str, label_en: &str, label_de: &str, current_pa: f64, required_pa: f64) -> Remedy {

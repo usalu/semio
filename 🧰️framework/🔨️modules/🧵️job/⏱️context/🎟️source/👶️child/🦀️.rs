@@ -34,28 +34,28 @@ impl OriginalCallerChildSource{
   if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Blocked);}
   let metadata_demand=RetirementDemand{depth:1,..Default::default()};
   let pending=|step|match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>InteractiveJobCloseStep::Blocked};
-  if !self.closing{return crate::close_original_retained_step(cx,metadata_demand,|_|{self.closing=true;self.ready=false;RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+  if !self.closing{return crate::close_original_retained_step(cx,metadata_demand,|_|{self.closing=true;self.ready=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
   if !self.admission.terminal_is_empty(){
    let(admission,ledger,cancel)=(&mut self.admission,&mut self.initial_child_ledger,&mut self.cancel);
    if admission.has_backing(){return crate::close_original_retained_effect_step(cx,OriginalCallerSourceAdmission::publish_demand(),|effect|admission.publish(&mut self.parent,effect).result).map(pending)}
    return crate::close_original_retained_effect_step(cx,OriginalCallerSourceAdmission::prepare_demand(),|effect|admission.return_inputs(ledger,cancel,effect).result).map(pending);
   }
   if let Some(child)=self.parent.as_mut(){
-   if child.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.parent.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+   if child.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.parent.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
    let demand=child.retirement_demands()?;let witness=parent.cancellation()?;
    return crate::close_original_effect_step(cx,demand,|effect|child.close_witnessed(effect,Some(witness))).map(pending);
   }
   if let Some(ledger)=self.initial_child_ledger.as_mut(){
-   if ledger.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.initial_child_ledger.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+   if ledger.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.initial_child_ledger.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
    let demand=ledger.retirement_demands();return crate::close_original_effect_step(cx,demand,|effect|semio_framework_value_control_contract::RetainedWorkPoll::Complete(ledger.close_step(effect))).map(pending);
   }
-  if self.cancel.is_some(){return crate::close_original_retained_step(cx,metadata_demand,|_|{*self.cancel_retiring=Some(CancelTokenRetirement::from_token(self.cancel.take().expect("cancel absent")));RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+  if self.cancel.is_some(){return crate::close_original_retained_step(cx,metadata_demand,|_|{*self.cancel_retiring=Some(CancelTokenRetirement::from_token(self.cancel.take().expect("cancel absent")));RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
   if let Some(retiring)=self.cancel_retiring.as_mut(){
-   if retiring.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.cancel_retiring.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
+   if retiring.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.cancel_retiring.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}});}
    let witness=parent.cancellation()?;return crate::close_original_retained_effect_step(cx,metadata_demand,|effect|retiring.return_alias_step(witness,effect).result.map_err(cancel_refusal)).map(pending);
   }
   let upstream=self.upstream.as_mut().ok_or_else(||ValueError::invariant("upstream absent"))?;
-  if upstream.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.upstream.take();RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(metadata())),work:1}});}
+  if upstream.terminal_is_empty(){return crate::close_original_retained_step(cx,metadata_demand,|_|{self.upstream.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:1}});}
   upstream.close_step(parent,cx).map(pending)
  }
 }

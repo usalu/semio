@@ -492,7 +492,7 @@ impl ToValue for FaultScope {
 }
 impl FromValue for FaultScope {
     fn from_value_controlled(value: &DslValue, c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { controlled::decode_scope(value, c) }
-    fn retire_decoded(self) { controlled::retire(self); }
+    fn retire_decoded(self) { controlled::retire(Box::new(self)); }
     fn default_value_controlled(c: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> { c.checkpoint()?; Ok(Self::default()) }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let entries = match value {

@@ -1,17 +1,17 @@
 //! 🚄️ Rail resonance and factor overrides: the Fig. 6.10 frequency band with the deck's natural frequency, the acceleration-versus-speed sweep of the HSLM-like spectrum with the resonance speeds, and the annex-versus-override values of every factor override. Every diagram has a table twin; markers bind to checks and, for overrides, to the override leaf.
 
 use super::*;
-use super::super::checks::rail_dynamics::{governing_acceleration, DeckModes, Train};
-use super::super::checks::ndp;
+use checks::rail_dynamics::{governing_acceleration, DeckModes, Train};
+use checks::ndp;
 
 const SPAN_NODES: usize = 24;
 const SWEEP: usize = 40;
 
-fn rail_rows(document: &En1990Snapshot) -> Vec<(&Member, &super::super::model::BridgeSls)> {
+fn rail_rows(document: &En1990Snapshot) -> Vec<(&Member, &model::BridgeSls)> {
     document.bridge_sls.iter().filter(|s| document.structure_kind == semio_s_artifact_norm_en1990_model::StructureKind::RailBridge && s.natural_frequency > 0.0).filter_map(|s| document.members.iter().find(|m| m.id == s.member_id && m.span > 0.0).map(|m| (m, s))).collect()
 }
 
-fn check_of<'a>(report: &'a CheckReport, key: &str, member: &Member, sls: &super::super::model::BridgeSls) -> Option<&'a super::super::norm::CheckResult> {
+fn check_of<'a>(report: &'a CheckReport, key: &str, member: &Member, sls: &model::BridgeSls) -> Option<&'a super::super::norm::CheckResult> {
     let id = format!("en1990.a2.rail-{key}.{}.{}", member.id, sls.id);
     report.checks.iter().find(|c| c.id == id)
 }
@@ -24,9 +24,9 @@ pub(super) fn frequency_limits(document: &En1990Snapshot, report: &CheckReport) 
             let annex = document.annex;
             let (lo, hi) = (ndp(annex, "ndp.en1990.a2.rail.f_range_min"), ndp(annex, "ndp.en1990.a2.rail.f_range_max"));
             let spans: Vec<f64> = (0..SPAN_NODES).map(|i| lo * (hi / lo).powf(i as f64 / (SPAN_NODES - 1) as f64)).collect();
-            let limits: Vec<(f64, f64)> = spans.iter().map(|l| super::super::checks::rail_dynamics::frequency_limits(annex, *l).unwrap_or((0.0, 0.0))).collect();
+            let limits: Vec<(f64, f64)> = spans.iter().map(|l| checks::rail_dynamics::frequency_limits(annex, *l).unwrap_or((0.0, 0.0))).collect();
             let check = check_of(report, "dynamic", member, sls);
-            let inside = super::super::checks::rail_dynamics::frequency_limits(annex, member.span).is_some_and(|(l, u)| sls.natural_frequency >= l && sls.natural_frequency <= u);
+            let inside = checks::rail_dynamics::frequency_limits(annex, member.span).is_some_and(|(l, u)| sls.natural_frequency >= l && sls.natural_frequency <= u);
             Diagram2d {
                 id: format!("rail-frequency-limits:{}", sls.id),
                 title: loc("Natural frequency limits (Fig. 6.10)", "Grenzen der Eigenfrequenz (Bild 6.10)"),
@@ -123,14 +123,14 @@ pub(super) fn overrides(document: &En1990Snapshot, report: &CheckReport) -> Opti
     if document.factor_overrides.is_empty() {
         return None;
     }
-    let verdicts = super::super::inferences::factor_overrides::verdicts(document);
-    let annex: Vec<f64> = document.factor_overrides.iter().map(|row| super::super::inferences::factor_overrides::annex_value(document, row).unwrap_or(0.0)).collect();
+    let verdicts = inferences::factor_overrides::verdicts(document);
+    let annex: Vec<f64> = document.factor_overrides.iter().map(|row| inferences::factor_overrides::annex_value(document, row).unwrap_or(0.0)).collect();
     let top = document.factor_overrides.iter().map(|r| r.value).chain(annex.iter().copied()).fold(1.0, f64::max) * 1.15;
     let mut series = Vec::new();
     let mut markers = Vec::new();
     for (i, row) in document.factor_overrides.iter().enumerate() {
         let x = i as f64;
-        let applied = verdicts[i] == super::super::inferences::factor_overrides::Verdict::Applied;
+        let applied = verdicts[i] == inferences::factor_overrides::Verdict::Applied;
         series.push(Series::Polygon { id: format!("annex-{}", row.id), label: loc(&format!("{} annex value {:.3}", row.id, annex[i]), &format!("{} Anhangswert {:.3}", row.id, annex[i])), ring: rect(x + CELL_INSET, 0.0, x + 0.5, annex[i]), fill: Fill { tone: Tone::Neutral, opacity: 0.5 }, hatch: None });
         series.push(Series::Polygon { id: format!("override-{}", row.id), label: loc(&format!("{} override {:.3} ({})", row.id, row.value, if applied { "deviates from NA" } else { "not applied" }), &format!("{} Überschreibung {:.3} ({})", row.id, row.value, if applied { "weicht vom NA ab" } else { "nicht angewendet" })), ring: rect(x + 0.5, 0.0, x + 1.0 - CELL_INSET, row.value.max(0.0)), fill: Fill { tone: if applied { Tone::Warning } else { Tone::Error }, opacity: 0.9 }, hatch: (!applied).then_some(Hatch::Diagonal) });
         let check = report.checks.iter().find(|c| c.id == format!("en1990.override.{}", row.id));
@@ -155,6 +155,6 @@ pub(super) fn overrides(document: &En1990Snapshot, report: &CheckReport) -> Opti
         annotations: Vec::new(),
         focus: None,
         legend: true,
-        table_twin: DataTable { columns: vec![column("Row index", "Zeilenindex", "1", (0..annex.len()).map(|i| i as f64).collect()), column("Annex value", "Anhangswert", "1", annex), column("Override value", "Überschreibungswert", "1", document.factor_overrides.iter().map(|r| r.value).collect()), column("Applied", "Angewendet", "1", verdicts.iter().map(|v| f64::from(u8::from(*v == super::super::inferences::factor_overrides::Verdict::Applied))).collect())] },
+        table_twin: DataTable { columns: vec![column("Row index", "Zeilenindex", "1", (0..annex.len()).map(|i| i as f64).collect()), column("Annex value", "Anhangswert", "1", annex), column("Override value", "Überschreibungswert", "1", document.factor_overrides.iter().map(|r| r.value).collect()), column("Applied", "Angewendet", "1", verdicts.iter().map(|v| f64::from(u8::from(*v == inferences::factor_overrides::Verdict::Applied))).collect())] },
     })
 }

@@ -262,7 +262,7 @@ fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_
     let scene = viewport::scene_of(&document, &report);
     let entities: Vec<_> = scene.entities.iter().map(|e| e.entity.clone()).collect();
     let handles = viewport::handles_of(&document, &entities);
-    let diagrams = semio_s_artifact_norm_en1996_scene::diagrams(&document, &report, None);
+    let diagrams = semio_s_artifact_norm_en1996_scene_diagrams::diagrams(&document, &report, None);
     let counts = semio_s_plugin_norm_app_surface::assert_default_document_nodes(&report, &scene, &handles, &diagrams);
     assert_eq!((counts.checks, counts.entities, counts.handles, counts.diagrams), (report.checks.len(), scene.entities.len(), handles.len(), diagrams.len()));
 }

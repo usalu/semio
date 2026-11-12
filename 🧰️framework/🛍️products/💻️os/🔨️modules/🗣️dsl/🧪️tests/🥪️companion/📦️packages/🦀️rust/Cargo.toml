@@ -42,3 +42,4 @@ blake3 = "1.8.2"
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["protocol-laws", "mutation-testing"] }
 semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

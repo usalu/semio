@@ -710,8 +710,7 @@ pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp
 #[path="🔏️digest/🦀️.rs"]
 pub mod native_digest;
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 #[path="🏁️publication/↩️inverse/🦀️.rs"]
 pub mod native_replay_inverses;

@@ -133,7 +133,7 @@ fn close_job(runner:&mut Runner,mut job:Box<dyn OwnedSerializerJob>,origin:&mut 
  while !origin.terminal_is_empty(){runner.turn(true,|cx|{origin.close_step(cx)?;Ok(())});}
  let bytes=job.terminal_frame_release_bytes().expect("actual completed frame release");assert_eq!(bytes,size_of_val(job.as_ref()));
  runner.turn(true,|cx|{
-  semio_framework_job::close_original_retained_step(cx,RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|_|{drop(job);RetainedWorkOutcome{result:Ok::<_,semio_framework_value::ValueError>(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})),work:1}})?;Ok(())
+  semio_framework_job::close_original_retained_step(cx,RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|_|{drop(job);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})),work:1}})?;Ok(())
  });
  if cancelled{assert!(observed_cancel,"real cancellation must preserve its exact typed canceled fault during paid cleanup");}
 }

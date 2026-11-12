@@ -13,6 +13,8 @@ import{createNodeStoreV1}from"../../../🧮️derived-nodes/💾️store/🟨️
 import{dirtySummaryV1,rowPathsV1,rowTouchedV1}from"../../../🧮️derived-nodes/🧩️closure-kinds/🧭️row-paths/🟨️.mjs";
 import{announceGenerationBuildV1,describeGenerationReasonV1,renderGenerationMessageV1,shapeComputeResultV1}from"../../🔌️load/🟨️.mjs";
 import schema from"../🧬️schema/🔣️.json";
+import{decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"../../🧮️fact-codec/🟨️.mjs";
+import{patchFactIndexBytesV1}from"../../🌊️stream-patch/🟨️.mjs";
 import fixture from"./🔣️.json";
 
 const settleSuspectsV1=(options:Record<string,any>)=>createClosureSettlerV1({store:options.store}).settle({pseudoRows:suspectRowsV1(options.index,options.suspects),derive:options.derive,hold:options.hold,signal:options.signal,progress:options.progress});
@@ -147,6 +149,14 @@ test("a held fact replaces its support, so the next verification finds nothing s
  const selection=selectFactClassesV1(patched),stale=new Set(["s1","s2"]);
  const again=await staleFactRowsV1(patched,verifiableRowIdsV1(patched,selection.ids),async rows=>rows.every(row=>!stale.has(row.path)));
  expect(again.stale.size).toBe(0);
+});
+
+test("a held support reaches the streaming patch as it is, read part by part, and gives the consumers of the in-memory patch",async()=>{
+ const world=worlds.find(row=>row.id==="support stale, same answer: cutoff")!,first=await decide(world),held=first.settled.held,upserts=derivedUpsertsV1([],held);
+ for(const[name,rows]of held)expect(upserts.get(name),"the support of "+name+" is not copied into a list").toBe(rows);
+ const limit=1<<24,raw=encodeFactIndexV1(first.index as never,{maximumBytes:limit}),streamed=decodeFactIndexV1(await patchFactIndexBytesV1(openFactIndexV1(raw,{maximumBytes:limit}),{upserts:upserts as never},{maximumBytes:limit}),{maximumBytes:limit});
+ const byKey=(index:Parameters<typeof factConsumersV1>[0])=>factConsumersV1(index).filter(([,names])=>names.length).sort((a,b)=>a[0]<b[0]?-1:1);
+ expect(byKey(streamed as never)).toEqual(byKey(patchFactIndexV1(first.index,{upserts})));
 });
 
 test("a pseudo owner whose derived fact no project holds any more is orphaned and removed by the patch",()=>{

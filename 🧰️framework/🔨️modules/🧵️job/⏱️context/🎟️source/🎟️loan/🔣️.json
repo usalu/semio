@@ -6,10 +6,8 @@
     "operation",
     "generation",
     "deniedWork",
-    "admittedWork",
     "cachedWork",
     "receiptRefusalRetainsLoan",
-    "copiedBytes",
     "stock"
   ],
   "properties": {
@@ -22,17 +20,11 @@
     "deniedWork": {
       "const": 0
     },
-    "admittedWork": {
-      "const": 1
-    },
     "cachedWork": {
       "const": 0
     },
     "receiptRefusalRetainsLoan": {
       "const": true
-    },
-    "copiedBytes": {
-      "const": 0
     },
     "stock": {
       "const": {

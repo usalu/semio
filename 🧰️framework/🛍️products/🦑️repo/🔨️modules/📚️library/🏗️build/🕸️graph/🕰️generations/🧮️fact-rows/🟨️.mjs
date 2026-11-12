@@ -28,7 +28,7 @@ export function createFactIndexV1(ownerRows){
  return{version:1,owners,rows,classes:[...classesOfChunksV1(rows.length,interner),...empty]};
 }
 
-/** 🩹️ Replaces the consumers in `upserts` (their old classes disappear), adds rows to the consumers in `append`, drops `drop`, prunes unreferenced rows and rebuilds the partition once classes outgrow the owners or the class lists hold more than `compactionDuplication` times the rows (the duplication of an index patched generation after generation, which no comparison with the previous generation can see). */
+/** 🩹️ The in-memory model of the patch of a decoded fact index (a build patches the packed bytes instead, `../🌊️stream-patch`, and its tests compare the two). Replaces the consumers in `upserts` (their old classes disappear), adds rows to the consumers in `append`, drops `drop`, prunes unreferenced rows and rebuilds the partition once classes outgrow the owners or the class lists hold more than `compactionDuplication` times the rows (the duplication of an index patched generation after generation, which no comparison with the previous generation can see). */
 export function patchFactIndexV1(index,{drop=[],upserts=new Map(),append=new Map()},{bulkRows=INDEX_CHUNK_POLICY_V1.bulkUpsertRows}={}){
  const ownerIds=new Map(ownerIdMap(index)),rows=index.rows.slice(),owners=index.owners.slice(),original=index.rows.length,byPath=pathIndexOf(index),added=new Map();
  const idOf=name=>{let id=ownerIds.get(name);if(id===undefined){id=owners.length;owners.push(name);ownerIds.set(name,id);}return id;};

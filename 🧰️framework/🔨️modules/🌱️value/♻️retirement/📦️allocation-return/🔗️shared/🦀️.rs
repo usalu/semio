@@ -18,7 +18,7 @@ pub fn admit_shared_allocation<T>(value:T,grant:RetainedCloneGrant,actual:&mut O
  let mut storage=match Arc::<T>::try_new_uninit(){Ok(storage)=>{*actual=Some(shared_allocation_bytes::<T>());storage},Err(_)=>{*actual=Some(0);return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"shared allocation failed"),value)),work:1}}};
  let Some(slot)=Arc::get_mut(&mut storage) else{return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"new shared storage is not unique"),value)),work:1}};slot.write(value);
  let owner=unsafe{storage.assume_init()};
- RetainedWorkOutcome{result:Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:shared_allocation_bytes::<T>(),..Default::default()})),work:2}
+ RetainedWorkOutcome{result:Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:shared_allocation_bytes::<T>(),..Default::default()})),work:u128::from(shared_allocation_work_demand())}
 }
 pub fn try_uninitialized_arc<T>(grant:RetainedCloneGrant,actual:&mut Option<usize>)->RetainedWorkOutcome<(Arc<MaybeUninit<T>>,RetainedCloneProgress)> {
  if actual.is_some(){return RetainedWorkOutcome{result:Err(ValueError::invariant("shared allocation marker is occupied")),work:0}}
@@ -43,6 +43,8 @@ mod tests;
 
 /// ⛽️ One bounded native acquisition includes opaque Arc headers and resident publication.
 pub const fn shared_uninitialized_work_demand()->u64{1}
+/// 🎫️ One admitted shared allocation performs its uninitialized acquisition and then writes its value.
+pub const fn shared_allocation_work_demand()->u64{shared_uninitialized_work_demand()+1}
 /// 📥️ Publishes the genuine empty Arc before this native allocation primitive returns.
 pub fn try_uninitialized_arc_into<T>(output:&mut Option<Arc<MaybeUninit<T>>>,effect:&mut crate::RetainedAllocationEffect<'_>)->RetainedWorkOutcome{
  let before=effect.performed_boundary();let result=(||{

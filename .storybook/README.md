@@ -5,9 +5,9 @@ The root catalog uses feature-owned stories and the scope registry in `📖️st
 ## Start
 
 ```sh
-repo run workspace:dev-storybook-ui
-repo run workspace:dev-storybook-styling
-repo run workspace:dev-storybook
+repo run repo-storybook:dev-storybook-ui
+repo run repo-storybook:dev-storybook-styling
+repo run repo-storybook:dev-storybook
 ```
 
 Port: **6010**, overridable with `STORYBOOK_PORT`. The last command includes every registered scope. OS/plugin/WASM stories need their real producer artifacts; UI/styling do not require unrelated host-engine WASM.
@@ -17,13 +17,13 @@ The canonical commands prepare the generated styling tokens and icon/asset catal
 ## Validate
 
 ```sh
-repo run workspace:test-storybook-catalog
-repo run workspace:test-storybook
+repo run repo-storybook:test-storybook-catalog
+repo run repo-storybook:test-storybook
 ```
 
 Catalog checks cover registered files, relative imports, source aliases, prerequisite edges, toolchain alignment and runtime initialization. The subject fixture under the UI owner's tests guards standalone component families. Browser validation reads the actual index and runs each registered UI/styling story, including play interactions; it rejects preview, console and resource errors. Autodocs is checked separately. The visual-layout browser suite also measures badge padding, icon/button containment, label responsiveness, avatar text clearance and peer gaps, verifies terminal tree connectors, and compares real below-floor WebGL pixels with the grid toggled off.
 
-The default full build is `repo run workspace:build-storybook`. To build just the UI/styling slice, set `STORYBOOK_SCOPE` to `ui,styling` in the calling environment. For example, in PowerShell use `$env:STORYBOOK_SCOPE='ui,styling'`; in a POSIX shell use `export STORYBOOK_SCOPE=ui,styling`. The same environment variable accepts hierarchical scopes and comma-separated combinations for the shared Storybook routing.
+The default full build is `repo run repo-storybook:build-storybook`. To build just the UI/styling slice, set `STORYBOOK_SCOPE` to `ui,styling` in the calling environment. For example, in PowerShell use `$env:STORYBOOK_SCOPE='ui,styling'`; in a POSIX shell use `export STORYBOOK_SCOPE=ui,styling`. The same environment variable accepts hierarchical scopes and comma-separated combinations for the shared Storybook routing.
 
 ## Add or Update a Component
 

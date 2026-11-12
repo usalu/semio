@@ -35,3 +35,4 @@ semio-s-plugin-energy-engine-bestest = { path = "../../../🏛️bestest/📦️
 semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

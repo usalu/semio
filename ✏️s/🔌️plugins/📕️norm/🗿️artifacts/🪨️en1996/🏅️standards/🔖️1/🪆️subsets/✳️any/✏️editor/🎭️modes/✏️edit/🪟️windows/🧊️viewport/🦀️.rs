@@ -53,7 +53,7 @@ fn peer_handles_of(document: &En1996Snapshot, scene: &StructuralScene, frame: &L
 
 /// ➕ The insert palette: one tool per entity kind of this standard.
 pub fn insert_specs() -> Vec<InsertSpec> {
-    semio_s_artifact_norm_en1996_scene::ENTITY_KINDS.iter().filter(|kind| kind.id != "case").map(|kind| InsertSpec { id: kind.id.to_string(), collection: kind.collection.to_string(), kind: kind.scene_kind, label_en: kind.label_en.to_string(), label_de: kind.label_de.to_string() }).collect()
+    semio_s_artifact_norm_en1996_scene_kit::ENTITY_KINDS.iter().filter(|kind| kind.id != "case").map(|kind| InsertSpec { id: kind.id.to_string(), collection: kind.collection.to_string(), kind: kind.scene_kind, label_en: kind.label_en.to_string(), label_de: kind.label_de.to_string() }).collect()
 }
 
 /// 🧊️ Projects the document and lowers it to the `world-3d` surface; `selection` is the resolved selection whose scene entities are highlighted, `frame` the live lanes: grips of the selection, the dimension-line entry of the open drag, the insert ghost and the selection of the other users.

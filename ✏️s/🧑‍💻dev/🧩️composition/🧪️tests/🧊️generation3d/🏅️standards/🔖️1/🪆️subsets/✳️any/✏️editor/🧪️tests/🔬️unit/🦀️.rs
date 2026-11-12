@@ -308,13 +308,7 @@ pub(crate) mod context {
     }
     
     //#region 🧮️HeapWitness
-    /// 🧮️ This test binary's allocator. The guest this artifact ships into runs in ONE fixed
-    /// `GUEST_LINEAR_MEMORY_MAXIMUM_BYTES` linear memory with ONE allocator and no threads, so an owner
-    /// the install path never frees is a hard `rust_oom` trap in a browser tab and nothing at all in a
-    /// native suite — the only way a law can state the bound is to weigh the heap itself
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    #[global_allocator]
-    static GENERATION3D_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
     
     /// 📸️ One labelled reading of the process heap, printed as `[MEMORY]` so a lane can read the whole
     /// boot → page → install → eval → tessellation sequence off one run's output.

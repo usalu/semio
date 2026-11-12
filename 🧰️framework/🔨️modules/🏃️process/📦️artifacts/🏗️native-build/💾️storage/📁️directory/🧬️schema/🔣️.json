@@ -159,7 +159,7 @@
           "concurrency": 16,
           "batch": 8,
           "recentMilliseconds": 5000,
-          "synchronousMaximumAgeMilliseconds": 60000,
+          "synchronousMaximumAgeMilliseconds": 900000,
           "recordFile": "usage.json",
           "statusMaximumAgeMilliseconds": 604800000
         },

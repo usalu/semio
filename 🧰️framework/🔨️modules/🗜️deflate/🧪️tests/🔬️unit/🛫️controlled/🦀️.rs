@@ -4,8 +4,8 @@ use super::*;
 mod refusal;
 static GATE:std::sync::Mutex<()>=std::sync::Mutex::new(());
 /// 🚧️ Serializes every test that deflates or measures the process-wide allocation observer.
-fn gate()->std::sync::MutexGuard<'static,()>{GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)}
-static DENY_ALLOCATION_SIZE:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
+fn gate()->std::sync::MutexGuard<'static,()>{static WATCH:std::sync::Once=std::sync::Once::new();WATCH.call_once(||install_allocation_tap(count_watched_request,|_,_|{}));GATE.lock().unwrap_or_else(std::sync::PoisonError::into_inner)}
+use semio_framework_value_testing_allocator::{install_allocation_tap,observe_retirement_allocations,LARGEST_ALLOCATION,OBSERVE_ALLOCATIONS};
 
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🛫️controlled/🔣️.json")).unwrap()}
 struct Control{maximum:usize,owned:usize,events:Vec<DeflateEncodeProgress>,cancel:Option<DeflateEncodePhase>,cancel_at:usize}
@@ -36,26 +36,12 @@ fn deflate_controlled_real_interior_phases_and_admission(){
 fn deflate_controlled_fixed_huffman_capacity_proof(){
  let _gate=gate();let lit=fixed_literal_length_lengths();let dist=fixed_distance_lengths();for length in MIN_MATCH..=MAX_MATCH{let index=length_index_for(length as u16);for distance in 1..=WINDOW_SIZE{let di=distance_index_for(distance as u32);assert!((lit[257+index]+LENGTH_EXTRA[index]+dist[di]+DIST_EXTRA[di]) as usize<=9*length);}}for raw in samples(){let output=deflate(&raw);assert!(output.len()<=(9*raw.len()+17)/8);}}
 
-struct ObservedAllocator;
-thread_local! { static BACKING: std::cell::Cell<(bool, usize, usize)> = const { std::cell::Cell::new((false, 0, 0)) }; }
 pub(crate) fn observe_backing<T>(work: impl FnOnce() -> T) -> (T, usize, usize) {
- BACKING.with(|counter| counter.set((true, 0, 0))); let result = work(); let (_, allocated, released) = BACKING.with(|counter| counter.replace((false, 0, 0))); (result, allocated, released)
+ let (result, (allocated, released)) = observe_retirement_allocations(work); (result, allocated, released)
 }
-fn observe_release(bytes: usize) { let _ = BACKING.try_with(|counter| { let (watch, allocated, released) = counter.get(); if watch { counter.set((true, allocated, released + bytes)); } }); }
-fn observe_created(bytes: usize) { let _ = BACKING.try_with(|counter| { let (watch, allocated, released) = counter.get(); if watch { counter.set((true, allocated + bytes, released)); } }); }
-static OBSERVE_ALLOCATIONS:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
 static WATCHED_SIZE:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
 static WATCHED_ALLOCATIONS:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
-static LARGEST_ALLOCATION:std::sync::atomic::AtomicUsize=std::sync::atomic::AtomicUsize::new(0);
-unsafe impl std::alloc::GlobalAlloc for ObservedAllocator{
- unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{observe_allocation(layout.size());if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==layout.size(){return std::ptr::null_mut()}let pointer=unsafe{std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};if !pointer.is_null(){observe_created(layout.size());}pointer}
- unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{observe_allocation(layout.size());if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==layout.size(){return std::ptr::null_mut()}let pointer=unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&std::alloc::System,layout)};if !pointer.is_null(){observe_created(layout.size());}pointer}
- unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{observe_allocation(size);if DENY_ALLOCATION_SIZE.load(std::sync::atomic::Ordering::Relaxed)==size{return std::ptr::null_mut()}let result=unsafe{std::alloc::GlobalAlloc::realloc(&std::alloc::System,pointer,layout,size)};if !result.is_null(){observe_release(layout.size());observe_created(size);}result}
- unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){observe_release(layout.size());unsafe{std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)}}
-}
-fn observe_allocation(bytes:usize){if OBSERVE_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed){LARGEST_ALLOCATION.fetch_max(bytes,std::sync::atomic::Ordering::Relaxed);if bytes==WATCHED_SIZE.load(std::sync::atomic::Ordering::Relaxed){WATCHED_ALLOCATIONS.fetch_add(1,std::sync::atomic::Ordering::Relaxed);}}}
-#[global_allocator]
-static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;
+fn count_watched_request(layout:std::alloc::Layout){if OBSERVE_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed)&&layout.size()==WATCHED_SIZE.load(std::sync::atomic::Ordering::Relaxed){WATCHED_ALLOCATIONS.fetch_add(1,std::sync::atomic::Ordering::Relaxed);}}
 #[test]
 fn deflate_controlled_actual_allocation_observes_refusal_before_large_buffers(){
  let _gate=gate();

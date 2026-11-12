@@ -35,6 +35,20 @@ impl NativeSequenceReservation for (){
 #[derive(RetireOwned)]
 #[value(crate="crate")]
 pub struct NativePagedReservation{header:Option<semio_framework_value_paged_list::PagedListSelectionHeader>,selection:Option<PagedListReservationSelection>,context:Option<(usize,usize)>,finished:bool,complete:bool,effect:NativeReceivingEffect}
+/// 🔭️ Observable paid frontier of one native page reservation, comparable across denied turns.
+#[cfg(feature="testkit")]
+#[doc(hidden)]
+#[derive(Debug,PartialEq)]
+pub struct NativePagedReservationFrontier{pub context:Option<(usize,usize)>,pub header:bool,pub selection:Option<RetirementDemand>,pub finished:bool,pub complete:bool,pub phase:NativeReceivingEffectPhase}
+#[cfg(feature="testkit")]
+impl NativePagedReservation{
+ /// 🔭️ Reads the exact frontier a denied turn must leave untouched.
+ #[doc(hidden)]
+ pub fn testkit_frontier(&self)->NativePagedReservationFrontier{NativePagedReservationFrontier{context:self.context,header:self.header.is_some(),selection:self.selection.map(|selection|selection.demand()),finished:self.finished,complete:self.complete,phase:self.effect.phase()}}
+ /// 🧷️ Resumes a reservation at a retained selection header and active context, as a parent mid-sequence would hold it.
+ #[doc(hidden)]
+ pub fn testkit_resume(header:Option<semio_framework_value_paged_list::PagedListSelectionHeader>,context:Option<(usize,usize)>)->Self{Self{header,context,..Self::default()}}
+}
 impl Default for NativePagedReservation{fn default()->Self{Self{header:None,selection:None,context:None,finished:false,complete:false,effect:Default::default()}}}
 impl NativePagedReservation{
  fn header_demand()->RetirementDemand{fixed(2*size_of::<Option<semio_framework_value_paged_list::PagedListSelectionHeader>>()+size_of::<Option<(usize,usize)>>()+size_of::<bool>())}

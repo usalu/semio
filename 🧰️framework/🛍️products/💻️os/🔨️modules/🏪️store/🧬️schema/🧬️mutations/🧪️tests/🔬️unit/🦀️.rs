@@ -107,18 +107,6 @@ fn bounded_pack_value_receiving_decodes_every_leaf_like_the_pack_rt_oracle() {
     semio_os_dsl::original_receiving::check_receiving_round_trip(&pack_value_samples()).expect("the bounded receiving cursor equals the whole-buffer pack_rt decode");
 }
 
-struct RequestedBytes;
-thread_local! { static REQUESTED: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
-fn requested(bytes: usize) { let _ = REQUESTED.try_with(|total| total.set(total.get().saturating_add(bytes))); }
-unsafe impl std::alloc::GlobalAlloc for RequestedBytes {
-    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 { requested(layout.size()); unsafe { std::alloc::System.alloc(layout) } }
-    unsafe fn alloc_zeroed(&self, layout: std::alloc::Layout) -> *mut u8 { requested(layout.size()); unsafe { std::alloc::System.alloc_zeroed(layout) } }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) { unsafe { std::alloc::System.dealloc(pointer, layout) } }
-    unsafe fn realloc(&self, pointer: *mut u8, layout: std::alloc::Layout, size: usize) -> *mut u8 { requested(size); unsafe { std::alloc::System.realloc(pointer, layout, size) } }
-}
-#[global_allocator]
-static REQUESTED_BYTES: RequestedBytes = RequestedBytes;
-
 /// 📏️ Law: the actual heap requested while binding a decoded value never exceeds the quote (decoded retained bytes plus the typed header); a sample above its quote needs a retained-clone `FromValue`.
 fn pack_value_quote_violations() -> Vec<String> {
     use semio_framework_value::{FromValue, ToValue};
@@ -128,9 +116,7 @@ fn pack_value_quote_violations() -> Vec<String> {
         let bytes = encode_pack_value(&ToValue::to_value(&sample));
         let value = decode_pack_value(&bytes).expect("pack_rt decodes its own document");
         let quote = semio_os_dsl::original_receiving::pack_value_conversion_quote::<SpaceHistoryMutation>(&value).copy_bytes;
-        let before = REQUESTED.with(std::cell::Cell::get);
-        let converted = SpaceHistoryMutation::from_value(renormalize_whole_number_floats(value)).expect("typed conversion");
-        let growth = REQUESTED.with(std::cell::Cell::get) - before;
+        let (converted, (growth, _)) = semio_framework_value_testing_allocator::observe_retirement_allocations(|| SpaceHistoryMutation::from_value(renormalize_whole_number_floats(value)).expect("typed conversion"));
         assert_eq!(converted, sample);
         if growth > quote { violations.push(format!("{} requested {growth} > quoted {quote}", converted_kind(&converted))); }
     }

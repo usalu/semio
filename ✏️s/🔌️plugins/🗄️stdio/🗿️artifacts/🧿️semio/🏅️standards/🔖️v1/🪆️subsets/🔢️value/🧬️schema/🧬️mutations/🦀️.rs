@@ -31,7 +31,7 @@ pub use semio_s_artifact_stdio_semio_value_mutation_leaves::{insert_list_item, r
 /// 🪆️ Mutation-leaf migration: each variant now wraps its own `dsl::MutationLeaf` payload type
 /// (`🧬️mutations/<emoji><kind>/🦀️.rs`), and `#[derive(dsl::Mutations)]` synthesizes
 /// `DESCRIPTORS`/`descriptor()` from that leaf roster — required by `protocol::Mutation<P>`
-/// (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs:105`). `NoMutation` is dropped: the
+/// (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs:105`). the
 /// derive requires every variant to wrap exactly one leaf payload, and `no` is not an approved
 /// semantic verb. `OpText`/`OpBinary` stay hand-rolled below (§OpCodecs) — every variant still
 /// carries a `SemioValue` and/or `SemioValuePath`, both data-carrying-enum-shaped payloads with no
@@ -40,7 +40,7 @@ pub use semio_s_artifact_stdio_semio_value_mutation_leaves::{insert_list_item, r
 //#region 🔖️Leaves
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]

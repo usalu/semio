@@ -236,6 +236,34 @@
         "command": "repo ./📜️script.ts verify jack-native-composition",
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"
       }
+    },
+    "verify-jack-query-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify jack-query-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-jack-results-window-transient": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify jack-results-window-transient",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "jack-results-window-transient"
+          ]
+        }
+      }
     }
   }
 }

@@ -35,3 +35,4 @@ rustybuzz = "0.20.1"
 semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-2d-text-font-testing = { path = "../../../🧪️testing/📦️packages/🦀️rust" }
 semio-framework-2d-text-font-catalog = { path = "../../../📇️catalog/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

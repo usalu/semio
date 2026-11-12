@@ -26,6 +26,16 @@
           ]
         }
       }
+    },
+    "verify-note-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🗒️note/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify note-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

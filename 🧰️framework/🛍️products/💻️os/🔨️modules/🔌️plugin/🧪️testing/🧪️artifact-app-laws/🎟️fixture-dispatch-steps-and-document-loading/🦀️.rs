@@ -276,6 +276,30 @@ pub fn fixture_identity() -> semio_os_kernel::os_vcs::io::binary::entity_identit
 /// (63) namespaces.
 pub const LAW_DOCUMENT_LOAD_OPERATION: u64 = 1 << 61;
 
+/// 🛬️ Admits one whole-document archive load under `operation`, renewing fixture turns until the original admission has funded every step of its handoff.
+pub fn admit_document_archive_load<P: PluginApp>(app: &mut P, operation: u64, mut archive: protocol::DocumentArchivePack, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
+    let fresh = OriginalFixtureCaller::turn_fuel();
+    let fresh_grant = cx.retained_grant();
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        if PluginApp::begin_document_archive_load(app, operation, &mut archive, &mut admission, cx)? { return Ok(()) }
+        fixture_renew_turn(cx, fresh, fresh_grant)?;
+    }
+    Err(semio_framework_value::ValueError::invariant("the archive admission exceeded its original caller bound").into())
+}
+
+/// 🔀️ Admits one whole-document archive merge under `operation`, renewing fixture turns until the original admission has funded every step of its handoff.
+pub fn admit_document_archive_merge<P: PluginApp>(app: &mut P, operation: u64, mut archive: protocol::DocumentArchivePack, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
+    let fresh = OriginalFixtureCaller::turn_fuel();
+    let fresh_grant = cx.retained_grant();
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        if PluginApp::begin_document_archive_merge(app, operation, &mut archive, &mut admission, cx)? { return Ok(()) }
+        fixture_renew_turn(cx, fresh, fresh_grant)?;
+    }
+    Err(semio_framework_value::ValueError::invariant("the archive merge admission exceeded its original caller bound").into())
+}
+
 /// 🛬️ Loads `files` into `app` the only way a whole document loads (`📓️api-stepped-document-load.md` §4): the pair is
 /// stamped with the live store's identity — exactly what the runtime does to an `Effect::LoadDocument` — admitted as a
 /// whole-document archive load (`members: []`), polled to its terminal state over real polls and acknowledged. A load
@@ -285,16 +309,11 @@ where
     A: ArtifactApp,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
-    let mut archive = PluginApp::document_load_archive(app, files)?;
+    let archive = PluginApp::document_load_archive(app, files)?;
+    admit_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive, cx)?;
+    let mut polls = 0usize;
     let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
-    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
-    for _ in 0..4096 {
-        if PluginApp::begin_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx)? { break; }
-        fixture_renew_turn(cx, fresh, fresh_grant)?;
-    }
-    assert!(admission.completed(), "fixture document archive admission did not finish");
-    let mut polls = 0usize;
     ensure_fixture_cancellation_issuer(app,cx)?;
     let status = loop {
         fixture_renew_turn(cx, fresh, fresh_grant)?;
@@ -308,15 +327,21 @@ where
     law_load_outcome(status).map_err(Into::into)
 }
 
+/// 🔄️ Runs one command-less runtime exchange turn over a fresh exchange state, the turn a fixture drives between its own steps.
+async fn plugin_exchange_idle<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let mut state = semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty();
+    semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, instance_id, &mut None, &mut state, identity, cx).await?;
+    Ok(())
+}
+
 /// 🏗️ Drives one live instance's metered store constructor through the runtime exchange the reactor uses, so a fixture that
 /// loads a document straight after opening the instance finds every store owner catalog installed.
 pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    let mut exchange = semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty();
     while semio_plugin_runtime_ops::ops_document::plugin_store_constructor_pending(runtime, instance_id).await? {
         if std::time::Instant::now() >= deadline { return Err(semio_framework::Fault::from("the instance store constructor did not settle").into()); }
         if cx.should_yield(){return Err(semio_framework::Fault::from("store constructor requires its next original source turn").into())}cx.consume_fuel(1);
-        semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime, instance_id, &mut None, &mut exchange, identity, cx).await?;
+        plugin_exchange_idle(runtime, instance_id, identity, cx).await?;
     }
     Ok(())
 }
@@ -327,19 +352,19 @@ pub async fn plugin_settle_store_constructor<PA: PluginApp>(runtime: &semio_plug
 pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance_id: u32, files: &store::os_store::serialization::ArtifactPackFiles, identity: &mut semio_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(),semio_framework_job::OriginalTurnFailure> {
     plugin_settle_store_constructor(runtime, instance_id, identity,cx).await?;
     let mut archive = semio_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
+    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
+    let mut polls = 0usize;
     let fresh = OriginalFixtureCaller::turn_fuel();
     let fresh_grant = cx.retained_grant();
-    let mut admission = semio_plugin_runtime_ops::ops_document::OriginalDocumentArchiveAdmission::empty();
-    for _ in 0..4096 {
-        if semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx).await? { break; }
+    let mut admitted = false;
+    for _ in 0..OriginalFixtureCaller::maximum_turns() {
+        if semio_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, &mut archive, &mut admission, cx).await? { admitted = true; break }
         fixture_renew_turn(cx, fresh, fresh_grant)?;
     }
-    assert!(admission.completed(), "fixture document archive admission did not finish");
-    let mut exchange = semio_plugin_runtime_ops::ops_ingress::OriginalCommandExchangeState::empty();
-    let mut polls = 0usize;
+    if !admitted { return Err(semio_framework_value::ValueError::invariant("the archive admission exceeded its original caller bound").into()) }
     let status = loop {
         fixture_renew_turn(cx, fresh, fresh_grant)?;
-        cx.consume_fuel(1);semio_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,&mut None,&mut exchange,identity,cx).await?;
+        cx.consume_fuel(1);plugin_exchange_idle(runtime,instance_id,identity,cx).await?;
         let status = semio_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
             break status;
@@ -510,141 +535,39 @@ pub fn assert_viewer_genesis_children_declared<V: semio_plugin_decl_surface::Art
 
     }
 
-    /// 🧳️ A fixture job retains one original consuming decoder and closes it under its caller's supplied grant.
-
+    /// 🧳️ A fixture job retains one original consuming decoder on one finite original work fixture and closes it, with its Source, when it drops.
     pub struct FixtureOriginalJob {
-
-        decoder: semio_framework_job::OriginalJobDecodeOwner,
-
-        cancel: Option<semio_framework_job::CancelToken>,
-
-        payload: semio_framework_job_payload::JobPayloadAuthority,
-
-        turn: semio_framework::kernel::RetainedTurnInput,
-
-        sequence: u64,
-
-        progress: semio_framework_value::RetainedCloneProgress,
-
+        work: Option<OriginalWorkFixture>,
     }
-
-
-
     impl FixtureOriginalJob {
-
-        /// 🎟️ Captures an explicit original input without allocating decoder capacity.
-
+        /// 🎟️ Admits the original Source of the turn's operation, generation, deadline and fuel over the work fixture's finite stock.
         pub fn new(turn: semio_framework::kernel::RetainedTurnInput) -> Self {
-
-            let ((cancel,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::CancelToken::admit_root(turn.grant).result.expect("fixture original cancellation admission").expect("fixture original input funds cancellation"));
-
-            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
-
-            assert!(progress.fits(turn.grant));
-
-            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant,&mut None).result.expect("fixture original payload admission").expect("fixture original input funds payload"));
-
-            assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
-
-            assert!(progress.fits(turn.grant));
-
-            Self { decoder: semio_framework_job::OriginalJobDecodeOwner::empty(),cancel:Some(cancel),payload,turn, sequence: 0, progress: Default::default() }
-
+            Self { work: Some(OriginalWorkFixture::with_source(semio_framework_job::OperationId(turn.operation), semio_framework_job::Generation(turn.generation), OriginalWorkFixture::stock(), semio_framework_job::default_now_us, turn.work.absolute_deadline_us, turn.work.fuel)) }
         }
-
-
-
-        /// 🫴️ Reborrows the same issuer for one context carrying the caller's exact turn grant.
-
-        pub fn context(&mut self, grant: RetainedCloneGrant) -> semio_framework_job::StepContext<'_> {
-
-            self.progress = Default::default();
-
-            semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(self.turn.operation), semio_framework_job::Generation(self.turn.generation), semio_framework_job::StepBudget::new(1_000_000, u64::MAX, grant), self.cancel.as_ref().expect("fixture original cancellation retained"), || Some(0), &mut self.sequence, &mut self.progress,&self.payload).expect("fixture original payload loan").with_original_decoder(&mut self.decoder)
-
-        }
-
-
-
-        /// 🛬️ Loans original receiving to a synchronous semantic unit through its real context recipient.
-
+        /// 🛬️ Loans original receiving to a synchronous semantic unit through its real context recipient, renewing turns until the Source has funded its return table.
         pub fn receive<T>(&mut self, grant: RetainedCloneGrant, operation: impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> T) -> T {
-
-            let (mut scope, mut result) = (None, None);
-            self.context(grant).with_native_receiving(&mut scope, |receiving, _| { result = Some(operation(receiving)); Ok(()) }).expect("fixture original receiving loan");
-            result.expect("fixture original receiving loan ran its unit")
-
+            let work = self.work.as_mut().expect("fixture original job retains its work fixture until closed");
+            let mut operation = Some(operation);
+            let mut stepped = None;
+            for _ in 0..OriginalFixtureCaller::maximum_turns() {
+                let ran = work.turn(grant, |cx| {
+                    let mut scope = None;
+                    let ran = cx.with_native_receiving(&mut scope, |receiving, _| { stepped = operation.take().map(|operation| operation(receiving)); Ok(()) })?;
+                    if let Some(scope) = scope.filter(|scope| scope.source_refusal.is_some() || scope.call.is_err()) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "fixture original receiving scope refused").with_retained_progress(scope.retained_progress()).into()) }
+                    Ok(ran)
+                }).expect("fixture original receiving loan");
+                if ran { break }
+            }
+            stepped.expect("fixture original receiving was not funded within its caller bound")
         }
-
-
-
-        /// ♻️ Pays every original receiving retirement action with the supplied fixture input.
-
+        /// ♻️ Pays every original receiving retirement action and the Source's own closure from the work fixture's stock.
         pub fn close(&mut self) {
-
-            for _ in 0..100_000 {
-                if self.decoder.terminal_is_empty() { break; }
-                let grant = self.turn.grant;
-                let mut cx = semio_framework_job::StepContext::with_payload_authority(semio_framework_job::OperationId(self.turn.operation), semio_framework_job::Generation(self.turn.generation), semio_framework_job::StepBudget::new(1_000_000, u64::MAX, grant), self.cancel.as_ref().expect("fixture original cancellation retained"), || Some(0), &mut self.sequence, &mut self.progress, &self.payload).expect("fixture original payload loan");
-                let (closed, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| self.decoder.close_on_source(&mut cx));
-                closed.expect("fixture original decoder paid closure");
-                let progress = cx.retained_progress();
-                assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
-                assert!(progress.fits(grant), "fixture receiving closure exceeded its original input");
-            }
-
-            assert!(self.decoder.terminal_is_empty(),"fixture original receiving retirement did not finish");
-
-            for _ in 0..100_000 {
-
-                if self.payload.terminal_is_empty() { break; }
-
-                let (outcome,heap)=fixture_pump_turn(self.turn.grant,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||self.payload.close_step(effect))).expect("fixture original payload close quote admitted");let step=outcome.result.expect("fixture original payload paid closure");let progress=step.progress();
-
-                assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
-
-                assert!(progress.fits(self.turn.grant));
-
-                assert_ne!(progress,semio_framework_value::RetainedCloneProgress::default(),"fixture original payload closure stalled");
-
-            }
-
-            assert!(self.payload.terminal_is_empty());
-
-            if let Some(cancel)=self.cancel.take() {
-
-                let mut owner=semio_framework_async::CancelTokenRetirement::from_token(cancel);
-
-                for _ in 0..100_000 {
-
-                    if owner.terminal_is_empty() { break; }
-
-                    let (outcome,heap)=fixture_pump_turn(self.turn.grant,|effect|semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(effect))).expect("fixture original cancellation close quote admitted");let step=outcome.result.expect("fixture original cancellation paid closure");let progress=step.progress();
-
-                    assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
-
-                    assert!(progress.fits(self.turn.grant));
-
-                    assert_ne!(progress,semio_framework_value::RetainedCloneProgress::default(),"fixture original cancellation closure stalled");
-
-                }
-
-                assert!(owner.terminal_is_empty());
-
-            }
-
+            if let Some(work) = self.work.take() { work.finish() }
         }
-
     }
-
-
-
     impl Drop for FixtureOriginalJob {
-
         fn drop(&mut self) { if !std::thread::panicking() { self.close(); } }
-
     }
-
 #[cfg(test)]
 mod renew_turn_laws {
     use super::*;
@@ -682,6 +605,82 @@ mod renew_turn_laws {
         };
         assert!(outcome.is_err());
         assert_eq!(turns, LAW_DOCUMENT_LOAD_MAXIMUM_TURNS);
+    }
+}
+
+/// 🗝️ One original fixture scope with its keyed cancellation issuer admitted, so a test begins, cleans and closes keyed leases through genuine original turns.
+pub struct KeyedCancellationFixture {
+    pub scope: OriginalFixtureScope,
+    pub issuer: semio_plugin_operation::ToolCancellationIssuer,
+}
+impl KeyedCancellationFixture {
+    pub fn open() -> Self {
+        let mut value = Self { scope: OriginalFixtureScope::admit(), issuer: semio_plugin_operation::ToolCancellationIssuer::empty() };
+        for _ in 0..100_000 {
+            if value.issuer.ready() { return value; }
+            let cx = value.scope.cx();
+            let parent = cx.original_source_parent().unwrap();
+            value.issuer.admit_step(parent, cx).unwrap();
+        }
+        panic!("original keyed fixture issuer admission stalled")
+    }
+    pub fn begin(&mut self, key: semio_plugin_operation::ToolOperationKey) -> semio_plugin_operation::ToolCancellationLease {
+        for _ in 0..100_000 {
+            if let Some(lease) = self.issuer.begin(&key, self.scope.cx()).unwrap() { return lease; }
+        }
+        panic!("original fixture lease admission stalled")
+    }
+    pub fn begin_keyed(&mut self, key: semio_plugin_operation::ToolOperationKey) -> semio_plugin_operation::ToolCancellationLease {
+        for _ in 0..100_000 {
+            if let Some(lease) = self.issuer.begin_keyed(&key, self.scope.cx()).unwrap() { return lease; }
+        }
+        panic!("original keyed fixture lease admission stalled")
+    }
+    pub fn handle(&self) -> &semio_plugin_operation::ToolCancellationHandle { self.issuer.handle().unwrap() }
+    pub fn cleanup(&mut self, index: usize, finished_only: bool) -> bool {
+        for _ in 0..100_000 {
+            if self.issuer.cleanup_slot(index, self.scope.cx(), finished_only).unwrap() { return true; }
+        }
+        panic!("original keyed cancellation slot cleanup stalled")
+    }
+    pub fn close_lease(&mut self, lease: semio_plugin_operation::ToolCancellationLease) {
+        let mut original = Some(lease);
+        let mut cursor = None;
+        for _ in 0..100_000 {
+            if original.is_none() { break; }
+            let cx = self.scope.cx();
+            let (owner, progress) = semio_plugin_operation::original_lease_cursor_admit(&mut original, cx.retained_grant()).unwrap();
+            cursor = owner;
+            cx.consume_retained(progress).unwrap();
+            if progress.copied_items > 0 { cx.consume_fuel(1); }
+        }
+        assert!(original.is_none());
+        let mut cursor = Some(cursor.expect("original lease cursor admitted"));
+        for _ in 0..100_000 {
+            let cx = self.scope.cx();
+            let handle = self.issuer.handle().unwrap();
+            let grant = cx.retained_grant();
+            if cursor.as_ref().unwrap().terminal_is_empty() {
+                let progress = semio_plugin_operation::original_lease_cursor_release(&mut cursor, grant).unwrap();
+                cx.consume_retained(progress).unwrap();
+                if progress.copied_items > 0 { cx.consume_fuel(1); }
+            } else if let Some((poll, performed)) = cx.with_original_effect(grant, |_, effect| cursor.as_mut().unwrap().close_step(handle, effect)).unwrap() {
+                cx.consume_fuel(u64::try_from(performed).unwrap_or(u64::MAX));
+                let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("original keyed fixture lease close stayed pending") };
+                turn.result.unwrap();
+            }
+            if cursor.is_none() { return; }
+        }
+        panic!("original keyed fixture lease closure stalled")
+    }
+    pub fn close(mut self) {
+        for _ in 0..100_000 {
+            if self.issuer.terminal_is_empty() { self.scope.retire(); return; }
+            let cx = self.scope.cx();
+            let parent = cx.original_source_parent().unwrap();
+            self.issuer.close_step(parent, cx).unwrap();
+        }
+        panic!("original keyed fixture issuer closure stalled")
     }
 }
 

@@ -187,5 +187,4 @@ impl<K:BoundedOrd+RetainedClone+Copy> Drop for ToolRunEntityEdit<K> {fn drop(&mu
 mod tests;
 
 #[cfg(test)]
-#[global_allocator]
-static TOOL_RUN_ENTITIES_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;

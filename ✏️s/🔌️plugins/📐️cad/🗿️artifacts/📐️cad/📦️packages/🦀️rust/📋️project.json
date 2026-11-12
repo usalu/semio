@@ -212,6 +212,16 @@
           ]
         }
       }
+    },
+    "verify-cad-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify cad-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

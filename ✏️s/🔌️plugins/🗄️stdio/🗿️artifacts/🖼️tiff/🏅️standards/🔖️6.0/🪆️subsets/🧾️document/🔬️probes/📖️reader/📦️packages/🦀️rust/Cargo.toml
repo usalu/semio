@@ -1,3 +1,4 @@
+cargo-features = ["trim-paths"]
 # 🧭️ Own workspace root: never joins the repository's root workspace.
 #
 # The BYTE-ORDER reader. This subset's existing projection is built on decoded pixels, and the tiff

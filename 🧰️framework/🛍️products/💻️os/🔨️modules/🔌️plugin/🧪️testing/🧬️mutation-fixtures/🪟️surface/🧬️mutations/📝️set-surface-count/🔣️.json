@@ -7,7 +7,7 @@
   "aggregateVariant": "SetSurfaceCount",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "set-surface-count",
-  "binaryTag": 101,
+  "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [

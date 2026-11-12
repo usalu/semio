@@ -69,6 +69,57 @@
         {"area": "build-input-closures", "id": "c2", "access": 9500, "size": 100, "protected": false}
       ],
       "victims": {"m1": "age", "c1": "age", "m2": "area", "m3": "area"}
+    },
+    {
+      "name": "a partition above its high watermark frees what the store cap alone would not",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "partitionNeedBytes": 250,
+      "externalBytes": 0, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}],
+      "entries": [
+        {"area": "store", "id": "a", "access": 1, "size": 300, "protected": false},
+        {"area": "store", "id": "b", "access": 2, "size": 100, "protected": false}
+      ],
+      "victims": {"a": "host"}
+    },
+    {
+      "name": "what age already freed counts against the partition need",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "partitionNeedBytes": 300,
+      "externalBytes": 0, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}, {"id": "graph-memo", "capBytes": null, "maxAgeMs": 5000}],
+      "entries": [
+        {"area": "store", "id": "s1", "access": 100, "size": 150, "protected": false},
+        {"area": "store", "id": "s2", "access": 9000, "size": 150, "protected": false},
+        {"area": "graph-memo", "id": "m1", "access": 1000, "size": 200, "protected": false}
+      ],
+      "victims": {"m1": "age", "s1": "host"}
+    },
+    {
+      "name": "the larger of the cap need and the partition need wins",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "partitionNeedBytes": 100,
+      "externalBytes": 0, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}],
+      "entries": [
+        {"area": "store", "id": "x", "access": 1, "size": 400, "protected": false},
+        {"area": "store", "id": "y", "access": 2, "size": 300, "protected": false},
+        {"area": "store", "id": "z", "access": 3, "size": 250, "protected": false}
+      ],
+      "victims": {"x": "host", "y": "host"}
+    },
+    {
+      "name": "a partition need beyond the unpinned objects takes all of them and keeps the pinned one",
+      "policy": {"capBytes": 1000, "highWatermark": 0.9, "lowWatermark": 0.5},
+      "partitionNeedBytes": 500,
+      "externalBytes": 0, "nowMs": 10000,
+      "areas": [{"id": "store", "capBytes": null, "maxAgeMs": null}],
+      "entries": [
+        {"area": "store", "id": "p", "access": 1, "size": 300, "protected": true},
+        {"area": "store", "id": "q", "access": 2, "size": 100, "protected": false},
+        {"area": "store", "id": "r", "access": 3, "size": 100, "protected": false}
+      ],
+      "victims": {"q": "host", "r": "host"}
     }
   ]
 }

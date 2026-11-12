@@ -91,6 +91,29 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
   })();conclude(effect,base,result,work,RetainedDiffPreflightAdvance::progress,reply)}
  /// 📨️ The already funded joined original diagnostics transfer without copying payloads.
  pub fn take_messages(&mut self)->Vec<MutationMessage>{assert!(self.phase==17,"ordered original diagnostics require settled preflight");self.output_messages.take().expect("ordered original diagnostic transfer occurs once")}
+ /// ⛽️ Quotes the exact Work of the next ordered preflight action from the owner that will perform it.
+ pub fn preflight_work_demand(&self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize,maximum_work_units:u64)->Result<u64,ValueError>{
+  self.preflight_demand(diffs,original,post,body,maximum_work_units)?;if maximum_work_units==0{return Ok(0)}
+  let mode=if self.phase==6{PagedOneItemPostMode::Original}else{PagedOneItemPostMode::Mutable};
+  let work=if !self.single&&matches!(self.phase,6|8)&&self.candidate_read.demand(mode,body)?.is_some(){self.candidate_read.work_demand(mode,body)?}
+  else if self.phase==3&&!self.previous.terminal_is_empty()&&self.previous.demand(PagedOneItemPostMode::Original,body)?.is_some(){self.previous.work_demand(PagedOneItemPostMode::Original,body)?}
+  else{let child=self.child.as_ref().ok_or_else(invalid);match self.phase{
+   0=>diffs.binding_work_demand(&self.diff)?,
+   1=>original.binding_work_demand(&self.original)?,
+   3=>self.projection.advance_work_demand(Self::current(&self.previous,original)?,body,maximum_work_units)?,
+   13=>if !self.projection.close_started(){self.projection.begin_close_work_demand()?}else if !self.projection.owners_empty(){self.projection.close_work_demand(body)?}else{1},
+   6=>{let candidate=if self.single{post}else{self.candidate_read.read(PagedOneItemPostMode::Original)?.original()?.project(0,ProjectionOutput::projected_value)};child?.preflight_work_demand(diffs.project(self.ordinal,|rows|&rows[self.ordinal]),Self::current(&self.previous,original)?,candidate,body,maximum_work_units)?},
+   7=>self.messages.push_work_demand()?,
+   8=>child?.commit_work_demand(diffs.project(self.ordinal,|rows|&rows[self.ordinal]),Self::current(&self.previous,original)?,self.candidate_read.read(PagedOneItemPostMode::Mutable)?.get().projected_value(),body)?,
+   9=>{let child=child?;if child.terminal_is_empty(){1}else{child.close_work_demand(body)?}},
+   10=>if !self.previous.terminal_is_empty(){if self.previous.demand(PagedOneItemPostMode::Mutable,body)?.is_some(){self.previous.work_demand(PagedOneItemPostMode::Mutable,body)?}else{1}}else if self.candidate.is_some()||!self.candidate_retirement.is_empty(){self.candidate_retirement.next_owner_work::<P::Output>(self.candidate.is_some(),&None,body)?}else{1},
+   14=>self.messages.finish_work_demand()?,
+   15=>self.messages.advance_work_demand(body)?,
+   16=>self.messages.take_work_demand()?,
+   _=>1,
+  }};
+  Ok(if work<=maximum_work_units{work}else{0})
+ }
  pub fn commit_demand(&self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||self.phase!=17||!self.admitted{return Err(invalid());}self.sources(diffs,original)?;
   if self.single{return Self::nested(self.child.as_ref().ok_or_else(invalid)?.commit_demand(diffs.project(0,|rows|&rows[0]),original,post,body.saturating_sub(Self::fixed()))?);}
@@ -119,6 +142,21 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
   else if self.original.is_some(){binding_demand(&self.original,body)?}
   else if self.diff.is_some(){binding_demand(&self.diff,body)?}
   else{return Ok(Default::default());};Self::nested(demand)
+ }
+ /// ♻️ Quotes the exact Work of the next ordered close action from the owner that will perform it.
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  self.close_demand(body)?;if self.terminal_is_empty(){return Ok(0)}let body=body.saturating_sub(Self::fixed());
+  if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(1)}else{child.close_work_demand(body)}}
+  if !self.projection.owners_empty(){return if self.projection.close_started(){self.projection.close_work_demand(body)}else{self.projection.begin_close_work_demand()}}
+  if !self.messages.terminal_is_empty(){return if self.messages.begin_close_demand().copy_bytes!=0{Ok(1)}else{self.messages.close_work_demand(body)}}
+  if !self.message_retirement.is_empty()||self.pending_messages.is_some(){return self.message_retirement.next_owner_work::<Vec<MutationMessage>>(self.pending_messages.is_some(),&None,body)}
+  if self.output_messages.is_some(){return self.message_retirement.next_owner_work::<Vec<MutationMessage>>(true,&None,body)}
+  if !self.previous.terminal_is_empty(){return if self.previous.demand(PagedOneItemPostMode::Mutable,body)?.is_some(){self.previous.work_demand(PagedOneItemPostMode::Mutable,body)}else{Ok(1)}}
+  if !self.candidate_read.terminal_is_empty(){return if self.candidate_read.demand(PagedOneItemPostMode::Mutable,body)?.is_some(){self.candidate_read.work_demand(PagedOneItemPostMode::Mutable,body)}else{Ok(1)}}
+  if self.candidate.is_some()||!self.candidate_retirement.is_empty(){return self.candidate_retirement.next_owner_work::<P::Output>(self.candidate.is_some(),&None,body)}
+  if self.original.is_some(){return RetainedCloneBinding::close_work_demand(&self.original,body)}
+  if self.diff.is_some(){return RetainedCloneBinding::close_work_demand(&self.diff,body)}
+  Ok(0)
  }
   pub fn requires_original_birth(&self)->bool{if !self.closing||!self.flight.idle(){return false}if let Some(c)=self.child.as_ref(){return !c.terminal_is_empty()&&c.requires_original_birth()}if !self.projection.owners_empty(){return self.projection.close_started()&&self.projection.requires_original_birth()}if !self.messages.terminal_is_empty(){return self.messages.begin_close_demand().copy_bytes==0&&self.messages.requires_original_birth()}if !self.message_retirement.is_empty(){return self.message_retirement.requires_original_birth()}if !self.previous.terminal_is_empty(){return self.previous.requires_original_birth()}if !self.candidate_read.terminal_is_empty(){return self.candidate_read.requires_original_birth()}!self.candidate_retirement.is_empty()&&self.candidate_retirement.requires_original_birth()}
   pub fn requires_original_control(&self)->bool{if let Some(loaned)=self.flight.loaned(){return loaned}if let Some(c)=self.child.as_ref(){return !c.terminal_is_empty()&&c.requires_original_control()}if !self.projection.owners_empty(){return self.projection.close_started()&&self.projection.requires_original_control()}if !self.messages.terminal_is_empty(){return false}if !self.message_retirement.is_empty(){return self.message_retirement.requires_original_control()}if !self.previous.terminal_is_empty(){return self.previous.requires_original_control()}if !self.candidate_read.terminal_is_empty(){return self.candidate_read.requires_original_control()}!self.candidate_retirement.is_empty()&&self.candidate_retirement.requires_original_control()}

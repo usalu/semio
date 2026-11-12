@@ -74,17 +74,18 @@ use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOpera
             self.closing = true;
         }
 
-        fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> semio_framework_value::OriginalRetirementOutcome {let mut work=0;let result=(||{
+        fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::OriginalRetirementPoll {
             use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
-            if !self.closing || !grant.permits_one() {
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+            if !self.closing || effect.grant().maximum_items == 0 {
+                return semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())), work: effect.performed_work() });
             }
-            if self.prepared.take().is_some() || self.request.take().is_some() {
-                work=1;
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
-            }
-            Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
-        })();semio_framework_value::RetainedWorkOutcome{result,work}}
+            let result = if self.prepared.take().is_some() || self.request.take().is_some() {
+                semio_framework_value::retirement::record_retirement_work(effect, 1).map(|_| RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })).map_err(|(error, _)| error.into())
+            } else {
+                Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+            };
+            semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() })
+        }
 
         fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
             Ok(0)
@@ -104,16 +105,6 @@ use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOpera
 
         fn terminal_is_empty(&self) -> bool {
             self.closing && self.request.is_none() && self.prepared.is_none()
-        }
-    }
-
-    #[derive(semio_framework_value::FactoryPayloadRetirement)]
-    struct PublicationPresenceLocalRootRetirementFactory;
-
-    impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceLocalRootRetirementFactory {
-        fn retirement_birth_bytes(&self, _snapshot: &std::sync::Arc<PublicationPresence>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<PublicationPresence>() }
-        fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<PublicationPresence>)> {
-            semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
         }
     }
 
@@ -158,6 +149,10 @@ use semio_plugin_retained_command::typed_operation::MountedTypedCommandFullOpera
     fn advance_registry(registry: &mut ToolLatestWinsRegistry, context: &str) {
         let quoted = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 };
         assert!(quoted.maximum_items>0 && quoted.maximum_depth>0, "{context}");
-        let (semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) = registry.advance(quoted).unwrap();
+        let mut bank = semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::new(quoted, 1 << 20));
+        let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, quoted, 1 << 20, |effect| { let result = registry.advance(effect); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() }) });
+        assert!(bank.into_wallet().is_ok(), "{context}");
+        let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("{context} left its funded turn pending") };
+        let (semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) | semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) = turn.result.unwrap();
         assert!(progress.fits(quoted) && progress.copied_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES && progress.released_bytes<=TYPED_OPERATION_RESULT_PAGE_BYTES, "{context}");
     }

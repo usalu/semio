@@ -34,3 +34,4 @@ semio-ui-scene-camera = { path = "../../../📐️math/🎥️camera/📦️pack
 semio-ui-scene-mesh = { path = "../../../📐️math/🕸️mesh/📦️packages/🦀️rust", features = ["testkit"] }
 semio-ui-viewport = { path = "../../../../🪟️viewport/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140" }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

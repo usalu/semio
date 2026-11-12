@@ -14,10 +14,10 @@ original_session!(WorkerJobSession);original_session!(MountedWorkerJobSession);o
 pub trait OriginalWorkerFixtureCaller{fn close_owner(&mut self,grant:RetainedCloneGrant,owner:&mut impl OriginalFixtureSession)->Result<WorkerJobCloseStep,OriginalTurnFailure>;}
 impl OriginalWorkerFixtureCaller for OriginalJobFixtureCaller{
     fn close_owner(&mut self,grant:RetainedCloneGrant,owner:&mut impl OriginalFixtureSession)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-        let step=self.turn(grant,|cx|{let remaining=cx.retained_grant();if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+        let fuel=self.fuel_remaining();let step=self.turn(grant,|cx|{let remaining=cx.retained_grant();if cx.should_yield()||remaining.maximum_items==0||remaining.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
             let witnessed=match owner.witnessed_alias(cx.original_cancel_token()){Ok(value)=>value,Err(WorkerJobDemandError::Contention(_))=>return Ok(WorkerJobCloseStep::Blocked),Err(WorkerJobDemandError::Refused(error))=>return Err(error.into())};
             if !witnessed{return owner.close_original(cx)}
             let turn=cx.with_original_effect(remaining,|cx,effect|owner.return_alias(cx.original_cancel_token(),effect))?.map_or(semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0},|(turn,_)|turn);let returned=turn.result.as_ref().is_ok_and(Option::is_some);let result=match turn.result{Ok(Some(step))=>Ok(step),Ok(None)|Err(WorkerJobDemandError::Contention(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(WorkerJobDemandError::Refused(error))=>Err(error)};let step=receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;Ok(if returned{WorkerJobCloseStep::Pending{progress:step.progress()}}else{WorkerJobCloseStep::Blocked})
-        })?;assert_eq!(self.receipt(),step.progress());Ok(step)
+        });let spent=fuel-self.fuel_remaining();self.fund_fuel(spent);let step=step?;assert_eq!(self.receipt(),step.progress());Ok(step)
     }
 }

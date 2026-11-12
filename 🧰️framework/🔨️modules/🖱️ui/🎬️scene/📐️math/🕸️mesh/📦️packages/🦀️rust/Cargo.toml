@@ -22,15 +22,17 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["dep:semio-framework-value-testing-allocator"]
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-mesh-component-references = { path = "../../../../../../🏗️mesh-engine/🎯️component-references/📦️packages/🦀️rust" }
 semio-framework-geometry = { path = "../../../../../../📐️geometry/📦️packages/🦀️rust" }
 semio-ui-scene-algebra = { path = "../../../🧮️algebra/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust", optional = true }
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140" }
 semio-framework-replication = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

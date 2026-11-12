@@ -76,8 +76,7 @@ pub use budget::ReplayTurnBudget;
 pub use semio_os_store_ledger::lifted_replay::{EffectiveSupersessions, edit_supersession_digest, supersession_digest};
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 #[path="🧬️supersession/🦀️.rs"]
 pub mod native_supersession;

@@ -21,8 +21,8 @@ pub mod set_snapshot {
     /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `Process3dSnapshot` dropped
     /// its `dsl::DslRecord` derive (composed `ArtifactChild<S>` fields have no `dsl::DslField` impl
     /// — see the snapshot facet's own doc comment), so this payload carries the snapshot as JSON
-    /// text now, parsed at the handler — matches the migration recipe's `SetSnapshot`/
-    /// `SetSnapshotJson` collapse.
+    /// text now, parsed at the handler — matches the migration recipe's whole-snapshot
+    /// collapse.
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
     #[dsl(keyword = "document")]
     pub struct SetDocument {

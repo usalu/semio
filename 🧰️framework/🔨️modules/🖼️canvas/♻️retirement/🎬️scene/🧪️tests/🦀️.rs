@@ -1,5 +1,4 @@
-#[global_allocator]
-static ORIGINAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 use semio_framework_canvas_scene::{Scene,CanvasSceneRetirement,BezPath,Stroke,FillRule,Affine,Color,RasterImage};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observed;

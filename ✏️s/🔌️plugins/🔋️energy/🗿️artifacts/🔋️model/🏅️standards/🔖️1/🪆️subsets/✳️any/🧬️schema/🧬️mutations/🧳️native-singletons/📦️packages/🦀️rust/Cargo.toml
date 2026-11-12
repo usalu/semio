@@ -27,3 +27,4 @@ semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰
 serde_json = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-s-plugin-energy-engine-calendar = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -1,15 +1,27 @@
 //! 📈️ Diagrams: eccentricity, reduction factor Φ and N_Ed against N_Rd along the wall height, Φ_m over the slenderness, f_k over f_b and f_m, the shear strength line,
 //! the lateral coefficient α₁ and capacity over the aspect ratio, the tabulated fire thickness and the M–N curve of reinforced walls, the chase table and the movement joint panels; each with a table twin.
 
-use super::kit::{base_id, is_document_check, is_drawn_family, owner_entity, wall_ref};
-use super::masonry as m;
-use super::model::{ChaseKind, En1996Snapshot, MasonryWall, WallType};
-use super::norm::{CheckReport, CheckResult};
-use super::profile::{self, Profile};
-use super::scene::diagram_kit::{curves, Xy};
-use super::scene::*;
-use super::scene::projection_kit::diagram_parts::{column, stroke};
-use super::scene::projection_kit::diagram_parts;
+extern crate semio_s_artifact_norm_en1996_model as model;
+extern crate semio_s_artifact_norm_en1996_schema as schema;
+extern crate semio_s_artifact_norm_en1996_scene_kit as kit;
+extern crate semio_s_artifact_norm_en1996_scene_layout as layout;
+extern crate semio_s_artifact_norm_en1996_scene_profile as profile;
+extern crate semio_s_plugin_norm_compliance as norm;
+extern crate semio_s_plugin_norm_structural_scene as scene;
+
+use kit::{compression_id, is_document_check, is_drawn_family, owner_entity, wall_ref};
+use model::{ChaseKind, En1996Snapshot, MasonryWall, WallType};
+use norm::{CheckReport, CheckResult};
+use profile::Profile;
+use scene::diagram_kit::{curves, Xy};
+use scene::projection_kit::diagram_parts::{column, stroke};
+use scene::projection_kit::diagram_parts;
+use scene::projection_kit::base_id;
+use scene::*;
+use schema::checks::masonry as m;
+
+#[path = "🥞️diaphragm/🦀️.rs"]
+mod diaphragm;
 
 const SAMPLES: usize = 40;
 const FIRE_CLASSES: [f64; 6] = [30.0, 60.0, 90.0, 120.0, 180.0, 240.0];
@@ -27,7 +39,7 @@ fn axis(en: &str, de: &str, quantity: QuantityKind, unit: &str, domain: (f64, f6
 }
 
 fn utilisation_tone(ratio: f64) -> Tone {
-    super::scene::utilisation_tone(ratio)
+    scene::utilisation_tone(ratio)
 }
 
 fn known(report: &CheckReport, id: &str) -> Option<String> {
@@ -91,7 +103,7 @@ fn eccentricity(wall: &MasonryWall, prof: &Profile, report: &CheckReport) -> Dia
     let e = [prof.e_top, prof.e_mk, prof.e_bottom];
     let top = binding(wall, "eccentricityTopM", Affine { base: -(prof.e_slab + prof.e_theta), k: 1.0 }, "m", Quantise::Round { step: 0.001 });
     let bottom = binding(wall, "eccentricityBottomM", Affine::IDENTITY, "m", Quantise::Round { step: 0.001 });
-    let bound = |s: usize| known(report, &super::walls::compression_id(&wall.id, &prof.load_case, s));
+    let bound = |s: usize| known(report, &compression_id(&wall.id, &prof.load_case, s));
     let markers = [(0, Some(top)), (1, None), (2, Some(bottom))]
         .into_iter()
         .map(|(s, b)| {
@@ -126,7 +138,7 @@ fn reduction(wall: &MasonryWall, prof: &Profile, report: &CheckReport) -> Diagra
     let markers = (0..3)
         .map(|s| {
             let (en, de) = station_name(s);
-            marker(Point { id: &format!("phi-{en}"), at: (prof.phi[s], heights(wall)[s]), label: (format!("{} at {en} = {:.3}", symbol(s), prof.phi[s]), format!("{} {de} = {:.3}", symbol(s), prof.phi[s])), utilisation: Some(prof.utilisation[s]), bound: known(report, &super::walls::compression_id(&wall.id, &prof.load_case, s)), binding: None })
+            marker(Point { id: &format!("phi-{en}"), at: (prof.phi[s], heights(wall)[s]), label: (format!("{} at {en} = {:.3}", symbol(s), prof.phi[s]), format!("{} {de} = {:.3}", symbol(s), prof.phi[s])), utilisation: Some(prof.utilisation[s]), bound: known(report, &compression_id(&wall.id, &prof.load_case, s)), binding: None })
         })
         .collect();
     finish(wall, Draft {
@@ -149,7 +161,7 @@ fn capacity(wall: &MasonryWall, prof: &Profile, report: &CheckReport) -> Diagram
     let markers = (0..3)
         .map(|s| {
             let (en, de) = station_name(s);
-            marker(Point { id: &format!("n-{en}"), at: (demand[s], heights(wall)[s]), label: (format!("N_Ed at {en} = {:.0} kN of N_Rd = {:.0} kN", demand[s], resistance[s]), format!("N_Ed {de} = {:.0} kN von N_Rd = {:.0} kN", demand[s], resistance[s])), utilisation: Some(prof.utilisation[s]), bound: known(report, &super::walls::compression_id(&wall.id, &prof.load_case, s)), binding: None })
+            marker(Point { id: &format!("n-{en}"), at: (demand[s], heights(wall)[s]), label: (format!("N_Ed at {en} = {:.0} kN of N_Rd = {:.0} kN", demand[s], resistance[s]), format!("N_Ed {de} = {:.0} kN von N_Rd = {:.0} kN", demand[s], resistance[s])), utilisation: Some(prof.utilisation[s]), bound: known(report, &compression_id(&wall.id, &prof.load_case, s)), binding: None })
         })
         .collect();
     finish(wall, Draft {
@@ -538,7 +550,7 @@ fn bearing_enhancement(wall: &MasonryWall, report: &CheckReport) -> Vec<Diagram2
     let mut out = Vec::new();
     for lc in &wall.load_cases {
         for c in &lc.concentrated {
-            let (ab, a_ef, beta) = super::spreading::bearing_terms(wall, c);
+            let (ab, a_ef, beta) = profile::bearing_terms(wall, c);
             let at = c.distance_a1_m.max(0.0) / h.max(1e-9);
             let x_max = (1.2 * at).max(2.0);
             let ratios: Vec<f64> = curves::sample(|x| x, 0.0, x_max, SAMPLES).iter().map(|q| q[0]).collect();
@@ -571,7 +583,7 @@ fn outcomes(document: &En1996Snapshot, wall: &MasonryWall, report: &CheckReport)
     let checks: Vec<&CheckResult> = report
         .checks
         .iter()
-        .filter(|c| c.utilization.is_finite() && c.status != super::norm::CheckStatus::NotApplicable && !is_document_check(&c.id) && !is_drawn_family(&c.id))
+        .filter(|c| c.utilization.is_finite() && c.status != norm::CheckStatus::NotApplicable && !is_document_check(&c.id) && !is_drawn_family(&c.id))
         .filter(|c| owner_entity(document, c).is_some_and(|owner| base_id(&owner) == wall.id))
         .collect();
     if checks.is_empty() {
@@ -629,9 +641,9 @@ fn diagrams_unbased(document: &En1996Snapshot, report: &CheckReport, focus: Opti
     if focus.is_none_or(|f| document.walls.iter().any(|w| base_id(f) == w.id && matches!(w.wall_type, WallType::Shear))) {
         out.extend(bracing(document, report));
     }
-    out.extend(super::diaphragm::diagrams(document, report, focus));
+    out.extend(diaphragm::diagrams(document, report, focus));
     for case in document.cases.iter().filter(|c| focus.is_none_or(|f| base_id(f) == c.id)) {
-        out.extend(super::scene::projection_kit::design_case::case_diagram(&case.id, &loc(&case.label_en, &case.label_de), report, None));
+        out.extend(scene::projection_kit::design_case::case_diagram(&case.id, &loc(&case.label_en, &case.label_de), report, None));
     }
     out
 }

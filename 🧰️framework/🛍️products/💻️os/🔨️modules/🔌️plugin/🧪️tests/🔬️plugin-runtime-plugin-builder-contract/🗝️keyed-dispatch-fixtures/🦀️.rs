@@ -55,7 +55,7 @@ pub struct KeyedTestCommandDisposer {
                 self.moved = true;
                 return Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<TestCommand>(), ..Default::default() }));
             }
-            let step = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) }.map_err(semio_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
+            let step = if self.active.is_some() { semio_framework_value_snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant.maximum_copy_bytes, effect)) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, effect).result }.map_err(semio_plugin_ownership::bounded_ownership::plugin_retirement_fault)?;
             Ok(semio_plugin_ownership::bounded_ownership::PluginLifecycleStep::retained(step, self.terminal_is_empty(command)))
         }
 
@@ -94,9 +94,9 @@ pub struct KeyedTestJobSources {
             Ok(None)
         }
 
-        pub fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
-            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.$field, active, grant).map(Some); } }; }
-            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.$field, active, grant).map(Some); } }; }
+        pub fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
+            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.$field, active, effect).result.map(Some); } }; }
+            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.$field, active, effect).result.map(Some); } }; }
 
             owned!(controller_id);owned!(tool_id);owned!(schema_id);owned!(window_config);owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
             lease!(snapshot); lease!(config); lease!(history); lease!(interaction); lease!(hover);
@@ -131,7 +131,8 @@ pub struct KeyedTestJob {
     }
 
     impl semio_framework_job::InteractiveJob for KeyedTestJob {
-        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _return_claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+            semio_framework_job::InteractiveJobStep::from_callback((move || -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
             if self.admitted { return semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from); }
             if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "keyed fixture original completion remains rejected").into()); }
             if cx.is_cancelled() {
@@ -163,6 +164,7 @@ pub struct KeyedTestJob {
             }
             self.admitted = true;
             semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from)
+        })())
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -176,24 +178,28 @@ pub struct KeyedTestJob {
         fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
             if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
             let original=cx.retained_grant();let demand=self.close_demands(original.maximum_copy_bytes)?;
-            let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
-                use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep};
-                if let Some(raw)=self.raw.as_mut(){
-                    let step=raw.close_step(grant)?;if raw.terminal_is_empty(){self.raw.take();}
-                    return Ok(RetainedCloneStep::Progress(step.progress()))
-                }
-                if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}
-                else if self.command.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command,&mut self.retirement,grant)}
-                else if self.completion.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.retirement,grant)}
-                else if let Some(sources)=self.sources.as_mut(){
-                    match sources.step(&mut self.retirement,grant){
-                        Ok(Some(step))=>Ok(step),
-                        Ok(None)=>{self.sources=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-                        Err(error)=>Err(error),
+            let step=semio_framework_job::close_original_effect_step(cx,demand,|effect|{
+                use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementPollExit as Exit};
+                let body=effect.grant().maximum_copy_bytes;
+                let result=(||->Result<RetainedCloneStep,Exit>{
+                    if let Some(raw)=self.raw.as_mut(){
+                        let step=raw.close_step(effect.grant())?;if raw.terminal_is_empty(){self.raw.take();}
+                        Exit::pay(effect,1)?;
+                        return Ok(RetainedCloneStep::Progress(step.progress()))
                     }
-                }
-                else if self.rejected.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected,&mut self.retirement,grant)}
-                else{Ok(RetainedCloneStep::Complete(Default::default()))}
+                    if self.retirement.is_some(){Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,body,effect))}
+                    else if self.command.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command,&mut self.retirement,effect).result?)}
+                    else if self.completion.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.retirement,effect).result?)}
+                    else if let Some(sources)=self.sources.as_mut(){
+                        match sources.step(&mut self.retirement,effect)?{
+                            Some(step)=>Ok(step),
+                            None=>{self.sources=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+                        }
+                    }
+                    else if self.rejected.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected,&mut self.retirement,effect).result?)}
+                    else{Ok(RetainedCloneStep::Complete(Default::default()))}
+                })();
+                Exit::settle(effect,result)
             })?;
             step.admit(original,self.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)
         }

@@ -1,7 +1,8 @@
 //! ⚖️ Typed-command input retirement law: the gate every typed command payload passes before its original owner is retired under quoted grants.
 //!
-//! Mounted by `#[path]` into integration test binaries that install `semio_framework_trace::HeapWitness` as their global allocator.
+//! Linking this crate links the one testing allocator, so the heap observations of every law run measure real requests.
 
+use semio_framework_value_testing_allocator as _;
 use semio_os_kernel as store;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::{

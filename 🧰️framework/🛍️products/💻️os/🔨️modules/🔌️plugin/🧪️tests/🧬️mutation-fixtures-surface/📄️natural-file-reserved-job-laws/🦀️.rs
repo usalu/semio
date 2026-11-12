@@ -91,7 +91,7 @@ fn original_reserved_preparation_pages_metadata_moves_arguments_and_cancels_part
             else{assert_eq!(owner.raw_wire.as_deref().unwrap(),expected);let actual=owner.action_returned.as_ref().unwrap().1.as_ref().unwrap().as_str().unwrap();assert_eq!(actual.as_ptr(),pointer);}
         }
         cx.original_cancel_token().cancel_now();
-        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|owner.close_step(same)).unwrap();}
+        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if owner.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|owner.close_step(&bus,same)).unwrap();}
         assert!(owner.terminal_is_empty());let demand=Prep::slot_close_demands(&preparation,&birth,32768).unwrap();let denied=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..SURFACE_ONE_UNIT_POLICY};assert_eq!(cx.with_retained_loan(denied,|same|Prep::close_slot(&mut preparation,&mut birth,&bus,same)).unwrap().progress(),Default::default());assert!(preparation.is_some());cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|Prep::close_slot(&mut preparation,&mut birth,&bus,same)).unwrap();assert!(preparation.is_none());let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
     }
 }
@@ -123,17 +123,17 @@ fn reserved_argument_wire_returns_actual_original_allocation_after_independent_e
         cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{
             if owner.phase()=="sourceClose"{
                 let demand=owner.original_return_demands(same.retained_grant().maximum_copy_bytes)?;
-                let denied=semio_framework_value::RetainedCloneGrant{maximum_items:0,..same.retained_grant()};let denied_turn=owner.return_original(&mut returned,denied);assert_eq!(denied_turn.work,0);assert_eq!(denied_turn.result.unwrap().progress(),Default::default());assert!(returned.is_none());assert_eq!(owner.original_return_demands(same.retained_grant().maximum_copy_bytes)?,demand);
-                let turn=owner.return_original(&mut returned,same.retained_grant());semio_framework_job::receive_original_retained_work(same,turn)?;
+                let denied=semio_framework_value::RetainedCloneGrant{maximum_items:0,..same.retained_grant()};assert!(same.with_original_effect(denied,|_,effect|owner.return_original(&mut returned,effect))?.is_none());assert!(returned.is_none());assert_eq!(owner.original_return_demands(same.retained_grant().maximum_copy_bytes)?,demand);
+                let Some((turn,performed))=same.with_original_effect(same.retained_grant(),|_,effect|owner.return_original(&mut returned,effect))?else{return Ok(())};semio_framework_job::receive_original_retained_work(same,RetainedWorkOutcome{result:turn.result,work:turn.work.max(performed)})?;
             }else{
-                let result=owner.advance(same.retained_grant());let work=owner.last_turn_work();let result=result.map(|step|{output=step.output;RetainedCloneStep::Progress(step.progress)});semio_framework_job::receive_original_retained_work(same,RetainedWorkOutcome{result,work})?;
+                let Some((result,performed))=same.with_original_effect(same.retained_grant(),|_,effect|owner.advance(effect).map(|step|{output=step.output;RetainedCloneStep::Progress(step.progress)}))?else{return Ok(())};semio_framework_job::receive_original_retained_work(same,RetainedWorkOutcome{result,work:performed})?;
             }
             Ok(())
         }).unwrap();
     }
     assert!(owner.terminal_is_empty());let returned=returned.expect("wire hands back the actual argument owner");assert_eq!(returned.as_ptr(),pointer);let output=output.unwrap();assert_eq!(output,expected);
     let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::retain((returned,output));
-    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,demand,|grant|{let result=close.step(grant);RetainedWorkOutcome{result,work:close.last_turn_work()}})?;Ok(())}).unwrap();}
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
     assert!(close.terminal_is_empty());let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
 }
 
@@ -156,7 +156,7 @@ impl crate::tool_contract::ArtifactReservedWork<EditorApp<SurfaceEditorFixture>>
     fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement.next_owner_demands::<ArtifactReservedToolInput>(self.input.is_some(),&None,body)}
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         let demand=<Self as crate::tool_contract::ArtifactReservedWork<EditorApp<SurfaceEditorFixture>>>::close_demands(self,cx.retained_grant().maximum_copy_bytes)?;
-        semio_framework_job::close_original_retained_step(cx,demand,|grant|if self.retirement.is_empty(){let turn=self.retirement.begin_granted(&mut self.input,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(semio_framework_value::RetainedCloneStep::Complete(Default::default()))),work:turn.work}}else{self.retirement.step_granted(grant)})
+        let body=cx.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,demand,|effect|if self.retirement.is_empty(){let turn=self.retirement.begin_granted(&mut self.input,effect);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(semio_framework_value::RetainedCloneStep::Complete(Default::default()))).map_err(Into::into),work:turn.work})}else{self.retirement.step_granted(body,effect)})
     }
     fn terminal_is_empty(&self)->bool{self.closing&&self.input.is_none()&&self.retirement.is_empty()}
 }
@@ -200,9 +200,9 @@ fn original_emission_handoff_moves_ok_payload_without_heap_and_accounts_busy_wor
  let mut birth=Birth::default();let mut completion=None;
  for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if completion.is_some(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|birth.advance(&mut completion,same)).unwrap();}
  let completion=completion.unwrap();assert!(birth.terminal_is_empty());
- let invocation=crate::ExtensionInvocation::new("original.extension","evaluate","{\"unicode\":\"💧\"}","complete");
+ let invocation=crate::app_emission::ExtensionInvocation::new("original.extension","evaluate","{\"unicode\":\"💧\"}","complete");
  let pointer=invocation.request_json.as_ptr();
- let mut source=Some((Ok(Emit{extension_invocations:vec![invocation],..Default::default()}),EphemeralEmit::<App>::default()));let mut published=false;
+ let mut source=Some((Ok(Emit{extension_invocations:vec![invocation],..Default::default()}),crate::app_emission::EphemeralEmit::<App>::default()));let mut published=false;
  cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{
   let progress=same.retained_progress();let fuel=same.fuel_remaining();
   let(result,heap)=completion.with_busy_test_lock(||semio_framework_trace::observe_heap_allocations_on_this_thread(||completion.complete_emit_original(&mut source,&mut published,same)));
@@ -216,7 +216,7 @@ fn original_emission_handoff_moves_ok_payload_without_heap_and_accounts_busy_wor
  }).unwrap();
  assert!(source.is_none()&&published);let accepted=completion.take_emit().unwrap().unwrap();assert_eq!(accepted.0.as_ref().ok().unwrap().extension_invocations[0].request_json.as_ptr(),pointer);
  let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::retain(accepted);
- for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,demand,|grant|{let result=close.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:close.last_turn_work()}})?;Ok(())}).unwrap();}
+ for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
  assert!(close.terminal_is_empty());crate::app_testing::mutation_fixture::job_close::retire_completion(completion,cx,SURFACE_JOB_POLICY);
  let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
 }
@@ -231,11 +231,11 @@ fn original_emission_handoff_preserves_denied_busy_and_occupied_sources(){
   for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if completion.is_some(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|birth.advance(&mut completion,same)).unwrap();}
   assert!(birth.terminal_is_empty());let completion=completion.unwrap();
   if row["receiver"].as_bool().unwrap(){
-   let mut first=Some((Err(Fault::from("already accepted original fault")),EphemeralEmit::<App>::default()));let mut first_published=false;
+   let mut first=Some((Err(Fault::from("already accepted original fault")),crate::app_emission::EphemeralEmit::<App>::default()));let mut first_published=false;
    assert!(cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|completion.complete_emit_original(&mut first,&mut first_published,same)).unwrap());assert!(first.is_none());
   }
   let mut published=row["published"].as_bool().unwrap();
-  let mut source=row["source"].as_bool().unwrap().then(||(Err(Fault::from("original emission fault 💧".repeat(40))),EphemeralEmit::<App>::default()));
+  let mut source=row["source"].as_bool().unwrap().then(||(Err(Fault::from("original emission fault 💧".repeat(40))),crate::app_emission::EphemeralEmit::<App>::default()));
   let pointer=source.as_ref().map(|(emit,_)|emit.as_ref().err().unwrap().message.as_ptr());
   let mut grant=SURFACE_ONE_UNIT_POLICY;if !row["items"].as_bool().unwrap(){grant.maximum_items=0;}if !row["copy"].as_bool().unwrap(){grant.maximum_copy_bytes=0;}if !row["depth"].as_bool().unwrap(){grant.maximum_depth=0;}
   if row["cancel"].as_bool().unwrap(){cx.original_cancel_token().cancel_now();}
@@ -249,7 +249,7 @@ fn original_emission_handoff_preserves_denied_busy_and_occupied_sources(){
   let taken=completion.take_emit().unwrap();assert_eq!(taken.is_some(),row["afterReceiver"].as_bool().unwrap(),"{}",row["id"]);
   if row["id"]=="publish"{assert_eq!(taken.as_ref().unwrap().0.as_ref().err().unwrap().message.as_ptr(),pointer.unwrap());}
   let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::retain((source,taken));
-  for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(same,demand,|grant|{let result=close.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:close.last_turn_work()}})?;Ok(())}).unwrap();}
+  for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if close.terminal_is_empty(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{let demand=close.selected_demand(same.retained_grant().maximum_copy_bytes)?;let body=same.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(same,demand,|effect|close.step(body,effect))?;Ok(())}).unwrap();}
   assert!(close.terminal_is_empty());crate::app_testing::mutation_fixture::job_close::retire_completion(completion,cx,SURFACE_JOB_POLICY);
   let fuel=cx.fuel_remaining();drop(original);caller.retire(fuel).unwrap();
  }

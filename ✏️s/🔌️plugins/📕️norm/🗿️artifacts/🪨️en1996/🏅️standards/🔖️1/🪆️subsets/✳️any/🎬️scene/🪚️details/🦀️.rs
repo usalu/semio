@@ -1,5 +1,6 @@
 //! 🪚️ Details: the Annex E panel (a thin panel in front of the wall with one glyph per edge condition: dashes free, one rod simple, two rods with hatching fixed), the chases and recesses of EN 1996-1-1 8.6 as translucent cut-out boxes on the wall face and the movement joints as full-height slit markers; chases and joints are the rows of the typed collections `chases` and `movementJoints`, linked to the wall by `wallId`.
 
+use super::scene::projection_kit::{loc, v3, binding_where as binding_by};
 use super::kit::*;
 use super::layout::{Layout, WallPose, EPS};
 use super::scene::*;

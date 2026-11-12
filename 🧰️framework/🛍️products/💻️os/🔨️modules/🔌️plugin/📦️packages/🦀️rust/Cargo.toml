@@ -233,6 +233,10 @@ semio-plugin-window-kits = { path = "../../🪟️window-kits/📦️packages/�
 semio-plugin-reactor-patches = { path = "../../⚛️reactor/🩹️patches/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-plugin-testing-fixtures-publication = { path = "../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }
 semio-plugin-testing-fixtures = { path = "../../🧪️testing/🧰️fixtures/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-plugin-testing-laws = { path = "../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-plugin-testing-acceptance = { path = "../../🧪️tests/🧪️history-edit-acceptance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-plugin-time-travel = { path = "../../⏪️time-travel/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-tool-run-tick-wire = { workspace = true }
 
 [[test]]

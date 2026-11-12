@@ -3,10 +3,10 @@
 use super::*;
 
 
-pub use semio_framework_job_payload::{Checkpoint,CommitCandidate,JobFault,StepOutcome};
+pub use semio_framework_job_outcome::{Checkpoint,CommitCandidate,JobFault,StepOutcome};
 
 //#region 🧭️InteractiveJob
-pub use semio_framework_job_payload::InteractiveJobCloseStep;
+pub use semio_framework_job_outcome::InteractiveJobCloseStep;
 
 /// 🧵️ Whether a job may be handed to another thread. Every threaded target elaborates this to
 /// `Send`, so `J: InteractiveJob` still proves `J: Send` for [`WorkerJobSessionInner`]'s

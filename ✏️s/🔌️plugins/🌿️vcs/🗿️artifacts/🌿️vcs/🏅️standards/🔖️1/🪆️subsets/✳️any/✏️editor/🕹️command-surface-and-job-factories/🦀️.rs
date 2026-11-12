@@ -18,7 +18,7 @@ semio_plugin::app_commands! {
         "changeNotes" as "change-notes" => change_notes::ChangeNotes,
         "textEdit" as "text-edit" => text_edit::TextEdit,
         "edit" as "edit" => edit_command::Edit,
-        "noMutation" as "no-operation" => no_operation::NoMutation,
+        "noOperation" as "no-operation" => no_operation::NoOperation,
         "canvasPointerDown" as "canvas-pointer-down" => canvas_pointer_down::CanvasPointerDown,
         "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "canvasPointerUp" as "canvas-pointer-up" => canvas_pointer_up::CanvasPointerUp,
@@ -37,7 +37,7 @@ semio_plugin::app_commands! {
 pub struct VcsPlayApp;
 
 //#region 🧵️RetainedCommands
-pub const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "renameVcs", "changeCounter", "changeStatus", "changeNotes", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel", "setActiveExample"];
+pub const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "renameVcs", "changeCounter", "changeStatus", "changeNotes", "noOperation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel", "setActiveExample"];
 
 pub const VCS_RESUMABLE_TOOL_IDS: &[&str] = &["textEdit", "edit"];
 
@@ -59,7 +59,7 @@ pub const VCS_BOUNDED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] 
     ArtifactToolPublicationContract { tool_id: "changeCounter", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "changeStatus", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "changeNotes", lanes: &[ArtifactToolPublicationLane::Artifact] },
-    ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "noOperation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -80,7 +80,7 @@ fn vcs_resumable_contract() -> ToolExecutionContract {
 
 pub fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
-        VcsCommand::IncrementCounter(_) | VcsCommand::NoMutation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
+        VcsCommand::IncrementCounter(_) | VcsCommand::NoOperation(_) | VcsCommand::CanvasPointerDown(_) | VcsCommand::CanvasPointerUp(_) | VcsCommand::CanvasWheel(_) => 0,
         VcsCommand::CanvasPointerMove(payload) => payload.samples.len().checked_mul(2 * size_of::<f64>())?,
         VcsCommand::RenameVcs(payload) => payload.title.len(),
         VcsCommand::ChangeCounter(_) => 0,

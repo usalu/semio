@@ -1,7 +1,34 @@
-use super::operation_bytes::{OperationByteCloseStep, OwnedOperationBytes};
+use super::operation_bytes::{OperationByteCloseStep, OperationBytePreparation, OwnedOperationBytes};
+use semio_framework_value::{ErasedSnapshotRetirement as _, RetainedCloneGrant, RetainedWorkOutcome, ValueError};
+use semio_framework_value_testing_effect_bank::{EffectBank, Wallet};
+use std::cell::RefCell;
+
+thread_local! {
+    static BANK: RefCell<EffectBank> = RefCell::new(EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }, u64::MAX)));
+}
+
+/// 🪙️ Builds the thread's finite Source stock outside any heap-observed region.
+fn warm() { BANK.with(|_| ()); }
+
+/// ♻️ Runs one byte close turn under a real original action that grants exactly the given items and bytes and the quoted work.
+fn close_turn(owner: &mut OwnedOperationBytes, items: usize, bytes: usize) -> RetainedWorkOutcome<OperationByteCloseStep, ValueError> {
+    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_release_bytes: bytes, ..Default::default() };
+    let work = owner.next_computational_work(0).unwrap();
+    BANK.with(|bank| bank.borrow_mut().run_outcome(grant, work, |effect| owner.close_one(effect)))
+}
+
+/// ♻️ Runs one prepared-bytes close turn under a real original action granting exactly the given items and bytes and one quoted work unit while open.
+fn close_prepared(prepared: &mut OperationBytePreparation, items: usize, bytes: usize) -> OperationByteCloseStep {
+    let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_release_bytes: bytes, ..Default::default() };
+    let work = u64::from(!prepared.terminal_is_empty());
+    BANK.with(|bank| bank.borrow_mut().run_outcome(grant, work, |effect| prepared.close_one(effect))).result.unwrap()
+}
+
+/// ♻️ Runs one byte close turn and requires it to succeed.
+fn close_one(owner: &mut OwnedOperationBytes, items: usize, bytes: usize) -> OperationByteCloseStep { close_turn(owner, items, bytes).result.unwrap() }
 
 #[test]
-fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing_under_4096() {
+fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing_under_4096() { warm();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let source = &fixture["source"];
     let expected: Vec<u8> = source["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(source["paddingByte"].as_u64().unwrap() as u8, source["paddingCount"].as_u64().unwrap() as usize)).collect();
@@ -40,18 +67,18 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
     assert_eq!((requested, released), (0, 0));
     assert!(owner.iter().eq(expected.iter().copied()));
     for (items, bytes) in [(0, maximum), (1, 0)] {
-        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_one(items, bytes));
-        assert_eq!(step.unwrap(), OperationByteCloseStep::Pending { released_items: 0, released_bytes: 0 });
+        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| close_one(&mut owner, items, bytes));
+        assert_eq!(step, OperationByteCloseStep::Pending { released_items: 0, released_bytes: 0 });
         assert_eq!((requested, released), (0, 0));
         assert_eq!(owner.allocated_bytes(), retained);
         assert!(owner.iter().eq(expected.iter().copied()));
     }
     let mut total = 0;
     for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap() {
-        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_one(1, maximum));
+        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| close_one(&mut owner, 1, maximum));
         assert_eq!(requested, 0);
         assert!(released <= maximum);
-        match step.unwrap() {
+        match step {
             OperationByteCloseStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1);
                 assert_eq!(released_bytes, released);
@@ -67,7 +94,7 @@ fn owned_operation_byte_pages_preserve_8194_words_and_return_each_actual_backing
 }
 
 #[test]
-fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without_flattening() {
+fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without_flattening() { warm();
     use crate::{ByteReader, ByteSpan};
     use super::operation_bytes::OperationByteOutput;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -101,13 +128,13 @@ fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without
     });
     assert_eq!((allocated, returned), (0, 0));
     for _ in 0..8322 {
-        if owner.close_one(1, 4096).unwrap() == OperationByteCloseStep::Complete { break; }
+        if close_one(&mut owner, 1, 4096) == OperationByteCloseStep::Complete { break; }
     }
     assert!(owner.terminal_is_empty());
 }
 
 #[test]
-fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_first_difference_without_allocation(){
+fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_first_difference_without_allocation(){ warm();
     use super::operation_bytes::{OperationByteComparison,OperationByteOutput};
     use crate::ByteSpan;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
@@ -156,16 +183,16 @@ fn owned_operation_byte_pages_canonical_comparison_retains_exact_source_and_firs
     }
     assert_eq!(source.allocated_bytes(),retained);
     assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
-    for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if source.close_one(1,4096).unwrap()==OperationByteCloseStep::Complete{break;}}
+    for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if close_one(&mut source, 1, 4096)==OperationByteCloseStep::Complete{break;}}
     assert!(source.terminal_is_empty());
 }
 
 #[test]
-fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns_refused_prefix(){
+fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns_refused_prefix(){ warm();
     use super::operation_bytes::{OperationByteLimitedOutput,OperationByteOutput};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
-    let close=|source:&mut OwnedOperationBytes|{for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if source.close_one(1,4096).unwrap()==OperationByteCloseStep::Complete{break;}}assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);};
+    let close=|source:&mut OwnedOperationBytes|{for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if close_one(source, 1, 4096)==OperationByteCloseStep::Complete{break;}}assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);};
     for maximum in [expected.len(),expected.len()-1]{
         let mut source=OwnedOperationBytes::try_new(expected.len(),65536).unwrap();
         let mut allow=|_|true;
@@ -205,7 +232,7 @@ fn owned_operation_byte_pages_complete_operation_limit_counts_header_and_returns
 }
 
 #[test]
-fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_emission(){
+fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_emission(){ warm();
     use super::operation_bytes::{OperationBytePreparation,OperationByteFundingStep,OperationByteOutput};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
@@ -237,7 +264,7 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
             assert_eq!(prepared.write_bytes(&expected,&mut control).unwrap_err().kind(),semio_framework_value::ValueRefusalKind::Canceled);
             let prefix=prepared.accepted_prefix().unwrap();assert_eq!(prefix.len(),256);assert!(prefix.iter().eq(expected[..256].iter().copied()));
             assert!(prepared.take_ready().is_none());
-            for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if prepared.close_one(1,maximum).unwrap()==OperationByteCloseStep::Complete{break;}}
+            for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if close_prepared(&mut prepared, 1, maximum)==OperationByteCloseStep::Complete{break;}}
             assert!(prepared.terminal_is_empty());assert_eq!(prepared.allocated_bytes(),0);
         }else{
             let (emitted,requested,released)=semio_framework_trace_memory_testing::observe_backing(||prepared.write_bytes(&expected,&mut control));
@@ -245,14 +272,14 @@ fn owned_operation_byte_pages_fund_complete_backing_across_hops_before_actual_em
             assert!(prepared.accepted_prefix().unwrap().iter().eq(expected.iter().copied()));
             let mut source=prepared.take_ready().unwrap();assert!(prepared.terminal_is_empty());
             assert_eq!(source.allocated_bytes(),retained);assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::to_value(&expected).unwrap());
-            for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if source.close_one(1,maximum).unwrap()==OperationByteCloseStep::Complete{break;}}
+            for _ in 0..fixture["maximumCloseSteps"].as_u64().unwrap(){if close_one(&mut source, 1, maximum)==OperationByteCloseStep::Complete{break;}}
             assert!(source.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);
         }
     }
 }
 
 #[test]
-fn owned_operation_byte_pages_empty_prepaid_handback_keeps_exact_zero_payload_authority(){
+fn owned_operation_byte_pages_empty_prepaid_handback_keeps_exact_zero_payload_authority(){ warm();
     use super::operation_bytes::OperationBytePreparation;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let mut prepared=OperationBytePreparation::try_new(fixture["emptyOperationLength"].as_u64().unwrap()as usize,65536).unwrap();
@@ -260,12 +287,12 @@ fn owned_operation_byte_pages_empty_prepaid_handback_keeps_exact_zero_payload_au
     let mut source=prepared.take_ready().unwrap();assert!(prepared.terminal_is_empty());assert_eq!(source.allocated_bytes(),0);
     assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::json!([]));
     let demand=source.next_allocation_bytes();
-    assert_eq!(source.close_one(1,4096).unwrap(),OperationByteCloseStep::Complete);assert!(source.terminal_is_empty());
+    assert_eq!(close_one(&mut source, 1, 4096),OperationByteCloseStep::Complete);assert!(source.terminal_is_empty());
     assert_eq!(demand.expect_err("exact zero emitted operation cannot acquire a later payload allocation").kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);
 }
 
 #[test]
-fn owned_operation_byte_pages_measure_complete_operation_without_retaining_payload_or_resetting_control(){
+fn owned_operation_byte_pages_measure_complete_operation_without_retaining_payload_or_resetting_control(){ warm();
     use super::operation_bytes::{OperationByteMeasurement,OperationByteOutput};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected:Vec<u8>=fixture["source"]["prefixUtf8"].as_str().unwrap().bytes().chain(std::iter::repeat_n(32,8192)).collect();
@@ -294,7 +321,7 @@ fn owned_operation_byte_pages_measure_complete_operation_without_retaining_paylo
 }
 
 #[test]
-fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refusal(){
+fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refusal(){ warm();
     use super::operation_bytes::{OperationByteComparison,OperationByteOutput};
     let f:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🧭️caller-stage.json")).unwrap();
     let source:Vec<u8>=serde_json::from_value(f["source"].clone()).unwrap();let foreign:Vec<u8>=serde_json::from_value(f["foreign"].clone()).unwrap();
@@ -311,7 +338,7 @@ fn operation_byte_comparison_preserves_enclosing_workload_on_acceptance_and_refu
 }
 
 #[test]
-fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_without_physical_credit(){
+fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_without_physical_credit(){ warm();
     use super::operation_bytes::{OperationSourceCollection,OperationByteReturnStep,OperationByteOutput};
     use semio_framework_value_persistent::list::PagedList;
     use semio_framework_value::retirement::allocation_return::{ParentAllocationReturn, AllocationReturnStep};
@@ -323,7 +350,7 @@ fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_with
     for _ in 0..f["paddingBytes"].as_u64().unwrap(){operation.write_bytes(&[f["paddingByte"].as_u64().unwrap()as u8],&mut encoding).unwrap();}
     let retained=operation.allocated_bytes();assert_eq!(retained,encoding.owned_bytes());assert_eq!(operation.len(),f["wireBytes"].as_u64().unwrap()as usize);
     let mut collection=PagedList::<OwnedOperationBytes,8194>::empty();
-    while !collection.has_reserved_slot(){let step=collection.reserve_one(max).unwrap();assert!(step.progressed&&step.allocated_bytes<=max);}
+    while !collection.has_reserved_slot(){let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:collection.next_reserve_copy_byte_demand().unwrap(),maximum_capacity_bytes:max,maximum_depth:collection.next_reserve_depth_demand().unwrap(),..Default::default()};let work=collection.reserve_one_work_demand().unwrap();let step=match BANK.with(|bank|bank.borrow_mut().run_outcome(grant,work,|effect|collection.reserve_one(effect))).result.unwrap(){semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step)=>step,_=>panic!("funded page reservation was denied")};assert!(step.progressed&&step.allocated_bytes<=max);}
     assert!(collection.push_reserved(operation).is_ok());
     let collection_bytes=collection.allocated_bytes();
     let ((),allocated,released)=semio_framework_trace_memory_testing::observe_backing(||{

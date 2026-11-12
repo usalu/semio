@@ -13,6 +13,7 @@ import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readFi
 import { dirname, join, posix, win32 } from "node:path";
 import installationSchema from "./📥️installation/🧬️schema/🔣️.json" with { type: "json" };
 import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
+import { DevScript } from "../../📚️library/🎛️commands/🛠️dev/🟦️.ts";
 
 const installationPolicy = installationSchema.$defs.Protocol.const;
 
@@ -97,7 +98,11 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 🧭️ Runs the `dev` command against the workspace root. */
+class OwnedDevScript extends BundleScript {
+  async run(segments: string[]): Promise<void> { await new DevScript(this.repoRoot, this.repoRoot, this.invocation).run(segments); }
+}
 if(isMainModuleV1(import.meta.url)){
- const router = new ScriptRouter(import.meta.dirname).register("build", BuildScript).register("test", TestScript).register("install",InstallScript).register("test-install",InstallationTestScript);
+ const router = new ScriptRouter(import.meta.dirname).register("dev", OwnedDevScript).register("build", BuildScript).register("test", TestScript).register("install",InstallScript).register("test-install",InstallationTestScript);
  await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));
 }

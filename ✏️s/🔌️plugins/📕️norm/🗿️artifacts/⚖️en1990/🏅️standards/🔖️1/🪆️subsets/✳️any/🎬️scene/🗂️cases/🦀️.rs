@@ -10,16 +10,8 @@ use super::model::CaseRow;
 
 pub(crate) const COLLECTION: &str = "cases";
 
-/// 📍️ The first row of cases lies behind the analysis lanes.
-pub const ROW_CASES: f64 = 20.0;
-
 /// 🧱️ The role of the solids of a case.
 pub(crate) const ROLE: MaterialRole = MaterialRole::Neutral;
-
-/// 🧊️ Whether the entry of `row` declares geometry, so the case stands in the scene.
-pub(crate) fn declared(row: &CaseRow) -> bool {
-    forms::declared::<En1990Cases>(row).is_some()
-}
 
 /// 🎬️ The drawing of one case in the pose; `None` when its entry declares no geometry.
 pub(crate) fn draw(input: &SceneInput, row: &CaseRow, pose: &CasePose) -> Option<CaseDraw> {

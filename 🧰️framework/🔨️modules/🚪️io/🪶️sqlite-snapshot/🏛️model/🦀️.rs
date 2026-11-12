@@ -158,6 +158,29 @@ pub enum SqliteSnapshotPhase { ReadPages, WritePages, ProjectSnapshot, Reconstru
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SqliteSnapshotProgress { pub phase: SqliteSnapshotPhase, pub completed: usize, pub total: usize }
 
+/// 🪢️ Allocation custody lent to one SQLite stage: local when the SQL ledger alone admits the backing, forwarded when an original port quotes every allocation.
+pub enum StageAllocation<'a>{Local,Forwarded(&'a mut (dyn semio_framework_value::native_encoding::NativeSendAllocationLoan+'a))}
+type DecodeControl<'c>=semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'c>;
+type ForwardedDecodeControl<'c>=semio_framework_value_native_owned::native_decoding::NativeForwardedDecodeControl<'c>;
+/// 🛬️ The stage's native decode control over its custody.
+pub enum StageDecode<'c>{Local(DecodeControl<'c>),Forwarded(ForwardedDecodeControl<'c>)}
+impl<'c> std::ops::Deref for StageDecode<'c>{type Target=DecodeControl<'c>;fn deref(&self)->&Self::Target{match self{Self::Local(control)=>control,Self::Forwarded(control)=>control}}}
+impl<'c> std::ops::DerefMut for StageDecode<'c>{fn deref_mut(&mut self)->&mut Self::Target{match self{Self::Local(control)=>control,Self::Forwarded(control)=>control}}}
+/// 🛫️ The stage's native encode control over its custody.
+pub enum StageEncode<'c>{Local(semio_framework_value::NativeEncodeControl<'c>),Forwarded(semio_framework_value::native_encoding::NativeForwardedEncodeControl<'c>)}
+impl<'c> std::ops::Deref for StageEncode<'c>{type Target=semio_framework_value::NativeEncodeControl<'c>;fn deref(&self)->&Self::Target{match self{Self::Local(control)=>control,Self::Forwarded(control)=>control}}}
+impl<'c> std::ops::DerefMut for StageEncode<'c>{fn deref_mut(&mut self)->&mut Self::Target{match self{Self::Local(control)=>control,Self::Forwarded(control)=>control}}}
+impl<'a> StageAllocation<'a>{
+    /// 🛬️ Opens the stage's native decode control over this custody.
+    pub fn decode<'c>(self,maximum:usize,callback:&'c mut dyn FnMut(semio_framework_value_native_owned::native_decoding::NativeDecodeProgress)->bool)->StageDecode<'c> where 'a:'c{
+        match self{Self::Local=>StageDecode::Local(DecodeControl::new(maximum,callback)),Self::Forwarded(loan)=>StageDecode::Forwarded(DecodeControl::new_forwarded(maximum,callback,loan))}
+    }
+    /// 🛫️ Opens the stage's native encode control over this custody.
+    pub fn encode<'c>(self,maximum:usize,callback:&'c mut dyn FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool)->StageEncode<'c> where 'a:'c{
+        match self{Self::Local=>StageEncode::Local(semio_framework_value::NativeEncodeControl::new(maximum,callback)),Self::Forwarded(loan)=>StageEncode::Forwarded(semio_framework_value::NativeEncodeControl::new_forwarded(maximum,callback,loan))}
+    }
+}
+
 /// 🛑️ One progress and cancellation authority spanning typed projection and physical I/O.
 pub struct SqliteSnapshotControl<'a> { required_allocation:bool, forwarded_bytes:usize, allocation:Option<&'a mut (dyn semio_framework_value::native_encoding::NativeSendAllocationLoan+'a)>, native_retirement:Option<&'a mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient>, callback: &'a mut dyn FnMut(SqliteSnapshotProgress) -> bool, limits: SqliteDatabaseLimits, ledger: SqliteSnapshotLedgerSlot<'a> }
 
@@ -268,10 +291,20 @@ impl<'a> SqliteSnapshotControl<'a> {
         self.ledger.allocation_bytes = next;
         Ok(())
     }
-    /// ⬅️ Runs one imperative producer under a stage-local allocation authority and settles its admitted backing.
-    pub fn allocation_stage<R>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool,&mut dyn semio_framework_value::native_encoding::NativeSendAllocationLoan)->(R,usize))->std::result::Result<R,ValueError>{
+    /// ⬅️ Runs one imperative producer under a stage-local allocation authority and settles its admitted backing; without an original port the SQL ledger is the only custody and the stage owns its native control locally.
+    pub fn allocation_stage<R>(&mut self,phase:SqliteSnapshotPhase,operation:impl FnOnce(usize,&mut dyn FnMut(usize,usize)->bool,StageAllocation<'_>)->(R,usize))->std::result::Result<R,ValueError>{
         self.checkpoint(phase,0,0)?;
         let remaining=self.allocation_remaining_bytes();let before=self.ledger.allocation_bytes;let maximum=self.limits.max_allocation_bytes;let physical=self.ledger.physical_read_progress;let required=self.required_allocation;
+        if self.allocation.is_none(){
+            let callback=&mut self.callback;
+            let mut progress=|completed,total|callback(if phase==SqliteSnapshotPhase::ReadPages{physical.unwrap_or(SqliteSnapshotProgress{phase,completed,total})}else{SqliteSnapshotProgress{phase,completed,total}});
+            let(result,declared)=operation(remaining,&mut progress,StageAllocation::Local);
+            if declared!=0&&required{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"SQLite backing requires the original receiving allocation port"))}
+            let next=self.ledger.allocation_bytes.checked_add(declared).filter(|next|*next<=maximum).ok_or_else(||ownership_limit("relational SQLite resource limit: allocation bytes"))?;
+            self.forwarded_bytes=self.forwarded_bytes.checked_add(declared).ok_or_else(||ownership_limit("relational SQLite resource limit: forwarded allocation bytes"))?;
+            self.ledger.allocation_bytes=next;
+            return Ok(result)
+        }
         let settled={
             let callback=&mut self.callback;let forwarded=&mut self.forwarded_bytes;
             let parent=match self.allocation.as_mut(){Some(port)=>Some(&mut **port as &mut (dyn semio_framework_value::native_encoding::NativeSendAllocationLoan+'_)),None=>None};
@@ -279,7 +312,7 @@ impl<'a> SqliteSnapshotControl<'a> {
             let mut turn=relay::StageRelayTurn::new(owned,forwarded,maximum,required,parent);
             let mut authority=semio_framework_value_control_contract::NativeAllocationAuthority::new(relay::StageRelay);
             let mut progress=|completed,total|callback(if phase==SqliteSnapshotPhase::ReadPages{physical.unwrap_or(SqliteSnapshotProgress{phase,completed,total})}else{SqliteSnapshotProgress{phase,completed,total}});
-            let run=authority.with_send_loan(&mut turn,|loan|operation(remaining,&mut progress,loan));
+            let run=authority.with_send_loan(&mut turn,|loan|operation(remaining,&mut progress,StageAllocation::Forwarded(loan)));
             let empty=turn.terminal_is_empty();
             match authority.into_port(){Ok(_)=>{},Err(stuck)=>std::mem::forget(stuck)}
             if empty{run}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"SQLite stage left an unsettled original allocation transaction"))}

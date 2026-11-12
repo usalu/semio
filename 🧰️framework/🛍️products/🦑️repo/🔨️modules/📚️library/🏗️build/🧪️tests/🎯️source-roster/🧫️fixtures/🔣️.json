@@ -4,7 +4,7 @@
   "cases": [
     {
       "index": 0,
-      "target": "workspace:test-workspace-build",
+      "target": "@semio-tech/repo-lib:test-workspace-build",
       "typedCompiler": false,
       "runtimeEntries": [
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
@@ -65,7 +65,7 @@
     },
     {
       "index": 1,
-      "target": "workspace:verify-zero-touch",
+      "target": "repo-policy:verify-zero-touch",
       "typedCompiler": false,
       "runtimeEntries": [
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🧾️taxonomy-lanes/🟦️.ts",

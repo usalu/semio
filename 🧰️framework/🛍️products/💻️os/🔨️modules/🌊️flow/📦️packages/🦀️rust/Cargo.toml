@@ -66,3 +66,4 @@ semio-os-flow-operators = { path = "../../🗃️operators/📦️packages/🦀�
 semio-framework-replication = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

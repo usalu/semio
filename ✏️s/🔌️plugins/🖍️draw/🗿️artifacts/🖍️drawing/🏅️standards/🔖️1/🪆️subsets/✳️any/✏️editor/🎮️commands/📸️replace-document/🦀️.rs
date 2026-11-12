@@ -1,0 +1,22 @@
+//! 📄️ 📄️ Drawing play app commands command — `replace-document`.
+
+use semio_plugin::{NoConfig, NoConfigMutation};
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_plugin::{ArtifactView, ConfigView, Emit, Fault};
+
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[dsl(keyword = "replace-document")]
+pub struct ReplaceDocument {
+    #[dsl(block)]
+    pub snapshot: DrawingSnapshot,
+}
+
+pub fn handle(
+    payload: &ReplaceDocument,
+    _doc: &ArtifactView<'_, DrawingSnapshot>,
+    _cfg: &ConfigView<'_, NoConfig>,
+    _session: &mut semio_s_artifact_draw_drawing_editor_tool::DrawingSession,
+) -> Result<Emit<DrawingMutation, NoConfigMutation>, Fault> {
+    Ok(Emit { effects: vec![semio_s_artifact_draw_drawing_editor_interaction::drawing_reset_document_effect(&payload.snapshot)], ..Default::default() })
+}

@@ -61,8 +61,8 @@ export async function mergeIntoHeadV1(port,{base,mine,patch,verified,signal}){
   const headIndex=await port.readIndex(head.manifest.factIndex);if(!headIndex)return count({conflict:"index"});
   const found=mergeGenerationV1({base:base.manifest,head:head.manifest,mine,baseIndex,headIndex,patch,verified,headVerified:head.pointer.verified,key:port.key});
   if(found.conflict)return count(found);
-  let index=port.patch(headIndex,{drop:found.drop,upserts:found.upserts,append:found.append});
-  const orphans=orphanedDerivedOwnersV1(index);if(orphans.length)index=port.patch(index,{drop:orphans});
+  let index=await port.patch(headIndex,{drop:found.drop,upserts:found.upserts,append:found.append});
+  const orphans=orphanedDerivedOwnersV1(index);if(orphans.length)index=await port.patch(index,{drop:orphans});
   if(unsupportedDerivedV1(index).length)return count({conflict:"derived"});
   const packed=port.pack(index),kept=await port.keep(packed.bytes);
   const next={...mine,generation:head.pointer.generation+1,parent:head.pointer.manifest,owners:found.owners,global:found.global,membership:found.membership,frontier:found.frontier,factIndex:kept.digest,built:{kind:"delta",base:head.manifest.generation,dirty:mine.built.dirty}};

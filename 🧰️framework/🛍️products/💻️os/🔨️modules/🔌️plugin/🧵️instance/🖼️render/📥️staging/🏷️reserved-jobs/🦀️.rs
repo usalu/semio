@@ -120,7 +120,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if !owner.wire_construction.terminal_is_empty(){owner.wire_construction.reset_step(cx)?;return Ok(false)}
             let Some(cursor)=owner.wire_cursor.as_mut()else{return Ok(true)};
             if !cursor.terminal_is_empty(){cx.with_original_retirement(|cx|cursor.close_step(&*self.tools.tool_jobs,cx))?;return Ok(false)}
-            let bytes=std::mem::size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{owner.wire_cursor.take();semio_framework_value::RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(false)        }
+            let bytes=std::mem::size_of::<Option<semio_framework::action_bus::OriginalWireAdmission>>();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_turn(cx,semio_framework_value::RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()},|_|{owner.wire_cursor.take();semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}}))?;return Ok(false)        }
         if owner.wire_cursor.is_some(){let advanced=owner.wire_cursor.as_mut().unwrap().advance(&*self.tools.tool_jobs,cx,&mut owner.wire_construction,&mut owner.admission)?;if advanced&&owner.admission.is_none(){owner.wire_construction.reset_step(cx)?;}return Ok(false)}
         if owner.wire_key.is_none()&&owner.wire_schema.is_none(){
             if ![5,6,7].into_iter().all(|field|owner.header_ready(field)){return Ok(false)}let bytes=std::mem::size_of::<semio_framework::ToolFactoryKey>()+std::mem::size_of::<String>();let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
@@ -188,7 +188,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🤝️ Moves the built producer, its completion and its wire admission out of the preparation in one paid step.
     pub fn handoff_reserved_producer(&mut self,output:&mut Option<(ArtifactReservedToolJob,ArtifactToolCompletion<A>,semio_framework::ToolWireAdmission)>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let owner=self.pending.reserved_preparation.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("reserved handoff requires its preparation"))?;
-        owner.handoff(output,cx)    }
+        owner.handoff(output,cx)
+    }
     const MEDIA_DONATION_BYTES:usize=std::mem::size_of::<ArtifactReservedToolInput>()+std::mem::size_of::<Option<Media>>()+std::mem::size_of::<Vec<u8>>();
     fn media_donation_funded(cx:&semio_framework_job::StepContext<'_>)->bool{let grant=cx.retained_grant();!(cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_copy_bytes<Self::MEDIA_DONATION_BYTES||grant.maximum_depth==0)}
     /// 🎞️ Whether the staged reserved media preparation awaits its media source and this step funds the donation, so a decoded source is never left unowned.

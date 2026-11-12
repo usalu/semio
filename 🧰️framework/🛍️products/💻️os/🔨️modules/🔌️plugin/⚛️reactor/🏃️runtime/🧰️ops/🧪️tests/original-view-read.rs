@@ -26,7 +26,7 @@ impl Rig{
   let mut value=Some(value);let mut close=RetainedCloneClose::default();
   while value.is_some()||!close.is_empty(){self.turn(|cx|cx.with_original_retirement(|cx|{
    for _ in 0..512{if cx.retirement_should_yield(){break}let d=if !close.is_empty(){close.demands(cx.retained_grant().maximum_copy_bytes)?}else{close.next_owner_demands::<T>(true,&None,cx.retained_grant().maximum_copy_bytes)?};
-    let step=close_original_retained_step(cx,d,|g|if !close.is_empty(){close.step_granted(g)}else{let turn=close.begin_granted(&mut value,g);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}})?;
+    let body=cx.retained_grant().maximum_copy_bytes;let step=semio_framework_job::close_original_effect_step(cx,d,|effect|if !close.is_empty(){close.step_granted(body,effect)}else{semio_plugin_job_receiving::original_steps::begin(&mut close,&mut value,effect)})?;
     if value.is_none()&&close.is_empty()||step.progress()==Default::default(){break}
    }Ok(())
   }));}
@@ -37,13 +37,13 @@ impl Rig{
  }
  fn close_foreign_decoder(&mut self,decoder:&mut OriginalJobDecodeOwner){
   while !decoder.terminal_is_empty(){self.calls+=1;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.caller.turn(self.stock,|cx|cx.with_original_retirement(|cx|{
-   for _ in 0..512{if decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let step=decoder.close_on_source(cx)?;if step.progress()==Default::default(){break}}Ok(())
+   for _ in 0..512{if decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let before=cx.retained_progress();let done=decoder.close_on_source(cx)?;if done||cx.retained_progress()==before{break}}Ok(())
   })));assert!(!heap.overflowed);let p=self.caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));self.born+=heap.requested_bytes;self.released+=heap.released_bytes;result.unwrap();}
  }
  fn finish(mut self){
   while !self.decoder.terminal_is_empty(){
    self.calls+=1;let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.caller.turn(self.stock,|cx|cx.with_original_retirement(|cx|{
-    for _ in 0..512{if self.decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let step=self.decoder.close_on_source(cx)?;if step.progress()==Default::default(){break}}Ok(())
+    for _ in 0..512{if self.decoder.terminal_is_empty()||cx.retirement_should_yield(){break}let d=self.decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let before=cx.retained_progress();let done=self.decoder.close_on_source(cx)?;if done||cx.retained_progress()==before{break}}Ok(())
    })));
    assert!(!heap.overflowed);let p=self.caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));self.born+=heap.requested_bytes;self.released+=heap.released_bytes;result.unwrap()
   }
@@ -126,10 +126,10 @@ struct ActorEpoch{slot:OriginalActorContextSlot,epoch:u64}
 impl ActorEpoch{
  fn new()->Self{Self{slot:OriginalActorContextSlot::empty(),epoch:0}}
  fn input(&mut self,host:&mut StepContext<'_>)->Result<RetainedTurnInput,OriginalTurnFailure>{self.epoch=self.epoch.checked_add(1).unwrap();host.bind_original_source_epoch(self.epoch)?;Ok(RetainedTurnInput::borrow_original(host)?)}
- fn post(host:&mut StepContext<'_>,progress:RetainedCloneProgress,work:u64)->Result<(),OriginalTurnFailure>{receive_original_retained_work(host,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work})?;Ok(())}
+ fn post(host:&mut StepContext<'_>,progress:RetainedCloneProgress,work:u64)->Result<(),OriginalTurnFailure>{receive_original_retained_work(host,RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Progress(progress)),work:u128::from(work)})?;Ok(())}
  fn admit(&mut self,rig:&mut Rig){
   for _ in 0..16{
-   let ready=rig.turn(|host|{let input=self.input(host)?;let call=self.slot.admit_step(input,host.retained_grant(),clock);Self::post(host,call.receipt_spent,call.work_units_spent)?;Ok(call.result?.ready)});
+   let ready=rig.turn(|host|{let input=self.input(host)?;let call=self.slot.admit_step(input,StepBudget::new(host.fuel_remaining().min(512),host.deadline_us(),host.retained_grant()),clock);Self::post(host,call.receipt_spent,call.work_units_spent)?;Ok(call.result?.ready)});
    if ready{return}
   }
   panic!("actual actor context admission did not settle")
@@ -152,7 +152,7 @@ impl ActorEpoch{
      if cx.retirement_should_yield()||value.is_none()&&close.is_empty(){break}
      let before=cx.retained_progress();let fuel=cx.fuel_remaining();
      let d=if !close.is_empty(){close.demands(cx.retained_grant().maximum_copy_bytes)?}else{close.next_owner_demands::<T>(true,&None,cx.retained_grant().maximum_copy_bytes)?};
-     close_original_retained_step(cx,d,|g|if !close.is_empty(){close.step_granted(g)}else{let turn=close.begin_granted(&mut value,g);RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Complete(Default::default()))),work:turn.work}})?;
+     let body=cx.retained_grant().maximum_copy_bytes;semio_framework_job::close_original_effect_step(cx,d,|effect|if !close.is_empty(){close.step_granted(body,effect)}else{semio_plugin_job_receiving::original_steps::begin(&mut close,&mut value,effect)})?;
      if before==cx.retained_progress()&&fuel==cx.fuel_remaining(){break}
     }Ok(())
    });
@@ -176,7 +176,7 @@ impl ActorEpoch{
  fn finish(&mut self,rig:&mut Rig){
   for _ in 0..4096{
    if self.slot.terminal_is_empty(){return}
-   rig.turn(|host|host.with_original_retirement(|host|{let input=self.input(host)?;let call=self.slot.close_step(input,host.retained_grant());Self::post(host,call.receipt_spent,call.work_units_spent)?;call.result.expect("actual actor context closes its original source and decoder");Ok(())}));
+   rig.turn(|host|host.with_original_retirement(|host|{let input=self.input(host)?;let call=self.slot.close_step(input,StepBudget::new(host.fuel_remaining().min(512),host.deadline_us(),host.retained_grant()));Self::post(host,call.receipt_spent,call.work_units_spent)?;call.result.expect("actual actor context closes its original source and decoder");Ok(())}));
   }
   panic!("actual actor context retirement did not settle")
  }

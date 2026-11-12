@@ -160,7 +160,7 @@ pub fn settle_store_constructor<A: ArtifactApp, M: store::ReferenceSpaceMember +
 pub fn drain_store_displaced_retirements<P, Mutation>(store: &mut store::ArtifactStore<P, Mutation>)
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + store::OpBinary + store::OpBinaryReceiving + store::OpText + Send + 'static,
+    Mutation: store::StoreMutationFor<P>,
 {
     for _ in 0..1_000_000 {
         if store.maintenance_retirements_terminal_is_empty() { return; }
@@ -178,7 +178,7 @@ pub fn settle_store_constructor_close<A: ArtifactApp, M: store::ReferenceSpaceMe
         retain_original_ownership_receipts(app, mounted_policy, &mut receipts).expect("original fixture constructor close receipts");
         if app.constructor.constructor_terminal_is_empty() { return receipts; }
         assert!(std::time::Instant::now() < deadline, "registered fixture store constructor close did not settle");
-        fixture_pump_turn(mounted_policy.close, |effect| app.stores.close_store_constructor_unit(&mut app.constructor, effect)).expect("registered fixture store constructor close quote admitted").expect("registered fixture store constructor close turn");
+        crate::artifact_app_laws::run_fixture_effect(mounted_policy.close, |effect| app.stores.close_store_constructor_unit(&mut app.constructor, effect)).expect("registered fixture store constructor close grant must fund its work quote").expect("registered fixture store constructor close turn");
     }
 }
 
@@ -300,7 +300,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         }
         let after=(cx.retained_progress(),receipt.ownership_receipts.len()+receipt.lanes.len()+receipt.effects.len()+receipt.events.len()+receipt.completions+receipt.resume_outcomes.len()+receipt.composed.len());
         idle=if after==before{idle+1}else{0};
-        if idle>=maximum_idle{eprintln!("[DEBUG] rb-gate settle-idle {} | close={}",app.typed_operation_diagnostic(),app.close_diagnostic());return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement made no progress for its idle turn bound").into())}
+        if idle>=maximum_idle{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement made no progress for its idle turn bound").into())}
         std::thread::yield_now();
     }
     Ok(receipt)

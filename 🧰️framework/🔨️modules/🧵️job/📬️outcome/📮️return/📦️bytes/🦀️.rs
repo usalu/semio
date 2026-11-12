@@ -11,10 +11,10 @@ impl OriginalContiguousJobBytes{
   let owner=output.as_mut().ok_or_else(||ValueError::invariant("output absent"))?;if !owner.active||!owner.binding.matches(cx)||owner.capacity!=length{return Err(refusal("contiguous birth changed its original source or exact extent").into())}
   if owner.source.is_none(){parent.admit_loan(&mut owner.source,cx)?;return Ok(false)}
   owner.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;
-  if owner.bytes.is_some()&&!owner.admission.has_failure(){return if owner.admission.terminal_is_empty(){Ok(true)}else{owner.admission.reset_step(cx)}}
+  if owner.bytes.is_some()&&!owner.admission.is_failed(){return if owner.admission.terminal_is_empty(){Ok(true)}else{owner.admission.reset_step(cx)}}
   if owner.failure.is_some(){return Err(refusal("contiguous birth construction already failed").into())}
-  match admit_original_construction_settled(cx,&mut owner.admission,&mut owner.bytes,demand,1,|_,_|{let mut bytes=Vec::new();let result=bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original contiguous backing allocation refused")).map(|()|{let capacity=bytes.capacity();(bytes,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})});semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:1}}){
-   Err(error)=>{if !owner.admission.has_failure(){return Err(error)}if !owner.admission.take_failure_into_step(&mut owner.failure,cx)?{return Ok(false)}Err(refusal("contiguous birth native construction failed").into())}
+  match admit_original_construction_settled(cx,&mut owner.admission,&mut owner.bytes,demand,1,|_,actual|{let mut bytes=Vec::new();let result=bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original contiguous backing allocation refused")).map(|()|{let capacity=bytes.capacity();*actual=Some(capacity);(bytes,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})});semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:1}}){
+   Err(error)=>{if !owner.admission.is_failed(){return Err(error)}if !owner.admission.take_failure_into_step(&mut owner.failure,cx)?{return Ok(false)}Err(owner.failure.as_ref().map_or_else(||refusal("contiguous birth failure absent"),OriginalConstructionFailure::refusal).into())}
    settled=>settled
   }
  }
@@ -31,18 +31,18 @@ impl OriginalContiguousJobBytes{
   match status{
    OriginalConstructionStatus::Ready=>{self.candidate=None;self.admission.reset_step(cx)}
    OriginalConstructionStatus::Pending=>Ok(false),
-   OriginalConstructionStatus::Failed=>{if !self.admission.take_failure_into_step(&mut self.failure,cx)?{return Ok(false)}Err(refusal("contiguous append native construction failed").into())}
+   OriginalConstructionStatus::Failed=>{if !self.admission.take_failure_into_step(&mut self.failure,cx)?{return Ok(false)}Err(self.failure.as_ref().map_or_else(||refusal("contiguous append failure absent"),OriginalConstructionFailure::refusal).into())}
   }
  }
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}if !self.binding.matches(cx){return Err(refusal("contiguous close refused foreign original source").into())}cx.original_source_parent()?.validate_borrowed_context(cx)?;
   if let Some(source)=self.source.as_ref(){if !source.terminal_is_empty(){source.validate_retirement_context(cx)?;}}
-  if let Some(bytes)=self.bytes.as_ref(){let demand=RetirementDemand{release_bytes:bytes.capacity(),depth:1,..Default::default()};return close_original_retained_step(cx,demand,|_|{drop(self.bytes.take());semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})}
-  if self.failure.is_some(){return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.failure.take();semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
-  if self.candidate.is_some(){return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.candidate.take();semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
+  if let Some(bytes)=self.bytes.as_ref(){let demand=RetirementDemand{release_bytes:bytes.capacity(),depth:1,..Default::default()};return close_original_retained_step(cx,demand,|_|{drop(self.bytes.take());semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})}
+  if self.failure.is_some(){return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.failure.take();semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
+  if self.candidate.is_some(){return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.candidate.take();semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
   if !self.admission.terminal_is_empty(){self.admission.close_step(cx)?;return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
   if let Some(source)=self.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(cx.original_source_parent()?,cx)}}
-  close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.source.take();self.active=false;semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
+  close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.source.take();self.active=false;semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
  }
  pub fn retire_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if !self.terminal_is_empty(){self.close_step(cx)?;}Ok(self.terminal_is_empty())}
 }
@@ -98,12 +98,12 @@ impl<const N:usize> OriginalJobBytesReturnRegistry<N>{
    if owners.credit.is_admitted(){let before=cx.retained_progress();owners.credit.settle_return(cx)?;let after=cx.retained_progress();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}})}
 
    if let Some(bytes)=owners.bytes.as_mut(){if !bytes.terminal_is_empty(){return bytes.close_step(cx)}
-    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.bytes.take();semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
+    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.bytes.take();semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
    }
    if let Some(source)=owners.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(parent,cx)}
-    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.source.take();semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
+    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.source.take();semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
    }
-   let result=close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.binding=None;semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}});
+   let result=close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.binding=None;semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}});
    if owners.binding.is_none(){checked.restore=VACANT}return result
   }Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
  }

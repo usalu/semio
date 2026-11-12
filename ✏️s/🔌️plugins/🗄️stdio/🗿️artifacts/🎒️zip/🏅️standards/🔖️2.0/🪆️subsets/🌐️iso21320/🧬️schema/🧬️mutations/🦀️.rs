@@ -53,8 +53,8 @@ pub mod set_archive_comment;
 pub mod set_entry_data;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed content mutation for `stdio.zip` 2.0/🌐️iso21320. `NoMutation` was dropped:
-/// `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one leaf payload and a unit
+/// 📐️ Typed content mutation for `stdio.zip` 2.0/🌐️iso21320. `#[derive(dsl::Mutations)]`
+/// requires every variant to wrap exactly one leaf payload and a unit
 /// variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

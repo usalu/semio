@@ -33,7 +33,7 @@ use store::ArtifactStore;
 /// 🧬️ Closed semantic mutation vocabulary for the fem3d document, derived per
 /// `📓️derivation-rules.md` from `Fem3dSnapshot`'s shape (8 id-keyed collections + one inseparable
 /// analysis-settings facet). Every generic `Set*`/`Remove*` variant this facet used to carry —
-/// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
+/// including the banned whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `ArtifactStore::reset` /
 /// `Effect::LoadDocument`, see
 /// `editor::fem3d::reset_document_effect`).

@@ -476,7 +476,6 @@ def _numpy_shared_width(a,b):
 class CirculationContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        print('[DEBUG] Building circulation support graph',flush=True)
         cls.parts = MODEL.structure_assembly("full").parts
         cls.nodes,cls.graph,cls.seeds = snapshot(cls.parts)
         cls.reached = reachable(cls.graph,cls.seeds)

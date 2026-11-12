@@ -97,7 +97,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the cad document, derived per
-/// `📓️derivation-rules.md` from `CadSnapshot`'s shape. `SetSnapshot`/`SetPaneObjects`-as-whole-doc-
+/// `📓️derivation-rules.md` from `CadSnapshot`'s shape. whole-snapshot/`SetPaneObjects`-as-whole-doc-
 /// replace and every generic `Patch*`/`CollectionMutation` variant this facet used to carry are
 /// gone — whole-document replace is not an in-history mutation at all (routed through
 /// `ArtifactStore::reset` / `Effect::LoadDocument`).

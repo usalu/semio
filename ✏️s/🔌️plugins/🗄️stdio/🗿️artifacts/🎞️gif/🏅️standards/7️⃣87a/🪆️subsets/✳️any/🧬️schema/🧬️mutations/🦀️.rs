@@ -8,7 +8,7 @@
 //!
 //! `protocol::Mutation<GifSnapshot>` now requires `DESCRIPTORS`/`descriptor()`, synthesized by
 //! `#[derive(dsl::Mutations)]` from one mutation LEAF per variant (`../🧬️mutations/<emoji><kind>/`,
-//! mirroring `stdio.tiff`'s `🔖️6.0/🧱️baseline` reference migration). `NoMutation` is dropped: the
+//! mirroring `stdio.tiff`'s `🔖️6.0/🧱️baseline` reference migration). the
 //! derive requires every variant to wrap exactly one leaf payload and asserts
 //! `is_approved_verb(SEMANTICS.verb)`, and `"no"` is not an approved verb. The old
 //! `impl Mutation<GifSnapshot> for GifMutation` block is gone; every leaf's own `MutationKind::diff`/`inverse`
@@ -51,7 +51,7 @@ pub mod set_pixel_aspect_ratio;
 #[path = "📐set-screen-size/🦀️.rs"]
 pub mod set_screen_size;
 
-/// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
+/// 📐️ Typed mutation for this artifact. `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

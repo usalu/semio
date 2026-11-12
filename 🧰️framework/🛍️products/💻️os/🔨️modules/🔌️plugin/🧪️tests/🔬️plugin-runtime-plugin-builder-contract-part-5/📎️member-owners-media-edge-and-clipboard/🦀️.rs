@@ -36,7 +36,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
             panic!("a whole document is answered as a document archive load");
         };
         assert_eq!(archive.members.iter().map(|entry| (entry.owner.slot.as_str(), entry.owner.child_id.as_str())).collect::<Vec<_>>(), vec![("slot", "child-1")]);
-        PluginApp::begin_document_archive_load(&mut consumer, 9, archive).expect("admit");
+        semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut consumer, 9, archive, cx).expect("admit");
         let status = loop {
             let status = PluginApp::poll_document_archive_load(&mut consumer, 9, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {

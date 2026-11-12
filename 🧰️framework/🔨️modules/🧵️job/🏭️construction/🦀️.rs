@@ -18,8 +18,18 @@ pub const ORIGINAL_CONSTRUCTION_FAILURE_ITEMS:usize=4;
 #[value(crate="::semio_framework_value")]
 pub struct OriginalConstructionFailure{pub source:super::OriginalNativeReceivingOutcome,pub child:Option<Result<RetainedCloneProgress,super::OriginalReceivingPrimary>>}
 
+/// 🧭️ Names which independently owned construction cause a failure reports first.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum OriginalConstructionOrigin{Native,Operation,Context,ReceiptRefusal,SourcePosting}
+/// 🔎️ The typed first cause of a construction failure: its origin and closed refusal kind.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct OriginalConstructionReason{pub origin:OriginalConstructionOrigin,pub kind:Option<ValueRefusalKind>}
 enum ConstructionCause<'a>{Native(&'a super::OriginalReceivingPrimary),Value(&'a ValueError)}
 impl OriginalConstructionFailure{
+ /// 🚨️ Reports this failure under its first actual cause kind and origin rather than a generic refusal.
+ pub fn refusal(&self)->ValueError{let Some(reason)=self.reason()else{return ValueError::invariant("construction failed without a retained cause")};let kind=reason.kind.unwrap_or(ValueRefusalKind::InvariantViolated);ValueError::literal(kind,match reason.origin{OriginalConstructionOrigin::Native=>"original construction failed in its native child",OriginalConstructionOrigin::Operation=>"original construction failed in its Source operation",OriginalConstructionOrigin::Context=>"original construction failed in its Source context",OriginalConstructionOrigin::ReceiptRefusal=>"original construction failed at its receipt",OriginalConstructionOrigin::SourcePosting=>"original construction failed posting to its Source"})}
+ /// 🔎️ Exposes the first retained cause as a typed reason instead of hiding it behind a generic refusal.
+ pub fn reason(&self)->Option<OriginalConstructionReason>{let call=self.source.call.as_ref().err();let kind=|e:&ValueError|Some(e.kind);[self.child.as_ref().and_then(|child|child.as_ref().err()).map(|e|(OriginalConstructionOrigin::Native,e.refusal_kind())),call.and_then(|e|e.operation.as_ref()).map(|e|(OriginalConstructionOrigin::Operation,kind(e))),call.and_then(|e|e.context.as_ref()).map(|e|(OriginalConstructionOrigin::Context,kind(e))),call.and_then(|e|e.receipt_refusal.as_ref()).map(|e|(OriginalConstructionOrigin::ReceiptRefusal,kind(e))),self.source.source_refusal.as_ref().map(|e|(OriginalConstructionOrigin::SourcePosting,kind(e)))].into_iter().flatten().next().map(|(origin,kind)|OriginalConstructionReason{origin,kind})}
  fn cause(&self,index:usize)->Result<(&'static str,ConstructionCause<'_>),ValueError>{let call=self.source.call.as_ref().err();[self.child.as_ref().and_then(|child|child.as_ref().err()).map(|e|("native",ConstructionCause::Native(e))),call.and_then(|e|e.operation.as_ref()).map(|e|("operation",ConstructionCause::Value(e))),call.and_then(|e|e.context.as_ref()).map(|e|("context",ConstructionCause::Value(e))),call.and_then(|e|e.receipt_refusal.as_ref()).map(|e|("receiptRefusal",ConstructionCause::Value(e))),self.source.source_refusal.as_ref().map(|e|("sourcePosting",ConstructionCause::Value(e)))].into_iter().flatten().nth(index).ok_or_else(||ValueError::invariant("construction cause ordinal changed"))}
  fn cause_count(&self)->usize{usize::from(self.child.as_ref().is_some_and(Result::is_err))+self.source.call.as_ref().err().map_or(0,|e|usize::from(e.operation.is_some())+usize::from(e.context.is_some())+usize::from(e.receipt_refusal.is_some()))+usize::from(self.source.source_refusal.is_some())}
 }
@@ -55,9 +65,12 @@ impl OriginalConstructionAdmission{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if self.binding.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::invariant("constructor changed its actual Source").into())}Ok(())}
  /// 🧾️ True while a born candidate still owns its unsettled Source outcome, which the next constructor call must settle before any reset.
  pub fn settling(&self)->bool{self.source.is_some()}
- pub fn has_failure(&self)->bool{self.failed_taken||self.source.as_ref().is_some_and(|source|source.call.is_err()||source.source_refusal.is_some())||self.child.as_ref().is_some_and(Result::is_err)}
+ /// 🧾️ Reports a failure whose causes still await their paid move into the caller's destination.
+ pub fn failure_untaken(&self)->bool{self.is_failed()&&!self.failed_taken}
+ /// ❌️ Reports a failed construction, whether or not its causes were already moved out.
+ pub fn is_failed(&self)->bool{self.failed_taken||self.source.as_ref().is_some_and(|source|source.call.is_err()||source.source_refusal.is_some())||self.child.as_ref().is_some_and(Result::is_err)}
  /// 🔁️ Explicitly retires a completed attempt before its caller advances to another construction.
- pub fn reset_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.has_failure()||self.source.is_some()||self.child.is_some()||self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty{return Err(ValueError::invariant("constructor still owns an unfinished attempt").into())}if !self.complete{return Ok(true)}if construction_metadata(cx,std::mem::size_of::<bool>(),1)?{self.complete=false;return Ok(true)}Ok(false)}
+ pub fn reset_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.is_failed()||self.source.is_some()||self.child.is_some()||self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty{return Err(ValueError::invariant("constructor still owns an unfinished attempt").into())}if !self.complete{return Ok(true)}if construction_metadata(cx,std::mem::size_of::<bool>(),1)?{self.complete=false;return Ok(true)}Ok(false)}
  fn release_authority(&mut self){if let Some(authority)=self.authority.take(){if let Err(authority)=authority.into_producer().map(drop){self.authority=Some(authority)}}}
  pub fn pending_recovery(&mut self)->Option<&mut semio_framework_value_native_owned::native_decoding::NativeReceivingEffect>{self.frame.pending_recovery()}
  /// 🧭️ Whether this admission's in-flight construction belongs to the caller's actual Source.
@@ -72,19 +85,27 @@ impl OriginalConstructionAdmission{
  /// 📏️ Quotes exactly the metadata move the next [`Self::close_step`] performs, branch for branch.
  pub fn close_demand(&self)->RetirementDemand{
   let step=|copy_bytes:usize|RetirementDemand{copy_bytes,depth:1,..Default::default()};
-  if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.has_failure()&&!self.failed_taken{return step(0)}
+  if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.is_failed()&&!self.failed_taken{return step(0)}
   if self.source.is_some()||self.child.is_some(){return step(std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child))}
   if self.authority.is_some(){return step(std::mem::size_of_val(&self.authority))}
   if self.binding.is_some()||self.complete||self.failed_taken{return step(std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>())}
   Default::default()
  }
+ /// 🧮️ Quotes the items the next [`Self::close_step`] posts, branch for branch with [`Self::close_demand`].
+ pub fn close_items(&self)->usize{
+  if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.is_failed()&&!self.failed_taken{return 1}
+  if self.source.is_some()||self.child.is_some(){return 2}
+  if self.authority.is_some(){return 1}
+  if self.binding.is_some()||self.complete||self.failed_taken{return 3}
+  1
+ }
  /// ♻️ Retires settled control metadata without starting another semantic constructor.
- pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.has_failure()&&!self.failed_taken{return Ok(false)}if self.source.is_some()||self.child.is_some(){let bytes=std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child);if construction_metadata(cx,bytes,2)?{self.source=None;self.child=None}return Ok(false)}if self.authority.is_some(){if !construction_metadata(cx,std::mem::size_of_val(&self.authority),1)?{return Ok(false)}self.release_authority();if self.authority.is_some(){return Err(ValueError::invariant("constructor authority still owns an action").into())}}if self.binding.is_some()||self.complete||self.failed_taken{if !construction_metadata(cx,std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>(),3)?{return Ok(false)}self.binding=None;self.complete=false;self.failed_taken=false}Ok(true)}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if self.frame.phase()!=semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPhase::Empty||self.is_failed()&&!self.failed_taken{return Ok(false)}if self.source.is_some()||self.child.is_some(){let bytes=std::mem::size_of_val(&self.source)+std::mem::size_of_val(&self.child);if construction_metadata(cx,bytes,2)?{self.source=None;self.child=None}return Ok(false)}if self.authority.is_some(){if !construction_metadata(cx,std::mem::size_of_val(&self.authority),1)?{return Ok(false)}self.release_authority();if self.authority.is_some(){return Err(ValueError::invariant("constructor authority still owns an action").into())}}if self.binding.is_some()||self.complete||self.failed_taken{if !construction_metadata(cx,std::mem::size_of_val(&self.binding)+2*std::mem::size_of::<bool>(),3)?{return Ok(false)}self.binding=None;self.complete=false;self.failed_taken=false}Ok(true)}
  fn take_failure_bytes(&self)->usize{std::mem::size_of::<Option<OriginalConstructionFailure>>()+std::mem::size_of::<Option<super::OriginalNativeReceivingOutcome>>()+std::mem::size_of_val(&self.child)+std::mem::size_of::<bool>()}
  /// 📐️ Quotes moving this admission's retained failure into its owner's empty resident slot: the items it posts and its physical demand.
  pub fn take_failure_demand(&self)->OriginalConstructionDemand{OriginalConstructionDemand{items:ORIGINAL_CONSTRUCTION_FAILURE_ITEMS,copy_bytes:self.take_failure_bytes(),capacity_bytes:0,release_bytes:0,depth:1}}
  /// 📤️ Transfers all original causes only to the caller's actual empty destination.
- pub fn take_failure_into_step(&mut self,output:&mut Option<OriginalConstructionFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if output.is_some(){return Err(ValueError::invariant("construction failure destination is occupied").into())}if !self.has_failure()||self.failed_taken{return Ok(false)}let bytes=self.take_failure_bytes();if !construction_metadata(cx,bytes,ORIGINAL_CONSTRUCTION_FAILURE_ITEMS)?{return Ok(false)}*output=Some(OriginalConstructionFailure{source:self.source.take().expect("failed constructor retains its Source outcome"),child:self.child.take()});self.failed_taken=true;Ok(true)}
+ pub fn take_failure_into_step(&mut self,output:&mut Option<OriginalConstructionFailure>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;if output.is_some(){return Err(ValueError::invariant("construction failure destination is occupied").into())}if !self.is_failed()||self.failed_taken{return Ok(false)}let bytes=self.take_failure_bytes();if !construction_metadata(cx,bytes,ORIGINAL_CONSTRUCTION_FAILURE_ITEMS)?{return Ok(false)}*output=Some(OriginalConstructionFailure{source:self.source.take().expect("failed constructor retains its Source outcome"),child:self.child.take()});self.failed_taken=true;Ok(true)}
 }
 fn construction_metadata(cx:&mut StepContext<'_>,bytes:usize,items:usize)->Result<bool,OriginalTurnFailure>{let progress=RetainedCloneProgress{copied_items:items,copied_bytes:bytes,..Default::default()};if cx.retirement_should_yield()||cx.fuel_remaining()<items as u64||cx.retained_grant().maximum_depth==0||!progress.fits(cx.retained_grant()){return Ok(false)}cx.consume_retained(progress)?;cx.consume_fuel(items as u64);Ok(true)}
 /// 🧾️ Quotes the control charged outside the constructor's own claim in one settled turn: the Source binding, then release of the Source outcome and child and the reset (items, copy bytes and fuel).
@@ -93,6 +114,10 @@ pub fn original_construction_settle_overhead()->(usize,usize,u64){
  let copy=std::mem::size_of::<Option<super::OriginalSourceBinding>>()+release+std::mem::size_of::<bool>();
  (5,copy,5)
 }
+/// 🧾️ The construction actions one nested receiving level acknowledges inside an open receiving scope: binding its Source, placing its acknowledgement producer and acknowledging its resident success, each one item of the native receiving frame.
+pub const ORIGINAL_RECEIVING_ACKNOWLEDGEMENT_ACTIONS:usize=3;
+/// 🪙️ Quotes the grant an open receiving scope claims for one receiving step of exact physical `demand`: its own action plus the acknowledgement actions of every nested level it may open.
+pub fn original_receiving_scope_quote(demand:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:ORIGINAL_RECEIVING_ACKNOWLEDGEMENT_ACTIONS*demand.depth.max(1),maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 /// 🧮️ Quotes the full cost of one settled construction in a single turn, checked before any charge and assuming the decoder's Source loan and return table are already admitted (`admit_step`, `admit_original_return_table`): constructor, candidate, capture and Source outcome, the first receiving scope's headroom and the settle metadata including the Source binding, with its fuel.
 pub fn original_construction_settled_quote<O>(demand:OriginalConstructionDemand,work:u64)->Result<(OriginalConstructionDemand,u64),ValueError>{
  let(complete,total)=original_construction_reserve::<O>(demand,work)?;let(items,copy,fuel)=original_construction_settle_overhead();let(scope_items,scope_copy,scope_fuel)=super::original_receiving_scope_headroom();
@@ -125,7 +150,7 @@ pub fn original_construction_reserve<O>(demand:OriginalConstructionDemand,work:u
 /// 🎟️ The actual caller retains candidate, allocation frame, complete native child and Source outcome.
 pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut Option<O>,admission:&mut OriginalConstructionAdmission,demand:OriginalConstructionDemand,work:u64,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_, '_>,&mut Option<usize>)->semio_framework_value_retained_clone::RetainedWorkOutcome<(O,RetainedCloneProgress)>)->Result<OriginalConstructionStatus,OriginalTurnFailure>{
  admission.validate(context)?;
- if admission.has_failure(){return Ok(OriginalConstructionStatus::Failed)}
+ if admission.is_failed(){return Ok(OriginalConstructionStatus::Failed)}
  if admission.complete{return Ok(OriginalConstructionStatus::Ready)}
  if admission.source.is_some(){let ready=output.is_some();let bytes=std::mem::size_of_val(&admission.source)+std::mem::size_of_val(&admission.child)+std::mem::size_of_val(&admission.authority)+std::mem::size_of::<bool>();if !construction_metadata(context,bytes,3)?{return Ok(OriginalConstructionStatus::Pending)}admission.source=None;admission.child=None;admission.release_authority();admission.complete=ready;return Ok(if ready{OriginalConstructionStatus::Ready}else{OriginalConstructionStatus::Pending})}
  if output.is_some(){return Err(ValueError::invariant("construction requires its original empty candidate").into())}
@@ -155,7 +180,7 @@ pub fn admit_original_construction<O>(context:&mut StepContext<'_>,output:&mut O
   if let semio_framework_value_native_owned::native_decoding::NativeReceivingEffectPoll::Complete(turn)=poll{*child=Some(turn.result.map(|step|step.progress()).map_err(child_primary));}
   Ok(())
  })?;
- Ok(if admission.has_failure(){OriginalConstructionStatus::Failed}else{OriginalConstructionStatus::Pending})
+ Ok(if admission.is_failed(){OriginalConstructionStatus::Failed}else{OriginalConstructionStatus::Pending})
 }
 
 #[cfg(test)]

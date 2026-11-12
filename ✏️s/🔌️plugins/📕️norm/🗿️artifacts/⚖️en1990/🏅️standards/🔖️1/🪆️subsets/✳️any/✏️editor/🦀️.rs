@@ -241,7 +241,7 @@ fn render_body(body_key: &str, doc: &ArtifactView<'_, En1990Snapshot>, cfg: &Con
     let focus = live.focus.clone();
     let worst = live.worst.as_deref();
     let selected_check = selection.check.and_then(|index| host.report().checks.get(index));
-    let combination = selected_check.and_then(|check| semio_s_artifact_norm_en1990_scene::combinations::id_for_check(doc.snapshot, check));
+    let combination = selected_check.and_then(|check| semio_s_artifact_norm_en1990_scene_combinations::id_for_check(doc.snapshot, check));
     match body_key {
         outliner::BODY_OUTLINER => outliner::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, outliner::BODY_OUTLINER)),
         properties::BODY_PROPERTIES => properties::render(host, selection, view_state.locale, CONTROLLER_ID, &semio_plugin::TreeWindows::for_body(view_state, properties::BODY_PROPERTIES)),

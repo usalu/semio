@@ -31,3 +31,4 @@ semio-framework-trace-memory-testing = { path = "../../../../../../../../../../.
 serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

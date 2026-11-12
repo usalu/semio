@@ -1,3 +1,4 @@
+cargo-features = ["trim-paths"]
 [workspace]
 resolver = "2"
 members = ["."]
@@ -28,3 +29,4 @@ value_derive = { package = "semio-framework-value-derive", path = "../../../../.
 [dev-dependencies]
 serde_json = "1.0"
 semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

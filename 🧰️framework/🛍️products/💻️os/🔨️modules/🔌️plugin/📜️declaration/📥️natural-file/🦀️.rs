@@ -363,7 +363,7 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
         if let Some(decoder)=self.decoder.as_mut(){match decoder{
             NaturalFileDecodeOwner::Controlled(owner)=>{
                 if owner.terminal_is_empty(){let released_bytes=size_of_val(&**owner);self.decoder.take();let work=record_retirement_work(effect,1);return settled(work.map(|_|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})).map_err(|(error,_)|error),effect.performed_work())}
-                owner.begin_close();let step=owner.close_step(grant).map_err(|_|invariant("natural-file decoder close failed while retaining its original owner"));
+                owner.begin_close();let step=owner.close_step(effect).map_err(|_|invariant("natural-file decoder close failed while retaining its original owner"));
                 let step=step.and_then(|step|{if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(invariant("natural-file decoder violated its original retirement grant or terminal witness"))}Ok(match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Progress(progress),PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>RetainedCloneStep::Progress(Default::default())})});
                 let work=record_retirement_work(effect,1);return settled(work.map_err(|(error,_)|error).and_then(|_|step),effect.performed_work())
             },

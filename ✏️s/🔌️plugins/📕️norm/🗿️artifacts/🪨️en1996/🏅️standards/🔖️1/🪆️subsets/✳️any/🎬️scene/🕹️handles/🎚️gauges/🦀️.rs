@@ -1,7 +1,8 @@
 //! 🎚️ Gauges: one scalar grip for every numeric field of a row that no geometric grip writes, listed per collection in one table. A gauge drags along `+Z` from its anchor; the field is `value + 20 * step * (s - anchor.z)` with the `step` of the field in the snapshot schema (`x-semio-ui.step`), quantised to that step and held inside its physical range. Catalogue fields (the fire class) snap to their classes. The tables are the contract of the grip coverage test, which reads the snapshot schema.
 //! 🔗️ Handle laws: [`assert_handle_laws`](crate::scene::projection_kit::test_support::assert_handle_laws).
 
-use super::super::kit::{loc, BAR_TAG, COLUMN_TAG, TENDON_TAG, TIE_TAG};
+use super::super::scene::projection_kit::{loc};
+use super::super::kit::{BAR_TAG, COLUMN_TAG, TENDON_TAG, TIE_TAG};
 use super::super::layout::WallPose;
 use super::super::model::{ConcentratedLoad, ConfinedElement, MasonryWall, WallBar, WallLoadCase, WallPrestress, WallTie};
 use super::super::scene::projection_kit::handle_kit::{field_binding, handle, HandleSpec};

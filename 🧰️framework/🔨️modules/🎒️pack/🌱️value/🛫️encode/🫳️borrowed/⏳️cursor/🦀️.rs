@@ -13,8 +13,7 @@ use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_paged_text::paged_text::TextReadView;
 
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 //#region 🎒️BorrowedDocumentCursor
 #[cfg(feature = "deflate")]
@@ -161,6 +160,8 @@ impl BorrowedProjectedPackCursor {
         if self.pending_offset < self.pending_length { return 1; }
         match self.phase { Phase::Expression=>if self.expression_state.mode==1{1}else{self.expression.next_copy_byte_demand().unwrap_or(usize::MAX).saturating_add(1)},Phase::Initialize if !self.frames.has_reserved_slot()=>self.frames.next_reserve_copy_byte_demand().unwrap_or(usize::MAX),Phase::Initialize|Phase::Reset=>size_of::<Frame>(),Phase::Reserve if !self.symbols.has_reserved_slot()=>self.symbols.next_reserve_copy_byte_demand().unwrap_or(usize::MAX),Phase::Reserve=>size_of::<Symbol>(),Phase::Insert if self.search>self.insertion=>3*size_of::<Symbol>(),Phase::Discover if self.frames[self.depth].phase==31&&matches!(self.frames[self.depth].shape,Some(B::Statements(_)))=>1,Phase::ChunkReserve if !self.replaying&&!self.chunks.has_reserved_slot()=>self.chunks.next_reserve_copy_byte_demand().unwrap_or(usize::MAX),Phase::ChunkReserve=>size_of::<ChunkLocator>(),Phase::Body if self.frames[self.depth].phase==60=>size_of::<ChunkLocator>(),Phase::Find | Phase::SymbolBytes | Phase::Body => 1, _ => 0 }
     }
+    /// 📋️ Quotes the original header copies written by the next whole backing release.
+    pub fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { if !self.expression.terminal_is_empty(){return Ok(0);}if !self.symbols.terminal_is_empty(){if !self.symbols.is_empty(){Ok(0)}else{self.symbols.next_release_copy_byte_demand().map_err(page_error)}}else if !self.frames.is_empty(){Ok(0)}else if !self.frames.terminal_is_empty(){self.frames.next_release_copy_byte_demand().map_err(page_error)}else if !self.chunks.is_empty(){Ok(0)}else{self.chunks.next_release_copy_byte_demand().map_err(page_error)} }
     pub fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if !self.expression.terminal_is_empty(){return Ok(self.expression.retirement_demands()?.release_bytes);}if !self.symbols.terminal_is_empty(){if !self.symbols.is_empty(){Ok(0)}else{self.symbols.next_release_allocation_bytes().map_err(page_error)}}else if !self.frames.is_empty(){Ok(0)}else if !self.frames.terminal_is_empty(){self.frames.next_release_allocation_bytes().map_err(page_error)}else if !self.chunks.is_empty(){Ok(0)}else{self.chunks.next_release_allocation_bytes().map_err(page_error)} }
 
     fn queue(&mut self, bytes: &[u8]) { self.pending[..bytes.len()].copy_from_slice(bytes); self.pending_length = bytes.len(); self.pending_offset = 0; }
@@ -567,7 +568,7 @@ impl BorrowedProjectedPackCursor {
     pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.phase == Phase::Closed { return Ok(Default::default()); }if !self.expression.terminal_is_empty(){let demand=self.expression.retirement_demands()?;return Ok(semio_framework_value::RetirementDemand{depth:demand.depth+1,..demand});}
         let depth = if !self.symbols.terminal_is_empty(){if !self.symbols.is_empty(){self.symbols.next_pop_depth_demand()}else{self.symbols.next_release_depth_demand()}}else if !self.frames.is_empty(){self.frames.next_pop_depth_demand()}else if !self.frames.terminal_is_empty(){self.frames.next_release_depth_demand()}else if !self.chunks.is_empty(){self.chunks.next_pop_depth_demand()}else{self.chunks.next_release_depth_demand()}.map_err(page_error)?;
-        Ok(semio_framework_value::RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth: depth.checked_add(1).ok_or_else(|| invalid("Pack retirement depth overflow"))?, ..Default::default() })
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: self.next_close_copy_byte_demand()?, release_bytes: self.next_close_byte_demand()?, depth: depth.checked_add(1).ok_or_else(|| invalid("Pack retirement depth overflow"))?, ..Default::default() })
     }
 
     /// 🍂️ Retires one inline locator or one whole paid symbol allocation without source disposal.

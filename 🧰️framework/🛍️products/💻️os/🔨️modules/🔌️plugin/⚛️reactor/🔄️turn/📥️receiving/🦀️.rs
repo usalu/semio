@@ -1,5 +1,5 @@
 //! 📥️ Original response and intent inputs remain owned through deferred dispatch and paid source return.
-pub use semio_plugin_reactor_receiving_source::{ReceivingSource,begun,forgotten,retired_poll};
+pub use semio_plugin_reactor_receiving_source::{ReceivingSource,begin,begun,forgotten,retired,retired_poll};
 use std::cell::{Cell, RefCell};
 use crate::{DIRTY_INTENT_INSTANCE_CAPACITY, DirtyIntentBatch, collect_original_publication_receipts, native_close_key, retain_refused_publication, route_exchange_output};
 use semio_framework::kernel::{Effect, Event};

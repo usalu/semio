@@ -6,8 +6,8 @@ export type CasCutV1=Readonly<{access:number;tieBytes:number}>;
 export type CasReasonV1="age"|"area"|"host";
 /** 📐️ The declared bounds of one area: its own byte cap and idle age (null is unbounded). */
 export type CasAreaBoundsV1=Readonly<{capBytes:number|null;maxAgeMs:number|null}>;
-/** 📐️ What one planner needs: the policy, the bounds per area id (the area `store` is the host store), bytes held by tool-owned images, and the clock. */
-export type CasPlannerConfigV1=Readonly<{policy:Pick<CasPolicyV1,"capBytes"|"highWatermark"|"lowWatermark">;areas:readonly (CasAreaBoundsV1&Readonly<{id:string}>)[];externalBytes:number;nowMs:number}>;
+/** 📐️ What one planner needs: the policy, the bounds per area id (the area `store` is the host store), bytes held by tool-owned images, the clock, and the bytes the partition that holds the store is above its low watermark (`partitionNeedBytes`, 0 when it is not above its high watermark or unknown). */
+export type CasPlannerConfigV1=Readonly<{policy:Pick<CasPolicyV1,"capBytes"|"highWatermark"|"lowWatermark">;areas:readonly (CasAreaBoundsV1&Readonly<{id:string}>)[];externalBytes:number;nowMs:number;partitionNeedBytes?:number}>;
 /** 📊️ The planner's totals after the first pass. */
 export type CasPlanTotalsV1=Readonly<{totalBytes:number;protectedBytes:number;candidateBytes:number;plannedBytes:number;keptBytes:number;shortfallBytes:number;needBytes:number}>;
 /** 🔎️ The evaluator of the second pass; call `decide` for every entry in the same scan order as `add`. */
@@ -48,7 +48,7 @@ class Rule{
  }
 }
 
-/** 🧮️ Creates the streaming least-recently-accessed planner. Stage 1 drops entries idle longer than their area's age; stage 2 cuts an area above its cap down to the low watermark share; stage 3 cuts the host total above the high watermark down to the low watermark, oldest first across all areas, never touching protected entries (pinned, leased, linked or too young), which count toward every total. Memory is 20 bytes per candidate entry, no strings. */
+/** 🧮️ Creates the streaming least-recently-accessed planner. Stage 1 drops entries idle longer than their area's age; stage 2 cuts an area above its cap down to the low watermark share; stage 3 cuts the host total above the high watermark down to the low watermark, and the bytes the partition is above its low watermark (less what stages 1 and 2 already free), whichever needs more, oldest first across all areas, never touching protected entries (pinned, leased, linked or too young), which count toward every total. Memory is 20 bytes per candidate entry, no strings. */
 export function createCasPlannerV1(config:CasPlannerConfigV1):CasPlannerV1{
  const ids=config.areas.map(area=>area.id),index=new Map(ids.map((id,position)=>[id,position])),columns=new Columns(),areaProtected=new Float64Array(ids.length);let protectedBytes=0;
  const {capBytes,highWatermark,lowWatermark}=config.policy;
@@ -70,7 +70,7 @@ export function createCasPlannerV1(config:CasPlannerConfigV1):CasPlannerV1{
    }
    let after=config.externalBytes+protectedBytes;const survivors:number[]=[];
    for(let i=0;i<n;i++)if(live[i]){after+=size[i]!;survivors.push(i);}
-   const need=after>capBytes*highWatermark?after-capBytes*lowWatermark:0,hostCut=casCutV1(access,size,Uint32Array.from(survivors),need);
+   const capNeed=after>capBytes*highWatermark?after-capBytes*lowWatermark:0,partitionNeed=Math.max(0,(config.partitionNeedBytes??0)-planned),need=Math.max(capNeed,partitionNeed),hostCut=casCutV1(access,size,Uint32Array.from(survivors),need);
    let hostBytes=0,short=0;
    if(hostCut){const rule=new Rule(hostCut);for(const i of survivors)if(rule.test(access[i]!,size[i]!))hostBytes+=size[i]!;short=Math.max(0,need-hostBytes);}
    let candidate=0;for(let i=0;i<n;i++)candidate+=size[i]!;

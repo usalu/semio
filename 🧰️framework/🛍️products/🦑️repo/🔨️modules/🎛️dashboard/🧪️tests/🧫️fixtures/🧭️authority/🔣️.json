@@ -1246,163 +1246,163 @@
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "cache"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "cache"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "nested"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "nested"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "uncached"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "uncached"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "birth"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "birth"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "services"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "services"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "refusals"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "refusals"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "cancellation"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "cancellation"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "configuration"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "configuration"
       ]
     },
     {
-      "id": "workspace:test-build-tool-bazel",
+      "id": "@semio-tech/repo-lib:test-build-tool-bazel",
       "parameters": {
         "phase": "offline"
       },
       "args": [],
       "env": {},
       "commandIds": [
-        "workspace:test-build-tool-bazel"
+        "@semio-tech/repo-lib:test-build-tool-bazel"
       ],
       "words": [
         "repo",
         "run",
-        "workspace:test-build-tool-bazel",
+        "@semio-tech/repo-lib:test-build-tool-bazel",
         "--",
         "offline"
       ]

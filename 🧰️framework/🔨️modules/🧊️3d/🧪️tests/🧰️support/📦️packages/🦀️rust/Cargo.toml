@@ -4,7 +4,7 @@ name = "semio-framework-3d-testing-support"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Test-only allocation observer shared by every 3d crate's test binary: the one global allocator of that binary."
+description = "Test-only allocation observation shared by every 3d crate's test binary, measured through the one testing allocator."
 
 [package.metadata.semio]
 role = "test"
@@ -24,3 +24,4 @@ doctest = false
 
 [dependencies]
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

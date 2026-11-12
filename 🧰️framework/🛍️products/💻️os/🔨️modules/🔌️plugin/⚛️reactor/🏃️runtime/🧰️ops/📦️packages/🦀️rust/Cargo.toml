@@ -75,6 +75,8 @@ semio-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", f
 semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-plugin-testing-caller = { path = "../../../../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
 [[test]]
 name = "original-surface-view-read"
 path = "../../🧪️tests/original-view-read.rs"

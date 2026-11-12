@@ -397,7 +397,7 @@ const CASES: Case[] = [
   { id: "workspace:test", parameters: { cache: "skip-local", "test-level": "quick", dependencies: true, "cargo-jobs": "2" }, args: ["--filter", "x"], env: { EXTRA: "1" } },
   { id: "workspace:build", parameters: { "build-mode": "ship" } },
   { id: "workspace:dev" },
-  { id: "workspace:verify", parameters: { rule: "literal-external" } },
+  { id: "repo-policy:verify", parameters: { rule: "literal-external" } },
   { id: "hub:dev" },
   { id: "hub:dev", parameters: { backend: "postgres" } },
   { id: "hub:dev", env: { OS_HUB_PORT: "9001" } },
@@ -446,8 +446,8 @@ test("`semio run --dry-run` resolves every selection to the launch an independen
 
 test("a selection the declarations do not allow is refused with the parameter named and nothing is started", () => {
   const cases: [string[], RegExp][] = [
-    [["workspace:verify"], /"rule" is required/],
-    [["workspace:verify", "--param", "rule=nope"], /choose dependencies, literal-external/],
+    [["repo-policy:verify"], /"rule" is required/],
+    [["repo-policy:verify", "--param", "rule=nope"], /choose dependencies, literal-external/],
     [["workspace:build", "--param", "ghost=1"], /unknown parameter "ghost"/],
     [["workspace:build", "--param", "cache"], /a choice parameter needs a value, write `--param cache=<value>`/],
     [["workspace:build", "--env", "NX_DAEMON=true"], /NX_DAEMON belongs to the dashboard/],

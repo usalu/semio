@@ -36,4 +36,4 @@ pub mod set_selected_opacity;
 pub mod toggle_layer_visible;
 //#endregion 🪢️TaxonomyMounts
 
-pub use semio_s_artifact_draw_drawing_editor_commands_2::{combine_boolean, commit_document, delete_layer, delete_selection, duplicate_layer, edit_path, edit_selection, engagement_submit, load_document_json, set_active_example, set_camera_zoom, set_snapshot};
+pub use semio_s_artifact_draw_drawing_editor_commands_2::{combine_boolean, commit_document, delete_layer, delete_selection, duplicate_layer, edit_path, edit_selection, engagement_submit, load_document_json, set_active_example, set_camera_zoom, replace_document};

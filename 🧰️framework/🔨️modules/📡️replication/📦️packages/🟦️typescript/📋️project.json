@@ -183,6 +183,70 @@
           }
         }
       }
+    },
+    "verify-shared-value-clone": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify shared-value-clone",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "shared-value-clone"
+          ]
+        }
+      }
+    },
+    "verify-shared-map-delta": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify shared-map-delta",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "shared-map-delta"
+          ]
+        }
+      }
+    },
+    "verify-shared-map-delta-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify shared-map-delta oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-paged-list-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify framework-paged-list-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-paged-list-ownership"
+          ]
+        }
+      }
     }
   }
 }

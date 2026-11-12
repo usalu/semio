@@ -37,8 +37,9 @@ mod tests{
  /// 📐️ The wallet of the test caller; its capacity, release and depth are not the bound under test, each turn's grant is, derived from the owner's own quote by `funded`.
  const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<29,maximum_release_bytes:1<<29,maximum_depth:4096};
  const LARGEST_WIRE:usize=70_128;
- fn funded(demand:RetirementDemand)->RetainedCloneGrant{
-  let demand=OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth};
+ fn funded(demand:RetirementDemand)->RetainedCloneGrant{funded_items(demand,1)}
+ fn funded_items(demand:RetirementDemand,items:usize)->RetainedCloneGrant{
+  let demand=OriginalConstructionDemand{items,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth};
   let quote=|candidate:fn(OriginalConstructionDemand)->RetainedCloneGrant|candidate(demand);
   fn of<O>(demand:OriginalConstructionDemand)->RetainedCloneGrant{semio_framework_job::original_construction_settled_turn_quote::<O>(demand,1).expect("bounded construction quote").0}
   [quote(of::<Box<Command>>),quote(of::<Vec<u8>>),quote(of::<RetainedToolWireInput>),quote(of::<()>)].into_iter().reduce(|a,b|RetainedCloneGrant{maximum_items:a.maximum_items.max(b.maximum_items),maximum_copy_bytes:a.maximum_copy_bytes.max(b.maximum_copy_bytes),maximum_capacity_bytes:a.maximum_capacity_bytes.max(b.maximum_capacity_bytes),maximum_release_bytes:a.maximum_release_bytes.max(b.maximum_release_bytes),maximum_depth:a.maximum_depth.max(b.maximum_depth)}).expect("candidate quotes")
@@ -51,12 +52,13 @@ mod tests{
  fn body()->usize{grant().maximum_copy_bytes}
  fn turn<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{caller.turn_with_decoder(grant(),decoder,run).unwrap()}
  fn quoted<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,demand:Result<RetirementDemand,semio_framework_value::ValueError>,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{caller.turn_with_decoder(funded(demand.expect("owner step quote")),decoder,run).unwrap()}
+ fn closing<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,(demand,items):(Result<RetirementDemand,semio_framework_value::ValueError>,usize),run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{caller.turn_with_decoder(funded_items(demand.expect("owner step quote"),items),decoder,run).unwrap()}
  fn born(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,make:Option<Command>,birth:Option<OriginalCommandBirth<Command>>)->Box<dyn ArtifactOriginalCommandProducer<Command>>{let mut slot=None;let mut admission=OriginalConstructionAdmission::default();let mut make=make.map(Box::new);for _ in 0..64{if slot.is_some(){break}turn(caller,decoder,|cx|{admit_op_binary_producer(||make.take(),birth,|_|RUNTIME_COMMAND_WIRE_MAXIMUM,cx,&mut admission,&mut slot)?;Ok(())});}slot.expect("producer birth fits the fixture grant")}
  fn retire<T:RetireOwned>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,value:T){let mut value=Some(value);let mut close=RetainedCloneClose::default();let body=body();for _ in 0..64{if value.is_none()&&close.is_empty(){return}let d=if close.is_empty(){close.next_owner_demands::<T>(true,&None,body)}else{close.demands(body)};quoted(caller,decoder,d,|cx|cx.with_original_retirement(|cx|{let d=if close.is_empty(){close.next_owner_demands::<T>(true,&None,body)?}else{close.demands(body)?};if close.is_empty(){begun(cx,d,|effect|close.begin_granted(&mut value,effect))?;}else{retired_poll(cx,d,|effect|close.step_granted(body,effect))?;}Ok(())}))}panic!("retirement did not finish")}
  fn finish(mut caller:OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){for _ in 0..semio_framework_job::ORIGINAL_DECODER_TEARDOWN_STEPS{let(quote,_)=semio_framework_job::original_decoder_teardown_quote(decoder).expect("bounded teardown quote");caller.turn(quote,|cx|{decoder.close_on_source(cx)?;Ok(())}).unwrap();}assert!(decoder.terminal_is_empty(),"decoder teardown exceeded its quoted steps");let source=funded(caller.retirement_demands().expect("Source closure quote"));caller.retire(source);}
  fn caller(operation:u64)->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(operation),Generation(1),STOCK,default_now_us,u64::MAX,1<<30)}
  fn produce(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,producer:&mut Box<dyn ArtifactOriginalCommandProducer<Command>>,action:&str,args:&mut Option<DslValue>){for _ in 0..64{if producer.ready(){return}let d=producer.demands(action,args,&None,body());quoted(caller,decoder,d,|cx|producer.advance(action,args,&mut None,cx));}panic!("producer did not become ready")}
- fn close_producer(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,producer:&mut Box<dyn ArtifactOriginalCommandProducer<Command>>){for _ in 0..64{if producer.terminal_is_empty(){return}quoted(caller,decoder,producer.close_demands(body()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));}panic!("producer did not close")}
+ fn close_producer(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,producer:&mut Box<dyn ArtifactOriginalCommandProducer<Command>>){while !producer.terminal_is_empty(){let fuel=caller.fuel_remaining();closing(caller,decoder,(producer.close_demands(body()),producer.close_items()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));assert!(caller.fuel_remaining()<fuel,"a paid close step must spend its quoted Work")}}
  fn wire_bytes(wire:&RetainedToolWireInput)->Vec<u8>{(0..wire.page_count()).flat_map(|index|wire.page(index).unwrap().to_vec()).collect()}
  #[test]
  fn born_command_is_written_as_the_exact_wire_pages_and_handed_over_together(){
@@ -87,7 +89,7 @@ mod tests{
   let mut staged=Some(Fault::new(FaultOrigin::App,FaultCode::new("app.args.invalid"),"staged refusal"));
   let failure=caller.turn_with_decoder(grant(),&mut decoder,|cx|producer.advance("setWidget",&mut None,&mut staged,cx)).unwrap_err();
   assert!(format!("{failure:?}").contains("app.args.invalid"));
-  for _ in 0..64{if producer.terminal_is_empty(){break}quoted(&mut caller,&mut decoder,producer.close_demands(body()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));}
+  close_producer(&mut caller,&mut decoder,&mut producer);
   assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
  }
  #[test]
@@ -97,7 +99,7 @@ mod tests{
    let mut caller=caller(902);let mut decoder=caller.admitted_decoder();
    let mut producer=born(&mut caller,&mut decoder,Some(Command{kind:kind.clone(),count:7}),None);
    for _ in 0..cut{if producer.ready(){break}quoted(&mut caller,&mut decoder,producer.demands("",&None,&None,body()),|cx|producer.advance("",&mut None,&mut None,cx));}
-   for _ in 0..64{if producer.terminal_is_empty(){break}quoted(&mut caller,&mut decoder,producer.close_demands(body()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));}
+   close_producer(&mut caller,&mut decoder,&mut producer);
    assert!(producer.terminal_is_empty(),"cut {cut}");drop(producer);finish(caller,&mut decoder);
   }
  }
@@ -109,7 +111,7 @@ mod tests{
    let mut admission=OriginalConstructionAdmission::default();for _ in 0..64{if slot.is_some(){break}turn(&mut caller,&mut decoder,|cx|{admit_op_binary_producer(||command.take(),None,maximum,cx,&mut admission,&mut slot)?;Ok(())});}let mut producer=slot.unwrap();let mut failure=None;
    for _ in 0..4096{if producer.ready(){break;}let attempt=match producer.demands("",&None,&None,body()){Ok(demand)=>caller.turn_with_decoder(funded(demand),&mut decoder,|cx|producer.advance("",&mut None,&mut None,cx)).map(drop),Err(error)=>Err(error.into())};if let Err(error)=attempt{failure=Some(error);break;}}
    if large{assert!(failure.is_none());assert!(producer.ready());let(mut command,mut wire)=(None,None);quoted(&mut caller,&mut decoder,producer.take_demands(),|cx|producer.take_into(&mut command,&mut wire,cx));assert_eq!(wire_bytes(wire.as_ref().unwrap()),oracle);assert!(oracle.len()>fixture["ordinaryBytes"].as_u64().unwrap()as usize);assert!(oracle.len()<=fixture["maximumBytes"].as_u64().unwrap()as usize);retire(&mut caller,&mut decoder,command);retire(&mut caller,&mut decoder,wire);}else{assert!(format!("{:?}",failure.expect("ordinary producer refuses oversized wire")).contains("declared maximum"));}
-   for _ in 0..4096{if producer.terminal_is_empty(){break;}quoted(&mut caller,&mut decoder,producer.close_demands(body()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));}assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
+   close_producer(&mut caller,&mut decoder,&mut producer);assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
   }
  }
 
@@ -119,7 +121,7 @@ mod tests{
   for kind in fixture["invalidMaximumKinds"].as_array().unwrap(){let maximum=match kind.as_str().unwrap(){"zero"=>0,"usizeMaximum"=>usize::MAX,_=>panic!("unknown neutral limit case")};
    let mut caller=caller(907);let mut decoder=caller.admitted_decoder();let mut command=Some(Box::new(Command{kind:"owned".into(),count:7}));let mut slot=None;let selector:fn(&Command)->usize=if maximum==0{ |_|0 }else{ |_|usize::MAX };
    let mut admission=OriginalConstructionAdmission::default();for _ in 0..64{if slot.is_some(){break}turn(&mut caller,&mut decoder,|cx|{admit_op_binary_producer(||command.take(),None,selector,cx,&mut admission,&mut slot)?;Ok(())});}assert!(command.is_none());let mut producer=slot.unwrap();let failure=OriginalTurnFailure::from(producer.demands("",&None,&None,body()).unwrap_err());assert!(format!("{failure:?}").contains("portable allocation bounds"));
-   for _ in 0..64{if producer.terminal_is_empty(){break;}quoted(&mut caller,&mut decoder,producer.close_demands(body()),|cx|cx.with_original_retirement(|cx|producer.close_step(cx)));}assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
+   close_producer(&mut caller,&mut decoder,&mut producer);assert!(producer.terminal_is_empty());drop(producer);finish(caller,&mut decoder);
   }
  }
 

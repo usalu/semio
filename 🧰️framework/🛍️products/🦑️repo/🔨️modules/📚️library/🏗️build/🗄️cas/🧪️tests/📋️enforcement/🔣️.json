@@ -1,0 +1,25 @@
+{
+  "$comment": "🚦️ Authored admission cases of a write or a build against the cap and the partition watermarks: the policy, what the store holds, the bytes about to be written, the partition and whether a collection already ran within the minimum age, with the expected action and reason. Read by the TypeScript rule and by the independent Python oracle.",
+  "policy": {"capBytes": 1000, "highWatermark": 0.9, "partition": {"highUsedFraction": 0.9, "lowUsedFraction": 0.8, "criticalUsedFraction": 0.97}},
+  "cases": [
+    {"name": "everything fits", "storeBytes": 100, "incomingBytes": 10, "partition": {"totalBytes": 1000, "freeBytes": 500}, "collected": false, "action": "allow", "reason": "fits"},
+    {"name": "a partition above its high share collects in the background", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 80}, "collected": false, "action": "collect-background", "reason": "partition-high"},
+    {"name": "after a collection a high partition goes on", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 80}, "collected": true, "action": "allow", "reason": "fits"},
+    {"name": "a critical partition waits for a collection", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 20}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
+    {"name": "a partition still critical after a collection refuses", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 20}, "collected": true, "action": "refuse", "reason": "partition-critical"},
+    {"name": "the bytes about to be written count toward the share", "storeBytes": 100, "incomingBytes": 25, "partition": {"totalBytes": 1000, "freeBytes": 50}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
+    {"name": "exactly the critical share is critical", "storeBytes": 100, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 30}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
+    {"name": "an unmeasured partition and an unknown store measure the store", "storeBytes": null, "incomingBytes": 0, "partition": null, "collected": false, "action": "measure", "reason": "unknown-usage"},
+    {"name": "a store above its cap waits for a collection", "storeBytes": 1000, "incomingBytes": 1, "partition": null, "collected": false, "action": "collect-now", "reason": "cap-exceeded"},
+    {"name": "after a collection a store that stays above its cap goes on because the rest is pinned", "storeBytes": 1000, "incomingBytes": 1, "partition": null, "collected": true, "action": "allow", "reason": "fits"},
+    {"name": "a store above its high watermark collects in the background", "storeBytes": 905, "incomingBytes": 0, "partition": null, "collected": false, "action": "collect-background", "reason": "cap-high"},
+    {"name": "a critical partition is judged before the cap", "storeBytes": 2000, "incomingBytes": 0, "partition": {"totalBytes": 1000, "freeBytes": 10}, "collected": false, "action": "collect-now", "reason": "partition-critical"},
+    {"name": "an unmeasured partition falls back to the cap rules", "storeBytes": 100, "incomingBytes": 0, "partition": null, "collected": false, "action": "allow", "reason": "fits"}
+  ],
+  "needs": [
+    {"name": "below the high share nothing is needed", "totalBytes": 1000, "freeBytes": 150, "need": 0},
+    {"name": "at the high share nothing is needed", "totalBytes": 1000, "freeBytes": 100, "need": 0},
+    {"name": "above the high share the excess over the low share is needed", "totalBytes": 1000, "freeBytes": 50, "need": 150},
+    {"name": "a full partition needs the whole excess over the low share", "totalBytes": 1000, "freeBytes": 0, "need": 200}
+  ]
+}

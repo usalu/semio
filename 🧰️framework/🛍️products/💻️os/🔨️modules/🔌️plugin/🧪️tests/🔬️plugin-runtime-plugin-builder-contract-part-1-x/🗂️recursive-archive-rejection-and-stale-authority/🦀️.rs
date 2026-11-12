@@ -7,7 +7,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     let archive = recursive_document_archive("archive-parent").await;
     let expected = archive.clone();
     let mut app = live_recursive_replacement_app().await;
-    PluginApp::begin_document_archive_load(app.as_mut(), 81, archive).expect("recursive archive admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 81, archive, &mut cx).expect("recursive archive admission");
     let status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 81, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 81).expect("recursive archive acknowledgement");
@@ -23,7 +23,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
 
     let mut malformed = persisted.clone();
     malformed.parent_pack.push(0);
-    PluginApp::begin_document_archive_load(app.as_mut(), 82, malformed).expect("malformed recursive archive retains admission owner");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 82, malformed, &mut cx).expect("malformed recursive archive retains admission owner");
     let malformed_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 82, &mut cx)).await;
     assert_eq!(malformed_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 82).expect("malformed recursive archive acknowledgement");
@@ -53,7 +53,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     ))
     .await
     .expect("encode semantically malformed retained history");
-    PluginApp::begin_document_archive_load(app.as_mut(), 85, malformed_history).expect("semantic recursive archive refusal retains admission owner");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 85, malformed_history, &mut cx).expect("semantic recursive archive refusal retains admission owner");
     let malformed_history_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 85, &mut cx)).await;
     assert_eq!(malformed_history_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 85).expect("semantic recursive archive refusal acknowledgement");
@@ -61,7 +61,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
 
     let mut malformed_child_history = persisted.clone();
     Box::pin(append_malformed_transition_to_member_history(&mut malformed_child_history.members[0])).await;
-    PluginApp::begin_document_archive_load(app.as_mut(), 86, malformed_child_history).expect("semantic recursive child refusal retains admission owner");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 86, malformed_child_history, &mut cx).expect("semantic recursive child refusal retains admission owner");
     let malformed_child_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 86, &mut cx)).await;
     assert_eq!(malformed_child_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 86).expect("semantic recursive child refusal acknowledgement");
@@ -82,7 +82,7 @@ async fn retained_window_input_recursive_document_archive_round_trips_the_comple
     let mut refused = persisted.clone();
     refused.parent_pack = foreign.pack;
     refused.parent_spr = foreign.spr;
-    PluginApp::begin_document_archive_load(app.as_mut(), 83, refused).expect("foreign recursive archive retains admission owner");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 83, refused, &mut cx).expect("foreign recursive archive retains admission owner");
     let refused_status = Box::pin(drive_recursive_document_archive_load(app.as_mut(), 83, &mut cx)).await;
     assert_eq!(refused_status.state, protocol::DocumentArchiveLoadState::Fault);
     PluginApp::acknowledge_document_archive_load(app.as_mut(), 83).expect("foreign recursive archive acknowledgement");
@@ -104,7 +104,7 @@ async fn retained_window_input_recursive_document_archive_cancel_retires_the_exa
     let archive = recursive_document_archive("cancelled-archive-parent").await;
     let mut app = live_recursive_replacement_app().await;
     let previous = app.stores.store.envelope().id.clone();
-    PluginApp::begin_document_archive_load(app.as_mut(), 84, archive).expect("recursive archive cancellation admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app.as_mut(), 84, archive, &mut cx).expect("recursive archive cancellation admission");
     assert!(PluginApp::acknowledge_document_archive_load(app.as_mut(), 84).is_err());
     PluginApp::cancel_document_archive_load(app.as_mut(), 84).expect("recursive archive cancellation request");
     let requested = Box::pin(PluginApp::poll_document_archive_load(app.as_mut(), 84, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut cx)).await.expect("recursive archive cancellation request status");

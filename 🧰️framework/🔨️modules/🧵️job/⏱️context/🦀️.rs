@@ -38,7 +38,7 @@ pub use semio_framework_job_payload::{JobPayloadStep, OriginalJobPayloadAdmissio
 
 pub use semio_framework_job_clock::{BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_US, CommitValidation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US, JobSequenceExhausted, MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_US, Operation, RevisionId, StepBudget, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_US, child_cancel_token, default_now_ms, default_now_us, install_microsecond_clock, logical_now_us, microseconds_from_milliseconds, root_cancel_token, validate_commit};
 
-pub use semio_framework_job_payload::{Checkpoint,CommitCandidate,InteractiveJobCloseStep,JobFault,StepOutcome};
+pub use semio_framework_job_outcome::{Checkpoint,CommitCandidate,InteractiveJobCloseStep,JobFault,StepOutcome};
 pub use semio_framework_job_clock::ClockStride;
 pub use semio_framework_job_clock::{OriginalClockAction,OriginalClockAuthority,OriginalClockDeadline,OriginalClockObservation,OriginalClockDecisionFrame,OriginalClockDecisionStatus,OriginalClockProducer,OriginalClockReply,OriginalClockReplyComplete,OriginalSystemClockContext};
 pub use semio_framework_job_clock::OriginalSystemClock;
@@ -52,7 +52,7 @@ pub use semio_framework_async::install_browser_monotonic_clock;
 
 //#region 📄️RetainedPayload
 
-pub use semio_framework_job_outcome::{close_step_outcome_slot,step_outcome_slot_retirement_demands,JobOutcomeSlot,JobPayloadSlot};
+pub use semio_framework_job_outcome::{close_step_outcome_slot,step_outcome_slot_retirement_demands,step_outcome_slot_retirement_work,JobOutcomeSlot,JobPayloadSlot};
 
 pub use semio_framework_job_work_grant as retained_work;
 
@@ -356,6 +356,11 @@ impl<'a> StepContext<'a> {
     pub fn original_return_budget_is_borrowed(&self)->bool{matches!(&self.return_budget,Some(original_job_continuation::source::OriginalReturnBudgetReference::Borrowed(_)))}
     /// 🔖️ Borrows the actual Source-issued dispatch token retained by this caller.
     pub fn original_source_turn(&self)->Result<&OriginalSourceTurn,ValueError>{self.source_turn.as_ref().map(SourceTurnReference::token).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"caller context has no original Source dispatch"))}
+    /// 🎟️ Lends the actual dispatch witness to a native call that also exclusively borrows this context.
+    ///
+    /// # Safety
+    /// The token lives inline in this context and is neither moved nor replaced while the returned witness is used; the caller must drop the witness before this context ends and must not touch the token through any exclusive path.
+    pub unsafe fn original_source_turn_witness_detached<'turn>(&self)->Result<OriginalSourceTurnWitness<'turn>,ValueError>{let token=std::ptr::from_ref(self.original_source_turn()?);Ok(unsafe{&*token}.witness())}
     /// 🧵️ Lends the original dispatch to a shorter native continuation turn.
     pub fn original_source_turn_witness(&self)->Result<OriginalSourceTurnWitness<'_>,ValueError>{Ok(self.original_source_turn()?.witness())}
     /// 🪪️ Observes the opaque dispatch identity without creating another token.

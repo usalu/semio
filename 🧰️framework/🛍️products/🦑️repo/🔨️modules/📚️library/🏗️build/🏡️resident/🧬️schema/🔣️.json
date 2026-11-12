@@ -1055,6 +1055,7 @@
     "deadline",
     "environment",
     "internal",
+    "disk",
     "memory"
    ]
   },
@@ -1665,6 +1666,7 @@
     "maximumIndexBytes": 2684354560,
     "maximumResidentBytes": 2684354560,
     "residentCheckMilliseconds": 5000,
+    "cacheTickMilliseconds": 600000,
     "workspaceIdleMilliseconds": 600000,
     "idleShutdownMilliseconds": 1800000,
     "supersededGraceMilliseconds": 60000,
@@ -1692,7 +1694,8 @@
     "sliceHostElasticity": {
      "maximumMegabytes": 8192,
      "hostShareBasisPoints": 7500,
-     "hostFloorMegabytes": 1536
+     "hostFloorMegabytes": 1536,
+     "learnedGrowthBasisPoints": 12500
     }
    }
   },
@@ -1872,7 +1875,9 @@
       "invalid": "The request is invalid: {reason}.",
       "deadline": "The request exceeded its deadline of {milliseconds} ms.",
       "environment": "The request runs with {key}={value} but the resident service was started with {actual}; running in this process instead.",
-      "internal": "The resident service met an unexpected failure (reference {reference}); try again, the details are in its log.",
+      "internal": "The resident service met an unexpected failure (reference {reference}); try again, the details under that reference are in the service log {log}.",
+      "disk-full": "The disk is full: partition {partition} has {free} free, so the resident service could not finish writing. Free space with `{command}` (it works on a full disk), then run the command again.",
+      "disk-full-unmeasured": "The disk is full: partition {partition} cannot take the write of the resident service (its free space cannot be read). Free space with `{command}` (it works on a full disk), then run the command again.",
       "degraded": "File events are unavailable ({reason}); every answer is re-proved by stat.",
       "recovered": "File events are available again.",
       "service-started": "The resident service is running (pid {pid}, {files} files watched, backend {backend}).",
@@ -1930,7 +1935,9 @@
       "invalid": "Die Anfrage ist ungültig: {reason}.",
       "deadline": "Die Anfrage hat ihre Frist von {milliseconds} ms überschritten.",
       "environment": "Die Anfrage läuft mit {key}={value}, der residente Dienst wurde aber mit {actual} gestartet; der Befehl läuft stattdessen in diesem Prozess.",
-      "internal": "Der residente Dienst ist auf einen unerwarteten Fehler gestoßen (Referenz {reference}); versuche es erneut, die Einzelheiten stehen in seinem Protokoll.",
+      "internal": "Der residente Dienst ist auf einen unerwarteten Fehler gestoßen (Referenz {reference}); versuche es erneut, die Einzelheiten zu dieser Referenz stehen im Dienstprotokoll {log}.",
+      "disk-full": "Der Datenträger ist voll: Partition {partition} hat noch {free} frei, daher konnte der residente Dienst das Schreiben nicht beenden. Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus.",
+      "disk-full-unmeasured": "Der Datenträger ist voll: Partition {partition} kann das Schreiben des residenten Dienstes nicht aufnehmen (ihr freier Platz ist nicht lesbar). Schaffe Platz mit `{command}` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus.",
       "degraded": "Dateiereignisse sind nicht verfügbar ({reason}); jede Antwort wird per stat neu belegt.",
       "recovered": "Dateiereignisse sind wieder verfügbar.",
       "service-started": "Der residente Dienst läuft (pid {pid}, {files} Dateien beobachtet, Backend {backend}).",

@@ -1,6 +1,7 @@
 //! ⚓️ Actions: the load-glyph model of permanent, variable (by category), accidental and seismic actions on the members they affect. A glyph carries the design value γ·ψ·E of the active combination, so selecting another combination re-scales every glyph;
 //! an action that does not take part in the active combination stays as a ghost at its characteristic value. The reliability, consequence and annex badges and the combination selector group belong here too.
 
+use super::scene::projection_kit::{loc, mul, along, entity_ref, polyline};
 use super::inferences::group_coefficient;
 use super::checks::{k_fi_for_rc, psi_entry_of, psi_is_ordered, psi_lookup, resolve_psi_category, target_reliability_index_for};
 use super::combinations::Column;

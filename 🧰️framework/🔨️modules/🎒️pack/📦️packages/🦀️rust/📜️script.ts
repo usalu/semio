@@ -15,6 +15,7 @@ import { readCargoTestPolicyV1, runAdmittedExactCargoLawsV1 as runExactCargoLaws
 import { BundleScript, ScriptRouter,scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runtimeTypeEnvironmentV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { OwnedVerifyScript } from "../../🧪️tests/🔬️owned-verify/🟦️.ts";
 
 
 /** 🎒️ The pack crates bottom up: container core, retained cursors, record codec stack, transports, then the façade every consumer links. */
@@ -161,7 +162,7 @@ async function runOccurrenceOrderSource(root:string,repoRoot:string):Promise<voi
  await runBudgetedTestCommand(process.execPath,["test",test],{cwd:repoRoot,budgetMs:30000,throwOnFailure:true});
 }
 
-const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("build", BuildScript).register("test-absolute-varint-source", AbsoluteVarintSourceScript).register("test-absolute-varint-native", AbsoluteVarintNativeScript).register("test-borrowed-preflight-source",BorrowedPreflightSourceScript).register("test-borrowed-preflight-native",BorrowedPreflightNativeScript).register("test-schema-hash-native",SchemaHashNativeScript).register("test-schema-storage-native",SchemaStorageNativeScript);
+const router = new ScriptRouter(import.meta.dirname).register("verify", OwnedVerifyScript).register("test", TestScript).register("build", BuildScript).register("test-absolute-varint-source", AbsoluteVarintSourceScript).register("test-absolute-varint-native", AbsoluteVarintNativeScript).register("test-borrowed-preflight-source",BorrowedPreflightSourceScript).register("test-borrowed-preflight-native",BorrowedPreflightNativeScript).register("test-schema-hash-native",SchemaHashNativeScript).register("test-schema-storage-native",SchemaStorageNativeScript);
 
 router.register("test-retained-intrinsic-native",RetainedIntrinsicNativeScript);
 router.register("test-intrinsic-schema-native",IntrinsicSchemaNativeScript);

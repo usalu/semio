@@ -6,9 +6,9 @@ fn grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1<<12,maximum_co
 struct Turn{quote:[u64;7],step:OriginalJobReturnBirthTurn,spent:u64,present:bool}
 fn cut(fuel:u64,serial:u64)->(Turn,Option<Turn>){
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(9200+serial),Generation(1),grant(),||Some(1),u64::MAX,1<<20);let mut birth=OriginalJobReturnBirth::new();
- for _ in 0..64{if birth.authorities_ready(){break}caller.turn(grant(),|cx|{testkit::renew_turn(cx,64,grant())?;Ok(birth.advance(cx)?)}).unwrap();}
+ for _ in 0..64{if birth.authorities_ready(){break}caller.bare_turn(grant(),|cx|{testkit::renew_turn(cx,64,grant())?;Ok(birth.advance(cx)?)}).unwrap();}
  assert!(birth.authorities_ready(),"original birth authorities never admitted");
- let mut turn=|fuel:u64|caller.turn(grant(),|cx|{testkit::renew_turn(cx,fuel,grant())?;testkit::request_return_publisher(cx);let quote=original_return_birth_quote(cx).map_err(OriginalTurnFailure::from)?;let before=cx.fuel_remaining();let step=birth.advance(cx)?;Ok(Turn{quote,step,spent:before-cx.fuel_remaining(),present:testkit::return_table_present(cx)})}).unwrap();
+ let mut turn=|fuel:u64|caller.bare_turn(grant(),|cx|{testkit::renew_turn(cx,fuel,grant())?;testkit::request_return_publisher(cx);let quote=original_return_birth_quote(cx).map_err(OriginalTurnFailure::from)?;let before=cx.fuel_remaining();let step=birth.advance(cx)?;Ok(Turn{quote,step,spent:before-cx.fuel_remaining(),present:testkit::return_table_present(cx)})}).unwrap();
  let starved=turn(0);assert_eq!(starved.step,OriginalJobReturnBirthTurn::Unaffordable{needed:starved.quote.iter().sum()},"fuel 0: the starved turn is exactly unaffordable and leaves no stale clock state");assert_eq!(starved.spent,0);let first=turn(fuel);let second=if first.present{Some(turn(1<<16))}else{None};
  std::mem::forget(birth);std::mem::forget(caller);(first,second)
 }
@@ -31,7 +31,7 @@ fn birth_chain_quotes_equal_spend_and_a_grant_one_below_is_refused(){
 #[test]
 fn a_source_with_a_born_table_and_refreshed_origin_closes_terminal_empty(){
  let mut caller=OriginalJobFixtureCaller::admit(OperationId(9900),Generation(1),grant(),||Some(1),u64::MAX,1<<20);caller.audit_heap();
- let mut turns=0;loop{turns+=1;assert!(turns<=64,"table never born");let present=caller.turn(grant(),|cx|{cx.admit_original_return_table()?;Ok(testkit::return_table_present(cx))}).unwrap();if present{break}}
- for _ in 0..2{caller.turn(grant(),|cx|{cx.admit_original_return_table()?;Ok(())}).unwrap();}
+ let mut turns=0;loop{turns+=1;assert!(turns<=64,"table never born");let present=caller.bare_turn(grant(),|cx|{cx.admit_original_return_table()?;Ok(testkit::return_table_present(cx))}).unwrap();if present{break}}
+ for _ in 0..2{caller.bare_turn(grant(),|cx|{cx.admit_original_return_table()?;Ok(())}).unwrap();}
  caller.retire(grant());
 }

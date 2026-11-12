@@ -1,6 +1,6 @@
 //! 🧪️ Original command fields and typed provenance cross preparing input exactly once.
 use super::*;
-use crate::original_steps::{admission_grant,begin,begun,birth_grant,finished,fixed,forgotten,grant_of,receipt,retired,retired_poll,step_grant};
+use crate::original_steps::{admission_grant,begin,begun,birth_grant,finished,fixed,forgotten,receipt,retired,retired_poll,step_grant};
 use semio_framework_job::{Generation,OperationId,OriginalConstructionAdmission,OriginalJobDecodeOwner,OriginalJobFixtureCaller,OriginalTurnFailure,StepContext,default_now_us};
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,ToValue,retained_clone::RetainedCloneClose};
 use semio_os_kernel as store;
@@ -8,7 +8,6 @@ use semio_plugin_decl_emission::ChildEmit;
 use std::mem::size_of;
 thread_local!{static IDLE:std::cell::Cell<u32>=const{std::cell::Cell::new(0)}}
 fn idle(p:semio_framework_value::RetainedCloneProgress){IDLE.with(|n|{if p==Default::default(){n.set(n.get()+1);assert!(n.get()<=16,"original turns neither progress nor charge: stalled before {} turns",n.get())}else{n.set(0)}})}
-fn finish(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){for index in 0..4096{if decoder.terminal_is_empty(){return}let grant=grant_of(decoder.retirement_demands(4096).unwrap());caller.turn(grant,|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})).unwrap();assert!(index<4095,"original decoder close stalled");}}
 fn bind(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){let stock=semio_framework_value::RetainedCloneGrant{maximum_items:1<<20,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128};for _ in 0..16{if caller.turn(stock,|cx|Ok(decoder.admit_step(cx)?)).unwrap(){break}}assert!(decoder.source_loan_admitted(),"original decoder source loan is admitted before any birth");}
 fn turn<R>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<R,OriginalTurnFailure>)->R{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,run));let p=caller.receipt();idle(p);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes),"actual original transaction source receipt {p:?}");result.unwrap()}
 fn packed<T:ToValue>(value:&T)->Vec<u8>{let mut allow=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1<<24,&mut allow);semio_framework_pack_record::intrinsic::encode_body(&value.to_value(),&Default::default(),&mut control).unwrap()}

@@ -15,6 +15,9 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use framework_schema::ArtifactSchema;
 
+extern crate semio_s_artifact_norm_en1991_inferences_bridge_effects as bridge_effects;
+extern crate semio_s_artifact_norm_en1991_inferences_crane_silo as crane_silo;
+extern crate semio_s_artifact_norm_en1991_inferences_hazard as hazard;
 extern crate semio_s_artifact_norm_en1991_inferences_rail_silo as rail_silo;
 
 //#region 🔖️Inference
@@ -74,7 +77,7 @@ mod tests;
 use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
 use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
 #[cfg(test)] use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1991_checks::{assess_covers, assess_covers_on, invalid_input, na_de, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4, raise_energy_remedy, raise_force_remedy, raise_power_remedy, raise_pressure_remedy, raise_temp_remedy};
+use semio_s_artifact_norm_en1991_checks::{copy, force_n as force, pressure_pa as pressure, ratio, temp_k as temp, assess_covers, assess_covers_on, invalid_input, na_de, part_1_1, part_1_2, part_1_3, part_1_4, part_1_5, part_1_6, part_1_7, part_2, part_3, part_4, raise_energy_remedy, raise_force_remedy, raise_power_remedy, raise_pressure_remedy, raise_temp_remedy};
 
 const OPENING_TOLERANCE: f64 = 0.005;
 const CPE_TOLERANCE: f64 = 0.05;
@@ -83,11 +86,6 @@ fn lm1_axle_spacing_m() -> f64 {
 }
 fn kn_pa(kn_m2: f64) -> f64 { kn_m2 * 1000.0 }
 fn kn_n(kn: f64) -> f64 { kn * 1000.0 }
-
-fn copy(en: &str, de: &str) -> LocalizedCopy { LocalizedCopy::new(en, de) }
-fn pressure(pa: f64) -> Quantity { Quantity::new(QuantityKind::Pressure, pa) }
-fn force(n: f64) -> Quantity { Quantity::new(QuantityKind::Force, n) }
-fn temp(k: f64) -> Quantity { Quantity::new(QuantityKind::Temperature, k) }
 
 fn push_duplicate_ids(report: &mut CheckReport, document: &En1991Snapshot, table: &str, ids: &[String], path_for: &dyn Fn(&str) -> String) {
     let mut counts = std::collections::BTreeMap::<String, usize>::new();
@@ -215,9 +213,9 @@ pub fn check_full_actions_scoped(document: &En1991Snapshot, scope: Scope<'_>) ->
     }
     collection_checks::check_collection_rows(document, annex, &mut report, scope);
     wave3_checks::check_rows(document, annex, &mut report, scope);
-    hazard_checks::check_rows(document, annex, &mut report, scope);
+    hazard::check_rows(document, annex, &mut report, scope);
     rail_silo::check_rows(document, annex, &mut report, scope);
-    wave3_rows::check_rows(document, annex, &mut report, scope);
+    hazard::wave3_rows::check_rows(document, annex, &mut report, scope);
     for (_, case) in document.cases.iter().enumerate().filter(|(index, _)| scope.admits("cases", *index)) {
         report.extend(semio_s_artifact_norm_en1991_checks::catalogue::evaluate_design_case(&semio_s_plugin_norm_compliance::design_case::DesignCase::from(case), annex));
     }
@@ -388,7 +386,7 @@ fn check_wind_thermal_and_accidental_actions(document: &En1991Snapshot, annex: s
     check_wind_actions(document, annex, report, scope);
 
     if scope.part("thermal") {
-    hazard_checks::check_isotherm(document, annex, report);
+    hazard::check_isotherm(document, annex, report);
     match part_1_5::required_delta_t(&document.thermal_element_type, document.t_max, document.t_min, document.t_0, document.thermal_bridge_type, document.delta_t_m) {
         Some(req_dt) => {
             let path_dt = "assumedDeltaT";
@@ -398,7 +396,7 @@ fn check_wind_thermal_and_accidental_actions(document: &En1991Snapshot, annex: s
         None if !part_1_5::ELEMENT_TYPES.contains(&document.thermal_element_type.as_str()) => invalid(report, annex, "en1991.input.thermalElementType".into(), "DIN EN 1991-1-5", ClauseId::new("EN 1991-1-5", "§5", "5"), "", "thermalElementType".into(), ("thermal element type", "Temperatur-Bauteiltyp"), &document.thermal_element_type, part_1_5::ELEMENT_TYPES.iter().map(|t| t.to_string()).collect()),
         None => invalid(report, annex, "en1991.input.thermalBridgeType".into(), "DIN EN 1991-1-5", ClauseId::new("EN 1991-1-5", "§6.1", "6.1"), "", "thermalBridgeType".into(), ("bridge deck type", "Brückendecktyp"), &document.thermal_bridge_type.to_string(), vec!["1".into(), "2".into(), "3".into()]),
     }
-    bridge_effects_checks::check_thermal_combination(document, annex, report);
+    bridge_effects::check_thermal_combination(document, annex, report);
 
     }
 
@@ -501,8 +499,6 @@ fn check_traffic_and_crane_actions(document: &En1991Snapshot, annex: semio_s_plu
     check_silo_actions(document, annex, report);
 }
 
-fn ratio(required: f64, assumed: f64) -> f64 { if required <= 0.0 { 0.0 } else { required / assumed.max(1e-9) } }
-
 /// 🌉 Checks the bridge traffic load models and the selected load group.
 fn check_bridge_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_compliance::AnnexChoice, report: &mut CheckReport) {
     if document.structure_kind != semio_s_artifact_norm_en1991_model::StructureKind::Bridge {
@@ -540,8 +536,8 @@ fn check_bridge_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_co
         position_check = position_check.remedy(Remedy::exactly(SubjectRef::new("", "bridgeTandemX", copy("LM1 tandem position", "LM1-Tandemlage")), Quantity::new(QuantityKind::Length, tandem_x), Quantity::new(QuantityKind::Length, span / 2.0), copy("Move the tandem onto the deck, e.g. to mid-span.", "Tandem auf das Deck verschieben, z. B. in Feldmitte.")));
     }
     report.push(position_check.build());
-    bridge_effects_checks::check_braking(document, annex, report);
-    bridge_effects_checks::check_centrifugal(document, annex, report);
+    bridge_effects::check_braking(document, annex, report);
+    bridge_effects::check_centrifugal(document, annex, report);
     if !part_2::rail_alphas().iter().any(|a| (a - document.rail_alpha).abs() < 1e-9) {
         invalid(report, annex, "en1991.input.railAlpha".into(), "DIN EN 1991-2", ClauseId::new("EN 1991-2", "§6.3.2", "6.3.2"), "", "railAlpha".into(), ("rail classification factor α", "Klassifizierungsbeiwert α der Bahnlasten"), &format!("{}", document.rail_alpha), part_2::rail_alphas().iter().map(|a| format!("{a}")).collect());
     } else {
@@ -650,7 +646,7 @@ fn check_crane_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_com
         });
     }
     report.push(position_check.build());
-    crane_silo_checks::check_crane_runway(document, annex, report);
+    crane_silo::check_crane_runway(document, annex, report);
     let classes = ["HC1", "HC2", "HC3", "HC4"].iter().map(|c| c.to_string()).collect::<Vec<_>>();
     let (Some(req_v), Some(req_h)) = (part_3::design_vertical_wheel_n(&document.crane_class, &document.hoist_class, document.hoisting_speed), part_3::design_horizontal_force_n(&document.crane_class, annex)) else {
         if part_3::crane_vertical_wheel_n(&document.crane_class).is_none() { invalid(report, annex, "en1991.input.craneClass".into(), "DIN EN 1991-3", ClauseId::new("EN 1991-3", "§2.5", "2.5"), "", "craneClass".into(), ("crane class", "Kranklasse"), &document.crane_class, classes.clone()); }
@@ -721,8 +717,8 @@ fn check_silo_actions(document: &En1991Snapshot, annex: semio_s_plugin_norm_comp
         let path_w = "assumedSiloWallFriction";
         let remedy_w = if document.assumed_silo_wall_friction + 1e-9 < req_w { Some(raise_pressure_remedy(path_w, "", "wall friction", "Wandreibung", document.assumed_silo_wall_friction, req_w)) } else { None };
         report.push(assess_covers("en1991.4.silo-wall-friction", "DIN EN 1991-4", ClauseId::new("EN 1991-4", "Eq. (5.3)", "5.2"), SubjectRef::new("", path_w, copy("Silo wall friction", "Silowandreibung")), copy("Wall friction traction", "Wandreibungstraktion"), pressure(document.assumed_silo_wall_friction), pressure(req_w), copy(&format!("Required p_w = {:.1} kN/m²; assumed {:.1} kN/m².", req_w / 1000.0, document.assumed_silo_wall_friction / 1000.0), &format!("Erforderliches p_w = {:.1} kN/m²; angenommen {:.1} kN/m².", req_w / 1000.0, document.assumed_silo_wall_friction / 1000.0)), annex, remedy_w));
-        crane_silo_checks::check_silo_class(document, annex, report);
-        crane_silo_checks::check_silo_discharge(document, annex, report);
+        crane_silo::check_silo_class(document, annex, report);
+        crane_silo::check_silo_discharge(document, annex, report);
     }
 }
 
@@ -748,16 +744,8 @@ mod units;
 mod collection_checks;
 #[path = "🌪️wave3-checks/🦀️.rs"]
 mod wave3_checks;
-#[path = "🚁hazard-checks/🦀️.rs"]
-mod hazard_checks;
 #[path = "🛖️hipped-checks/🦀️.rs"]
 mod hipped_checks;
-#[path = "🛤️bridge-effects-checks/🦀️.rs"]
-mod bridge_effects_checks;
-#[path = "🏭️crane-silo-checks/🦀️.rs"]
-mod crane_silo_checks;
-#[path = "🧷️wave3-rows/🦀️.rs"]
-mod wave3_rows;
 pub use units::*;
 
 //#region 🛰️LiveEvaluation

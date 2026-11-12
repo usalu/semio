@@ -10,6 +10,7 @@ import { runOwnedCommand, resolveTypescriptCompilerV1 } from "../../../🏃️pr
 import { scriptInvocationBudget } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolve } from "node:path";
 import { runtimeTypeEnvironmentV1 } from "../../../⚙️runtime/🏷️identity/🟦️.ts";
+import { OwnedVerifyScript } from "../../🧪️tests/🔬️owned-verify/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -29,6 +30,6 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dirname).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("verify", OwnedVerifyScript).register("test", TestScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

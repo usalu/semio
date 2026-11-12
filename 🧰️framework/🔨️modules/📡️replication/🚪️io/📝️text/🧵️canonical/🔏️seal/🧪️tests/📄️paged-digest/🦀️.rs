@@ -3,28 +3,32 @@ use protocol::{io::text::canonical::ArtifactCanonicalEditSealCursor,Edit};
 use semio_framework_hash::Sha256;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{RetirementDemand,retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneSource}};
+use semio_framework_value_clone_source_testing::{admit_owned,drive::drive};
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+const STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:4194304,maximum_copy_bytes:16777216,maximum_capacity_bytes:16777216,maximum_release_bytes:33554432,maximum_depth:256};
+const CPU:u64=1048576;
 
 fn hex(bytes:[u8;32])->String{bytes.iter().map(|byte|format!("{byte:02x}")).collect()}
 
 fn exact(demand:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
 
-fn generous()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<20,maximum_depth:4096}}
+fn generous()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,..STOCK}}
 
-fn stage<M:RetireOwned+Sync>(owner:Box<Edit<M>>)->RetainedCloneSource<Box<Edit<M>>>{let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<20,maximum_depth:4096};let mut admission=RetainedCloneSource::admission_owned(owner,());let mut output=None;for _ in 0..64{if admission.terminal_is_empty(){break}if admission.phase()=="ready"{admission.take_output(&mut output,g).result.unwrap();}else{admission.advance(g).result.unwrap();}}output.expect("staged edit source")}
+fn stage<M:RetireOwned+Sync+'static>(owner:Box<Edit<M>>)->RetainedCloneSource<Box<Edit<M>>>{let mut bank=EffectBank::new(Wallet::new(STOCK,CPU));let admitted=admit_owned(&mut bank,owner,(),STOCK).result;let source=match admitted{Ok((source,_))=>source,Err(_)=>panic!("staged edit source admission")};source}
 
-fn seal<M:RetireOwned+ArtifactCanonicalJsonTree>(edit:Edit<M>,paged:bool)->(u64,[u8;32],usize){
+fn seal<M:RetireOwned+Sync+'static+ArtifactCanonicalJsonTree>(edit:Edit<M>,paged:bool)->(u64,[u8;32],usize){
  let mut source=Some(stage(Box::new(edit)));
  let(mut cursor,_)=ArtifactCanonicalEditSealCursor::admit_source(&mut source,generous()).unwrap().unwrap();
  let mut turns=0;
  while !cursor.is_ready(){
   turns+=1;assert!(turns<10_000_000,"seal did not settle");
   let grant=if paged{generous()}else{exact(cursor.next_demand().unwrap())};
-  let step=cursor.advance(grant).unwrap();assert!(step.progress().fits(grant));
+  let units=cursor.next_work_demand().unwrap();let step=drive(grant,units,|effect|cursor.advance(effect)).result.unwrap_or_else(|_|panic!("seal turn refused"));assert!(step.progress().fits(grant));
  }
  let(length,digest)=(cursor.canonical_length(),cursor.digest().unwrap());
  let(edit,_,_)=cursor.take_edit(generous()).unwrap().unwrap();
  let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("sealed edit retirement: {error}"));
- for _ in 0..1_000_000{if owner.terminal_is_empty(){break;}owner.step(generous()).unwrap();}
+ let body=generous().maximum_copy_bytes;for _ in 0..1_000_000{if owner.terminal_is_empty(){break;}let units=owner.next_computational_work(body).unwrap();let step=drive(generous(),units,|effect|owner.step(body,effect)).result.unwrap_or_else(|_|panic!("sealed edit retirement turn refused"));assert!(step.progress().fits(generous()));}
  assert!(owner.terminal_is_empty());assert!(cursor.terminal_is_empty());
  (length,digest,turns)
 }

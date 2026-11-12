@@ -1,8 +1,7 @@
 //! 🧪️ Explicit native target authority borrows actual authored segment storage.
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_os_store_one_item_publication::lifted_prepared_operation_wire::{whole_document_target,ArtifactOperationTargets,ArtifactOperationWire};
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 #[test]
 fn original_targets_preserve_authored_path_without_fallback(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();

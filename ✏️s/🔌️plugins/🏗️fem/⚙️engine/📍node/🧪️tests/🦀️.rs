@@ -2,22 +2,51 @@
 use super::FemNode;
 use super::FemNodeValue;
 use super::DIMENSION;
-use semio_framework_value::{DslValue, FromValue, RetirementDemand, ValueError, retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneSource, RetainedCloneGrant, RetainedCloneProgress}};
-use semio_framework_value_snapshot_projection::snapshot_projection::{ProjectionField, SnapshotProjectionCursor};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver, native_decoding::NativeDecodeConstructionRecipient, native_decoding::owned::NativeRecordSource};
-fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=4096);assert!(d.capacity_bytes<=65536);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}}
-struct Recipient{submitted:RetainedCloneProgress,grant:RetainedCloneGrant}
-impl NativeDecodeConstructionRecipient for Recipient{fn submitted(&self)->RetainedCloneProgress{self.submitted}fn grant(&mut self,d:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{assert!(semio_framework_value::retained_clone::retained_clone_grant_admits(self.grant,d));Ok(self.grant)}fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{self.submitted=self.submitted.checked_add(p)?;assert_eq!(g,self.grant);assert!(p.fits(g));Ok(())}}
-fn observe<R>(operation:impl FnOnce()->R)->(R,(usize,usize)){let(r,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(operation);(r,(h.requested_bytes,h.released_bytes))}
-fn drain<T:RetireOwned>(value:T){let mut close=ControlledRetirement::new(value).unwrap_or_else(|_|panic!("node typed retirement"));while !close.terminal_is_empty(){let g=grant(close.next_demand(4096).unwrap());let(s,h)=observe(||close.step(g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));}}
-fn source<I:RetireOwned+Sync>(value:I)->RetainedCloneSource<I>{let d=RetainedCloneSource::<I>::owned_constructor_demand::<()>();RetainedCloneSource::admit_owned(value,(),grant(RetirementDemand{copy_bytes:RetainedCloneSource::<I>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()})).unwrap_or_else(|_|panic!("node original source")).0}
-fn denied(d:RetirementDemand)->Vec<RetainedCloneGrant>{let g=grant(d);[(true,RetainedCloneGrant{maximum_items:0,..g}),(d.copy_bytes>0,RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.saturating_sub(1),..g}),(d.capacity_bytes>0,RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes.saturating_sub(1),..g}),(d.release_bytes>0,RetainedCloneGrant{maximum_release_bytes:d.release_bytes.saturating_sub(1),..g}),(d.depth>0,RetainedCloneGrant{maximum_depth:d.depth.saturating_sub(1),..g})].into_iter().filter_map(|(active,g)|active.then_some(g)).collect()}
-fn run<I:NativeRecordSource+RetireOwned>(input:impl Fn()->I,expected:&serde_json::Value,accepted:bool){
- let mut completed=false;let mut refused=false;for cut in 0..160{let original=source(input());let foreign=source(input());let(mut receiver,_)=<FemNode as NativeReceive<I>>::begin_receive(grant(<FemNode as NativeReceive<I>>::receive_birth_demand())).unwrap();let mut callback=|_|true;let mut control=NativeDecodeControl::new(16777216,&mut callback);let mut recipient=Recipient{submitted:Default::default(),grant:grant(Default::default())};let mut ready=false;
-  for turn in 0..cut{if receiver.output_ready(){ready=true;break;}let d=receiver.demands(original.borrow(),4096).unwrap();if turn>0{assert!(receiver.demands(foreign.borrow(),4096).is_err());}for g in denied(d){let(s,h)=observe(||control.with_construction_recipient(&mut recipient,|control|receiver.advance(original.borrow(),control,4096,g)).unwrap());assert_eq!(s.progress(),Default::default());assert_eq!(h,(0,0));}let g=grant(d);let(result,h)=observe(||control.with_construction_recipient(&mut recipient,|control|receiver.advance(original.borrow(),control,4096,g)));match result{Ok(s)=>assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes)),Err(error)=>{assert!(!accepted);assert_eq!(h,(error.retained_progress().retained_capacity_bytes,error.retained_progress().released_bytes));refused=true;break;}}}
-  ready|=receiver.output_ready();if ready{assert!(accepted);let d=receiver.take_demand().unwrap();let(output,p)=receiver.take(grant(d)).unwrap().unwrap();assert!(p.fits(grant(d)));assert_eq!(output.id.as_str(),expected["id"].as_str().unwrap());assert_eq!(output.x.to_bits(),expected["x"].as_f64().unwrap().to_bits());assert_eq!(output.y.to_bits(),expected["y"].as_f64().unwrap().to_bits());completed=true;let original=source(output);let pointer=std::ptr::from_ref(original.borrow().get().id.get());let mut projection=ProjectionField::<FemNode>::default();while !projection.ready(){let g=grant(projection.demands(original.borrow(),4096).unwrap());let(s,h)=observe(||projection.advance(original.borrow(),g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));}let(row,_)=projection.take(grant(projection.take_demand().unwrap())).unwrap().unwrap();assert_eq!(std::ptr::from_ref(row.id.get()),pointer);drain(row);projection.begin_close();while !projection.terminal_is_empty(){let g=grant(projection.close_demands(4096).unwrap());projection.close_step(g).unwrap();}drain(original);}
-  receiver.begin_close();while !receiver.terminal_is_empty(){let d=receiver.close_demands(4096).unwrap();let g=grant(d);let(s,h)=observe(||receiver.close_step(g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));}assert_eq!(observe(||drop(receiver)).1,(0,0));drain(original);drain(foreign);if completed||refused{break;}
- }assert_eq!(completed,accepted);assert_eq!(refused,!accepted);
+use semio_framework_value::{DslValue, FromValue, OriginalRetirementFailure, RetainedWorkPoll, RetirementDemand, retirement::RetireOwned, retained_clone::{RetainedCloneGrant, RetainedCloneRef}};
+use semio_framework_value_snapshot_projection::snapshot_projection::ProjectionField;
+use semio_framework_value_native_owned::{native_decoding::NativeReceive, owned::NativeReceiver};
+use semio_framework_value_testing_admission::{EffectBank, session_driven, session_open};
+use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
+#[path="../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/receiver-driver.rs"]mod driver;
+const BODY:usize=4096;
+const MAXIMUM:u64=1<<20;
+fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+fn settle(bank:&mut EffectBank,g:RetainedCloneGrant,heap:(usize,usize),poll:RetainedWorkPoll<semio_framework_value::retained_clone::RetainedCloneStep,OriginalRetirementFailure>){if let RetainedWorkPoll::Complete(turn)=poll{let step=turn.result.unwrap_or_else(|_|panic!("node projection turn refused"));bank.post(step.progress(),g,heap);}}
+fn project(original:RetainedCloneRef<'_,FemNode>,bank:&mut EffectBank)->ProjectionField<FemNode>{
+ let mut field=ProjectionField::<FemNode>::default();session_open(bank);
+ for _ in 0..100000{if field.ready(){break;}let g=grant(field.demands(original,BODY,MAXIMUM).unwrap());let work=field.advance_work_demand(original,BODY,MAXIMUM).unwrap();let((poll,_),heap)=observe(||session_driven::<OriginalRetirementFailure>(bank,g,work.max(1),|effect,reply,recover|if recover{field.recover_advance_into(original,BODY,MAXIMUM,effect,reply)}else{field.advance_into(original,BODY,MAXIMUM,effect,reply)}));settle(bank,g,heap,poll);}
+ assert!(field.ready(),"node projection stalled");field
+}
+fn close_projection(mut field:ProjectionField<FemNode>,bank:&mut EffectBank){
+ for _ in 0..100000{
+  if field.terminal_is_empty(){return;}
+  let(d,work)=if field.close_started(){(field.close_demands(BODY).unwrap(),field.close_work_demand(BODY).unwrap())}else{(field.begin_close_demand().unwrap(),field.begin_close_work_demand().unwrap())};let g=grant(d);
+  let((poll,_),heap)=observe(||session_driven::<OriginalRetirementFailure>(bank,g,work.max(1),|effect,reply,recover|match(field.close_started(),recover){(false,false)=>field.begin_close_into(effect,reply),(false,true)=>field.recover_begin_close_into(effect,reply),(true,false)=>field.close_into(BODY,effect,reply),(true,true)=>field.recover_close_into(BODY,effect,reply)}));settle(bank,g,heap,poll);
+
+ }
+ panic!("node projection failed its funded close");
+}
+fn run<I:RetireOwned+Sync+'static>(input:impl Fn()->I,expected:&serde_json::Value,accepted:bool)where FemNode:NativeReceive<I>{
+ let mut completed=false;let mut refused=false;
+ let cuts={let mut bank=driver::bank();let original=driver::admit(&mut bank,input());let mut receiver=<FemNode as NativeReceive<I>>::receiver();let mut trace=driver::Trace::default();if let Ok(Some(output))=driver::receive_traced(&mut receiver,original.borrow(),&mut bank,BODY,None,None,&mut trace){driver::retire(output,&mut bank);}driver::close(&mut receiver,&mut bank,BODY);drop(receiver);driver::close_source(original,&mut bank);
+  let total=trace.advance.len() as u64;let mut cuts=std::collections::BTreeSet::from([0u64,1,2]);let mut seen=std::collections::HashSet::new();for index in 1..trace.shapes.len(){if seen.insert((trace.shapes[index-1],trace.shapes[index])){cuts.extend([index as u64,index as u64+1])}}cuts.extend([total.saturating_sub(1),total,total+1]);cuts};
+ for cut in cuts{
+  let mut bank=driver::bank();let original=driver::admit(&mut bank,input());let foreign=driver::admit(&mut bank,input());
+  let mut receiver=<FemNode as NativeReceive<I>>::receiver();
+  match driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,Some(cut)){Ok(published)=>assert!(published.is_none()),Err(_)=>{assert!(!accepted);refused=true;}}
+  if !refused{
+   if receiver.output_ready(){
+    assert!(accepted);let output=driver::receive_cut(&mut receiver,original.borrow(),&mut bank,BODY,None).unwrap().expect("uncut receive publishes");
+    assert_eq!(output.id.as_str(),expected["id"].as_str().unwrap());assert_eq!(output.x.to_bits(),expected["x"].as_f64().unwrap().to_bits());assert_eq!(output.y.to_bits(),expected["y"].as_f64().unwrap().to_bits());completed=true;
+    let row=driver::admit(&mut bank,output);let pointer=std::ptr::from_ref(row.borrow().get().id.get());
+    let field=project(row.borrow(),&mut bank);assert_eq!(std::ptr::from_ref(field.value().unwrap().id.get()),pointer);close_projection(field,&mut bank);
+    driver::close_source(row,&mut bank);
+   }else if cut>0{assert!(receiver.demands(foreign.borrow(),BODY,MAXIMUM).is_err());}
+  }
+  driver::close(&mut receiver,&mut bank,BODY);assert!(receiver.terminal_is_empty());drop(receiver);driver::close_source(original,&mut bank);driver::close_source(foreign,&mut bank);
+  if completed||refused{break;}
+ }
+ assert_eq!(completed,accepted);assert_eq!(refused,!accepted);
 }
 #[test]
 fn native_node_original_receiving_projection_and_every_cancelled_frontier(){let f:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();for row in f["cases"].as_array().unwrap().iter().filter(|row|row["dimension"].as_u64()==Some(DIMENSION as u64)){let accepted=row["accepted"].as_bool().unwrap();run(||DslValue::from(&row["row"]),&row["row"],accepted);if accepted{run(||FemNodeValue::from_value(DslValue::from(&row["row"])).unwrap(),&row["row"],true);}}}

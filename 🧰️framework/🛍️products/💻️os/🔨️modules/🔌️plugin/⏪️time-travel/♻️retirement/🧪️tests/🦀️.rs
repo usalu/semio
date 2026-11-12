@@ -1,7 +1,7 @@
 //! 🕰️ The actual ledger transfers its original session inline and measures every child frontier.
 use crate::MemberKey;
 use semio_framework::ArtifactDialect;
-use semio_framework::{ActionArgDef, ArgSchema, FaultFrom};
+use semio_framework::FaultFrom;
 use semio_plugin_decl_app::ArtifactApp;
 #[cfg(test)]
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
@@ -9,15 +9,14 @@ use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-use semio_framework_value::{DslValue, RetirementDemand};
+use semio_framework_value::RetirementDemand;
 use semio_plugin_decl_emission::Emit;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_ui_locale::LocalizedLabel;
 use store::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
-use semio_framework_time_travel::{TimeTravelBase, TimeTravelEvent, TimeTravelSession, TimeTravelStage, TimeTravelTarget};
-use crate::{TimeTravelEditor, TimeTravelLedger, TimeTravelMemberMetadata, TimeTravelOwners};
+use semio_framework_time_travel::{TimeTravelEvent, TimeTravelSession, TimeTravelStage, TimeTravelTarget};
+use crate::{TimeTravelLedger, TimeTravelMemberMetadata, TimeTravelOwners};
 #[cfg(test)]
 use semio_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[cfg(any(test, feature = "artifact-app-testing"))]
@@ -26,7 +25,6 @@ use crate::original_retirement::{permits, progress};
 use semio_ui_contract::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 use semio_plugin_child::MemberPath;
-use semio_plugin_instance_app::VcsArtifactApp;
 use retirement_fixture::{run,settled};
 
 mod retirement_fixture{
@@ -83,24 +81,7 @@ pub fn assert_session_original<A:ArtifactApp>() {
 }
 
 fn original_drafts(capacity:usize)->semio_framework_value_persistent::list::PagedList<semio_framework_time_travel::TimeTravelDraft,{usize::MAX}>{
- let mut owner=semio_framework_value_persistent::list::PagedList::default();if capacity>0{while owner.capacity()<8192{assert!(owner.reserve_exact_capacity_one(8192,native_original_actor_grant().maximum_capacity_bytes).unwrap().progressed)}}owner
-}
-
-#[doc(hidden)]
-pub fn assert_discard_publication_original<A:ArtifactApp>(app:&mut VcsArtifactApp<A>,make_mutation:fn()->A::Mutation){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&law["discardPublicationGrant"];let grant=RetainedCloneGrant{maximum_items:policy["items"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:policy["release"].as_u64().unwrap()as usize,maximum_depth:policy["depth"].as_u64().unwrap()as usize};
- let ((session,editor,mutation,preview,input),heap)=observe_heap_allocations_on_this_thread(||{let mut id=String::with_capacity(65536);id.push_str("original/α\0😀");let target=protocol::MutationId(id);let input=protocol::InputReplacement::Input{schema:String::with_capacity(8192),payload:Vec::with_capacity(65536)};let session=TimeTravelSession{id:37,generation:5,base:TimeTravelBase{content_revision:app.stores.store.content_revision_now()},stage:TimeTravelStage::Editing,pending:Some(semio_framework_time_travel::TimeTravelPending{target:TimeTravelTarget{mutation:target.clone(),position:0},original:protocol::InputReplacement::Withdrawn,replacement:protocol::InputReplacement::Withdrawn,return_stage:TimeTravelStage::Inactive}),..Default::default()};let editor=TimeTravelEditor{target,position:0,op_index:0,label:LocalizedLabel::native("Original","Original"),schema:Some("native.v1"),inputs:vec![ActionArgDef { schema:ArgSchema::Array{items:Box::new(ArgSchema::Object{fields:vec![ActionArgDef::text("leaf",LocalizedLabel::native("Leaf","Blatt"))]}),min_items:None,max_items:None},..ActionArgDef::text("original",LocalizedLabel::native("Original","Ursprünglich")) }],inputs_refused:None,validator:Ok(semio_framework_schema::OwnedJsonSchemaValidator::compile("{\"type\":\"string\",\"pattern\":\"^(a|[b-d]){1,4}$\"}").unwrap()),value:DslValue::String(String::with_capacity(65536)),outcome:Vec::new(),refused:None};(session,editor,make_mutation(),app.stores.store.derived_snapshot_head(),input)});let held=heap.requested_bytes-heap.released_bytes;let editor_pointer=app.time_travel.editor.as_ref().map(|editor|editor.target.0.as_ptr());assert!(editor_pointer.is_none());app.time_travel.session=session;app.time_travel.editor=Some(editor);app.time_travel.document.kind=Some(mutation);app.time_travel.document.preview=Some(preview);app.time_travel.document.preview_input=Some(input);let pointer=app.time_travel.editor.as_ref().unwrap().target.0.as_ptr();let mut original=Some(TimeTravelEvent::Discard{generation:5});let (receipt,heap)=observe_heap_allocations_on_this_thread(||app.time_travel.stage_time_travel_command(&mut original,grant).unwrap().unwrap());assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut births=0;let mut releases=0;let mut committed=false;let mut turns=0;
- for _ in 0..100000{
-  let pending=app.time_travel.pending_command.is_some()||app.time_travel.discard_cursor.is_some()||!app.time_travel.command_retirements.terminal_is_empty();if !pending&&app.time_travel.document.discard_effects.is_none(){break}
-  if pending{let (pending,heap)=run(RetainedCloneGrant::default(),|effect|app.time_travel_ctx().drive_original_discard_command(RetainedCloneGrant::default(),effect).unwrap());assert!(pending);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let (original,receipt)=app.time_travel.take_command_receipt().unwrap();assert_eq!(original,RetainedCloneGrant::default());assert_eq!(receipt,Default::default());if !committed{assert_eq!(app.time_travel.editor.as_ref().unwrap().target.0.as_ptr(),pointer);assert_eq!(app.time_travel.session.stage,TimeTravelStage::Editing)}}
-  else{
-   let (quote,heap)=observe_heap_allocations_on_this_thread(||app.time_travel_ref().time_travel_retirement_demands(grant.maximum_copy_bytes).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:0,..grant}),(quote.copy_bytes>0).then_some(RetainedCloneGrant{maximum_copy_bytes:0,..grant}),(quote.capacity_bytes>0).then_some(RetainedCloneGrant{maximum_capacity_bytes:0,..grant}),(quote.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:0,..grant})].into_iter().flatten(){let (step,heap)=run(denied,|effect|app.time_travel_ctx().time_travel_retire_step(effect).unwrap().unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(app.time_travel.document.discard_effects.is_some())}
-  }
-  let (receipt,heap)=run(grant,|effect|{if app.time_travel_ctx().drive_original_discard_command(grant,effect).unwrap(){let (original,receipt)=app.time_travel.take_command_receipt().unwrap();assert_eq!(original,grant);receipt}else{app.time_travel_ctx().time_travel_retire_step(effect).unwrap().expect("original Discard residue frontier").progress()}});assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;
-  if app.time_travel.session.stage==TimeTravelStage::Inactive{committed=true;assert!(app.time_travel.editor.is_none());assert!(app.time_travel.document.preview.is_none());assert!(app.time_travel.document.preview_input.is_none());assert!(app.time_travel.document.kind.is_none())}else{assert_eq!(app.time_travel.editor.as_ref().unwrap().target.0.as_ptr(),pointer)}
- }
- assert!(committed);assert!(app.time_travel.pending_command.is_none());assert!(app.time_travel.discard_cursor.is_none());assert!(app.time_travel.command_retirements.terminal_is_empty());assert!(app.time_travel.document.discard_effects.is_none());assert_eq!(releases,held+births);assert!(app.time_travel.document.terminal_is_empty());
+ let mut owner=semio_framework_value_persistent::list::PagedList::default();if capacity>0{while owner.capacity()<8192{assert!(run(native_original_actor_grant(),|effect|matches!(owner.reserve_exact_capacity_one(8192,effect).result.unwrap(),semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(_))).0)}}owner
 }
 
 #[doc(hidden)]

@@ -401,7 +401,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
-        let expected = if id == "noMutation" { "no-operation".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
+        let expected = if id == "noOperation" { "no-operation".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
         let printed = protocol::OpText::print_op(&command);
         assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
     }
@@ -422,7 +422,7 @@ pub(crate) fn every_command() -> Vec<VcsCommand> {
         VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: "Jotted".into() }),
         VcsCommand::TextEdit(text_edit::TextEdit { text: "{}".into() }),
         VcsCommand::Edit(edit_command::Edit { text: "{}".into() }),
-        VcsCommand::NoMutation(no_operation::NoMutation {}),
+        VcsCommand::NoOperation(no_operation::NoOperation {}),
         VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
         VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[1.0, 2.0], [3.0, 4.0]] }),
         VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
@@ -472,7 +472,7 @@ fn retained_factories_publish_only_their_exact_declared_lanes() {
         };
         assert_eq!(contract.lanes, &[expected]);
     }
-    assert_eq!(VCS_BOUNDED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "noMutation").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::HostOnly][..]));
+    assert_eq!(VCS_BOUNDED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "noOperation").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::HostOnly][..]));
     assert!(VCS_RESUMABLE_PUBLICATION_CONTRACTS.iter().all(|row| row.lanes == [ArtifactToolPublicationLane::Artifact]));
 }
 
@@ -498,7 +498,7 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         ("changeNotes", action_args([("value", "next".to_string())])),
         ("textEdit", action_args([("text", "{}".to_string())])),
         ("edit", action_args([("text", "{}".to_string())])),
-        ("noMutation", no_args()),
+        ("noOperation", no_args()),
         ("canvasPointerDown", no_args()),
         ("canvasPointerMove", semio_framework_value::DslValue::Object(vec![("samples".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::float(2.0)])]))])),
         ("canvasPointerUp", semio_framework_value::DslValue::Object(vec![("cancelled".into(), semio_framework_value::DslValue::Bool(false))])),

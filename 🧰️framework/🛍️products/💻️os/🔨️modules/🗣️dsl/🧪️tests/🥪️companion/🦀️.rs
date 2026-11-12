@@ -7,8 +7,7 @@ extern crate semio_os_kernel as dsl;
 extern crate semio_os_kernel as store;
 
 
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 use semio_framework_diagnostic::TextSpan;
 use semio_framework_dsl::*;

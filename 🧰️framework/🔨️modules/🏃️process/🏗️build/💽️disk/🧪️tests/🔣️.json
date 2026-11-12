@@ -1,0 +1,43 @@
+{
+  "$comment": "💽️ Authored disk refusals: the failure, what the volume holds and the exact English and German text. Read by the TypeScript test and by the independent Python oracle (which formats the bytes).",
+  "bytes": [
+    {"bytes": 0, "text": "0 B"},
+    {"bytes": 1023, "text": "1023 B"},
+    {"bytes": 1024, "text": "1 KiB"},
+    {"bytes": 1572864, "text": "1.5 MiB"},
+    {"bytes": 1342177280, "text": "1.25 GiB"},
+    {"bytes": 1099511627776, "text": "1 TiB"},
+    {"bytes": 2199023255552000, "text": "2000 TiB"}
+  ],
+  "full": [
+    {
+      "name": "errno ENOSPC with a path",
+      "error": {"code": "ENOSPC", "message": "ENOSPC: no space left on device, write", "path": "/home/dev/.cache/semio/cas/v1/t/x"},
+      "partition": "/home", "availableBytes": 0, "totalBytes": 499963174912,
+      "en": "The disk is full: partition /home has 0 B free. Nothing was lost, but the write could not finish. Free space with `repo cache cas gc` (it works on a full disk), then run the command again.",
+      "de": "Der Datenträger ist voll: Partition /home hat noch 0 B frei. Es ging nichts verloren, aber das Schreiben konnte nicht enden. Schaffe Platz mit `repo cache cas gc` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
+    },
+    {
+      "name": "sqlite text without a path",
+      "error": {"message": "SQLiteError: database or disk is full"},
+      "partition": "/data", "availableBytes": 1572864, "totalBytes": 107374182400,
+      "en": "The disk is full: partition /data has 1.5 MiB free. Nothing was lost, but the write could not finish. Free space with `repo cache cas gc` (it works on a full disk), then run the command again.",
+      "de": "Der Datenträger ist voll: Partition /data hat noch 1.5 MiB frei. Es ging nichts verloren, aber das Schreiben konnte nicht enden. Schaffe Platz mit `repo cache cas gc` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
+    },
+    {
+      "name": "a volume whose free space cannot be read",
+      "error": {"code": "ENOSPC", "message": "write failed"},
+      "partition": "D:\\", "availableBytes": null, "totalBytes": null,
+      "en": "The disk is full: partition D:\\ cannot take the write (its free space cannot be read). Free space with `repo cache cas gc` (it works on a full disk), then run the command again.",
+      "de": "Der Datenträger ist voll: Partition D:\\ kann das Schreiben nicht aufnehmen (ihr freier Platz ist nicht lesbar). Schaffe Platz mit `repo cache cas gc` (es arbeitet auch auf vollem Datenträger) und führe den Befehl erneut aus."
+    }
+  ],
+  "low": [
+    {
+      "name": "a partition above its used share",
+      "partition": "/home", "availableBytes": 16106127360, "totalBytes": 499963174912, "limitFraction": 0.97,
+      "en": "Partition /home has only 15 GiB free (96.8% used, limit 97%), so no build or cache write starts before space is freed. Free space with `repo cache cas gc`, then run the command again.",
+      "de": "Partition /home hat nur noch 15 GiB frei (96.8 % belegt, Grenze 97 %), daher startet kein Build und kein Cache-Schreiben, bevor Platz frei ist. Schaffe Platz mit `repo cache cas gc` und führe den Befehl erneut aus."
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 //! — `🧬️schema-design.md`'s svg infinite-recursion warning): each variant builds its own sparse
 //! `SemioImageDiff` directly and computes its own base-aware inverse mutation.
 //!
-//! `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
+//! `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
 //! leaf payload, and its sentinel verb `no` is not in `APPROVED_VERBS` — see
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`. Every variant is now a
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/

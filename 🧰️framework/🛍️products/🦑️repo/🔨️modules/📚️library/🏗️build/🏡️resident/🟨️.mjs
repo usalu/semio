@@ -14,7 +14,7 @@ export{runResidentCommandV1,RESIDENT_EXCLUDES_V1,RESIDENT_FENCE_DIRECTORY_V1}fro
 export{createHostServiceV1,HostRunningErrorV1}from"./🏛️service/🌐️host/🟨️.mjs";
 export{createIndexPoolV1}from"./🏛️service/🌐️host/🧊️pool/🟨️.mjs";
 export{createGraphPlannerPortV1,graphDigestV1,UnknownTargetErrorV1}from"./🔌️ports/🧭️plan/🟨️.mjs";
-export{requestPlanV1,requestHostStatusV1,connectHostV1,resolvePlanV1,HostUnavailableErrorV1,PlanRefusedErrorV1}from"./🚪️client/🛰️plan/🟨️.mjs";
+export{requestPlanV1,requestHostStatusV1,holdHostV1,connectHostV1,resolvePlanV1,HostUnavailableErrorV1,PlanRefusedErrorV1}from"./🚪️client/🛰️plan/🟨️.mjs";
 export{runHostForegroundV1,spawnHostServiceV1}from"./🏗️composition/🌐️host/🟨️.mjs";
 export{runHostCommandV1}from"./⌨️command/🌐️host/🟨️.mjs";
 export{hostEndpointsV1,workspaceIdV1}from"./📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";

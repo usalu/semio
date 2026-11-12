@@ -30788,6 +30788,18 @@
           "@semio-tech/schema-validator-ts": {
             "manifestPath": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"
+          },
+          "@semio-tech/value-ts/refusal/codec": {
+            "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🔁️codec/🟦️.ts"
+          },
+          "@semio-tech/value-ts/refusal": {
+            "manifestPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/⚠️refusal/🟦️.ts"
+          },
+          "@semio-tech/framework-diagnostic-ts/controlled": {
+            "manifestPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/🎛️controlled/🟦️.ts"
           }
         }
       },

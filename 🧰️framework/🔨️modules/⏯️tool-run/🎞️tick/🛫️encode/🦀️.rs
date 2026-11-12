@@ -69,6 +69,10 @@ impl ToolRunTickWireCursor{
  pub fn is_complete(&self)->bool{self.done&&self.length==0}
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.length==0}
  pub fn written_bytes(&self)->usize{self.total}
+ /// 🔭️ Test surface: the exact encoder frontier (written bytes, frame depth, pending chunk length, current frame index) so denied turns prove they left it untouched.
+ #[cfg(feature="testkit")]
+ #[doc(hidden)]
+ pub fn testkit_frontier(&self)->(usize,usize,usize,usize){(self.total,self.depth,self.length,self.frames[self.depth].index)}
  /// 🤝️ Acknowledges the retained chunk only after its consumer has preserved its own original receipt.
  pub fn acknowledge_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:if self.length>0{size_of::<usize>()}else{0},depth:usize::from(self.length>0),..Default::default()}}
  pub fn acknowledge_chunk(&mut self,grant:Grant)->Progress{let demand=self.acknowledge_demands();if self.length==0||!Self::permits(grant,demand){return Default::default();}self.length=0;Progress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}

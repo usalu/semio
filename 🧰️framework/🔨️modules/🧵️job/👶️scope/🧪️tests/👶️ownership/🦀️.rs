@@ -17,7 +17,7 @@ impl InteractiveJob for StructuredChildJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
         self.begin_close();if self.backing.is_none(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
-        let demand=RetirementDemand{release_bytes:self.next_close_release_byte_demand()?,depth:1,..Default::default()};close_original_retained_step(cx,demand,|_|{drop(self.backing.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})
+        let demand=RetirementDemand{release_bytes:self.next_close_release_byte_demand()?,depth:1,..Default::default()};close_original_retained_step(cx,demand,|_|{drop(self.backing.take());semio_framework_value_testing_effect_bank::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})
     }
 
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -32,7 +32,7 @@ impl InteractiveJob for StructuredChildJob {
 
 #[test]
 fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_are_exact() {
-    let source=crate::component::TEST_RETAINED_POLICY;let mut caller=OriginalJobFixtureCaller::admit(OperationId(90_003),Generation(9),source,default_now_us,u64::MAX,1);let scope = JobScope::for_operation(caller.cancel(), OperationId(90_003), Generation(9));
+    let births=[OriginalCallerSourceAdmission::prepare_demand(),OriginalCallerSourceAdmission::backing_demand().unwrap(),OriginalCallerSourceAdmission::publish_demand()];let policy=crate::component::TEST_RETAINED_POLICY;let source=RetainedCloneGrant{maximum_items:policy.maximum_items+births.len(),maximum_copy_bytes:policy.maximum_copy_bytes+births.iter().map(|demand|demand.copy_bytes).sum::<usize>(),maximum_capacity_bytes:policy.maximum_capacity_bytes+births.iter().map(|demand|demand.capacity_bytes).sum::<usize>(),maximum_release_bytes:policy.maximum_release_bytes+births.iter().map(|demand|demand.release_bytes).sum::<usize>(),maximum_depth:policy.maximum_depth.max(births.iter().map(|demand|demand.depth).max().unwrap_or(0))};let mut caller=OriginalJobFixtureCaller::admit(OperationId(90_003),Generation(9),source,default_now_us,u64::MAX,2*(JOB_CHILD_SLOTS as u64+2));let scope = JobScope::for_operation(caller.cancel(), OperationId(90_003), Generation(9));
     let mut guards: [Option<ChildJobGuard<'_, StructuredChildJob>>; JOB_CHILD_SLOTS] =
         std::array::from_fn(|index| Some(scope.spawn_child(StructuredChildJob { backing: Some(Box::new(index as u8)), closing: false }).unwrap_or_else(|_| panic!("fixed child slot"))));
     let retained_child_pointer = guards[1].as_mut().expect("second structured child").with_child_mut(|child| child.backing.as_deref().expect("retained structured child backing") as *const u8).expect("generation-qualified child checkout");
@@ -62,11 +62,12 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
     assert_eq!(scope.complete_child(stale), Err(JobChildCompletionFault::Stale));
     drop(guards);
     assert_eq!(caller.turn(RetainedCloneGrant{maximum_items:0,maximum_depth:64,..Default::default()},|cx|scope.pump_child_close(cx)).unwrap(), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}});
-    assert_eq!(caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64},|cx|scope.pump_child_close(cx)).unwrap(), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:0,released_bytes:0,..RetainedCloneProgress::default()}}, "child begin-close transfers control without claiming an owner release");
+    let quoted=scope.child_retirement_demands(32768).unwrap();
+    assert_eq!(caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64},|cx|scope.pump_child_close(cx)).unwrap(), InteractiveJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:quoted.release_bytes,..RetainedCloneProgress::default()}}, "the first funded child close completes its node and reports exactly one item and its quoted release");
     let close_started=Instant::now();let mut close_attempts=0;
     while !scope.terminal_is_empty() {
         close_attempts+=1;assert!(close_attempts<=65536 && close_started.elapsed()<WORKER_LIVENESS_BOUND,"original owner retained beyond declared finite close control");
-        let _ = caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64},|cx|scope.pump_child_close(cx)).unwrap();
+        let fuel=caller.fuel_remaining();let step = caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:JOB_PAYLOAD_PAGE_BYTES,maximum_depth:64},|cx|scope.pump_child_close(cx)).unwrap();let _ = step;caller.fund_fuel(fuel-caller.fuel_remaining());
     }
     assert!(scope.assert_completable().is_ok());
     for slot in &scope.slots {
@@ -89,6 +90,6 @@ fn child_registry_max_plus_one_stale_duplicate_exhaustion_and_parent_completion_
         let _ = caller.turn(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:1,maximum_depth:64,..RetainedCloneGrant::default()},|cx|rejected.close_step(cx)).unwrap();
     }
     scope.begin_close();
-    assert!(scope.terminal_is_empty());let mut scope_cancel=semio_framework_async::CancelTokenRetirement::from_token(scope.cancel);while !scope_cancel.terminal_is_empty(){scope_cancel.close_step(source).unwrap();}caller.retire(source);
+    assert!(scope.terminal_is_empty());let mut scope_cancel=semio_framework_async::CancelTokenRetirement::from_token(scope.cancel);let mut effects=semio_framework_value_testing_effect_bank::EffectBank::new(semio_framework_value_testing_effect_bank::Wallet::new(source,source.maximum_items as u64));while !scope_cancel.terminal_is_empty(){let grant=semio_framework_value_testing_effect_bank::demand_grant(scope_cancel.retirement_demands().unwrap());let work=scope_cancel.retirement_work_demand();effects.run_outcome(grant,work,|effect|scope_cancel.close_step(effect)).result.unwrap();let _=effects.take_admitted();}caller.retire(source);
 }
 

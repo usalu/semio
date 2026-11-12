@@ -2,10 +2,10 @@
 
     /// 📥️ Drives one stepped document archive load on `app` to its terminal status and acknowledges it.
     use semio_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
-async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>, operation: u64, archive: protocol::DocumentArchivePack) -> protocol::DocumentArchiveLoadStatus {
-        PluginApp::begin_document_archive_load(app, operation, archive).expect("the runtime admits the archive");
+async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>, operation: u64, archive: protocol::DocumentArchivePack, cx: &mut semio_framework_job::StepContext<'_>) -> protocol::DocumentArchiveLoadStatus {
+        semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app, operation, archive, cx).expect("the runtime admits the archive");
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(app, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("poll");
+            let status = PluginApp::poll_document_archive_load(app, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 break status;
             }
@@ -54,7 +54,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
         );
 
         let mut reloaded = contract_composed_app_raw(mounted_policy, &mut identity).await;
-        let status = drive_test_archive_load(&mut reloaded, 21, archive.clone()).await;
+        let status = drive_test_archive_load(&mut reloaded, 21, archive.clone(), cx).await;
         assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "{:?}", semio_framework_diagnostic::decode_fault_bytes(&status.fault));
         assert_eq!(reloaded.test_snapshot().await.slot.len(), 1, "the reloaded parent carries its own declaration through the pack");
         let child = reloaded.child_store("slot", "child-1").await.expect("child restored");
@@ -65,7 +65,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
         let mut halved = contract_composed_app_raw(mounted_policy, &mut identity).await;
         let mut parent_alone = archive;
         parent_alone.members.clear();
-        let refused = drive_test_archive_load(&mut halved, 22, parent_alone).await;
+        let refused = drive_test_archive_load(&mut halved, 22, parent_alone, cx).await;
         let refusal = format!("{:?}", semio_framework_diagnostic::decode_fault_bytes(&refused.fault));
         assert_eq!(refused.state, protocol::DocumentArchiveLoadState::Fault, "a parent that declares a member never loads without it: {refusal}");
         assert!(refusal.contains("closure-rejected"), "the ownership closure names the refusal: {refusal}");

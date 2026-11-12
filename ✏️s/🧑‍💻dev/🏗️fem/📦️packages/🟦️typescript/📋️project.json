@@ -177,6 +177,66 @@
           ]
         }
       }
+    },
+    "verify-fem-pcg-publication-owners-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify fem-pcg-publication-owners native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-fem-assembly-physical-owners-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify fem-assembly-physical-owners native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-fem-numerical-page-owners-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify fem-numerical-page-owners native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-fem-mesh-preparation-owners-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify fem-mesh-preparation-owners native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-fem2d-window-config-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify fem2d-window-config-contract native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-fem3d-window-config-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify fem3d-window-config-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

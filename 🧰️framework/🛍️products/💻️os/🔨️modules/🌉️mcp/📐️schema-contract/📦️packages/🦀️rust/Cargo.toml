@@ -37,6 +37,8 @@ semio-os-mcp-wire = { path = "../../../📡️wire/📦️packages/🦀️rust" 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
 
+semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
 [[test]]
 name = "inference-borrowed-json"
 path = "../../../🧬️schema/🧪️tests/💡️borrowed-wire/🦀️.rs"

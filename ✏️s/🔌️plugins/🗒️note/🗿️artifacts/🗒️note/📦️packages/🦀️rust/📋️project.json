@@ -142,6 +142,26 @@
           ]
         }
       }
+    },
+    "verify-note-empty-config-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify note-empty-config-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-note-empty-config-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify note-empty-config-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -272,6 +272,5 @@ mod label_fit_laws;
 
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 // #endregion 🧪️Tests

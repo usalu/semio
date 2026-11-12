@@ -16,7 +16,10 @@ pub fn prepare_original_fixture_child(emit:&mut Emit<TestMutation,TestConfigMuta
         let demand=emit.child_preparation_demands(maximum_bytes).expect("original child preparation quote");
         assert!(demand.copy_bytes<=maximum_bytes&&demand.capacity_bytes<=maximum_bytes&&demand.release_bytes<=maximum_bytes&&demand.depth<=128);
         let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:maximum_bytes,maximum_depth:128};
-        emit.prepare_child_one(grant)
+        let mut bank=semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::new(grant,1<<20));
+        let (poll,_)=semio_framework_value_testing_admission::bank_run(&mut bank,grant,1<<20,|effect|{let result=emit.prepare_child_one(effect);semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result,work:effect.performed_work()})});
+        assert!(bank.into_wallet().is_ok(),"the fixture bank closed with a live original action");
+        match poll{semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result,semio_framework_value::RetainedWorkPoll::Pending{..}=>panic!("a funded child preparation turn stayed pending")}
     }
     #[doc(hidden)]
 pub fn label_in(label: &LocalizedLabel, locale: Locale) -> &str {

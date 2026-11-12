@@ -19,6 +19,7 @@ pub fn close(owner: &mut BuiltTreeRetirement) {
 
 #[test]
 fn fixture_projection_retires_exact_tree_before_return_error_or_panic() {
+    let _arena = semio_ui_contract_values::testkit::UiArenaFixture::new();
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🌲️fixture-projection/🔣️.json")).unwrap();
     assert_eq!(fixture["reservedPages"], UI_BUILT_CHILD_RETIRE_SLOTS);
     let payloads: serde_json::Value = serde_json::from_str(include_str!("../../../../../../🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

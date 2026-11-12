@@ -1,3 +1,4 @@
+cargo-features = ["trim-paths"]
 # 🧭️ Own workspace root. The repository's root Cargo.toml is a shared, leased manifest that concurrent
 # sessions edit, and `semio-s-plugin-stdio` is mid-refactor and does not currently build; an oracle
 # that had to be a member of that workspace would be blocked by both. This crate links NOTHING from

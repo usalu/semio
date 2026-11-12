@@ -52,11 +52,11 @@
       },
       {
         "targets": [
-          "workspace:schema-check",
-          "workspace:schema-docs",
-          "workspace:schema-fixture-boundary",
-          "workspace:schema-generate",
-          "workspace:schema-verify",
+          "repo-schema-commands:schema-check",
+          "repo-schema-commands:schema-docs",
+          "repo-schema-commands:schema-fixture-boundary",
+          "repo-schema-commands:schema-generate",
+          "repo-schema-commands:schema-verify",
           "@semio-tech/repo-test-domain:test-schema"
         ],
         "reason": "The schema family validates, documents and generates every schema scope of the workspace by design; a per-scope partition of the schema registry would be needed to key them narrower."

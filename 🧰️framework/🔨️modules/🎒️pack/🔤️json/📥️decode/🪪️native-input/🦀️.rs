@@ -37,7 +37,7 @@ impl<'source,T:NativeReceive<DslValue>+Sync> JsonNativeInputCursor<'source,T>{
   if self.closing{return self.close_demands(body)}if self.faulted{return Err(invalid("faulted native JSON input requires cleanup"))}
   let d=match self.phase{
    Phase::Parse=>add(self.parser.as_ref().ok_or_else(||invalid("native JSON parser absent"))?.normal_step_demands(self.source).map_err(|error|ValueError::literal(error.kind(),"native JSON grammar demand refused"))?,size_of::<Option<DslValue>>()+size_of::<Option<RetainedCloneSourceAdmission<DslValue,DslValue>>>())?,
-   Phase::Source=>{let a=self.admission.as_ref().ok_or_else(||invalid("native JSON admission absent"))?;if a.phase()=="ready"{header::<Option<RetainedCloneSource<DslValue>>>()}else{a.next_demand()?}},
+   Phase::Source=>{let a=self.admission.as_ref().ok_or_else(||invalid("native JSON admission absent"))?;if a.phase()=="projectionStart"{a.owned_projection_demand()?}else if a.phase()=="ready"{header::<Option<RetainedCloneSource<DslValue>>>()}else{a.next_demand()?}},
    Phase::Shell=>header::<Option<NativeReceivingOriginal<DslValue,T>>>(),
    Phase::Receive=>self.receiver.as_ref().ok_or_else(||invalid("native JSON receiver absent"))?.demands(body,maximum_work_units)?,
    Phase::Ready=>self.receiver.as_ref().ok_or_else(||invalid("native JSON receiver absent"))?.take_demand()?,
@@ -61,7 +61,7 @@ impl<'source,T:NativeReceive<DslValue>+Sync> JsonNativeInputCursor<'source,T>{
   let d=self.demands(body,maximum_work_units)?;if maximum_work_units==0||!retained_clone_grant_admits(g,d){return Ok(idle())}
   if !in_flight{control.checkpoint()?}
   let child=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:g.maximum_copy_bytes-size_of::<Phase>(),..g};
-  let q=if in_flight{self.action.work.unwrap_or(1)}else{match self.phase{Phase::Parse=>maximum_work_units,_=>1}};
+  let q=if in_flight{self.action.work.unwrap_or(1)}else{match self.phase{Phase::Parse=>maximum_work_units,Phase::Source=>match self.admission.as_ref(){Some(a) if a.phase()=="projectionStart"=>1,Some(a) if a.phase()!="ready"=>a.advance_work_demand()?,_=>1},_=>1}};
   let poll=match self.phase{
    Phase::Parse=>{
     let capture=size_of::<Option<DslValue>>()+size_of::<Option<RetainedCloneSourceAdmission<DslValue,DslValue>>>();
@@ -76,8 +76,8 @@ impl<'source,T:NativeReceive<DslValue>+Sync> JsonNativeInputCursor<'source,T>{
    },
    Phase::Source=>{
     let admission=self.admission.as_mut().ok_or_else(||invalid("native JSON admission absent"))?;
-    let ready=admission.phase()=="ready"||self.action.tag==9;let owner=&mut self.source_owner;
-    let poll=Self::local(&mut self.action,&mut self.local_authority,control,d,g,q,maximum_work_units,if ready{9}else{2},|_,effect|{let turn=if ready{admission.take_output(owner,&mut effect.nested(child))}else{admission.advance(&mut effect.nested(child))};Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})})?;
+    let ready=admission.phase()=="ready"||self.action.tag==9;let projecting=admission.phase()=="projectionStart"||self.action.tag==16;let owner=&mut self.source_owner;
+    let poll=Self::local(&mut self.action,&mut self.local_authority,control,d,g,q,maximum_work_units,if projecting{16}else if ready{9}else{2},|_,effect|{let turn=if projecting{admission.project_owned(&mut effect.nested(child))}else if ready{admission.take_output(owner,&mut effect.nested(child))}else{admission.advance(&mut effect.nested(child))};Complete(RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work})})?;
     if matches!(&poll,Complete(turn) if turn.result.is_ok())&&self.admission.as_ref().is_some_and(|admission|admission.terminal_is_empty()){self.admission.take();self.phase=Phase::Shell}
     poll
    },
@@ -114,6 +114,18 @@ impl<'source,T:NativeReceive<DslValue>+Sync> JsonNativeInputCursor<'source,T>{
   macro_rules! owner{($field:ident,$ty:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_demands::<$ty>(true,&None,body)}};}
   owner!(parser,JsonGrammarCursor<DslValue>);owner!(parsed,DslValue);owner!(error,JsonError);owner!(local_authority,NativeLocalAuthority<ValueError>);Ok(Default::default())
  }
+ /// ⚖️ Quotes the work of the next cleanup action so the caller can open exactly one effect for it.
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{
+  if !self.closing{return Err(invalid("native JSON input cleanup not started"))}
+  if !self.retirement.is_empty(){return self.retirement.next_owner_work::<DslValue>(false,&None,body)}
+  if let Some(a)=self.admission.as_ref(){return a.return_work_demand()}
+  if let Some(r)=self.receiver.as_ref(){return if r.terminal_is_empty(){Ok(1)}else if r.is_closing(){r.close_work_demand(body)}else{r.begin_close_work_demand()}}
+  if let Some(s)=self.source_owner.as_ref(){return if s.terminal_is_empty(){Ok(1)}else{s.next_close_work_demand(body)}}
+  macro_rules! owner{($field:ident,$ty:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_work::<$ty>(true,&None,body)}};}
+  owner!(parser,JsonGrammarCursor<DslValue>);owner!(parsed,DslValue);owner!(error,JsonError);owner!(local_authority,NativeLocalAuthority<ValueError>);Ok(0)
+ }
+ /// ⚖️ Quotes the work of transferring the ready typed result into the caller's slot.
+ pub fn take_work_demand(&self)->Result<u64,ValueError>{if !self.ready(){return Err(invalid("native JSON input is not ready"))}self.receiver.as_ref().ok_or_else(||invalid("native JSON receiver absent"))?.take_work_demand()}
  /// ♻️ Releases each actual source, parser and native receiver under the same retirement issuer.
  pub fn close_step(&mut self,control:&mut dyn OriginalRetirementControl,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
   use RetirementPollExit as X;

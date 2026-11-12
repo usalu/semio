@@ -65,3 +65,4 @@ semio-os-store-ephemeral = { path = "../../../🫧️ephemeral/📦️packages/�
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

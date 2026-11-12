@@ -5,7 +5,7 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[doc(hidden)]
-#[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslReceiving)]
+#[derive(Clone, semio_framework_value::CanonicalJsonTree, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, dsl::MutationLeaf)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -69,11 +69,11 @@ impl semio_framework_value::ErasedSnapshotRetirement for SetLabelSource{
  fn close_step(&mut self,body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{
   let settle=|result:Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>,work:u128|semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome{result:result.map_err(Into::into),work});
   let Some(value)=self.value.as_mut() else{return settle(Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),0)};
-  if !value.terminal_is_empty(){return value.close_step(body,effect)}
+  if !value.terminal_is_empty(){return semio_framework_value::ErasedSnapshotRetirement::close_step(value,body,effect)}
   let demand=match self.next_demand(effect.grant().maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return settle(Err(error),0)};
-  if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),demand)||effect.maximum_work_units()==0{return settle(Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),0)}
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(effect.grant(),demand)||!matches!(effect.performed(1),Ok(true)){return settle(Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),0)}
   self.value=None;
-  settle(Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),1)
+  settle(Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),effect.performed_work())
  }
  fn terminal_is_empty(&self)->bool{self.value.is_none()}
  fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
@@ -87,7 +87,4 @@ impl semio_framework_value::RetireOwned for SetLabelSource{
  fn retirement_seed(self)->Self::RetirementCursor{semio_framework_value::RetireOwned::retirement_seed(self.value)}
  fn retirement_birth_bytes(&self)->Option<usize>{self.retirement_ready().then_some(std::mem::size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{true}
-}
-
-impl SetLabel{
 }

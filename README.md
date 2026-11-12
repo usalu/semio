@@ -689,8 +689,8 @@ available in English and German; Settings chooses the language, appearance and k
 | Debug a program | `@semio-tech/repo-developer-tools:debug` | Debugger profile, program file, working directory and program arguments |
 | Run several project targets | `tool:workspace/run-targets` | Targets, projects, parallel tasks and cache |
 | Run a particular test file | `tool:workspace/bun-test` | Test file and owning project |
-| Setup, build, test and check | `workspace:setup`, `workspace:build`, `workspace:test`, `workspace:verify` | Owner, scope and command-specific choices |
-| Start a server or preview | `playground:s`, `os-hub:dev`, `workspace:dev-storybook` | Renderer, example and service options |
+| Setup, build, test and check | `workspace:setup`, `workspace:build`, `workspace:test`, `repo-policy:verify` | Owner, scope and command-specific choices |
+| Start a server or preview | `playground:s`, `os-hub:dev`, `repo-storybook:dev-storybook` | Renderer, example and service options |
 | Run an authored operation | `tool:workspace/run-script` | Script path, owner project, working directory and arguments |
 | Manage tickets and goals | `repo:<action>` | Select the named repo action and complete its form |
 
@@ -894,7 +894,7 @@ The default model for agent work is the one native to the platform we use for th
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the canonical root commands, which the dashboard lists as commands: `workspace:setup`, `workspace:lint`, `workspace:format`, `workspace:test`, `workspace:build` and `workspace:publish`. Devs pick them in the dashboard (`repo dashboard`, `Ctrl+B n`); agents and CI run `repo run workspace:<target>` (the bootstrap itself is `bun run setup`). Playgrounds and servers (`playground:<variant>`, `os-hub:dev`, `workspace:dev-storybook`, the `tool:workspace/*` servers) stay live for watch mode, while the root commands exit so CI and agents can finish reliably. The local development hub that `playground:s` signs in through is the dashboard command `os-hub:local-hub-owner`: the daemon supervises it, it declares its ready address, and no root verb starts it behind the daemon's back.
+All automation, CI runs, and agent workflows are controlled through the canonical root commands, which the dashboard lists as commands: `workspace:setup`, `workspace:lint`, `workspace:format`, `workspace:test`, `workspace:build` and `workspace:publish`. Devs pick them in the dashboard (`repo dashboard`, `Ctrl+B n`); agents and CI run `repo run workspace:<target>` (the bootstrap itself is `bun run setup`). Playgrounds and servers (`playground:<variant>`, `os-hub:dev`, `repo-storybook:dev-storybook`, the `tool:workspace/*` servers) stay live for watch mode, while the root commands exit so CI and agents can finish reliably. The local development hub that `playground:s` signs in through is the dashboard command `os-hub:local-hub-owner`: the daemon supervises it, it declares its ready address, and no root verb starts it behind the daemon's back.
 The repository framework owns the build graph, task selection, configuration, inputs, outputs, progress, and cancellation. All entry points use `repo`: `repo run <project>:<task>`, `repo run-many --targets=test --projects=<projects>`, and `repo graph`. The root `📋️project.json` and package manifests use the owned project schema and `repo:script` executor.
 
 Nx remains the default build tool (`defaultTool` in `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json`); see [Build](#-build-) for Bazel, tool provisioning, dependencies, cargo and cache recovery. The shared flags `--skip-cache`, `--skip-remote-cache`, `--exclude-dependencies`, `--parallel`, `--configuration`, and `--output=stream` are translated by the selected backend. Bazel qualification does not change the default automatically.

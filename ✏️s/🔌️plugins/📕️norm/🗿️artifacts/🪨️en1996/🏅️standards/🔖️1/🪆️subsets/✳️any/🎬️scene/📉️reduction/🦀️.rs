@@ -1,5 +1,6 @@
 //! 📉️ Reduction: the reduction factor Φ of EN 1996-1-1 (6.1.2.2, Annex G) as a 3D distribution over the wall height: a ribbon on the front face whose depth is Φ·t, interpolated linearly between the three verified sections (top, mid-height, bottom), bound to the governing compression check.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, EPS};
 use super::scene::*;
@@ -65,7 +66,7 @@ pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
             &format!("Φ_top = {:.3}, Φ_m = {:.3}, Φ_bottom = {:.3}; the depth of the ribbon is Φ·t, linear between the verified sections (EN 1996-1-1 6.1.2.2, Annex G)", prof.phi[0], prof.phi[1], prof.phi[2]),
             &format!("Φ_oben = {:.3}, Φ_m = {:.3}, Φ_unten = {:.3}; die Tiefe des Bandes ist Φ·t, linear zwischen den nachgewiesenen Schnitten (EN 1996-1-1 6.1.2.2, Anhang G)", prof.phi[0], prof.phi[1], prof.phi[2]),
         );
-        spec.binding = binding_of(input.report, &super::walls::compression_id(&wall.id, &prof.load_case, prof.governing_station()));
+        spec.binding = binding_of(input.report, &compression_id(&wall.id, &prof.load_case, prof.governing_station()));
         spec.opacity = OPACITY;
         spec.channel = Some(ColourChannel::Utilisation);
         spec.handles = super::handles::ids(input.document, layout, &spec.id);

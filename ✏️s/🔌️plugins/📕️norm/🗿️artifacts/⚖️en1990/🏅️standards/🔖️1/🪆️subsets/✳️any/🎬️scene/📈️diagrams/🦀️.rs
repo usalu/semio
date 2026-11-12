@@ -1,14 +1,21 @@
 //! 📈️ Diagrams: the combination matrix (actions × combinations with γ·ψ and the leading action), the ψ chart per category, the β–P_f reliability chart with the RC targets, the FORM design point,
 //! the Annex D k_n factors, the fatigue S–N line with the damage of a member and the three serviceability combinations of a member. Every diagram has a table twin; markers bind to checks and to document leaves.
 
-use super::checks::{analysis_form_multi, standard_evaluation, annex_c_alphas, en1993_endurance_cycles, k_n, spectrum_damage, test_design_value, phi_cdf, psi_entry_of, psi_lookup, resolve_psi_category, target_reliability_index_for, gamma_g, gamma_q, k_fi_for_rc, traffic_group, ActionClass, Domain, FactorSet};
-use super::combinations::{self, column_for_check, Column};
-use super::kit::COMBINATION_ENTITY;
-use super::model::{En1990Snapshot, Member, ReliabilityAnalysis, TestSeries};
-use super::norm::CheckReport;
-use super::scene::*;
-use super::scene::projection_kit::diagram_parts::{column, stroke};
-use super::scene::projection_kit::diagram_parts;
+extern crate semio_s_artifact_norm_en1990_checks as checks;
+extern crate semio_s_artifact_norm_en1990_model as model;
+extern crate semio_s_artifact_norm_en1990_scene_combinations as combinations;
+extern crate semio_s_artifact_norm_en1990_scene_kit as kit;
+extern crate semio_s_plugin_norm_compliance as norm;
+extern crate semio_s_plugin_norm_structural_scene as scene;
+
+use checks::{analysis_form_multi, standard_evaluation, annex_c_alphas, en1993_endurance_cycles, k_n, spectrum_damage, test_design_value, phi_cdf, psi_entry_of, psi_lookup, resolve_psi_category, target_reliability_index_for, gamma_g, gamma_q, k_fi_for_rc, traffic_group, ActionClass, Domain, FactorSet};
+use combinations::{column_for_check, Column};
+use kit::COMBINATION_ENTITY;
+use model::{En1990Snapshot, Member, ReliabilityAnalysis, TestSeries};
+use norm::CheckReport;
+use scene::projection_kit::diagram_parts::{column, stroke};
+use scene::projection_kit::diagram_parts;
+use scene::*;
 
 const BETA_MAX: f64 = 7.0;
 const BETA_STEP: f64 = 0.1;
@@ -35,7 +42,7 @@ fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Vec2> {
 }
 
 fn utilisation_tone(ratio: f64) -> Tone {
-    super::scene::utilisation_tone(ratio)
+    scene::utilisation_tone(ratio)
 }
 
 fn class_tone(class: ActionClass) -> Tone {
@@ -51,7 +58,7 @@ fn selector_ref() -> EntityRef {
     EntityRef::new(EntityKind::Group, COMBINATION_ENTITY, format!("combinations[id={COMBINATION_ENTITY}]"))
 }
 
-fn worst_of_column<'a>(report: &'a CheckReport, columns: &[Column], target: &Column) -> Option<&'a super::norm::CheckResult> {
+fn worst_of_column<'a>(report: &'a CheckReport, columns: &[Column], target: &Column) -> Option<&'a norm::CheckResult> {
     report.checks.iter().filter(|c| c.utilization.is_finite() && column_for_check(columns, c).is_some_and(|found| found.id == target.id)).max_by(|a, b| a.utilization.total_cmp(&b.utilization))
 }
 
@@ -372,7 +379,7 @@ fn annex_d(document: &En1990Snapshot, focus: Option<&str>) -> Diagram2d {
 
 fn fatigue(document: &En1990Snapshot, report: &CheckReport, member: &Member) -> Option<Diagram2d> {
     let bins: Vec<_> = document.fatigue_spectra.iter().filter(|b| b.member_id == member.id && b.detail_category > 0.0 && b.stress_range >= 0.0 && b.cycles >= 0.0).collect();
-    let live = |id: String| report.checks.iter().find(|c| c.id == id && c.status != super::norm::CheckStatus::NotApplicable);
+    let live = |id: String| report.checks.iter().find(|c| c.id == id && c.status != norm::CheckStatus::NotApplicable);
     let range_check = live(format!("en1990.fat.{}", member.id));
     let damage_check = live(format!("en1990.fat.damage.{}", member.id));
     let check = range_check.or(damage_check)?;
@@ -557,7 +564,7 @@ fn diagrams_unbased(document: &En1990Snapshot, report: &CheckReport, focus: Opti
         out.extend(ranking_and_reliability::sls_combinations(report, member));
     }
     for case in document.cases.iter().filter(|c| focus.is_none_or(|f| f == c.id)) {
-        out.extend(super::scene::projection_kit::design_case::case_diagram(&case.id, &loc(&case.label_en, &case.label_de), report, None));
+        out.extend(scene::projection_kit::design_case::case_diagram(&case.id, &loc(&case.label_en, &case.label_de), report, None));
     }
     out
 }

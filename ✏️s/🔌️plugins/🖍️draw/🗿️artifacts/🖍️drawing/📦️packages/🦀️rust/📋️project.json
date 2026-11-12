@@ -203,6 +203,26 @@
         "command": "repo ./📜️script.ts native-coverage",
         "forwardAllArgs": false
       }
+    },
+    "verify-drawing-canvas-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify drawing-canvas-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-drawing-canvas-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify drawing-canvas-window-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

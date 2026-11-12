@@ -33,7 +33,7 @@ semio_s_plugin_norm_app_surface::norm_viewer_commands!(En1996Snapshot);
 
 semio_s_plugin_norm_app_surface::norm_owned_view_tool_job_factory!(En1996ViewBoundedCommandJobFactory, En1996Viewer);
 
-semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1996Viewer, En1996ViewCommand, variant = "en1996", report = |d: &En1996Snapshot| semio_s_artifact_norm_en1996_inferences::live::responsive(d, semio_s_plugin_norm_app_surface::PAINT_BUDGET).0, scene = |d: &En1996Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1996_scene::live_scene_of(d, r), diagrams = |d: &En1996Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("en1996", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_en1996_scene::diagrams(d, r, focus)).to_vec());
+semio_s_plugin_norm_app_surface::norm_viewer_surface!(En1996Viewer, En1996ViewCommand, variant = "en1996", report = |d: &En1996Snapshot| semio_s_artifact_norm_en1996_inferences::live::responsive(d, semio_s_plugin_norm_app_surface::PAINT_BUDGET).0, scene = |d: &En1996Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, _| semio_s_artifact_norm_en1996_scene::live_scene_of(d, r), diagrams = |d: &En1996Snapshot, r: &semio_s_plugin_norm_app_surface::NormViewReport, focus: Option<&str>| semio_s_plugin_norm_structural_scene::projection::memo_diagrams("en1996", d, r, focus.unwrap_or("\u{0}"), || semio_s_artifact_norm_en1996_scene_diagrams::diagrams(d, r, focus)).to_vec());
 //#endregion 🔖️Command
 
 //#region 🔖️Viewer

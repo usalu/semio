@@ -1,9 +1,10 @@
 import {createHash,randomUUID} from "node:crypto";
 import {constants} from "node:fs";
-import {chmod,copyFile,link,lstat,mkdir,open,readdir,readFile,rename,rm,unlink} from "node:fs/promises";
+import {chmod,copyFile,link,lstat,mkdir,open,readFile,rename,rm,unlink} from "node:fs/promises";
 import {homedir} from "node:os";
 import {dirname,join} from "node:path";
 import {appendCasAccessV1} from "../📒️ledger/🟦️.ts";
+import {createCasGuardV1,type CasGuardV1} from "../🚦️guard/🟦️.ts";
 import {pinCasV1,releaseCasPinsV1} from "../📌️pins/🟦️.ts";
 import {CAS_POLICY_V1,requireCasPolicyV1,type CasPolicyV1} from "../🧬️schema/🟦️.ts";
 
@@ -32,8 +33,8 @@ export type CasStoreV1=Readonly<{
 export type CasExpectationV1=Readonly<{hash?:string;size?:number;maxBytes?:number}>;
 /** 🛂️ How a checked put ended; nothing is published unless it is `created` or `exists`. */
 export type CasPutOutcomeV1=Readonly<{outcome:"created"|"exists"|"too-large"|"length-mismatch"|"digest-mismatch"|"aborted";digest?:CasDigestV1}>;
-/** 🧰️ Ports of a store: clock (tests), process id and writer identity. */
-export type CasStoreOptionsV1=Readonly<{root?:string;policy?:CasPolicyV1;now?():number;pid?:number;writer?:string}>;
+/** 🧰️ Ports of a store: clock (tests), process id and writer identity, and the admission guard (by default the guard of the root, which keeps the cap and the partition watermarks before a write adds to the disk). */
+export type CasStoreOptionsV1=Readonly<{root?:string;policy?:CasPolicyV1;now?():number;pid?:number;writer?:string;guard?:CasGuardV1}>;
 
 const HASH=/^[0-9a-f]{64}$/u;
 const sha=(hash:string):void=>{if(!HASH.test(hash))throw Error("Valid sha256 digest required / Gültiger sha256-Digest erforderlich");};
@@ -53,12 +54,14 @@ const allocated=(info:{size:number;blocks?:number}):number=>info.size;
 /** 🗄️ Opens a store; no state is held beyond the throttle of access events, so any number of processes and workspaces share one root. */
 export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
  const root=options.root??casRootV1(),policy=requireCasPolicyV1(options.policy??CAS_POLICY_V1),now=options.now??Date.now,pid=options.pid??process.pid,writer=options.writer??`${pid}-${randomUUID().slice(0,8)}`;
+ const guard=options.guard??createCasGuardV1({root,policy,now});
  const fan=policy.fanOutHexLength,objectPath=(hash:string):string=>casObjectPathV1(root,hash,fan),shard=(hash:string):string=>hash.slice(0,fan),touched=new Map<string,number>();
  const touch=async(hash:string):Promise<void>=>{
   const at=now(),last=touched.get(hash);
   if(last!==undefined&&at-last<policy.touchGranularityMs)return;
   if(touched.size>=4096)touched.clear();
-  touched.set(hash,at);await appendCasAccessV1(root,shard(hash),writer,hash,at);
+  touched.set(hash,at);
+  try{await appendCasAccessV1(root,shard(hash),writer,hash,at);}catch(error){if(!["ENOSPC","EDQUOT"].includes((error as NodeJS.ErrnoException).code??""))throw error;}
  };
  const exists=(path:string):Promise<boolean>=>lstat(path).then(()=>true,()=>false);
  const place=async(temporary:string,hash:string):Promise<void>=>{
@@ -69,6 +72,7 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
  };
 
  const ingest=async(source:CasSourceV1,expect:CasExpectationV1,signal?:AbortSignal):Promise<CasPutOutcomeV1>=>{
+  await guard.admit(expect.size??0,signal);
   const directory=join(root,"v1","t");await mkdir(directory,{recursive:true});
   const temporary=join(directory,`${writer}-${randomUUID().slice(0,12)}`),hash=createHash("sha256");let size=0,outcome:CasPutOutcomeV1["outcome"]|undefined;
   const handle=await open(temporary,"wx",0o600);
@@ -82,13 +86,13 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
     }
    }catch(error){if((error as NodeJS.ErrnoException).syscall!==undefined||signal?.aborted)throw error;outcome="aborted";}
    await handle.close();
-  }catch(error){await handle.close().catch(()=>undefined);await unlink(temporary).catch(()=>undefined);throw error;}
+  }catch(error){await handle.close().catch(()=>undefined);await unlink(temporary).catch(()=>undefined);guard.relieve(error);throw error;}
   const digest=hash.digest("hex");
   if(!outcome&&expect.size!==undefined&&size!==expect.size)outcome="length-mismatch";
   if(!outcome&&expect.hash!==undefined&&digest!==expect.hash)outcome="digest-mismatch";
   if(outcome){await unlink(temporary).catch(()=>undefined);return{outcome};}
   const target=objectPath(digest),existed=await exists(target);
-  await place(temporary,digest);await touch(digest);
+  await place(temporary,digest);await touch(digest);if(!existed)guard.account(size);
   return{outcome:existed?"exists":"created",digest:Object.freeze({hash:digest,size})};
  };
  const store:CasStoreV1={
@@ -128,8 +132,11 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
    try{const buffer=Buffer.allocUnsafe(1<<20);for(;;){signal?.throwIfAborted();const{bytesRead}=await handle.read(buffer,0,buffer.length,null);if(!bytesRead)break;hash.update(buffer.subarray(0,bytesRead));size+=bytesRead;}}finally{await handle.close();}
    const digest=hash.digest("hex"),target=objectPath(digest);
    if(!await exists(target)){
+    await guard.admit(size,signal);
     const directory=join(root,"v1","t");await mkdir(directory,{recursive:true});
-    const temporary=join(directory,`${writer}-${randomUUID().slice(0,12)}`);await copyFile(path,temporary,constants.COPYFILE_FICLONE);await place(temporary,digest);
+    const temporary=join(directory,`${writer}-${randomUUID().slice(0,12)}`);
+    try{await copyFile(path,temporary,constants.COPYFILE_FICLONE);}catch(error){await unlink(temporary).catch(()=>undefined);guard.relieve(error);throw error;}
+    await place(temporary,digest);guard.account(size);
    }
    await touch(digest);return Object.freeze({hash:digest,size});
   },
@@ -137,14 +144,4 @@ export function createCasStoreV1(options:CasStoreOptionsV1={}):CasStoreV1{
   release:holder=>releaseCasPinsV1(root,holder),
  };
  return Object.freeze(store);
-}
-
-/** 🔢️ Counts objects and bytes of a store root without reading file contents; used by status. */
-export async function casUsageV1(root:string):Promise<Readonly<{objects:number;bytes:number}>>{
- let objects=0,bytes=0;const base=join(root,"v1","o");let shards:string[];try{shards=await readdir(base);}catch{return{objects,bytes};}
- for(const shardName of shards){
-  let names:string[];try{names=await readdir(join(base,shardName));}catch{continue;}
-  for(const name of names)try{const info=await lstat(join(base,shardName,name));objects++;bytes+=info.size;}catch{}
- }
- return{objects,bytes};
 }

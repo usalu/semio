@@ -18,6 +18,9 @@ maxActiveLines = 4000
 [lints]
 workspace = true
 
+[features]
+testkit = []
+
 [lib]
 name = "semio_framework_value_snapshot_projection"
 path = "🦀️.rs"

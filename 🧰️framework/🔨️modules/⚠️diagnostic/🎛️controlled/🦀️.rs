@@ -58,6 +58,18 @@ impl semio_framework_value::native_decoding::OriginalWorkRecipient for Standalon
     fn settle_partial<'reply, 'turn, 'source>(&mut self, _: &mut (), check: semio_framework_value::native_decoding::OriginalWorkPartialCheck<'reply>) -> semio_framework_value::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.complete(Ok(())) }
     fn recover_partial<'reply, 'turn, 'source>(&mut self, _: &mut (), check: semio_framework_value::native_decoding::OriginalWorkPartialCheck<'reply>) -> semio_framework_value::native_decoding::OriginalWorkPartialCheckComplete<'reply> where 'source: 'turn { check.pending() }
 }
+/// 🪢️ Runs one retirement turn as the genuine producer invocation of its original Work action.
+struct Invoked<F, R> { operation: Option<F>, output: Option<R> }
+impl<F: FnOnce(&mut semio_framework_value::RetainedAllocationEffect<'_>) -> R, R> semio_framework_value::retained_clone::OriginalEffectProducer for Invoked<F, R> {
+    type Output = semio_framework_value::RetainedCloneStep; type Failure = ValueError; type Context<'a, 'b> = () where 'b: 'a;
+    fn validate_context<'a, 'b>(&self, _: &()) -> Result<(), ValueError> where 'b: 'a { Ok(()) }
+    fn source_turn<'a, 'b>(&self, _: &()) -> Option<semio_framework_value::retained_clone::OriginalSourceTurnIdentity> where 'b: 'a { None }
+    fn receive<'r, 'a, 'b>(&mut self, _: &mut (), effect: &mut semio_framework_value::RetainedAllocationEffect<'_>, reply: semio_framework_value::retained_clone::OriginalEffectReply<'r, semio_framework_value::RetainedCloneStep, ValueError>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r, semio_framework_value::RetainedCloneStep, ValueError>, ValueError> where 'b: 'a {
+        self.output = Some((self.operation.take().ok_or_else(|| ValueError::invariant("diagnostic retirement turn has no operation"))?)(effect));
+        Ok(reply.complete(Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))))
+    }
+    fn recover<'r, 'a, 'b>(&mut self, _: &mut (), _: &mut semio_framework_value::RetainedAllocationEffect<'_>, _: semio_framework_value::retained_clone::OriginalEffectReply<'r, semio_framework_value::RetainedCloneStep, ValueError>) -> Result<semio_framework_value::retained_clone::OriginalEffectReplyComplete<'r, semio_framework_value::RetainedCloneStep, ValueError>, ValueError> where 'b: 'a { Err(ValueError::invariant("diagnostic retirement turn has no original callback to recover")) }
+}
 /// 🗑️ Drops a decoded value outside any caller turn by driving its controlled retirement under a local, unconstrained Work action.
 pub(super) fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
@@ -80,7 +92,14 @@ pub(super) fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T
             work.issue_performed_for_action(action, &mut receipt).expect("diagnostic retirement receipt");
             let poll = {
                 let mut effect = semio_framework_value::RetainedAllocationEffect::new(grant, maximum, &mut actual, receipt.as_mut().expect("diagnostic retirement receipt issued"));
-                cursor.step(grant.maximum_copy_bytes,&mut effect)
+                let mut producer = semio_framework_value::retained_clone::OriginalEffectAuthority::new(Invoked { operation: Some(|effect: &mut semio_framework_value::RetainedAllocationEffect<'_>| cursor.step(grant.maximum_copy_bytes, effect)), output: None });
+                let mut invoked = None;
+                assert!(producer.drive(&mut (), &mut effect, &mut invoked).expect("diagnostic retirement invocation"));
+                let mut answer = None;
+                invoked.as_mut().expect("diagnostic retirement invocation action").transfer_reply(&mut answer).expect("diagnostic retirement invocation reply");
+                producer.finish(&mut invoked).expect("diagnostic retirement invocation finish");
+                answer.expect("diagnostic retirement invocation answer").expect("diagnostic retirement invocation settled");
+                producer.into_producer().ok().and_then(|mut done| done.output.take()).expect("diagnostic retirement turn ran")
             };
             let performed = OriginalWorkSink::observed_work(receipt.as_ref().expect("diagnostic retirement receipt issued"));
             work.claim_performed_for_action(action, &mut receipt).expect("diagnostic retirement claim");
@@ -99,7 +118,7 @@ pub(super) fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T
         }).expect("diagnostic retirement loan");
         assert!(!authority.has_live_actions());
         let semio_framework_value::RetainedWorkPoll::Complete(turn) = step else { panic!("diagnostic retirement stayed pending") };
-        let step = turn.result.unwrap_or_else(|_| panic!("diagnostic retirement respects independent grants"));
+        let step = turn.result.unwrap_or_else(|error| panic!("diagnostic retirement respects independent grants: {error:?}"));
         assert!(step.progress().fits(grant), "diagnostic retirement exceeded admitted authority");
     }
 }

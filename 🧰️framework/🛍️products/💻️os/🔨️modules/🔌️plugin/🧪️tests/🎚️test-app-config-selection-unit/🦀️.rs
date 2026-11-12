@@ -1,5 +1,5 @@
+use semio_framework_test_fixtures::repo_text;
 use crate::test_app_mutation_fixture::config::mutations::change_test_config_selection::ChangeTestConfigSelection;
-use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value_derive::{FromValue, ToValue};
 use protocol::{MutationKind, OpText};
 use crate::test_app_mutation_fixture::config::{TestConfig, TestConfigDiff};
@@ -57,12 +57,12 @@ fn close_config_original<T:semio_framework_value::retirement::RetireOwned>(origi
 
 #[test]
 fn test_config_original_record_receiving_preserves_nullable_selection() {
-    use replication::{OpBinary, OpBinaryReceiving, OpBinaryReceivingCursor};
+    use replication::{OpBinary, OpBinaryReceiving};
     use semio_framework_value::RetainedCloneGrant;
     use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
     use semio_framework_value_testing_admission::{bank_run,EffectBank,Wallet};
     let mut bank=EffectBank::new(Wallet::from_profile(&serde_json::json!({"items":1<<16,"copyBytes":1<<28,"capacityBytes":1<<28,"releaseBytes":1<<28,"depth":1<<16,"fuel":1<<16})));
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️tests/🎚️test-app-config-selection-unit/🧫️fixtures/🔣️receiving.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️test-app-config-selection-unit/🧫️fixtures/🔣️receiving.json")).unwrap();
     let turn = &fixture["turn"];
     let grant = RetainedCloneGrant { maximum_items: turn["items"].as_u64().unwrap() as usize, maximum_copy_bytes: turn["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: turn["capacityBytes"].as_u64().unwrap() as usize, maximum_release_bytes: turn["releaseBytes"].as_u64().unwrap() as usize, maximum_depth: turn["depth"].as_u64().unwrap() as usize };
     for selected in fixture["selections"].as_array().unwrap() {

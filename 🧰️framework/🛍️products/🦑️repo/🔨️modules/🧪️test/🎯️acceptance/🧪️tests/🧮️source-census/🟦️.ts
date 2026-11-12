@@ -5,7 +5,7 @@
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // 🧮️ Source-census laws: the placeholder, interactive-job, docstring-opener, docstring-emoji-reuse, debug-tag and interface-import scanners against the
-// language-neutral fixture. The live gates (`workspace:verify -- production-placeholders`, `-- interactivity commands`) additionally cross-check every
+// language-neutral fixture. The live gates (`repo-policy:verify -- production-placeholders`, `-- interactivity commands`) additionally cross-check every
 // tracked Rust source against `git grep`, the third-party oracle; the docstring-emoji-reuse cases are cross-checked against tree-sitter (Rust,
 // TypeScript, TSX) here.
 

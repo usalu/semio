@@ -1,10 +1,10 @@
-//! 🧬️ SemioAudioMutation — the full named-variant vocabulary replacing the W1b `SetSnapshot`-only
+//! 🧬️ SemioAudioMutation — the full named-variant vocabulary replacing the whole-snapshot-only
 //! scaffold: scalar setters (`SetSampleRate`/`SetFormat`), channel insert/remove/set-samples, and
 //! tag insert/remove/set-value. Every variant's `diff()`/`inverse()` is handcrafted directly
 //! against the sparse `SemioAudioDiff` shape — never apply-and-capture (per the schema-design
 //! recipe's own svg infinite-recursion warning).
 //!
-//! `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
+//! `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
 //! leaf payload, and its sentinel verb `no` is not in `APPROVED_VERBS` — see
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`. Every variant is now a
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/

@@ -11,5 +11,5 @@ export function nativeSourceWatchPlanV1(root: string, workspaceRoot: string): Pr
 export function declaredSourceInputs(json: any, workspaceRoot: string, context?: any, inputNames?: readonly string[]): Promise<any>;
 export function projectInputs(json: any, root: string, workspaceRoot: string, facts: any, scripts?: any, sourceRepresentation?: string, sourceGroups?: any, inputNames?: readonly string[], commandGroups?: any): Promise<any>;
 export function projectWithDefaults(json: any, root: string, projectDir: string, workspaceRoot: string, contracts?: any, facts?: any, commandInputs?: any, scripts?: any, sourceGroups?: any, sourceRepresentation?: string): Promise<any>;
-export function resolveClosureRefsV1(project: any, workspaceRoot: string, scripts: any, sourceRepresentation?: string): Promise<any>;
+export function resolveClosureRefsV1(project: any, workspaceRoot: string, scripts: any, sourceRepresentation?: string, log?: unknown): Promise<any>;
 export function inferReadOnlyBuildProjectSourcesV1(json: any, root: string, workspaceRoot: string, invocation: any, phaseControl: any): Promise<any>;

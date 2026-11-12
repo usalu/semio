@@ -193,6 +193,52 @@
         "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts preview-generated"
       }
+    },
+    "verify-wires-document-contract-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify wires-document-contract oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-wires-pointer-move": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify wires-pointer-move",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "wires-pointer-move"
+          ]
+        }
+      }
+    },
+    "verify-wires-reset-document-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify wires-reset-document-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "wires-reset-document-ownership"
+          ]
+        }
+      }
     }
   }
 }

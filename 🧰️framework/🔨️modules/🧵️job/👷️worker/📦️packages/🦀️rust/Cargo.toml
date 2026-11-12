@@ -28,10 +28,12 @@ semio-framework-job-payload = { workspace = true }
 
 [dev-dependencies]
 semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-conformance = { workspace = true }
+semio-framework-job-testing-caller = { workspace = true }
 
 [[test]]
 name = "original-payload"

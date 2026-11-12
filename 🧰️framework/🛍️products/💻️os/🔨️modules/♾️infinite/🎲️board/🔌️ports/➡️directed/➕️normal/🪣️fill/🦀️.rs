@@ -155,7 +155,7 @@ impl BoardFillSnapshot {
         if self.terminal_is_empty() { return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         let demand = self.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;
         let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-            let done = |step| semio_framework_value::RetainedWorkOutcome { result: Ok::<_,semio_framework_value::ValueError>(step), work: 1 };
+            let done = |step| semio_framework_value::RetainedWorkOutcome { result: Ok(step), work: 1 };
             if let Some(kind) = self.kinds.len.checked_sub(1).and_then(|index| self.kinds.get_mut(index)) {
                 if !kind.handles.terminal_is_empty() { return done(kind.handles.close_plain_granted(grant)); }
             }

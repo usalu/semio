@@ -1,5 +1,6 @@
 //! 🔥️ Isotherms: the zone of the wall beyond the limit isotherm of the reduced-section method (EN 1996-1-2, M-91) as a 3D solid on both faces, hatched on the fire layer, bound to the reduced-section check; the depth a_θ drags from its grip.
 
+use super::scene::projection_kit::{loc, binding_where as binding_by};
 use super::kit::*;
 use super::layout::{solid_rects, Layout, WallPose, EPS};
 use super::model::MasonryWall;

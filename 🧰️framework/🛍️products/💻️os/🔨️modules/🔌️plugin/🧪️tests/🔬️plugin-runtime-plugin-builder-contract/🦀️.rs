@@ -1,4 +1,5 @@
 // 🔬️ Support module 1 of the split test module `🔬️plugin-runtime-plugin-builder-contract`: the fixtures that more than one piece uses, as real definitions the pieces import.
+use semio_plugin_reactor_app::InstanceBirth;
 use semio_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase;
 use semio_plugin_decl_app::tool_contract::{ArtifactToolPublicContract, ToolOwnerWitness};
 use semio_framework_tool_run::ToolRunTraceCursor;
@@ -105,7 +106,6 @@ use semio_plugin_interaction::UiAssemblyResult;
 use serde_json::Value;
 use semio_plugin_window_config::{WindowConfigOwner, WindowConfigReplaceMutation, WindowConfigSnapshot};
 use semio_ui_layout::layout::WindowMeasure;
-#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_testing_laws::artifact_app_laws;
 use semio_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, transient_store_disposer};
 use semio_plugin_window_transient::{built_text_to_component_tree, window_transient};

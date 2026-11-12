@@ -479,25 +479,42 @@ function withClosureRecipesV1(project, symbolicGroups, closures) {
   return { ...project, ...table, symbolicGroups };
 }
 
-/** 🔓️ Answers the questions of a project record: every command closure it names is brought up to date (its observations join the owner, not the record), the symbolic lists become the files of the closure and the symbolic groups are compacted exactly as the direct inference compacts them. Returns the project without its recipes, the observations of the closures it used and the derived facts that stand for the walks those closures reused. */
-export async function resolveClosureRefsV1(project, workspaceRoot, scripts, sourceRepresentation = "hash") {
+/** 🔓️ Answers the questions of a project record: every command closure it names is brought up to date (its observations join the owner, not the record), the symbolic lists become the files of the closure and the symbolic groups are compacted exactly as the direct inference compacts them. Returns the project without its recipes, the observations of the closures it used and the derived facts that stand for the walks those closures reused; with a row `log` the observations and the supports are lists in that log (written once, read back in batches), never arrays. */
+export async function resolveClosureRefsV1(project, workspaceRoot, scripts, sourceRepresentation = "hash", log = undefined) {
   if (!project.closureRecipes) return { project, rows: [], derived: [] };
-  const { values, rows, derived } = await closureApiV1(scripts, workspaceRoot).resolve(Object.entries(project.closureRecipes)), root = project.root;
+  const { values, rows, derived } = await closureApiV1(scripts, workspaceRoot).resolve(Object.entries(project.closureRecipes), log), root = project.root;
   const bind = (value) => Array.isArray(value) ? value.flatMap((item) => closureMarkerV1(item) ? values.get(item.closureRef) : [bind(item)]) : value !== null && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, bind(item)])) : value;
   const { closureRecipes, closureInputs, symbolicGroups, ...rest } = project, bound = { ...rest, namedInputs: bind(rest.namedInputs), targets: bind(rest.targets) };
   for (const [name, dedupe] of symbolicGroups ?? []) { if (!Array.isArray(bound.namedInputs[name])) throw refuseBuildV1("invalid", "assembly.symbolic-group-without-list", { name: JSON.stringify(name), project: String(root), record: JSON.stringify(symbolicGroups) }); const list = dedupe || sourceRepresentation === "source" ? loaded.deduplicateProjectInputs(bound.namedInputs[name], root) : bound.namedInputs[name]; bound.namedInputs[name] = sourceRepresentation === "source" ? list : loaded.compactSourceInputs(list, workspaceRoot, root); }
   return { project: mergeCommandSourceGroupsV1(bound), rows, derived };
 }
 
+/** 🔑️ The digest of one input list, taken item by item: equal lists have equal digests without the text of the whole list ever existing, which for the thousands of command source groups of one project (each the files of a whole closure) is the difference between one pass and gigabytes of serialised text. */
+function inputListDigestV1(list) {
+  if (!Array.isArray(list)) return createHash("sha256").update(JSON.stringify(list) ?? "undefined").digest("hex");
+  const hash = createHash("sha256");
+  for (const item of list) hash.update(typeof item === "string" ? "s" + item.length + ":" + item : "j" + JSON.stringify(item) + "\n");
+  return hash.digest("hex");
+}
+
+/** 🟰️ Whether two input lists hold the same items in the same order: the exact check behind an equal digest. */
+function sameInputListV1(left, right) {
+  if (left === right) return true;
+  if (!Array.isArray(left) || !Array.isArray(right)) return JSON.stringify(left) === JSON.stringify(right);
+  if (left.length !== right.length) return false;
+  for (let at = 0; at < left.length; at++) if (left[at] !== right[at] && JSON.stringify(left[at]) !== JSON.stringify(right[at])) return false;
+  return true;
+}
+
 /** 📁️ Groups made from different recipes can hold the same files; the direct inference names one group per distinct content in order of first use, so equal groups are merged and the survivors renumbered the same way. */
-function mergeCommandSourceGroupsV1(project) {
+export function mergeCommandSourceGroupsV1(project) {
   const names = Object.keys(project.namedInputs).filter((name) => /^commandSources\d+$/u.test(name)).sort((left, right) => Number(left.slice(14)) - Number(right.slice(14)));
   const contents = new Map(), rename = new Map(), groups = [];
   for (const name of names) {
-    const key = JSON.stringify(project.namedInputs[name]);
-    let merged = contents.get(key);
-    if (!merged) { merged = `commandSources${contents.size}`; contents.set(key, merged); groups.push([merged, project.namedInputs[name]]); }
-    rename.set(name, merged);
+    const list = project.namedInputs[name], key = inputListDigestV1(list);
+    let found = contents.get(key)?.find((row) => sameInputListV1(row.list, list));
+    if (!found) { found = { name: `commandSources${groups.length}`, list }; const held = contents.get(key); if (held) held.push(found); else contents.set(key, [found]); groups.push([found.name, list]); }
+    rename.set(name, found.name);
   }
   if (names.every((name) => rename.get(name) === name)) return project;
   const rewrite = (value) => typeof value === "string" ? rename.get(value) ?? value : Array.isArray(value) ? value.map(rewrite) : value !== null && typeof value === "object" ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, rewrite(item)])) : value;

@@ -1,8 +1,7 @@
 //! ✏️ Schema-erased, typed snapshot editing shared by every stdio artifact editor.
 
 #[cfg(test)]
-#[global_allocator]
-static ORIGINAL_OWNER_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 use semio_os_kernel as kernel;
 use semio_framework_value_derive as value_derive;

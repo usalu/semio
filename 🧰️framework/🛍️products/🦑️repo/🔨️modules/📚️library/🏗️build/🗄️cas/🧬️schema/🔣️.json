@@ -9,6 +9,11 @@
         "capBytes": 34359738368,
         "highWatermark": 0.9,
         "lowWatermark": 0.75,
+        "partition": {
+          "highUsedFraction": 0.9,
+          "lowUsedFraction": 0.8,
+          "criticalUsedFraction": 0.97
+        },
         "minAgeMs": 600000,
         "leaseMaxMs": 3600000,
         "touchGranularityMs": 60000,
@@ -95,6 +100,14 @@
           "en": "Cache store collected: {evicted} entries, {freedMib} MiB freed, {keptGib} GiB kept, {protectedMib} MiB protected{partial}.",
           "de": "Cache-Speicher bereinigt: {evicted} Einträge, {freedMib} MiB freigegeben, {keptGib} GiB behalten, {protectedMib} MiB geschützt{partial}."
         },
+        "partitionState": {
+          "en": " Partition {partition} was {usedPercent}% used (high watermark {highPercent}%, low watermark {lowPercent}%).",
+          "de": " Partition {partition} war zu {usedPercent} % belegt (obere Marke {highPercent} %, untere Marke {lowPercent} %)."
+        },
+        "partitionShortfall": {
+          "en": " The partition stays {overMib} MiB above its low watermark because the rest is pinned, leased or too young.",
+          "de": " Die Partition bleibt um {overMib} MiB über ihrer unteren Marke, weil der Rest gepinnt, geleast oder zu jung ist."
+        },
         "idle": {
           "en": "Cache store is below the high watermark ({usedGib} GiB of {capGib} GiB); nothing to collect.",
           "de": "Der Cache-Speicher liegt unter der oberen Marke ({usedGib} GiB von {capGib} GiB); nichts zu bereinigen."
@@ -114,6 +127,10 @@
         "status": {
           "en": "Cache store {root}: {objects} objects, {usedGib} GiB of {capGib} GiB cap.",
           "de": "Cache-Speicher {root}: {objects} Objekte, {usedGib} GiB von {capGib} GiB Grenze."
+        },
+        "statusPartition": {
+          "en": "Partition {partition}: {usedPercent}% used, {freeGib} GiB free (collection from {highPercent}% down to {lowPercent}%, writes and builds refused from {criticalPercent}%).",
+          "de": "Partition {partition}: {usedPercent} % belegt, {freeGib} GiB frei (Bereinigung ab {highPercent} % bis auf {lowPercent} %, Schreiben und Builds abgelehnt ab {criticalPercent} %)."
         },
         "adopted": {
           "en": "Cache store: {linked} files now share {objects} stored objects, {savedMib} MiB saved, {failed} failed{partial}.",

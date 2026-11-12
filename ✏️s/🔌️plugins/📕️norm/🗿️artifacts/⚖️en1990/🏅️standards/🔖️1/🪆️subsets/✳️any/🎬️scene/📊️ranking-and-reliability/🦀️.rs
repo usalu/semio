@@ -1,7 +1,7 @@
 //! 📊️ Ranking and reliability: every combination ranked by its worst utilisation with the governing one highlighted, and the reliability index β against K_FI of the classes RC1 to RC3 with the project's design point. Both are pure functions of the document and its report, so a drag that changes a magnitude or the class redraws them in the same frame. See [`super::diagrams`].
 
 use super::*;
-use super::super::norm::{CheckResult, ReliabilityClass};
+use norm::{CheckResult, ReliabilityClass};
 
 /// 🏁️ The worst check of every combination column, ranked by utilisation: the left bar is the governing combination (hatched, diamond marker bound to its check), the framed bar is the active one and the dashed line is the limit u = 1. Columns without a check are left out.
 pub(super) fn ranking(report: &CheckReport, columns: &[Column], active: Option<&Column>) -> Option<Diagram2d> {
@@ -134,7 +134,7 @@ const SLS_EQUATIONS: [(&str, &str, &str); 3] = [("6.14b", "Characteristic (6.14b
 
 /// 📏️ The three serviceability combinations of a member side by side: the utilisation E_d / C_d of the characteristic (6.14b), frequent (6.15b) and quasi-permanent (6.16b) combination against its own criterion C_d, bars left to right with the diamond bound to the check; the dashed line is u = 1 and the table twin lists E_d and C_d in N. Combinations without a criterion C_d have no bar.
 pub(super) fn sls_combinations(report: &CheckReport, member: &Member) -> Option<Diagram2d> {
-    let rows: Vec<(usize, &str, &str, &CheckResult)> = SLS_EQUATIONS.iter().enumerate().filter_map(|(i, (label, en, de))| report.checks.iter().find(|c| c.id == format!("en1990.sls.{}.{label}", member.id) && c.utilization.is_finite() && c.status != super::super::norm::CheckStatus::NotApplicable).map(|c| (i, *en, *de, c))).collect();
+    let rows: Vec<(usize, &str, &str, &CheckResult)> = SLS_EQUATIONS.iter().enumerate().filter_map(|(i, (label, en, de))| report.checks.iter().find(|c| c.id == format!("en1990.sls.{}.{label}", member.id) && c.utilization.is_finite() && c.status != norm::CheckStatus::NotApplicable).map(|c| (i, *en, *de, c))).collect();
     if rows.is_empty() {
         return None;
     }

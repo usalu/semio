@@ -558,7 +558,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             .with_presence(presence_local, std::sync::Arc::clone(&roots.presence_peers), self.stores.presence_store.peer_retirement_factory())
             .with_original_tool_run(self.tool_runs.capture_original_view_for(meta.view_state.as_deref().and_then(|view|view.window_id.as_deref()),cx)?)
             .with_provisional(self.tool_machines.provisional_values(), self.tool_machines.provisional_generation()));
-        let (context, _) = ArtifactOwnedContextHandle::admit(original.take().expect("original context awaits its admission"), artifact_owned_tool_birth_grant(), cx);
+        let (context, birth) = ArtifactOwnedContextHandle::admit(original.take().expect("original context awaits its admission"), artifact_owned_tool_birth_grant(), cx);
+        cx.consume_retained(birth)?;
         let context = context.admitted().map_err(|error| error.into_fault())?;
         let key = admission.proof.key();
         let contract = admission.proof.contract();
@@ -605,7 +606,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 "pure command bytes require one schema-owned PureCommandRequest with a declared invocation and optional explicit caller context",
             )
         })?.bind_context(meta.view_state.as_deref())?;
-        let meta = ActionMeta { expected_document_revision: meta.expected_document_revision, actor: meta.actor.clone(), instance_id: meta.instance_id, view_state: request.view_state.map(std::sync::Arc::new) };
+        let meta = ActionMeta { actor: meta.actor.clone(), instance_id: meta.instance_id, view_state: request.view_state.map(std::sync::Arc::new), expected_document_revision: meta.expected_document_revision };
         match request.invocation {
             semio_framework::kernel::PureInvocation::Command(invocation) => self.preview_addressed_command(&invocation, &meta, cx).await,
             semio_framework::kernel::PureInvocation::Action(invocation) => self.preview_addressed_action(&invocation, &meta, cx).await,

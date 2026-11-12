@@ -172,7 +172,7 @@ impl ArtifactEditor for VcsPlayApp {
                 }
                 Ok(VcsCommand::Edit(edit_command::Edit { text }))
             }
-            "noMutation" => Ok(VcsCommand::NoMutation(no_operation::NoMutation {})),
+            "noOperation" => Ok(VcsCommand::NoOperation(no_operation::NoOperation {})),
             "canvasPointerDown" => Ok(VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {})),
             "canvasPointerMove" => Ok(VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: pointer_samples()? })),
             "canvasPointerUp" => Ok(VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: pointer_cancelled()? })),
@@ -228,7 +228,7 @@ pub fn create_vcs_app() -> semio_plugin::AppDefinition {
             .mutation("changeNotes", LocalizedLabel::native("Change Notes", "Notizen ändern"))
             .action_with(semio_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), semio_plugin::ActionKind::Mutation, "typography"))
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
-            .view_action("noMutation", LocalizedLabel::native("No-operation", "Keine Aktion"))
+            .view_action("noOperation", LocalizedLabel::native("No-operation", "Keine Aktion"))
             .action_with(semio_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_plugin::ActionKind::View, "mouse-pointer"))
             .action_audience("canvasPointerDown", semio_plugin::CapabilityAudience::Input)
             .action_with(semio_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_plugin::ActionKind::View, "mouse-pointer"))
@@ -244,7 +244,7 @@ pub fn create_vcs_app() -> semio_plugin::AppDefinition {
             .action_interactive_job("changeCounter", InteractiveJobClassification::Migrated)
             .action_interactive_job("changeStatus", InteractiveJobClassification::Migrated)
             .action_interactive_job("changeNotes", InteractiveJobClassification::Migrated)
-            .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
+            .action_interactive_job("noOperation", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
@@ -280,7 +280,7 @@ pub fn create_vcs_app() -> semio_plugin::AppDefinition {
             .action_describe("textEdit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes the title, counter, status and notes that differ; a live typing run commits as one edit.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt abweichenden Titel, Zähler, Status und Notizen; ein fortlaufender Tipplauf wird als eine Änderung übernommen."))
             .action_describe("edit", LocalizedLabel::native("Reads the given text as the demo document's projection and writes every field that differs as one edit.", "Liest den angegebenen Text als Projektion des Demodokuments und schreibt jedes abweichende Feld als eine Änderung."))
             .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole demo document with one of the plugin's bundled examples, by example id.", "Ersetzt das gesamte Demodokument durch eines der mitgelieferten Beispiele, anhand der Beispiel-Id."))
-            .action_audience("noMutation", semio_plugin::CapabilityAudience::Chrome)
+            .action_audience("noOperation", semio_plugin::CapabilityAudience::Chrome)
             .build_definition()
 }
 //#endregion 🔖️Manifest

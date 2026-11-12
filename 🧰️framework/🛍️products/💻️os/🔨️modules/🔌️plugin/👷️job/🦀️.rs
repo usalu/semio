@@ -6,10 +6,8 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_os_kernel as vcs;
 extern crate semio_os_kernel as pack;
 
-/// 🧮️ Weighs the allocator events that the paid-receipt laws of this crate's own test binary compare with their receipts.
 #[cfg(test)]
-#[global_allocator]
-static JOB_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_window_transient::window_transient::WindowTransientSnapshot;
 #[cfg(any(test, feature = "artifact-app-testing"))]

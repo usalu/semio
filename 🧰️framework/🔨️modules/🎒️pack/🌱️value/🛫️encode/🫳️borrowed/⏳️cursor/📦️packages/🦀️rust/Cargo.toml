@@ -43,4 +43,10 @@ semio-framework-dsl-record-derive = { path = "../../../../../../../🗣️dsl/�
 semio-framework-trace = { path = "../../../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 blake3 = "1.8.2"
+semio-framework-value-clone-source = { path = "../../../../../../../🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust" }
+semio-framework-value-clone-source-testing = { path = "../../../../../../../🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../../../🌱️value/♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-native-encoding = { path = "../../../../../../../🌱️value/🛫️encode/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

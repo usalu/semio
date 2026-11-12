@@ -1,6 +1,7 @@
     /// 📌️ Document cancellation and latest-wins keys: the retained document cancellation, exact keys against the serde oracle, producer child claims, contended finish, rebase and full registry reclaim.
 
 use semio_plugin_command::command_admission::ToolLatestWinsRegistry;
+use semio_plugin_testing_laws::artifact_app_laws::KeyedCancellationFixture;
 use semio_os_store_command::HistoryLane;
 pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
@@ -22,7 +23,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                 let generation = app.stores.store.generation_now();
                 let operation = semio_framework_job::Operation::new(if ack_phase == 2 { semio_framework_job::OperationId(41) } else { semio_framework_job::allocate_operation_id() }, semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(generation), 1);
                 let lease = fixture_cancellation_lease(&mut app, &ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }, cx);
-                let mut mounted = MountedTypedCommandFullOperation::<A> {
+                let mut mounted = MountedTypedCommandFullOperation::<A> { reserved_construction: Default::default(),
                     source_identity: semio_framework_job::OriginalSourceBinding::borrow(cx),
                     original_emission_caller: None,
                     original_emission_decoder: None,
@@ -55,7 +56,7 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
                     owned_child_group: None,
                     owned_child_committed: false,
                     owned_child_result_pending: false,
-                    captured_child_content: Some(std::sync::Arc::new(ChildContentView::EMPTY)),
+                    captured_child_content: Some(semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage::from_cold(ChildContentView::EMPTY)),
                     captured_child_content_generation: 0,
                     page_publication:semio_plugin_retained_command::typed_operation::MountedPagePublication::new(),result_page:None, diagnostics:None,
                     result_page_presented: false,
@@ -167,76 +168,21 @@ pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(fac
         }
     }
 
-struct KeyedCancellationFixture {
-    scope: semio_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope,
-    issuer: semio_plugin_operation::ToolCancellationIssuer,
-}
-impl KeyedCancellationFixture {
-    fn open() -> Self {
-        let mut value = Self { scope: semio_plugin_testing_laws::artifact_app_laws::OriginalFixtureScope::admit(), issuer: semio_plugin_operation::ToolCancellationIssuer::empty() };
-        for _ in 0..100_000 {
-            if value.issuer.ready() { return value; }
-            let cx = value.scope.cx();
-            let parent = cx.original_source_parent().unwrap();
-            value.issuer.admit_step(parent, cx).unwrap();
-        }
-        panic!("original keyed fixture issuer admission stalled")
+    /// 🗝️ Admits one latest-wins operation through a funded original turn and reports whether the registry accepted it.
+    fn begin_registry(registry: &mut ToolLatestWinsRegistry, operation: u64, key: &semio_framework_value_ordered::ordered::SharedOwner<String>, lease: &semio_plugin_operation::ToolCancellationLease) -> bool {
+        let quoted = RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+        let mut bank = semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::new(quoted, 1 << 20));
+        let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, quoted, 1 << 20, |effect| { let result = registry.begin(operation, key, lease, effect); semio_framework_value::RetainedWorkPoll::Complete(semio_framework_value::RetainedWorkOutcome { result, work: effect.performed_work() }) });
+        assert!(bank.into_wallet().is_ok());
+        let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("latest-wins admission left its funded turn pending") };
+        turn.result.unwrap().is_some()
     }
-    fn begin(&mut self, key: ToolOperationKey) -> semio_plugin_operation::ToolCancellationLease {
-        for _ in 0..100_000 {
-            if let Some(lease) = self.issuer.begin(&key, self.scope.cx()).unwrap() { return lease; }
-        }
-        panic!("original fixture lease admission stalled")
+
+    /// 🔓️ Releases one non-final alias of a fixture key through its quoted funded retirement.
+    fn release_key_alias(key: &mut semio_framework_value_ordered::ordered::SharedOwner<String>) {
+        let grant = semio_framework_value_testing_admission::demand_grant(key.retire_demand().unwrap());
+        assert!(matches!(key.retire_step(grant, key.retire_work_demand().unwrap()).result.unwrap(), Some((semio_framework_value::retirement::arc_custody::original::SharedOriginalRelease::Alias, _))));
     }
-    fn begin_keyed(&mut self, key: ToolOperationKey) -> semio_plugin_operation::ToolCancellationLease {
-        for _ in 0..100_000 {
-            if let Some(lease) = self.issuer.begin_keyed(&key, self.scope.cx()).unwrap() { return lease; }
-        }
-        panic!("original keyed fixture lease admission stalled")
-    }
-    fn handle(&self) -> &semio_plugin_operation::ToolCancellationHandle { self.issuer.handle().unwrap() }
-    fn cleanup(&mut self, index: usize, finished_only: bool) -> bool {
-        for _ in 0..100_000 {
-            if self.issuer.cleanup_slot(index, self.scope.cx(), finished_only).unwrap() { return true; }
-        }
-        panic!("original keyed cancellation slot cleanup stalled")
-    }
-    fn close_lease(&mut self, lease: semio_plugin_operation::ToolCancellationLease) {
-        let mut original = Some(lease);
-        let mut cursor = None;
-        for _ in 0..100_000 {
-            if original.is_none() { break; }
-            let cx = self.scope.cx();
-            let (owner, progress) = semio_plugin_operation::original_lease_cursor_admit(&mut original, cx.retained_grant()).unwrap();
-            cursor = owner;
-            cx.consume_retained(progress).unwrap();
-            if progress.copied_items > 0 { cx.consume_fuel(1); }
-        }
-        assert!(original.is_none());
-        let mut cursor = Some(cursor.expect("original lease cursor admitted"));
-        for _ in 0..100_000 {
-            let cx = self.scope.cx();
-            let progress = if cursor.as_ref().unwrap().terminal_is_empty() {
-                semio_plugin_operation::original_lease_cursor_release(&mut cursor, cx.retained_grant()).unwrap()
-            } else {
-                cursor.as_mut().unwrap().close_step(self.issuer.handle().unwrap(), cx.retained_grant()).unwrap().progress()
-            };
-            cx.consume_retained(progress).unwrap();
-            if progress.copied_items > 0 { cx.consume_fuel(1); }
-            if cursor.is_none() { return; }
-        }
-        panic!("original keyed fixture lease closure stalled")
-    }
-    fn close(mut self) {
-        for _ in 0..100_000 {
-            if self.issuer.terminal_is_empty() { self.scope.retire(); return; }
-            let cx = self.scope.cx();
-            let parent = cx.original_source_parent().unwrap();
-            self.issuer.close_step(parent, cx).unwrap();
-        }
-        panic!("original keyed fixture issuer closure stalled")
-    }
-}
 
     #[test]
     fn retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire() {
@@ -260,8 +206,8 @@ impl KeyedCancellationFixture {
                     generation: semio_framework_job::Generation(0),
                 });
             let mut first_key=fixture_latest_wins_key(first);
-            assert!(registry.begin(first_operation.0, &first_key, &first_lease, RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 }).unwrap().is_some());
-            assert!(first_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(first_key.next_release_byte_demand(),1)).result.unwrap().value.is_none());
+            assert!(begin_registry(&mut registry, first_operation.0, &first_key, &first_lease));
+            release_key_alias(&mut first_key);
             for _ in 0..100_000 {
                 if registry.take_outcome(first_operation.0) == Some(true) {
                     break;
@@ -286,8 +232,8 @@ impl KeyedCancellationFixture {
                     generation: semio_framework_job::Generation(0),
                 });
             let mut next_key=fixture_latest_wins_key(next);
-            assert!(registry.begin(next_operation.0, &next_key, &next_lease, RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 }).unwrap().is_some());
-            assert!(next_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(next_key.next_release_byte_demand(),1)).result.unwrap().value.is_none());
+            assert!(begin_registry(&mut registry, next_operation.0, &next_key, &next_lease));
+            release_key_alias(&mut next_key);
             let mut accepted = false;
             for _ in 0..100_000 {
                 if let Some(result) = registry.take_outcome(next_operation.0) {
@@ -420,12 +366,12 @@ impl KeyedCancellationFixture {
             let operation = semio_framework_job::allocate_operation_id();
             let mut lease = cancellations
                 .begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) });
-            let mut key = semio_framework_value_ordered::ordered::SharedOwner::admit(format!("target-{index:04}"), semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:TYPED_OPERATION_RESULT_PAGE_BYTES,maximum_release_bytes:0,maximum_depth:1}).result.unwrap().0;
+            let mut key = semio_framework_value_ordered::ordered::SharedOwner::from_cold(format!("target-{index:04}"));
             let mut begun = false;
             let mut result = None;
             for _ in 0..100_000 {
                 if !begun {
-                    begun = registry.begin(operation.0, &key, &lease, RetainedCloneGrant { maximum_items:1, maximum_copy_bytes:4096, maximum_capacity_bytes:4096, maximum_release_bytes:4096, maximum_depth:semio_framework_value_ordered::ordered::MAX_AVL_HEIGHT * 5 + 16 }).unwrap().is_some();
+                    begun = begin_registry(&mut registry, operation.0, &key, &lease);
                 }
                 if begun {
                     result = registry.take_outcome(operation.0);
@@ -436,7 +382,7 @@ impl KeyedCancellationFixture {
                 advance_registry(&mut registry, "full-map retained admission");
             }
             assert_eq!(result, Some(true), "completed target {index} must not consume permanent admission capacity");
-            assert!(key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(key.next_release_byte_demand(),1)).result.unwrap().value.is_none());
+            release_key_alias(&mut key);
             accepted += 1;
             for _ in 0..100_000 {
                 if registry.can_begin() {

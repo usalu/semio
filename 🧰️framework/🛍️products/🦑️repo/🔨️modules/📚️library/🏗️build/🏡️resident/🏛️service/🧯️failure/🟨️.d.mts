@@ -1,0 +1,1 @@
+export function failureRefusalV1(error:unknown,options:{log:(event:string,detail?:string)=>void;logPath:string;retry?:"later"|"never"}):{code:"disk"|"internal";key:string;fields:Record<string,string>;retry:"later"|"never"};

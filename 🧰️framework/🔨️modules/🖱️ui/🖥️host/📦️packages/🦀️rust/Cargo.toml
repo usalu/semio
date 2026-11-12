@@ -57,3 +57,4 @@ backend_webgpu = { path = "../../../🖌️render/🎯️targets/🧊️webgpu/�
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

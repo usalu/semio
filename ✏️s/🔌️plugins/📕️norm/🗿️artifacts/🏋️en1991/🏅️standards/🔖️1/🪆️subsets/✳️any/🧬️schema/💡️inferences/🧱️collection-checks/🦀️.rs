@@ -23,22 +23,22 @@ pub(super) fn check_collection_rows(document: &En1991Snapshot, annex: AnnexChoic
         check_stage(annex, report, stage);
     }
     for (_, hoist) in document.crane_hoists.iter().enumerate().filter(|(index, _)| scope.admits("craneHoists", *index)) {
-        super::crane_silo_checks::check_crane_hoist(hoist, annex, report);
+        super::crane_silo::check_crane_hoist(hoist, annex, report);
     }
     for (_, bridge) in document.footbridges.iter().enumerate().filter(|(index, _)| scope.admits("footbridges", *index)) {
-        super::bridge_effects_checks::check_footbridge(bridge, annex, report);
+        super::bridge_effects::check_footbridge(bridge, annex, report);
     }
     for (_, span) in document.rail_dynamics.iter().enumerate().filter(|(index, _)| scope.admits("railDynamics", *index)) {
-        super::bridge_effects_checks::check_rail_dynamic(span, annex, report);
+        super::bridge_effects::check_rail_dynamic(span, annex, report);
     }
     for (_, row) in document.load_dispersals.iter().enumerate().filter(|(index, _)| scope.admits("loadDispersals", *index)) {
-        super::bridge_effects_checks::check_load_dispersal(row, annex, report);
+        super::bridge_effects::check_load_dispersal(row, annex, report);
     }
     for (_, solid) in document.bulk_solids.iter().enumerate().filter(|(index, _)| scope.admits("bulkSolids", *index)) {
-        super::crane_silo_checks::check_bulk_solid(solid, annex, report);
+        super::crane_silo::check_bulk_solid(solid, annex, report);
     }
     for (_, machine) in document.rotating_machines.iter().enumerate().filter(|(index, _)| scope.admits("rotatingMachines", *index)) {
-        super::crane_silo_checks::check_rotating_machine(machine, annex, report);
+        super::crane_silo::check_rotating_machine(machine, annex, report);
     }
     for (index, surface) in document.roof_surfaces.iter().enumerate().filter(|(index, _)| scope.admits("roofSurfaces", *index)) {
         check_roof_surface(document, annex, report, surface);

@@ -1,12 +1,14 @@
 //! 🏭️ Moving-crane envelope of the runway girder (EN 1991-3, 2.5 and 2.7) and the silo action assessment class, slenderness and discharge pressures (EN 1991-4, 2.2 and 5.3). The wheel load, the factors C_h and C_w and the capacities of the classes are registry values, all unverified, so the verdicts report the unverified basis.
 
-use super::*;
+use semio_s_artifact_norm_en1991_checks::{assess_covers_on, copy, force_n as force, part_3, part_4, pressure_pa as pressure, raise_pressure_remedy, ratio};
+use semio_s_plugin_norm_compliance::{CheckReport, ClauseId, Quantity, QuantityKind, SubjectRef};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 
 const SECTIONS: usize = 40;
 
 /// 🌈️ Runway girder under the travelling crane: the end reaction R_max is the leading quantity, the largest moment M_max and shear V_max with the governing section are named in the explanation (influence lines of a simply supported span, two wheels at the wheel base).
-pub(super) fn check_crane_runway(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_crane_runway(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
     if !document.crane_claimed {
         return;
     }
@@ -32,7 +34,7 @@ pub(super) fn check_crane_runway(document: &En1991Snapshot, annex: AnnexChoice, 
 }
 
 /// 📊 Action assessment class from the mass held (capacity) and the slenderness class from h_c/d_c of a silo (2.2); a retaining silo (h_c/d_c ≤ 0.4) is outside the Janssen pressures of the artifact and said so.
-pub(super) fn check_silo_class(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_silo_class(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
     let (diameter, height) = (document.silo_diameter, document.silo_height);
     if !(diameter.is_finite() && diameter > 0.0 && height.is_finite() && height > 0.0) {
         return;
@@ -53,7 +55,7 @@ pub(super) fn check_silo_class(document: &En1991Snapshot, annex: AnnexChoice, re
 }
 
 /// ⏬ Discharge pressures p_he = C_h p_hf,max and p_we = C_w p_wf,max (5.3) against the assumed silo pressure and wall friction of the same fields as the filling checks.
-pub(super) fn check_silo_discharge(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_silo_discharge(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
     let depth = document.silo_height;
     let (gamma, a, mu, k) = (document.silo_bulk_density, document.silo_hydraulic_radius, document.silo_mu, document.silo_k);
     let (required_h, required_w) = (part_4::discharge_horizontal_max_pa(gamma, a, mu, k, depth), part_4::discharge_wall_friction_max_pa(gamma, a, mu, k, depth));
@@ -80,7 +82,7 @@ pub(super) fn check_silo_discharge(document: &En1991Snapshot, annex: AnnexChoice
 }
 
 /// 🪝 One crane hoist (EN 1991-3, 2.5 and 2.9): the dynamic factor φ₃ = 1 − (Δm/m)(1 + β₃) of the suddenly released payload fraction and the static and dynamic test loads Q_T of the rated hoist load Q_H. An unknown release device or a fraction outside 0…1 is an invalid input, no fallback is taken.
-pub(super) fn check_crane_hoist(hoist: &semio_s_artifact_norm_en1991_model::CraneHoist, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_crane_hoist(hoist: &semio_s_artifact_norm_en1991_model::CraneHoist, annex: AnnexChoice, report: &mut CheckReport) {
     let subject = |leaf: &str, en: &str, de: &str| SubjectRef::new(&hoist.id, &format!("craneHoists[id={}].{leaf}", hoist.id), copy(en, de));
     let clause = |locator: &str, section: &str| ClauseId::new("EN 1991-3", locator, section);
     let admissible = ["grab", "magnet"].map(String::from).to_vec();
@@ -125,7 +127,7 @@ pub(super) fn check_crane_hoist(hoist: &semio_s_artifact_norm_en1991_model::Cran
 }
 
 /// 🧾 One information check of a collection row: the id `<check>.<row id>`, the row's own leaf as subject, the quantity and the localized explanation, the clause of the given part.
-pub(super) fn row_check<I: AsRef<str>, E: AsRef<str>>(report: &mut CheckReport, annex: AnnexChoice, (part, locator, section): (&str, &str, &str), (collection, row_id, leaf): (&str, I, &str), (check, quantity): (&str, Quantity), (subject_en, subject_de): (&str, &str), (title_en, title_de): (&str, &str), (explanation_en, explanation_de): (E, E)) {
+pub fn row_check<I: AsRef<str>, E: AsRef<str>>(report: &mut CheckReport, annex: AnnexChoice, (part, locator, section): (&str, &str, &str), (collection, row_id, leaf): (&str, I, &str), (check, quantity): (&str, Quantity), (subject_en, subject_de): (&str, &str), (title_en, title_de): (&str, &str), (explanation_en, explanation_de): (E, E)) {
     let row_id = row_id.as_ref();
     report.push(info_check(
         format!("{check}.{row_id}"),
@@ -140,7 +142,7 @@ pub(super) fn row_check<I: AsRef<str>, E: AsRef<str>>(report: &mut CheckReport, 
 }
 
 /// ⚙️ One rotating machine (EN 1991-3, 5): the equivalent static force F_dyn = m e ω² with ω = 2π f; a non-positive mass, a negative eccentricity or a non-positive frequency is an invalid input without a fallback. The spec line gives no verdict criterion, so the force is reported as information.
-pub(super) fn check_rotating_machine(machine: &semio_s_artifact_norm_en1991_model::RotatingMachine, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_rotating_machine(machine: &semio_s_artifact_norm_en1991_model::RotatingMachine, annex: AnnexChoice, report: &mut CheckReport) {
     let clause = || ClauseId::new("EN 1991-3", "§5", "5");
     for (leaf, ok, en, de, found) in [("mass", machine.mass.is_finite() && machine.mass > 0.0, "rotating mass m (positive)", "rotierende Masse m (positiv)", machine.mass), ("eccentricity", machine.eccentricity.is_finite() && machine.eccentricity >= 0.0, "eccentricity e (not negative)", "Exzentrizität e (nicht negativ)", machine.eccentricity), ("frequency", machine.frequency.is_finite() && machine.frequency > 0.0, "rotation frequency f (positive)", "Drehfrequenz f (positiv)", machine.frequency)] {
         if !ok {
@@ -155,7 +157,7 @@ pub(super) fn check_rotating_machine(machine: &semio_s_artifact_norm_en1991_mode
 }
 
 /// 🌾 One bulk solid (EN 1991-4, Annex E): the lateral pressure ratio K = 1 − sin φ_i and its mean K_m = 1.1 K; an angle outside 0 to 90 degrees is an invalid input without a fallback.
-pub(super) fn check_bulk_solid(solid: &semio_s_artifact_norm_en1991_model::BulkSolid, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_bulk_solid(solid: &semio_s_artifact_norm_en1991_model::BulkSolid, annex: AnnexChoice, report: &mut CheckReport) {
     let phi = solid.internal_friction;
     if !(phi.is_finite() && phi > 0.0 && phi < std::f64::consts::FRAC_PI_2) {
         invalid(report, annex, format!("en1991.input.bulkSolids.{}.internalFriction", solid.id), "DIN EN 1991-4", ClauseId::new("EN 1991-4", "Annex E", "E.3"), &solid.id, format!("bulkSolids[id={}].internalFriction", solid.id), ("angle of internal friction φ_i (0 to 90°)", "innerer Reibungswinkel φ_i (0 bis 90°)"), &phi.to_string(), vec!["0 … 90°".into()]);

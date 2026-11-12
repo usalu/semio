@@ -13,6 +13,8 @@ pub struct OriginalPayloadSourceIdentity(pub usize);
 /// 🎟️ Owns one paid original operation ledger; genuine caller turns borrow it until separate closure.
 pub struct JobPayloadAuthority{original:ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>}
 impl JobPayloadAuthority{
+ /// 🎫️ The work one payload authority birth performs, quoted by its shared allocation.
+ pub fn admission_work_demand()->u64{semio_framework_value_retirement::retirement::allocation_return::shared_allocation_work_demand()}
  pub fn admission_demand()->RetirementDemand{RetirementDemand{capacity_bytes:semio_framework_value_retirement::retirement::allocation_return::shared_allocation_bytes::<JobPayloadOperationLedger>(),depth:1,..Default::default()}}
  fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
  pub fn admit(operation:OperationId,generation:Generation,grant:RetainedCloneGrant,actual:&mut Option<usize>)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
@@ -132,7 +134,7 @@ impl RetainedPayloadBuilder{
   Ok(u64::from(!self.terminal_is_empty()))
  }
  /// ♻️ Original pages and ledger close before a separate in-place metadata removal turn.
- /// ```compile_fail,E0599
+ /// ```compile_fail,E0308
  /// use semio_framework_job_payload::{RetainedPayloadBuilder,JobPayloadStep};
  /// fn cannot_hide_work(builder:&mut RetainedPayloadBuilder,cx:&mut impl JobPayloadStep){let _=builder.close_step(cx);}
  /// ```

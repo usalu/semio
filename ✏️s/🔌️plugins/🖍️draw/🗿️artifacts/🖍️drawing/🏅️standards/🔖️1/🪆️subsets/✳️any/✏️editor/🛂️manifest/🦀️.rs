@@ -7,7 +7,7 @@ use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_POINT_DOMAIN;
 use semio_s_artifact_draw_drawing_editor_interaction::drawing_manifest_action;
 use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast, nudge_selection_down, nudge_selection_down_fast};
 use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession};
-use semio_s_artifact_draw_drawing_editor_commands::{import_image, add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, set_snapshot, toggle_layer_visible};
+use semio_s_artifact_draw_drawing_editor_commands::{import_image, add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, replace_document, toggle_layer_visible};
 use semio_s_artifact_draw_drawing_editor_tool::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
 use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_s_artifact_draw_drawing_editor_tool::modes::edit;
@@ -373,11 +373,11 @@ fn create_drawing_app_part_2(builder: semio_plugin::app::EditorBuilder) -> semio
             )
             .action_interactive_job("exportDocument", semio_plugin::InteractiveJobClassification::Migrated)
             .action_with(
-                drawing_internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation)
+                drawing_internal_action("replaceDocument", LocalizedLabel::native("Replace Document", "Dokument ersetzen"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native("Replaces the entire drawing document with a supplied snapshot.", "Ersetzt das gesamte Zeichnungsdokument durch einen übergebenen Snapshot."))
                     .use_when(["replace the whole drawing"]),
             )
-            .action_interactive_job("setSnapshot", semio_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("replaceDocument", semio_plugin::InteractiveJobClassification::Migrated)
             .action_with(
                 drawing_internal_action("commitDocument", LocalizedLabel::native("Commit Document", "Dokument übernehmen"), ActionKind::Mutation)
                     .describe(LocalizedLabel::native("Commits a supplied snapshot as the drawing's next revision.", "Schreibt einen übergebenen Snapshot als nächste Revision der Zeichnung fest."))
@@ -481,7 +481,7 @@ fn create_drawing_app_part_4(builder: semio_plugin::app::EditorBuilder) -> semio
             .action_interactive_job("setCameraZoom", semio_plugin::InteractiveJobClassification::Migrated)
             .action_audience("dropLayerKind", semio_plugin::CapabilityAudience::Agent)
             .action_destructive("deleteLayer")
-            .action_destructive("setSnapshot")
+            .action_destructive("replaceDocument")
             .action_destructive("loadDocumentJson")
             .action_destructive("setActiveExample")
             .action_destructive("commitDocument")

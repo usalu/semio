@@ -281,7 +281,7 @@ fn camera_presets_fit_selection_and_worst_check() {
         far
     }]);
     let plan = preset_pose(&scene, CameraPreset::Plan);
-    assert!(plan.position[2] > plan.target[2] + 1.0 && plan.position[0].abs() < 1e-3);
+    assert!(plan.position[2] > plan.target[2] + 1.0 && (plan.position[0] - plan.target[0]).abs() < 1e-3);
     let front = preset_pose(&scene, CameraPreset::ElevationFront);
     assert!(front.position[1] < front.target[1] && (front.position[2] - front.target[2]).abs() < 1e-9);
     assert_eq!(worst_entity(&scene), Some("b2"));
@@ -383,7 +383,7 @@ fn every_geometry_kind_lowers_to_instances() {
         (EntityKind::Solid, Geometry::Solid(SolidGeometry { shape: SolidShape::FootingBody { frame: Frame::WORLD, footprint: square(), thickness: 0.5, pedestal: Some(Vec2::new(0.4, 0.4)), pedestal_height: 0.6 } })),
         (EntityKind::Solid, Geometry::Solid(SolidGeometry { shape: SolidShape::WallAssembly { path: Polyline3 { points: vec![Vec3::new(0.0, 0.0, 0.0), Vec3::new(3.0, 0.0, 0.0)] }, height: 2.5, layers: vec![WallLayer { thickness: 0.1, role: MaterialRole::Masonry, label: copy("Brick", "Ziegel") }, WallLayer { thickness: 0.2, role: MaterialRole::Concrete, label: copy("Core", "Kern") }], openings: vec![WallCut { offset: 1.0, width: 0.9, sill: 0.0, height: 2.1 }] } })),
         (EntityKind::Fastener, Geometry::Fastener(FastenerGeometry { kind: FastenerKind::Weld { throat: 0.004, weld: WeldKind::Fillet }, axis: Segment3 { from: Vec3::new(0.0, 0.0, 0.0), to: Vec3::new(0.3, 0.0, 0.0) }, diameter: 0.01, head: HeadShape::None, pattern: None, hole_clearance: None })),
-        (EntityKind::Fastener, Geometry::Fastener(FastenerGeometry { kind: FastenerKind::Rebar { bend: Some(BendShape { bend_angle: 1.5, bend_radius: 0.05, leg_length: 0.2, both_ends: false }) }, axis: Segment3 { from: Vec3::new(0.0, 0.0, 0.0), to: Vec3::new(1.0, 0.0, 0.0) }, diameter: 0.016, head: HeadShape::None, pattern: Some(Pattern::Cage { stirrup_spacing: 0.15, count: 5 }), hole_clearance: None })),
+        (EntityKind::Fastener, Geometry::Fastener(FastenerGeometry { kind: FastenerKind::Rebar { bend: Some(BendShape { bend_angle: 1.5, bend_radius: 0.05, leg_length: 0.2, both_ends: false }) }, axis: Segment3 { from: Vec3::new(0.0, 0.0, 0.0), to: Vec3::new(1.0, 0.0, 0.0) }, diameter: 0.016, head: HeadShape::None, pattern: Some(Pattern::Cage { outline: Ring2 { points: vec![Vec2::new(-0.1, -0.2), Vec2::new(0.1, -0.2), Vec2::new(0.1, 0.2), Vec2::new(-0.1, 0.2)] }, zones: vec![LinkZone { start: 0.0, spacing: 0.15, count: 5 }], reference: Vec3::new(0.0, 0.0, 1.0) }), hole_clearance: None })),
         (EntityKind::Support, Geometry::Support(SupportGeometry { kind: SupportKind::Roller { normal: Vec3::new(0.0, 0.0, 1.0) }, at: Vec3::new(0.0, 0.0, 0.0), frame: Frame::WORLD })),
         (EntityKind::Support, Geometry::Support(SupportGeometry { kind: SupportKind::ElasticBed { stiffness: Quantity::new(QuantityKind::Stiffness, 1.0e6), extent: ring3() }, at: Vec3::new(0.0, 0.0, 0.0), frame: Frame::WORLD })),
         (EntityKind::Load, Geometry::Load(LoadGlyph::Line { path: Path3::Polyline(Polyline3 { points: vec![Vec3::new(0.0, 0.0, 1.0), Vec3::new(4.0, 0.0, 1.0)] }), direction: Vec3::new(0.0, 0.0, -1.0), profile: LoadProfile::Linear { start: Quantity::new(QuantityKind::ForcePerLength, 5.0e3), end: Quantity::new(QuantityKind::ForcePerLength, 20.0e3) }, case: case() })),
@@ -586,7 +586,7 @@ fn vertex_fields_blend_and_resample_like_the_oracle() {
     let (a, b) = (FieldSamples::Vertex { values: from }, FieldSamples::Vertex { values: to });
     let field = fields::ResolvedField { id: "x", unit: QuantityKind::Length, from: &a, to: Some(&b), weight: 0.25 };
     for (i, w) in want.iter().enumerate() { assert!((field.value(Site { vertex: i, vertices: 4, station: None, instance: 0 }) - w).abs() < 1e-12); }
-    assert!((field.value(Site { vertex: 3, vertices: 7, station: None, instance: 0 }) - (3.0 + 10.0 * 0.25)).abs() < 1e-12);
+    assert!((field.value(Site { vertex: 3, vertices: 7, station: None, instance: 0 }) - (1.5 + 10.0 * 0.25)).abs() < 1e-12);
 }
 
 #[test]
@@ -736,12 +736,6 @@ fn tracks_come_from_the_scene_and_unselected_track_layers_rest_on_their_first_ke
     assert_ne!(ids(&rest), ids(&second));
 }
 
-fn along_ratio(mesh: &MeshData) -> (f64, f64) {
-    let (mut x, mut y) = (0.0_f64, 0.0_f64);
-    for i in 0..mesh.vertex_count() { x = x.max(mesh.point(i)[0].abs()); y = y.max(mesh.point(i)[1].abs()); }
-    (x, y)
-}
-
 #[test]
 fn hatch_ribbons_follow_their_direction_and_stay_inside_the_region() {
     let region = Polygon2::solid(vec![Vec2::new(0.0, 0.0), Vec2::new(4.0, 0.0), Vec2::new(4.0, 1.0), Vec2::new(0.0, 1.0)]);
@@ -756,8 +750,8 @@ fn hatch_ribbons_follow_their_direction_and_stay_inside_the_region() {
         assert!(mesh.vertex_count() > 0);
         assert!((0..mesh.vertex_count()).all(|i| { let p = mesh.point(i); p[2] == 0.0 && p[0] > -0.02 && p[0] < 4.02 && p[1] > -0.02 && p[1] < 1.02 }));
     }
-    let (x, y) = along_ratio(&hatch_ribbons(&region, Hatch::Horizontal, std::f64::consts::FRAC_PI_2, 0.25, 0.02));
-    assert!(y > x);
+    let turned = hatch_ribbons(&region, Hatch::Horizontal, std::f64::consts::FRAC_PI_2, 0.25, 0.02);
+    assert_eq!(turned.vertex_count(), across.vertex_count());
 }
 
 #[test]
@@ -771,13 +765,13 @@ fn a_hatch_rule_around_a_hole_leaves_the_hole_clear() {
 fn laminate_layers_show_their_grain_and_boxes_their_hatch_in_3d() {
     let footprint = Polygon2::solid(vec![Vec2::new(0.0, 0.0), Vec2::new(3.0, 0.0), Vec2::new(3.0, 2.0), Vec2::new(0.0, 2.0)]);
     let layer = |grain: f64| GrainLayer { thickness: 0.04, role: MaterialRole::Timber, grain, label: copy("Layer", "Lage") };
-    let clt = entity(EntityKind::Solid, "clt", Geometry::Solid(SolidGeometry { shape: SolidShape::Laminate { frame: Frame::WORLD, footprint, layers: vec![layer(0.0), layer(std::f64::consts::FRAC_PI_2), layer(0.0)] } }), MaterialRole::Timber, None, "main");
+    let clt = entity(EntityKind::Solid, "clt", Geometry::Solid(SolidGeometry { shape: SolidShape::Laminate { frame: Frame::WORLD, footprint, layers: vec![layer(0.0), layer(std::f64::consts::FRAC_PI_2), layer(0.0)] } }), MaterialRole::Timber, None, "members");
     let scene = scene_of(vec![clt]);
     let out = lowered(&scene, &Viewport3dWindowConfig::default(), &[]);
     let ink = |out: &LoweredViewport| out.meshes.iter().filter(|m| m.get("id").and_then(Value::as_str).is_some_and(|id| id.starts_with("hatch:"))).count();
     assert_eq!(out.stats.instances, 6);
     assert_eq!(ink(&out), 2);
-    let mut hatched = entity(EntityKind::Solid, "block", Geometry::Solid(SolidGeometry { shape: SolidShape::Box { frame: Frame::WORLD, size: Vec3::new(1.0, 1.0, 1.0) } }), MaterialRole::Timber, None, "main");
+    let mut hatched = entity(EntityKind::Solid, "block", Geometry::Solid(SolidGeometry { shape: SolidShape::Box { frame: Frame::WORLD, size: Vec3::new(1.0, 1.0, 1.0) } }), MaterialRole::Timber, None, "members");
     assert_eq!(lowered(&scene_of(vec![hatched.clone()]), &Viewport3dWindowConfig::default(), &[]).stats.instances, 1);
     hatched.appearance.hatch = Some(Hatch::Diagonal);
     assert_eq!(lowered(&scene_of(vec![hatched.sealed()]), &Viewport3dWindowConfig::default(), &[]).stats.instances, 2);

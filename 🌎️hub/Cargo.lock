@@ -6035,6 +6035,8 @@ dependencies = [
 name = "semio-framework-io-sqlite-snapshot-testing-backing"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value-testing-allocator",
  "semio-os-kernel",
 ]
 
@@ -6280,6 +6282,7 @@ dependencies = [
  "semio-framework-job-clock",
  "semio-framework-job-context",
  "semio-framework-job-failure",
+ "semio-framework-job-outcome",
  "semio-framework-job-payload",
  "semio-framework-job-return-budget",
  "semio-framework-job-return-escrow-publication",
@@ -17097,6 +17100,7 @@ dependencies = [
  "semio-plugin-instance-ladders",
  "semio-plugin-instance-stores",
  "semio-plugin-interaction",
+ "semio-plugin-job",
  "semio-plugin-mounted-owner",
  "semio-plugin-ownership",
  "semio-plugin-peer",
@@ -18273,11 +18277,13 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-time-travel",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-framework-value-retirement-queue",
+ "semio-framework-value-testing-admission",
  "semio-os-kernel",
  "semio-os-store-engine-replay",
  "semio-os-vcs",
@@ -18293,6 +18299,7 @@ dependencies = [
  "semio-ui-contract",
  "semio-ui-layout",
  "semio-ui-locale",
+ "serde_json",
 ]
 
 [[package]]
@@ -44085,6 +44092,9 @@ dependencies = [
  "semio-s-artifact-norm-en1990-model",
  "semio-s-artifact-norm-en1990-mutations",
  "semio-s-artifact-norm-en1990-scene",
+ "semio-s-artifact-norm-en1990-scene-combinations",
+ "semio-s-artifact-norm-en1990-scene-diagrams",
+ "semio-s-artifact-norm-en1990-scene-kit",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-results-config",
@@ -44740,7 +44750,52 @@ dependencies = [
  "semio-s-artifact-norm-en1990-checks",
  "semio-s-artifact-norm-en1990-inferences",
  "semio-s-artifact-norm-en1990-model",
+ "semio-s-artifact-norm-en1990-scene-combinations",
+ "semio-s-artifact-norm-en1990-scene-kit",
+ "semio-s-artifact-norm-en1990-scene-layout",
  "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1990-scene-combinations"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1990-checks",
+ "semio-s-artifact-norm-en1990-inferences",
+ "semio-s-artifact-norm-en1990-model",
+ "semio-s-plugin-norm-compliance",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1990-scene-diagrams"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1990-checks",
+ "semio-s-artifact-norm-en1990-model",
+ "semio-s-artifact-norm-en1990-scene-combinations",
+ "semio-s-artifact-norm-en1990-scene-kit",
+ "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1990-scene-kit"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1990-checks",
+ "semio-s-artifact-norm-en1990-inferences",
+ "semio-s-artifact-norm-en1990-model",
+ "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1990-scene-layout"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1990-checks",
+ "semio-s-artifact-norm-en1990-model",
  "semio-s-plugin-norm-structural-scene",
 ]
 
@@ -44779,6 +44834,7 @@ dependencies = [
  "semio-s-artifact-norm-en1990-model",
  "semio-s-artifact-norm-en1990-mutations",
  "semio-s-artifact-norm-en1990-scene",
+ "semio-s-artifact-norm-en1990-scene-diagrams",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-structural-scene",
@@ -44925,6 +44981,39 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-os-kernel",
+ "semio-s-artifact-norm-en1991-checks",
+ "semio-s-artifact-norm-en1991-inferences-bridge-effects",
+ "semio-s-artifact-norm-en1991-inferences-crane-silo",
+ "semio-s-artifact-norm-en1991-inferences-hazard",
+ "semio-s-artifact-norm-en1991-inferences-rail-silo",
+ "semio-s-artifact-norm-en1991-model",
+ "semio-s-plugin-norm-compliance",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1991-inferences-bridge-effects"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1991-checks",
+ "semio-s-artifact-norm-en1991-inferences-crane-silo",
+ "semio-s-artifact-norm-en1991-inferences-rail-silo",
+ "semio-s-artifact-norm-en1991-model",
+ "semio-s-plugin-norm-compliance",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1991-inferences-crane-silo"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1991-checks",
+ "semio-s-artifact-norm-en1991-model",
+ "semio-s-plugin-norm-compliance",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1991-inferences-hazard"
+version = "0.1.0"
+dependencies = [
  "semio-s-artifact-norm-en1991-checks",
  "semio-s-artifact-norm-en1991-inferences-rail-silo",
  "semio-s-artifact-norm-en1991-model",
@@ -51780,6 +51869,8 @@ dependencies = [
  "semio-s-artifact-norm-en1996-model",
  "semio-s-artifact-norm-en1996-mutations",
  "semio-s-artifact-norm-en1996-scene",
+ "semio-s-artifact-norm-en1996-scene-diagrams",
+ "semio-s-artifact-norm-en1996-scene-kit",
  "semio-s-artifact-norm-en1996-schema",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
@@ -52473,10 +52564,55 @@ name = "semio-s-artifact-norm-en1996-scene"
 version = "0.1.0"
 dependencies = [
  "semio-s-artifact-norm-en1996-model",
+ "semio-s-artifact-norm-en1996-scene-kit",
+ "semio-s-artifact-norm-en1996-scene-layout",
+ "semio-s-artifact-norm-en1996-scene-profile",
  "semio-s-artifact-norm-en1996-schema",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-mechanics",
  "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1996-scene-diagrams"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1996-model",
+ "semio-s-artifact-norm-en1996-scene-kit",
+ "semio-s-artifact-norm-en1996-scene-layout",
+ "semio-s-artifact-norm-en1996-scene-profile",
+ "semio-s-artifact-norm-en1996-schema",
+ "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1996-scene-kit"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1996-model",
+ "semio-s-artifact-norm-en1996-scene-layout",
+ "semio-s-artifact-norm-en1996-schema",
+ "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1996-scene-layout"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1996-model",
+ "semio-s-artifact-norm-en1996-schema",
+ "semio-s-plugin-norm-structural-scene",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-en1996-scene-profile"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-norm-en1996-model",
+ "semio-s-artifact-norm-en1996-schema",
+ "semio-s-plugin-norm-compliance",
 ]
 
 [[package]]
@@ -52517,6 +52653,7 @@ dependencies = [
  "semio-s-artifact-norm-en1996-model",
  "semio-s-artifact-norm-en1996-mutations",
  "semio-s-artifact-norm-en1996-scene",
+ "semio-s-artifact-norm-en1996-scene-diagrams",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
  "semio-s-plugin-norm-structural-scene",
@@ -66058,6 +66195,7 @@ dependencies = [
  "semio-s-artifact-remodel-remodeling-model",
  "semio-s-artifact-remodel-remodeling-model-diff",
  "semio-s-artifact-remodel-remodeling-mutations",
+ "semio-s-artifact-remodel-remodeling-mutations-leaves",
  "semio-s-artifact-remodel-remodeling-read",
  "semio-s-artifact-remodel-remodeling-schema",
  "semio-s-artifact-remodel-remodeling-viewer",
@@ -66652,7 +66790,6 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-pack-json",
- "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -66666,6 +66803,13 @@ dependencies = [
  "semio-s-artifact-remodel-remodeling-mut-params",
  "semio-s-artifact-remodel-remodeling-mut-results",
  "semio-ui-locale",
+]
+
+[[package]]
+name = "semio-s-artifact-remodel-remodeling-mutations-leaves"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-schema-registry",
 ]
 
 [[package]]

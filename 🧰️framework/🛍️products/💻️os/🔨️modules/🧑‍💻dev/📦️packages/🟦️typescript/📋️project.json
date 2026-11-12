@@ -907,6 +907,21 @@
         "forwardAllArgs": true
       }
     },
+    "channel-version-descriptors-check": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json",
+        "{workspaceRoot}/**/🧩️component/🔣️.json"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts channel-version check-descriptors"
+      }
+    },
     "channel-version-generate": {
       "executor": "repo:script",
       "inputs": [

@@ -5,7 +5,7 @@ import{resolve}from"node:path";
 import{spawn,spawnSync}from"node:child_process";
 import schema from"../🧬️schema/🔣️.json";
 import fixture from"./🔣️.json";
-import{scriptProcessStallActionV1,createScriptTerminationGuardV1,liveChildCountV1,treeCpuMillisecondsV1,waitingDelayV1,enterScriptProcessWaitV1,activeScriptProcessWaitsV1,noteScriptProcessProgressV1,observeScriptProcessOutputV1,scriptProcessWaitEpisodeV1,scriptProcessStallDecisionV1,scriptProcessWatchdogNoticeV1,startScriptProcessWatchdogV1}from"../🟦️.ts";
+import{enterScriptProcessServiceV1,scriptProcessServiceCountV1,scriptProcessStallActionV1,createScriptTerminationGuardV1,liveChildCountV1,treeCpuMillisecondsV1,waitingDelayV1,enterScriptProcessWaitV1,activeScriptProcessWaitsV1,noteScriptProcessProgressV1,observeScriptProcessOutputV1,scriptProcessWaitEpisodeV1,scriptProcessStallDecisionV1,scriptProcessWatchdogNoticeV1,startScriptProcessWatchdogV1}from"../🟦️.ts";
 test("the stall decision agrees with the closed schema and an independent SQLite table",()=>{
  const database=new Database(":memory:"),validate=new Ajv({strict:true}).compile({...schema.definitions.State,definitions:{}});
  try{for(const row of fixture.decisions){expect(validate(row.state)).toBe(true);expect(scriptProcessStallDecisionV1(row.state,fixture.stall,fixture.idleTree)).toBe(row.decision);
@@ -41,6 +41,11 @@ test.skipIf(process.platform==="win32")("the CPU time reader agrees with the sys
 test("a process inside a queue wait is never reported as stalled, however long the wait lasts",async()=>{
  const sleep=(milliseconds:number)=>new Promise(done=>setTimeout(done,milliseconds));let stalls=0;const stop=startScriptProcessWatchdogV1({children:()=>[],stallMilliseconds:60,checkMilliseconds:10,onStall:()=>{stalls++;}});
  try{const waiting=waitingDelayV1(400);await sleep(300);expect(stalls).toBe(0);await waiting;await sleep(250);expect(stalls).toBe(1);}finally{stop();}
+});
+test("a serving host is never reported as stalled however idle it is, and is judged again as soon as it stops serving",async()=>{
+ const sleep=(milliseconds:number)=>new Promise(done=>setTimeout(done,milliseconds));let stalls=0;const stop=startScriptProcessWatchdogV1({children:()=>[],stallMilliseconds:60,checkMilliseconds:10,onStall:()=>{stalls++;}});
+ const leave=enterScriptProcessServiceV1();
+ try{expect(scriptProcessServiceCountV1()).toBe(1);await sleep(400);expect(stalls,"idle while serving").toBe(0);leave();leave();expect(scriptProcessServiceCountV1(),"leaving twice counts once").toBe(0);await sleep(300);expect(stalls,"idle after serving").toBe(1);}finally{leave();stop();}
 });
 test("a wait counts only until the wait ceiling, so a queue nobody serves any more is stalled like anything else",()=>{
  const leave=enterScriptProcessWaitV1(),start=Date.now();try{expect(activeScriptProcessWaitsV1(start+1000,60000)).toBe(1);expect(activeScriptProcessWaitsV1(start+59999,60000)).toBe(1);expect(activeScriptProcessWaitsV1(start+60000+5,60000)).toBe(0);}finally{leave();}

@@ -3,16 +3,69 @@
 version = 4
 
 [[package]]
+name = "bumpalo"
+version = "3.20.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
+
+[[package]]
+name = "cfg-if"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
+
+[[package]]
+name = "futures-core"
+version = "0.3.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "92d699e522242e69e3003b94ecc1f960f3a5e015aa7c5d7486e65ad01dd94f5e"
+
+[[package]]
+name = "futures-task"
+version = "0.3.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd417de3d1d015fc3bfd2b1ea46dfc7bab72ef86f1cc7cc9c78e728b34a6d1fd"
+
+[[package]]
+name = "futures-util"
+version = "0.3.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d50a92467f8ba5dd6e3ee5d4bd04d73ab2e4e1c44474a0674821dfce14b79bc"
+dependencies = [
+ "futures-core",
+ "futures-task",
+ "pin-project-lite",
+ "slab",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
+name = "js-sys"
+version = "0.3.107"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8dc09d2154098bbf4ef54eab6b117a3c24cbbffe94046b16ee6d6d4510584d3a"
+dependencies = [
+ "cfg-if",
+ "futures-util",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+
+[[package]]
+name = "pin-project-lite"
+version = "0.2.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
 name = "proc-macro2"
@@ -31,6 +84,28 @@ checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "rustversion"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
+
+[[package]]
+name = "semio-framework-async"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-framework-async-timer",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-allocation-return",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-async-timer"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-diagnostic"
@@ -181,6 +256,160 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-control-contract",
  "semio-framework-value-native-owned",
+]
+
+[[package]]
+name = "semio-framework-job-clock"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job-recorded-clock",
+ "semio-framework-trace",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-context"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-job-clock",
+ "semio-framework-job-failure",
+ "semio-framework-job-outcome",
+ "semio-framework-job-outcome-borrow",
+ "semio-framework-job-payload",
+ "semio-framework-job-receiving",
+ "semio-framework-job-replacement",
+ "semio-framework-job-return-book",
+ "semio-framework-job-return-budget",
+ "semio-framework-job-return-escrow-publication",
+ "semio-framework-job-work-grant",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-call",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-outcome",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-native-receiving-frame",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-job-failure"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-io-control",
+ "semio-framework-job-payload",
+ "semio-framework-job-receiving",
+ "semio-framework-pack-json",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-outcome"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-payload",
+ "semio-framework-value-derive",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-outcome-borrow"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-payload",
+ "semio-framework-trace",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-payload"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-derive",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-job-receiving"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-return-budget",
+ "semio-framework-value-call",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-recorded-clock"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-receiving",
+ "semio-framework-value-retirement",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-job-replacement"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-job-return-book"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-payload",
+ "semio-framework-job-return-escrow-publication",
+ "semio-framework-trace",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-return-budget"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-payload",
+ "semio-framework-job-return-escrow-publication",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-outcome",
+ "semio-framework-value-native-receiving-frame",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-return-escrow-publication"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job-payload",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-work-grant"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-derive",
+ "semio-framework-value-retained-clone",
 ]
 
 [[package]]
@@ -380,6 +609,7 @@ name = "semio-framework-replication-history"
 version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
+ "semio-framework-job-context",
  "semio-framework-pack-error",
  "semio-framework-pack-json",
  "semio-framework-replication-causal",
@@ -538,6 +768,13 @@ dependencies = [
 [[package]]
 name = "semio-framework-trace"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-trace-memory-testing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+]
 
 [[package]]
 name = "semio-framework-value"
@@ -841,6 +1078,7 @@ dependencies = [
  "semio-framework-value-native-receiver-protocol",
  "semio-framework-value-native-receiving-contract",
  "semio-framework-value-native-reservation",
+ "semio-framework-value-native-schema",
  "semio-framework-value-native-schema-engine",
  "semio-framework-value-native-shared-engine",
  "semio-framework-value-native-shared-field",
@@ -910,6 +1148,20 @@ dependencies = [
  "semio-framework-value-native-schema-engine",
  "semio-framework-value-native-source",
  "semio-framework-value-paged-list",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
+name = "semio-framework-value-native-schema"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-clone-backing",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-receiver-protocol",
+ "semio-framework-value-native-schema-engine",
+ "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
 ]
@@ -1201,6 +1453,7 @@ dependencies = [
 name = "semio-framework-value-retirement"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-trace",
  "semio-framework-value-allocation-return",
  "semio-framework-value-control-contract",
  "semio-framework-value-paged-list",
@@ -1256,6 +1509,14 @@ name = "semio-framework-value-source-turn"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-value-testing-allocator"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-trace-memory-testing",
+]
+
+[[package]]
 name = "semio-s-fem-material"
 version = "0.1.0"
 dependencies = [
@@ -1270,6 +1531,7 @@ dependencies = [
  "semio-framework-value-native-receiving-original",
  "semio-framework-value-persistent",
  "semio-framework-value-snapshot-projection",
+ "semio-framework-value-testing-allocator",
  "serde_json",
 ]
 
@@ -1317,6 +1579,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "slab"
+version = "0.4.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
+
+[[package]]
 name = "syn"
 version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1343,6 +1611,50 @@ name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
+
+[[package]]
+name = "wasm-bindgen"
+version = "0.2.130"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0181c14ddd6c7b8b0b0132a5f1ea2f32be0d893cd3ea97b6e3b28886b8a3d1c"
+dependencies = [
+ "cfg-if",
+ "rustversion",
+ "wasm-bindgen-macro",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-macro"
+version = "0.2.130"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e931a02a39abdbf66966fc35902b5ed58344750a70885bed4ebb3d8eaf28ed9"
+dependencies = [
+ "quote",
+ "wasm-bindgen-macro-support",
+]
+
+[[package]]
+name = "wasm-bindgen-macro-support"
+version = "0.2.130"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ca4b54280e455bd831e33a6b8e734baf432fe63fbc35c42ac14ce67a043a53a"
+dependencies = [
+ "bumpalo",
+ "proc-macro2",
+ "quote",
+ "syn 3.0.9",
+ "wasm-bindgen-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-shared"
+version = "0.2.130"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b1f9c3798725016c6ee5f2f57869ec0831e8bbc0ab0310a86e787e97f41389e"
+dependencies = [
+ "unicode-ident",
+]
 
 [[package]]
 name = "zmij"

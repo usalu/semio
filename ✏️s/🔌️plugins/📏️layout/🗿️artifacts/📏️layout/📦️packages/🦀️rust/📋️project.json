@@ -209,6 +209,36 @@
         "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts verify physical-codecs"
       }
+    },
+    "verify-layout-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify layout-document-contract native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-layout-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify layout-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-layout-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify layout-window-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

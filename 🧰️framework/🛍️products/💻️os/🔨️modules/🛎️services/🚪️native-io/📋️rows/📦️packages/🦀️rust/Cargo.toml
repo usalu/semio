@@ -29,3 +29,4 @@ semio-framework-value-native-storage = { workspace = true }
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

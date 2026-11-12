@@ -37,7 +37,7 @@
     {
       "axis": "copy",
       "limit": 0,
-      "admitted": true
+      "admitted": false
     },
     {
       "axis": "capacity",

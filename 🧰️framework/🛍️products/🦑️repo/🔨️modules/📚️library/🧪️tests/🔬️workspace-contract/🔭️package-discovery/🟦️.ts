@@ -7,7 +7,6 @@ import { policyPluginDependencyParityBreaches } from "../../../⚖️laws/🧩�
 import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, readSemioMarker } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
 import { computeWorkspaces, diffWorkspaces, getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { loadTaxonomy, loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { policyDiscoveredAllowlist } from "../../../🚨️policy/🔒️allowlist/🟦️.ts";
 import { buildSemanticCensus } from "../../../🔍️discovery/🧩️semantic-census/🟦️.ts";
 
 describe("areaOf", () => {
@@ -398,17 +397,4 @@ describe("policyPluginDependencyParityBreaches", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
-});
-
-describe("🔒️ policy allowlist", () => {
-  const repoRoot = getWorkspaceRoot();
-
-  test.if(testLevelAtLeast("long"))("an area contributes its own policy exemptions, and the router merges them by discovery", () => {
-    const merged = policyDiscoveredAllowlist(repoRoot, "semantic-vocabulary");
-    expect(merged.size).toBeGreaterThan(0);
-    // 🧭️Every entry must live under the area that contributed it — an exemption never outlives the
-    // code it exempts, which is the whole point of moving it out of the root router.
-    for (const entry of merged) expect(entry.length).toBeGreaterThan(0);
-    expect(policyDiscoveredAllowlist(repoRoot, "no-such-rule-key").size).toBe(0);
-  }, 600_000);
 });

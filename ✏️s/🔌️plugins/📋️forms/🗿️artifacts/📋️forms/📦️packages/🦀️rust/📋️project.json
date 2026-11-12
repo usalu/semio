@@ -133,6 +133,26 @@
           ]
         }
       }
+    },
+    "verify-forms-document-contract-native-all": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify forms-document-contract native all",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-forms-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify forms-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

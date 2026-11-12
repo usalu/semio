@@ -1,7 +1,7 @@
 //! 📊️ Effects and spectra: the bridge serviceability quantities against their limits, the envelope of every action effect over the generated combinations and the stress-range spectrum of a member with its Palmgren-Miner damage. Pure projections of the document and the report, every diagram has a table twin. See [`super`].
 
 use super::*;
-use super::super::model::BridgeSls;
+use model::BridgeSls;
 
 fn bridge_rows(document: &En1990Snapshot) -> impl Iterator<Item = (&Member, &BridgeSls)> {
     document.bridge_sls.iter().filter_map(|s| document.members.iter().find(|m| m.id == s.member_id).map(|m| (m, s)))
@@ -81,7 +81,7 @@ pub(super) fn effects(document: &En1990Snapshot, columns: &[Column], focus: Opti
             let mut table = [Vec::new(), Vec::new(), Vec::new(), Vec::new()];
             let mut extent = 1.0_f64;
             for (i, effect) in rows.iter().enumerate() {
-                let characteristic = effect.influence * super::super::handles::raw_value(document, &effect.action_id);
+                let characteristic = effect.influence * handles::raw_value(document, &effect.action_id);
                 let values: Vec<f64> = columns.iter().filter_map(|c| c.factor(&effect.action_id)).map(|f| f * characteristic).collect();
                 let (low, high) = (values.iter().copied().fold(0.0, f64::min), values.iter().copied().fold(0.0, f64::max));
                 extent = extent.max(high.abs()).max(low.abs()).max(characteristic.abs());

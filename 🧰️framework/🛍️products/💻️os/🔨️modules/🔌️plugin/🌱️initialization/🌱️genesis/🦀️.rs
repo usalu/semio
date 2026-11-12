@@ -31,9 +31,22 @@ impl OriginalStoreBirth{
  pub fn built_with<O>(&mut self,cx:&mut StepContext<'_>,output:&mut Option<O>,demand:OriginalConstructionDemand,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::construction::NativeConstructionScope<'_,'_>)->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,OriginalTurnFailure>{
   let status=admit_original_construction(cx,output,&mut self.admission,demand,1,|scope,_|semio_framework_value::RetainedWorkOutcome{result:construct(scope),work:1})?;self.status(cx,status)
  }
+ /// 🧬️ Admits the actor lease alias once under its own funded effect so a later construction consumes it; `false` while unfunded.
+ pub fn stash_actor(&mut self,actor:&protocol::ActorId,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.clone.is_some(){return Ok(true)}
+  let grant=cx.retained_grant();
+  match cx.with_original_effect(grant,|_,effect|actor.0.admit_clone(effect))?{Some((turn,performed))=>{cx.consume_work(performed);self.clone=Some(turn.result?);Ok(true)},None=>Ok(false)}
+ }
+ /// 🏗️ [`Self::built`] for a constructor that consumes the stashed actor lease alias; an unconsumed alias stays stashed.
+ pub fn built_actor<O>(&mut self,cx:&mut StepContext<'_>,output:&mut Option<O>,demand:OriginalConstructionDemand,construct:impl FnOnce(semio_framework_value::SharedUtf8)->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,OriginalTurnFailure>{
+  let mut stashed=self.clone.take();
+  let ready=self.built(cx,output,demand,||{let(actor,_)=stashed.take().ok_or_else(||invalid("original construction lost its stashed actor"))?;construct(actor)});
+  if stashed.is_some(){self.clone=stashed}
+  ready
+ }
  /// ♻️ Retires the frame, then its retained causes, one funded step per call.
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if self.failure.is_none()&&self.admission.has_failure()&&self.admission.take_failure_into_step(&mut self.failure,cx)?{return Ok(false)}
+  if self.admission.failure_untaken()&&self.admission.take_failure_into_step(&mut self.failure,cx)?{return Ok(false)}
   if let Some(active)=self.active.as_ref(){let d=store::os_store::snapshot_read::artifact_retirement_box_demands(active,cx.retained_grant().maximum_copy_bytes)?;retired_effect(cx,d,|effect|store::os_store::snapshot_read::settle_close_poll(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,effect.grant().maximum_copy_bytes,effect)))?;return Ok(false)}
   if self.failure.is_some(){let d=store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.failure)?;retired_effect(cx,d,|effect|store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.failure,&mut self.active,effect).result)?;return Ok(false)}
   if !self.admission.terminal_is_empty(){self.admission.close_step(cx)?;}

@@ -41,7 +41,7 @@ pub mod set_has_header;
 //#region 🔖️Leaves
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed content mutation for `stdio.csv`. `NoMutation` was dropped: the derive requires every
+/// 📐️ Typed content mutation for `stdio.csv`. The derive requires every
 /// variant to wrap exactly one leaf payload, and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

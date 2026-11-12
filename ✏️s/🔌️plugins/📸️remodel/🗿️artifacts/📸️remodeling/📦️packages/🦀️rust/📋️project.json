@@ -172,6 +172,26 @@
         "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts verify snapshot-sqlite-native-syntax"
       }
+    },
+    "verify-remodel-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify remodel-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-remodel-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify remodel-window-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

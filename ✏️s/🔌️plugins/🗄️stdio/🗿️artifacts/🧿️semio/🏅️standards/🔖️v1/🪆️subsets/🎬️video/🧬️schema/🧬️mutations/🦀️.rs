@@ -1,7 +1,7 @@
 //! 🧬️ SemioVideoMutation — video mutation dispatch. Every variant's `diff()` is handcrafted
 //! (never apply-and-capture) and every variant's `inverse()` is handcrafted, index-aware.
 //!
-//! `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
+//! `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
 //! leaf payload, and its sentinel verb `no` is not in `APPROVED_VERBS` — see
 //! `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs`. Every variant is now a
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
@@ -55,11 +55,11 @@ pub mod remove_stream;
 pub mod set_sample_data;
 #[path = "🚩set-sample-flags/🦀️.rs"]
 pub mod set_sample_flags;
-/// 📐️ Typed content mutation for `stdio.semio.video`. Beyond the baseline `SetSnapshot`, this
+/// 📐️ Typed content mutation for `stdio.semio.video`. This
 /// addresses `streams` by index and, within a stream, `samples` by index — the same index-only
 /// addressing scheme the diff grammar uses (neither collection carries a spec-mandated key). No
 /// `#[derive(dsl::DslOps)]` attempted (this ticket's own instruction: hand-roll all op codecs) —
-/// `SetSnapshot{snapshot: SemioVideoSnapshot}` alone would hit the same
+/// a whole-`SemioVideoSnapshot` payload alone would hit the same
 /// `Vec<SemioVideoStream>`-of-`Vec<SemioVideoSample>` nesting the diff side's own doc comment
 /// documents as blocking a derive attempt; `OpText`/`OpBinary` are hand-rolled below instead.
 //#region 🔖️Leaves

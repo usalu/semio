@@ -1,14 +1,16 @@
 //! 🛤️ Horizontal bridge traffic effects of EN 1991-2, 4.4 (braking and acceleration Q_lk, centrifugal force Q_tk of Table 4.3) and the thermal actions of EN 1991-1-5 as they enter the load combinations of EN 1990
 //! through the shared `ActionFactors` (γ_Q and ψ rows of the registry). Every registry value is unverified, so the verdicts report the unverified basis.
 
-use super::*;
+use semio_s_artifact_norm_en1991_checks::{copy, invalid_input, part_1_5, part_2, temp_k as temp};
+use semio_s_plugin_norm_compliance::{CheckReport, CheckResult, ClauseId, Quantity, QuantityKind, SubjectRef};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_s_plugin_norm_compliance::action_factors::Domain;
 use semio_s_plugin_norm_compliance::{ActionFactors, AnnexChoice, DesignSituation, ReliabilityClass};
 
 fn force(kn: f64) -> Quantity { Quantity::new(QuantityKind::Force, kn * 1000.0) }
 
 /// 🛑 Braking and acceleration force Q_lk of lane 1 over the span (4.4.1): the share of the 900 kN cap, so the verdict shows how close the cap is.
-pub(super) fn check_braking(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_braking(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
     let (span, lanes) = (document.bridge_span, document.bridge_lanes.iter().map(|l| (l.lm1_lane, l.width)).collect::<Vec<_>>());
     let (low, high) = part_2::braking_bounds_kn(annex);
     let q_lk = part_2::braking_force_of_deck_kn(annex, span, document.bridge_lane_width, &lanes);
@@ -29,7 +31,7 @@ pub(super) fn check_braking(document: &En1991Snapshot, annex: AnnexChoice, repor
 }
 
 /// 🌀 Centrifugal force Q_tk of a curved deck (4.4.2, Table 4.3) from the total tandem weight Q_v of the loaded lanes and the horizontal radius; a radius of zero is a straight deck.
-pub(super) fn check_centrifugal(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_centrifugal(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
     let radius = document.bridge_curve_radius;
     let clause = ClauseId::new("EN 1991-2", "§4.4.2 Table 4.3", "4.4.2");
     let subject = SubjectRef::new("", "bridgeCurveRadius", copy("Horizontal radius of the deck", "Horizontaler Radius des Decks"));
@@ -59,7 +61,7 @@ pub(super) fn check_centrifugal(document: &En1991Snapshot, annex: AnnexChoice, r
 }
 
 /// 🌡️ Design values of the thermal action in the load combinations of EN 1990: γ_Q ΔT (leading), γ_Q ψ_0 ΔT (accompanying), ψ_1 ΔT (frequent) and ψ_2 ΔT (quasi-permanent) from the shared `ActionFactors` (registry, Table A1.1 / A2.1 category `temperature` or `temperature_bridge`).
-pub(super) fn check_thermal_combination(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_thermal_combination(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
     let Some(delta_t) = part_1_5::required_delta_t(&document.thermal_element_type, document.t_max, document.t_min, document.t_0, document.thermal_bridge_type, document.delta_t_m) else { return };
     let bridge = document.structure_kind == semio_s_artifact_norm_en1991_model::StructureKind::Bridge;
     let (domain, category) = if bridge { (Domain::Bridge, "temperature_bridge") } else { (Domain::Building, "temperature") };
@@ -83,8 +85,8 @@ pub(super) fn check_thermal_combination(document: &En1991Snapshot, annex: AnnexC
 }
 
 /// 🚶 One footbridge (EN 1991-2, 5.3.2.1, 5.4 and 5.7): the uniform load q_fk of the loaded length, the horizontal force Q_flk and the comfort-verification trigger of EN 1990 A2.4.3.2(1) (first vertical frequency below the registry bound) with the walking-resonance verdict inside it (information: the printed limits of the comfort analysis are unverified). A non-positive length or width or a negative frequency is an invalid input without a fallback.
-pub(super) fn check_footbridge(bridge: &semio_s_artifact_norm_en1991_model::Footbridge, annex: AnnexChoice, report: &mut CheckReport) {
-    use super::crane_silo_checks::row_check;
+pub fn check_footbridge(bridge: &semio_s_artifact_norm_en1991_model::Footbridge, annex: AnnexChoice, report: &mut CheckReport) {
+    use semio_s_artifact_norm_en1991_inferences_crane_silo::row_check;
     let clause = || ClauseId::new("EN 1991-2", "§5.3.2.1", "5.3.2.1");
     for (leaf, ok, en, de, found) in [("loadedLength", bridge.loaded_length.is_finite() && bridge.loaded_length > 0.0, "loaded length L (positive)", "belastete Länge L (positiv)", bridge.loaded_length), ("deckWidth", bridge.deck_width.is_finite() && bridge.deck_width > 0.0, "deck width b (positive)", "Deckbreite b (positiv)", bridge.deck_width)] {
         if !ok {
@@ -97,7 +99,7 @@ pub(super) fn check_footbridge(bridge: &semio_s_artifact_norm_en1991_model::Foot
     let q_flk = part_2::footbridge_horizontal_n(length, width);
     row_check(report, annex, ("EN 1991-2", "§5.3.2.1", "5.3.2.1"), ("footbridges", &bridge.id, "loadedLength"), ("en1991.2.footbridge-load", Quantity::new(QuantityKind::Pressure, q_fk)), ("Footbridge", "Fußgängerbrücke"), ("Uniform load q_fk of the footbridge", "Gleichmäßig verteilte Last q_fk der Fußgängerbrücke"), (&format!("q_fk = 2.0 + 120/(L + 30) = 2.0 + 120/({length:.1} + 30) kN/m², limited to 2.5 … 5.0 kN/m²: {:.2} kN/m² (spec line E2.12, unverified).", q_fk / 1000.0), &format!("q_fk = 2,0 + 120/(L + 30) = 2,0 + 120/({length:.1} + 30) kN/m², begrenzt auf 2,5 … 5,0 kN/m²: {:.2} kN/m² (Spezifikationszeile E2.12, ungeprüft).", q_fk / 1000.0)));
     row_check(report, annex, ("EN 1991-2", "§5.4", "5.4"), ("footbridges", &bridge.id, "deckWidth"), ("en1991.2.footbridge-horizontal", force(q_flk / 1000.0)), ("Footbridge", "Fußgängerbrücke"), ("Horizontal force Q_flk of the footbridge", "Horizontalkraft Q_flk der Fußgängerbrücke"), (&format!("Q_flk = max(10 % · q_fk L b, 10 kN) = max(0.10 · {:.2} kN/m² · {length:.1} m · {width:.2} m, 10 kN) = {:.1} kN (spec line E2.12, the 10 kN bound is unverified).", q_fk / 1000.0, q_flk / 1000.0), &format!("Q_flk = max(10 % · q_fk L b, 10 kN) = max(0,10 · {:.2} kN/m² · {length:.1} m · {width:.2} m, 10 kN) = {:.1} kN (Spezifikationszeile E2.12, die Grenze 10 kN ist ungeprüft).", q_fk / 1000.0, q_flk / 1000.0)));
-    super::rail_silo::check_footbridge_service(bridge, annex, report);
+    semio_s_artifact_norm_en1991_inferences_rail_silo::check_footbridge_service(bridge, annex, report);
     if bridge.natural_frequency.is_finite() && bridge.natural_frequency > 0.0 {
         let (min, max, bound) = (ndp("ndp.en1991.2.footbridge-walk-f-min"), ndp("ndp.en1991.2.footbridge-walk-f-max"), ndp("ndp.en1991.2.footbridge-band-vertical-max"));
         let (f, required) = (bridge.natural_frequency, part_2::footbridge_comfort_required(bridge.natural_frequency));
@@ -118,8 +120,8 @@ pub(super) fn check_footbridge(bridge: &semio_s_artifact_norm_en1991_model::Foot
 }
 
 /// 🚆 One rail span (EN 1991-2, 6.4.5.2): the dynamic factor Φ₂ (careful) or Φ₃ (standard maintenance) of the determinant length L_Φ; an unknown maintenance or a non-positive length is an invalid input without a fallback.
-pub(super) fn check_rail_dynamic(span: &semio_s_artifact_norm_en1991_model::RailDynamic, annex: AnnexChoice, report: &mut CheckReport) {
-    use super::crane_silo_checks::row_check;
+pub fn check_rail_dynamic(span: &semio_s_artifact_norm_en1991_model::RailDynamic, annex: AnnexChoice, report: &mut CheckReport) {
+    use semio_s_artifact_norm_en1991_inferences_crane_silo::row_check;
     let clause = || ClauseId::new("EN 1991-2", "§6.4.5.2", "6.4.5.2");
     let valid_length = span.determinant_length.is_finite() && span.determinant_length > 0.0;
     if !valid_length {
@@ -138,8 +140,8 @@ pub(super) fn check_rail_dynamic(span: &semio_s_artifact_norm_en1991_model::Rail
 }
 
 /// 📐 One wheel load dispersal (EN 1991-2, 4.3.6): the footprint a + 2 (t_p + t_s/2) × b + 2 (t_p + t_s/2) at the mid-plane of the slab that the punching checks read; non-positive contact sides or negative thicknesses are invalid inputs without a fallback.
-pub(super) fn check_load_dispersal(row: &semio_s_artifact_norm_en1991_model::LoadDispersal, annex: AnnexChoice, report: &mut CheckReport) {
-    use super::crane_silo_checks::row_check;
+pub fn check_load_dispersal(row: &semio_s_artifact_norm_en1991_model::LoadDispersal, annex: AnnexChoice, report: &mut CheckReport) {
+    use semio_s_artifact_norm_en1991_inferences_crane_silo::row_check;
     let clause = || ClauseId::new("EN 1991-2", "§4.3.6", "4.3.6");
     for (leaf, ok, en, de, found) in [("wheelLength", row.wheel_length.is_finite() && row.wheel_length > 0.0, "wheel contact length (positive)", "Radaufstandslänge (positiv)", row.wheel_length), ("wheelWidth", row.wheel_width.is_finite() && row.wheel_width > 0.0, "wheel contact width (positive)", "Radaufstandsbreite (positiv)", row.wheel_width), ("pavementThickness", row.pavement_thickness.is_finite() && row.pavement_thickness >= 0.0, "pavement thickness (not negative)", "Belagdicke (nicht negativ)", row.pavement_thickness), ("slabThickness", row.slab_thickness.is_finite() && row.slab_thickness >= 0.0, "slab thickness (not negative)", "Plattendicke (nicht negativ)", row.slab_thickness)] {
         if !ok {

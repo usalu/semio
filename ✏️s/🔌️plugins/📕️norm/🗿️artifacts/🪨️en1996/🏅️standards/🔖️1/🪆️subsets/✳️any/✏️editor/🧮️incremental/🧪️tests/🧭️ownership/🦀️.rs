@@ -9,7 +9,7 @@ fn every_check_of_every_demo_document_has_an_owner_or_is_documented_global_and_a
     for document in documents() {
         let report = evaluate_units::<En1996Family>(&document);
         let drawn = scene::live_scene_of(&document, &report);
-        let owners = audit_owners(&document, &scene::entities_of(&document));
+        let owners = audit_owners(&document, &semio_s_artifact_norm_en1996_scene_kit::entities_of(&document));
         let audit = ownership_audit(&report, &drawn, &owners, |id| En1996Family::OWNERS.is_document_level(id));
         assert!(audit.is_clean(), "{audit:?}");
     }

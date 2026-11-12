@@ -85,11 +85,11 @@ export function suspectRowsV1(index,suspects){
  return out;
 }
 
-/** 🧱️ The rows of the pseudo owners a build writes: the facts the compute produced with their fresh support, and the supports of the questions that still held. */
+/** 🧱️ The rows of the pseudo owners a build writes: the facts the compute produced with their fresh support, and the supports of the questions that still held, as they are (a held support is a lazy list of its parts: the patch flattens one question at a time when it reaches it, so the rows of all questions never exist as lists together). */
 export function derivedUpsertsV1(derived,held=new Map()){
  const out=new Map();
- for(const fact of derived)out.set(derivedOwnerNameV1(fact.row),[fact.row,...fact.support]);
- for(const[name,rows]of held)if(!out.has(name))out.set(name,[...rows]);
+ for(const fact of derived)out.set(derivedOwnerNameV1(fact.row),!Array.isArray(fact.support)&&typeof fact.support?.concat==="function"?fact.support.concat([fact.row]):[fact.row,...fact.support]);
+ for(const[name,rows]of held)if(!out.has(name))out.set(name,rows);
  return out;
 }
 

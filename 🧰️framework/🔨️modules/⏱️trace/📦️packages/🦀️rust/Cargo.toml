@@ -18,6 +18,11 @@ workspace = true
 name = "semio_framework_trace"
 path = "🦀️.rs"
 
+[[test]]
+name = "native_birth"
+path = "../../📈️percentile/🔐️gate/🧪️tests/🧱️native-birth/🦀️.rs"
+
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = "1"
+semio-framework-value-testing-allocator = { path = "../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

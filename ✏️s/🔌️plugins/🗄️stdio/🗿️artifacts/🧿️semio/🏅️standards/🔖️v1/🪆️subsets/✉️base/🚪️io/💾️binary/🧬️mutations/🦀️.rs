@@ -32,7 +32,7 @@ use protocol::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;
 
-/// 🏷️ Binary tag ordinal for [`SemioMutation`] — `0` = `SetSnapshot`, `1..=18` = the 18 wrapped
+/// 🏷️ Binary tag ordinal for [`SemioMutation`] — `0` = the whole-snapshot tag, `1..=18` = the 18 wrapped
 /// subset kinds (enum declaration order).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn mutation_tag(m: &SemioMutation) -> u8 {
@@ -62,7 +62,7 @@ impl OpBinary for SemioMutation {
     /// ⚡️ Real delegating binary: `format u8` + `tag u8` ([`mutation_tag`]) as two genuine,
     /// individually protocol-walkable fixed header fields, then ONE opaque trailing payload — for
     /// the 18 wrapped variants, the wrapped subset's OWN real `OpBinary::encode_op()` bytes
-    /// (genuine reuse); for `SetSnapshot`, the wrapped snapshot's own real
+    /// (genuine reuse); for the whole-snapshot tag, the wrapped snapshot's own real
     /// `ArtifactPack::encode_pack()` bytes.
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;

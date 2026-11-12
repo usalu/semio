@@ -62,7 +62,7 @@ export abstract class VerifyGateLanes extends VerifyToolJobLane {
     sayVerifyV1("gates.framework-owned-schema-binding-freshness");
     runCmd("repo", ["run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     sayVerifyV1("gates.schema-parser-projection-freshness");
-    runCmd("repo", ["run", "workspace:schema-parsers-check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("repo", ["run", "repo-schema-commands:schema-parsers-check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     sayVerifyV1("gates.ui-locale-terminology-axes-freshness");
     runCmd("repo", ["run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     sayVerifyV1("gates.chrome-i18n-literal-scan");

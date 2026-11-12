@@ -7,7 +7,7 @@ pub(super) fn copy_text(text:&dyn Utf8Text,control:&mut SqliteSnapshotControl<'_
  let total=text.text_bytes();
  control.allocation_stage(phase,|remaining,progress,allocation|{
   let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-  let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
+  let mut native=allocation.encode(remaining,&mut callback);
   let result=(||{native.begin_stage(total)?;native.charge(total)?;let mut output=String::new();output.try_reserve_exact(total).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"paged text allocation failed"))?;for index in 0..text.text_chunk_count(){let chunk=text.text_chunk(index).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"paged text omitted a declared chunk"))?;output.push_str(chunk);native.advance(chunk.len())?}Ok::<_,ValueError>(output)})();
   (result,native.owned_bytes())
  })?

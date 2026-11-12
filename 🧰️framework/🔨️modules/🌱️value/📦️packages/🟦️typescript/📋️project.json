@@ -84,6 +84,42 @@
         "command": "repo 📜️script.ts test-scratch-hash",
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript"
       }
+    },
+    "verify-shared-dynamic-value": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify shared-dynamic-value",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "shared-dynamic-value"
+          ]
+        }
+      }
+    },
+    "verify-framework-variant-field-casing": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify framework-variant-field-casing",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-variant-field-casing"
+          ]
+        }
+      }
     }
   }
 }

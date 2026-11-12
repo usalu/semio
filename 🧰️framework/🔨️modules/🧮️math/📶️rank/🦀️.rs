@@ -110,5 +110,4 @@ impl Drop for ScalarRankCursor{fn drop(&mut self){assert!(std::thread::panicking
 #[path="../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
 mod rank_allocation;
 #[cfg(test)]
-#[global_allocator]
-static RANK_ALLOCATOR:rank_allocation::RequestedAllocator=rank_allocation::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;

@@ -98,14 +98,14 @@ pub fn envelope_field_close_grant() -> RetainedCloneGrant {
 }
 
 
-/// 🎟️ The envelope cleanup caller is the shared once-paid job fixture caller, so every cleanup turn carries its real producer invocation.
+/// 🎟️ The original caller of an envelope cleanup fixture: one genuine fixture Source parent whose lent context spans the test.
 pub struct OriginalEnvelopeCaller {
-    pub inner: semio_framework_job::OriginalJobFixtureCaller,
+    pub caller: semio_framework_job::OriginalJobFixtureCaller,
 }
 
 impl OriginalEnvelopeCaller {
     pub fn admit(operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation,source:RetainedCloneGrant,clock:fn()->Option<u64>,deadline:u64,fuel:u64)->Self{
-        Self{inner:semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,source,clock,deadline,fuel)}
+        Self{caller:semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,source,clock,deadline,fuel)}
     }
 
 
@@ -116,13 +116,9 @@ impl OriginalEnvelopeCaller {
         Self::admit(semio_framework_job::OperationId(policy["operation"].as_u64().unwrap()),semio_framework_job::Generation(policy["generation"].as_u64().unwrap()),serde_json::from_value(policy["grant"].clone()).unwrap(),||Some(1000),policy["deadlineUs"].as_u64().unwrap(),policy["fuel"].as_u64().unwrap())
     }
 
-    pub fn context(&mut self)->semio_framework_job::StepContext<'_>{
-        self.inner.lend_context()
-    }
+    pub fn context(&mut self)->semio_framework_job::StepContext<'_>{self.caller.lend_context()}
 
-    pub fn retire(self,source:RetainedCloneGrant){
-        self.inner.retire(source);
-    }
+    pub fn retire(self,source:RetainedCloneGrant){self.caller.retire(source);}
 }
 
 pub fn drive_test_envelope_field_return(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>, detached: &mut Option<ArtifactEnvelopeReturnedFieldDecoder<(), ()>>) {
@@ -169,27 +165,15 @@ pub fn demo_child_dialect() -> semio_framework_artifact_reference::ArtifactDiale
 }
 
 
-/// 🎟️ The member-open caller is the shared once-paid job fixture caller with the member policy fixtures, so every turn carries its real producer invocation.
-pub struct OriginalMemberCaller{pub inner:Option<semio_framework_job::OriginalJobFixtureCaller>,pub policy:RetainedCloneGrant,pub maximum_turns:usize}
+/// 🎟️ The original caller of a member open fixture: every turn runs under the one fixed source policy of its corpus.
+pub struct OriginalMemberCaller{pub caller:semio_framework_job::OriginalJobFixtureCaller,pub policy:RetainedCloneGrant,pub maximum_turns:usize}
 
 impl OriginalMemberCaller{
  pub fn policy(&self)->RetainedCloneGrant{self.policy}
  pub fn maximum_turns(&self)->usize{self.maximum_turns}
- pub fn new()->Self{
-  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
-  let policy:RetainedCloneGrant=serde_json::from_value(fixture["snapshotInput"]["policy"].clone()).unwrap();
-  let receiving:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🧫️receiving/🔣️.json")).unwrap();
-  let caller=&receiving["caller"];assert_eq!(caller["clockUs"],1);
-  let inner=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(caller["operation"].as_u64().unwrap()),semio_framework_job::Generation(caller["generation"].as_u64().unwrap()),policy,||Some(1),caller["deadlineUs"].as_u64().unwrap(),caller["fuel"].as_u64().unwrap());
-  Self{inner:Some(inner),policy,maximum_turns:caller["maximumTurns"].as_u64().unwrap()as usize}
- }
- pub fn run<T>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&semio_framework_job::OriginalCallerSourceParent,&mut semio_framework_job::StepContext<'_>)->T)->(T,RetainedCloneProgress){
-  assert!(grant.maximum_items<=self.policy.maximum_items&&grant.maximum_copy_bytes<=self.policy.maximum_copy_bytes&&grant.maximum_capacity_bytes<=self.policy.maximum_capacity_bytes&&grant.maximum_release_bytes<=self.policy.maximum_release_bytes&&grant.maximum_depth<=self.policy.maximum_depth);
-  let inner=self.inner.as_mut().expect("original member caller is open");
-  let result=inner.turn(grant,|cx|{let parent=cx.original_source_parent()?;Ok(run(parent,cx))}).expect("original member caller turn");
-  (result,inner.receipt())
- }
- pub fn close(&mut self){if let Some(inner)=self.inner.take(){inner.retire(self.policy);}}
+ pub fn new()->Self{let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let policy:RetainedCloneGrant=serde_json::from_value(fixture["snapshotInput"]["policy"].clone()).unwrap();let receiving:serde_json::Value=serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/📜️history/🏭️factory/🧪️tests/🧫️receiving/🔣️.json")).unwrap();let caller=&receiving["caller"];assert_eq!(caller["clockUs"],1);Self{caller:semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(caller["operation"].as_u64().unwrap()),semio_framework_job::Generation(caller["generation"].as_u64().unwrap()),policy,||Some(1),caller["deadlineUs"].as_u64().unwrap(),caller["fuel"].as_u64().unwrap()),policy,maximum_turns:caller["maximumTurns"].as_u64().unwrap()as usize}}
+ pub fn run<T>(&mut self,grant:RetainedCloneGrant,run:impl FnOnce(&semio_framework_job::OriginalCallerSourceParent,&mut semio_framework_job::StepContext<'_>)->T)->(T,RetainedCloneProgress){assert!(grant.maximum_items<=self.policy.maximum_items&&grant.maximum_copy_bytes<=self.policy.maximum_copy_bytes&&grant.maximum_capacity_bytes<=self.policy.maximum_capacity_bytes&&grant.maximum_release_bytes<=self.policy.maximum_release_bytes&&grant.maximum_depth<=self.policy.maximum_depth);let result=self.caller.turn(grant,|cx|{let parent=cx.original_source_parent()?;Ok(run(parent,cx))}).expect("original member fixture turn");(result,self.caller.receipt())}
+ pub fn close(&mut self){let mut stalled=0;while !self.caller.terminal_is_empty(){self.caller.fund_retirement();let step=self.caller.retire_step(self.policy).expect("original member fixture source-root close");assert!(step.progress().fits(self.policy));if step.progress()==RetainedCloneProgress::default(){stalled+=1;assert!(stalled<64,"original member fixture close stalled on its quoted funding")}else{stalled=0}}}
 }
 
 pub fn retire_original_member_open(open:&mut impl MemberOpenOperation,caller:&mut OriginalMemberCaller)->(usize,usize,usize){

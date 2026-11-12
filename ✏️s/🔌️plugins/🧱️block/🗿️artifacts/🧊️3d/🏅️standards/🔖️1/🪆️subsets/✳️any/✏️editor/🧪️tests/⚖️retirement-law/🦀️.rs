@@ -1,12 +1,8 @@
 //! ⚖️ Block3d owners retire under quoted grants: the document and its catalog lease retire exactly, every mutation passes the typed-command input lane, and a document edit authors, applies, undoes and redoes through the editor's real catalog.
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_test_typed_input_law as typed_input_law;
 
-#[path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/🦀️.rs"]
-mod typed_input_law;
-
-use semio_plugin::{authoring_law::author_through_document_store, ArtifactEditor, EditorApp};
+use semio_plugin::{authoring_law::{author_through_document_store, StoreAuthoringPhase}, ArtifactEditor, EditorApp};
 use semio_s_artifact_block_3d_editor::Block3dPlayApp;
 use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_label::change_object_kind_label;
 use semio_s_artifact_block_3d_mut_representations::create_representation::create_representation;
@@ -83,15 +79,24 @@ fn block3d_snapshot_retires_with_its_catalog_lease() {
 #[semio_framework_async_macros::async_test]
 async fn a_block3d_document_edit_authors_applies_undoes_and_redoes_through_its_real_store() {
     let base = boot();
-    let law = author_through_document_store::<EditorApp<Block3dPlayApp>>(rename_object_kind("Renamed".into())).await;
-    assert_eq!(law.applied.object_kind.name, "Renamed");
-    assert_eq!(law.undone.object_kind.name, base.object_kind.name, "undo restores the object kind name");
-    assert_eq!(law.redone.object_kind.name, "Renamed", "redo renames again");
-    assert_eq!(law.forward_rows.len(), 1);
-    assert_eq!(law.inverse_rows.len(), 1);
+    let renamed = "Renamed";
+    let mut phases = 0;
+    let law = author_through_document_store::<EditorApp<Block3dPlayApp>>(rename_object_kind(renamed.into()), |phase, snapshot| {
+        phases += 1;
+        match phase {
+            StoreAuthoringPhase::Applied | StoreAuthoringPhase::Redone => assert_eq!(snapshot.object_kind.name, renamed),
+            StoreAuthoringPhase::Undone => assert_eq!(snapshot.object_kind.name, base.object_kind.name, "undo restores the object kind name"),
+        }
+    }).await;
+    assert_eq!(phases, 3);
+    assert_eq!((law.forward_rows.len(), law.inverse_rows.len()), (1, 1));
     let representation = representation();
-    let law = author_through_document_store::<EditorApp<Block3dPlayApp>>(create_representation(representation.clone())).await;
-    assert_eq!(law.applied.representations.last(), Some(&representation));
-    assert_eq!(law.undone.representations, base.representations, "undo removes the created representation");
-    assert_eq!(law.redone.representations, law.applied.representations, "redo restores the created representation");
+    let mut observed: Vec<(StoreAuthoringPhase, Vec<BlockRepresentation>)> = Vec::new();
+    let law = author_through_document_store::<EditorApp<Block3dPlayApp>>(create_representation(representation.clone()), |phase, snapshot| observed.push((phase, snapshot.representations.clone()))).await;
+    let phases: Vec<_> = observed.iter().map(|(phase, _)| *phase).collect();
+    assert_eq!(phases, [StoreAuthoringPhase::Applied, StoreAuthoringPhase::Undone, StoreAuthoringPhase::Redone]);
+    assert_eq!(observed[0].1.last(), Some(&representation));
+    assert_eq!(observed[1].1, base.representations, "undo removes the created representation");
+    assert_eq!(observed[2].1, observed[0].1, "redo restores the created representation");
+    assert_eq!((law.forward_rows.len(), law.inverse_rows.len()), (1, 1));
 }

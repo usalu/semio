@@ -160,7 +160,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         };
         assert_eq!(consumer.test_snapshot().await, before, "consuming folded nothing: the document is unchanged until the load runs");
         assert!(archive.members.is_empty() && !archive.parent_pack.is_empty() && !archive.parent_spr.is_empty());
-        PluginApp::begin_document_archive_load(&mut consumer, 7, archive).expect("the runtime admits the archive");
+        semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut consumer, 7, archive, cx).expect("the runtime admits the archive");
         let status = loop {
             let status = PluginApp::poll_document_archive_load(&mut consumer, 7, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {

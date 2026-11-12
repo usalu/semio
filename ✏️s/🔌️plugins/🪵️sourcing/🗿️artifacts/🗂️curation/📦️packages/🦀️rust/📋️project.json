@@ -106,6 +106,16 @@
         "command": "repo ./📜️script.ts verify snapshot-sqlite-source",
         "forwardAllArgs": true
       }
+    },
+    "verify-curation-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify curation-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -10,7 +10,8 @@ import {importObservedModuleV1,observedFs} from "../../👁️observation/🟨�
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import {requireTestToolV1} from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🧰️toolchain/🟦️.ts";
-import {casUsageV1,createCasStoreV1} from "../../🗄️cas/🗃️store/🟦️.ts";
+import {createCasStoreV1} from "../../🗄️cas/🗃️store/🟦️.ts";
+import {casUsageV1} from "../../🗄️cas/🗃️store/📏️usage/🟦️.ts";
 import {readCasPinsV1} from "../../🗄️cas/📌️pins/🟦️.ts";
 import {actionKeyV1,buildTreeV1,compareCodePointsV1,flattenTreeV1,loadManifestV1,materializeRevisionV1,createPinnedFsV1,pinModuleV1,withCapturedPlanV1,openPinnedWorldSyncV1,openPinnedWorldV1,pinRevisionV1,releasePinV1,renewPinV1,revisionDigestV1,revisionErrorV1,revisionTextV1,stageRevisionV1,withPinnedRevisionV1,REVISION_POLICY_V1,type ManifestEntryV1} from "../🟦️.ts";
 

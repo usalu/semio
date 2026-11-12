@@ -11,6 +11,7 @@ import { runOwnedCommand } from "../../../🏃️process/📦️packages/🟦️
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runTestScript, runCloseDemandSourceScript, runOriginalTurnFailureScript, runOriginalCloseContextScript, runOriginalCloseContextNativeScript, runOriginalRetainedLoanNativeScript, runOriginalReceivingScript, runOriginalPageReturnScript } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
+import { OwnedVerifyScript } from "../../🧪️tests/🔬️owned-verify/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -84,6 +85,6 @@ class OriginalPageReturnScript extends BundleScript {
     await runOriginalPageReturnScript({ root: this.root, repoRoot: this.repoRoot, invocation: this.invocation }, segments);
   }
 }
-const router = new ScriptRouter(import.meta.dirname).register("test-original-page-return",OriginalPageReturnScript).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript).register("test-close-demand-source", CloseDemandSourceScript).register("test-retained-source", RetainedSourceScript).register("test-original-turn-failure",OriginalTurnFailureScript).register("test-original-close-context-source",OriginalCloseContextScript).register("test-original-close-context-native",OriginalCloseContextNativeScript).register("test-original-retained-loan-native",OriginalRetainedLoanNativeScript).register("test-original-receiving",OriginalReceivingScript);
+const router = new ScriptRouter(import.meta.dirname).register("verify", OwnedVerifyScript).register("test-original-page-return",OriginalPageReturnScript).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript).register("test-close-demand-source", CloseDemandSourceScript).register("test-retained-source", RetainedSourceScript).register("test-original-turn-failure",OriginalTurnFailureScript).register("test-original-close-context-source",OriginalCloseContextScript).register("test-original-close-context-native",OriginalCloseContextNativeScript).register("test-original-retained-loan-native",OriginalRetainedLoanNativeScript).register("test-original-receiving",OriginalReceivingScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

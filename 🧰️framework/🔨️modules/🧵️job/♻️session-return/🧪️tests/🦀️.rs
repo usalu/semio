@@ -6,7 +6,7 @@ impl InteractiveJob for ScalarJob{
  fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from))}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{descriptor.yielded()}
  fn begin_close(&mut self){self.0=true;}
- fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.0{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.0=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))})}
+ fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.0{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}close_original_retained_effect_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.0=true;Ok::<_,ValueError>(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))})}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -16,7 +16,7 @@ impl InteractiveJob for ScalarJob{
 fn source()->(WorkerJobSession<ScalarJob>,OriginalJobFixtureCaller){
  let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let mut caller=OriginalJobFixtureCaller::admit(OperationId(98201),Generation(1),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
  let params=BatchJobParams{operation:OperationId(98201),generation:Generation(1),cancel:caller.admit_alias(grant),config:BatchDriveConfig{retained:grant,site:"test.original-session-return",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:1000},now_us:logical_now_us};
- let session=admit_original_fixture_owner!(caller,WorkerJobSession,ScalarJob(false),params).unwrap_or_else(|_|panic!("original session admission"));(session,caller)
+ let session=admit_original_fixture_owner!(caller,WorkerJobSession,ScalarJob(false),params);(session,caller)
 }
 fn close_body(session:&mut WorkerJobSession<ScalarJob>,caller:&mut OriginalJobFixtureCaller){
  session.begin_close();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
@@ -64,7 +64,7 @@ fn original_session_frame_return_has_exact_custody(){
 }
 
 #[test]
-fn original_terminal_witness_finishes_without_admitting_live_phase_contention(){let _slots=worker_session_slots_shared();let(mut session,mut caller)=source();for phase in [SESSION_TRANSITION,SESSION_IDLE,SESSION_SUBMITTED,SESSION_OUTCOME,SESSION_TERMINAL,SESSION_REJECTED,SESSION_CHECKED_OUT]{session.inner.phase.store(phase,Ordering::Release);assert!(matches!(session.has_original_cancel_alias_witness(caller.cancel()),Err(WorkerJobDemandError::Contention(_))));assert_eq!(session.inner.phase(),phase);}session.inner.phase.store(SESSION_IDLE,Ordering::Release);close_body(&mut session,&mut caller);assert_eq!(session.inner.phase(),SESSION_EMPTY);assert!(!session.has_original_cancel_alias_witness(caller.cancel()).unwrap());assert!(caller.turn(WORKER_TEST_STOCK,|cx|Ok(cx.with_original_effect(WORKER_TEST_STOCK,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map(|(turn,_)|turn))).unwrap().is_none_or(|turn|turn.unwrap().is_none()));for _ in 0..8{if session.terminal_is_empty(){break}caller.close_owner(WORKER_TEST_STOCK,&mut session).unwrap();}assert!(session.terminal_is_empty());caller.retire(WORKER_TEST_STOCK);}
+fn original_terminal_witness_finishes_without_admitting_live_phase_contention(){let _slots=worker_session_slots_shared();let(mut session,mut caller)=source();for phase in [SESSION_TRANSITION,SESSION_IDLE,SESSION_SUBMITTED,SESSION_OUTCOME,SESSION_TERMINAL,SESSION_REJECTED,SESSION_CHECKED_OUT]{session.inner.phase.store(phase,Ordering::Release);assert!(matches!(session.has_original_cancel_alias_witness(caller.cancel()),Err(WorkerJobDemandError::Contention(_))));assert_eq!(session.inner.phase(),phase);}session.inner.phase.store(SESSION_IDLE,Ordering::Release);close_body(&mut session,&mut caller);assert_eq!(session.inner.phase(),SESSION_EMPTY);assert!(!session.has_original_cancel_alias_witness(caller.cancel()).unwrap());assert!(caller.turn(WORKER_TEST_STOCK,|cx|Ok(cx.with_original_effect(WORKER_TEST_STOCK,|cx,effect|session.return_original_cancel_alias_step(cx.original_cancel_token(),effect))?.map(|(turn,_)|turn))).unwrap().is_none_or(|turn|turn.result.unwrap().is_none()));for _ in 0..8{if session.terminal_is_empty(){break}caller.close_owner(WORKER_TEST_STOCK,&mut session).unwrap();}assert!(session.terminal_is_empty());caller.retire(WORKER_TEST_STOCK);}
 
 #[test]
 fn parked_original_alias_uses_its_initiating_caller_without_slot_residue(){

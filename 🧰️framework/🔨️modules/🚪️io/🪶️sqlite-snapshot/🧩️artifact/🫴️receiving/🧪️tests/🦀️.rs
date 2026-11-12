@@ -1,5 +1,7 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
+#[path="../../../../../🌱️value/♻️retirement/📦️owner/🧪️work/effect.rs"]
+mod effect;
 struct OriginalSchemaWallet{grant:RetainedCloneGrant,progress:RetainedCloneProgress}
 impl ReceivingWallet for OriginalSchemaWallet{
 
@@ -32,29 +34,40 @@ fn sqlite_settlement_keeps_typed_primary_and_existing_native_context(){
  let original=NativeSnapshotFailure::from(OriginalReceivingPrimary::from_fields(Some(value(0)),Some(value(1)),Some(value(2)),None,None,None,None,None,None,p)).with_context_refusal(value(3));let primary=original.receiving_primary().unwrap().primary.as_ref().unwrap().message.as_ptr();let context=original.context_refusal().unwrap().message.as_ptr();
  let calls=std::cell::Cell::new(0u64);let mut callback=|_|{calls.set(calls.get()+1);false};let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let settlement=super::ReceivingSettlement::new(&mut control,0,semio_framework_io_sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot);settlement.finish_body(0).unwrap();let completed=f["sqlite"]["completed"].as_u64().unwrap()as usize;let total=f["sqlite"]["total"].as_u64().unwrap()as usize;assert!(!settlement.observe(0,completed,total));assert!(!settlement.observe(0,completed,total));assert_eq!(calls.get(),f["sqlite"]["callbackCalls"].as_u64().unwrap());
  let(original,born,released)=semio_framework_trace_memory_testing::observe_backing(||settlement.refused_failure(0,original));assert_eq!((born,released),(0,0));assert_eq!(original.receiving_primary().unwrap().primary.as_ref().unwrap().message.as_ptr(),primary);assert_eq!(original.context_refusal().unwrap().message.as_ptr(),context);assert_eq!(original.settlement_refusal().unwrap().kind,ValueRefusalKind::Canceled);assert_eq!(original.settlement_refusal().unwrap().message.as_ref(),f["sqlite"]["settlementMessage"].as_str().unwrap());assert_eq!(original.receipt_refusal(),None);assert_eq!(original.retained_progress(),p);drop(settlement);
- let g=serde_json::from_value(f["closeGrant"].clone()).unwrap();let mut owner=ControlledRetirement::new(original).ok().unwrap();for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||owner.step(g));let p=result.unwrap().progress();assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));}assert!(owner.terminal_is_empty());
+ let g=serde_json::from_value(f["closeGrant"].clone()).unwrap();let mut owner=ControlledRetirement::new(original).ok().unwrap();for _ in 0..f["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let(poll,born,released)=effect::with_effect(g,1<<20,&mut None,|effect|semio_framework_trace_memory_testing::observe_backing(||owner.step(g.maximum_copy_bytes,effect)));let p=effect::settled(poll).result.unwrap().progress();assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));}assert!(owner.terminal_is_empty());
 }
 
 #[test]
 fn effect_unwind_posts_actual_progress_into_the_caller_failure_slot(){
  use semio_framework_io_control::NativeSnapshotBodyWallet;
  use semio_framework_value::{RetirementDemand,ValueError};
- use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient,OriginalWorkRecipient,OriginalWorkQuote,OriginalWorkQuoteComplete};
- struct Work;
- impl NativeDecodeWorkRecipient for Work{fn available_work(&mut self,observed:u64)->Result<u64,ValueError>{1_000_000u64.checked_sub(observed).ok_or_else(||ValueError::invariant("observed test work exceeds its finite scope"))}fn admits(&mut self,observed:u64,additional:u64)->Result<bool>{Ok(additional<=self.available_work(observed)?)}}
- struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress}
- impl NativeDecodeConstructionRecipient for Physical{
-  fn submitted(&self)->RetainedCloneProgress{self.submitted}
-  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant>{Ok(self.grant)}
-  fn accept(&mut self,_:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<()>{self.submitted=self.submitted.checked_add(progress)?;Err(ValueError::literal(ValueRefusalKind::Canceled,"physical refusal"))}
+ use semio_framework_value_native_owned::native_decoding::{OriginalConstructionAccept,OriginalConstructionAcceptComplete,OriginalConstructionAuthority,OriginalConstructionGrant,OriginalConstructionGrantComplete,OriginalConstructionRecipient,OriginalWorkAuthority,OriginalWorkPartialCheck,OriginalWorkPartialCheckComplete,OriginalWorkQuote,OriginalWorkQuoteComplete,OriginalWorkRecipient};
+ use semio_framework_value::retained_clone::{OriginalSourceTurnIdentity,OriginalSourceTurnIssuer};
+ struct Work{turn:OriginalSourceTurnIdentity}
+ impl OriginalWorkRecipient for Work{
+  type Context<'turn,'source>=() where 'source:'turn;
+  fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}
+  fn source_turn<'turn,'source>(&self,_:&())->Option<OriginalSourceTurnIdentity>where 'source:'turn{Some(self.turn)}
+  fn settle_partial<'a,'turn,'source>(&mut self,_:&mut (),check:OriginalWorkPartialCheck<'a>)->OriginalWorkPartialCheckComplete<'a>where 'source:'turn{check.complete(Ok(()))}
+  fn recover_partial<'a,'turn,'source>(&mut self,_:&mut (),check:OriginalWorkPartialCheck<'a>)->OriginalWorkPartialCheckComplete<'a>where 'source:'turn{check.complete(Ok(()))}
+  fn admits<'a,'turn,'source>(&mut self,_:&mut (),quote:OriginalWorkQuote<'a>,observed:u64,additional:u64)->OriginalWorkQuoteComplete<'a>where 'source:'turn{quote.complete(Ok(observed.checked_add(additional).is_some_and(|total|total<=1_000_000)))}
+ }
+ struct Physical{grant:RetainedCloneGrant,submitted:RetainedCloneProgress,turn:OriginalSourceTurnIdentity}
+ impl OriginalConstructionRecipient for Physical{
+  type Context<'turn,'source>=() where 'source:'turn;
+  fn validate_context<'turn,'source>(&self,_:&())->Result<(),ValueError>where 'source:'turn{Ok(())}
+  fn source_turn<'turn,'source>(&self,_:&())->Option<OriginalSourceTurnIdentity>where 'source:'turn{Some(self.turn)}
+  fn grant<'a,'turn,'source>(&mut self,_:&mut (),quote:OriginalConstructionGrant<'a>)->OriginalConstructionGrantComplete<'a>where 'source:'turn{quote.complete(Ok(self.grant))}
+  fn accept<'a,'turn,'source>(&mut self,_:&mut (),receipt:OriginalConstructionAccept<'a>)->OriginalConstructionAcceptComplete<'a>where 'source:'turn{let progress=receipt.progress();let result=self.submitted.checked_add(progress).map(|sum|self.submitted=sum).and_then(|()|Err(ValueError::literal(ValueRefusalKind::Canceled,"physical refusal")));receipt.complete(result)}
+  fn submitted<'turn,'source>(&self,_:&())->RetainedCloneProgress where 'source:'turn{self.submitted}
  }
  let grant=RetainedCloneGrant{maximum_items:10,maximum_copy_bytes:10,maximum_capacity_bytes:10,maximum_release_bytes:10,maximum_depth:2};
- let mut native_observer=|_|true;let mut sql_observer=|_|true;let mut native=NativeDecodeControl::new(10,&mut native_observer);let mut control=SqliteSnapshotControl::new(&mut sql_observer,Default::default());let mut work=Work;let mut physical=Physical{grant,submitted:Default::default()};let mut body=NativeSnapshotBodyWallet::new(grant);let mut progress=semio_framework_io_control::NativeSnapshotEffectProgress::default();let mut failure=None;let mut slot=0u8;
+ let mut native_observer=|_|true;let mut sql_observer=|_|true;let mut native=NativeDecodeControl::new(10,&mut native_observer);let mut control=SqliteSnapshotControl::new(&mut sql_observer,Default::default());let issuer=OriginalSourceTurnIssuer::new();let source=issuer.issue().expect("fixture Source dispatch");let turn=source.identity();let mut work=OriginalWorkAuthority::new(Work{turn});let mut physical=OriginalConstructionAuthority::new(Physical{grant,submitted:Default::default(),turn});let mut body=NativeSnapshotBodyWallet::new(grant);let mut progress=semio_framework_io_control::NativeSnapshotEffectProgress::default();let mut failure=None;let mut slot=0u8;
  let panic=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||{
-  let _:Result<()>=native.with_work_recipient(&mut work,|native|native.with_construction_recipient(&mut physical,|native|{
+  let _=physical.with_loan(&mut (),|construction|work.with_loan(&mut (),|loan|native.with_work_recipient(loan,|native|native.with_construction_recipient(construction,|native|{
    let mut port=Port{control:&mut control,native:Direction::Decode(native),body:&mut body};
-   let _=port.effect(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_depth:1,..Default::default()},&mut progress,&mut failure,&mut |performed,physical|{slot=7;*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()};panic!("effect unwind")});Ok(())
-  }));
+   let _=port.effect(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_depth:1,..Default::default()},&mut progress,&mut failure,&mut |performed,physical|{slot=7;*performed=true;*physical=RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()};panic!("effect unwind")});Ok::<(),ValueError>(())
+  }))));
  }));
- assert!(panic.is_err());assert_eq!(slot,7);assert_eq!(physical.submitted.copied_bytes,1);assert_eq!(body.progress().copied_bytes,1);assert_eq!(failure.unwrap().receipt_refusal().unwrap().message.as_ref(),"physical refusal");
+ assert!(panic.is_err());assert_eq!(slot,7);assert_eq!(physical.inspect(|physical|physical.submitted.copied_bytes),1);assert_eq!(body.progress().copied_bytes,1);assert_eq!(failure.unwrap().receipt_refusal().unwrap().message.as_ref(),"physical refusal");
 }

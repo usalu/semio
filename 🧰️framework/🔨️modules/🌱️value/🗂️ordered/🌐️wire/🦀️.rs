@@ -15,13 +15,14 @@ impl<V: super::FromValue> super::FromValue for OrderedMap<V> {
         let super::DslValue::Object(fields) = value else {
             return Err(super::ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("expected an ordered string-keyed object, found {value:?}")));
         };
-        let mut map = OrderedMap::new();
+        let mut map = <Self as super::FromValue>::guard_decoded(OrderedMap::<V>::new());
         for (key, entry) in fields {
             let decoded = <V as super::FromValue>::from_value(entry).map_err(|error| error.under(key.clone()))?;
-            map.insert(key, decoded);
+            map.get_mut().insert(key, decoded);
         }
-        Ok(map)
+        Ok(map.take())
     }
+    fn retire_decoded(self) { self.retire_cold(); }
 }
 //#endregion 🔁️Value
 #[path="../🧺️set/🌐️wire/🦀️.rs"]

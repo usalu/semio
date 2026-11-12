@@ -1,8 +1,7 @@
 //! 🧫️ Shared authored SFNT admission, outlines and kerning agree with ttf-parser, rustybuzz and pixels and retain original backing through funded close.
 use super::*;
 use semio_framework_2d_text_font_testing::{bytes,close};
-#[global_allocator]
-static FONT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 struct OraclePath(tiny_skia::PathBuilder);
 impl ttf_parser::OutlineBuilder for OraclePath{fn move_to(&mut self,x:f32,y:f32){self.0.move_to(x,y);}fn line_to(&mut self,x:f32,y:f32){self.0.line_to(x,y);}fn quad_to(&mut self,x1:f32,y1:f32,x:f32,y:f32){self.0.quad_to(x1,y1,x,y);}fn curve_to(&mut self,x1:f32,y1:f32,x2:f32,y2:f32,x:f32,y:f32){self.0.cubic_to(x1,y1,x2,y2,x,y);}fn close(&mut self){self.0.close();}}
 fn rendered(path:Option<tiny_skia::Path>,em:u16)->tiny_skia::Pixmap{let mut image=tiny_skia::Pixmap::new(128,96).unwrap();if let Some(path)=path{let paint=tiny_skia::Paint::default();let scale=40.0/f32::from(em);image.fill_path(&path,&paint,tiny_skia::FillRule::Winding,tiny_skia::Transform::from_row(scale,0.0,0.0,-scale,8.0,48.0),None);}image}

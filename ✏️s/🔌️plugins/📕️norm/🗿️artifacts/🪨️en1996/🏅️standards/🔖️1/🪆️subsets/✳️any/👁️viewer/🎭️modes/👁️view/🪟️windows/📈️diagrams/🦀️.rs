@@ -3,7 +3,7 @@
 use semio_plugin::{BuiltNode, TreeWindows, UiAssemblyResult, WindowKindDefinition};
 use semio_ui_locale::{Locale, LocalizedLabel};
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
-use semio_s_artifact_norm_en1996_scene::diagrams;
+use semio_s_artifact_norm_en1996_scene_diagrams::diagrams;
 use semio_s_plugin_norm_structural_scene::projection::memo_diagrams;
 use semio_s_plugin_norm_app_surface::{render_diagrams, DiagramsWindowSpec};
 

@@ -3,7 +3,7 @@ use crate::{InteractiveJobCloseStep,OriginalTurnFailure,RetainedCloneProgress,St
 use semio_framework_value_retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 
 /// 🪙️ One quoted original cursor action records its actual physical effects and independent CPU once.
-pub fn close_original_retained_step<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,E>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+pub fn close_original_retained_step(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
  close_original_retained_turn(cx,demand,|grant|{let turn=advance(grant);RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}})
 }
 /// ⛽️ Admits an original selected close work quote before allowing the cursor to move. A quote larger than this turn's remaining fuel waits for a turn whose fuel is untouched and is then admitted whole (the overdraft is charged); a demand larger than the operation's whole remaining grant is a typed `WorkLimit` refusal (a narrowed turn that cannot fit yields and retries wider), never zero-work Pending forever.

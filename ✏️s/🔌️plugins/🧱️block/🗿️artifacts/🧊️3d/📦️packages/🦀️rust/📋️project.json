@@ -66,6 +66,34 @@
         "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "verify-block3d-window-transient": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify block3d-window-transient",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "block3d-window-transient"
+          ]
+        }
+      }
+    },
+    "verify-block3d-window-transient-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify block3d-window-transient native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

@@ -10,7 +10,10 @@ fn measured(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeO
 }
 fn account<R>(cx:&mut StepContext<'_>,run:impl FnOnce(&mut StepContext<'_>)->R)->R{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run(cx));cx.consume_retained(RetainedCloneProgress{retained_capacity_bytes:heap.requested_bytes,released_bytes:heap.released_bytes,..Default::default()}).unwrap();result}
 fn checkpoint(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){
- measured(caller,decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|native.checkpoint()))?;account(cx,|_|drop(out));cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;Ok(())});
+ let funded=caller.fuel_remaining();let mut turns=0u64;let mut ran=false;
+ while !ran{turns+=1;assert!(turns<=funded,"receiving scope never opened within its funded fuel quote of {funded}");
+  measured(caller,decoder,|cx|{let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|{ran=true;native.checkpoint()}))?;account(cx,|_|drop(out));if ran{cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),RetainedCloneProgress::default())?;}Ok(())});
+ }
 }
 fn close(mut caller:OriginalJobFixtureCaller,mut decoder:OriginalJobDecodeOwner){
  while !decoder.terminal_is_empty(){caller.bare_turn(quantum(),|cx|cx.with_original_retirement(|cx|{decoder.close_on_source(cx)?;Ok(())})).unwrap();}caller.retire(quantum());
@@ -23,14 +26,14 @@ fn actual_original_progress_observer_has_no_verdict_and_cancels_at_completed_256
  testkit::with_native_decode_progress(Box::new(move|progress|{
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{observing_seen.borrow_mut().push(progress.completed);if progress.completed==256{observing.cancel_now();}});
   assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
- }),||measured(&mut caller,&mut decoder,|cx|{
-  let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|{
+ }),||{let funded=caller.fuel_remaining();let mut turns=0u64;let mut ran=false;while !ran{turns+=1;assert!(turns<=funded,"receiving scope never opened within its funded fuel quote of {funded}");measured(&mut caller,&mut decoder,|cx|{
+  let mut out=None;account(cx,|cx|cx.with_native_receiving(&mut out,|native,_|{ran=true;
    let identity=(native.ledger_identity(),native.retirement_recipient_identity());assert!(identity.1.is_some());native.begin_stage(0)?;
    for _ in 0..256{assert!(native.prepare_work(1)?);native.commit_work(1)?;completed_work+=1;native.step()?;}
    Ok(())
   }))?;
-  let issued=cx.receiving_issued_grant().unwrap();cx.consume_receiving_retained(issued,Default::default())?;cx.consume_fuel(completed_work);let taken=out.take().unwrap();let failure=account(cx,|_|taken.call.unwrap_err());assert_eq!(failure.operation.or(failure.context).unwrap().kind,ValueRefusalKind::Canceled);Ok(())
- }));
+  if !ran{return Ok(())}let issued=cx.receiving_issued_grant().unwrap();cx.consume_receiving_retained(issued,Default::default())?;cx.consume_fuel(completed_work);let taken=out.take().unwrap();let failure=account(cx,|_|taken.call.unwrap_err());assert_eq!(failure.operation.or(failure.context).unwrap().kind,ValueRefusalKind::Canceled);Ok(())
+ })}});
  assert_eq!(completed_work,256);assert!(seen.borrow().contains(&256));assert!(token.is_cancelled_now());
  caller.return_alias(Arc::try_unwrap(token).ok().expect("observer releases only its external borrow"),quantum());close(caller,decoder);
 }

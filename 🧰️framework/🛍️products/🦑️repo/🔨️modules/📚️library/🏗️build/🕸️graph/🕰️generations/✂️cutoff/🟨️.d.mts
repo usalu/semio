@@ -6,7 +6,7 @@ export const CUTOFF_POLICY_V1:CutoffPolicyV1;
 /** 🧵️ What a computation answers when it is asked again: the digest of the answer and every raw row it read. */
 export interface DerivedAnswerV1{fact:unknown;rows:readonly GenerationRowV1[]}
 /** 🪢️ A derived fact a project record produced: its row and the raw rows that support it. */
-export interface DerivedFactV1{row:GenerationRowV1;support:readonly GenerationRowV1[]}
+export interface DerivedFactV1{row:GenerationRowV1;support:Iterable<GenerationRowV1>}
 /** 🏷️ Whether a row is a derived fact: the answer of a question, never a raw fact that can be checked against the disk. */
 export function isDerivedRowV1(row:GenerationRowV1):boolean;
 /** 👻️ Whether an owner name is the pseudo owner that holds a derived fact together with its support. */
@@ -28,7 +28,7 @@ export function suspectsWithinV1(index:FactIndexV1,suspects:Iterable<string>,nam
 /** 🧾️ The derived row of each suspect pseudo owner. */
 export function suspectRowsV1(index:FactIndexV1,suspects:Iterable<string>):Map<string,GenerationRowV1>;
 /** 🧱️ The rows of the pseudo owners a build writes: the fresh facts with their support and the supports of the questions that still held. */
-export function derivedUpsertsV1(derived:readonly DerivedFactV1[],held?:ReadonlyMap<string,readonly GenerationRowV1[]>):Map<string,GenerationRowV1[]>;
+export function derivedUpsertsV1(derived:readonly DerivedFactV1[],held?:ReadonlyMap<string,GenerationRowSourceV1>):Map<string,GenerationRowSourceV1>;
 /** 🧹️ The pseudo owners whose derived fact no project holds any more. */
 export function orphanedDerivedOwnersV1(index:FactIndexV1):string[];
 /** 🚨️ The derived rows that projects hold and no pseudo owner supports. */

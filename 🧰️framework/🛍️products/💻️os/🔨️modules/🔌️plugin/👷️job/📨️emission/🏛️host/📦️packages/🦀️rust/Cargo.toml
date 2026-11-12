@@ -35,3 +35,4 @@ semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

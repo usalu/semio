@@ -2,7 +2,7 @@
 use super::*;
 fn fund(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 fn observed<T>(run:impl FnOnce()->(T,RetainedCloneProgress))->T{let((result,p),born,released)=semio_framework_trace_memory_testing::observe_backing(run);assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));result}
-fn retire(text:String){let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(text).map_err(|(e,_)|e).unwrap();while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();observed(||{let step=owner.step(fund(d)).unwrap();((),step.progress())});}}
+fn retire(text:String){let mut owner=semio_framework_value::retirement::controlled::ControlledRetirement::new(text).map_err(|(e,_)|e).unwrap();while !owner.terminal_is_empty(){let d=owner.next_demand(4096).unwrap();let g=fund(d);let(step,spent)=crate::component::original_clone_tests::stepped(&mut owner,g);assert!(step.progress().fits(g));assert_eq!(spent,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}}
 fn close(dag:&mut MutationDag){while let Some(owner)=dag.take_one_close_owner(){match owner{MutationDagCloseOwner::Identity(text)=>retire(text),MutationDagCloseOwner::Envelope(_)=>panic!("fixture has original identity rows")}}while !dag.backing_is_empty(){let release=dag.next_backing_release_byte_demand();let((_,bytes,_),born,released)=semio_framework_trace_memory_testing::observe_backing(||dag.close_backing_step(1,release));assert_eq!((born,released),(0,bytes));}}
 #[test]
 fn original_causal_seed_suffix_commits_once_and_aborts_every_unpublished_prefix(){

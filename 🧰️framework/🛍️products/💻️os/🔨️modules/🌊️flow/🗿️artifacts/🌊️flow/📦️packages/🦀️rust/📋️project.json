@@ -181,6 +181,22 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts verify selected-copy-source"
       }
+    },
+    "verify-framework-flow-physical-retirement-native": {
+      "executor": "repo:script",
+      "inputs": [
+        "default",
+        "^default",
+        "reads",
+        "cargoToolchain"
+      ],
+      "outputs": [],
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify framework-flow-physical-retirement native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

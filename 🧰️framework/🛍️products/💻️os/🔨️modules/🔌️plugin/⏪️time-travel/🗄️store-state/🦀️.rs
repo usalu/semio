@@ -89,6 +89,15 @@ impl<P,Mu: ::protocol::StoreMutationFor<P>> TimeTravelStoreState<P,Mu>{
     pub fn adopt_discard_issuer(&mut self,factory:Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>){self.discarded_factory=Some(factory);}
     /// ♻️ Queues the retirement of a displaced snapshot so it retires without the store.
     pub fn queue_retirement(&mut self,owner:Box<dyn store::ErasedSnapshotRetirement>){self.retirements.push_back(owner);}
+    /// 🧪️ Adopts one staged draft preview with its edited kind and replacement input, the custody a discard must retire.
+    #[cfg(any(test,feature="artifact-app-testing"))]
+    pub fn adopt_draft_preview(&mut self,kind:Mu,preview:store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>,input:protocol::InputReplacement){self.kind=Some(kind);self.preview=Some(preview);self.preview_input=Some(input);}
+    /// 🧪️ Whether the draft preview, its replacement input and its edited kind are all retired.
+    #[cfg(any(test,feature="artifact-app-testing"))]
+    pub fn draft_preview_retired(&self)->bool{self.preview.is_none()&&self.preview_input.is_none()&&self.kind.is_none()}
+    /// 🧪️ Whether a staged discard still holds its prepared store effects.
+    #[cfg(any(test,feature="artifact-app-testing"))]
+    pub fn discard_effects_held(&self)->bool{self.discard_effects.is_some()}
 }
 
 /// ⏭️ What one replay slice did: progress, a retry request, a completed report (the head is swapped in), or a fault.
@@ -409,8 +418,8 @@ where
                 let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history preview requires its original Job receiving issuer").into_fault())?;
                 if self.preview_source_advancing(){
                     self.snapshot_custody_available(2)?;
-                    let stepped=receive_step(cx,|native|self.preview_source.as_mut().unwrap().advance_chained(native,grant).map(|step|step.progress()).map_err(ValueError::into_fault),|result|match result{Ok(progress)=>*progress,Err(fault)=>fault.retained_progress,_=>Default::default()})?;
-                    TimeTravelStoreOutput::Previewed(match stepped{Some(result)=>TimeTravelPreviewStep::Progress(result?),None=>TimeTravelPreviewStep::Pending})
+                    let stepped=receive_step(cx,|native|self.preview_source.as_mut().unwrap().advance_chained(native,grant).map_err(ValueError::into_fault),|result|match result{Ok(step)=>step.progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
+                    TimeTravelStoreOutput::Previewed(match stepped{Some(result)=>TimeTravelPreviewStep::Progress(result?.progress()),None=>TimeTravelPreviewStep::Pending})
                 }else{
                     let stepped=receive_step(cx,|native|self.step_preview(store,deadline_us,clock,grant,native),|result|match result{Ok(TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p))=>*p,Ok(TimeTravelPreviewStep::Refused(error))=>error.retained_progress(),Err(fault)=>fault.retained_progress,_=>Default::default()})?;
                     match stepped{Some(result)=>{if let Some(work)=self.preview_job.as_mut().and_then(|job|job.take_preparation_work()){cx.consume_fuel(work)}TimeTravelStoreOutput::Previewed(result?)},None=>TimeTravelStoreOutput::Previewed(TimeTravelPreviewStep::Pending)}

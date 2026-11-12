@@ -52,7 +52,7 @@ async fn a_capacity_filled_context_fits_the_bound() {
     use crate::{TreeWindowRequest, ViewModel, ViewSessionIdentity, ViewWindowInstance};
     let identifier = || "i".repeat(VIEW_CONTEXT_IDENTIFIER_CHARS);
     let long = || "l".repeat(VIEW_CONTEXT_LONG_STRING_CHARS);
-    let view = ViewModel {
+    let view = crate::resolved_host_context_tests::Retiring::new(ViewModel {
         active_mode_id: Some(identifier()),
         active_window_kind_id: Some(identifier()),
         active_utility_id: Some(identifier()),
@@ -69,8 +69,8 @@ async fn a_capacity_filled_context_fits_the_bound() {
         tool_run_trace_cursor_by_window_id: (0..VIEW_CONTEXT_TRACE_CURSOR_ENTRIES).map(|index| (format!("{index}{}", identifier()), semio_framework_tool_run::ToolRunTraceCursor { run: (1 << 53) - 1, generation: u32::MAX, page: u32::MAX })).collect(),
         tree_windows: (0..VIEW_CONTEXT_TREE_WINDOWS).map(|index| TreeWindowRequest { body_key: format!("{index}{}", identifier()), node_key: identifier(), open: Some(true), offset: u32::MAX, rows: u32::MAX }).collect(),
         tree_viewport_rows: Some(u32::MAX),
-    };
-    let encoded = serde_json::to_vec(&view).unwrap();
+    });
+    let encoded = serde_json::to_vec(&*view).unwrap();
     println!("[STATS] capacity-filled view context encoded={} bound={}", encoded.len(), MAX_SURFACE_VIEW_CONTEXT_BYTES);
     assert!(encoded.len() <= MAX_SURFACE_VIEW_CONTEXT_BYTES, "encoded {} exceeds bound {MAX_SURFACE_VIEW_CONTEXT_BYTES}", encoded.len());
 }
@@ -87,8 +87,8 @@ async fn contributions_are_not_a_view_context_field() {
     assert!(schema["properties"].get("contributionsJson").is_none(), "contributionsJson must not be a view-context property");
     assert!(schema["additionalProperties"].as_bool() == Some(false), "the schema must refuse any re-added long field");
     assert_eq!(VIEW_CONTEXT_LONG_STRING_FIELDS, 2, "panel state and a single embedded surface input are bounded independently");
-    let view = crate::ViewModel { panel_json: Some("p".into()), locale: semio_ui_locale::Locale::En, terminology: semio_ui_locale::Terminology::Native, ..crate::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) };
-    let encoded = serde_json::to_string(&view).unwrap();
+    let view = crate::resolved_host_context_tests::Retiring::new(crate::ViewModel { panel_json: Some("p".into()), locale: semio_ui_locale::Locale::En, terminology: semio_ui_locale::Terminology::Native, ..crate::ViewModel::new(semio_ui_locale::Locale::En, semio_ui_locale::Terminology::Native) });
+    let encoded = serde_json::to_string(&*view).unwrap();
     assert!(!encoded.contains("contributionsJson"), "the guest projection must not emit contributionsJson: {encoded}");
     assert!(encoded.contains("panelJson"), "the guest projection still carries the one long field: {encoded}");
 }

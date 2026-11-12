@@ -73,3 +73,32 @@ test("a loaded entry gives exactly the support rows, walk facts and resolution o
   expect(loaded).toBe(derived);
  });
 }));
+
+test("resolving into a row log gives the rows, supports and values of the arrays for derived and for loaded entries, and the loaded entry reads its layers from the store",async()=>repository.invoke(async()=>{
+ const root=await repository.scratch("durable-log-"),stage=await repository.scratch("durable-log-stage-");roots.push(root,stage);
+ const{entry,modules,extras}=fixture.differential,names=Array.from({length:modules},(_,at)=>"tools/m"+at+".mjs"),{createRowLogV1}=await import("../../../🕰️generations/🗃️row-log/🟨️.mjs") as any;
+ write(root,{[entry]:names.map(name=>'import "./'+name.slice(6)+'";\n').join(""),...Object.fromEntries(names.map((name,at)=>[name,"export const m"+at+" = "+at+";\n"]))});
+ await storage.withBuildGraphStagingV1({root:stage},async()=>{
+  const image=async(log?:any)=>{
+   const scripts=createScriptInputCache({workspaceRoot:root,lateClosures:true}),api=scriptInputs.closureApiV1(scripts,root);
+   return observation.observeInferenceSnapshotV1(async()=>{
+    const lists=[];for(const more of [[],extras])lists.push(await api.closureOf([join(root,entry)],more,"artifact-command"));
+    const handles=lists.map((list:any)=>scriptInputs.closureHandleOfV1(list)),resolved=await api.resolve(handles.map((handle:any)=>[handle.key,handle.recipe]),log);
+    return JSON.stringify({values:[...resolved.values].sort(),rows:[...resolved.rows],derived:resolved.derived.map((item:any)=>({row:item.row,support:[...item.support]}))});
+   });
+  };
+  const log=createRowLogV1({path:join(stage,"rl","durable.rows")});
+  try{
+   scriptInputs.resetClosureEntriesV1();
+   const derivedArrays=await image();scriptInputs.resetClosureEntriesV1();
+   const derivedLog=await image(log);
+   expect(derivedLog).toBe(derivedArrays);
+   scriptInputs.resetClosureEntriesV1();
+   const loadedArrays=await image(),loadedCounts=scriptInputs.closureEntryCountsV1();scriptInputs.resetClosureEntriesV1();
+   const loadedLog=await image(log);
+   expect(loadedCounts.loaded).toBe(2);expect(loadedCounts.derived).toBe(0);
+   expect(loadedLog).toBe(loadedArrays);expect(loadedArrays).toBe(derivedArrays);
+   expect(log.stats().rows).toBeGreaterThan(0);
+  }finally{log.close();}
+ });
+}));

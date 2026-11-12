@@ -48,17 +48,17 @@ const FOLDER_RELOAD_ROUTE_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/
 
 #[doc(hidden)]
 pub async fn pump_until(app: &mut ToyApp, what: &str, done: impl Fn(&ToyApp) -> bool) {
-    semio_plugin_tests_06::time_travel_support_1::pump_until(app, what, done, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await
+    semio_plugin_tests_06::time_travel_support_1::pump_until(app, what, done, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await
 }
 
 #[doc(hidden)]
 pub async fn verb(app: &mut ToyApp, fixture: &Value, action: &str, args: Vec<(String, DslValue)>) -> InvocationResult {
-    semio_plugin_tests_06::time_travel_support_1::verb(app, fixture, action, args, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await
+    semio_plugin_tests_06::time_travel_support_1::verb(app, fixture, action, args, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await
 }
 
 #[doc(hidden)]
 pub async fn run_step(app: &mut ToyApp, fixture: &Value, step: &Value) -> Option<InvocationResult> {
-    semio_plugin_tests_06::time_travel_support_1::run_step(app, fixture, step, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await
+    semio_plugin_tests_06::time_travel_support_1::run_step(app, fixture, step, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await
 }
 
 /// 🧫️ The shared route fixture.
@@ -208,7 +208,7 @@ async fn bind_document_port(app: &mut ToyApp, uri: &str) -> MemoryBackbone {
 
 /// 🧩️ A fresh registered program of the toy app authoring as `actor`.
 async fn fresh_program(actor: &str) -> ToyApp {
-    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await;
     assert_eq!(app.stores.store.local_actor_id().0.as_str(), actor);
     app
 }
@@ -284,7 +284,7 @@ pub async fn deliver(batches: Vec<BackboneMessage>, port: &mut MemoryBackbone, t
     for message in batches {
         port.send(message).await.expect("a batch reaches the reader");
     }
-    to.tick_backbone(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reader ingests the batch");
+    to.tick_backbone(&mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("the reader ingests the batch");
     pump_until(to, "the reader adopts the batch", |app| app.stores.store.reprojection_progress().is_none()).await;
     to.render_ctx().refresh_cache().await.expect("the reader's history backfills");
 }
@@ -292,7 +292,15 @@ pub async fn deliver(batches: Vec<BackboneMessage>, port: &mut MemoryBackbone, t
 /// 🧭️ Drives one host load driver against `app`: the kernel's driver decides each command, and the program answers it as its
 /// channel does (admit a load or a merge, poll to a terminal status, acknowledge). Answers the outcome, the polls it took
 /// and the terminal status.
-async fn drive_archive_host(app: &mut ToyApp, mut host: protocol::DocumentArchiveLoadHost) -> (protocol::DocumentArchiveLoadOutcome, usize, Option<protocol::DocumentArchiveLoadStatus>) {
+async fn drive_archive_host(app: &mut ToyApp, host: protocol::DocumentArchiveLoadHost) -> (protocol::DocumentArchiveLoadOutcome, usize, Option<protocol::DocumentArchiveLoadStatus>) {
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original archive host caller");let mut context=caller.context();
+    let driven=drive_archive_host_on(app, host, &mut context).await;
+    let fuel=context.fuel_remaining();drop(context);caller.retire(fuel).expect("original archive host caller paid retirement");
+    driven
+}
+
+/// 🗃️ [`drive_archive_host`] on one caller turn.
+async fn drive_archive_host_on(app: &mut ToyApp, mut host: protocol::DocumentArchiveLoadHost, cx: &mut semio_framework_job::StepContext<'_>) -> (protocol::DocumentArchiveLoadOutcome, usize, Option<protocol::DocumentArchiveLoadStatus>) {
     let mut sequence = 0u64;
     let mut polls = 0usize;
     let mut terminal = None;
@@ -305,12 +313,12 @@ async fn drive_archive_host(app: &mut ToyApp, mut host: protocol::DocumentArchiv
             protocol::DocumentArchiveLoadStep::Send { seq, command } => (seq, command),
         };
         let frame = match command {
-            protocol::AppCommand::LoadDocumentArchive { seq, archive } => PluginApp::begin_document_archive_load(app, seq, archive).map(|()| protocol::AppFrame::Done { in_reply_to: seq }),
-            protocol::AppCommand::MergeDocumentArchive { seq, archive } => PluginApp::begin_document_archive_merge(app, seq, archive).map(|()| protocol::AppFrame::Done { in_reply_to: seq }),
+            protocol::AppCommand::LoadDocumentArchive { seq, archive } => semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(app, seq, archive, cx).map(|()| protocol::AppFrame::Done { in_reply_to: seq }).map_err(|failure| failure.primary_fault().cloned().expect("the archive admission refuses with a fault")),
+            protocol::AppCommand::MergeDocumentArchive { seq, archive } => semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_merge(app, seq, archive, cx).map(|()| protocol::AppFrame::Done { in_reply_to: seq }).map_err(|failure| failure.primary_fault().cloned().expect("the archive admission refuses with a fault")),
             protocol::AppCommand::PollDocumentArchiveLoad { seq, operation } => {
                 polls += 1;
                 assert!(polls < 1_000_000, "the archive operation never reaches a terminal status");
-                PluginApp::poll_document_archive_load(app, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.map(|status| protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status })
+                PluginApp::poll_document_archive_load(app, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.map(|status| protocol::AppFrame::DocumentArchiveLoad { in_reply_to: seq, status })
             }
             protocol::AppCommand::AcknowledgeDocumentArchiveLoad { seq, operation } => PluginApp::acknowledge_document_archive_load(app, operation).map(|()| protocol::AppFrame::Done { in_reply_to: seq }),
             other => panic!("the load driver sends admit, poll and acknowledge only, not {other:?}"),
@@ -463,6 +471,7 @@ fn hold_refusal(findings: &mut RouteFindings, what: &str, fault: &Fault, code: &
 /// them changes the document or leaves an operation behind.
 #[semio_framework_async_macros::async_test]
 async fn every_refused_whole_document_load_is_named_and_told_in_every_locale() {
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original load caller");let mut context=caller.context();let cx=&mut context;
     let mut findings = RouteFindings::default();
     let mut app = fresh_program("author").await;
     author_edit(&mut app, &serde_json::json!({ "kind": "setCount", "value": 3 })).await;
@@ -478,24 +487,24 @@ async fn every_refused_whole_document_load_is_named_and_told_in_every_locale() {
         ("a member out of order", protocol::DocumentArchivePack { members: vec![refusal_member(3)], ..own.clone() }, "plugin.document-load.member-invalid", vec!["1".to_string()]),
     ];
     for (index, (what, archive, code, values)) in refused.into_iter().enumerate() {
-        match PluginApp::begin_document_archive_load(&mut app, 70 + index as u64, archive) {
+        match semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 70 + index as u64, archive, cx) {
             Ok(()) => findings.0.push(format!("{what}: the archive was admitted")),
-            Err(fault) => hold_refusal(&mut findings, what, &fault, code, &values),
+            Err(failure) => hold_refusal(&mut findings, what, failure.primary_fault().expect("the refusal is a fault"), code, &values),
         }
     }
-    PluginApp::begin_document_archive_load(&mut app, 90, own.clone()).expect("the program's own archive is admitted");
-    match PluginApp::begin_document_archive_load(&mut app, 90, own) {
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 90, own.clone(), cx).expect("the program's own archive is admitted");
+    match semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 90, own, cx) {
         Ok(()) => findings.0.push("a second load under a live operation was admitted".to_string()),
-        Err(fault) => hold_refusal(&mut findings, "a second load under a live operation", &fault, "plugin.document-load.busy", &[]),
+        Err(failure) => hold_refusal(&mut findings, "a second load under a live operation", failure.primary_fault().expect("the refusal is a fault"), "plugin.document-load.busy", &[]),
     }
-    match PluginApp::poll_document_archive_load(&mut app, 4_242, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await {
+    match PluginApp::poll_document_archive_load(&mut app, 4_242, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await {
         Ok(status) => findings.0.push(format!("a poll of an operation that does not run answered {status:?}")),
         Err(fault) => hold_refusal(&mut findings, "a poll of an operation that does not run", &fault, "plugin.document-load.operation-unknown", &[]),
     }
     PluginApp::cancel_document_archive_load(&mut app, 90).expect("the admitted load is cancelled");
     let mut polls = 0usize;
     let ended = loop {
-        let status = PluginApp::poll_document_archive_load(&mut app, 90, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the cancelled load is polled");
+        let status = PluginApp::poll_document_archive_load(&mut app, 90, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("the cancelled load is polled");
         polls += 1;
         assert!(polls < 1_000_000, "the cancelled load never reaches a terminal status");
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
@@ -507,6 +516,7 @@ async fn every_refused_whole_document_load_is_named_and_told_in_every_locale() {
     findings.same(&head(&app), &before, "the document after every refusal and the cancel");
     pump_until(&mut app, "the program settles", |app| !app.time_travel.has_pending_work()).await;
     close(&mut app);
+    let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).expect("original load caller paid retirement");
     assert!(findings.0.is_empty(), "the load surface's refusals depart in {} place(s):\n{}", findings.0.len(), findings.0.join("\n"));
 }
 //#endregion 🪧️NamedRefusals
@@ -528,13 +538,14 @@ async fn program_with_history(edits: i64) -> (ToyApp, protocol::DocumentArchiveP
 /// as work is discovered, and a finished load has done all of it.
 #[semio_framework_async_macros::async_test]
 async fn a_whole_document_load_reports_the_work_it_did_and_never_goes_back() {
+    let mut caller=semio_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original load caller");let mut context=caller.context();let cx=&mut context;
     let mut findings = RouteFindings::default();
     let (mut source, archive) = program_with_history(24).await;
     let mut target = fresh_program("author").await;
-    PluginApp::begin_document_archive_load(&mut target, 61, archive).expect("the archive is admitted");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut target, 61, archive, cx).expect("the archive is admitted");
     let mut statuses: Vec<(u64, u64)> = Vec::new();
     let ended = loop {
-        let status = PluginApp::poll_document_archive_load(&mut target, 61, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the load is polled");
+        let status = PluginApp::poll_document_archive_load(&mut target, 61, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("the load is polled");
         assert!(statuses.len() < 1_000_000, "the load never reaches a terminal status");
         statuses.push((status.completed, status.total));
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
@@ -553,6 +564,7 @@ async fn a_whole_document_load_reports_the_work_it_did_and_never_goes_back() {
         pump_until(app, "the program settles", |app| !app.time_travel.has_pending_work()).await;
         close(app);
     }
+    let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).expect("original load caller paid retirement");
     assert!(findings.0.is_empty(), "the load's progress departs in {} place(s):\n{}", findings.0.len(), findings.0.join("\n"));
 }
 
@@ -568,8 +580,8 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
     let mut target = fresh_program("author").await;
     author_edit(&mut target, &fixture["example"]).await;
     let before = head(&target);
-    PluginApp::begin_document_archive_load(&mut target, 62, archive).expect("the archive is admitted");
-    let first = PluginApp::poll_document_archive_load(&mut target, 62, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the load is polled once");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut target, 62, archive, cx).expect("the archive is admitted");
+    let first = PluginApp::poll_document_archive_load(&mut target, 62, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("the load is polled once");
     findings.holds(matches!(first.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running), || format!("the load ended within one poll ({:?}), so the cancel has nothing to cancel", first.state));
     findings.holds(target.render_ref().reprojection_status().is_some_and(|status| status.kind == semio_framework::kernel::HistoryReprojectionKind::Load), || "a running load shows no loading row".to_string());
     let cancelled = verb(&mut target, &fixture, semio_framework::history_edit::HISTORY_EDIT_CANCEL_REPLAY_ACTION_ID, Vec::new()).await;
@@ -583,7 +595,7 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
         turns += 1;
     }
     findings.holds(target.ingest.document_archive_loads.get(62).is_some_and(|load| load.terminal()), || format!("the cancelled load did not retire in {turns} maintenance turns without a host poll"));
-    let status = PluginApp::poll_document_archive_load(&mut target, 62, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the host's next poll");
+    let status = PluginApp::poll_document_archive_load(&mut target, 62, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect("the host's next poll");
     findings.same(&status.state, &protocol::DocumentArchiveLoadState::Cancelled, "what the host's next poll finds");
     PluginApp::acknowledge_document_archive_load(&mut target, 62).expect("the cancelled load is acknowledged");
     findings.same(&head(&target), &before, "the document after the cancelled load");
@@ -591,6 +603,7 @@ async fn a_cancelled_load_stops_reading_as_loading_at_once_and_retires_without_a
         pump_until(app, "the program settles", |app| !app.time_travel.has_pending_work()).await;
         close(app);
     }
+    let fuel=cx.fuel_remaining();drop(context);caller.retire(fuel).expect("original load caller paid retirement");
     assert!(findings.0.is_empty(), "the cancelled load departs in {} place(s):\n{}", findings.0.len(), findings.0.join("\n"));
 }
 //#endregion ⏳️LoadProgressAndCancel

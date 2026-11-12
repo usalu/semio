@@ -1,5 +1,6 @@
 //! 📊️ Analyses: the fatigue spectrum bins, FORM reliability analyses, test series and factor-override rows of the document as bar plates in a lane behind the members. Each bar is an entity bound to its Annex check; the grip height of an editable bar is the value over a fixed scale, so a drag writes the document leaf.
 
+use super::scene::projection_kit::{loc, v3};
 use super::checks::{analysis_form, analysis_form_multi, test_design_value};
 use super::handles;
 use super::kit::*;

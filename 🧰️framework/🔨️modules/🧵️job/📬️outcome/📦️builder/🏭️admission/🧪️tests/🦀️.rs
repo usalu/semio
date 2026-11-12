@@ -2,9 +2,8 @@
 use semio_framework_job_payload::*;
 use semio_framework_trace::{OperationId,Generation};
 use semio_framework_value_control_contract::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet,demand_grant as grant};
 use semio_framework_value_testing_allocator::{observe_retirement_allocations as observe,refuse_one_allocation_on_this_thread as refuse};
-fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn complete(result:RetainedWorkOutcome)->RetainedWorkPoll<RetainedCloneStep,ValueError>{RetainedWorkPoll::Complete(result)}
 fn take(turn:RetainedWorkPoll<RetainedCloneStep,ValueError>)->RetainedWorkOutcome{let RetainedWorkPoll::Complete(turn)=turn else{panic!("original payload birth unexpectedly pending")};turn}
 #[test]fn real_payload_allocator_refusal_retains_original_input_and_marker(){

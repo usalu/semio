@@ -298,13 +298,7 @@ pub struct TestTaskDrop<F>(std::mem::ManuallyDrop<Option<F>>);
     impl<F: Send + 'static> semio_framework_value::retirement::RetirementCursor for TestTaskDrop<F> {
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
 
-        fn close_step(&mut self, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
-            use semio_framework_value::retirement::RetirementStep;
-            if self.0.is_none() { return RetirementStep::Complete; }
-            if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-            drop(self.0.take());
-            RetirementStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() })
-        }
+        semio_framework_value::native_retirement_reply!();
         fn terminal_is_empty(&self) -> bool { self.0.is_none() }
         fn next_work_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
         fn next_birth_bytes(&self, _: usize) -> Option<usize> { Some(0) }
@@ -314,8 +308,20 @@ pub struct TestTaskDrop<F>(std::mem::ManuallyDrop<Option<F>>);
         fn terminal_release_bytes(&self) -> Option<usize> { self.0.is_none().then_some(std::mem::size_of::<Self>()) }
     }
 
+    impl<F: Send + 'static> TestTaskDrop<F> {
+        fn close_step(&mut self, _body: usize, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> semio_framework_value::retirement::RetirementStep {
+            use semio_framework_value::retirement::RetirementStep;
+            if self.0.is_none() { return RetirementStep::Complete(0); }
+            if effect.grant().maximum_items == 0 { return RetirementStep::BudgetExhausted; }
+            let work = match semio_framework_value::retirement::record_retirement_work(effect, 1) { Ok(work) => work, Err((error, work)) => return RetirementStep::Failure(error.into(), work) };
+            drop(self.0.take());
+            RetirementStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }, work)
+        }
+    }
+
     impl<F: Send + 'static> semio_framework_value::retirement::RetireOwned for TestTaskSource<F> {
-        fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { Box::new(TestTaskDrop(std::mem::ManuallyDrop::new(Some(self.0)))) }
+        type RetirementCursor = TestTaskDrop<F>;
+        fn retirement_seed(self) -> Self::RetirementCursor { TestTaskDrop(std::mem::ManuallyDrop::new(Some(self.0))) }
         fn retirement_birth_bytes(&self) -> Option<usize> { Some(std::mem::size_of::<TestTaskDrop<F>>()) }
         fn controlled_retirement_supported() -> bool { true }
     }

@@ -8,6 +8,8 @@ export interface GenerationOwnerRowV1{readonly root:string;readonly kind:"projec
 export interface GenerationManifestV1{readonly version:1;readonly generation:number;readonly parent:string|null;readonly identity:string;readonly implementation:string;readonly env:string;readonly membership:string;readonly frontier:string|null;readonly factIndex:string;readonly global:string;readonly envParts?:import("./🧵️edge-reads/🟨️.mjs").EnvironmentStoredPartsV1;readonly owners:Readonly<Record<string,GenerationOwnerRowV1>>;readonly built:{readonly kind:"cold"|"delta"|"refresh";readonly base:number|null;readonly dirty:readonly string[]}}
 export interface GenerationFragmentV1{readonly version:1;readonly name:string;readonly root:string;readonly kind:"project"|"unavailable";readonly node:unknown;readonly edges:readonly {source:string;target:string;[key:string]:unknown}[];readonly edgesEnv:string;readonly targets:readonly string[];readonly config?:string;readonly nativeRoot?:string}
 export interface GenerationSealedV1{readonly pointer:GenerationPointerV1;readonly manifest:GenerationManifestV1|undefined;readonly missing?:boolean}
+/** 📦️ The rows one owner holds as the patch consumes them: an array, or an iterable that also names its rows in batches (`batches()`, loaded where they are consumed). */
+export type GenerationRowSourceV1=readonly GenerationRowV1[]|(Iterable<GenerationRowV1>&{readonly length:number;batches():AsyncIterable<readonly GenerationRowV1[]>});
 export interface FactIndexV1{version:1;owners:string[];rows:GenerationRowV1[];classes:{r:number[];o:number[]}[]}
 export interface FrontierV1{version:1;capturedAt:number;directories:[string,number,number][];members:[string,number][]}
 export interface MembershipChangeV1{path:string;kind:"added"|"removed"|"changed";directory?:boolean;config?:boolean;pending?:boolean}
@@ -16,8 +18,8 @@ export interface GenerationStaleReasonV1{row?:GenerationRowV1;change?:{path:stri
 export interface GenerationPlanV1{kind:"cold"|"clean"|"delta";reason?:string;dirty:Set<string>;added:string[];removed:string[];envStale:boolean;checked:number;stale?:number;reasons?:GenerationStaleReasonV1[];cutoff?:{questions:number;held:number;changed:number;failed:number};refresh?:ReadonlyMap<string,GenerationRowV1[]>}
 export interface GenerationProgressV1{phase:"facts"|"verification"|"assembly";done:number;total:number}
 export interface GenerationComputeSpecV1{cold:boolean;owners:string[];discover:string[];removed:string[];changed:string[];previousEnv:string|null;previousParts?:import("./🧵️edge-reads/🟨️.mjs").EnvironmentStoredPartsV1;envStale:boolean;generation:number;coldReason?:string;reasons:GenerationStaleReasonV1[];staleRows:number;staleKinds?:Record<string,number>;stubs:Record<string,{root:string;kind:"project"|"unavailable";targets:readonly string[];nativeRoot?:string;config?:string;tag?:string;reads?:import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1}>}
-export interface GenerationComputedOwnerV1{name:string;partial?:"edges";root?:string;kind?:"project"|"unavailable";node?:unknown;edges?:unknown[];targets?:string[];config?:string;nativeRoot?:string;tag?:string;rows?:GenerationRowV1[];reads?:import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1}
-export interface GenerationComputeResultV1{owners:GenerationComputedOwnerV1[];reEdge?:(name:string,fragment:{node?:unknown})=>Promise<unknown[]>;readsOf?:(name:string)=>import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1|undefined;carried?:readonly string[];env:{digest:string;rows:GenerationRowV1[];parts?:import("./🧵️edge-reads/🟨️.mjs").EnvironmentPartsV1};global?:unknown;replaceTags?:string[];derived?:import("./✂️cutoff/🟨️.mjs").DerivedFactV1[]}
+export interface GenerationComputedOwnerV1{name:string;partial?:"edges";root?:string;kind?:"project"|"unavailable";node?:unknown;edges?:unknown[];targets?:string[];config?:string;nativeRoot?:string;tag?:string;rows?:GenerationRowSourceV1;reads?:import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1}
+export interface GenerationComputeResultV1{owners:GenerationComputedOwnerV1[];reEdge?:(name:string,fragment:{node?:unknown})=>Promise<unknown[]>;readsOf?:(name:string)=>import("./🧵️edge-reads/🟨️.mjs").EdgeReadsV1|undefined;carried?:readonly string[];env:{digest:string;rows:GenerationRowV1[];parts?:import("./🧵️edge-reads/🟨️.mjs").EnvironmentPartsV1};global?:unknown;replaceTags?:string[];derived?:import("./✂️cutoff/🟨️.mjs").DerivedFactV1[];dispose?:()=>void|Promise<void>}
 export interface GenerationFilePortV1{read(path:string):Promise<Uint8Array|undefined>;write(path:string,bytes:Uint8Array,options?:{ifAbsent?:boolean}):Promise<boolean>;names(directory:string):Promise<string[]>;list(directory:string):Promise<{name:string;modifiedMs:number}[]>;remove(path:string):Promise<void>}
 export interface GenerationLeasePortV1{exclusive<T>(resource:string,body:()=>Promise<T>,options?:{signal?:AbortSignal;timeoutMs?:number}):Promise<T>}
 /** 🧠️ Complete answers may be shared only within one workspace, identity, implementation and deriver domain; every reuse validates their support through the current store. */
@@ -59,7 +61,9 @@ export function packGenerationDocumentV1(value:unknown,maximumBytes:number):Uint
 export function packFactIndexV1(index:FactIndexV1,maximumBytes:number):{bytes:Uint8Array;expandedBytes:number};
 export function unpackFactIndexV1(bytes:Uint8Array,maximumBytes:number):FactIndexV1;
 /** 🪶️ Opens a packed fact index for verification only: rows become objects when they are read. */
-export function openPackedFactIndexV1(bytes:Uint8Array,maximumBytes:number,name?:string):FactIndexV1;
+export function openPackedFactIndexV1(bytes:Uint8Array,maximumBytes:number,name?:string):import("./🧮️fact-codec/🟨️.mjs").FactCodecOpenIndexV1;
+export function openRawFactIndexV1(raw:Uint8Array,maximumBytes:number,name?:string):import("./🧮️fact-codec/🟨️.mjs").FactCodecOpenIndexV1;
+export function packFactIndexBytesV1(raw:Uint8Array,maximumBytes:number):{bytes:Uint8Array;expandedBytes:number};
 export function compareCodePointsV1(a:string,b:string):number;
 export function rowKeyV1(row:GenerationRowV1):string;
 export const ROW_KEY_TEXT_LIMIT_V1:128;

@@ -1,6 +1,8 @@
 use super::*;
 use semio_framework_test_fixtures::fixture_text;
-use semio_framework_value::{retained_clone::RetainedCloneSource, retirement::RetireOwned};
+use semio_framework_value::{retained_clone::RetainedCloneSource, retirement::RetireOwned, RetainedWorkPoll};
+use semio_framework_value_clone_source_testing::admit_owned;
+use semio_framework_value_testing_effect_bank::{EffectBank, Wallet};
 
 fn grant(demand: RetirementDemand) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
@@ -11,21 +13,26 @@ fn observe<T>(operation: impl FnOnce() -> T) -> (T, (usize, usize)) {
     (result, (born, released))
 }
 
-fn source<T: RetireOwned + Sync>(value: T) -> RetainedCloneSource<T> {
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 };
-    let mut admission = RetainedCloneSource::admission_owned(value, ());
-    let mut output = None;
-    for _ in 0..64 {
-        if admission.terminal_is_empty() {
-            return output.expect("funded original source");
-        }
-        let mut actual = None;
-        let outcome = if admission.phase() == "ready" { admission.take_output(&mut output, grant) } else { admission.advance(grant, &mut actual) };
-        assert!(outcome.result.unwrap().progress().fits(grant));
-    }
-    panic!("original source admission did not settle");
+thread_local! {
+    static BANK: std::cell::RefCell<EffectBank> = std::cell::RefCell::new(EffectBank::new(Wallet::new(RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX }, u64::MAX)));
 }
 
+/// 🪙️ Admits one owned fixture under the thread's finite Source stock with the whole remaining stock as its grant.
+fn source<T: RetireOwned + Sync>(value: T) -> RetainedCloneSource<T> {
+    BANK.with(|bank| {
+        let mut bank = bank.borrow_mut();
+        let stock = bank.wallet().remaining();
+        let outcome = admit_owned(&mut bank, value, (), stock);
+        let admitted = match outcome.result {
+            Ok(admitted) => admitted,
+            Err(_) => panic!("funded original source admission"),
+        };
+        assert!(admitted.1.fits(stock));
+        admitted.0
+    })
+}
+
+/// ♻️ Closes one admitted source under real original actions, each granted exactly its own quote and work.
 fn close_source<T: RetireOwned + Sync>(source: &mut RetainedCloneSource<T>) {
     for _ in 0..4096 {
         if source.terminal_is_empty() {
@@ -37,9 +44,27 @@ fn close_source<T: RetireOwned + Sync>(source: &mut RetainedCloneSource<T>) {
             release_bytes: source.next_close_release_byte_demand().unwrap(),
             depth: source.next_close_depth_demand().unwrap(),
         });
-        assert!(source.close_step(quote).result.unwrap().progress().fits(quote));
+        let work = source.next_close_work_demand(4096).unwrap();
+        let poll = BANK.with(|bank| bank.borrow_mut().run(quote, work, |effect| source.close_step(4096, effect)).0);
+        if let RetainedWorkPoll::Complete(turn) = poll {
+            assert!(turn.result.unwrap().progress().fits(quote));
+        }
     }
     panic!("original source closure did not settle");
+}
+
+/// ▶️ Runs one lookup advance under a real original action granting the given grant and the selected work bound.
+fn advance<R: RetainedKeyedRow>(lookup: &mut RetainedKeyLookup, rows: RetainedCloneRef<'_, Vec<R>>, key: RetainedCloneRef<'_, String>, body: usize, work: u64, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep, semio_framework_value::ValueError> {
+    BANK.with(|bank| bank.borrow_mut().run_outcome(grant, work, |effect| lookup.advance(rows, key, body, work, effect)))
+}
+
+/// ♻️ Runs one lookup close turn under a real original action granting the given grant and the quoted work.
+fn close_step(lookup: &mut RetainedKeyLookup, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep, semio_framework_value::OriginalRetirementFailure> {
+    let work = lookup.close_work_demand(4096).unwrap();
+    match BANK.with(|bank| bank.borrow_mut().run(grant, work, |effect| lookup.close_step(effect)).0) {
+        RetainedWorkPoll::Complete(turn) => turn,
+        RetainedWorkPoll::Pending { .. } => panic!("lookup closure stayed pending"),
+    }
 }
 
 fn close(lookup: &mut RetainedKeyLookup) {
@@ -50,12 +75,12 @@ fn close(lookup: &mut RetainedKeyLookup) {
         }
         let quote = grant(lookup.close_demand(4096).unwrap());
         let work = lookup.close_work_demand(4096).unwrap();
-        let (denied, heap) = observe(|| lookup.close_step(RetainedCloneGrant::default()));
+        let (denied, heap) = observe(|| close_step(lookup, RetainedCloneGrant::default()));
         assert_eq!(heap, (0, 0));
         assert_eq!(denied.work, 0);
         assert_eq!(denied.result.unwrap().progress(), Default::default());
-        let (outcome, heap) = observe(|| lookup.close_step(quote));
-        assert!(outcome.work <= work);
+        let (outcome, heap) = observe(|| close_step(lookup, quote));
+        assert!(outcome.work <= u128::from(work));
         let step = outcome.result.unwrap();
         assert!(step.progress().fits(quote));
         assert_eq!(heap, (step.progress().retained_capacity_bytes, step.progress().released_bytes));
@@ -91,7 +116,7 @@ fn run(case: &serde_json::Value, cut: Option<usize>) -> usize {
         if work == 2 {
             let before = state(&lookup);
             assert_eq!(lookup.advance_work_demand(rows.borrow(), key.borrow(), 1, 1).unwrap(), 0);
-            let (outcome, heap) = observe(|| lookup.advance(rows.borrow(), key.borrow(), 1, 1, selected));
+            let (outcome, heap) = observe(|| advance(&mut lookup, rows.borrow(), key.borrow(), 1, 1, selected));
             assert_eq!(heap, (0, 0));
             assert_eq!(outcome.work, 0);
             assert_eq!(outcome.result.unwrap().progress(), Default::default());
@@ -107,21 +132,21 @@ fn run(case: &serde_json::Value, cut: Option<usize>) -> usize {
         .flatten()
         {
             let before = state(&lookup);
-            let (outcome, heap) = observe(|| lookup.advance(rows.borrow(), key.borrow(), 1, 2, denied));
+            let (outcome, heap) = observe(|| advance(&mut lookup, rows.borrow(), key.borrow(), 1, 2, denied));
             assert_eq!(heap, (0, 0));
             assert_eq!(outcome.work, 0);
             assert_eq!(outcome.result.unwrap().progress(), Default::default());
             assert_eq!(state(&lookup), before);
         }
         let before = state(&lookup);
-        let (outcome, heap) = observe(|| lookup.advance(rows.borrow(), key.borrow(), 1, 0, selected));
+        let (outcome, heap) = observe(|| advance(&mut lookup, rows.borrow(), key.borrow(), 1, 0, selected));
         assert_eq!(heap, (0, 0));
         assert_eq!(outcome.work, 0);
         assert_eq!(outcome.result.unwrap().progress(), Default::default());
         assert_eq!(state(&lookup), before);
-        let (outcome, heap) = observe(|| lookup.advance(rows.borrow(), key.borrow(), 1, 2, selected));
+        let (outcome, heap) = observe(|| advance(&mut lookup, rows.borrow(), key.borrow(), 1, 2, selected));
         assert_eq!(heap, (0, 0));
-        assert_eq!(outcome.work, work);
+        assert_eq!(outcome.work, u128::from(work));
         assert!(outcome.result.unwrap().progress().fits(selected));
         turns += 1;
         assert!(turns < 4096);
@@ -170,13 +195,13 @@ fn retained_key_lookup_rejects_source_substitution() {
         let mut turns = 0;
         while lookup.result().is_none() && (finish || turns < 3) {
             let selected = grant(lookup.demand(rows.borrow(), key.borrow(), 1, 2).unwrap());
-            lookup.advance(rows.borrow(), key.borrow(), 1, 2, selected).result.unwrap();
+            advance(&mut lookup, rows.borrow(), key.borrow(), 1, 2, selected).result.unwrap();
             turns += 1;
             assert!(turns < 100);
         }
         let before = state(&lookup);
         for (rows, key) in [(foreign_rows.borrow(), key.borrow()), (rows.borrow(), foreign_key.borrow())] {
-            let (outcome, heap) = observe(|| lookup.advance(rows, key, 1, 2, grant(scalar(4096))));
+            let (outcome, heap) = observe(|| advance(&mut lookup, rows, key, 1, 2, grant(scalar(4096))));
             assert_eq!(heap, (0, 0));
             assert_eq!(outcome.work, 0);
             assert!(outcome.result.is_err());

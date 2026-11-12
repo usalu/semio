@@ -6,7 +6,7 @@ impl InteractiveJob for Probe{
  fn step<'a>(&'a mut self,_:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(Ok(None))}
  fn borrow_outcome<'a>(&'a self,_:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"birth probe has no semantic outcome"))}
  fn begin_close(&mut self){}
- fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.value.is_none(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}close_original_retained_step(cx,RetirementDemand{release_bytes:std::mem::size_of::<u64>(),depth:1,..Default::default()},|_|{self.value.take();semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:std::mem::size_of::<u64>(),..Default::default()})),work:1}})}
+ fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.value.is_none(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}close_original_retained_effect_step(cx,RetirementDemand{release_bytes:std::mem::size_of::<u64>(),depth:1,..Default::default()},|_|{self.value.take();Ok::<_,ValueError>(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:std::mem::size_of::<u64>(),..Default::default()}))})}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.value.is_some(){std::mem::size_of::<u64>()}else{0})}

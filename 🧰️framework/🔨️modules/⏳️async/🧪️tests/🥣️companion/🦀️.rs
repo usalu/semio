@@ -39,8 +39,7 @@ pub fn bytes(relative: &str) -> &'static [u8] {
     leaked(relative)
 }
 
-#[global_allocator]
-static ASYNC_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 //#region 🧬️Tests
 #[path = "../🔬️unit/🦀️.rs"]

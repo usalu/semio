@@ -1,5 +1,6 @@
 import type { BuildGraphSelectionV1 } from "../🚪️admission/🟦️.ts";
 import type { EdgeReadsV1, EnvironmentPartsV1 } from "../🕰️generations/🧵️edge-reads/🟨️.mjs";
+import type { RowLogListV1 } from "../🕰️generations/🗃️row-log/🟨️.mjs";
 
 /** 🧾️ Binds loaded graph behavior and its publication declaration to their original bytes. */
 export interface BuildGraphModuleAuthorityV1{implementation:string;publication:string}
@@ -16,7 +17,7 @@ export interface BuildUnavailableProjectV1 { root:string; project?:string; sourc
 /** 📋️ Describes observed root entries without granting mutation or storage custody. */
 export interface BuildGraphInvalidationInventoryV1 {device:number;entries:{name:string;kind:"file"|"directory"|"symlink"|"other";links:number;bytes:number;device:number}[]}
 /** 🏗️ What one partial inference produced, in repository terms: fully inferred owners with their own facts, owners whose edges alone were recomputed, every edge of the processed owners, the environment and every fact the inference consumed. */
-export interface BuildGraphPartV1 {owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:any;unavailable?:BuildUnavailableProjectV1;nodeRows?:BuildGraphRowV1[];reads?:EdgeReadsV1}[];edgeOnly:{name:string;streamed?:true}[];reEdge?:(name:string,fragment:{node?:any})=>Promise<unknown[]>|unknown[];readsOf?:(name:string)=>EdgeReadsV1|undefined;carried?:readonly string[];derived?:{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}[];edges:{source:string;target:string;[key:string]:unknown}[];externalNodes:Record<string,unknown>;parseUnavailable:BuildUnavailableProjectV1[];rows:BuildGraphRowV1[];env:{digest:string;rows:BuildGraphRowV1[];parts?:EnvironmentPartsV1};replaceTags:string[]}
+export interface BuildGraphPartV1 {owners:{name:string;root:string;nativeRoot?:string;config?:string;tag?:string;node?:any;unavailable?:BuildUnavailableProjectV1;nodeRows?:BuildGraphRowV1[]|RowLogListV1<BuildGraphRowV1>;reads?:EdgeReadsV1}[];edgeOnly:{name:string;streamed?:true}[];reEdge?:(name:string,fragment:{node?:any})=>Promise<unknown[]>|unknown[];readsOf?:(name:string)=>EdgeReadsV1|undefined;carried?:readonly string[];derived?:{readonly row:BuildGraphRowV1;readonly support:Iterable<BuildGraphRowV1>}[];dispose?:()=>void;edges:{source:string;target:string;[key:string]:unknown}[];externalNodes:Record<string,unknown>;parseUnavailable:BuildUnavailableProjectV1[];rows:BuildGraphRowV1[];env:{digest:string;rows:BuildGraphRowV1[];parts?:EnvironmentPartsV1};replaceTags:string[]}
 /** 🔨️ One consumed fact of an inference. */
 export interface BuildGraphRowV1 {kind:string;path:string;fact:unknown}
 /** 🧭️ The stored summary of one published owner: enough for edges, ownership and generator validation without its node. */

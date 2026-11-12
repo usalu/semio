@@ -85,7 +85,7 @@ mod tests;
 
 #[path="🔗️shared/🦀️.rs"]
 mod shared;
-pub use shared::{shared_arc_publication_demand,shared_arc_publication_work_demand,publish_uninitialized_arc_from,try_uninitialized_arc_into,shared_uninitialized_work_demand,uninitialized_arc_release_demand,release_uninitialized_arc_from,admit_shared_allocation,admit_shared_allocation_from,try_uninitialized_arc,shared_uninitialized_demand,shared_allocation_value_demand,shared_allocation_slot_demand,shared_allocation_bytes,SharedAllocation};
+pub use shared::{shared_allocation_work_demand,shared_arc_publication_demand,shared_arc_publication_work_demand,publish_uninitialized_arc_from,try_uninitialized_arc_into,shared_uninitialized_work_demand,uninitialized_arc_release_demand,release_uninitialized_arc_from,admit_shared_allocation,admit_shared_allocation_from,try_uninitialized_arc,shared_uninitialized_demand,shared_allocation_value_demand,shared_allocation_slot_demand,shared_allocation_bytes,SharedAllocation};
 
 #[path="🔗️shared/📦️original/🦀️.rs"]
 pub mod original;

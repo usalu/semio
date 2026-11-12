@@ -168,7 +168,7 @@ pub(in super::super) fn reconstruct(database: &SqliteDatabase, tables: OpcSqlite
     control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, work, work)?;
     output.relationships = control.allocation_stage(SqliteSnapshotPhase::ReconstructSnapshot, |limits, progress, allocation| {
         let mut callback = |event: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| progress(event.completed, event.total);
-        let mut native = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_forwarded(limits, &mut callback, allocation);
+        let mut native = allocation.decode(limits, &mut callback);
         let result = OpcRelationshipOwners::adopt_admitted(groups, &mut native);
         (result, native.owned_bytes())
     })??;

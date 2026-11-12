@@ -48,7 +48,7 @@ pub fn decode_semio_audio_mutation_json(text: &str) -> Result<SemioAudioMutation
 /// 🎙️ Hand-rolled `OpText`/`OpBinary` per the ticket's blanket instruction — real one-line
 /// `keyword payload...` grammar (not `serde_json`), reusing the diff module's own bracket value
 /// codecs (`enc_channel`/`enc_tag`/`enc_format`/`enc_snapshot`/…) so a mutation's embedded payload
-/// (e.g. `SetSnapshot`'s whole snapshot, `InsertChannel`'s channel) prints identically to how the
+/// (e.g. a whole snapshot, `InsertChannel`'s channel) prints identically to how the
 /// same value would print inside a diff's `added` triple. Binary = the text bytes verbatim, same
 /// simplification `SemioAudioDiff::encode_diff`/gif 89a's `GifDiff::encode_diff` both use.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

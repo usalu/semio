@@ -142,7 +142,7 @@ impl OriginalArtifactDocumentReceiving {
             } else if let Some(index) = self.decoded.iter().position(Option::is_some) {
                 *self.close_owner = Some(ControlledRetirement::retain(DocumentSourceOwner::Bytes(self.decoded[index].take().expect("original decoded bytes"))));
             }
-            RetainedWorkOutcome::<_, ValueError> { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
+            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
         })
     }
 

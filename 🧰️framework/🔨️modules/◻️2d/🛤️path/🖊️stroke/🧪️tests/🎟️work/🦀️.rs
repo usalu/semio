@@ -3,8 +3,7 @@ use super::*;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand};
 use semio_framework_value_persistent::work::RetainedWorkLedger;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 fn quote(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn admitted(g:RetainedCloneGrant,s:RetainedCloneGrant){assert!(g.maximum_items<=s.maximum_items&&g.maximum_copy_bytes<=s.maximum_copy_bytes&&g.maximum_capacity_bytes<=s.maximum_capacity_bytes&&g.maximum_release_bytes<=s.maximum_release_bytes&&g.maximum_depth<=s.maximum_depth);}
 fn spend(stock:&mut RetainedCloneGrant,p:RetainedCloneProgress){assert!(p.fits(*stock));stock.maximum_items-=p.copied_items;stock.maximum_copy_bytes-=p.copied_bytes;stock.maximum_capacity_bytes-=p.retained_capacity_bytes;stock.maximum_release_bytes-=p.released_bytes;}

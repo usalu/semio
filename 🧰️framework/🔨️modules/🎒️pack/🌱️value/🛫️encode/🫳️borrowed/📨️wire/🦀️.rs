@@ -39,7 +39,7 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
   if let Some(cursor)=self.cursor.as_ref(){return if cursor.terminal_is_empty(){Ok(header())}else{cursor.retirement_demands()}}
   if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header())}else{source.next_close_demand(body)}}
   if let Some(owner)=self.original_close.as_ref(){return if owner.terminal_is_empty(){Ok(header())}else{owner.selected_demand(body)}}
-  if self.original.is_some(){return Ok(header())}if !self.wire.is_empty(){return Ok(RetirementDemand{copy_bytes:self.wire.len().min(body).min(64),depth:self.wire.next_pop_depth_demand().map_err(page_error)?.max(1),..Default::default()})}Ok(RetirementDemand{release_bytes:self.wire.next_release_allocation_bytes().map_err(page_error)?,depth:self.wire.next_release_depth_demand().map_err(page_error)?.max(1),..Default::default()})
+  if self.original.is_some(){return Ok(header())}if !self.wire.is_empty(){return Ok(RetirementDemand{copy_bytes:self.wire.len().min(body).min(64),depth:self.wire.next_pop_depth_demand().map_err(page_error)?.max(1),..Default::default()})}Ok(RetirementDemand{copy_bytes:self.wire.next_release_copy_byte_demand().map_err(page_error)?,release_bytes:self.wire.next_release_allocation_bytes().map_err(page_error)?,depth:self.wire.next_release_depth_demand().map_err(page_error)?.max(1),..Default::default()})
  }
  /// 📏️ Quotes the exact original source, symbol, output or ownership donation selected by this turn.
  pub fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{

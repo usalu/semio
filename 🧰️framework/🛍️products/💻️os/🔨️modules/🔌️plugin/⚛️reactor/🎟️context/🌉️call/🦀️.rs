@@ -113,6 +113,18 @@ impl OriginalActorGuestEntry{
   **close=Some(OriginalTurnFailure::from(original));let error=close.as_mut().unwrap();let progress=error.retained_progress();error.receipt_refusal=cx.consume_retained(progress).err();error.receipt_refusal.is_none()
  }
 
+ fn has_close_causes(&self)->bool{self.close_fault.is_some()||self.close_fault_retirement.is_some()||self.debit_fault.is_some()||self.debit_fault_retirement.is_some()}
+ /// 🧯️ Closes the retained child and debit causes of this entry one paid effect at a time inside its own Source turn.
+ fn close_causes_step(&mut self,input:RetainedTurnInput,budget:StepBudget)->OriginalActorCall<RetainedCloneStep,OriginalActorContextError>{
+  let Some(clock)=self.context.original_clock_source()else{return OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Err(OriginalActorContextError::Refused(refusal("guest cause retirement requires its admitted Source clock")))}};let mut spent=Default::default();
+  let Self{context,close_fault,close_fault_retirement,debit_fault,debit_fault_retirement,..}=self;
+  let call=context.dispatch_step(input,budget,&mut spent,clock,|cx|cx.with_original_retirement(|cx|{
+   let one=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};let mut work=0u128;
+   let Some((result,_))=cx.with_original_effect(one,|_,effect|if close_fault.is_some()||close_fault_retirement.is_some(){Self::close_original_slot(close_fault,close_fault_retirement,effect,&mut work)}else{Self::close_original_slot(debit_fault,debit_fault_retirement,effect,&mut work)})?else{return Ok(false)};
+   semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work})?;Ok(close_fault.is_none()&&close_fault_retirement.is_none()&&debit_fault.is_none()&&debit_fault_retirement.is_none())
+  }));
+  let result=match call.result{Ok(_)=>Ok(RetainedCloneStep::Progress(call.receipt_spent)),Err(OriginalActorCallError::Authority(error))=>Err(OriginalActorContextError::Refused(error)),Err(OriginalActorCallError::Semantic(error))=>Err(OriginalActorContextError::Original(error))};OriginalActorCall{input:call.input,receipt_spent:call.receipt_spent,work_units_spent:call.work_units_spent,result}
+ }
  fn has_close_failure(&self)->bool{self.bootstrap_fault.is_some()||self.close_fault.is_some()||self.close_fault_retirement.is_some()||self.debit_fault.is_some()||self.debit_fault_retirement.is_some()}
  pub fn original_close_fault(&self)->Option<&ValueError>{self.close_fault.as_ref().and_then(OriginalTurnFailure::primary_value)}
  pub fn original_debit_fault(&self)->Option<&ValueError>{self.debit_fault.as_ref().and_then(OriginalTurnFailure::primary_value).or_else(||self.close_fault.as_ref().and_then(|original|original.receipt_refusal.as_ref()))}
@@ -152,6 +164,7 @@ impl OriginalActorGuestEntry{
  pub fn close_step(&mut self,input:RetainedTurnInput,budget:StepBudget)->OriginalActorCall<RetainedCloneStep,OriginalActorContextError>{
   let policy=budget.retained;if budget.fuel>input.work.fuel||budget.deadline_us>input.work.absolute_deadline_us{return OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result:Err(OriginalActorContextError::Refused(refusal("guest retirement scope exceeds its original work")))}}
   if !self.source_header.terminal_is_empty()&&!self.has_close_failure(){return self.close_source_header_step(input,budget)}
+  if !self.jobs.is_registered()&&!self.jobs.has_source()&&!self.jobs.has_output()&&self.has_close_causes(){return self.close_causes_step(input,budget)}
   if self.jobs.is_registered()||self.jobs.has_source()||self.jobs.has_output()||self.has_close_failure(){let result=self.context.validate_call_policy(input,policy).map(|()|RetainedCloneStep::Progress(Default::default())).map_err(OriginalActorContextError::Refused);return OriginalActorCall{input,receipt_spent:Default::default(),work_units_spent:0,result}}
   if !self.ui_arena.terminal_is_empty(){return self.close_ui_step(input,budget)}
   if self.fault.is_none()&&self.retirement.is_none()&&self.value_fault.is_none()&&self.value_retirement.is_none()&&self.publication.terminal_is_empty()&&self.value_publication.terminal_is_empty()&&self.cleanup_fault.is_none()&&self.cleanup_fault_retirement.is_none(){return self.context.close_step(input,budget)}

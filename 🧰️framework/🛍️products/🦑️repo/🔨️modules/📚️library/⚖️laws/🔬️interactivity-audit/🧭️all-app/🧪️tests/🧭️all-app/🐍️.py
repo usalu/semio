@@ -417,15 +417,15 @@ def gates(msrc, ssrc, gs=None):
         fails.append(ROOT_MANIFEST + ": the root project must be named workspace")
     verify = rec(rec(man.get("targets")).get("verify"))
     if len(verify) == 0:
-        fails.append(ROOT_MANIFEST + ": target workspace:verify is missing, so no verification gate is a dashboard command")
+        fails.append(ROOT_MANIFEST + ": target repo-policy:verify is missing, so no verification gate is a dashboard command")
     opts = rec(verify.get("options"))
     if not isinstance(opts.get("command"), str) or not opts["command"].endswith("📜️script.ts verify") or opts.get("forwardAllArgs") is not True:
-        fails.append(ROOT_MANIFEST + ": workspace:verify must forward free arguments to 📜️script.ts verify")
+        fails.append(ROOT_MANIFEST + ": repo-policy:verify must forward free arguments to 📜️script.ts verify")
     params = rec(rec(rec(verify.get("metadata")).get("semio")).get("dashboard")).get("parameters")
     pos = [rec(p) for p in (params if isinstance(params, list) else [])]
     pos = [p for p in pos if p.get("kind") == "text" and p.get("valuePositional") is True]
     if len(pos) != 1:
-        fails.append(ROOT_MANIFEST + ": workspace:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found %d" % len(pos))
+        fails.append(ROOT_MANIFEST + ": repo-policy:verify must declare exactly one positional text parameter in metadata.semio.dashboard, found %d" % len(pos))
     seen = set()
     for g in gs:
         key = " ".join(g["check"])

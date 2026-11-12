@@ -16,7 +16,7 @@ fn empty_view() -> (Fem3dSnapshot, semio_plugin::HistoryView) {
     (Fem3dSnapshot::default(), semio_plugin::HistoryView::empty())
 }
 
-/// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
+/// 🧬️ Whole-document replace is not an in-history mutation (whole-snapshot replace is banned outright —
 /// see `📓️taxonomy.md`'s forbidden vocabulary), so this now surfaces as a `Effect::LoadDocument`
 /// carrying the replacement document's pack bytes, not an `artifact_mutations` entry — `dispatch`'s
 /// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's

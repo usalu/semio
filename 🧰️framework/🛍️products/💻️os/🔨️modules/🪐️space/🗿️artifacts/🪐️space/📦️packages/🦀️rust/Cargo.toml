@@ -46,3 +46,4 @@ semio-framework-test-typed-input-law = { path = "../../../../../../../../🔨️
 semio-os-space-testing-sqlite-preflight = { path = "../../../../🧪️tests/🪶️sqlite/📏️preflight/📦️packages/🦀️rust" }
 semio-os-space-testing-sqlite-oracle = { path = "../../../../🧪️tests/🪶️sqlite/🔬️oracle/📦️packages/🦀️rust" }
 semio-os-space-testing-sqlite-native-caller = { path = "../../../../🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

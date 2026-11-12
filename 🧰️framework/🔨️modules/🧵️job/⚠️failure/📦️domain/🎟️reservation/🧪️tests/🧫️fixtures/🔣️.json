@@ -96,11 +96,12 @@
     "depth": 1,
     "cpu": 1
   },
-  "foreignRecord": {
-    "items": 1,
-    "depth": 1,
-    "cpu": 1,
-    "repeatCpu": 0
+  "foreignPublicationRefusal": {
+    "kind": "invariantViolated",
+    "message": "original domain reservation requires its initiating source",
+    "copiedItems": 0,
+    "cpu": 0,
+    "repeats": 2
   },
   "parentOwnedClose": true
 }

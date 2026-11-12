@@ -93,6 +93,26 @@
         "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "verify-generation2d-window-camera-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify generation2d-window-camera-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-generation2d-window-camera-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify generation2d-window-camera-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

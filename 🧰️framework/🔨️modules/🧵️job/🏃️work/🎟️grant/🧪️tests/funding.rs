@@ -5,8 +5,7 @@ use semio_framework_value_retained_clone::{
     RetirementDemand,
 };
 use std::mem::size_of;
-#[global_allocator]
-static ORIGINAL_TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 fn grant(v: &serde_json::Value) -> RetainedCloneGrant {
     let n = |key| v[key].as_u64().unwrap() as usize;

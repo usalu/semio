@@ -144,7 +144,7 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
  pub fn advance(&mut self,maximum_units:usize,cancelled:bool,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedIntrinsicStep,PackRefusal>{
   if self.closing{return Err(invalid("advance after close"))}if let Some(error)=&self.fault{return Err(error.clone())}
   if cancelled{let error=PackRefusal::ValueRefusal(ValueError::literal(ValueRefusalKind::Canceled,"retained intrinsic decoding canceled"));self.fault=Some(error.clone());return Err(error)}
-  let mut units=0;while units<maximum_units&&!self.complete{units+=1;if let Err(error)=self.one(effect){self.fault=Some(error.clone());return Err(error)}}
+  let mut units=0;while units<maximum_units&&!self.complete&&effect.actual().is_none(){units+=1;if let Err(error)=self.one(effect){self.fault=Some(error.clone());return Err(error)}}
   Ok(RetainedIntrinsicStep{units,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete})
  }
  pub fn take_output(&mut self)->Option<DslValue>{if self.complete&&!self.closing&&!self.original_failed&&self.fault.is_none(){self.owned.output.take()}else{None}}

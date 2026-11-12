@@ -1,0 +1,25 @@
+{
+ "version": 1,
+ "question": ["/shared/b.mjs"],
+ "files": {
+  "shared/a.mjs": "export const a = 1;\n",
+  "shared/b.mjs": "export const b = 1;\n",
+  "owners/p0/entry.mjs": "import \"../../shared/a.mjs\";\nexport const p = 0;\n",
+  "owners/p1/entry.mjs": "import \"../../shared/a.mjs\";\nexport const p = 1;\n",
+  "owners/p2/entry.mjs": "import \"../../shared/a.mjs\";\nimport \"../../shared/b.mjs\";\nexport const p = 2;\n",
+  "owners/p3/entry.mjs": "import \"../../shared/a.mjs\";\nimport \"../../shared/b.mjs\";\nexport const p = 3;\n",
+  "owners/p0/data.txt": "zero\n",
+  "owners/p1/data.txt": "one\n",
+  "owners/p2/data.txt": "two\n",
+  "owners/p3/data.txt": "three\n"
+ },
+ "owners": ["p0", "p1", "p2", "p3"],
+ "steps": [
+  {"name": "first build in a fresh process infers every owner", "edit": {}, "inferred": ["p0", "p1", "p2", "p3"], "derivedClosures": "any"},
+  {"name": "second build in a fresh process, no edits: every owner is reloaded and no closure entry is derived again", "edit": {}, "inferred": [], "derivedClosures": 0},
+  {"name": "an edit of the data one owner reads re-infers that owner only", "edit": {"owners/p1/data.txt": "uno\n"}, "inferred": ["p1"], "derivedClosures": 0},
+  {"name": "an edit of a module without an import change re-infers no owner", "edit": {"shared/a.mjs": "export const a = 2;\n"}, "inferred": [], "derivedClosures": "any"},
+  {"name": "a new import of the module only some owners ask about re-infers exactly the owners whose answer moves", "edit": {"owners/p0/entry.mjs": "import \"../../shared/a.mjs\";\nimport \"../../shared/b.mjs\";\nexport const p = 0;\n"}, "inferred": ["p0"], "derivedClosures": "any"},
+  {"name": "third build in a fresh process after those edits: everything is reloaded", "edit": {}, "inferred": [], "derivedClosures": 0}
+ ]
+}

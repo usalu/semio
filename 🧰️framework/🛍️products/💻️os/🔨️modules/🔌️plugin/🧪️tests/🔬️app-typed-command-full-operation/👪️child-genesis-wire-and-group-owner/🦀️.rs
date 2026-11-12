@@ -5,10 +5,11 @@
     fn document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root() {
         let mut original_scope = artifact_app_laws::OriginalFixtureScope::admit();
         let cx = original_scope.cx();
+        let mut bank = semio_framework_value_testing_admission::EffectBank::new(semio_framework_value_testing_admission::BankWallet::new(RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 1 << 10 }, 1 << 30));
         let canonical_revision = [3; 32];
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(93), semio_framework_job::RevisionId(u64::from_be_bytes([3; 8])), semio_framework_job::Generation(0), 17);
         let mut presence = store::PresenceStore::<PublicationPresence, PublicationPresenceMutation>::new(PublicationPresence::default());
-        let root_factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<PublicationPresence>> = std::sync::Arc::new(PublicationPresenceLocalRootRetirementFactory);
+        let root_factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<PublicationPresence>> = std::sync::Arc::new(semio_framework_value::SharedValueRetirementFactory::<PublicationPresence>::default());
         presence.install_local_retirement_factory(root_factory.clone()).unwrap();
         let initial_root = presence.local_read().unwrap();
         let factory = TwoTurnPublicationPresencePreparationFactory;
@@ -22,7 +23,10 @@
         assert!(!typed_operation_document_is_fresh(&operation, canonical_revision, changed_document_revision, 0));
         publication.begin_close();
         for _ in 0..4 {
-            if matches!(publication.close_step(grant).expect("stale pending publication closes"),RetainedCloneStep::Complete(_)) {
+            let close_grant = RetainedCloneGrant { maximum_items: grant.maximum_items, maximum_copy_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth };
+            let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, close_grant, 1 << 20, |effect| publication.close_step(close_grant.maximum_copy_bytes, effect));
+            let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("stale pending publication close stayed pending") };
+            if matches!(turn.result.unwrap_or_else(|_| panic!("stale pending publication closes")),RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -32,7 +36,10 @@
         drop(initial_root);
         let mut close = presence.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).ok().unwrap();
         for _ in 0..2048 {
-            if matches!(close.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64}).unwrap(),RetainedCloneStep::Complete(_)) {
+            let quoted = RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:4096,maximum_depth:64};
+            let (poll, _) = semio_framework_value_testing_admission::bank_run(&mut bank, quoted, 1 << 20, |effect| { let result = close.close_step(effect); semio_framework_value::RetirementPollExit::settle(effect, result) });
+            let semio_framework_value::RetainedWorkPoll::Complete(turn) = poll else { panic!("presence close stayed pending") };
+            if matches!(turn.result.unwrap_or_else(|_| panic!("presence close")),RetainedCloneStep::Complete(_)) {
                 break;
             }
         }

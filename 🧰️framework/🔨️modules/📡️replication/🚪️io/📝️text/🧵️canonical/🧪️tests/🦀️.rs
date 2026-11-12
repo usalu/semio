@@ -1,7 +1,8 @@
 //! 🧪️ Actual persistent protocol field projections and granted closure match independent JSON bytes.
 use super::*;
 use semio_framework_pack_json::ArtifactCanonicalJsonTreeCursor;
-use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource}};
+use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant}};
+use crate::retained_sources::{stage,drained,effected,projected};
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
 
 fn grant(demand:RetirementDemand)->RetainedCloneGrant {
@@ -18,7 +19,7 @@ fn persistent_protocol_canonical_fields_preserve_original_projection_pointers_an
    let mut edit:Edit<bool>=semio_framework_pack_json::from_json_str(&serde_json::to_string(&row["edit"]).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
    edit.id.reserve(8192);if let Some(meta)=edit.mutation_meta.first_mut(){meta.label.as_mut().unwrap().reserve(8192);}
    let id_pointer=edit.id.as_ptr();let forwards_pointer=edit.forwards.as_ptr();
-    let mut source={let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<20,maximum_depth:4096};let mut admission=RetainedCloneSource::admission_owned(edit,());let mut output=None;for _ in 0..64{if admission.terminal_is_empty(){break}if admission.phase()=="ready"{admission.take_output(&mut output,g).result.unwrap();}else{admission.advance(g).result.unwrap();}}output.expect("staged protocol source")};
+    let mut source=stage(edit);
 
 
 
@@ -31,25 +32,21 @@ fn persistent_protocol_canonical_fields_preserve_original_projection_pointers_an
     if let Some(meta)=owner.mutation_meta.first(){let field=meta.canonical_tree_child(11).unwrap();assert_eq!(field as*const dyn ArtifactCanonicalJsonTree as*const (),&meta.transaction as*const Option<TransactionRef> as*const ());}
     owner.canonical_tree_node().unwrap()
    });assert!(matches!(fields,Node::Object(_)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   let((projection,_),heap)=observe_heap_allocations_on_this_thread(||source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:semio_framework_value::retained_clone::RetainedCloneBinding::alias_copy_bytes(),maximum_depth:2,..Default::default()}).result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   let projection=projected(source.borrow().project(0,|owner:&Edit<bool>|owner as&dyn ArtifactCanonicalJsonTree));
    let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();
    let((mut cursor,progress),heap)=observe_heap_allocations_on_this_thread(||ArtifactCanonicalJsonTreeCursor::admit(projection,grant(demand)).unwrap_or_else(|(error,_)|panic!("original protocol tree: {error}")));
    assert_eq!(progress.copied_bytes,demand.copy_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   let(zero,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut[0],RetainedCloneGrant::default()).unwrap());assert_eq!(zero.ownership.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+   let(zero,_,spent)=effected(RetainedCloneGrant::default(),|effect|{let step=cursor.advance(&mut[0],effect)?;Ok((step.written_bytes,step.ownership))});assert_eq!(zero,0);assert_eq!(spent,(0,0));
    let mut bytes=Vec::new();let mut turns=0;
    while !cursor.terminal_is_empty(){
     assert!(turns<100000);if pause==Some(turns){cursor.begin_close();}
     let(demand,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let admitted=grant(demand);let mut output=[0xa5];
-    let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut output,admitted).unwrap());assert!(step.ownership.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.ownership.progress().retained_capacity_bytes,step.ownership.progress().released_bytes));
-    bytes.extend_from_slice(&output[..step.written_bytes]);turns+=1;
+    let(written,ownership,_)=effected(admitted,|effect|{let step=cursor.advance(&mut output,effect)?;Ok((step.written_bytes,step.ownership))});assert!(ownership.progress().fits(admitted));
+    bytes.extend_from_slice(&output[..written]);turns+=1;
    }
    if pause.is_none(){assert_eq!(bytes,expected);}else{assert_eq!(bytes,expected[..bytes.len()]);}
    let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-   for turn in 0..100000 {
-    if source.terminal_is_empty(){break;}
-    let copy=source.next_close_copy_byte_demand().unwrap();let admitted=grant(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});
-    let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(admitted).result.unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());
-   }
+   drained(&mut source);
    assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   }
  }

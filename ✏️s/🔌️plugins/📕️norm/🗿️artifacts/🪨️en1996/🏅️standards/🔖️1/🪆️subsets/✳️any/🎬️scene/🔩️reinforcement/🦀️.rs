@@ -1,5 +1,6 @@
 //! 🔩️ Reinforcement: the vertical bars and the bed-joint reinforcement layers of reinforced walls, with bar diameters derived from the declared steel areas.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, EPS};
 use super::scene::*;

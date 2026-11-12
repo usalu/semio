@@ -4,6 +4,9 @@ cargo-features = [ "trim-paths" ]
 resolver = "2"
 members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🚂rail-silo/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛤️bridge-effects-checks/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏭️crane-silo-checks/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🚁hazard-checks/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/📒️registry/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/📦️packages/🦀️rust",
@@ -484,6 +487,15 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/
 
 [workspace.dependencies.semio-s-artifact-norm-en1991-inferences-rail-silo]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🚂rail-silo/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-inferences-hazard]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🚁hazard-checks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-inferences-crane-silo]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏭️crane-silo-checks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-inferences-bridge-effects]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛤️bridge-effects-checks/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1991-mut-dust-explosions]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥dust-explosions/📦️packages/🦀️rust"

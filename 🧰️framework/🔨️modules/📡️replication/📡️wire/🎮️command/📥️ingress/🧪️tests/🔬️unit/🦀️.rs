@@ -1,5 +1,23 @@
 use super::*;
 use std::mem::size_of;
+use semio_framework_value::{RetainedCloneGrant,retained_clone::{RetainedCloneStep,RetainedCloneProgress},OriginalRetirementFailure,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement}};
+
+/// 🚗️ Runs one controlled retirement turn under a real original Work action and returns its step with the heap it was receipted against.
+pub(crate) fn stepped<T:RetireOwned>(owner:&mut ControlledRetirement<T>,grant:RetainedCloneGrant)->(RetainedCloneStep,(usize,usize)){
+    semio_framework_value_clone_source_testing::drive::warm();
+    let(outcome,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||semio_framework_value_clone_source_testing::drive::drive(grant,WORK,|effect|owner.step(grant.maximum_copy_bytes,effect)));
+    (outcome.result.expect("original controlled step"),heap)
+}
+
+/// 🪙️ Closes one cursor turn under a real original Work action and returns its step with the heap it was receipted against.
+pub(crate) fn closed(grant:RetainedCloneGrant,cursor:&mut dyn RetirementCursor)->(RetirementStep,(usize,usize)){
+    let progress=|reply:&Result<RetirementStep,OriginalRetirementFailure>|match reply{Ok(RetirementStep::Progress(progress,_)|RetirementStep::ChildProgress(_,progress,_))=>*progress,Err(failure)=>failure.retained_progress(),_=>RetainedCloneProgress::default()};
+    semio_framework_value_clone_source_testing::drive::warm();
+    let(turn,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||semio_framework_value_clone_source_testing::drive::drive_reply::<RetirementStep,OriginalRetirementFailure>(grant,WORK,progress,|effect,reply,recover|if recover{cursor.recover_close_into(grant.maximum_copy_bytes,effect,reply)}else{cursor.close_into(grant.maximum_copy_bytes,effect,reply)}));
+    let step=match turn.result{Ok(step)=>step,Err(failure)=>RetirementStep::Failure(failure,turn.work)};
+    (step,heap)
+}
+const WORK:u64=1<<16;
 
 #[test]
 fn retained_batch_descriptor_has_no_destructor() {
@@ -166,8 +184,8 @@ fn command_page_sources_return_real_backing_only_under_funded_retirement(){
    if owner.terminal_is_empty(){break}
    let d=owner.next_demand(4096).unwrap();
    let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};
-   let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(g));let p=result.unwrap().progress();
-   assert!(p.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;released+=p.released_bytes;assert!(at<9999);
+   let(result,heap)=stepped(&mut owner,g);let p=result.progress();
+   assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));born+=p.retained_capacity_bytes;released+=p.released_bytes;assert!(at<9999);
   }
   assert!(owner.terminal_is_empty());assert_eq!(released,existing+born);
  }
@@ -197,7 +215,7 @@ fn original_page_set_admission_and_capture_post_only_actual_heap_effects(){
  for at in 0..10000{
   if close.terminal_is_empty(){break}
   let d=close.next_demand(4096).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};
-  let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close.step(g));let p=turn.unwrap().progress();assert!(p.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert!(at<9999);
+  let(turn,heap)=stepped(&mut close,g);let p=turn.progress();assert!(p.fits(g));assert_eq!(heap,(p.retained_capacity_bytes,p.released_bytes));assert!(at<9999);
  }
  assert!(close.terminal_is_empty());
 }

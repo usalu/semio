@@ -149,7 +149,7 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     let dialect: ArtifactDialect = <ToyHistoryApp as ArtifactApp>::DIALECT.into();
     let parent_spr = store::os_store::text_format::stamp_document_spr_identity(&files.spr, &envelope.id, <ToyHistoryApp as ArtifactApp>::DOCUMENT_SCHEMA, &dialect, envelope.owner.as_ref()).await.expect("the load identity stamp");
     let operation = 0x51;
-    PluginApp::begin_document_archive_load(&mut pure, operation, protocol::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr, members: Vec::new() }).expect("the archive load is admitted");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut pure, operation, protocol::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr, members: Vec::new() }, cx).expect("the archive load is admitted");
     let mut polls = 0;
     let status = loop {
         let status = PluginApp::poll_document_archive_load(&mut pure, operation, &mut semio_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the archive load status");

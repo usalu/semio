@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-en1990-scene-diagrams"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1990 structural scene: the Diagram2d set with table twins: combination matrix, envelope, reliability, fatigue, serviceability and cases"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1990-checks = { workspace = true }
+semio-s-artifact-norm-en1990-model = { workspace = true }
+semio-s-artifact-norm-en1990-scene-combinations = { workspace = true }
+semio-s-artifact-norm-en1990-scene-kit = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }

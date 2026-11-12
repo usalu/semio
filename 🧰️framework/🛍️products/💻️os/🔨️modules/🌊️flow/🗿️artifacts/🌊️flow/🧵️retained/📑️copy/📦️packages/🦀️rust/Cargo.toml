@@ -31,3 +31,4 @@ semio-framework-value = { path = "../../../../../../../../../../🔨️modules/�
 semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 serde_json = "1"
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

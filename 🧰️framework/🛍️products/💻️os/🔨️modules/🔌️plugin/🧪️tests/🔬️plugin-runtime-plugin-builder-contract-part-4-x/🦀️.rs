@@ -129,7 +129,7 @@ async fn a_whole_document_archive_with_supersessions_loads_its_superseded_state(
     let files = Box::pin(store::os_store::text_format::print_document_pack(source.envelope())).await.expect("source pair prints");
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&files.spr, &live_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, app.stores.store.envelope().owner.as_ref())).await.expect("load-document identity stamp");
-    PluginApp::begin_document_archive_load(&mut app, 95, protocol::DocumentArchivePack { parent_pack: files.pack, parent_spr, members: Vec::new() }).expect("superseded archive admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut app, 95, protocol::DocumentArchivePack { parent_pack: files.pack, parent_spr, members: Vec::new() }, &mut cx).expect("superseded archive admission");
     let status = Box::pin(drive_single_document_archive(&mut app, 95, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "a superseded archive failed to load: {}", archive_fault_text(&status));
     PluginApp::acknowledge_document_archive_load(&mut app, 95).expect("superseded archive acknowledgement");
@@ -183,7 +183,7 @@ async fn a_document_archive_round_trip_lists_every_history_row_of_its_source() {
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let target_id = target.store.envelope().id.clone();
     let parent_spr = Box::pin(store::os_store::text_format::stamp_document_spr_identity(&archive.parent_spr, &target_id, SingleDocumentApp::DOCUMENT_SCHEMA, &dialect, target.store.envelope().owner.as_ref())).await.expect("archive identity stamp");
-    PluginApp::begin_document_archive_load(&mut target, 96, protocol::DocumentArchivePack { parent_spr, ..archive }).expect("archive admission");
+    semio_plugin_testing_laws::artifact_app_laws::admit_document_archive_load(&mut target, 96, protocol::DocumentArchivePack { parent_spr, ..archive }, &mut cx).expect("archive admission");
     let status = Box::pin(drive_single_document_archive(&mut target, 96, &mut cx)).await;
     assert_eq!(status.state, protocol::DocumentArchiveLoadState::Ready, "the archive failed to load: {}", archive_fault_text(&status));
     PluginApp::acknowledge_document_archive_load(&mut target, 96).expect("archive acknowledgement");

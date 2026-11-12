@@ -15,6 +15,10 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[test]]
+name = "retirement_law"
+path = "../../🧪️tests/⚖️retirement-law/🦀️.rs"
+
 [dependencies]
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -49,3 +53,9 @@ semio-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-block-3d-schema = { workspace = true }
 semio-s-plugin-block = { workspace = true, features = ["test-serde"] }
 serde_json = { workspace = true }
+semio-framework-test-typed-input-law = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust" }
+semio-s-artifact-block-3d-mut-meta = { workspace = true }
+semio-s-artifact-block-3d-mut-object-kind = { workspace = true }
+semio-s-artifact-block-3d-mut-representations = { workspace = true }
+semio-s-artifact-block-3d-mut-vortices = { workspace = true }
+semio-s-artifact-stdio-semio-kit = { workspace = true }

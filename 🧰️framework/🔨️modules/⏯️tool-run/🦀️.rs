@@ -198,8 +198,7 @@ mod original_retirement;
 
 
 #[cfg(test)]
-#[global_allocator]
-static TOOL_RUN_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[cfg(test)]
 #[path="🪪️group/🦀️.rs"]

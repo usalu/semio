@@ -3,8 +3,7 @@ use semio_framework_diagnostic::{FaultOrigin,TextError};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[cfg(test)] use semio_framework_value_persistent::{list::PagedListError, list::PagedListAllocationError, list::PagedListRefusalKind};
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 #[path="🔌️capture/🦀️.rs"]
 mod transport_capture;
 pub use transport_capture::{OwnedTransportError,TransportAdmission,TransportCaptureRefusal,TransportCaptureStage,TransportReservation,reserve_transport,PackTransportContext,PackTransportPolicy,PackTransportPhase,PackTransportProgress,TransportContextRefusal,TransportContextRefusalCause,SharedTransportReservation};

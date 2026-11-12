@@ -79,7 +79,7 @@ fn close_capture(capture: &mut PayloadCapture, caller: &mut HeadlessCaller, site
 fn close_builder(builder: &mut RetainedPayloadBuilder, caller: &mut HeadlessCaller, site: &HeadlessSite) {
     for _ in 0..10_000 {
         if builder.terminal_is_empty() { return; }
-        caller.turn(site, true, |cx| semio_framework_job::close_original_retained_step(cx, builder.retirement_demands()?, |grant| builder.close_step_granted(grant))).unwrap();
+        caller.turn(site, true, |cx| semio_framework_job::close_original_effect_step(cx, builder.retirement_demands()?, |effect| semio_framework_value::RetainedWorkPoll::Complete(builder.close_step(effect)))).unwrap();
     }
     panic!("original test payload did not retire");
 }

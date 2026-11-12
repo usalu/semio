@@ -55,3 +55,6 @@ semio-framework-replication = { path = "../../../../../../../../../../../../../.
 semio-framework-async-macros = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-bestest = { workspace = true }
+
+[dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -2,8 +2,10 @@ import schema from "./🔣️.json" with {type: "json"};
 
 /** 🗄️ One declared loose-file area (a directory of independent cache files) whose bytes count against the host cap; its own cap and age bound the area itself. */
 export type CasAreaPolicyV1=Readonly<{id:string;capBytes:number|null;maxAgeMs:number|null}>;
+/** 🌡️ The used shares of the partition that holds the store: a collection starts at `highUsedFraction` and frees least-recently-accessed objects down to `lowUsedFraction`; at `criticalUsedFraction` a write or a build that would add to it first waits for such a collection and is refused when that frees too little. */
+export type CasPartitionPolicyV1=Readonly<{highUsedFraction:number;lowUsedFraction:number;criticalUsedFraction:number}>;
 /** 🗄️ The size cap, watermarks, grace times and cadences of the host-wide store (single source: the sibling schema document, definition `Policy`). */
-export type CasPolicyV1=Readonly<{version:1;capBytes:number;highWatermark:number;lowWatermark:number;minAgeMs:number;leaseMaxMs:number;touchGranularityMs:number;temporaryMaxAgeMs:number;ledgerQuietMs:number;lockStaleMs:number;progressMs:number;checkEvery:number;fanOutHexLength:number;areas:readonly CasAreaPolicyV1[]}>;
+export type CasPolicyV1=Readonly<{version:1;capBytes:number;highWatermark:number;lowWatermark:number;partition:CasPartitionPolicyV1;minAgeMs:number;leaseMaxMs:number;touchGranularityMs:number;temporaryMaxAgeMs:number;ledgerQuietMs:number;lockStaleMs:number;progressMs:number;checkEvery:number;fanOutHexLength:number;areas:readonly CasAreaPolicyV1[]}>;
 /** 🗣️ The EN+DE texts of the store; the schema document is their single source. */
 export const CAS_MESSAGES_V1=Object.freeze(schema.definitions.Messages.const);
 /** 🗄️ The default policy: 120 GiB of the 200 GiB disk budget. */
@@ -18,6 +20,8 @@ export function casTextV1(key:keyof typeof CAS_MESSAGES_V1,language:"en"|"de",va
 export function requireCasPolicyV1(policy:CasPolicyV1):CasPolicyV1{
  const finite=(value:number):boolean=>Number.isFinite(value)&&value>=0;
  if(!(policy.capBytes>0)||!(policy.lowWatermark>0)||!(policy.lowWatermark<policy.highWatermark)||!(policy.highWatermark<=1))throw Error("Valid cache store watermarks required / Gültige Cache-Speicher-Marken erforderlich");
+ const {lowUsedFraction:low,highUsedFraction:high,criticalUsedFraction:critical}=policy.partition;
+ if(!(low>0)||!(low<high)||!(high<critical)||!(critical<=1))throw Error("Valid partition watermarks required / Gültige Partitions-Marken erforderlich");
  for(const value of [policy.minAgeMs,policy.leaseMaxMs,policy.touchGranularityMs,policy.temporaryMaxAgeMs,policy.ledgerQuietMs,policy.lockStaleMs,policy.progressMs])if(!finite(value))throw Error("Finite cache store bounds required / Endliche Cache-Speicher-Grenzen erforderlich");
  if(!Number.isInteger(policy.checkEvery)||policy.checkEvery<1||!Number.isInteger(policy.fanOutHexLength)||policy.fanOutHexLength<1||policy.fanOutHexLength>3)throw Error("Valid cache store cadence required / Gültiger Cache-Speicher-Takt erforderlich");
  return policy;

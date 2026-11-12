@@ -235,6 +235,36 @@
           ]
         }
       }
+    },
+    "verify-flow-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify flow-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-flow-window-ownership-check": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify flow-window-ownership check",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-flow-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify flow-window-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

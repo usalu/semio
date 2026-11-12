@@ -26,7 +26,7 @@ export function createStringInternerV1(options?:{maximumCharacters?:number;minim
 export function internJsonStringsV1<T>(value:T,interner:StringInternerV1):T;
 export declare const graphStringInternerV1:StringInternerV1;
 /** 💾️ The durable learned peak in bytes of every owner kind. */
-export interface GraphOwnerPeaksV1{readonly read:()=>Record<string,number>;readonly write:(peaks:Record<string,number>)=>void}
+export interface GraphOwnerPeaksV1{readonly read:()=>Record<string,number[]>;readonly write:(peaks:Record<string,number[]>)=>void}
 /** 🧮️ The admission law of one more owner. */
 export function graphOwnerAdmissionV1(state:{headroom:number;running:number;inflight:readonly {estimate:number;taken:number}[];estimate:number;learned:boolean}):boolean;
 /** 💾️ The learned owner peaks kept in one file. */

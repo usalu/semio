@@ -1,5 +1,6 @@
 //! 📐️ Yield lines: the governing fracture pattern of the laterally loaded panel (EN 1996-1-1 Annex E coefficients by Johansen yield lines, M-31): the rigid facets (coloured by the moment utilisation) with the ridge and the diagonals to the corners of the held edges as rods on the deformed mechanism, bound to the yield-line check.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, EPS};
 use super::scene::*;

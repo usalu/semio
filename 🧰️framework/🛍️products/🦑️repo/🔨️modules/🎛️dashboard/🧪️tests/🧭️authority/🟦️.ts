@@ -414,7 +414,7 @@ test("Bazel runtime controls retain typed dashboard phases and both locales", as
   expect(parameter.kind).toBe("choice"); expect(parameter.default).toBeUndefined();
   expect(parameter.values).toEqual(bazel.integrationPhases.map((phase: string) => ({ id: phase, args: [phase] })));
   for (const field of ["title", "description"]) expect(Object.keys(parameter[field]).sort()).toEqual(["de", "en"]);
-  expect(fixture.liveControls.filter((row: { id: string }) => row.id === "workspace:test-build-tool-bazel").map((row: { parameters: { phase: string } }) => row.parameters.phase)).toEqual(bazel.integrationPhases);
+  expect(fixture.liveControls.filter((row: { id: string }) => row.id === "@semio-tech/repo-lib:test-build-tool-bazel").map((row: { parameters: { phase: string } }) => row.parameters.phase)).toEqual(bazel.integrationPhases);
   const build = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build");
   const dispatchSchema = read(join(build, "🔧️tools/🏗️bazel/🧪️tests/🧬️schema/📋️dispatch.json"));
   const ts = await import("typescript"), { compileJsonSchemaSubset } = await import(join(root, "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts"));

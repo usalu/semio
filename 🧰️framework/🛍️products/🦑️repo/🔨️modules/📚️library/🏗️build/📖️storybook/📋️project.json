@@ -1,0 +1,489 @@
+{
+  "name": "repo-storybook",
+  "$schema": "../🧬️schema/📋️project/🔣️.json",
+  "targets": {
+    "prepare-storybook": {
+      "executor": "repo:noop",
+      "dependsOn": [
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/assets:build"
+      ],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
+        }
+      }
+    },
+    "dev-storybook": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-ui": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook ui",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-puzzle": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook puzzle",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-puzzle-2d": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook puzzle 2d",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-styling": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook styling",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-puzzle-3d": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook puzzle 3d",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-puzzle-5d": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook puzzle 5d",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-framework": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook framework",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-framework-hosts": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook framework hosts",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-framework-os": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook framework os",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-infinite": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook infinite",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-cad": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook cad",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "dev-storybook-animate": {
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6010,
+              "portEnv": "STORYBOOK_PORT"
+            }
+          }
+        }
+      },
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts dev storybook animate",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      }
+    },
+    "test-storybook-subjects": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📖️stories/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/**/*",
+        "{workspaceRoot}/.storybook/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/**/*.stories.{ts,tsx}",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo tools exec bun -- test ./🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️story-subject-coverage/🟦️.test.ts",
+        "cwd": "."
+      }
+    },
+    "test-storybook-catalog": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "prepare-storybook",
+        "test-storybook-subjects"
+      ],
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/.storybook/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/**/*.stories.{ts,tsx}",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo tools exec bun -- x vitest run --config .storybook/🧪️tests/🧪️unit-runner/🟦️.ts",
+        "cwd": "."
+      }
+    },
+    "test-storybook": {
+      "executor": "repo:script",
+      "metadata": {
+        "semio": {
+          "orchestrator": true,
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      },
+      "dependsOn": [
+        "prepare-storybook",
+        "test-storybook-catalog"
+      ],
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts test storybook",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      },
+      "outputs": []
+    },
+    "build-storybook": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "prepare-storybook"
+      ],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "cwd": "."
+      },
+      "cache": false,
+      "outputs": [
+        "{workspaceRoot}/.🧾️store/build-storybook.json"
+      ],
+      "inputs": [
+        "{workspaceRoot}/.storybook/**/*",
+        {
+          "env": "STORYBOOK_SCOPE"
+        },
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+        "{workspaceRoot}/**/*.stories.{ts,tsx}",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
+      ],
+      "defaultConfiguration": "prototype",
+      "configurations": {
+        "prototype": {
+          "env": {
+            "SEMIO_BUILD_MODE": "prototype"
+          }
+        },
+        "release": {
+          "env": {
+            "SEMIO_BUILD_MODE": "release"
+          }
+        }
+      },
+      "metadata": {
+        "semio": {
+          "orchestrator": true,
+          "execution": {
+            "version": 1,
+            "kind": "orchestration"
+          },
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
+        }
+      }
+    },
+    "setup-storybook": {
+      "executor": "repo:script",
+      "cache": false,
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/📜️script.ts setup prepare",
+        "cwd": "."
+      },
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "outputs": [],
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
+        }
+      }
+    }
+  }
+}

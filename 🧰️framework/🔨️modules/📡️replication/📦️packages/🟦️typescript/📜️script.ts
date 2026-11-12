@@ -10,6 +10,7 @@ import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/📦️
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { OwnedVerifyScript } from "../../🧪️tests/🔬️owned-verify/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -45,6 +46,6 @@ class DiagnosticTransferTestScript extends BundleScript {
 class RetainedWireFieldTestScript extends BundleScript {
  async run(args:string[]):Promise<void>{if(args.length)throw new Error("test-retained-wire-field accepts no arguments");await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../⚙️codec/🛬️retained/🧪️tests/🟦️.ts")],this.repoRoot,"replication:retained-wire-field",scriptInvocationBudget(this.invocation,TEST_LEVEL_BUDGET_MS.quick),{signal:this.invocation.control.signal});}
 }
-const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-retained-wire-field",RetainedWireFieldTestScript).register("test-map-delta",MapDeltaTestScript).register("test-diagnostic-transfer",DiagnosticTransferTestScript).register("test-retained-mutation",RetainedMutationTestScript).register("test-index-entry",IndexEntryTestScript).register("test-index-insertion",IndexInsertionTestScript).register("test-index-set",IndexSetTestScript);
+const router = new ScriptRouter(import.meta.dirname).register("verify", OwnedVerifyScript).register("test", TestScript).register("test-retained-wire-field",RetainedWireFieldTestScript).register("test-map-delta",MapDeltaTestScript).register("test-diagnostic-transfer",DiagnosticTransferTestScript).register("test-retained-mutation",RetainedMutationTestScript).register("test-index-entry",IndexEntryTestScript).register("test-index-insertion",IndexInsertionTestScript).register("test-index-set",IndexSetTestScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

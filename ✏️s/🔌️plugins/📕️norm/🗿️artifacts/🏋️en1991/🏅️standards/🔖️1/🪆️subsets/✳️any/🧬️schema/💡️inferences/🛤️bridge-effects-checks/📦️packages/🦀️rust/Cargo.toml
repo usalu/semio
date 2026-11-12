@@ -1,0 +1,23 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-norm-en1991-inferences-bridge-effects"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1991 row checks of horizontal bridge traffic effects, thermal combinations, footbridges, rail dynamics and load dispersal"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1991-checks = { workspace = true }
+semio-s-artifact-norm-en1991-inferences-crane-silo = { workspace = true }
+semio-s-artifact-norm-en1991-inferences-rail-silo = { workspace = true }
+semio-s-artifact-norm-en1991-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }

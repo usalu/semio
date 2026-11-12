@@ -2,7 +2,7 @@ import {expect,test} from "bun:test";
 import {spawnSync} from "node:child_process";
 import {freemem,totalmem} from "node:os";
 import {formatHostCapacityErrorV1,readHostCapacityPolicyV1,resolveHostCapacityLanguageV1,type HostCommandRunnerV1} from "../../🟦️.ts";
-import {observeTreeMegabytesV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,parseWindowsCountersV1,readHostCountersV1,WINDOWS_COUNTERS_COMMAND,readHostSampleV1,reduceHostSampleV1,simulatedHostTotalV1,treeMegabytesV1} from "../../📡️sampling/🟦️.ts";
+import {observeTreeMegabytesV1,parseDarwinCountersV1,parseLinuxCountersV1,parseProcessTableV1,parseWindowsCountersV1,readHostCountersV1,WINDOWS_COUNTERS_COMMAND,readHostSampleV1,reduceHostSampleV1,simulatedHostTotalV1,treeMegabytesV1,wholeHostProbeV1} from "../../📡️sampling/🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 
@@ -84,4 +84,12 @@ test("A simulated host total shrinks the host: total is the smaller size, the av
  expect(small.availableMegabytes).toBe(Math.min(limit,plain.availableMegabytes));
  expect(larger.totalMegabytes,"a simulated total never grows the host").toBe(plain.totalMegabytes);
  expect(larger.availableMegabytes).toBe(plain.availableMegabytes);
+});
+
+test("A process in a memory-limited cgroup samples the whole machine through the whole-host probe: the limit that bounds the caller is not read, so a reservation is measured against the host",async()=>{
+ const gigabyte=1073741824,files=new Map<string,string>([["/proc/meminfo",fixture.linux[0]!.meminfo],["/proc/vmstat",fixture.linux[0]!.vmstat],["/proc/self/cgroup","0::/service"],["/sys/fs/cgroup/service/memory.max",String(4*gigabyte)],["/sys/fs/cgroup/service/memory.current",String(gigabyte)],["/sys/fs/cgroup/memory.max","max"],["/sys/fs/cgroup/memory.current",String(gigabyte)]]);
+ const probe={platform:"linux" as const,run:async()=>{throw Error("no command expected");},read:async(path:string)=>files.get(path)??null};
+ const limited=await readHostCountersV1(probe),whole=await readHostCountersV1(wholeHostProbeV1(probe));
+ expect(limited.constrainedBytes).not.toBeNull();expect(whole.constrainedBytes).toBeNull();
+ expect(whole.availableBytes).toBeGreaterThanOrEqual(limited.availableBytes!);
 });

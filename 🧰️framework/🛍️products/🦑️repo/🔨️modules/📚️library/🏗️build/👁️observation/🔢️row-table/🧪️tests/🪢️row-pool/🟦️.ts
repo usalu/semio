@@ -56,3 +56,16 @@ test("a row dies with its last holder and leaves no key behind",async()=>{
  for(let round=0;round<8&&pool.size()>0;round++)await settle();
  expect(pool.size()).toBeLessThan(50);
 });
+
+test("a list and a row that were shared once are never serialised again, however many entries carry them",()=>{
+ const pool=createRowPoolV1<Row>(),counts={serialised:0},make=(at:number):Row=>({kind:"file",path:"/w/f"+at,fact:{size:at,mtimeMs:0,ctimeMs:0,ino:0,sha256:"aa",toJSON(){counts.serialised++;return{size:at};}} as never});
+ const layer=Array.from({length:200},(_,at)=>make(at));
+ pool.rows(layer);
+ const afterFirst=counts.serialised;
+ expect(afterFirst).toBeGreaterThan(0);
+ for(let entry=0;entry<50;entry++){const carried=pool.rows(layer);expect(carried).toBe(layer);for(const row of layer)expect(pool.share(row)).toBe(row);}
+ expect(counts.serialised).toBe(afterFirst);
+ const copy=Array.from({length:200},(_,at)=>make(at));
+ pool.rows(copy);
+ copy.forEach((row,at)=>expect(row).toBe(layer[at]));
+});

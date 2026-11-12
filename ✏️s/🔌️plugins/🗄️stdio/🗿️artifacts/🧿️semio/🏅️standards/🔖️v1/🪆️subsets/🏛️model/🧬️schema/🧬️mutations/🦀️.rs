@@ -1,5 +1,5 @@
 //! 🧬️ SemioModelMutation — named-variant vocabulary (gif 89a / docx precedent): a sparse
-//! `SetSnapshot` plus insert/remove/set per collection (spatial/elements/relations). Every
+//! whole-snapshot replacement plus insert/remove/set per collection (spatial/elements/relations). Every
 //! variant's `diff()`/`inverse()` is HAND-WRITTEN below (schema-design.md: apply-and-capture via
 //! clone+apply+re-diff is banned -- each variant constructs its `SemioModelDiff` directly).
 
@@ -66,7 +66,7 @@ pub mod rotate_elements;
 pub mod scale_elements;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none (same consequence
 /// tiff's baseline migration reached — see
 /// `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).

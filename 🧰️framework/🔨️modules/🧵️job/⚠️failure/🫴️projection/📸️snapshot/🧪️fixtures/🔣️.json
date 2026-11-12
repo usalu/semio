@@ -46,12 +46,16 @@
     ],
     "effect": [
       "primary",
+      "context",
       "invariant",
       "physicalInvariant",
       "capacityInvariant",
+      "markerFailure",
       "work",
+      "workOverrun",
       "local",
       "physical",
+      "physicalReceipt",
       "allocation"
     ],
     "nativeAllocation": [
@@ -88,16 +92,19 @@
       "quoteRefusal",
       "allocationRefusal",
       "workRefusal",
+      "workOverrun",
       "retirementFailure",
       "allocationFailure",
       "nativeAllocation",
       "receiptRefusal",
+      "receiptCompletion",
       "progress"
     ],
     "snapshotRetirement": [
       "primary",
       "workRefusal",
       "receiptRefusal",
+      "allocationRefusal",
       "progressOverride",
       "child"
     ]

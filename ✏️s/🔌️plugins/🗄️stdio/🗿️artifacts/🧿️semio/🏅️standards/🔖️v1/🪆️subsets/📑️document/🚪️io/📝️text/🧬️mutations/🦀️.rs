@@ -105,8 +105,8 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
-/// 🌱 Full (non-diff) `DocBlock`/`SemioDocumentSnapshot` codecs -- only `SetSnapshot`/
-/// `InsertBlock`/`SetBlockContent`'s whole-payload encoding needs these; reuses `SemioDocumentDiff`'s
+/// 🌱 Full (non-diff) `DocBlock`/`SemioDocumentSnapshot` codecs -- only `InsertBlock`/
+/// `SetBlockContent`'s whole-payload encoding needs these; reuses `SemioDocumentDiff`'s
 /// `pub(crate)` `enc_block`/`enc_style`/`enc_image` for the shared per-item shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn enc_block(b: &DocBlock) -> String {

@@ -1,3 +1,4 @@
+cargo-features = ["trim-paths"]
 # 🧭️ Own workspace root: linked by `../📜️script.ts` (`cargo build --manifest-path`), never joins the
 # repository's root workspace, whose root manifest is a shared, contended file.
 #

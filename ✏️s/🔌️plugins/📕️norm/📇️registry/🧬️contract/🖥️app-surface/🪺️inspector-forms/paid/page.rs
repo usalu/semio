@@ -1,8 +1,9 @@
 //! 📄️ Original retained schema/value sources fund one bounded metadata step before a page can be borrowed.
-use super::{original::*,walk::{self,Candidate,Kind,Part,Seed,Walk,WalkStep},NormInspectorChoicePage};
+use super::{funding::{pay,run},original::*,walk::{self,Candidate,Kind,Part,Seed,Walk,WalkStep},NormInspectorChoicePage};
 use semio_framework::ArgSchema;
-use semio_framework_value::{NativeDecodeControl,OriginalRetirementControl,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,ValueError,ValueRefusalKind};
-use semio_framework_value::retained_clone::{RetainedCloneRef,retained_clone_grant_admits};
+use semio_framework_value::{NativeDecodeControl,OriginalRetirementControl,OriginalRetirementPoll,RetainedAllocationEffect,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementPollExit,ValueError,ValueRefusalKind};
+use semio_framework_value::retained_clone::{NativeAllocationIdentity,RetainedCloneRef,retained_clone_grant_admits};
+use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"norm.inspector.page-source")}
 #[derive(Clone,Copy)]
@@ -44,34 +45,41 @@ impl NormInspectorPreparedPage{
   super::norm_inspector_variant_source(self.borrow_original()?,control.candidate.variant_group.ok_or_else(invalid)?,option).map(Some)
  }
 
- pub fn next_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{match self.original.as_ref(){Some(source)if source.terminal_is_empty()=>Ok(RetirementDemand{copy_bytes:size_of::<Option<NormInspectorOriginalSource>>(),depth:1,..Default::default()}),Some(source)=>source.next_close_demand(body),None=>Ok(Default::default())}}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  let Some(source)=self.original.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
-  if source.terminal_is_empty(){
-   let bytes=size_of::<Option<NormInspectorOriginalSource>>();
-   if !retained_clone_grant_admits(grant,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-   self.original.take();self.len=0;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}
-  }source.close_step(grant)
+ pub fn next_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{match self.original.as_ref(){Some(source)if source.terminal_is_empty()=>Ok(shell_demand()),Some(source)=>source.next_close_demand(body),None=>Ok(Default::default())}}
+ pub fn next_close_work_demand(&self,body:usize)->Result<u64,ValueError>{match self.original.as_ref(){Some(source)if source.terminal_is_empty()=>Ok(1),Some(source)=>source.next_close_work_demand(body),None=>Ok(0)}}
+ pub fn close_poll(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  use RetirementPollExit as X;let grant=effect.grant();
+  let result=(||->Result<RetainedCloneStep,X>{
+   let Some(source)=self.original.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
+   if source.terminal_is_empty(){
+    let demand=shell_demand();if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+    X::pay(effect,1)?;self.original.take();self.len=0;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+   }
+   X::resume(source.close_step(body,effect))
+  })();X::settle(effect,result)
  }
+ pub fn close_step(&mut self,body:usize,effect:&mut RetainedAllocationEffect<'_>)->RetirementStep{super::funding::step(self.close_poll(body,effect))}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()}
 }
-impl semio_framework_value::retirement::RetireOwned for NormInspectorPreparedPage{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(self)}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+fn shell_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<NormInspectorOriginalSource>>(),depth:1,..Default::default()}}
+impl RetireOwned for NormInspectorPreparedPage{
+ type RetirementCursor=Self;
+ fn retirement_seed(self)->Self{self}
  fn controlled_retirement_supported()->bool{true}
 }
-impl semio_framework_value::retirement::RetirementCursor for NormInspectorPreparedPage{
+impl RetirementCursor for NormInspectorPreparedPage{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.next_close_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{let turn=Self::close_step(self,grant);match turn.result{Ok(step)=>semio_framework_value::retirement::RetirementStep::Progress(step.progress(),turn.work),Err(error)=>semio_framework_value::retirement::RetirementStep::Failure(error,turn.work)}}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.next_close_work_demand(body)}
+ semio_framework_value::native_retirement_reply!();
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
- fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+ derived_cursor_quotes!();
 }
 impl Drop for NormInspectorPreparedPage{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"norm inspector page requires original funded retirement")}}
 /// 🚶️ The original native caller advances one checked field/value edge and retains at most sixteen resident controls.
 pub struct NormInspectorPagePreparation{
  page:ManuallyDrop<Option<NormInspectorPreparedPage>>,walk:Walk,phase:Phase,
  index:usize,choice_scan:usize,choice_selected:Option<usize>,choice_offset:usize,
- ledger:u64,recipient:Option<u64>,closing:bool,
+ ledger:NativeAllocationIdentity,recipient:Option<u64>,closing:bool,
 }
 impl NormInspectorPagePreparation{
  pub fn constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>(),depth:1,..Default::default()}}
@@ -83,10 +91,13 @@ impl NormInspectorPagePreparation{
  fn same(&self,control:&NativeDecodeControl<'_>)->Result<(),ValueError>{if self.ledger!=control.ledger_identity()||self.recipient!=control.retirement_recipient_identity(){return Err(invalid())}Ok(())}
  pub fn ready(&self)->bool{!self.closing&&matches!(self.phase,Phase::Ready)}
  pub fn demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:if matches!(self.phase,Phase::Ready){size_of::<Option<NormInspectorPreparedPage>>()+size_of::<bool>()}else{size_of::<Control>()+Walk::step_copy_bytes()+size_of::<usize>()*8+size_of::<Phase>()},depth:1,..Default::default()}}
+ pub fn advance_work_demand(&self)->u64{1}
  pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  let mut work=0;let result=(||{
+  let mut work=0u128;let result=(||{
    self.same(control)?;if self.closing||self.ready(){return Err(invalid())}let demand=self.demands();
    if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;
+   let Some(step)=run(control,demand,self.advance_work_demand(),&mut work,|_,effect|{
+   pay(effect,1)?;
    let page=self.page.as_mut().ok_or_else(invalid)?;let original=page.original.as_ref().ok_or_else(invalid)?.borrow();let original=original.get();
    match self.phase{
     Phase::Check=>{
@@ -136,25 +147,31 @@ impl NormInspectorPagePreparation{
      }
     },
     Phase::Ready=>return Err(invalid()),
-   }work=1;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+   }Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+   })?else{return Ok(RetainedCloneStep::Progress(Default::default()))};Ok(step)
   })();RetainedWorkOutcome{result,work}
  }
  pub fn take(&mut self,control:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(NormInspectorPreparedPage,RetainedCloneProgress)>>{
-  let mut work=0;let result=(||{self.same(control)?;if !self.ready(){return Err(invalid())}let demand=self.demands();if !retained_clone_grant_admits(grant,demand){return Ok(None)}control.checkpoint()?;let page=self.page.take().ok_or_else(invalid)?;self.closing=true;work=1;Ok(Some((page,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))})();RetainedWorkOutcome{result,work}
+  let mut work=0u128;let result=(||{
+   self.same(control)?;if !self.ready(){return Err(invalid())}let demand=self.demands();if !retained_clone_grant_admits(grant,demand){return Ok(None)}
+   control.checkpoint()?;if run(control,demand,1,&mut work,|_,effect|pay(effect,1))?.is_none(){return Ok(None)}
+   let page=self.page.take().ok_or_else(invalid)?;self.closing=true;
+   Ok(Some((page,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+  })();RetainedWorkOutcome{result,work}
  }
  pub fn begin_close(&mut self){self.closing=true}
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid())}match self.page.as_ref(){Some(page)if page.terminal_is_empty()=>Ok(RetirementDemand{copy_bytes:size_of::<Option<NormInspectorPreparedPage>>(),depth:1,..Default::default()}),Some(page)=>page.next_close_demand(body),None=>Ok(Default::default())}}
- pub fn close_step(&mut self,control:&mut dyn OriginalRetirementControl,grant:RetainedCloneGrant)->RetainedWorkOutcome{
-  if !self.closing||self.ledger!=control.ledger_identity()||self.recipient!=control.retirement_recipient_identity(){return RetainedWorkOutcome{result:Err(invalid()),work:0}}
-  let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
-  if !retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if demand.capacity_bytes>0{if let Err(error)=control.charge(demand.capacity_bytes){return RetainedWorkOutcome{result:Err(error),work:0}}}
-  let Some(page)=self.page.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
-  if page.terminal_is_empty(){
-   let bytes=size_of::<Option<NormInspectorPreparedPage>>();
-   if !retained_clone_grant_admits(grant,RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()}){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-   self.page.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}
-  }page.close_step(grant)
+ pub fn close_work_demand(&self,body:usize)->Result<u64,ValueError>{if !self.closing{return Err(invalid())}match self.page.as_ref(){Some(page)if page.terminal_is_empty()=>Ok(1),Some(page)=>page.next_close_work_demand(body),None=>Ok(0)}}
+ pub fn close_step(&mut self,control:&mut dyn OriginalRetirementControl,effect:&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll{
+  use RetirementPollExit as X;
+  let grant=effect.grant();let body=grant.maximum_copy_bytes;
+  let result=(||->Result<RetainedCloneStep,X>{
+   if !self.closing||self.ledger!=control.ledger_identity()||self.recipient!=control.retirement_recipient_identity(){return Err(invalid().into())}
+   let demand=self.close_demands(body)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
+   let Some(page)=self.page.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
+   if page.terminal_is_empty(){X::pay(effect,1)?;self.page.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+   X::resume(page.close_poll(body,effect))
+  })();X::settle(effect,result)
  }
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.page.is_none()}
 }

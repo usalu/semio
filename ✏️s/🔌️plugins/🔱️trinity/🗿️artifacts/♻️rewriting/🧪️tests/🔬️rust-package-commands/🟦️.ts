@@ -27,5 +27,9 @@ if (segments[0] === "rewriting-window-config") {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "rewriting_window_config", "--", "--nocapture"], join(context.repoRoot, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust"));
     return;
   }
+    if (segments[0] === "rewriting-reset-document-ownership") {
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-trinity-rewriting", "--lib", "reset_document_ownership", "--", "--nocapture"], context.repoRoot);
+      return;
+    }
   throw new Error('Unknown owned verification '+segments.join(' '));
 }

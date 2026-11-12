@@ -1,15 +1,16 @@
 //! 📍️ Layout: where every wall stands. Persisted placements win; otherwise the documented default rule applies (golden-tested):
 //! walls run along `+X` left to right with a 3 m gap, thickness towards `+Y`, openings stand at their own positions.
 
-use super::kit::v3;
-use super::schema::checks::masonry::En1996Cases;
-use super::scene::projection_kit::design_case::forms;
-use super::model::{En1996Snapshot, MasonryWall};
-use super::scene::Vec3;
-use std::collections::BTreeMap;
+extern crate semio_s_artifact_norm_en1996_model as model;
+extern crate semio_s_artifact_norm_en1996_schema as schema;
+extern crate semio_s_plugin_norm_structural_scene as scene;
 
-pub use super::scene::projection_kit::Placement;
-pub use super::scene::projection_kit::design_case::forms::CasePose;
+use model::{En1996Snapshot, MasonryWall};
+use scene::projection_kit::design_case::forms::{self, CasePose};
+use scene::projection_kit::{v3, Placement};
+use scene::Vec3;
+use schema::checks::masonry::En1996Cases;
+use std::collections::BTreeMap;
 
 pub const WALL_GAP: f64 = 3.0;
 pub const ROW_CASES: f64 = 15.0;

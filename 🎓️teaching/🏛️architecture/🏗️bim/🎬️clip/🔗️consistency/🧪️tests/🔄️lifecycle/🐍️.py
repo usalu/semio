@@ -34,7 +34,6 @@ def native_play(scene, *animations, **kwargs):
             animation.finish()
             animation.clean_up_from_scene(scene)
         except Exception:
-            print("[DEBUG] Finish failure", index, type(animation).__name__, flush=True)
             raise
     scene.update_mobjects(0)
     scene.renderer.time += max((animation.run_time for animation in compiled), default=0)
@@ -109,7 +108,6 @@ class ConsistencyLifecycle(unittest.TestCase):
                 def present(scene):
                     scene._prepare()
                     for key in CASES["authored_prefix"]:
-                        print("[DEBUG] Actual consistency", language, key, flush=True)
                         getattr(scene, "_" + key)()
                         seen.append(key)
                 probe = type("CurrentConsistencyPrefix", (module.Beat6_Consistency,),

@@ -529,7 +529,7 @@ where
     }
 
     fn retire_native(&mut self,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
-        if self.construction_failure.is_none()&&self.construction.has_failure(){match self.construction.take_failure_into_step(&mut self.construction_failure,cx){Ok(true)=>return Ok(false),Ok(false)=>{},Err(error)=>{self.original_failure=Some(error);return Ok(false)}}}
+        if self.construction.failure_untaken(){match self.construction.take_failure_into_step(&mut self.construction_failure,cx){Ok(true)=>return Ok(false),Ok(false)=>{},Err(error)=>{self.original_failure=Some(error);return Ok(false)}}}
         if !self.construction.terminal_is_empty(){match self.construction.close_step(cx){Ok(_)=>{},Err(error)=>{self.original_failure=Some(error);return Ok(false)}}if !self.construction.terminal_is_empty(){return Ok(false)}}
         if self.supersession_native.active(){match self.supersession_native.close(cx){Ok(true)=>{},Ok(false)=>return Ok(false),Err(error)=>{self.original_failure=Some(error);return Ok(false)}}}
 

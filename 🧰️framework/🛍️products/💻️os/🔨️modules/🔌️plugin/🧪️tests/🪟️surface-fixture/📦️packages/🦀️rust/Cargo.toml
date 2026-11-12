@@ -42,6 +42,7 @@ semio-plugin-decl-surface = { path = "../../../../📜️declaration/🪟️surf
 semio-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-plugin-decl-tool-contract = { path = "../../../../📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
 semio-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-plugin-instance-jobs = { path = "../../../../🧵️instance/👷️jobs/📦️packages/🦀️rust" }
 semio-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust" }
 semio-plugin-retained-command = { path = "../../../../🧵️retained-command/📦️packages/🦀️rust", features = ["artifact-app-testing"]}

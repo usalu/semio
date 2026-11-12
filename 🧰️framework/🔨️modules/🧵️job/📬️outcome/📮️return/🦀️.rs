@@ -86,12 +86,12 @@ impl<const N:usize> OriginalJobPageReturnRegistry<N>{
    let pending=owners.pending.is_some();
    if let Some(owner)=if pending{owners.pending.as_mut()}else{owners.returned.as_mut()}{
     if !owner.terminal_is_empty(){let mut demand=owner.retirement_demands();demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"returned original page parent depth overflow"))?;return close_original_retained_effect_step(cx,demand,|effect|{let g=effect.grant();owner.close_step(&mut effect.nested(RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g})).result})}
-    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{if pending{owners.pending.take();}else{owners.returned.take();}semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
+    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{if pending{owners.pending.take();}else{owners.returned.take();}semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
    }
    if let Some(source)=owners.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(parent,cx)}
-    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.source.take();semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
+    return close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.source.take();semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})
    }
-   let result=close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.binding=None;semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}});
+   let result=close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{owners.binding=None;semio_framework_value_retained_clone::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}});
    if owners.binding.is_none(){checked.restore=VACANT}return result
   }Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
  }

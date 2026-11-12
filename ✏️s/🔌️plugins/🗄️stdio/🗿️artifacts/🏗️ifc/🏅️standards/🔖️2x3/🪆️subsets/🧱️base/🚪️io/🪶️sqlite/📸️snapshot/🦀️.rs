@@ -35,7 +35,7 @@ pub fn mvd_instances<'a>(snapshot:&'a Ifc2x3Snapshot,name:&str,control:&mut Sqli
     control.check_rows(snapshot.document.instances.len())?;let maximum=control.limits().max_rows;
     control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress,allocation|{
         let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-        let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
+        let mut native=allocation.encode(remaining,&mut callback);
         let result=(||{native.begin_stage(0)?;let mut result=native.allocate_vec(snapshot.document.instances.len())?;let mut count=0usize;for instance in &snapshot.document.instances{let mut matched=false;for(entity,_)in &instance.entities{matched|=entity.eq_ignore_ascii_case(name);count=count.checked_add(1).filter(|count|*count<=maximum).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"IFC2x3 MVD count exceeds limit"))?;native.step()?;}if matched{result.push(instance);}count=count.checked_add(1).filter(|count|*count<=maximum).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"IFC2x3 MVD count exceeds limit"))?;native.step()?;}Ok(result)})();(result,native.owned_bytes())
     })?
 }
@@ -50,7 +50,7 @@ pub fn mvd_identity_index<'a>(snapshot:&'a Ifc2x3Snapshot,control:&mut SqliteSna
     control.check_rows(snapshot.document.instances.len())?;
     control.allocation_stage(SqliteSnapshotPhase::ProjectSnapshot,|remaining,progress,allocation|{
         let mut callback=|event:semio_framework_value::native_encoding::NativeEncodeProgress|progress(event.completed,event.total);
-        let mut native=semio_framework_value::NativeEncodeControl::new_forwarded(remaining,&mut callback,allocation);
+        let mut native=allocation.encode(remaining,&mut callback);
         let result=(||{native.begin_stage(0)?;let mut entries=native.allocate_vec(snapshot.document.instances.len())?;for(index,instance)in snapshot.document.instances.iter().enumerate(){entries.push((instance.id,index));native.step()?;}sort_paid(&mut entries,|left,right|{native.step()?;Ok(left.cmp(right))})?;let mut kept=0;for index in 0..entries.len(){if kept==0||entries[kept-1].0!=entries[index].0{entries[kept]=entries[index];kept+=1;}native.step()?;}entries.truncate(kept);Ok(MvdIdentityIndex{snapshot,entries})})();(result,native.owned_bytes())
     })?
 }

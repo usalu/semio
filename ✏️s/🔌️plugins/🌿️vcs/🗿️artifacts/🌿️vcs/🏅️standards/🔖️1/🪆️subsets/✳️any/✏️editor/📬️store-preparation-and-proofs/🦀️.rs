@@ -129,7 +129,7 @@ impl VcsBoundedProofs {
             "changeCounter" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "changeStatus" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "changeNotes" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "noMutation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "noOperation" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerUp" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),

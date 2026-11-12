@@ -252,7 +252,7 @@ async fn codec_retention_law() {
 //#region 🔖️OpTextBinaryRoundtripLaw
 /// 🧪️ `OpText`/`OpBinary` round-trip laws for the hand-rolled `SemioVideoMutation` grammar —
 /// exercises every variant, incl. `InsertStream`'s bare `SemioVideoStream` payload (with
-/// nested samples), `SetSnapshot`'s whole `SemioVideoSnapshot`, and the `SemioVideoStreamKind`
+/// nested samples), a whole `SemioVideoSnapshot`, and the `SemioVideoStreamKind`
 /// enum tag.
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {

@@ -64,13 +64,11 @@ use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 #[path="♻️retirement/🦀️.rs"]
 mod original_retirement;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use crate::original_retirement::tests::assert_session_original;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use crate::original_retirement::tests::assert_pending_command_original;
-#[cfg(test)]
-pub use crate::original_retirement::tests::assert_discard_publication_original;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 pub use crate::original_retirement::tests::native_original_actor_grant;
 
 pub use semio_plugin_time_travel_panel::panel_pointer::*;

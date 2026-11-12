@@ -52,3 +52,4 @@ serde_json = { workspace = true }
 ttf-parser = "0.25.1"
 semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-2d-text-font-testing = { path = "../../../🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

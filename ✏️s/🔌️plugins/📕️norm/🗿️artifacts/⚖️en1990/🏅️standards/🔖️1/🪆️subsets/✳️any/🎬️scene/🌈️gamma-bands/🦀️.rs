@@ -1,5 +1,6 @@
 //! 🌈️ Gamma bands: the permanent partial factor of every permanent action of a member as a colour band on the side face of its beam (EN 1990 A1.3.1, Table A1.2(B) note 1: γ_G,sup where the action adds to the effect, γ_G,inf where it relieves). The bands follow the permanent actions of the member in table order, equal in width; each carries one scalar field per combination column, so the combination stepper recolours the pattern of the governing arrangement of every column without re-projecting. See [`super::combinations::permanent_factors`].
 
+use super::scene::projection_kit::{loc, unit, along};
 use super::combinations::{self, Column};
 use super::dynamics::field_id;
 use super::kit::*;

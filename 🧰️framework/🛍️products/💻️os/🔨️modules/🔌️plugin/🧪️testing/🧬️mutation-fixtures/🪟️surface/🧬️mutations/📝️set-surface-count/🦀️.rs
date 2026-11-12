@@ -1,43 +1,13 @@
 use super::super::{SurfaceDiff, SurfaceMutation, SurfaceSnapshot};
-use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
+use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
-#[derive(semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetSurfaceCount {
     pub value: i32,
-}
-impl SetSurfaceCount {
-    const OPCODE: &'static str = "set-surface-count";
-    const TAG: u8 = 0x65;
-}
-impl OpText for SetSurfaceCount {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        Ok(Self {
-            value: line
-                .strip_prefix("set-surface-count ")
-                .ok_or_else(|| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected set-surface-count", semio_framework_diagnostic::TextSpan::at(1, 1)))?
-                .parse()
-                .map_err(|_| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "surface count must be i32", semio_framework_diagnostic::TextSpan::at(1, 1)))?,
-        })
-    }
-    fn print_op(&self) -> String {
-        format!("{} {}", Self::OPCODE, self.value)
-    }
-}
-impl OpBinary for SetSurfaceCount {
-    fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
-        let mut bytes = vec![Self::TAG];
-        bytes.extend_from_slice(&self.value.to_be_bytes());
-        Ok(bytes)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
-        if bytes.len() != 5 || bytes.first() != Some(&Self::TAG) {
-            return Err(ProtocolError::Malformed { what: "set-surface-count", offset: 0, detail: "expected tag 0x65 and four i32 bytes".into() });
-        }
-        Ok(Self { value: i32::from_be_bytes(bytes[1..].try_into().expect("exact i32 width")) })
-    }
 }
 impl MutationKind<SurfaceSnapshot, SurfaceMutation> for SetSurfaceCount {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "surface-count", kind: "set-surface-count", record: "SetSurfaceCount" };

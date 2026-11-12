@@ -4,7 +4,7 @@ use semio_plugin_decl_app::ArtifactApp;
 use semio_plugin_instance_extension::InstanceExtension;
 use semio_plugin_job::original_emission::{OriginalEmissionInput,OriginalEmissionCapture,OriginalEmissionReceipt,admit_original_emission_receipt};
 use semio_plugin_retained_command::typed_operation::{MountedTypedCommandFullOperation,original_emission::{OriginalEmissionAdmission,OriginalEmissionPublicationFrontier}};
-use semio_framework_job::{StepContext,OriginalTurnFailure,close_original_retained_step};
+use semio_framework_job::{StepContext,OriginalTurnFailure,close_original_retained_turn,close_original_retained_step};
 use semio_framework_value::retirement::arc_custody::original::SharedOriginalStorage;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 use semio_plugin_decl_views::child_view::ChildContentView;
@@ -47,7 +47,7 @@ impl<'ctx,A:ArtifactApp,M:store::ReferenceSpaceMember+MemberFactory+'static,X:In
    },
    8=>{
     let source=self.tools.original_emission_admission.as_mut().unwrap();if !source.terminal_is_empty(){cx.with_original_retirement(|cx|source.close_step(&self.tools.tool_cancellations,cx))?;return Ok(false)}
-    let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};close_original_retained_step(cx,d,|_|{self.tools.original_emission_admission.take();semio_framework_value::RetainedWorkOutcome{result:Ok::<_,semio_framework_job::OriginalTurnPrimary>(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;
+    let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};close_original_retained_turn(cx,d,|_|{self.tools.original_emission_admission.take();semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;
    },
    _=>return Err(invalid("original emission admission has an invalid retained phase").into())
   }

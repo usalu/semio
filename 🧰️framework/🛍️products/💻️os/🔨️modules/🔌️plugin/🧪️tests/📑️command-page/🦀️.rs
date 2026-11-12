@@ -1,7 +1,6 @@
 //! 📑️ Actual command-page reservation, refusal and terminal retirement integration laws.
 use std::mem::size_of;
-#[global_allocator]
-static COMMAND_PAGE_HEAP_WITNESS:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 /// ⚖️ LAW: the prologue reserves EXACTLY the pages its command declares, and that reservation stays
     /// inside one guest-allocator growth unit.

@@ -2575,15 +2575,15 @@
             }
           },
           {
-            "id": "setSnapshot",
+            "id": "replaceDocument",
             "label": {
               "native": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
+                "en": "Replace Document",
+                "de": "Dokument ersetzen"
               },
               "reuse": {
-                "en": "Set Document",
-                "de": "Dokument festlegen"
+                "en": "Replace Document",
+                "de": "Dokument ersetzen"
               }
             },
             "kind": "mutation",

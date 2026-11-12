@@ -26,13 +26,15 @@ semio-framework-dsl-record = { path = "../../../../../🗣️dsl/🧬️schema/�
 semio-framework-hash = { path = "../../../../../🔏️hash/📦️packages/🦀️rust" }
 semio-framework-pack-format = { path = "../../../../📐️format/📦️packages/🦀️rust" }
 semio-framework-pack-record-schema = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
-semio-framework-replication-codec = { path = "../../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+semio-framework-replication-codec = { path = "../../../../../📡️replication/⚙️codec/📦️packages/🦀️rust", features = ["deflate"] }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-edit = { path = "../../../../../🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 blake3 = "1.8.2"
+semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

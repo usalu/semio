@@ -1,6 +1,5 @@
 //! 🧪️ Original retained-command and view laws run in their own test owner.
 #![cfg(test)]
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 #[path="♻️metadata/🦀️.rs"] mod metadata_laws;
 #[path="📸️checkpoint/🦀️.rs"] mod checkpoint_laws;

@@ -138,6 +138,26 @@
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
       ],
       "outputs": []
+    },
+    "verify-terrain-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify terrain-document-contract native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-gis-terrain-window-config-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify gis-terrain-window-config native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

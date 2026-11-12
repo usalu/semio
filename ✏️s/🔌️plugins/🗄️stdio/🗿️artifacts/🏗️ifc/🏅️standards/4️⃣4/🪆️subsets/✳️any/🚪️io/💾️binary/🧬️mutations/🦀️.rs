@@ -60,7 +60,7 @@ pub(crate) fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<I
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (`IfcMutation` was one of 4
 /// of stdio's 7 FG1 standards still on that shortcut per this wave's own P2-FG1 census). `tag` is
 /// the `IfcMutation` variant ordinal, same 1-10 order `parse_ifc_mutation`'s own keyword match
-/// uses (tag 0, formerly `NoMutation`, is retired rather than reassigned). Every field is real
+/// uses (tag 0 is retired rather than reassigned). Every field is real
 /// (`id`/`index` varints, `IfcEntity`/`IfcValue` field-by-field via the reused diff-sibling
 /// primitives) — the only place the recursion bottoms out through a fully spec-expressible
 /// per-variant tag (`enc_ifc_value_bin`), never an opaque byte-chain fallback.

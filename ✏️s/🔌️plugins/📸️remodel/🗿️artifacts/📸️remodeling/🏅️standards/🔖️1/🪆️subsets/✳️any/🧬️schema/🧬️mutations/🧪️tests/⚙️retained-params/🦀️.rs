@@ -3,8 +3,7 @@ use super::*;
 use protocol::{ColdMutation, Mutation, RetainedMutationAdvance, RetainedMutationCloseContext, RetainedMutationDecision, RetainedMutationLeaf, RetainedMutationLeafPreparation};
 use semio_framework_value::{retirement::RetireOwned, RetirementDemand, retained_clone::{RetainedCloneGrant, RetainedCloneSource, RetainedCloneStep}};
 
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 macro_rules! test_wrapper {
     ($leaf:ty, $variant:ident) => {

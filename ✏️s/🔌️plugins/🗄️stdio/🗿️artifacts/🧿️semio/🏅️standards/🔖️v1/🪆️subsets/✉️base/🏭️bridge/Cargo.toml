@@ -1,3 +1,4 @@
+cargo-features = ["trim-paths"]
 # 🧭️ Own workspace root, like every other bridge and probe here: the repository root manifest is a
 # shared leased file, and a member crate would serialise every concurrent session behind that lease.
 [workspace]

@@ -44,7 +44,7 @@ impl FieldProjectionSource for ChildGroupProjection<'_>{
             [0,index,3,operation,byte]=>{
                 let group=self.groups.group_at(*index).ok_or_else(projection_path_error)?;
                 let source=group.operations.source_at(*operation).ok_or_else(projection_path_error)?;
-                Ok(V::IntrinsicNumber(semio_framework_value::Number::UInt(u64::from(*source.get(*byte).ok_or_else(projection_path_error)?))))
+                Ok(V::IntrinsicNumber(semio_framework_value::Number::UInt(u64::from(source.get(*byte).ok_or_else(projection_path_error)?))))
             },
             [0,index,5,label]=>{
                 self.groups.group_at(*index).and_then(|group|group.labels.label_at(*label)).ok_or_else(projection_path_error)?;

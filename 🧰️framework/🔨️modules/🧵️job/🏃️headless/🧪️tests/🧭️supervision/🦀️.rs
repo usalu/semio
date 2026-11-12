@@ -99,8 +99,7 @@ impl InteractiveJob for SupervisedJob {
         if !self.terminal_is_empty() && !self.base.close_open.load(Ordering::SeqCst) { return Ok(InteractiveJobCloseStep::Blocked); }
         if let Some(source) = self.base.source { assert_eq!(cx.original_source_parent()?.source_identity()?, source); }
         if !self.payload.terminal_is_empty() {
-            let grant = RetainedCloneGrant { maximum_depth: cx.retained_grant().maximum_depth.saturating_sub(1), ..cx.retained_grant() };
-            let step = semio_framework_job::receive_original_retained_work(cx, self.payload.close_step_granted(grant))?;
+            let step = semio_framework_job::close_original_effect_step(cx, self.payload.retirement_demands()?, |effect| semio_framework_value::RetainedWorkPoll::Complete(self.payload.close_step(effect)))?;
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
         }
         self.base.close_step(cx)
@@ -230,13 +229,17 @@ fn capture_is_paid_and_acknowledgement_refusal_preserves_both_original_owners() 
     assert!(after.copied_bytes - before.copied_bytes >= DATA.len());
     assert!(after.retained_capacity_bytes - before.retained_capacity_bytes >= capacity);
     assert!(state.caller.as_ref().unwrap().fuel_remaining() < fuel);
+    let delta = |from: RetainedCloneProgress, to: RetainedCloneProgress| RetainedCloneProgress { copied_items: to.copied_items - from.copied_items, copied_bytes: to.copied_bytes - from.copied_bytes, retained_capacity_bytes: to.retained_capacity_bytes - from.retained_capacity_bytes, released_bytes: to.released_bytes - from.released_bytes };
+    let idle_before = state.caller.as_ref().unwrap().receipt();
+    state.turn(|_, _, _, _, _| Ok(false)).unwrap();
+    let refresh = delta(idle_before, state.caller.as_ref().unwrap().receipt());
     let denied_before = state.caller.as_ref().unwrap().receipt();
     let acknowledged = state.turn(|cx, _, _, _, session| {
         let denied = RetainedCloneGrant { maximum_items: 0, ..cx.retained_grant() };
         cx.with_retained_loan(denied, |same| session.as_mut().unwrap().acknowledge_outcome(same))
     }).unwrap();
     assert!(!acknowledged);
-    assert_eq!(state.caller.as_ref().unwrap().receipt(), denied_before);
+    assert_eq!(delta(denied_before, state.caller.as_ref().unwrap().receipt()), refresh);
     assert_eq!(state.capture.bytes.as_ref().unwrap().as_ptr() as usize, backing);
     assert_eq!(state.capture.bytes.as_ref().unwrap().as_slice(), &DATA[..]);
     match state.session.as_ref().unwrap().checked_out_outcome().unwrap() {

@@ -42,8 +42,8 @@ export function canonicalKeyV1(value,limit){
  hash.update(pending,"utf8");return"#"+hash.digest("hex");
 }
 
-/** ✍️ A growable byte sink that refuses to grow beyond the finite document limit. */
-function createSink(maximumBytes){
+/** ✍️ A growable byte sink that refuses to grow beyond the finite document limit; `size()` is the bytes written so far and `truncate(size)` takes the bytes back to an earlier size. */
+export function createFactSinkV1(maximumBytes){
  let buffer=Buffer.allocUnsafe(1<<20),length=0;
  const room=count=>{
   const needed=length+count;if(needed>maximumBytes)throw fail("Stored document exceeds its finite limit ("+needed+" bytes expanded, limit "+maximumBytes+")");
@@ -58,8 +58,41 @@ function createSink(maximumBytes){
    buffer[length++]=value;
   },
   bytes(source,from=0){const count=source.length-from;room(count);source.copy(buffer,length,from);length+=count;},
+  size:()=>length,
+  truncate(to){length=to;},
   result(){return buffer.subarray(0,length);},
  };
+}
+
+/** 🧵️ Adds to `strings` every text a fact spends in the table of strings: object keys and string values except the digests (`HEX` text is stored as 32 raw bytes). */
+export function collectFactStringsV1(value,strings){
+ if(typeof value==="string"){if(!HEX.test(value))strings.add(value);}
+ else if(Array.isArray(value)){for(const item of value)collectFactStringsV1(item,strings);}
+ else if(value!==null&&typeof value==="object"){for(const key of Object.keys(value))if(value[key]!==undefined&&typeof value[key]!=="function"&&typeof value[key]!=="symbol"){strings.add(key);collectFactStringsV1(value[key],strings);}}
+}
+
+/** 🖋️ Writes one fact as tagged values into `sink`; `textId` names the rank of a text in the table of strings, and object keys are written in the order of their ranks (the order of the code points). */
+export function writeFactValueV1(sink,value,textId,depth){
+ const writeId=id=>{if(!(id<=MAX_ID))throw fail("Bounded fact index ids required");sink.varint(id);};
+ if(value===null||value===undefined||typeof value==="function"||typeof value==="symbol"){sink.byte(T.null);return;}
+ if(typeof value==="boolean"){sink.byte(value?T.true:T.false);return;}
+ if(typeof value==="number"){
+  if(!Number.isFinite(value)){sink.byte(T.null);return;}
+  if(Number.isSafeInteger(value)){if(value>=0||Object.is(value,-0)){sink.byte(T.uint);sink.varint(Math.abs(value));}else{sink.byte(T.negint);sink.varint(-value);}return;}
+  const raw=Buffer.allocUnsafe(8);raw.writeDoubleLE(value);sink.byte(T.float);sink.bytes(raw);return;
+ }
+ if(typeof value==="string"){if(HEX.test(value)){sink.byte(T.hex);sink.bytes(Buffer.from(value,"hex"));}else{sink.byte(T.string);writeId(textId(value));}return;}
+ if(typeof value==="object"&&depth>P.maximumDepth)throw fail("Bounded fact depth required");
+ if(Array.isArray(value)){sink.byte(T.array);sink.varint(value.length);for(const item of value)writeFactValueV1(sink,item,textId,depth+1);return;}
+ if(typeof value==="bigint")throw fail("JSON data required in a fact index");
+ const keys=Object.keys(value).filter(key=>value[key]!==undefined&&typeof value[key]!=="function"&&typeof value[key]!=="symbol").sort((a,b)=>textId(a)-textId(b));
+ sink.byte(T.object);sink.varint(keys.length);for(const key of keys){writeId(textId(key));writeFactValueV1(sink,value[key],textId,depth+1);}
+}
+
+/** 🖊️ Writes one list of row or owner numbers: its length, then the zigzag deltas of its numbers. */
+export function writeFactListV1(sink,list){
+ sink.varint(list.length);let previousId=0;
+ for(const id of list){if(!Number.isSafeInteger(id)||id<0||id>MAX_ID)throw fail("Bounded fact index ids required");const delta=id-previousId;sink.varint(delta>=0?delta*2:-delta*2-1);previousId=id;}
 }
 
 /** 🧱️ Encodes the logical fact index (`{version,owners,rows,classes}`) into the binary document the schema file describes; the output is canonical: the same logical index yields the same bytes. */
@@ -67,11 +100,6 @@ export function encodeFactIndexV1(index,{maximumBytes}){
  if(!Number.isSafeInteger(maximumBytes)||maximumBytes<1)throw fail("Finite generation document byte limit required");
  if(index?.version!==1||!Array.isArray(index.owners)||!Array.isArray(index.rows)||!Array.isArray(index.classes))throw fail("Closed fact index required");
  const strings=new Set(),kindIds=new Map(),kinds=[],factByObject=new Map(),factByText=new Map(),facts=[],rowKind=new Uint32Array(index.rows.length),rowFact=new Uint32Array(index.rows.length);
- const collect=value=>{
-  if(typeof value==="string"){if(!HEX.test(value))strings.add(value);}
-  else if(Array.isArray(value)){for(const item of value)collect(item);}
-  else if(value!==null&&typeof value==="object"){for(const key of Object.keys(value))if(value[key]!==undefined&&typeof value[key]!=="function"&&typeof value[key]!=="symbol"){strings.add(key);collect(value[key]);}}
- };
  for(const owner of index.owners){if(typeof owner!=="string")throw fail("Owner names must be text");strings.add(owner);}
  for(let at=0;at<index.rows.length;at++){
   const row=index.rows[at];
@@ -81,13 +109,13 @@ export function encodeFactIndexV1(index,{maximumBytes}){
   let id=factByObject.get(row.fact);
   if(id===undefined||typeof row.fact!=="object"||row.fact===null){
    const text=canonicalJsonV1(row.fact)??"null";id=factByText.get(text);
-   if(id===undefined){id=facts.length;factByText.set(text,id);facts.push(row.fact);collect(row.fact);}
+   if(id===undefined){id=facts.length;factByText.set(text,id);facts.push(row.fact);collectFactStringsV1(row.fact,strings);}
    if(typeof row.fact==="object"&&row.fact!==null)factByObject.set(row.fact,id);
   }
   rowFact[at]=id;
  }
  const table=[...strings].map(text=>{if(LONE_SURROGATE.test(text))throw fail("Well formed text required in a fact index: "+JSON.stringify(text.slice(0,64)));return{text,bytes:Buffer.from(text,"utf8")};}).sort((a,b)=>Buffer.compare(a.bytes,b.bytes)),ids=new Map(table.map((entry,rank)=>[entry.text,rank]));
- const sink=createSink(maximumBytes),writeId=value=>{if(value>MAX_ID)throw fail("Bounded fact index ids required");sink.varint(value);};
+ const sink=createFactSinkV1(maximumBytes),writeId=value=>{if(value>MAX_ID)throw fail("Bounded fact index ids required");sink.varint(value);};
  sink.bytes(MAGIC);
  for(const count of[table.length,kinds.length,index.owners.length,facts.length,index.rows.length,index.classes.length])sink.varint(count);
  let previous=Buffer.alloc(0);
@@ -97,28 +125,10 @@ export function encodeFactIndexV1(index,{maximumBytes}){
  }
  for(const kind of kinds)sink.varint(ids.get(kind));
  for(const owner of index.owners)sink.varint(ids.get(owner));
- const writeValue=(value,depth)=>{
-   if(value===null||value===undefined||typeof value==="function"||typeof value==="symbol"){sink.byte(T.null);return;}
-  if(typeof value==="boolean"){sink.byte(value?T.true:T.false);return;}
-  if(typeof value==="number"){
-   if(!Number.isFinite(value)){sink.byte(T.null);return;}
-   if(Number.isSafeInteger(value)){if(value>=0||Object.is(value,-0)){sink.byte(T.uint);sink.varint(Math.abs(value));}else{sink.byte(T.negint);sink.varint(-value);}return;}
-   const raw=Buffer.allocUnsafe(8);raw.writeDoubleLE(value);sink.byte(T.float);sink.bytes(raw);return;
-  }
-  if(typeof value==="string"){if(HEX.test(value)){sink.byte(T.hex);sink.bytes(Buffer.from(value,"hex"));}else{sink.byte(T.string);writeId(ids.get(value));}return;}
-  if(typeof value==="object"&&depth>P.maximumDepth)throw fail("Bounded fact depth required");
-  if(Array.isArray(value)){sink.byte(T.array);sink.varint(value.length);for(const item of value)writeValue(item,depth+1);return;}
-  if(typeof value==="bigint")throw fail("JSON data required in a fact index");
-  const keys=Object.keys(value).filter(key=>value[key]!==undefined&&typeof value[key]!=="function"&&typeof value[key]!=="symbol").sort((a,b)=>ids.get(a)-ids.get(b));
-  sink.byte(T.object);sink.varint(keys.length);for(const key of keys){writeId(ids.get(key));writeValue(value[key],depth+1);}
- };
- for(const fact of facts)writeValue(fact,1);
+ const textId=text=>ids.get(text);
+ for(const fact of facts)writeFactValueV1(sink,fact,textId,1);
  for(let at=0;at<index.rows.length;at++){sink.varint(rowKind[at]);writeId(ids.get(index.rows[at].path));writeId(rowFact[at]);}
- const writeList=list=>{
-  sink.varint(list.length);let previousId=0;
-  for(const id of list){if(!Number.isSafeInteger(id)||id<0||id>MAX_ID)throw fail("Bounded fact index ids required");const delta=id-previousId;sink.varint(delta>=0?delta*2:-delta*2-1);previousId=id;}
- };
- for(const cls of index.classes){writeList(cls.r);writeList(cls.o);}
+ for(const cls of index.classes){writeFactListV1(sink,cls.r);writeFactListV1(sink,cls.o);}
  return sink.result();
 }
 
@@ -219,7 +229,7 @@ export function decodeFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>t
 }
 
 /**
- * 🪶️ Opens a binary fact index as a bounded view: the document stays one packed buffer, strings, facts, rows and class lists are decoded when they are read and live in bounded least recently used caches (`🧊️bounded`, sizes in the schema policy `view`), so the resident size is the document plus small offset tables whatever is read. Every bound the full decoder checks is checked here, including the well formed UTF-8 of every string. `owners` is a plain array; `rows` and `classes` are read only array views (`length`, index, iteration and the array methods work, nothing is stored when they are walked); `rowKindOf(id)` answers a kind without reading the row; `stats()` lists the caches.
+ * 🪶️ Opens a binary fact index as a bounded view: the document stays one packed buffer, strings, facts, rows and class lists are decoded when they are read and live in bounded least recently used caches (`🧊️bounded`, sizes in the schema policy `view`), so the resident size is the document plus small offset tables whatever is read. Every bound the full decoder checks is checked here, including the well formed UTF-8 of every string. `owners` is a plain array; `rows` and `classes` are read only array views (`length`, index, iteration and the array methods work, nothing is stored when they are walked); `rowKindOf(id)` answers a kind without reading the row; `document` names the offset tables of the packed bytes for a streaming reader of the same layout (`../🌊️stream-patch`); `stats()` lists the caches.
  * [bounded caches](../../../🧊️bounded/🟨️.mjs)
  */
 export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>text,name}={}){
@@ -264,8 +274,8 @@ export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>tex
   return text;
  };
  const stringId=()=>{const id=varint();if(id>=stringCount)refuse();return id;};
- const kinds=new Array(kindCount);for(let kind=0;kind<kindCount;kind++)kinds[kind]=textAt(stringId(),false);
- const owners=new Array(ownerCount);for(let owner=0;owner<ownerCount;owner++)owners[owner]=textAt(stringId(),false);
+ const kinds=new Array(kindCount),kindString=new Uint32Array(kindCount);for(let kind=0;kind<kindCount;kind++){kindString[kind]=stringId();kinds[kind]=textAt(kindString[kind],false);}
+ const owners=new Array(ownerCount),ownerString=new Uint32Array(ownerCount);for(let owner=0;owner<ownerCount;owner++){ownerString[owner]=stringId();owners[owner]=textAt(ownerString[owner],false);}
  const skipValue=depth=>{
   if(at>=buffer.length)refuse();
   const tag=buffer[at++];
@@ -284,6 +294,7 @@ export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>tex
  };
  const factAt=new Uint32Array(factCount);
  for(let fact=0;fact<factCount;fact++){factAt[fact]=at;skipValue(1);}
+ const factsEnd=at;
  const rowKind=new Uint16Array(rowCount),rowPath=new Uint32Array(rowCount),rowFact=new Uint32Array(rowCount);
  for(let row=0;row<rowCount;row++){const kind=varint();if(kind>=kindCount)refuse();rowKind[row]=kind;rowPath[row]=stringId();const fact=varint();if(fact>=factCount)refuse();rowFact[row]=fact;}
  const listAt=new Uint32Array(classCount*2);
@@ -294,6 +305,13 @@ export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>tex
   let position=start,value=0,scale=1;
   const next=()=>{value=0;scale=1;for(;;){const byte=buffer[position++];value+=(byte&127)*scale;if(byte<128)return value;scale*=128;}};
   const items=next(),list=new Array(items);let previous=0;
+  for(let item=0;item<items;item++){const zigzag=next();previous+=zigzag%2?-(zigzag+1)/2:zigzag/2;list[item]=previous;}
+  return list;
+ };
+ const readTyped=start=>{
+  let position=start,value=0,scale=1;
+  const next=()=>{value=0;scale=1;for(;;){const byte=buffer[position++];value+=(byte&127)*scale;if(byte<128)return value;scale*=128;}};
+  const items=next(),list=new Uint32Array(items);let previous=0;
   for(let item=0;item<items;item++){const zigzag=next();previous+=zigzag%2?-(zigzag+1)/2:zigzag/2;list[item]=previous;}
   return list;
  };
@@ -345,5 +363,6 @@ export function openFactIndexV1(bytes,{maximumBytes=bytes.length,share=text=>tex
   defineProperty(){return false;},
  });
  const caches=[texts,factCache,rowCache,classCache];
- return{version:1,owners,rows:view(rowCount,rowAt),classes:view(classCount,classAt),rowKindOf:id=>kinds[rowKind[id]],rowsRead:()=>read,stats:()=>({bytes:buffer.length,caches:caches.map(cache=>cache.stats())}),drop:()=>{for(const cache of caches)cache.clear();}};
+ const document=Object.freeze({classTyped:id=>({r:readTyped(listAt[id*2]),o:readTyped(listAt[id*2+1])}),buffer,stringCount,kinds,kindString,ownerString,factCount,factAt,factsEnd,rowCount,rowKind,rowPath,rowFact,classCount,suffixAt,suffixLength,lcps,textAt});
+ return{version:1,owners,rows:view(rowCount,rowAt),classes:view(classCount,classAt),rowKindOf:id=>kinds[rowKind[id]],document,rowsRead:()=>read,stats:()=>({bytes:buffer.length,caches:caches.map(cache=>cache.stats())}),drop:()=>{for(const cache of caches)cache.clear();}};
 }

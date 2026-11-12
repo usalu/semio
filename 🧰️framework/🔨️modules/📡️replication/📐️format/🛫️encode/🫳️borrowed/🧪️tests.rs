@@ -1,6 +1,6 @@
 //! 🧪️ Canonical retained framing matches the existing writer without allocating or changing original payload storage.
 use super::*;
-#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 struct Source{rows:Vec<(u8,bool,Vec<u8>)>}
 impl BorrowedSprSource for Source{fn source_identity(&self)->usize{self as*const _ as usize}fn record(&self,index:usize)->Result<Option<BorrowedSprRecord<'_>>,ValueError>{Ok(self.rows.get(index).map(|(kind,critical,payload)|BorrowedSprRecord{kind:*kind,critical:*critical,payload}))}}
 fn full(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}

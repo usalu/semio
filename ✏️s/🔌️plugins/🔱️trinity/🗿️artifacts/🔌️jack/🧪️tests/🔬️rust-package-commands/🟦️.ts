@@ -118,5 +118,9 @@ if (segments[0] === "jack-query-ownership") {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "query_ownership", "--", "--nocapture"], join(context.repoRoot, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"));
     return;
   }
+    if (segments[0] === "jack-results-window-transient") {
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-trinity-jack", "--lib", "results_window_large_output_", "--", "--nocapture"], context.repoRoot);
+      return;
+    }
   throw new Error('Unknown owned verification '+segments.join(' '));
 }

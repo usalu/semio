@@ -21,7 +21,7 @@ extern crate semio_framework_schema as framework_schema;
 
 use semio_s_artifact_draw_drawing_editor_commands::nudge_selection::{nudge_selection_left, nudge_selection_left_fast, nudge_selection_right, nudge_selection_right_fast, nudge_selection_up, nudge_selection_up_fast, nudge_selection_down, nudge_selection_down_fast};
 use semio_s_artifact_draw_drawing_editor_tool::{DrawingGesturePreview, DrawingSession};
-use semio_s_artifact_draw_drawing_editor_commands::{import_image, add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, set_snapshot, toggle_layer_visible};
+use semio_s_artifact_draw_drawing_editor_commands::{import_image, add_layer, combine_boolean, commit_document, delete_layer, delete_selection, drop_layer_kind, duplicate_layer, engagement_input, engagement_submit, export_document, edit_selection, edit_path, edit_fill, move_layer, patch_layer, patch_layers, set_active_example, set_camera, set_camera_zoom, load_document_json, set_selected_opacity, replace_document, toggle_layer_visible};
 use semio_s_artifact_draw_drawing_editor_tool::{canvas_commit_draft, canvas_double_click, canvas_escape, canvas_pointer_move, canvas_pointer_up};
 use semio_s_artifact_draw_drawing_editor_tool as canvas_pointer_down;
 use semio_s_artifact_draw_drawing_editor_tool::modes::edit;
@@ -116,7 +116,7 @@ semio_plugin::app_commands! {
     /// action `create_drawing_app` declares. Field shapes mirror each action's real `args` object.
     /// **Row order is the binary variant ordinal: appending is safe, reordering is a wire-format break.**
     pub enum DrawingCommand for DrawingSnapshot, DrawingMutation, NoConfig, NoConfigMutation, ctx = DrawingSession {
-        "setSnapshot" as "set-snapshot" => set_snapshot::SetSnapshot,
+        "replaceDocument" as "replace-document" => replace_document::ReplaceDocument,
         "commitDocument" as "commit-document" => commit_document::CommitDocument,
         "loadDocumentJson" as "document-json" => load_document_json::LoadDocumentJson,
         "setActiveExample" as "active-example" => set_active_example::SetActiveExample,

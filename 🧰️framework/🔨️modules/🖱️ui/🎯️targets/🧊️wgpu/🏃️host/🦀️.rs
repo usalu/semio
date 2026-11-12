@@ -258,7 +258,7 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
         if !self.closing{return Ok(Close::Blocked)}
         if !self.fault.terminal_is_empty(){let mut demand=self.fault.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"clipboard fault close depth overflow"))?;return close_original_effect_step(cx,demand,|effect|RetainedWorkPoll::Complete(self.fault.close_step(effect)))}
         if self.operation.is_none(){return Ok(Close::Complete{progress:Progress::default()})}
-        let bytes=match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0};let step=close_original_retained_step(cx,RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|_|{*self.operation=None;semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Complete(Progress{copied_items:1,released_bytes:bytes,..Default::default()})),work:1}})?;
+        let bytes=match self.operation.as_ref(){Some(ClipboardIoOperation::Write(text))=>text.capacity(),_=>0};let step=close_original_retained_step(cx,RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|_|{*self.operation=None;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Progress{copied_items:1,released_bytes:bytes,..Default::default()})),work:1}})?;
         Ok(match step{Close::Pending{progress}if self.operation.is_none()=>Close::Complete{progress},step=>step})
     }
 

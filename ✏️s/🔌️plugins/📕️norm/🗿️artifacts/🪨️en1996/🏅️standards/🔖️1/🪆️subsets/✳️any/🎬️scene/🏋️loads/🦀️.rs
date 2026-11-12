@@ -1,10 +1,10 @@
 //! 🏋️ Loads: the vertical resultants at the top and the bottom with their eccentricities, concentrated loads with the 60° spreading zone, the wind pressure and the indicative yield-line pattern of the laterally loaded wall.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, WallPose, EPS};
 use super::model::{ConcentratedLoad, MasonryWall, WallLoadCase};
 use super::scene::*;
-use super::walls::compression_id;
 use super::{handles, profile, SceneInput};
 
 const FRONT: f64 = -0.006;

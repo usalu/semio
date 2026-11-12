@@ -85,7 +85,7 @@ describe("Storybook catalog integrity", () => {
   });
 
   it("prepares generated browser catalogs before every canonical compiler entry", () => {
-    const project = JSON.parse(readFileSync(resolve(root, "📋️project.json"), "utf8"));
+    const project = JSON.parse(readFileSync(resolve(root, "🧰️framework/🔨️modules/🖱️ui/📖️storybook/📋️project.json"), "utf8"));
     expect(project.targets["prepare-storybook"].dependsOn).toEqual(["@semio-tech/ui-styling-tokens:generate", "@semio-tech/assets:build"]);
     for (const [name, target] of Object.entries(project.targets)) {
       if (name.startsWith("dev-storybook") || ["build-storybook", "test-storybook"].includes(name)) {

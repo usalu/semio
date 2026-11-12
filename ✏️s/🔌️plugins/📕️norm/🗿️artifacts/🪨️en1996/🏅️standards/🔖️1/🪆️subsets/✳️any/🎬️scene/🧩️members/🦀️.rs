@@ -1,9 +1,9 @@
 //! 🧩️ Members: the lintels, piers, ties, anchors, ring ties, tendons, confining columns and reinforcing bars of a wall as scene entities with their drag handles, each bound to the check that judges it.
 
+use super::scene::projection_kit::{loc, binding_where as binding_by, binding_of_subjects as binding};
 use super::kit::*;
 use super::layout::{openings, WallPose, EPS};
 use super::model::{BarKind, MasonryWall, TieKind};
-use super::lateral::FLANGE_TAG;
 use super::reinforcement::bar_diameter;
 use super::scene::projection_kit::handle_kit::{grid, handle, field_binding as binding, round, HandleSpec as HSpec};
 use super::scene::*;

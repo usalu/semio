@@ -81,4 +81,4 @@ impl InteractiveJobCloseStep {
 
 #[path="../../♻️retirement/📄️payload/🦀️.rs"]
 mod payload_retirement;
-pub use payload_retirement::{close_step_outcome_slot,step_outcome_slot_retirement_demands,JobOutcomeSlot,JobPayloadSlot};
+pub use payload_retirement::{close_step_outcome_slot,step_outcome_slot_retirement_demands,step_outcome_slot_retirement_work,JobOutcomeSlot,JobPayloadSlot};

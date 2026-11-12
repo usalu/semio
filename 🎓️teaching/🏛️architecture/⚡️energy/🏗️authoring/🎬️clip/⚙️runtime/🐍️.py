@@ -203,7 +203,7 @@ class ToolSession:
             log.parent.mkdir(parents=True, exist_ok=True)
         with log.open("x", encoding="utf-8") if log else nullcontext(None) as stream:
             if stream:
-                stream.write("[DEBUG] " + json.dumps({"command": command, "cwd": str(cwd)}) + "\n")
+                stream.write(json.dumps({"command": command, "cwd": str(cwd)}) + "\n")
                 stream.flush()
             with self._lock:
                 if self.cancelled.is_set():

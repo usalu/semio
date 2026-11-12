@@ -4,8 +4,7 @@ extern crate semio_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 #[path = "."]
 pub mod standards {

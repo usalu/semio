@@ -11,8 +11,7 @@ pub use semio_framework_tool_run::*;
 pub use semio_framework_tool_run_tick_wire::testkit::*;
 pub use semio_framework_tool_run_tick_wire::*;
 
-#[global_allocator]
-static TOOL_RUN_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 pub fn module_directory() -> &'static Path {
     static DIRECTORY: OnceLock<PathBuf> = OnceLock::new();

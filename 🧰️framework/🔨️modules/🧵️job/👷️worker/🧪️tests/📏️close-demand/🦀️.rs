@@ -18,7 +18,7 @@ impl InteractiveJob for PhysicalDemandJob {
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.backing.is_some()))}
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
         let grant=cx.retained_grant();self.calls.lock().unwrap().push(grant);let Some(backing)=self.backing.as_ref()else{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})};if !self.closing{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
-        let demand=RetirementDemand{release_bytes:backing.capacity(),depth:1,..Default::default()};let step=close_original_retained_step(cx,demand,|_|{drop(self.backing.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})?;Ok(match step{InteractiveJobCloseStep::Pending{progress}if self.terminal_is_empty()=>InteractiveJobCloseStep::Complete{progress},step=>step})
+        let demand=RetirementDemand{release_bytes:backing.capacity(),depth:1,..Default::default()};let step=close_original_retained_effect_step(cx,demand,|_|{drop(self.backing.take());Ok::<_,ValueError>(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})?;Ok(match step{InteractiveJobCloseStep::Pending{progress}if self.terminal_is_empty()=>InteractiveJobCloseStep::Complete{progress},step=>step})
     }
 
     fn terminal_is_empty(&self) -> bool { self.closing && self.backing.is_none() }

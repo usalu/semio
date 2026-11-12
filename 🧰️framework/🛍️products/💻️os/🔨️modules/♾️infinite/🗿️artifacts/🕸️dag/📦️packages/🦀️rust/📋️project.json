@@ -125,6 +125,24 @@
         "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "verify-dag-demo-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify dag-demo-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "dag-demo-ownership"
+          ]
+        }
+      }
     }
   }
 }

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fan-out of one owner's targets / Auffächerung der Ziele eines Eigners",
+  "description": "EN: One owner declares many targets whose commands differ only in their arguments; the closure of their script is stored once (at most the declared number of value records) and the managed heap after a collection grows, after the warmup targets, by at most the declared megabytes and the declared slope per target. DE: Ein Eigner erklärt viele Ziele, deren Befehle sich nur in ihren Argumenten unterscheiden; die Closure ihres Skripts wird einmal gespeichert (höchstens die genannte Zahl an Wertdatensätzen), und der verwaltete Heap nach einer Sammlung wächst nach den Aufwärm-Zielen höchstens um die genannten Megabyte und die genannte Steigung je Ziel.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "targets", "modules", "bytesPerModule", "warmup", "maximumGrowthMegabytes", "maximumSlopeKilobytesPerTarget", "maximumStoredValues"],
+  "properties": {
+    "version": {"const": 1},
+    "targets": {"type": "integer", "minimum": 2},
+    "modules": {"type": "integer", "minimum": 1},
+    "bytesPerModule": {"type": "integer", "minimum": 1},
+    "warmup": {"type": "integer", "minimum": 0},
+    "maximumGrowthMegabytes": {"type": "number", "minimum": 0},
+    "maximumSlopeKilobytesPerTarget": {"type": "number", "minimum": 0},
+    "maximumStoredValues": {"type": "integer", "minimum": 1}
+  }
+}

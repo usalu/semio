@@ -57,6 +57,7 @@ impl<T:OriginalDomainFailure> RetirementCursor for DomainFrame<T>{
  fn recover_close_into<'r>(&mut self,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>,reply:semio_framework_value_retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>)->Result<semio_framework_value_retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{RetirementCursor::recover_close_into(&mut self.owner,body,effect,reply)}
  fn close_original_into<'r>(&mut self,original:&mut semio_framework_value_retained_clone::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>,reply:semio_framework_value_retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>)->Result<semio_framework_value_retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{RetirementCursor::close_original_into(&mut self.owner,original,body,effect,reply)}
  fn recover_close_original_into<'r>(&mut self,original:&mut semio_framework_value_retained_clone::OriginalRetirementCloseLoan<'_>,body:usize,effect:&mut semio_framework_value_retained_clone::RetainedAllocationEffect<'_>,reply:semio_framework_value_retained_clone::OriginalEffectReply<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>)->Result<semio_framework_value_retained_clone::OriginalEffectReplyComplete<'r,RetirementStep,semio_framework_value_retained_clone::OriginalRetirementFailure>,ValueError>{RetirementCursor::recover_close_original_into(&mut self.owner,original,body,effect,reply)}
+ fn next_computational_work(&self,body:usize)->Result<u64,ValueError>{self.owner.next_computational_work(body)}
  fn requires_original_birth(&self)->bool{RetirementCursor::requires_original_birth(&self.owner)}
  fn requires_original_control(&self)->bool{RetirementCursor::requires_original_control(&self.owner)}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
@@ -66,7 +67,7 @@ impl<T:OriginalDomainFailure> RetirementCursor for DomainFrame<T>{
  fn next_close_byte_demand(&self)->Option<usize>{self.owner.next_release_byte_demand().ok()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.next_depth_demand()}
  fn allows_admitted_narrow_work(&self)->bool{true}
- fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>()+size_of::<Box<dyn RetirementCursor>>())}
 }
 
 /// 🫴️ The erased header moves without cloning the admitted typed source or its nested payloads.
@@ -81,7 +82,7 @@ impl OriginalDomainPrimary{
 impl RetireOwned for OriginalDomainPrimary{
  type RetirementCursor=Box<dyn RetirementCursor>;
  fn retirement_seed(self)->Self::RetirementCursor{self.owner.into_retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(0)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self::RetirementCursor>())}
  fn controlled_retirement_supported()->bool{true}
 }
 

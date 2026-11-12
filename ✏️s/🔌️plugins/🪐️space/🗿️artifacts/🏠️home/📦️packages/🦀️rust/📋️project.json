@@ -167,6 +167,26 @@
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": false
       }
+    },
+    "verify-home-host-panel-owner-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify home-host-panel-owner oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-home-host-panel-owner-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify home-host-panel-owner native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

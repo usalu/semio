@@ -1,6 +1,7 @@
 //! 🧩️ Bond: the explicit running bond of units and mortar joints of every wall (courses of height `hu + tbed`, perpends offset by half a unit); a unit meeting an opening is cut to the remaining wall rectangles.
 //! The overlap is checked against `max(0.4 hu, 45 mm)`; an invalid bond is drawn in error style. Both entities live on the hidden `bond` layer and fall back to the joint lines when the unit budget is spent.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{openings, solid_rects, Layout, EPS};
 use super::model::MasonryWall;

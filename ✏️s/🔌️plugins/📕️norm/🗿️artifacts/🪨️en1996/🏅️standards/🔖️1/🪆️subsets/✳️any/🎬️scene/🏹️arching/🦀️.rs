@@ -1,5 +1,6 @@
 //! 🏹️ Arching: the thrust line of the three-hinge arch of a wall held at floor and base (EN 1996-1-1 6.3.2, M-32): the parabola from the back face at the supports to the front face at mid-height with the three compression blocks, bound to the arching check. The block depth is derived so that the arch statics reproduce the catalogue capacity.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, EPS};
 use super::scene::*;

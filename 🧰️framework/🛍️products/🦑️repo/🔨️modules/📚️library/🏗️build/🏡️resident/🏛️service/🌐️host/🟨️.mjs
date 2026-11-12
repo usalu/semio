@@ -2,7 +2,7 @@ import {preparePrivateDirectoryV1} from "../../📨️protocol/📍️endpoint/�
 /** 🌐 The per-host graph service: one process per user holds the fact index once and answers plan and status requests from every agent, worktree and workspace over one local socket or pipe. */
 
 import {createServer,connect} from "node:net";
-import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,utimesSync,writeFileSync} from "node:fs";
+import {chmodSync,existsSync,lstatSync,mkdirSync,readFileSync,readdirSync,renameSync,rmSync,statSync,statfsSync,utimesSync,writeFileSync} from "node:fs";
 import {createHash,randomBytes} from "node:crypto";
 import {join} from "node:path";
 import {createFrameDecoderV1,encodeFrameV1} from "../../📨️protocol/🟨️.mjs";
@@ -10,6 +10,7 @@ import {HOST_POLICY_V1,renderBothV1,renderTextV1,validatorV1} from "../../📨�
 import {authorizeCapabilityV1,createRootKeyV1,verifyCapabilityV1} from "../../📨️protocol/🔑️capability/🟨️.mjs";
 import {workspaceIdV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {BusyErrorV1,createGovernorV1} from "../🚦️governor/🟨️.mjs";
+import {failureRefusalV1} from "../🧯️failure/🟨️.mjs";
 import {createIndexPoolV1} from "./🧊️pool/🟨️.mjs";
 import {boundedCacheStatsV1} from "../../../🧊️bounded/🟨️.mjs";
 /** 🏃 Whether a build or test run of this machine still holds a live capacity grant (its row is touched by the run's heartbeat): the service hosts the cache endpoint of that run, so a silent run, a long test suite that prints nothing, is not idle time, and the service must outlive it. */
@@ -50,7 +51,15 @@ function probe(endpoint,timeout=500){
 
 function atomicWrite(path,text,mode=0o600){
  const temporary=path+"."+randomBytes(4).toString("hex")+".tmp";
- writeFileSync(temporary,text,{mode});renameSync(temporary,path);
+ try{writeFileSync(temporary,text,{mode});renameSync(temporary,path);}catch(error){rmSync(temporary,{force:true});throw error;}
+}
+
+/** 💽 Frees spilled slices, oldest first and never the one about to be written, until the directory's device has room for the next slice body; leftover temporary files of failed writes go first. The room comes from the device's own free-space quote, so a small runtime filesystem never fails a write that evicting a stale slice would have admitted. */
+export function makeRoomV1(directory,keep,bytes){
+ const entries=readdirSync(directory),free=()=>{const quote=statfsSync(directory);return quote.bavail*quote.bsize;};
+ for(const name of entries)if(name.endsWith(".tmp"))rmSync(join(directory,name),{force:true});
+ const spilled=entries.filter(name=>name.endsWith(".json")&&name!==keep).map(name=>({name,at:statSync(join(directory,name)).mtimeMs})).sort((a,b)=>a.at-b.at);
+ for(const stale of spilled){if(free()>=bytes)break;rmSync(join(directory,stale.name),{force:true});}
 }
 
 /** 🌐 Creates the service; call `start()`, then wait for `closed`. `ports.planner` is `{identify?,load,plan,contentDigest?,bind?}` (`contentDigest` and `bind` together let workspaces with equal captured inputs share one job, `bind` answering each client's own pin, manifest and revision) (see `createGraphPlannerPortV1`); `ports.admission` defaults to the fair governor. */
@@ -62,7 +71,7 @@ export function createHostServiceV1(options){
  const pool=createIndexPoolV1({maximumBytes:policy.maximumIndexBytes,maximumEntries:policy.maximumWorkspaces,now,onEvict:key=>{for(const memoKey of[...memo.keys()])if(memoKey.startsWith(key))memo.delete(memoKey);}});
  const memo=new Map(),workspaces=new Map(),connections=new Set(),spills=join(runtime.directory,"plans-"+runtime.tag);
  const counters={plans:0,hits:0,refused:0,evictedWorkspaces:0,jobs:0,coalesced:0,abandoned:0},jobs=new Map(),planned={budgetRefusals:0,load:undefined,computed:0,milliseconds:0,lastMilliseconds:0,captureFiles:0,captureProbes:0,unstaged:0};
- let server,rootKey,closeResolve,closing=false,lastActivity=now(),idleTimer,residentTimer,supersededSince;
+ let server,rootKey,closeResolve,closing=false,lastActivity=now(),idleTimer,residentTimer,cacheTimer,supersededSince;
  const closed=new Promise(resolve=>{closeResolve=resolve;});
  const touch=()=>{lastActivity=now();};
 
@@ -82,7 +91,7 @@ export function createHostServiceV1(options){
   const body=JSON.stringify(plan),digest=createHash("sha256").update(body).digest("hex");
   mkdirSync(spills,{recursive:true,mode:0o700});
   const path=join(spills,digest+".json");
-  if(!existsSync(path))atomicWrite(path,body);else utimesSync(path,new Date(),new Date());
+  if(!existsSync(path)){makeRoomV1(spills,digest+".json",Buffer.byteLength(body));atomicWrite(path,body);}else utimesSync(path,new Date(),new Date());
   const files=readdirSync(spills).filter(name=>name.endsWith(".json")).map(name=>({name,at:statSync(join(spills,name)).mtimeMs})).sort((a,b)=>b.at-a.at);
   for(const stale of files.slice(policy.planMemoEntries))rmSync(join(spills,stale.name),{force:true});
   return{ref:{hash:digest,size:Buffer.byteLength(body)}};
@@ -149,7 +158,7 @@ export function createHostServiceV1(options){
     const reason=controller.signal.reason;
     if(reason?.code==="deadline")await refuse(connection,frame.id,"deadline","deadline",{milliseconds:frame.deadlineMs},"never");
     else await refuse(connection,frame.id,"shutdown","shutdown",{},"never");
-   }else{const reason=String(error?.stack??error),reference=createHash("sha256").update(reason).digest("hex").slice(0,8);log("plan-failed",reference+" "+reason);await refuse(connection,frame.id,"internal","internal",{reference},"later");}
+   }else{const failure=failureRefusalV1(error,{log,logPath:runtime.log});await refuse(connection,frame.id,failure.code,failure.key,failure.fields,failure.retry);}
   }finally{clearTimeout(deadline);connection.requests.delete(frame.id);touch();}
  }
 
@@ -311,10 +320,18 @@ export function createHostServiceV1(options){
   if(supersededSince!==undefined&&connections.size===0&&governor.inFlight===0&&at-supersededSince>=policy.supersededGraceMilliseconds)void drainAndExit("superseded");
  };
 
+ const cacheStop=new AbortController();let cacheRunning=false;
+ /** 🗄 One tick of the host cache upkeep (`ports.cache.tick`): single-flight, cancelled with the service, a failure is logged and never reaches a client. */
+ const cacheTick=()=>{
+  if(cacheRunning||closing||!ports.cache?.tick)return;
+  cacheRunning=true;
+  Promise.resolve().then(()=>ports.cache.tick(cacheStop.signal)).catch(error=>{if(!cacheStop.signal.aborted)log("cache-tick-failed",String(error?.stack??error));}).finally(()=>{cacheRunning=false;});
+ };
+
  async function drainAndExit(reason){
   if(closing)return;
   closing=true;log("shutdown",reason);
-  clearInterval(idleTimer);clearInterval(residentTimer);
+  clearInterval(idleTimer);clearInterval(residentTimer);clearInterval(cacheTimer);cacheStop.abort(new Error("shutdown"));
   if(listening)writeDescriptor(true);
   for(const connection of connections)void send(connection,{t:"notice",kind:"draining",message:text(connection,"shutdown",{})});
   server?.close();
@@ -336,6 +353,7 @@ export function createHostServiceV1(options){
    await listen();writeDescriptor();
    idleTimer=setInterval(()=>{if(connections.size===0&&governor.inFlight===0&&now()-lastActivity>policy.idleShutdownMilliseconds)void runInFlightV1().then(running=>{if(running)lastActivity=now();else if(connections.size===0&&governor.inFlight===0)void drainAndExit("idle");});},Math.max(250,Math.min(policy.idleShutdownMilliseconds/4,30000)));idleTimer.unref?.();
    residentTimer=setInterval(sweep,Math.max(50,policy.residentCheckMilliseconds));residentTimer.unref?.();
+   if(ports.cache?.tick){cacheTimer=setInterval(cacheTick,Math.max(50,policy.cacheTickMilliseconds));cacheTimer.unref?.();cacheTick();}
    return{instance,endpoint:runtime.endpoint};
   },
   stop:reason=>drainAndExit(reason??"stop"),

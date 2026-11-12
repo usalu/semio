@@ -929,8 +929,7 @@ use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_manifest_arg_schema::{ActionArgControl, AppRole, reference_id_text};
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[cfg(test)]
 #[path = "../🔖️action-args/♻️retirement/🧪️tests/🦀️.rs"]

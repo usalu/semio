@@ -1,4 +1,4 @@
-use crate::ClockStride;
+use crate::{ClockStride,logical_now_us};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static FAKE_NOW_US: AtomicU64 = AtomicU64::new(0);

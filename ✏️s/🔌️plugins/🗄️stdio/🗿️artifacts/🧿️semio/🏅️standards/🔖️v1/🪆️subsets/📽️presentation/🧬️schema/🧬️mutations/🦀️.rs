@@ -56,7 +56,7 @@ pub use semio_s_artifact_stdio_semio_presentation_examples::schema::mutations::s
 pub mod set_textbox_blocks;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none (the
 /// stdio mutation-leaf migration recipe's hard constraint #1 — `no` is also not an approved
 /// semantic verb). The `#[value(tag = "mutation", rename_all = "camelCase")]` container attribute

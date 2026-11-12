@@ -1,23 +1,31 @@
 //! 🧰️ Scene kit: vector helpers, the mesh and entity builders, utilisation bindings from the report, layers, legends and the entity-kind registry.
 
-use super::layout::WallPose;
-use super::scene::*;
-pub(crate) use scene::projection_kit::{self, base_id, loc, v3, clause_of, tone_of, utilisation_words, binding_where as binding_by, binding_of_subjects as binding};
-use super::*;
+extern crate semio_s_artifact_norm_en1996_model as model;
+extern crate semio_s_artifact_norm_en1996_schema as schema;
+extern crate semio_s_artifact_norm_en1996_scene_layout as layout;
+extern crate semio_s_plugin_norm_compliance as norm;
+extern crate semio_s_plugin_norm_structural_scene as scene;
+
+use layout::WallPose;
+use schema::checks::masonry;
+use scene::*;
 use scene::projection::{Fragment, Part};
+use scene::projection_kit::design_case::forms;
+use scene::projection_kit::{self, base_id, loc, utilisation_words, binding_where as binding_by};
+use schema::checks::masonry::En1996Cases;
 use std::collections::BTreeSet;
 
-pub(crate) const LAYER_MASONRY: &str = "masonry";
-pub(crate) const LAYER_OPENINGS: &str = "openings";
-pub(crate) const LAYER_FLOORS: &str = "floors";
-pub(crate) const LAYER_BOND: &str = "bond";
-pub(crate) const LAYER_REINFORCEMENT: &str = "reinforcement";
-pub(crate) const LAYER_LOADS: &str = "loads";
-pub(crate) const LAYER_PATTERNS: &str = "patterns";
-pub(crate) const LAYER_SUPPORTS: &str = "supports";
-pub(crate) const LAYER_FIRE: &str = "fire";
-pub(crate) const LAYER_CASES: &str = "cases";
-pub(crate) const LAYER_ANNOTATIONS: &str = "annotations";
+pub const LAYER_MASONRY: &str = "masonry";
+pub const LAYER_OPENINGS: &str = "openings";
+pub const LAYER_FLOORS: &str = "floors";
+pub const LAYER_BOND: &str = "bond";
+pub const LAYER_REINFORCEMENT: &str = "reinforcement";
+pub const LAYER_LOADS: &str = "loads";
+pub const LAYER_PATTERNS: &str = "patterns";
+pub const LAYER_SUPPORTS: &str = "supports";
+pub const LAYER_FIRE: &str = "fire";
+pub const LAYER_CASES: &str = "cases";
+pub const LAYER_ANNOTATIONS: &str = "annotations";
 
 const LAYERS: [(&str, &str, &str); 11] = [
     (LAYER_MASONRY, "Masonry", "Mauerwerk"),
@@ -66,36 +74,37 @@ pub const ENTITY_KINDS: &[EntityKindSpec] = &[
     kind("placement", "placements", "Placement", "Platzierung", "map-pin", EntityKind::Group),
 ];
 
-pub(crate) const OPENING_TAG: &str = "opening-";
-pub(crate) const LINTEL_TAG: &str = "lintel-";
-pub(crate) const CONCENTRATED_TAG: &str = "conc-";
-pub(crate) const PIER_TAG: &str = "pier-";
-pub(crate) const TIE_TAG: &str = "tie-";
-pub(crate) const TENDON_TAG: &str = "tendon-";
-pub(crate) const COLUMN_TAG: &str = "column-";
-pub(crate) const BAR_TAG: &str = "bar-";
-pub(crate) const WEDGE_TAG: &str = "wedge-";
-pub(crate) const BEARING_TAG: &str = "bearing-";
-pub(crate) const ISOTHERM_TAG: &str = "isotherm-zone";
-pub(crate) const PHI_TAG: &str = "phi-field";
-pub(crate) const YIELD_TAG: &str = "yield-lines";
-pub(crate) const ARCH_TAG: &str = "arch-thrust";
-pub(crate) const ANNEX_E_TAG: &str = "annex-e";
-pub(crate) const CHASE_TAG: &str = "chase-";
-pub(crate) const JOINT_TAG: &str = "joint-";
-pub(crate) const DIAPHRAGM_TAG: &str = "diaphragm-";
+pub const OPENING_TAG: &str = "opening-";
+pub const LINTEL_TAG: &str = "lintel-";
+pub const CONCENTRATED_TAG: &str = "conc-";
+pub const PIER_TAG: &str = "pier-";
+pub const TIE_TAG: &str = "tie-";
+pub const TENDON_TAG: &str = "tendon-";
+pub const COLUMN_TAG: &str = "column-";
+pub const BAR_TAG: &str = "bar-";
+pub const WEDGE_TAG: &str = "wedge-";
+pub const BEARING_TAG: &str = "bearing-";
+pub const FLANGE_TAG: &str = "flange-";
+pub const ISOTHERM_TAG: &str = "isotherm-zone";
+pub const PHI_TAG: &str = "phi-field";
+pub const YIELD_TAG: &str = "yield-lines";
+pub const ARCH_TAG: &str = "arch-thrust";
+pub const ANNEX_E_TAG: &str = "annex-e";
+pub const CHASE_TAG: &str = "chase-";
+pub const JOINT_TAG: &str = "joint-";
+pub const DIAPHRAGM_TAG: &str = "diaphragm-";
 
 /// 🧭️ The registry row owning an entity id: a wall, one of its openings (`wall:opening-<id>`) or one of its concentrated loads (`wall:conc-<load case>-<id>`).
 pub fn entity_kind_of(document: &model::En1996Snapshot, id: &str) -> Option<&'static EntityKindSpec> {
     let base = base_id(id);
-    if document.cases.iter().any(|c| c.id == base && super::cases::declared(c)) {
+    if document.cases.iter().any(|c| c.id == base && case_declared(c)) {
         return ENTITY_KINDS.iter().find(|k| k.collection == "cases");
     }
     if !document.walls.iter().any(|w| w.id == base) {
         return document.placements.iter().any(|p| p.id == base).then(|| ENTITY_KINDS.iter().find(|k| k.collection == "placements")).flatten();
     }
     let tag = id.split_once(':').map_or("", |(_, tag)| tag);
-    let collection = [(OPENING_TAG, "openings"), (LINTEL_TAG, "lintels"), (PIER_TAG, "piers"), (TIE_TAG, "ties"), (TENDON_TAG, "prestress"), (COLUMN_TAG, "confined"), (super::lateral::FLANGE_TAG, "flanges"), (BAR_TAG, "bars"), (CONCENTRATED_TAG, "concentrated"), (WEDGE_TAG, "concentrated"), (BEARING_TAG, "concentrated"), (CHASE_TAG, "chases"), (JOINT_TAG, "movementJoints")]
+    let collection = [(OPENING_TAG, "openings"), (LINTEL_TAG, "lintels"), (PIER_TAG, "piers"), (TIE_TAG, "ties"), (TENDON_TAG, "prestress"), (COLUMN_TAG, "confined"), (FLANGE_TAG, "flanges"), (BAR_TAG, "bars"), (CONCENTRATED_TAG, "concentrated"), (WEDGE_TAG, "concentrated"), (BEARING_TAG, "concentrated"), (CHASE_TAG, "chases"), (JOINT_TAG, "movementJoints")]
         .into_iter()
         .find(|(prefix, _)| tag.starts_with(prefix))
         .map_or("walls", |(_, collection)| collection);
@@ -104,7 +113,7 @@ pub fn entity_kind_of(document: &model::En1996Snapshot, id: &str) -> Option<&'st
 
 /// 🆔️ Every document entity in document order: the walls, whose sub-entities (`wall:tag`) are projected with them.
 pub fn entities_of(document: &model::En1996Snapshot) -> Vec<EntityRef> {
-    document.walls.iter().map(|w| wall_ref(&w.id)).chain(document.cases.iter().filter(|c| super::cases::declared(c)).map(|c| case_ref(&c.id))).collect()
+    document.walls.iter().map(|w| wall_ref(&w.id)).chain(document.cases.iter().filter(|c| case_declared(c)).map(|c| case_ref(&c.id))).collect()
 }
 
 /// 🔗️ The entities a projection of `id` reads besides itself, so a change of any of them re-projects `id`.
@@ -136,50 +145,50 @@ pub fn entity_dependencies(document: &model::En1996Snapshot, id: &str) -> Vec<St
     out.into_iter().collect()
 }
 
-pub(crate) fn case_ref(case: &str) -> EntityRef {
+pub fn case_ref(case: &str) -> EntityRef {
     EntityRef::new(EntityKind::Solid, case, format!("cases[id={case}]"))
 }
 
-pub(crate) fn wall_ref(wall: &str) -> EntityRef {
+pub fn wall_ref(wall: &str) -> EntityRef {
     EntityRef::new(EntityKind::Group, wall, format!("walls[id={wall}]"))
 }
 
-pub(crate) fn entity_ref(kind: EntityKind, id: &str, path: &str) -> EntityRef {
+pub fn entity_ref(kind: EntityKind, id: &str, path: &str) -> EntityRef {
     EntityRef::new(kind, id, path)
 }
 
 /// 📶️ The binding of the check with exactly this id.
-pub(crate) fn binding_of(report: &norm::CheckReport, check_id: &str) -> Option<UtilisationBinding> {
+pub fn binding_of(report: &norm::CheckReport, check_id: &str) -> Option<UtilisationBinding> {
     binding_by(report, |c| c.id == check_id)
 }
 
 /// 📶️ A binding for a ratio computed in the scene: status from the ratio, check id from the report.
-pub(crate) fn computed_binding(check_id: String, ratio: f64) -> UtilisationBinding {
+pub fn computed_binding(check_id: String, ratio: f64) -> UtilisationBinding {
     let status = scene::utilisation_status(ratio, 0.9);
     UtilisationBinding { check_id, ratio: ratio.max(0.0), status, per_station: None, stale: false }
 }
 
-pub(crate) fn ring(points: &[Vec3]) -> Polygon3 {
+pub fn ring(points: &[Vec3]) -> Polygon3 {
     Polygon3 { outer: Ring3 { points: points.to_vec() }, holes: Vec::new() }
 }
 
-pub(crate) fn polygon2(points: &[(f64, f64)]) -> Polygon2 {
+pub fn polygon2(points: &[(f64, f64)]) -> Polygon2 {
     Polygon2 { outer: Ring2 { points: points.iter().map(|p| Vec2::new(p.0, p.1)).collect() }, holes: Vec::new() }
 }
 
-pub(crate) fn surface(points: &[Vec3]) -> Geometry {
+pub fn surface(points: &[Vec3]) -> Geometry {
     Geometry::Surface(SurfaceGeometry { shape: SurfaceShape::Polygon { polygon: ring(points) } })
 }
 
 /// 🧱️ Accumulating triangle mesh of cuboids in wall coordinates, transformed by the wall pose.
 #[derive(Default)]
-pub(crate) struct MeshBuilder {
+pub struct MeshBuilder {
     vertices: Vec<Vec3>,
     triangles: Vec<Triangle>,
 }
 
 impl MeshBuilder {
-    pub(crate) fn cuboid(&mut self, pose: &WallPose, x: (f64, f64), y: (f64, f64), z: (f64, f64)) {
+    pub fn cuboid(&mut self, pose: &WallPose, x: (f64, f64), y: (f64, f64), z: (f64, f64)) {
         const QUADS: [[u32; 4]; 6] = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
         let base = self.vertices.len() as u32;
         for zi in [z.0, z.1] {
@@ -193,7 +202,7 @@ impl MeshBuilder {
         }
     }
 
-    pub(crate) fn prism(&mut self, pose: &WallPose, bottom: (f64, f64), top: (f64, f64), y: (f64, f64), z: (f64, f64)) {
+    pub fn prism(&mut self, pose: &WallPose, bottom: (f64, f64), top: (f64, f64), y: (f64, f64), z: (f64, f64)) {
         const QUADS: [[u32; 4]; 6] = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
         let base = self.vertices.len() as u32;
         for (zi, x) in [(z.0, bottom), (z.1, top)] {
@@ -208,7 +217,7 @@ impl MeshBuilder {
     }
 
     /// 🧱️ A hexahedron over the x range between two z levels whose y range changes from `bottom` to `top` (a trapezoid in the y–z plane extruded along x).
-    pub(crate) fn frustum(&mut self, pose: &WallPose, x: (f64, f64), bottom: (f64, f64), top: (f64, f64), z: (f64, f64)) {
+    pub fn frustum(&mut self, pose: &WallPose, x: (f64, f64), bottom: (f64, f64), top: (f64, f64), z: (f64, f64)) {
         const QUADS: [[u32; 4]; 6] = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
         let base = self.vertices.len() as u32;
         for (zi, y) in [(z.0, bottom), (z.1, top)] {
@@ -223,7 +232,7 @@ impl MeshBuilder {
     }
 
     /// 📏️ A square-section rod of half width `half` between two points `(x, y, z)` in wall coordinates.
-    pub(crate) fn rod(&mut self, pose: &WallPose, a: [f64; 3], b: [f64; 3], half: f64) {
+    pub fn rod(&mut self, pose: &WallPose, a: [f64; 3], b: [f64; 3], half: f64) {
         const QUADS: [[u32; 4]; 6] = [[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [1, 2, 6, 5], [2, 3, 7, 6], [3, 0, 4, 7]];
         let cross = |p: [f64; 3], q: [f64; 3]| [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
         let unit = |p: [f64; 3]| {
@@ -252,7 +261,7 @@ impl MeshBuilder {
     }
 
     /// 📏️ A thin sheet over a convex polygon of points `(x, y, z)` in wall coordinates, visible from both sides.
-    pub(crate) fn sheet(&mut self, pose: &WallPose, points: &[[f64; 3]]) {
+    pub fn sheet(&mut self, pose: &WallPose, points: &[[f64; 3]]) {
         let base = self.vertices.len() as u32;
         self.vertices.extend(points.iter().map(|p| pose.at(p[0], p[1], p[2])));
         for k in 1..points.len().saturating_sub(1) as u32 {
@@ -261,21 +270,21 @@ impl MeshBuilder {
         }
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.triangles.is_empty()
     }
 
-    pub(crate) fn points(&self) -> &[Vec3] {
+    pub fn points(&self) -> &[Vec3] {
         &self.vertices
     }
 
-    pub(crate) fn solid(self) -> Geometry {
+    pub fn solid(self) -> Geometry {
         Geometry::Solid(SolidGeometry { shape: SolidShape::Mesh { vertices: self.vertices, triangles: self.triangles } })
     }
 }
 
 /// 🧱️ Everything one scene entity needs before sealing; `nested` is the path below the wall row (`.openings[id=win-1]`), `owner_path` the path of an entity whose document row is not below a wall (`chases[id=c1]`).
-pub(crate) struct Spec {
+pub struct Spec {
     pub kind: EntityKind,
     pub id: String,
     pub nested: String,
@@ -295,11 +304,11 @@ pub(crate) struct Spec {
 }
 
 impl Spec {
-    pub(crate) fn new(kind: EntityKind, id: impl Into<String>, geometry: Geometry, role: MaterialRole, layer: &'static str, name: LocalizedCopy) -> Self {
+    pub fn new(kind: EntityKind, id: impl Into<String>, geometry: Geometry, role: MaterialRole, layer: &'static str, name: LocalizedCopy) -> Self {
         Self { kind, id: id.into(), nested: String::new(), owner_path: None, geometry, role, channel: None, binding: None, detail: name.clone(), name, layer, handles: Vec::new(), opacity: 1.0, hatch: None, error: false, deformation: None }
     }
 
-    pub(crate) fn build(self) -> SceneEntity {
+    pub fn build(self) -> SceneEntity {
         let (more_en, more_de) = utilisation_words(&self.binding);
         let failing = self.error || self.binding.as_ref().is_some_and(|b| b.status == scene::CheckStatus::Fail);
         let path = self.owner_path.clone().unwrap_or_else(|| format!("walls[id={}]{}", base_id(&self.id), self.nested));
@@ -329,7 +338,7 @@ impl Spec {
 
 /// 📥️ Append-only scene accumulator of one projection part: entities in document order, owned annotations and tracks, legends and the points that bound the part.
 #[derive(Default)]
-pub(crate) struct Out {
+pub struct Out {
     pub entities: Vec<SceneEntity>,
     pub annotations: Vec<Annotation>,
     pub tracks: Vec<ParameterTrack>,
@@ -350,7 +359,7 @@ enum Scope {
 
 impl Out {
     /// 🎯️ An accumulator that keeps only what belongs to `part`: the live scene projects one wall, or the global rest, at a time.
-    pub(crate) fn scoped(part: Part<'_>) -> Self {
+    pub fn scoped(part: Part<'_>) -> Self {
         let scope = match part {
             Part::All => Scope::All,
             Part::Entity(id) => Scope::Entity(id.to_owned()),
@@ -368,17 +377,17 @@ impl Out {
     }
 
     /// 🎯️ Whether the entity `id` is part of this projection; modules test it before building an entity's geometry.
-    pub(crate) fn wants(&self, id: &str) -> bool {
+    pub fn wants(&self, id: &str) -> bool {
         self.part().wants(id)
     }
 
     /// 🔗️ From now on annotations and tracks belong to no entity.
-    pub(crate) fn global(&mut self) {
+    pub fn global(&mut self) {
         self.owner = None;
     }
 
     /// 📥️ Pushes an entity built outside the spec builder (the case forms of the projection kit); its document row is the case of its base id.
-    pub(crate) fn push_entity(&mut self, entity: SceneEntity, points: &[Vec3]) {
+    pub fn push_entity(&mut self, entity: SceneEntity, points: &[Vec3]) {
         self.owner = Some(case_ref(base_id(&entity.entity.id)));
         if !self.wants(&entity.entity.id) {
             return;
@@ -387,7 +396,7 @@ impl Out {
         self.entities.push(entity);
     }
 
-    pub(crate) fn push(&mut self, spec: Spec, points: &[Vec3]) {
+    pub fn push(&mut self, spec: Spec, points: &[Vec3]) {
         self.owner = Some(wall_ref(base_id(&spec.id)));
         if !self.wants(&spec.id) {
             return;
@@ -406,27 +415,27 @@ impl Out {
         true
     }
 
-    pub(crate) fn annotate(&mut self, annotation: Annotation, anchor: &Vec3) {
+    pub fn annotate(&mut self, annotation: Annotation, anchor: &Vec3) {
         if self.link(OwnedKind::Annotation, annotation.id()) {
             self.points.push(anchor.clone());
             self.annotations.push(annotation);
         }
     }
 
-    pub(crate) fn track(&mut self, track: ParameterTrack) {
+    pub fn track(&mut self, track: ParameterTrack) {
         if self.link(OwnedKind::Track, &track.id) {
             self.tracks.push(track);
         }
     }
 
-    pub(crate) fn into_fragment(self) -> Fragment {
+    pub fn into_fragment(self) -> Fragment {
         let bounds = Aabb::of_points(&self.points);
         Fragment { entities: self.entities, annotations: self.annotations, legends: self.legends, layers: Vec::new(), tracks: self.tracks, owners: self.owners, bounds }
     }
 }
 
 /// 🏁️ The global parts of the merged scene: used layers, the utilisation and role legends in front of the field legends of the fragments, and the description.
-pub(crate) fn finish(scene: &mut StructuralScene, description: LocalizedCopy) {
+pub fn finish(scene: &mut StructuralScene, description: LocalizedCopy) {
     let used = projection_kit::legends::used_layers(&scene.entities, &scene.annotations, LAYER_ANNOTATIONS);
     let roles = role_legend(&scene.entities);
     let fields = std::mem::take(&mut scene.legends);
@@ -440,7 +449,7 @@ pub(crate) fn finish(scene: &mut StructuralScene, description: LocalizedCopy) {
 }
 
 /// 🌈️ The scalar legend of a utilisation field with the viridis ramp 0 to 1,2, pushed once per field id.
-pub(crate) fn field_legend(legends: &mut Vec<Legend>, id: &str, title: LocalizedCopy) {
+pub fn field_legend(legends: &mut Vec<Legend>, id: &str, title: LocalizedCopy) {
     if !legends.iter().any(|l| l.id == id) {
         legends.push(Legend { id: id.into(), title, scale: LegendScale::Scalar { field_id: id.into(), map: ColourMapRef { id: "viridis".into(), min: 0.0, max: 1.2 }, unit: QuantityKind::Dimensionless } });
     }
@@ -465,7 +474,7 @@ fn role_legend(entities: &[SceneEntity]) -> Vec<LegendRole> {
     })
 }
 
-const MEMBER_TAGS: [(&str, &str); 7] = [("piers", PIER_TAG), ("lintels", LINTEL_TAG), ("ties", TIE_TAG), ("prestress", TENDON_TAG), ("confined", COLUMN_TAG), ("flanges", super::lateral::FLANGE_TAG), ("bars", BAR_TAG)];
+const MEMBER_TAGS: [(&str, &str); 7] = [("piers", PIER_TAG), ("lintels", LINTEL_TAG), ("ties", TIE_TAG), ("prestress", TENDON_TAG), ("confined", COLUMN_TAG), ("flanges", FLANGE_TAG), ("bars", BAR_TAG)];
 
 fn member_ids<'a>(wall: &'a model::MasonryWall, collection: &str) -> Vec<&'a str> {
     match collection {
@@ -515,7 +524,7 @@ fn sub_tag(document: &model::En1996Snapshot, wall: &model::MasonryWall, check_id
 pub fn owner_entity(document: &model::En1996Snapshot, check: &norm::CheckResult) -> Option<String> {
     let id = check.id.as_str();
     let subject = base_id(&check.subject.entity_id);
-    if document.cases.iter().any(|c| c.id == subject && super::cases::declared(c)) {
+    if document.cases.iter().any(|c| c.id == subject && case_declared(c)) {
         return Some(subject.to_owned());
     }
     if let Some(chase) = id.starts_with("en1996.8.6.").then(|| document.chases.iter().find(|c| id.ends_with(&format!(".{}", c.id)) && document.walls.iter().any(|w| w.id == c.wall_id))).flatten() {
@@ -563,4 +572,19 @@ pub const DRAWN_FAMILIES: &[&str] = &[
 /// 📊️ Whether a dedicated diagram draws the check `check_id`; the others are outcome bars.
 pub fn is_drawn_family(check_id: &str) -> bool {
     DRAWN_FAMILIES.iter().any(|prefix| check_id.starts_with(prefix))
+}
+
+/// 🧊️ Whether the entry of `row` declares geometry, so the case stands in the scene.
+pub fn case_declared(row: &model::CaseRow) -> bool {
+    forms::declared::<En1996Cases>(row).is_some()
+}
+
+/// 🥞️ The walls that declare a floor diaphragm stiffness.
+pub fn diaphragm_walls(document: &model::En1996Snapshot) -> Vec<&model::MasonryWall> {
+    document.walls.iter().filter(|w| w.diaphragm_stiffness_n_per_m > 0.0).collect()
+}
+
+/// 🆔️ The id of the compression check of `wall` under `load_case` at `station`: 0 top, 1 middle, 2 bottom.
+pub fn compression_id(wall: &str, load_case: &str, station: usize) -> String {
+    if station == 1 { format!("en1996.6.1.2.compression.mid.{wall}.{load_case}") } else { format!("en1996.6.1.2.compression.{wall}.{load_case}") }
 }

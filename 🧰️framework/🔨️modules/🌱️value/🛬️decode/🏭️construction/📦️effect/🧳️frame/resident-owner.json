@@ -11,6 +11,9 @@
   "semanticActions": 2,
   "seedParts": 80,
   "cancelAfter": 3,
+  "settledCancelActions": 2,
+  "settledCancelBaseWork": 1,
+  "unreportedWorkCharged": true,
   "stock": {
     "items": 128,
     "copyBytes": 524288,

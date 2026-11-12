@@ -29,3 +29,4 @@ semio-framework-value = { path = "../../../../../../../../../../🔨️modules/�
 semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

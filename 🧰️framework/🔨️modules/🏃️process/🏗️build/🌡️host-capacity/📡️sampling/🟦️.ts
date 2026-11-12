@@ -192,6 +192,11 @@ export function currentHostProbeV1(signal?:AbortSignal):HostProbeV1{
  return Object.freeze({platform,run:runHostCommandV1,read:readHostTextV1,...signal?{signal}:{}});
 }
 
+/** 🌍️ The probe of the whole machine for a process that lives in a memory-limited cgroup (the resident graph service): the cgroup files that bound the caller are never read, so the sample is what the host has, not what the caller may use, and a reservation made by such a process is measured against the machine every build is admitted against. */
+export function wholeHostProbeV1(probe:HostProbeV1):HostProbeV1{
+ return Object.freeze({...probe,read:(path:string)=>path==="/proc/self/cgroup"?Promise.resolve(null):probe.read(path)});
+}
+
 /** 📋️ The one PowerShell command that lists every Windows process as `pid ppid working-set-kilobytes` lines, the shape of `ps -A -o pid=,ppid=,rss=`, so one parser and one tree sum serve macOS and Windows. */
 export const WINDOWS_PROCESS_TABLE_COMMAND=OBSERVERS.platforms.win32.resident.arguments[3]!;
 

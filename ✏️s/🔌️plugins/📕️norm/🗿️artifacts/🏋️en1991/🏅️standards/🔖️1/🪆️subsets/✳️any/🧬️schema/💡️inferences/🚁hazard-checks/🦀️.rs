@@ -1,15 +1,21 @@
 //! 🚁 Checks of the six hazard and execution collections: helicopter hard landings (EN 1991-1-7, 4.7), horizontal ties (Annex A), derailment (4.4), the construction loads of a stage (EN 1991-1-6, Annex A.2), falling
 //! loads and execution imperfections, and the altitude-corrected isotherm reference of EN 1991-1-5 Annex A. Registry values are unverified and reported as such; mechanics-only checks carry no normative factor.
 
-use super::*;
+use semio_s_artifact_norm_en1991_inferences_rail_silo::{covers, first_non_positive, positive};
+use semio_s_artifact_norm_en1991_checks::{copy, force_n as force, part_1_6, pressure_pa as pressure, raise_force_remedy, raise_pressure_remedy, temp_k as temp};
+use semio_s_plugin_norm_compliance::{CheckReport, ClauseId, SubjectRef};
+use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
 use semio_s_artifact_norm_en1991_model::{ConstructionLoad, DerailmentCase, ExecutionImperfection, FallingLoad, HelicopterLanding, TieRun};
 use semio_s_plugin_norm_compliance::{ndp_common, AnnexChoice};
+
+#[path = "../🧷️wave3-rows/🦀️.rs"]
+pub mod wave3_rows;
 
 const G: f64 = 9.80665;
 const KIND_INTERNAL: u8 = 1;
 const LOAD_KINDS: [&str; 6] = ["Q_ca", "Q_cb", "Q_cc", "Q_cd", "Q_ce", "Q_cf"];
 
-pub(crate) use super::rail_silo::{covers, first_non_positive, positive};
 
 /// 🚁 Equivalent static force F_d = C √m (N) of a helicopter hard landing, C from the registry.
 pub fn helicopter_force_n(mass_kg: f64) -> f64 { ndp_common("ndp.en1991.1-7.helicopter-c") * mass_kg.sqrt() }
@@ -31,7 +37,7 @@ pub fn isotherm_reference(altitude_m: f64) -> (f64, f64) {
 }
 
 /// 🚁 The row checks of the six collections and the isotherm reference, in the order of the units of [`En1991Units`].
-pub(super) fn check_rows(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport, scope: Scope<'_>) {
+pub fn check_rows(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport, scope: Scope<'_>) {
     for (_, row) in document.helicopter_landings.iter().enumerate().filter(|(i, _)| scope.admits("helicopterLandings", *i)) { check_helicopter(annex, report, row); }
     for (_, row) in document.tie_runs.iter().enumerate().filter(|(i, _)| scope.admits("tieRuns", *i)) { check_tie(annex, report, row); }
     for (index, row) in document.construction_loads.iter().enumerate().filter(|(i, _)| scope.admits("constructionLoads", *i)) { check_construction_load(document, annex, report, index, row); }
@@ -41,7 +47,7 @@ pub(super) fn check_rows(document: &En1991Snapshot, annex: AnnexChoice, report: 
 }
 
 /// 🌡️ Informative: the entered T_max and T_min against the altitude-corrected isotherm reference (the national maps are not reproduced).
-pub(super) fn check_isotherm(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
+pub fn check_isotherm(document: &En1991Snapshot, annex: AnnexChoice, report: &mut CheckReport) {
     let (t_max, t_min) = isotherm_reference(document.altitude);
     let subject = SubjectRef::new("thermal", "tMax", copy("Isotherm reference", "Isothermen-Referenz"));
     let margin = (document.t_max - t_max).min(t_min - document.t_min);

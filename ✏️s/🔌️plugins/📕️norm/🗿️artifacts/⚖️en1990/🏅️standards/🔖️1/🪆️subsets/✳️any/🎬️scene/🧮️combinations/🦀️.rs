@@ -2,10 +2,15 @@
 //!
 //! The factors do not depend on the member influences, so the columns are generated once from the unit-influence action list of the document; the generator is the one the compliance report uses.
 
-use super::checks::{combinations, offers_610ab, Action, ActionClass, Combination, Equation, FactorSet};
-use super::inferences::{actions_with, context_for, member_actions};
-use super::model::En1990Snapshot;
-use super::norm::CheckResult;
+extern crate semio_s_artifact_norm_en1990_checks as checks;
+extern crate semio_s_artifact_norm_en1990_inferences as inferences;
+extern crate semio_s_artifact_norm_en1990_model as model;
+extern crate semio_s_plugin_norm_compliance as norm;
+
+use checks::{combinations, offers_610ab, Action, ActionClass, Combination, Equation, FactorSet};
+use inferences::{actions_with, context_for, member_actions};
+use model::En1990Snapshot;
+use norm::CheckResult;
 
 /// 🏷️ The limit-state family of a matrix column.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

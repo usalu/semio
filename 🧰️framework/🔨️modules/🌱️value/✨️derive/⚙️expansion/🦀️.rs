@@ -445,7 +445,7 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
                 }
                 None => quote! { #value_crate::FromValue::from_value(#remaining).map_err(|error| error.under(#wire_name))? },
             };
-            return quote! { let #ident = #found; };
+            return if field.attrs.effective_deserialize_with().is_some() { quote! { let #ident = #found; } } else { quote! { let #ident = #value_crate::FromValue::guard_decoded(#found); } };
         }
         let missing = match (&field.attrs.default, container.default, field.attrs.required) {
             (_, _, true) => quote! {
@@ -468,18 +468,22 @@ fn from_value_struct_fields(fields: &[NamedField], container: &ContainerAttrs, v
             }
             None => quote! { #value_crate::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))? },
         };
-        quote! {
-            let #ident = match __entries.iter().find(|(k, _)| k == #wire_name) {
+        let read = quote! {
+            match __entries.iter().find(|(k, _)| k == #wire_name) {
                 Some((_, value)) => #found,
                 None => #missing,
-            };
-        }
+            }
+        };
+        if field.attrs.effective_deserialize_with().is_some() { quote! { let #ident = #read; } } else { quote! { let #ident = #value_crate::FromValue::guard_decoded(#read); } }
     });
-    let idents = fields.iter().map(|field| &field.ident);
+    let assigns = fields.iter().map(|field| {
+        let ident = &field.ident;
+        if field.attrs.skip || field.attrs.effective_deserialize_with().is_some() { quote! { #ident } } else { quote! { #ident: #ident.take() } }
+    });
     quote! {
         #deny_check
         #(#reads)*
-        Ok(Self { #(#idents),* })
+        Ok(Self { #(#assigns),* })
     }
 }
 //#endregion 🔖️StructPlan
@@ -559,12 +563,18 @@ fn variant_field_from_value_read(field: &syn::Field, field_attrs: &FieldAttrs, w
         }
         None => quote! { #value_crate::FromValue::from_value(value.clone()).map_err(|error| error.under(#wire_name))? },
     };
-    Ok(quote! {
-        let #ident = match #entries_ident.iter().find(|(k, _)| k == #wire_name) {
+    let read = quote! {
+        match #entries_ident.iter().find(|(k, _)| k == #wire_name) {
             Some((_, value)) => #found,
             None => #missing,
-        };
-    })
+        }
+    };
+    if field_attrs.effective_deserialize_with().is_some() { return Ok(quote! { let #ident = #read; }) }
+    Ok(quote! { let #ident = #value_crate::FromValue::guard_decoded(#read); })
+}
+/// 🛡️ Publishes a guarded variant field once every sibling field decoded; a skipped or custom-decoded field was never guarded.
+fn variant_field_from_value_release(field_attrs: &FieldAttrs, ident: &syn::Ident) -> proc_macro2::TokenStream {
+    if field_attrs.skip || field_attrs.effective_deserialize_with().is_some() { quote! {} } else { quote! { let #ident = #ident.take(); } }
 }
 /// 🧹 Builds the `Self::Variant { … }` destructure pattern for `ToValue`'s per-field push
 /// generation — a `skip` field destructures as `ident: _` (still exhaustive) instead of binding an

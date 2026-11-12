@@ -1,9 +1,8 @@
 //! 🧪️ A real failed Source allocation retains and returns its original paid inputs.
 use semio_framework_job_context::*;
 use semio_framework_value_control_contract::{RetainedAllocationEffect,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetainedWorkPoll,RetirementDemand,ValueError,ValueRefusalKind};
-use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet,demand_grant as grant};
 use semio_framework_value_testing_allocator::{observe_retirement_allocations as observe,refuse_one_allocation_on_this_thread as refuse};
-fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn step(bank:&mut EffectBank,demand:RetirementDemand,work:u64,run:impl FnOnce(&mut RetainedAllocationEffect<'_>)->RetainedWorkOutcome)->RetainedCloneStep{let issued=grant(demand);let((poll,actual),heap)=observe(||bank.run(issued,work,|effect|RetainedWorkPoll::Complete(run(effect))));let RetainedWorkPoll::Complete(turn)=poll else{panic!("funded original birth remained pending")};let result=turn.result.unwrap();assert_eq!(actual,if demand.capacity_bytes==0{None}else{Some(demand.capacity_bytes)});bank.post(result.progress(),issued,heap);assert_eq!(bank.take_admitted(),Some(true));result}
 #[test]fn source_allocator_failure_returns_the_same_paid_inputs(){
  let law:serde_json::Value=serde_json::from_str(include_str!("source-birth.json")).unwrap();let mut bank=EffectBank::new(Wallet::from_profile(&serde_json::json!({"items":128,"copyBytes":1048576,"capacityBytes":1048576,"releaseBytes":1048576,"depth":64,"fuel":256})));

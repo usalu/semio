@@ -2,18 +2,7 @@
 use super::*;
 use crate::os_store as store;
 use store::ErasedSnapshotRetirement;
-use std::{alloc::{GlobalAlloc,Layout,System},cell::Cell};
-thread_local! {static EVENTS:Cell<Option<(usize,usize)>>=const {Cell::new(None)};}
-struct ObservedAllocator;
-fn event(allocated:usize,released:usize){let _=EVENTS.try_with(|events|{if let Some((a,r))=events.get(){events.set(Some((a+allocated,r+released)));}});}
-unsafe impl GlobalAlloc for ObservedAllocator {
- unsafe fn alloc(&self,layout:Layout)->*mut u8{let p=unsafe{System.alloc(layout)};if !p.is_null(){event(layout.size(),0)}p}
- unsafe fn alloc_zeroed(&self,layout:Layout)->*mut u8{let p=unsafe{System.alloc_zeroed(layout)};if !p.is_null(){event(layout.size(),0)}p}
- unsafe fn realloc(&self,p:*mut u8,layout:Layout,size:usize)->*mut u8{let next=unsafe{System.realloc(p,layout,size)};if !next.is_null(){event(size,layout.size())}next}
- unsafe fn dealloc(&self,p:*mut u8,layout:Layout){event(0,layout.size());unsafe{System.dealloc(p,layout)}}
-}
-#[global_allocator]static ALLOCATOR:ObservedAllocator=ObservedAllocator;
-fn observe<T>(action:impl FnOnce()->T)->(T,(usize,usize)){EVENTS.with(|events|assert!(events.replace(Some((0,0))).is_none()));let result=action();let heap=EVENTS.with(|events|events.replace(None).unwrap());(result,heap)}
+use semio_framework_value_testing_allocator::observe_retirement_allocations as observe;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn root(value:&serde_json::Value)->GenerationPlayRoot{semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn quoted_grant(owner:&GenerationRootRetirement,baseline:usize)->RetainedCloneGrant{let copy=baseline.max(owner.next_copy_byte_demand().unwrap());RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}}

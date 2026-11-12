@@ -38,10 +38,9 @@ mod agent_lane_preview_tests {
         pub fn new(script: Vec<ScriptedStep>) -> Self {
             Self { script, cursor: 0, closing: false, released: false, outcomes: semio_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(), pending: None }
         }
-    }
 
-    impl semio_framework_job::InteractiveJob for ScriptedPreviewJob {
-        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        /// 🎬️ Reports the script entry of this turn, borrowing the job's own outcome storage.
+        fn advance_script<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
             use semio_plugin_decl_app::tool_contract::ReservedOutcomeKind;
             use semio_framework_job::JobOutcomeBorrow;
             if cx.is_cancelled() {
@@ -72,6 +71,12 @@ mod agent_lane_preview_tests {
                 ScriptedStep::Fault(detail) => (ReservedOutcomeKind::Fault, detail.clone()),
             });
             Ok(None)
+        }
+    }
+
+    impl semio_framework_job::InteractiveJob for ScriptedPreviewJob {
+        fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _return_claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+            semio_framework_job::InteractiveJobStep::from_callback(self.advance_script(cx))
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -119,6 +124,53 @@ mod agent_lane_preview_tests {
         }
     }
 
+    /// 🏃️ Drives one scripted job through the production preview driver turn by turn on a fixture caller, enforcing the fixture's wall and turn budgets as the host driver does and closing the driver on every path.
+    fn drive_preview(case: &serde_json::Value, name: &str) -> Result<u64, semio_framework_job::OriginalTurnFailure> {
+        let stride = case["clockMicrosPerRead"].as_u64().expect("clock stride");
+        SCRIPTED_CLOCK.with(|clock| clock.set((1_000_000, stride)));
+        let policy = semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy();
+        let stock = semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 22, maximum_copy_bytes: 1 << 32, maximum_capacity_bytes: 1 << 32, maximum_release_bytes: 1 << 32, maximum_depth: 1 << 10 };
+        let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), stock, scripted_now_us, u64::MAX, u64::MAX / 2);
+        if case["cancelled"].as_bool() == Some(true) {
+            caller.cancel().cancel_now();
+        }
+        let config = semio_framework_job_worker_authority::BatchDriveConfig { retained: policy.maintenance, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 };
+        let mut job = Some(ScriptedPreviewJob::new(case["script"].as_array().expect("script").iter().map(scripted_step).collect()));
+        let mut owner = None;
+        let grant = caller.within_stock(policy.maintenance);
+        caller.turn(grant, |cx| { owner = Some(semio_plugin_job::OriginalPreviewDrive::new(job.take().expect("one scripted job"), config, cx)); Ok(()) }).expect("the preview source births");
+        let mut owner = owner.expect("the preview source births");
+        let started = SCRIPTED_CLOCK.with(|clock| clock.get().0);
+        let mut turns = 0u64;
+        let verdict = loop {
+            let grant = caller.within_stock(policy.maintenance);
+            match caller.turn(grant, |cx| drive_agent_lane_preview(&mut owner, name, cx)) {
+                Ok(Some(steps)) => break Ok(steps),
+                Ok(None) => {}
+                Err(failure) => break Err(failure),
+            }
+            turns += 1;
+            if turns >= AGENT_LANE_PREVIEW_TURNS || SCRIPTED_CLOCK.with(|clock| clock.get().0) - started >= AGENT_LANE_PREVIEW_WALL_US {
+                break Err(Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("interactive-job.preview-budget"), format!("the preview of action '{name}' exceeded its budget")).into());
+            }
+        };
+        owner.begin_close();
+        for _ in 0..AGENT_LANE_PREVIEW_TURNS {
+            if owner.terminal_is_empty() {
+                break;
+            }
+            let grant = caller.within_stock(policy.close);
+            caller.turn(grant, |cx| owner.close_step(cx).map(drop)).expect("the preview driver closes");
+        }
+        assert!(owner.terminal_is_empty(), "{name}: the preview driver closes to terminal-empty");
+        owner.verdict = None;
+        while !caller.terminal_is_empty() {
+            let grant = caller.within_stock(policy.close);
+            caller.retire_step(grant).expect("the fixture caller retires");
+        }
+        verdict
+    }
+
     /// ⚖️ LAW: every case of the language-agnostic agent-lane preview fixture answers exactly its verdict when its
     /// scripted job runs through the real preview driver (a session the driver could not close would answer
     /// `interactive-job.preview-close` instead).
@@ -133,24 +185,13 @@ mod agent_lane_preview_tests {
             let name = case["name"].as_str().expect("case name");
             let stride = case["clockMicrosPerRead"].as_u64().expect("clock stride");
             SCRIPTED_CLOCK.with(|clock| clock.set((1_000_000, stride)));
-            let job = ScriptedPreviewJob::new(case["script"].as_array().expect("script").iter().map(scripted_step).collect());
-            let cancel = semio_framework_job::root_cancel_token();
-            if case["cancelled"].as_bool() == Some(true) {
-                cancel.cancel_now();
-            }
-            let params = semio_framework_job_worker_authority::BatchJobParams {
-                operation: semio_framework_job::allocate_operation_id(),
-                generation: semio_framework_job::Generation(1),
-                cancel,
-                config: semio_framework_job_worker_authority::BatchDriveConfig { retained: semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().maintenance, site: "agent_lane_preview_law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1_000, step_budget_us: 7_500 },
-                now_us: scripted_now_us,
-            };
-            let verdict = drive_agent_lane_preview(job, params, semio_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy().close, name);
+            let verdict = drive_preview(case, name);
             let expected = &case["verdict"];
             match (expected["steps"].as_u64(), &expected["fault"]) {
-                (Some(steps), _) => assert_eq!(verdict.as_ref().map_err(|fault| fault.code.0.clone()), Ok(&steps), "{name}"),
+                (Some(steps), _) => assert_eq!(verdict.as_ref().map_err(|failure| failure.primary_fault().map(|fault| fault.code.0.clone())), Ok(&steps), "{name}"),
                 (None, fault) => {
-                    let refused = verdict.expect_err(name);
+                    let failure = verdict.expect_err(name);
+                    let refused = failure.primary_fault().unwrap_or_else(|| panic!("{name}: the verdict is a typed fault"));
                     assert_eq!(refused.code.0, fault["code"].as_str().expect("fault code"), "{name}: {}", refused.message);
                     if let Some(message) = fault["message"].as_str() {
                         assert_eq!(refused.message, message, "{name}");

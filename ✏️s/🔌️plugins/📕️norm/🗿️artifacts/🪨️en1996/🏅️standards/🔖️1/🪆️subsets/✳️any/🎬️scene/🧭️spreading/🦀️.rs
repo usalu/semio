@@ -1,5 +1,6 @@
 //! 🧭️ Spreading: the load spread of every concentrated load as a 3D wedge through the wall (EN 1996-1-1, 6.1.3): the bearing length at the top widens at 60° to the horizontal, to the effective length l_efm at mid-height, clipped to the wall, extruded through the thickness (the flat face view is `spread-…` in the loads module); the wedge carries the utilisation of the bearing check.
 
+use super::scene::projection_kit::{loc};
 use super::kit::*;
 use super::layout::{Layout, WallPose, EPS};
 use super::masonry as m;
@@ -14,13 +15,6 @@ const BEARING_DEPTH: f64 = 0.05;
 pub fn spread_extent(centre: f64, bearing: f64, drop: f64, length: f64) -> (f64, f64) {
     let reach = bearing * 0.5 + drop / 3f64.sqrt();
     ((centre - reach).max(0.0), (centre + reach).min(length))
-}
-
-/// 📐️ The bearing area A_b, the effective area A_ef = l_efm·t (60° spread to mid-height, clipped to the effective wall length) and the enhancement β of Eq. 6.10 of a concentrated load, the same terms the check evaluates.
-pub fn bearing_terms(wall: &MasonryWall, c: &super::model::ConcentratedLoad) -> (f64, f64, f64) {
-    let ab = if c.bearing_area_m2 > 0.0 { c.bearing_area_m2 } else { c.bearing_length_m * wall.thickness_m };
-    let a_ef = (c.bearing_length_m + wall.height_m / 3f64.sqrt()).min(m::effective_length_m(wall)) * wall.thickness_m;
-    (ab, a_ef, m::concentrated_beta(c.distance_a1_m.max(0.0), wall.height_m, ab, a_ef))
 }
 
 fn wedge(wall: &MasonryWall, pose: &WallPose, centre: f64, bearing: f64) -> Option<(MeshBuilder, f64)> {

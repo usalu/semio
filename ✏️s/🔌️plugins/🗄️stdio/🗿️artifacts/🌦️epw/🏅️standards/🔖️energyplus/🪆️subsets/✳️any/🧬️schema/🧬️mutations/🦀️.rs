@@ -47,7 +47,7 @@ pub mod set_record_field;
 pub mod set_typical_extreme_periods;
 //#endregion 🔖️Leaves
 
-/// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
+/// 🧭️ `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
 /// one leaf payload (a unit variant wraps none) and asserts `is_approved_verb(SEMANTICS.verb)`,
 /// and `no` is not an approved verb.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

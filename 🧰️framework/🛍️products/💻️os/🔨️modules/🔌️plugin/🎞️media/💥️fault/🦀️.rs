@@ -1,3 +1,4 @@
+use semio_framework_value::retirement::{RetireOwned as MediaRetireOwned, controlled::ControlledRetirement as MediaControlled};
 #[derive(semio_framework_value::RetireOwned)]
 struct MediaFaultReceiving {
     pub source: Option<MediaArtifactError>,

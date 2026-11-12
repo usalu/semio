@@ -17,6 +17,8 @@ pub trait ArtifactOriginalCommandProducer<C:RetireOwned+Send+Sync+'static>:Send{
  fn take_demands(&self)->Result<RetirementDemand,ValueError>;
  fn take_into(&mut self,command:&mut Option<Box<C>>,wire:&mut Option<RetainedToolWireInput>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
+ /// 🧮️ Quotes the items the next close step posts, which the physical quote does not carry.
+ fn close_items(&self)->usize;
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
  fn terminal_is_empty(&self)->bool;
 }

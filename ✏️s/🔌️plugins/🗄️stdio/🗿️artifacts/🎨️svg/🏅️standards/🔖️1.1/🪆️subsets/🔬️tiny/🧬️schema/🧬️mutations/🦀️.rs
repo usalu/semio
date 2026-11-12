@@ -53,7 +53,7 @@ pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::sc
 pub use semio_s_artifact_stdio_svg_mutations::standards::v1_1::subsets::tiny::schema::mutations::strip_non_tiny;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

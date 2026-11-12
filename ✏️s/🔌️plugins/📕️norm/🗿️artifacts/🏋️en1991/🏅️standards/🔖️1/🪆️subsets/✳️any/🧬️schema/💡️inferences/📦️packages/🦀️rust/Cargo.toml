@@ -19,6 +19,9 @@ path = "../../🦀️.rs"
 test-support = ["dep:serde", "semio-s-artifact-norm-en1991-model/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dependencies]
+semio-s-artifact-norm-en1991-inferences-bridge-effects = { workspace = true }
+semio-s-artifact-norm-en1991-inferences-crane-silo = { workspace = true }
+semio-s-artifact-norm-en1991-inferences-hazard = { workspace = true }
 semio-s-artifact-norm-en1991-inferences-rail-silo = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-os-kernel = { workspace = true }

@@ -206,6 +206,144 @@
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "stdio-quick": {
+      "executor": "repo:script",
+      "dependsOn": [],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio quick",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-long": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-quick"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio long",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-exhaustive": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-long"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio exhaustive",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-schema-parity": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-quick"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio schema-parity",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-standards-coverage": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-schema-parity"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio standards-coverage",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-codec": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-standards-coverage"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio codec",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-mutation-law": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-codec"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio mutation-law",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-inference": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-mutation-law"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio inference",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-runtime": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-inference"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio runtime",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
+    },
+    "stdio-fuzz": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-runtime"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio fuzz",
+        "cwd": "."
+      },
+      "cache": false,
+      "metadata": {
+        "semio": {
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
+        }
+      }
+    },
+    "stdio-cross-platform": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "stdio-fuzz"
+      ],
+      "options": {
+        "command": "repo ./✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/📜️script.ts stdio cross-platform",
+        "cwd": "."
+      },
+      "outputs": [],
+      "cache": true
     }
   }
 }

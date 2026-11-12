@@ -33,8 +33,8 @@ semio-framework-replication-mutation = { path = "../../../../../../../../../🧰
 [dev-dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 
-semio-framework-job-native-decode = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

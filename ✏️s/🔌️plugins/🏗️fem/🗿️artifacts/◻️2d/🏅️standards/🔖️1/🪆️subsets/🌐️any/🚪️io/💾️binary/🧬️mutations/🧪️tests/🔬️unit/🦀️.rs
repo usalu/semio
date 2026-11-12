@@ -47,7 +47,7 @@ fn material_field_intent_binary_round_trips_and_agrees_with_text() {
     assert_eq!(decode_op(&bytes).expect("decode sparse material field intent"), operation);
 }
 
-/// 🧬️ The whole-document `SetSnapshot` mutation that used to seed this store round-trip test is
+/// 🧬️ The whole-document mutation that used to seed this store round-trip test is
 /// banned outright (`📓️taxonomy.md`'s forbidden vocabulary — no replacement mutation). Builds the
 /// same `simply_supported_beam_doc` content through a real sequence of semantic mutations instead,
 /// still exercising every collection kind (id-keyed create + a nested load) for the text/pack codecs.

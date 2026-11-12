@@ -70,7 +70,7 @@ mod original_candidate_tests {
             assert_eq!(refused.work, 0);
             assert!(refused.result.unwrap().is_none());
             let turn = original_supersession_candidate(&envelope, grant, u64::MAX);
-            assert_eq!(turn.work, store::os_spr::HISTORY_TRANSITION_SCHEMA.len() as u64 + 2);
+            assert_eq!(turn.work, u128::from(store::os_spr::HISTORY_TRANSITION_SCHEMA.len() as u64 + 2));
             let (actual, progress) = turn.result.unwrap().unwrap();
             assert_eq!(actual, expected);
             assert!(progress.fits(grant));

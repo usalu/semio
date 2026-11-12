@@ -1,19 +1,26 @@
 //! 🧰️ Scene kit: vector helpers, the entity builder, utilisation bindings from the report, layers, legends and the entity-kind registry.
 
-use super::*;
-use super::scene::*;
-pub(crate) use scene::projection_kit::{self, base_id, loc, v3, add, mul, unit, along, member_frame, entity_ref, clause_of, tone_of, utilisation_words, polyline};
+extern crate semio_s_artifact_norm_en1990_checks as checks;
+extern crate semio_s_artifact_norm_en1990_inferences as inferences;
+extern crate semio_s_artifact_norm_en1990_model as model;
+extern crate semio_s_plugin_norm_compliance as norm;
+extern crate semio_s_plugin_norm_structural_scene as scene;
+
+use checks::catalogue::En1990Cases;
+use scene::*;
 use scene::projection::{Fragment, Part};
+use scene::projection_kit::design_case::forms;
+use scene::projection_kit::{self, base_id, loc, unit, entity_ref, utilisation_words};
 use std::collections::BTreeSet;
 
-pub(crate) const LAYER_MEMBERS: &str = "members";
-pub(crate) const LAYER_DECKS: &str = "decks";
-pub(crate) const LAYER_LOADS: &str = "loads";
-pub(crate) const LAYER_SUPPORTS: &str = "supports";
-pub(crate) const LAYER_ANNOTATIONS: &str = "annotations";
-pub(crate) const LAYER_ANALYSES: &str = "analyses";
-pub(crate) const LAYER_CASES: &str = "cases";
-pub(crate) const LAYER_GAMMA: &str = "gamma-bands";
+pub const LAYER_MEMBERS: &str = "members";
+pub const LAYER_DECKS: &str = "decks";
+pub const LAYER_LOADS: &str = "loads";
+pub const LAYER_SUPPORTS: &str = "supports";
+pub const LAYER_ANNOTATIONS: &str = "annotations";
+pub const LAYER_ANALYSES: &str = "analyses";
+pub const LAYER_CASES: &str = "cases";
+pub const LAYER_GAMMA: &str = "gamma-bands";
 
 const LAYERS: [(&str, &str, &str); 8] = [
     (LAYER_MEMBERS, "Members", "Bauteile"),
@@ -78,7 +85,7 @@ fn rows_of(d: &model::En1990Snapshot) -> [(&'static str, Vec<&str>); 13] {
         ("factorOverrides", d.factor_overrides.iter().map(|e| e.id.as_str()).collect()),
         ("trafficGroups", d.traffic_groups.iter().map(|e| e.id.as_str()).collect()),
         ("combinations", vec![COMBINATION_ENTITY]),
-        ("cases", d.cases.iter().filter(|e| super::cases::declared(e)).map(|e| e.id.as_str()).collect()),
+        ("cases", d.cases.iter().filter(|e| case_declared(e)).map(|e| e.id.as_str()).collect()),
     ]
 }
 
@@ -134,7 +141,7 @@ fn model_actions(d: &model::En1990Snapshot) -> impl Iterator<Item = String> + '_
 }
 
 /// 🔗️ The member id plus every bridge SLS id that verifies the same member: the subjects whose checks colour the member.
-pub(crate) fn dependents<'a>(d: &'a model::En1990Snapshot, member: &'a str) -> Vec<&'a str> {
+pub fn dependents<'a>(d: &'a model::En1990Snapshot, member: &'a str) -> Vec<&'a str> {
     std::iter::once(member).chain(d.bridge_sls.iter().filter(|e| e.member_id == member).map(|e| e.id.as_str())).chain(d.fatigue_spectra.iter().filter(|e| e.member_id == member).take(1).map(|e| e.id.as_str())).collect()
 }
 
@@ -215,17 +222,17 @@ pub fn binding(document: &model::En1990Snapshot, report: &norm::CheckReport, ids
 }
 
 /// 🧱️ The section outline of a member: the depth follows the span (L/16, 0.2 to 1.6 m), the width is half of it.
-pub(crate) fn member_depth(span: f64) -> f64 {
+pub fn member_depth(span: f64) -> f64 {
     (span / 16.0).clamp(0.2, 1.6)
 }
 
-pub(crate) fn section_shape(span: f64) -> SectionShape {
+pub fn section_shape(span: f64) -> SectionShape {
     let h = member_depth(span);
     SectionShape::parametric(ProfileKind::Rect, &[("h", h), ("b", h / 2.0)])
 }
 
 /// 🚦️ The tone of one check by id; neutral when the check is absent or not applicable.
-pub(crate) fn check_tone(report: &norm::CheckReport, id: &str) -> Tone {
+pub fn check_tone(report: &norm::CheckReport, id: &str) -> Tone {
     report.checks.iter().find(|c| c.id == id).map_or(Tone::Neutral, |c| match c.status {
         norm::CheckStatus::Fail => Tone::Error,
         norm::CheckStatus::Warning | norm::CheckStatus::UnverifiedBasis => Tone::Warning,
@@ -236,7 +243,7 @@ pub(crate) fn check_tone(report: &norm::CheckReport, id: &str) -> Tone {
 }
 
 /// 🧱️ Everything one scene entity needs before sealing; `ghost` draws an entity that does not take part in the active combination.
-pub(crate) struct Spec {
+pub struct Spec {
     pub kind: EntityKind,
     pub id: String,
     pub collection: &'static str,
@@ -252,7 +259,7 @@ pub(crate) struct Spec {
 }
 
 impl Spec {
-    pub(crate) fn build(self) -> SceneEntity {
+    pub fn build(self) -> SceneEntity {
         let (more_en, more_de) = utilisation_words(&self.binding);
         let failing = self.binding.as_ref().is_some_and(|b| b.status == scene::CheckStatus::Fail);
         SceneEntity {
@@ -281,7 +288,7 @@ impl Spec {
 
 /// 📥️ Append-only scene accumulator of one projection part: entities in document order, owned annotations and tracks, and the points that bound the part.
 #[derive(Default)]
-pub(crate) struct Out {
+pub struct Out {
     pub entities: Vec<SceneEntity>,
     pub annotations: Vec<Annotation>,
     pub tracks: Vec<ParameterTrack>,
@@ -301,7 +308,7 @@ enum Scope {
 
 impl Out {
     /// 🎯️ An accumulator that keeps only what belongs to `part`: the live scene projects one document entity, or the global rest, at a time.
-    pub(crate) fn scoped(part: Part<'_>) -> Self {
+    pub fn scoped(part: Part<'_>) -> Self {
         let scope = match part {
             Part::All => Scope::All,
             Part::Entity(id) => Scope::Entity(id.to_owned()),
@@ -319,17 +326,17 @@ impl Out {
     }
 
     /// 🎯️ Whether the entity `id` is part of this projection; modules test it before building an entity's geometry.
-    pub(crate) fn wants(&self, id: &str) -> bool {
+    pub fn wants(&self, id: &str) -> bool {
         self.part().wants(id)
     }
 
     /// 🔗️ From now on annotations and tracks belong to no entity.
-    pub(crate) fn global(&mut self) {
+    pub fn global(&mut self) {
         self.owner = None;
     }
 
     /// 📥️ Pushes an entity built outside the spec builder (the case forms of the projection kit); `collection` names the document collection that owns it.
-    pub(crate) fn push_entity(&mut self, entity: SceneEntity, collection: &'static str, points: &[Vec3]) {
+    pub fn push_entity(&mut self, entity: SceneEntity, collection: &'static str, points: &[Vec3]) {
         self.owner = Some(entity_ref(EntityKind::Solid, base_id(&entity.entity.id), collection));
         if !self.wants(&entity.entity.id) {
             return;
@@ -338,7 +345,7 @@ impl Out {
         self.entities.push(entity);
     }
 
-    pub(crate) fn push(&mut self, spec: Spec, points: &[Vec3]) {
+    pub fn push(&mut self, spec: Spec, points: &[Vec3]) {
         self.owner = Some(entity_ref(spec.kind, base_id(&spec.id), spec.collection));
         if !self.wants(&spec.id) {
             return;
@@ -348,7 +355,7 @@ impl Out {
     }
 
     /// 🌈️ Pushes a spec whose colour is the scalar field `active` of `fields` (one field per combination column), so the combination track recolours it without re-projecting.
-    pub(crate) fn push_fields(&mut self, spec: Spec, points: &[Vec3], active: String, fields: Vec<ScalarField>) {
+    pub fn push_fields(&mut self, spec: Spec, points: &[Vec3], active: String, fields: Vec<ScalarField>) {
         self.owner = Some(entity_ref(spec.kind, base_id(&spec.id), spec.collection));
         if !self.wants(&spec.id) {
             return;
@@ -369,27 +376,27 @@ impl Out {
         true
     }
 
-    pub(crate) fn annotate(&mut self, annotation: Annotation, anchor: &Vec3) {
+    pub fn annotate(&mut self, annotation: Annotation, anchor: &Vec3) {
         if self.link(OwnedKind::Annotation, annotation.id()) {
             self.points.push(anchor.clone());
             self.annotations.push(annotation);
         }
     }
 
-    pub(crate) fn track(&mut self, track: ParameterTrack) {
+    pub fn track(&mut self, track: ParameterTrack) {
         if self.link(OwnedKind::Track, &track.id) {
             self.tracks.push(track);
         }
     }
 
-    pub(crate) fn into_fragment(self) -> Fragment {
+    pub fn into_fragment(self) -> Fragment {
         let bounds = Aabb::of_points(&self.points);
         Fragment { entities: self.entities, annotations: self.annotations, legends: Vec::new(), layers: Vec::new(), tracks: self.tracks, owners: self.owners, bounds }
     }
 }
 
 /// 🏁️ The global parts of the merged scene: used layers, the utilisation and role legends and the description.
-pub(crate) fn finish(scene: &mut StructuralScene, description: LocalizedCopy) {
+pub fn finish(scene: &mut StructuralScene, description: LocalizedCopy) {
     let used = projection_kit::legends::used_layers(&scene.entities, &scene.annotations, LAYER_ANNOTATIONS);
     let roles = role_legend(&scene.entities);
     scene.layers = projection_kit::legends::layers(&LAYERS, &used, &[]);
@@ -443,4 +450,9 @@ fn role_legend(entities: &[SceneEntity]) -> Vec<LegendRole> {
         let key = role.clone();
         Some((label, key))
     })
+}
+
+/// 🧊️ Whether the entry of `row` declares geometry, so the case stands in the scene.
+pub fn case_declared(row: &model::CaseRow) -> bool {
+    forms::declared::<En1990Cases>(row).is_some()
 }

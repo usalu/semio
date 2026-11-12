@@ -53,3 +53,4 @@ semio-plugin-host = { path = "../../../../🔌️plugin/🖥️host/📦️packa
 serde_json = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -265,7 +265,7 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
         Ok(())
     }
     fn key_demands(&self)->Result<RetirementDemand,ValueError>{
-        if self.key_copy.as_ref().is_some_and(|copy|copy.key.is_none()){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if self.command_retirement.is_empty()&&self.key_copy.as_ref().is_some_and(|copy|copy.key.is_none()){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if !self.command_retirement.is_empty(){return self.command_retirement.demands(self.original_body)}
         if self.key_copy.is_some(){return self.command_retirement.next_owner_demands::<String>(true,&None,self.original_body)}
         if self.key.is_some(){return self.command_retirement.next_owner_demands::<Shared<String>>(true,&None,self.original_body)}
@@ -299,7 +299,7 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
     }
     pub fn close_key_step(&mut self,effect:&mut RetainedAllocationEffect<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
         let grant=effect.grant();let idle=RetainedCloneProgress::default();if !Self::permits(grant,self.key_demands()?){return Ok(PluginLifecycleStep::Progress(idle))}
-        if self.key_copy.as_ref().is_some_and(|copy|copy.key.is_none()){plugin_pay_unit(effect)?;self.key_copy.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}))}
+        if self.command_retirement.is_empty()&&self.key_copy.as_ref().is_some_and(|copy|copy.key.is_none()){plugin_pay_unit(effect)?;self.key_copy.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}))}
         if !self.command_retirement.is_empty(){return Ok(PluginLifecycleStep::Progress(plugin_settle_poll(self.command_retirement.step_granted(self.original_body,effect))?.progress()))}
         if let Some(copy)=self.key_copy.as_mut(){return Ok(PluginLifecycleStep::Progress(self.command_retirement.begin_granted(&mut copy.key,effect).result?.unwrap_or(RetainedCloneStep::Progress(idle)).progress()))}
         if self.key.is_some(){return Ok(PluginLifecycleStep::Progress(self.command_retirement.begin_granted(&mut self.key,effect).result?.unwrap_or(RetainedCloneStep::Progress(idle)).progress()))}

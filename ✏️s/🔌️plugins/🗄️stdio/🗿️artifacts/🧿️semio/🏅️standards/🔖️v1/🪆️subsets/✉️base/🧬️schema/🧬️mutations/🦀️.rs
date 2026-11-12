@@ -6,8 +6,8 @@
 //! envelope-level routing (does the wrapped mutation's kind match the base snapshot's current
 //! kind, and if so thread it through).
 //!
-//! 🪆️ Mutation-leaf migration: `NoMutation` is dropped (the derive requires every variant to wrap
-//! exactly one leaf payload, and `no` is not an approved semantic verb). `#[derive(dsl::Mutations)]`
+//! 🪆️ Mutation-leaf migration: the derive requires every variant to wrap
+//! exactly one leaf payload, so there is no unit variant. `#[derive(dsl::Mutations)]`
 //! requires each variant's payload to directly implement `protocol::MutationKind<SemioSnapshot,
 //! SemioMutation>` + `protocol::MutationLeaf`, and `MutationLeaf`'s provenance is validated against
 //! the FILE the `#[derive(dsl::MutationLeaf)]` macro expands in — a subset's own `SemioXMutation` is
@@ -20,9 +20,9 @@
 //!
 //! Some of the 18 wrapped subsets are migrated onto this same leaf pattern (`model`, `document`,
 //! `cad`, `image`, `video`, `audio`, `animation`, `presentation`, `value`, `table`, `graph`,
-//! `object`, `kit` — no `NoMutation`/`Default` of their own any more, so their harmless
-//! representative case below is `SetSnapshot` with a default snapshot); `flow` is not yet migrated
-//! (still carries its own `NoMutation`/`Default`), so its representative case uses `::default()`
+//! `object`, `kit` — no unit/`Default` variant of their own, so their harmless
+//! representative case below wraps a default snapshot); `flow` is not yet migrated
+//! (still carries its own unit/`Default` variant), so its representative case uses `::default()`
 //! until its own lane migrates it.
 
 use {semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation, semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot};
@@ -89,7 +89,7 @@ pub use semio_s_artifact_stdio_semio_mut_family_2::schema::mutations::apply_vide
 //#region 🔖️Leaves
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 📐️ Typed mutation for this subset. `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -163,7 +163,7 @@ pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
 //#endregion OpCodecs
 
 //#region 🔖️Demo
-/// 🌱 All 19 top-level [`SemioMutation`] tags (`SetSnapshot` and each of the 18 wrapped-kind
+/// 🌱 All 19 top-level [`SemioMutation`] tags (the whole-snapshot tag and each of the 18 wrapped-kind
 /// representative variants) — full dispatch-table coverage for this facet's grammar/protocol
 /// conformance-law tests. Single source of truth shared with `🎹️composer/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law`.

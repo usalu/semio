@@ -51,7 +51,7 @@ pub mod set_entity_layer;
 #[path = "🎚️set-layer/🦀️.rs"]
 pub mod set_layer;
 /// 📐️ Typed document mutation for `stdio.semio.cad`. Every variant addresses one facet of the CAD
-/// document; `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap
+/// document; `#[derive(dsl::Mutations)]` requires every variant to wrap
 /// exactly one leaf payload and a unit variant wraps none (same consequence tiff's baseline
 /// migration reached — see `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
 

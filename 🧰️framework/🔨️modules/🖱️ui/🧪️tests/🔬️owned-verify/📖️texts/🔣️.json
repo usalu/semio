@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "verify-ui",
+  "languages": [
+    "en",
+    "de"
+  ],
+  "messages": {
+    "run.framework-viewport-projection-accepts-only": {
+      "en": "framework-viewport-projection accepts only the optional native phase",
+      "de": "framework-viewport-projection akzeptiert nur die optionale Phase native"
+    },
+    "run.node-graph-viewport-ownership-accepts": {
+      "en": "node-graph-viewport-ownership accepts native with the optional renderer-host or consumers phase",
+      "de": "node-graph-viewport-ownership akzeptiert native mit der optionalen Phase renderer-host oder consumers"
+    }
+  }
+}

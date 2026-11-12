@@ -1,0 +1,17 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://semio.tech/schema/owner-reuse-law.json",
+ "type": "object",
+ "required": ["version", "question", "files", "owners", "steps"],
+ "additionalProperties": false,
+ "properties": {
+  "version": {"const": 1},
+  "question": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+  "files": {"type": "object", "additionalProperties": {"type": "string"}},
+  "owners": {"type": "array", "items": {"type": "string"}, "minItems": 2},
+  "steps": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["name", "edit", "inferred", "derivedClosures"], "additionalProperties": false, "properties": {
+   "name": {"type": "string"}, "edit": {"type": "object", "additionalProperties": {"type": "string"}},
+   "inferred": {"type": "array", "items": {"type": "string"}},
+   "derivedClosures": {"oneOf": [{"const": 0}, {"const": "any"}]}}}}
+ }
+}

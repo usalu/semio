@@ -1,17 +1,17 @@
 import {afterAll,describe,expect,test} from "bun:test";
-import {copyFileSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync} from "node:fs";
+import {copyFileSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,utimesSync} from "node:fs";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
 import {dirname,join} from "node:path";
 import {spawnSync} from "node:child_process";
 import {HERE,ORACLE,sleep} from "../🟦️.ts";
 import {createIndexPoolV1} from "../../🏛️service/🌐️host/🧊️pool/🟨️.mjs";
-import {createHostServiceV1} from "../../🏛️service/🌐️host/🟨️.mjs";
+import {createHostServiceV1,makeRoomV1} from "../../🏛️service/🌐️host/🟨️.mjs";
 import {createGraphPlannerPortV1} from "../../🔌️ports/🧭️plan/🟨️.mjs";
 import {spawnHostServiceV1} from "../../🏗️composition/🌐️host/🟨️.mjs";
 import {createSlicePoolV1} from "../../🏗️composition/🌐️host/👷️slice-pool/🟨️.mjs";
 import {GRAPH_MEMORY_POLICY_V1} from "../../../🧠️memory/🟨️.mjs";
-import {PlanRefusedErrorV1,connectHostV1,requestHostStatusV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
+import {PlanRefusedErrorV1,connectHostV1,holdHostV1,requestHostStatusV1,requestPlanV1} from "../../🚪️client/🛰️plan/🟨️.mjs";
 import {hostEndpointsV1} from "../../📨️protocol/📍️endpoint/🏠️host/🟨️.mjs";
 import {HOST_POLICY_V1,validatorV1} from "../../📨️protocol/🎚️policy/🟨️.mjs";
 import {writeFileSync} from "node:fs";
@@ -257,6 +257,18 @@ describe("host service in process",()=>{
   expect("ref" in result.reply.plan).toBe(true);checkPlan(result.plan.tasks,["app:test"]);
   await h.service.stop("test");
  });
+ test("a spill directory out of room evicts the oldest slices first, never the one being written, and drops failed temporary writes",()=>{
+  const directory=mkdtempSync(join(tmpdir(),"spill-room-"));
+  try{
+   for(const [name,age] of [["old.json",30],["mid.json",20],["keep.json",40],["new.json",10]]){writeFileSync(join(directory,name),"x");utimesSync(join(directory,name),new Date(Date.now()-age*1000),new Date(Date.now()-age*1000));}
+   writeFileSync(join(directory,"half.json.ab12cd34.tmp"),"partial");
+   makeRoomV1(directory,"keep.json",Number.MAX_SAFE_INTEGER);
+   expect(readdirSync(directory).sort()).toEqual(["keep.json"]);
+   writeFileSync(join(directory,"stay.json"),"x");
+   makeRoomV1(directory,"keep.json",0);
+   expect(readdirSync(directory).sort()).toEqual(["keep.json","stay.json"]);
+  }finally{rmSync(directory,{recursive:true,force:true});}
+ });
  test("bounded: more workspaces than the bound close the least recently used one",async()=>{
   const h=inProcess("e",{maximumWorkspaces:2}),roots=["x1","x2","x3"].map(n=>workspace(n));
   for(const root of roots)await requestPlanV1({root,implementation:h.implementation,targets:["core:build"],agent:"a",language:"en",environment:h.env,spawnService:h.spawnService});
@@ -290,13 +302,43 @@ describe("bounded memory",()=>{
  test("an unexpected failure reaches the client localized and retryable, never as the raw error text",async()=>{
   const env=environment("internal"),implementation=digestOf("impl-internal"),runtime=hostEndpointsV1(implementation,env),root=workspace("internal-w");
   const planner=createGraphPlannerPortV1({identify:async()=>"id",loadGraph:async()=>{throw new Error("secret implementation detail");}});
-  const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50}});
+  const logged:string[]=[],service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50},log:(event:string,detail?:string)=>{logged.push(event+" "+detail);}});
   await service.start();
   try{
    const error=await requestPlanV1({root,implementation,targets:["core:build"],agent:"a",language:"de",environment:env}).then(()=>undefined,reason=>reason as any);
    expect(error?.name).toBe("PlanRefusedErrorV1");expect(error.code).toBe("internal");expect(error.retry).toBe("later");
    expect(JSON.stringify(error.message_)).not.toContain("secret implementation detail");expect(error.message_.de).toContain("unerwarteten");expect(error.message_.en).toContain("unexpected");expect(error.message_.en).toMatch(/reference [0-9a-f]{8}/u);
+   const reference=/reference ([0-9a-f]{8})/u.exec(error.message_.en)![1]!;
+   expect(error.message_.en).toContain(runtime.log);expect(error.message_.de).toContain(runtime.log);
+   expect(logged.some(line=>line.startsWith("request-failed "+reference+" ")&&line.includes("secret implementation detail"))).toBe(true);
   }finally{await service.stop("test");}
+ });
+ test("a full disk reaches the client as the typed disk refusal that names the partition, the free bytes and the gc command, never as an internal failure",async()=>{
+  const env=environment("disk"),implementation=digestOf("impl-disk"),runtime=hostEndpointsV1(implementation,env),root=workspace("disk-w"),logged:string[]=[];
+  const planner=createGraphPlannerPortV1({identify:async()=>"id",loadGraph:async()=>{throw Object.assign(new Error("ENOSPC: no space left on device, write"),{code:"ENOSPC",path:join(root,"x")});}});
+  const service=createHostServiceV1({runtime,implementation,ports:{planner},policy:{residentCheckMilliseconds:50},log:(event:string,detail?:string)=>{logged.push(event+" "+detail);}});
+  await service.start();
+  try{
+   const error=await requestPlanV1({root,implementation,targets:["core:build"],agent:"a",language:"de",environment:env}).then(()=>undefined,reason=>reason as any);
+   expect(error?.name).toBe("PlanRefusedErrorV1");expect(error.code).toBe("disk");expect(error.retry).toBe("later");
+   for(const language of ["en","de"])expect(error.message_[language]).toContain("repo cache cas gc");
+   expect(error.message_.en).toContain("The disk is full");expect(error.message_.de).toContain("Datenträger ist voll");expect(error.message_.en).toMatch(/free/u);
+   expect(error.message_.en).not.toContain("unexpected failure");expect(logged.some(line=>line.startsWith("disk-full "))).toBe(true);
+  }finally{await service.stop("test");}
+ });
+ test("the host service ticks the cache upkeep at start and every interval, once at a time, logs a failing tick and cancels a running one when it stops",async()=>{
+  const env=environment("tick"),implementation=digestOf("impl-tick"),runtime=hostEndpointsV1(implementation,env),logged:string[]=[],signals:AbortSignal[]=[];let ticks=0,release:()=>void=()=>undefined;
+  const planner=createGraphPlannerPortV1({identify:async()=>"id",loadGraph:async()=>({})});
+  const cache={tick:async(signal:AbortSignal)=>{ticks++;signals.push(signal);if(ticks===1)throw new Error("tick exploded");if(ticks===3)await new Promise<void>(done=>{release=done;signal.addEventListener("abort",()=>done(),{once:true});});}};
+  const service=createHostServiceV1({runtime,implementation,ports:{planner,cache},policy:{residentCheckMilliseconds:50,cacheTickMilliseconds:60},log:(event:string,detail?:string)=>{logged.push(event+" "+detail);}});
+  await service.start();
+  try{
+   await sleep(400);
+   expect(ticks).toBe(3);expect(logged.some(line=>line.startsWith("cache-tick-failed ")&&line.includes("tick exploded"))).toBe(true);
+   expect(signals[2]!.aborted).toBe(false);
+  }finally{await service.stop("test");release();}
+  expect(signals[2]!.aborted).toBe(true);
+  await sleep(150);expect(ticks).toBe(3);
  });
  test("a second service on a live endpoint adopts it: it exits quietly, leaves no crash row and the first keeps serving",async()=>{
   const h=inProcess("adopt"),root=workspace("adopt-w");
@@ -395,4 +437,18 @@ describe("host service reports recorded tasks up to date",()=>{
   const lost=planned.tasks.find(task=>task.outputs.length>0);
   if(lost){rmSync(join(root,lost.outputs[0]!),{recursive:true,force:true});expect((await ask()).tasks.find(task=>task.id===lost.id)!.stale,"a task whose output is gone is stale although its key is recorded").toBe(true);}
  });
+});
+
+describe("host service held by a long run",()=>{
+ test("a held connection keeps the idle rule from retiring the service for as long as it is held, and the service retires after it is released",async()=>{
+  const h=inProcess("hold",{idleShutdownMilliseconds:200});await h.service.start();
+  const exits:string[]=[];h.service.closed.then(reason=>exits.push(reason));
+  const release=await holdHostV1({implementation:h.implementation,environment:h.env});
+  await sleep(1200);expect(exits).toEqual([]);
+  expect(await requestHostStatusV1({implementation:h.implementation,environment:h.env})).toBeDefined();
+  await release();
+  for(let at=0;at<100&&exits.length===0;at++)await sleep(50);
+  expect(exits).toEqual(["idle"]);
+  expect(await holdHostV1({implementation:h.implementation,environment:h.env})).toBeInstanceOf(Function);
+ },30000);
 });

@@ -25,3 +25,4 @@ semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-trace = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

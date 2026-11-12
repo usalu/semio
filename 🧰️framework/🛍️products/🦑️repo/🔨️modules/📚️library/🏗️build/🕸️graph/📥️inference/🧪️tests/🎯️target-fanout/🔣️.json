@@ -1,0 +1,10 @@
+{
+ "version": 1,
+ "targets": 120,
+ "modules": 60,
+ "bytesPerModule": 2048,
+ "warmup": 20,
+ "maximumGrowthMegabytes": 12,
+ "maximumSlopeKilobytesPerTarget": 200,
+ "maximumStoredValues": 4
+}

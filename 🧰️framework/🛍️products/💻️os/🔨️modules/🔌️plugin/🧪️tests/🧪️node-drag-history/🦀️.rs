@@ -14,11 +14,11 @@ use semio_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
 #[cfg(test)]
 use semio_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
-use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, Mutation, SpaceMember};
+use store::{ArtifactStore, ArtifactStoreInitializationAuthority, MemberFactory, SpaceMember};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_decl_emission::Emit;
 use std::future::Future;
-use protocol::{LOCAL_ACTOR_ID, OpBinary, OpText};
+use protocol::{LOCAL_ACTOR_ID, OpText};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_plugin_reactor_app::PluginApp;
 use semio_plugin_window_config::WindowConfigOwner;
@@ -40,7 +40,7 @@ pub fn node_drag_transaction_rows(patch: &semio_framework::kernel::HistoryPatch)
 pub async fn assert_node_drag_edits_replay_like_a_fresh_fold<P, Mu>(guest: &str, schema: &str, base: &P, log: &[Mu], edits: &[(usize, Mu)], fold: impl Fn(&mut P, &Mu))
 where
     P: Clone + PartialEq + std::fmt::Debug + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + store::ColdMutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + protocol::OpBinaryReceiving + 'static,
+    Mu: store::StoreMutationFor<P> + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree,
 {
     let fresh = |leaves: &[Mu]| {
         let mut state = base.clone();

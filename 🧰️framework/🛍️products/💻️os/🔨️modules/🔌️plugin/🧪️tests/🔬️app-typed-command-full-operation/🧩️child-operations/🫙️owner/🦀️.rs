@@ -1,5 +1,8 @@
 // 🫙️ Child semantic text and encoded source owners retain their independent physical lifetimes.
-use semio_framework_value_paged_text::paged_text::{PagedText, TextReadSource};
+use super::paged_encoder::settled_poll;
+use semio_framework_value_paged_text::paged_text::{PagedText, TextReadSource, InlineTextBuffer, PagedTextDecodeFrame, PagedTextReadStep};
+use semio_framework_value_paged_text::{OriginalConstructionAuthority,OriginalWorkAuthority};
+use semio_framework_value::retirement::RetireOwned;
 use super::paged_encoder::{ChildTextView,PagedChildGroup,PagedChildGroups,PagedChildLabels,nested_grant,grant_funds,deeper,quote,handoff,yielded,settle,pop_demand,release_demand,release_page};
 use super::reader::{ChildGroupDecodeVisitor,ChildGroupText};
 use semio_os_kernel::{os_pack::{PackRefusal,codec::ByteSpan},os_spr::operation_bytes::OwnedOperationBytes};
@@ -7,12 +10,56 @@ use semio_framework_value::{ValueError, ValueRefusalKind, ErasedSnapshotRetireme
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value_persistent::list::PagedList;
 use semio_ui_locale::{Terminology,Locale};
+/// 🧾️ An owned octet source lets the real paged decoder and producer read the borrowed laws input under a retained Source.
+struct Bytes(Vec<u8>);
+impl Bytes{fn of(source:&impl TextReadSource)->Self{Self((0..source.byte_len()).map(|index|source.byte_at(index).expect("original text octet")).collect())}}
+impl TextReadSource for Bytes{fn byte_len(&self)->usize{self.0.len()}fn byte_at(&self,index:usize)->Option<u8>{self.0.get(index).copied()}}
+impl RetireOwned for Bytes{
+ type RetirementCursor=<Vec<u8> as RetireOwned>::RetirementCursor;
+ fn retirement_seed(self)->Self::RetirementCursor{self.0.retirement_seed()}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self::RetirementCursor>())}
+ fn controlled_retirement_supported()->bool{<Vec<u8> as RetireOwned>::controlled_retirement_supported()}
+}
+type TextOutput=(Option<PagedText<CAPACITY>>,Option<InlineTextBuffer>);
+/// 🛬️ Decodes through the real resident frame, paid publication and paid frame close of the paged text laws; a refusal still returns the partially built owner so the caller retains it.
+fn decode_text(bytes:Bytes,long:bool,control:&mut NativeDecodeControl<'_>)->(TextOutput,Option<ValueError>){
+    use crate::rig::{source,close_source,decode_turn,close_decode_frame,Work,Physical};
+    let original=source(bytes);let mut physical=OriginalConstructionAuthority::new(Physical{interrupt:false,submitted:Default::default()});let mut work=OriginalWorkAuthority::new(Work);
+    let(mut output,mut inline)=(None,None);let mut failure=None;
+    {
+        let frame=if long{PagedTextDecodeFrame::<CAPACITY>::new(&mut output)}else{PagedTextDecodeFrame::<CAPACITY>::new_inline(&mut output,&mut inline)};let mut frame=match frame{Ok(frame)=>frame,Err(error)=>return((None,None),Some(error))};
+        let mut done=false;for _ in 0..1000000{match decode_turn(&mut frame,&original,control,&mut physical,&mut work).result{Ok(PagedTextReadStep::Complete(_))=>{done=true;break}Ok(_)=>{}Err(error)=>{failure=Some(error.child.or(error.producer_refusal).or(error.work_refusal).unwrap_or_else(||invalid("child text decode refused")));break}}}
+        assert!(done||failure.is_some(),"child text decode exceeded its maintained bound");close_decode_frame(&mut frame);assert!(frame.terminal_is_empty());
+    }
+    assert!(!work.has_live_actions());assert!(work.into_recipient().is_ok());assert!(physical.into_recipient().is_ok());close_source(original);
+    ((output,inline),failure)
+}
+/// 🛫️ Encodes through the real resident producer, paid publication and paid producer close of the paged text laws.
+fn encode_text(bytes:Bytes,prefix:&'static str,suffix:&'static str,maximum:usize,cancel:Option<&mut dyn FnMut(semio_framework_value::native_encoding::NativeEncodeProgress)->bool>)->(TextOutput,Option<ValueError>){
+    use crate::rig::{source,close_source,EncodeBank,Stock};use crate::rig::encoder::{projection_work,encode_inline_retaining};
+    let length=prefix.len()+bytes.0.len()+suffix.len();let original=source(bytes);
+    let stock=match projection_work(original.borrow()).and_then(|work|Stock::for_outputs::<CAPACITY>(&[(length,work)],65536,64)){Ok(stock)=>stock,Err(error)=>{close_source(original);return((None,None),Some(error))}};let mut bank=EncodeBank::new(stock,false);
+    let mut partial=(None,None);
+    let result=bank.run_cancelable(65536,64,cancel,|turn,control|{let(output,failure)=encode_inline_retaining::<_,CAPACITY>(&original,control,turn,maximum,prefix,suffix);partial=output;failure.map_or(Ok(()),Err)});
+    bank.finish();close_source(original);
+    (partial,result.err())
+}
+/// 🧹️ Closes a partially built text that no caller retains.
+fn retire_partial(partial:TextOutput){if let Some(text)=partial.0{crate::rig::close_text(text);}if let Some(mut cell)=partial.1{assert!(cell.close_one(1));}}
+/// 🧾️ A refused standalone encode retires its partial text and reports the refusal.
+fn settled(output:(TextOutput,Option<ValueError>))->Result<TextOutput,ValueError>{match output{(partial,None)=>Ok(partial),(partial,Some(error))=>{retire_partial(partial);Err(error)}}}
+/// 🏷️ Produces one authored label cell through the real resident producer, borrowing its prefix and suffix for the program lifetime.
+pub(super) fn encode_label(original:&str,prefix:&'static str,suffix:&'static str,maximum:usize)->Result<TextOutput,ValueError>{settled(encode_text(Bytes::of(&original),prefix,suffix,maximum,None))}
+/// 📜️ Promotes a borrowed literal to the static lifetime the resident producer requires.
+pub(super) fn leaked(text:&str)->&'static str{Box::leak(text.to_owned().into_boxed_str())}
+/// 📄️ Produces one paged semantic text through the real resident producer.
+pub(super) fn encode_paged(original:&impl TextReadSource,maximum:usize)->Result<PagedText<CAPACITY>,ValueError>{settled(encode_text(Bytes::of(original),"","",maximum,None))?.0.ok_or_else(||invalid("child semantic text is not paged"))}
 const CAPACITY:usize=isize::MAX as usize;
 
 /// 🪆️ Quotes the actual child and one enclosing depth without granting its demand.
 pub(super) fn child_demands(owner:&dyn ErasedSnapshotRetirement,copy:usize)->Result<RetirementDemand,ValueError>{if owner.terminal_is_empty(){return Ok(Default::default())}Ok({let mut demand=owner.next_demand(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original child depth overflow"))?;demand})}
 /// 🧾️ Preserves the performed child receipt while validating its original independent grant.
-pub(super) fn close_child(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child requires enclosing depth"))}let child=RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original typed child").map_err(|error|error.with_retained_progress(step.progress()))?;Ok(RetainedCloneStep::Progress(step.progress()))}
+pub(super) fn close_child(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child requires enclosing depth"))}let child=RetainedCloneGrant{maximum_items:grant.maximum_items.min(1),maximum_depth:grant.maximum_depth-1,..grant};let step=match owner.close_step(4096,&mut effect.nested(child)){semio_framework_value::RetainedWorkPoll::Complete(turn)=>turn.result.map_err(semio_framework_value::OriginalRetirementFailure::into_value_error)?,semio_framework_value::RetainedWorkPoll::Pending{..}=>return Err(ValueError::invariant("original child close stayed pending"))};semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original typed child").map_err(|error|error.with_retained_progress(step.progress()))?;Ok(RetainedCloneStep::Progress(step.progress()))}
 
 /// 🔤️ A finite intrinsic semantic cell and genuine long pages have distinct complete borrows.
 struct Text{inline:semio_framework_value_paged_text::paged_text::InlineTextBuffer,complete:bool,paged:PagedText<CAPACITY>,long:bool}
@@ -22,13 +69,18 @@ impl Text{
     fn view(&self)->Result<ChildTextView<'_>,ValueError>{if self.long{self.paged.borrow()?;return Ok(ChildTextView::Paged(&self.paged))}if !self.complete{return Err(invalid("child intrinsic text lacks complete UTF8 authority"))}Ok(ChildTextView::Literal(self.inline.borrow()?))}
     fn read_from_source(&mut self,source:&Source<'_>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
         if self.complete||self.long||!self.inline.terminal_is_empty(){return Err(invalid("child semantic text requires an empty owner"))}
-        if source.byte_len()>128{self.long=true;return self.paged.read_from_source(source,control)}
-        self.inline.read_from_source(source,control)?;self.complete=true;Ok(())
+        let(partial,failure)=decode_text(Bytes::of(source),source.byte_len()>128,control);
+        if let Some(error)=failure{if let Some(paged)=partial.0{self.paged=paged;self.long=true}if let Some(inline)=partial.1{self.inline=inline}return Err(error)}
+        self.publish(partial)
     }
-    fn encode_label_with(&mut self,maximum_payload_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),ValueError>)->Result<(),ValueError>{
+    fn encode_label_with(&mut self,original:impl TextReadSource,prefix:&'static str,suffix:&'static str,maximum_payload_bytes:usize,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>{
         if self.complete||self.long||!self.inline.terminal_is_empty(){return Err(invalid("child semantic label requires an empty owner"))}
-        self.paged.encode_with_inline(&mut self.inline,&mut self.long,maximum_payload_bytes,control,producer)?;self.complete=true;Ok(())
+        let base=control.owned_bytes();
+        let(partial,failure)=encode_text(Bytes::of(&original),prefix,suffix,maximum_payload_bytes,Some(&mut|progress|control.observe(semio_framework_value::native_encoding::NativeEncodeProgress{owned_bytes:base+progress.owned_bytes,..progress})));
+        if let Some(error)=failure{if let Some(paged)=partial.0{self.paged=paged;self.long=true}if let Some(inline)=partial.1{self.inline=inline}control.charge(self.allocated_bytes())?;return Err(error)}
+        self.publish(partial)?;control.charge(self.allocated_bytes())
     }
+    fn publish(&mut self,output:TextOutput)->Result<(),ValueError>{match output{(Some(paged),None)=>{self.paged=paged;self.long=true;Ok(())}(None,Some(inline))=>{self.inline=inline;self.complete=true;Ok(())}_=>Err(invalid("child semantic text lacks its single published owner"))}}
 }
 impl Text{
  fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.inline.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<usize>()+std::mem::size_of::<bool>(),depth:1,..Default::default()})}if self.long&&!self.paged.terminal_is_empty(){return child_demands(&self.paged,copy)}Ok(Default::default())}
@@ -36,7 +88,8 @@ impl Text{
 impl ErasedSnapshotRetirement for Text{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.inline.close_one(1){self.complete=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}if self.long{return close_child(&mut self.paged,grant)}Ok(RetainedCloneStep::Complete(empty))}
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let grant=effect.grant();let step=self.advance_granted(grant,effect);settled_poll(step)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.inline.terminal_is_empty()&&self.paged.terminal_is_empty()}
 
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -46,8 +99,8 @@ impl ErasedSnapshotRetirement for Text{
 }
 fn invalid(detail:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvariantViolated,detail)}
 struct Source<'a>(ByteSpan<'a>);
-impl TextReadSource for Source<'_>{fn byte_len(&self)->usize{self.0.len()}fn byte_at(&self,index:usize)->Option<u8>{self.0.get(index).copied()}}
-fn reserve<T>(owner:&mut PagedList<T,CAPACITY>,control:&mut NativeDecodeControl<'_>)->Result<(),PackRefusal>{while !owner.has_reserved_slot(){let required=owner.next_allocation_bytes().map_err(ValueError::from)?;if required>4096{return Err(invalid("child outer page exceeds physical grant").into())}control.checkpoint()?;control.charge(required)?;let step=owner.reserve_one(4096).map_err(|error|ValueError::from(error.refusal()))?;if !step.progressed||step.allocated_bytes!=required{return Err(invalid("child outer page differs from its exact admission").into())}}Ok(())}
+impl TextReadSource for Source<'_>{fn byte_len(&self)->usize{self.0.len()}fn byte_at(&self,index:usize)->Option<u8>{self.0.get(index)}}
+fn reserve<T>(owner:&mut PagedList<T,CAPACITY>,control:&mut NativeDecodeControl<'_>)->Result<(),PackRefusal>{while !owner.has_reserved_slot(){let required=owner.next_allocation_bytes().map_err(ValueError::from)?;if required>4096{return Err(invalid("child outer page exceeds physical grant").into())}control.checkpoint()?;control.charge(required)?;let step=owner.reserve_one_cold(4096).map_err(|error|ValueError::from(error.refusal()))?;if !step.progressed||step.allocated_bytes!=required{return Err(invalid("child outer page differs from its exact admission").into())}}Ok(())}
 
 /// 🏷️ The complete locale matrix owns each typed semantic cell in separate physical pages.
 pub struct ChildLabelOwner{cells:[[Text;Locale::COUNT];Terminology::COUNT]}
@@ -63,7 +116,8 @@ impl ChildLabelOwner{
 impl ErasedSnapshotRetirement for ChildLabelOwner{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}for row in &mut self.cells{for cell in row{if !cell.terminal_is_empty(){return close_child(cell,grant)}}}Ok(RetainedCloneStep::Complete(empty))}
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let grant=effect.grant();let step=self.advance_granted(grant,effect);settled_poll(step)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.cells.iter().flatten().all(ErasedSnapshotRetirement::terminal_is_empty)}
 
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -84,25 +138,17 @@ impl PagedChildOwner{
  fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(schema)=self.pending_schema.as_ref(){return if schema.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<Text>>(),depth:1,..Default::default()})}else{child_demands(schema,copy)}}
   if let Some(source)=self.partial_source.as_ref().or_else(||self.operations.len().checked_sub(1).and_then(|index|self.operations.get(index))){return if source.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<OwnedOperationBytes>(),depth:1,..Default::default()})}else{child_demands(source,copy)}}
-  if !self.operations.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.operations.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
+  if !self.operations.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:self.operations.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:self.operations.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
   if let Some(label)=self.partial_label.as_ref().or_else(||self.labels.len().checked_sub(1).and_then(|index|self.labels.get(index))){return if label.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<ChildLabelOwner>(),depth:1,..Default::default()})}else{child_demands(label,copy)}}
-  if !self.labels.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.labels.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
+  if !self.labels.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:self.labels.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:self.labels.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}
   match self.metadata.iter().find(|text|!text.terminal_is_empty()){Some(text)=>child_demands(text,copy),None=>Ok(Default::default())}
  }
 }
 impl ErasedSnapshotRetirement for PagedChildOwner{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
-  if let Some(schema)=self.pending_schema.as_mut(){if !schema.terminal_is_empty(){return close_child(schema,grant)}self.pending_schema.take();self.pending_schema_is_retired=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
-  let index=self.operations.len().checked_sub(1);let source=match self.partial_source.as_mut(){Some(source)=>Some(source),None=>index.and_then(|index|self.operations.get_mut(index))};
-  if let Some(source)=source{if !source.terminal_is_empty(){return close_child(source,grant)}if self.partial_source.is_some(){self.partial_source.take();}else{self.operations.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
-  if !self.operations.terminal_is_empty(){let step=self.operations.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
-  let index=self.labels.len().checked_sub(1);let label=match self.partial_label.as_mut(){Some(label)=>Some(label),None=>index.and_then(|index|self.labels.get_mut(index))};
-  if let Some(label)=label{if !label.terminal_is_empty(){return close_child(label,grant)}if self.partial_label.is_some(){self.partial_label.take();}else{self.labels.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
-  if !self.labels.terminal_is_empty(){let step=self.labels.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
-  for text in &mut self.metadata{if !text.terminal_is_empty(){return close_child(text,grant)}}Ok(RetainedCloneStep::Complete(empty))
- }
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let grant=effect.grant();let step=self.advance_granted(grant,effect);settled_poll(step)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.metadata.iter().all(ErasedSnapshotRetirement::terminal_is_empty)&&self.operations.terminal_is_empty()&&self.labels.terminal_is_empty()&&self.partial_source.is_none()&&self.partial_label.is_none()&&self.pending_schema.is_none()}
 
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -131,12 +177,13 @@ impl ChildGroupDecodeVisitor for PagedChildDecodeOwner{
     fn end_groups(&mut self,_:&mut NativeDecodeControl<'_>)->Result<(),PackRefusal>{if self.child.is_some(){return Err(invalid("complete child decode retains an unfinished group").into())}Ok(())}
 }
 impl PagedChildDecodeOwner{
- fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.symbols.terminal_is_empty(){return child_demands(&self.symbols,copy)}if let Some(child)=self.child.as_ref().or_else(||self.groups.len().checked_sub(1).and_then(|index|self.groups.get(index))){return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<PagedChildOwner>(),depth:1,..Default::default()})}else{child_demands(child,copy)}}if !self.groups.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.groups.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}Ok(Default::default())}
+ fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{if !self.symbols.terminal_is_empty(){return child_demands(&self.symbols,copy)}if let Some(child)=self.child.as_ref().or_else(||self.groups.len().checked_sub(1).and_then(|index|self.groups.get(index))){return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:std::mem::size_of::<PagedChildOwner>(),depth:1,..Default::default()})}else{child_demands(child,copy)}}if !self.groups.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:self.groups.next_release_copy_byte_demand().map_err(ValueError::from)?,release_bytes:self.groups.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()})}Ok(Default::default())}
 }
 impl ErasedSnapshotRetirement for PagedChildDecodeOwner{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if !self.symbols.terminal_is_empty(){return close_child(&mut self.symbols,grant)}let index=self.groups.len().checked_sub(1);let child=match self.child.as_mut(){Some(child)=>Some(child),None=>index.and_then(|index|self.groups.get_mut(index))};if let Some(child)=child{if !child.terminal_is_empty(){return close_child(child,grant)}if self.child.is_some(){self.child.take();}else{self.groups.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.groups.release_empty_page(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+ fn close_step(&mut self,_body:usize,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::OriginalRetirementPoll{let grant=effect.grant();let step=self.advance_granted(grant,effect);settled_poll(step)}
+ fn next_computational_work(&self,_body:usize)->Result<u64,ValueError>{Ok(1)}
  fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.groups.terminal_is_empty()&&self.symbols.terminal_is_empty()}
 
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
@@ -184,13 +231,11 @@ impl PagedChildOwner{
 
 impl Text{
     fn read_from_encoding_source(&mut self,source:&impl TextReadSource,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),ValueError>{
-        if self.complete||self.long||!self.inline.terminal_is_empty(){return Err(invalid("child semantic text requires an empty producer owner"))}
-        if source.byte_len()>128{self.long=true;return self.paged.read_from_encoding_source(source,control)}
-        self.inline.read_from_encoding_source(source,control)?;self.complete=true;Ok(())
+        self.encode_label_with(Bytes::of(source),"","",control.maximum_bytes(),control)
     }
 }
 fn reserve_encoded<T>(owner:&mut PagedList<T,CAPACITY>,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{
-    while !owner.has_reserved_slot(){let required=owner.next_allocation_bytes().map_err(ValueError::from)?;if required>4096{return Err(invalid("child producer outer page exceeds physical grant").into())}control.checkpoint()?;control.charge(required)?;let step=owner.reserve_one(4096).map_err(|error|ValueError::from(error.refusal()))?;if !step.progressed||step.allocated_bytes!=required{return Err(invalid("child producer outer page differs from exact admission").into())}}Ok(())
+    while !owner.has_reserved_slot(){let required=owner.next_allocation_bytes().map_err(ValueError::from)?;if required>4096{return Err(invalid("child producer outer page exceeds physical grant").into())}control.checkpoint()?;control.charge(required)?;let step=owner.reserve_one_cold(4096).map_err(|error|ValueError::from(error.refusal()))?;if !step.progressed||step.allocated_bytes!=required{return Err(invalid("child producer outer page differs from exact admission").into())}}Ok(())
 }
 impl ChildLabelOwner{
     pub fn read_from_encoding_source(&mut self,terminology:Terminology,locale:Locale,source:&impl TextReadSource,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{self.cell_mut(terminology,locale).read_from_encoding_source(source,control).map_err(Into::into)}
@@ -236,8 +281,36 @@ impl PagedChildOwner{
 
 impl ChildOperationSourceReceipt<'_>{
     /// 🏷️ The authored producer writes into the retained locale cell under the same full caller policy.
-    pub fn produce_label(&mut self,terminology:Terminology,locale:Locale,control:&mut semio_framework_value::NativeEncodeControl<'_>,producer:impl FnOnce(&mut dyn semio_framework_value_paged_text::paged_text::TextEncodingOutput)->Result<(),ValueError>)->Result<(),PackRefusal>{
+    pub fn produce_label(&mut self,terminology:Terminology,locale:Locale,original:impl TextReadSource,prefix:&'static str,suffix:&'static str,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<(),PackRefusal>{
         let maximum=self.options.limits.max_segment_len.min(usize::MAX as u64)as usize;
-        semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.partial_label.as_mut().ok_or_else(||invalid("child label producer lacks its retained cell owner"))?.cell_mut(terminology,locale).encode_label_with(maximum,control,producer).map_err(Into::into))
+        semio_os_kernel::os_spr::operation_bytes::with_operation_encode_policy(self.options,control,|control|self.owner.partial_label.as_mut().ok_or_else(||invalid("child label producer lacks its retained cell owner"))?.cell_mut(terminology,locale).encode_label_with(original,prefix,suffix,maximum,control).map_err(Into::into))
     }
 }
+
+impl Text{
+ fn advance_granted(&mut self,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if self.inline.close_one(1){self.complete=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}if self.long{return close_child(&mut self.paged,grant,effect)}Ok(RetainedCloneStep::Complete(empty))}
+}
+
+impl ChildLabelOwner{
+ fn advance_granted(&mut self,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}for row in &mut self.cells{for cell in row{if !cell.terminal_is_empty(){return close_child(cell,grant,effect)}}}Ok(RetainedCloneStep::Complete(empty))}
+}
+
+impl PagedChildOwner{
+ fn advance_granted(&mut self,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}
+  if let Some(schema)=self.pending_schema.as_mut(){if !schema.terminal_is_empty(){return close_child(schema,grant,effect)}self.pending_schema.take();self.pending_schema_is_retired=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+  let index=self.operations.len().checked_sub(1);let source=match self.partial_source.as_mut(){Some(source)=>Some(source),None=>index.and_then(|index|self.operations.get_mut(index))};
+  if let Some(source)=source{if !source.terminal_is_empty(){return close_child(source,grant,effect)}if self.partial_source.is_some(){self.partial_source.take();}else{self.operations.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+  if !self.operations.terminal_is_empty(){let step=self.operations.release_empty_page_leased(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+  let index=self.labels.len().checked_sub(1);let label=match self.partial_label.as_mut(){Some(label)=>Some(label),None=>index.and_then(|index|self.labels.get_mut(index))};
+  if let Some(label)=label{if !label.terminal_is_empty(){return close_child(label,grant,effect)}if self.partial_label.is_some(){self.partial_label.take();}else{self.labels.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}
+  if !self.labels.terminal_is_empty(){let step=self.labels.release_empty_page_leased(grant.maximum_release_bytes).map_err(ValueError::from)?;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+  for text in &mut self.metadata{if !text.terminal_is_empty(){return close_child(text,grant,effect)}}Ok(RetainedCloneStep::Complete(empty))
+}
+}
+
+impl PagedChildDecodeOwner{
+ fn advance_granted(&mut self,grant:RetainedCloneGrant,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->Result<RetainedCloneStep,ValueError>{let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty))}let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original child retirement exceeds caller depth"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty))}if !self.symbols.terminal_is_empty(){return close_child(&mut self.symbols,grant,effect)}let index=self.groups.len().checked_sub(1);let child=match self.child.as_mut(){Some(child)=>Some(child),None=>index.and_then(|index|self.groups.get_mut(index))};if let Some(child)=child{if !child.terminal_is_empty(){return close_child(child,grant,effect)}if self.child.is_some(){self.child.take();}else{self.groups.pop();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}))}let step=self.groups.release_empty_page_leased(grant.maximum_release_bytes).map_err(ValueError::from)?;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))}
+}
+
+/// ✍️ The authored operation label prefix and suffix of one locale.
+pub fn authored(locale:Locale)->(&'static str,&'static str){match locale{Locale::En=>("Set label to ",""),Locale::De=>("Beschriftung auf "," setzen")}}

@@ -2,19 +2,11 @@
 use super::*;
 use base64::Engine;
 use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::RetainedCloneStep};
-use std::{alloc::{GlobalAlloc,Layout,System},cell::Cell};
-thread_local!{static TRACK:Cell<Option<(usize,usize)>>=const{Cell::new(None)};}
-struct PhysicalAllocator;
-#[global_allocator]
-static ALLOCATOR:PhysicalAllocator=PhysicalAllocator;
-unsafe impl GlobalAlloc for PhysicalAllocator{
- unsafe fn alloc(&self,layout:Layout)->*mut u8{let pointer=unsafe{System.alloc(layout)};if !pointer.is_null(){let _=TRACK.try_with(|track|if let Some((allocated,released))=track.get(){track.set(Some((allocated+layout.size(),released)));});}pointer}
- unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout){let _=TRACK.try_with(|track|if let Some((allocated,released))=track.get(){track.set(Some((allocated,released+layout.size())));});unsafe{System.dealloc(pointer,layout);}}
-}
-fn observed<T>(step:impl FnOnce()->T)->(T,(usize,usize)){TRACK.with(|track|{assert!(track.get().is_none());track.set(Some((0,0)));});let output=step();let bytes=TRACK.with(|track|track.replace(None).unwrap());(output,bytes)}
+use semio_framework_value_testing_allocator::observe_retirement_allocations as observed;
+use semio_framework_value_clone_source_testing::drive::drive;
 fn drain<T:RetireOwned>(value:T)->(usize,usize){
  let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("unsupported original: {error}"));let(mut allocated,mut released)=(0,0);
- for _ in 0..2000000{if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:owner.next_depth_demand().unwrap()};let(step,physical)=observed(||owner.step(grant).unwrap());let(RetainedCloneStep::Progress(receipt)|RetainedCloneStep::Complete(receipt))=step;assert!(receipt.fits(grant));assert_eq!(physical,(receipt.retained_capacity_bytes,receipt.released_bytes));allocated+=physical.0;released+=physical.1;}
+ while !owner.terminal_is_empty(){let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();let body=if copy>0{copy}else{release};let demand=owner.next_demand(body).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let units=owner.next_computational_work(body).unwrap();let turn=drive(grant,units,|effect|owner.step(body,effect));let(RetainedCloneStep::Progress(receipt)|RetainedCloneStep::Complete(receipt))=turn.result.unwrap();assert!(receipt.fits(grant));allocated+=receipt.retained_capacity_bytes;released+=receipt.released_bytes;}
  assert!(owner.terminal_is_empty());assert_eq!(observed(||drop(owner)).1,(0,0));(allocated,released)
 }
 fn parsed_input(value:&serde_json::Value)->Option<BinarySourceInput<'_>>{Some(BinarySourceInput{mime:value["mime"].as_str()?,data:value["data"].as_str()?,min_bytes:value["minBytes"].as_u64()?as usize,max_bytes:value["maxBytes"].as_u64()?as usize,max_source_bytes:value["maxSourceBytes"].as_u64()?as usize,max_work:value["maxWork"].as_u64()?})}

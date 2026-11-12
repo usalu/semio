@@ -44,8 +44,8 @@ fn deflate_controlled_retained_allocation_errors_retain_the_owned_kind(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/⚠️refusal/🔣️.json")).unwrap();
  for row in fixture["retained"].as_array().unwrap(){
   let requested=row["requestedBytes"].as_u64().unwrap() as usize;let mut history=RetainedInflateHistory::new(requested,requested).unwrap();
-  if row["id"]=="allocator-refused"{DENY_ALLOCATION_SIZE.store(requested,std::sync::atomic::Ordering::Relaxed);}else{history.bytes=std::mem::ManuallyDrop::new(Vec::with_capacity(row["allocatedBytes"].as_u64().unwrap() as usize));}
-  let result=history.reserve(requested);DENY_ALLOCATION_SIZE.store(0,std::sync::atomic::Ordering::Relaxed);
+  let refused_by_allocator=row["id"]=="allocator-refused";if !refused_by_allocator{history.bytes=std::mem::ManuallyDrop::new(Vec::with_capacity(row["allocatedBytes"].as_u64().unwrap() as usize));}
+  let result=if refused_by_allocator{let(result,attempts)=semio_framework_value_testing_allocator::refuse_allocations_of_size_on_this_thread(requested,||history.reserve(requested));assert!(attempts>0);result}else{history.reserve(requested)};
   let repeated=history.reserve(requested);let allocated=history.allocated_bytes();history.release(allocated);assert_eq!(history.allocated_bytes(),0);
   let error=result.unwrap_err();assert_eq!(error.kind,refusal_kind(row["kind"].as_str().unwrap()));assert_eq!(error.reason,row["reason"].as_str().unwrap());assert_eq!(error.allocated_bytes,row["allocatedBytes"].as_u64().unwrap() as usize);assert_eq!(repeated.unwrap_err(),error);
  }

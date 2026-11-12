@@ -28,7 +28,7 @@ fn inference_descriptors() -> &'static [::semio_framework_schema_registry::Artif
 
 /// 🧬️ Descriptor for `s.remodel.remodeling`, assembled from the four facets' own format leaves.
 pub fn remodeling_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
-    semio_framework_schema_registry::ArtifactSchemaDescriptor { id: "s.remodel.remodeling", artifact: schema::ARTIFACT_LEAVES, snapshot: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SNAPSHOT_LEAVES, diff: semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::DIFF_LEAVES, mutations: semio_s_artifact_remodel_remodeling_mutations::standards::v1::subsets::any::schema::mutations::MUTATION_LEAVES }
+    semio_framework_schema_registry::ArtifactSchemaDescriptor { id: "s.remodel.remodeling", artifact: schema::ARTIFACT_LEAVES, snapshot: semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::SNAPSHOT_LEAVES, diff: semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::DIFF_LEAVES, mutations: semio_s_artifact_remodel_remodeling_mutations_leaves::standards::v1::subsets::any::schema::mutation_leaves::MUTATION_LEAVES }
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.

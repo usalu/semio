@@ -3,15 +3,7 @@
 use crate::FlowHostSnapshot;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
 
-thread_local! {static OBSERVATION:std::cell::Cell<Option<(usize,usize)>>=const {std::cell::Cell::new(None)};}
-pub(crate) fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize) {OBSERVATION.with(|state|assert!(state.replace(Some((0,0))).is_none()));let value=operation();let (born,freed)=OBSERVATION.with(|state|state.replace(None).unwrap());(value,born,freed)}
-struct ObservedSystem;
-unsafe impl std::alloc::GlobalAlloc for ObservedSystem {
-    unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8 {let pointer=unsafe {std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};if !pointer.is_null(){let _=OBSERVATION.try_with(|state|if let Some((born,freed))=state.get(){state.set(Some((born+layout.size(),freed)));});}pointer}
-    unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout) {let _=OBSERVATION.try_with(|state|if let Some((born,freed))=state.get(){state.set(Some((born,freed+layout.size())));});unsafe {std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)};}
-}
-#[global_allocator]
-static OBSERVED_SYSTEM:ObservedSystem=ObservedSystem;
+pub(crate) fn observe<T>(operation:impl FnOnce()->T)->(T,usize,usize) {let (value,(born,freed))=semio_framework_value_testing_allocator::observe_retirement_allocations(operation);(value,born,freed)}
 
 /// ⚖️ Structural JSON equality that ignores object key order and the integer/float spelling of equal numbers: `to_value` writes every `f64` field as a float literal while the committed wire spells `0` and `1` as integers.
 fn same_json(left:&semio_framework_pack_json::Value,right:&semio_framework_pack_json::Value)->bool {

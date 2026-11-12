@@ -2,7 +2,7 @@
   "tools": [
     { "id": "run-script", "values": { "project": "workspace", "workspace": "/workspace", "script": "folder with spaces/📜️script.ts", "dry-run": "false" }, "command": ["repo", "exec", "--projects=workspace", "--dry-run=false", "--", "bun", "/workspace/folder with spaces/📜️script.ts"] },
     { "id": "bun-test", "values": { "project": "workspace", "file": "folder with spaces/🟦️.ts", "dry-run": "false" }, "command": ["repo", "exec", "--projects=workspace", "--dry-run=false", "--", "bun", "test", "folder with spaces/🟦️.ts"] },
-    { "id": "build-task", "values": { "task": "workspace:test-build-tool-bazel" }, "command": ["repo", "run", "workspace:test-build-tool-bazel", "--output=stream"] },
+    { "id": "build-task", "values": { "task": "@semio-tech/repo-lib:test-build-tool-bazel" }, "command": ["repo", "run", "@semio-tech/repo-lib:test-build-tool-bazel", "--output=stream"] },
     { "id": "build-task", "values": { "task": "workspace:test-command-entrypoint", "mode": "release" }, "command": ["repo", "run", "workspace:test-command-entrypoint", "--output=stream", "--configuration=release"] },
     { "id": "build-help", "values": {}, "command": ["repo", "--help"] },
     { "id": "build-affected", "values": { "targets": "test", "mode": "prototype" }, "command": ["repo", "affected", "--targets=test", "--output=stream", "--configuration=prototype"] },

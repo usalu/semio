@@ -35,3 +35,7 @@ semio-framework-value-native-schema-engine = { path = "../../../../🧩️record
 [dev-dependencies]
 serde_json = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../🧪️testing/📥️admission/📦️packages/🦀️rust" }
+semio-framework-value-native-schema-engine = { path = "../../../../🧩️record/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../../../📦️packages/🦀️rust" }

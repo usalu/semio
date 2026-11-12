@@ -197,5 +197,4 @@ def compose_lesson(video_id: str, content: Path, output: Path, settings: dict, s
     if any(not runtime.reusable_clip(clip, expected) or not runtime.state_inputs_current(expected)
             for clip, expected in zip(clips, states, strict=True)):
         raise RuntimeError("Chapter inputs changed while assembling the lesson")
-    print(f"[DEBUG] Published lesson {video_id}: {len(clips)} chapter windows, {total} frames", flush=True)
     return output

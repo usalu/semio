@@ -1,0 +1,17 @@
+FW="🧰️framework"
+OS=FW+"/🛍️products/💻️os"
+GROUPS=[
+ dict(project="@semio-tech/framework-os",root=OS,id="os",lanes=["browser-actor-host-context","resolved-host-context","host-ownership","shared-artifact-addressing","retained-window-input","publication-retirement-authority","snapshot-read-retirement","semio-envelope-identity","shared-value-canonical-json","store-reload-publication","window-config-provisioning-lifecycle","window-config-retained-pack-load","window-config-pack-identity","ephemeral-transfer-preparation","owned-document-closure","framework-empty-state-contract","window-action-context","surface-view-context","view-context-integer-carriers","window-view-context"]),
+ dict(project="@semio-tech/framework-replication",root=FW+"/🔨️modules/📡️replication",id="replication",lanes=["shared-value-clone","shared-map-delta","framework-paged-list-ownership"]),
+ dict(project="@semio-tech/value-ts",root=FW+"/🔨️modules/🌱️value",id="value",lanes=["shared-dynamic-value","framework-variant-field-casing"]),
+ dict(project="@semio-tech/framework-pack-rs",root=FW+"/🔨️modules/🎒️pack",id="pack",lanes=["framework-retained-pack-ownership"]),
+ dict(project="@semio-tech/framework-job-rs",root=FW+"/🔨️modules/🧵️job",id="job",lanes=["framework-job-physical-close"]),
+ dict(project="@semio-tech/framework-kernel",root=FW+"/🔨️modules/🎠️kernel",id="kernel",lanes=["media-export-encoding","file-open-import","ui-dirty-scope","spawned-job-drive","video-render-export"]),
+ dict(project="@semio-tech/ui-rs",root=FW+"/🔨️modules/🖱️ui",id="ui",lanes=["framework-viewport-ownership","framework-viewport-projection","node-graph-viewport-ownership"]),
+ dict(project="@semio-tech/framework-infinite-dag-rs",root=OS+"/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag",id="infinite-dag",lanes=["dag-demo-ownership"]),
+ dict(project="@semio-tech/block-3d-rs",root="✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d",id="block-3d",lanes=["block3d-window-transient"]),
+ dict(project="@semio-tech/reasoning-wires-rs",root="✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires",id="wires",lanes=["wires-pointer-move","wires-reset-document-ownership"],existing=True),
+ dict(project="@semio-tech/trinity-rewriting-rs",root="✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting",id="rewriting",lanes=["rewriting-reset-document-ownership"],existing=True),
+ dict(project="@semio-tech/trinity-jack-rs",root="✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack",id="jack",lanes=["jack-results-window-transient"],existing=True),
+]
+RENAME={"reset-document-ownership":[("wires-reset-document-ownership","semio-s-artifact-reasoning-wires"),("rewriting-reset-document-ownership","semio-s-artifact-trinity-rewriting")]}

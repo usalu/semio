@@ -89,10 +89,10 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
     if (!["native", "react", "wgpu"].includes(renderer)) throw new Error(`Unknown benchmark renderer: ${renderer}`);
     return { args: ["run", `@semio-tech/framework-os-dev:bench-plugins-${renderer}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
   }
-  if (target === "workspace:cpp" && selected.length) {
+  if (target === "@semio-tech/repo-lib:cpp" && selected.length) {
     const [command, ...args] = selected;
     if (!["setup", "configure", "build", "test", "all"].includes(command??"")) throw new Error(`Unknown CMake operation: ${command}`);
-    return { args: ["run", command === "all" ? "workspace:cpp" : `workspace:cpp-${command}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
+    return { args: ["run", command === "all" ? "@semio-tech/repo-lib:cpp" : `@semio-tech/repo-lib:cpp-${command}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
   }
   if (target === "workspace:test") {
     const { level, rest } = resolveTestLevel(selected);
@@ -103,7 +103,7 @@ export function resolveBuildSelectionV1(root:string,segments: string[]): { args:
   }
   if (target === "workspace:lint" && selected[0] === "repo") return { args: ["run", "workspace:lint-repo", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
   if (target === "workspace:build" && selected.length) {
-    const resolved = selected[0] === "storybook" ? "workspace:build-storybook" : canonicalBuildTargetV1(selected[0]!);
+    const resolved = selected[0] === "storybook" ? "repo-storybook:build-storybook" : canonicalBuildTargetV1(selected[0]!);
     return { args: ["run", resolved, ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
   }
   return { args: segments, env: {} };

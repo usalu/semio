@@ -1,3 +1,4 @@
+cargo-features = ["trim-paths"]
 [package]
 name = "semio-browser-actor-import-guest"
 version = "0.1.0"

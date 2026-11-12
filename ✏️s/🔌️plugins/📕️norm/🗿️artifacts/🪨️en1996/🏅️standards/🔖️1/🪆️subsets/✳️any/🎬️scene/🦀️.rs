@@ -2,22 +2,14 @@
 
 extern crate semio_s_artifact_norm_en1996_model as model;
 extern crate semio_s_artifact_norm_en1996_schema as schema;
+extern crate semio_s_artifact_norm_en1996_scene_kit as kit;
+extern crate semio_s_artifact_norm_en1996_scene_layout as layout;
+extern crate semio_s_artifact_norm_en1996_scene_profile as profile;
 extern crate semio_s_plugin_norm_compliance as norm;
 extern crate semio_s_plugin_norm_mechanics as mechanics;
 extern crate semio_s_plugin_norm_structural_scene as scene;
 
 use schema::checks::masonry;
-
-#[path = "🧰️kit/🦀️.rs"]
-mod kit;
-pub use kit::{EntityKindSpec, ENTITY_KINDS, entities_of, entity_dependencies, entity_kind_of, focus_of_outcome, owner_entity, route_of, CheckRoute};
-
-#[path = "📍️layout/🦀️.rs"]
-pub mod layout;
-pub use layout::{Layout, Placement};
-
-#[path = "🧮️profile/🦀️.rs"]
-pub mod profile;
 
 #[path = "🎞️tracks/🦀️.rs"]
 pub mod tracks;
@@ -64,15 +56,13 @@ mod diaphragm;
 #[path = "🗂️cases/🦀️.rs"]
 pub mod cases;
 
-#[path = "📈️diagrams/🦀️.rs"]
-pub mod diagrams;
-pub use diagrams::diagrams;
-
 #[path = "🕹️handles/🦀️.rs"]
 pub mod handles;
 pub use handles::handles;
 
-use kit::Out;
+use kit::{entities_of, entity_dependencies, Out};
+use layout::Layout;
+use scene::projection_kit::Placement;
 use model::En1996Snapshot;
 use norm::CheckReport;
 use scene::projection::{project_whole, Fragment, Kit, KitDoc, Part, ProjectionContext, SceneKit};
@@ -176,6 +166,9 @@ fn summary(input: &SceneInput) -> LocalizedCopy {
         format!("EN-1996-Mauerwerksmodell mit {} Wänden, {} Öffnungen und {} Geschossen; größte Ausnutzung {:.0} %.", d.walls.len(), openings, d.storeys, worst * 100.0),
     )
 }
+
+#[cfg(test)]
+extern crate semio_s_artifact_norm_en1996_scene_diagrams as diagrams;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

@@ -117,7 +117,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
                     if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&mut stores.store,cx))?;return Ok(false)}
                     if !resident.terminal_is_empty(){cx.with_original_retirement(|cx|resident.close_step(cx))?;return Ok(false)}
                     let mut d=semio_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();d.copy_bytes+=1;
-                    cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{*pending=None;*completed=true;semio_framework_value::RetainedWorkOutcome{result:Ok::<_,semio_framework_value::ValueError>(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;
+                    cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{*pending=None;*completed=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;
                     return Ok(*completed)
                 }
                 if owner.prepared(){owner.publish(&mut stores.store,cx)?;}else{owner.advance(&mut stores.store,&transaction.id,cx)?;}

@@ -1,5 +1,24 @@
 use super::*;
 use semio_framework_dsl_record::{BorrowedFieldSpec as F, RecordLayout};
+use semio_framework_value::{RetainedWorkOutcome,RetainedWorkPoll};
+use semio_framework_value_testing_effect_bank::{EffectBank,Wallet};
+
+#[path="../../../../../../🌱️value/📝️text/📦️paged/🧪️tests/native-rig.rs"]
+#[allow(dead_code)]
+mod staged_rig;
+
+thread_local!{static BANK:std::cell::RefCell<EffectBank>=std::cell::RefCell::new(EffectBank::new(Wallet::new(RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<40,maximum_capacity_bytes:1<<40,maximum_release_bytes:1<<40,maximum_depth:1<<10},1<<50)));}
+/// 🪙️ The finite Source stock a normal cursor turn is funded from.
+pub(crate) fn stock()->RetainedCloneGrant{BANK.with(|bank|bank.borrow().wallet().remaining())}
+/// 🧵️ Runs one cursor turn inside a real original action and returns its result with the heap its operation alone requested and released.
+pub(crate) fn turn<T>(grant:RetainedCloneGrant,call:impl FnOnce(&mut RetainedAllocationEffect<'_>)->T)->(T,usize,usize){
+ BANK.with(|bank|{
+  let mut bank=bank.borrow_mut();let units=bank.wallet().remaining_work();let mut heap=(0,0);
+  let poll=bank.run(grant,units,|effect|{let before=effect.performed_work();let(result,requests,releases)=semio_framework_trace_memory_testing::observe_backing(||call(&mut *effect));heap=(requests,releases);RetainedWorkPoll::Complete(RetainedWorkOutcome::<T,()>{result:Ok(result),work:effect.performed_work()-before})}).0;
+  assert_ne!(bank.take_admitted(),Some(false));
+  match poll{RetainedWorkPoll::Complete(done)=>(done.result.unwrap_or_else(|()|unreachable!("a cursor turn reports no failure of its own")),heap.0,heap.1),RetainedWorkPoll::Pending{..}=>unreachable!("a synchronous cursor turn completes in its own original action")}
+ })
+}
 
 static REFERENCE_FIELDS: [F; 4] = [F::new(4,"subset",B::Text),F::new(1,"id",B::Text),F::new(3,"standard",B::Text),F::new(2,"kind",B::Text)];
 fn reference_spec() -> BorrowedRecordSpec { BorrowedRecordSpec { keyword: None, layout: RecordLayout::Inline, fields: &REFERENCE_FIELDS } }
@@ -25,7 +44,7 @@ fn borrowed_projected_pack_original_expression_ast_matches_independent_corpus_an
  struct Source(E);
  impl FieldProjectionSource for Source{fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{match path{[]=>Ok(V::Record(&[1])),[0]=>Ok(V::Expr(&self.0)),_=>Err(invalid("original expression field path"))}}}
  static FIELDS:[F;1]=[F::new(1,"formula",B::Expr)];let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&FIELDS};let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧮️expression/🔣️.json")).unwrap();
- for row in fixture["cases"].as_array().unwrap(){let source=Source(expression(&row["ast"]));let expected:Vec<u8>=row["bodyHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();for _ in 0..1000000{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:cursor.next_minimum_copy_bytes(),maximum_capacity_bytes:cursor.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:cursor.next_advance_depth_demand().unwrap()};let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(&source,spec,&mut output,grant).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}let complete=cursor.is_complete();close(&mut cursor);assert!(complete);assert_eq!(actual,expected,"{}",row["text"]);assert_eq!(semio_framework_dsl_record::print_expr(&source.0),row["text"].as_str().unwrap());for stop in fixture["cancelNodes"].as_array().unwrap(){let mut cursor=BorrowedProjectedPackCursor::default();for _ in 0..stop.as_u64().unwrap(){let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:0,maximum_depth:128};if cursor.advance(&source,spec,&mut output,grant).unwrap().complete{break;}}close(&mut cursor);}}
+ for row in fixture["cases"].as_array().unwrap(){let source=Source(expression(&row["ast"]));let expected:Vec<u8>=row["bodyHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect();let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();for _ in 0..1000000{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:cursor.next_minimum_copy_bytes(),maximum_capacity_bytes:cursor.next_capacity_byte_demand().unwrap(),maximum_release_bytes:0,maximum_depth:cursor.next_advance_depth_demand().unwrap()};let(step,birth,free)=turn(grant,|effect|cursor.advance(&source,spec,&mut output,effect).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));assert!(step.progress.fits(grant));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}let complete=cursor.is_complete();close(&mut cursor);assert!(complete);assert_eq!(actual,expected,"{}",row["text"]);assert_eq!(semio_framework_dsl_record::print_expr(&source.0),row["text"].as_str().unwrap());for stop in fixture["cancelNodes"].as_array().unwrap(){let mut cursor=BorrowedProjectedPackCursor::default();for _ in 0..stop.as_u64().unwrap(){let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:0,maximum_depth:128};if turn(grant,|effect|cursor.advance(&source,spec,&mut output,effect)).0.unwrap().complete{break;}}close(&mut cursor);}}
 }
 
 #[test]
@@ -40,23 +59,22 @@ fn borrowed_projected_pack_standard_map_statements_wire_match_portable_oracle(){
  }
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🧩️branches/🔣️.json")).unwrap();
  for row in fixture["cases"].as_array().unwrap(){let source=Source(row);let fields=match row["kind"].as_str().unwrap(){"map"=>&MAP_FIELDS,"statements"=>&STMT_FIELDS,_=>&WIRE_FIELDS};let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields};let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();
-  for _ in 0..20000{let capacity=cursor.next_capacity_byte_demand().unwrap();let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(&source,spec,&mut output,grant(capacity,0)).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
+  for _ in 0..20000{let capacity=cursor.next_capacity_byte_demand().unwrap();let(step,birth,free)=turn(grant(capacity,0),|effect|cursor.advance(&source,spec,&mut output,effect).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
   let complete=cursor.is_complete();close(&mut cursor);assert!(complete);assert_eq!(actual,expected(row["expectedHex"].as_str().unwrap()));
  }
 }
 
 #[test]
 fn borrowed_projected_pack_native_paged_key_and_text_cross_unicode_pages(){
- use semio_framework_value::{NativeEncodeControl, ErasedSnapshotRetirement, RetainedCloneStep};
  use semio_framework_value_paged_text::paged_text::{PagedText, TextReadSource};
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🌿️native-text/🔣️.json")).unwrap();let marker=fixture["scalar"].as_str().unwrap().as_bytes();let split=fixture["split"].as_u64().unwrap()as usize;let length=fixture["bytes"].as_u64().unwrap()as usize;
  struct Bytes<'a>{marker:&'a[u8],split:usize,length:usize}impl TextReadSource for Bytes<'_>{fn byte_len(&self)->usize{self.length}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.length{None}else if index>=self.split&&index<self.split+self.marker.len(){Some(self.marker[index-self.split])}else{Some(b'x')}}}
  struct Source{value:PagedText<8194>}impl FieldProjectionSource for Source{fn projection_view(&self,path:&[usize])->Result<V<'_>,ValueError>{Ok(match path{[]=>V::Record(&[1]),[0]=>V::Map(1),[0,0]=>V::TextSource(self.value.read_view()?),_=>return Err(invalid("native text path"))})}fn projection_key_view(&self,path:&[usize],index:usize)->Result<TextReadView<'_>,ValueError>{if path!=[0]||index!=0{return Err(invalid("native key path"));}self.value.read_view()}}
- let mut source=Source{value:PagedText::empty()};let mut allow=|_|true;let mut control=NativeEncodeControl::new(65536,&mut allow);source.value.read_from_encoding_source(&Bytes{marker,split,length},&mut control).unwrap();assert!(source.value.read_view().unwrap().contiguous().is_none());let backing=source.value.allocated_bytes();
+ let original=staged_rig::source(String::from_utf8((0..length).map(|index|Bytes{marker,split,length}.byte_at(index).unwrap()).collect()).unwrap());let bind=staged_rig::encoder::projection_work(original.borrow()).unwrap();let mut bank=staged_rig::EncodeBank::new(staged_rig::Stock::for_outputs::<8194>(&[(length,bind)],65536,64).unwrap(),false);let value=bank.run(65536,64,|turn,control|staged_rig::encode_success::<_,8194>(&original,control,turn,65536,"","")).unwrap();bank.finish();staged_rig::close_source(original);let source=Source{value};assert!(source.value.read_view().unwrap().contiguous().is_none());let backing=source.value.allocated_bytes();
  let spec=BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&MAP_FIELDS};let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;1];let mut actual=Vec::new();
- for _ in 0..100000{let capacity=cursor.next_capacity_byte_demand().unwrap();let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(&source,spec,&mut output,grant(capacity,0)).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
+ for _ in 0..100000{let capacity=cursor.next_capacity_byte_demand().unwrap();let(step,birth,free)=turn(grant(capacity,0),|effect|cursor.advance(&source,spec,&mut output,effect).unwrap());assert_eq!((birth,free),(step.progress.retained_capacity_bytes,0));actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}
  let complete=cursor.is_complete();close(&mut cursor);assert!(complete);let mut expected=vec![1,130,64];expected.extend((0..length).map(|index|Bytes{marker,split,length}.byte_at(index).unwrap()));expected.extend(self::expected(fixture["bodyHex"].as_str().unwrap()));assert_eq!(actual,expected);assert_eq!(source.value.allocated_bytes(),backing);
- for _ in 0..20000{match source.value.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:4096,maximum_depth:64}).unwrap(){RetainedCloneStep::Progress(_)=>{},RetainedCloneStep::Complete(_)=>break,}}assert!(source.value.terminal_is_empty());
+ assert_eq!(staged_rig::close_text(source.value),backing);
 }
 
 struct Node { value: Kind, ids: &'static [u16] }
@@ -96,10 +114,10 @@ fn close(cursor:&mut BorrowedProjectedPackCursor) {
     for _ in 0..20000 {
         let required=cursor.next_close_byte_demand().unwrap();
         if required != 0 {
-            let (step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.close(grant(0,required-1)).unwrap());
+            let (step,birth,free)=turn(grant(0,required-1),|effect|cursor.close(effect).unwrap());
             assert_eq!((birth,free),(0,0)); assert_eq!(step.progress,Default::default()); assert_eq!(cursor.next_close_byte_demand().unwrap(),required);
         }
-        let (step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.close(grant(0,required)).unwrap());
+        let (step,birth,free)=turn(grant(0,required),|effect|cursor.close(effect).unwrap());
         assert_eq!(birth,0); assert_eq!(free,step.progress.released_bytes); assert!(step.progress.fits(grant(0,required)));
         if step.complete { assert!(cursor.terminal_is_empty()); return; }
     }
@@ -117,24 +135,24 @@ fn borrowed_projected_pack_cursor_matches_neutral_buffer_oracle_and_exact_physic
             let mut actual=Vec::new(); let mut complete=false; let mut output=[0;256];
             for _ in 0..20000 {
                 let demand=cursor.next_capacity_byte_demand().unwrap();
-                let (zero,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(&source,spec,&mut output[..output_bytes],RetainedCloneGrant::default()).unwrap());
+                let (zero,birth,free)=turn(RetainedCloneGrant::default(),|effect|cursor.advance(&source,spec,&mut output[..output_bytes],effect).unwrap());
                 assert_eq!(zero.progress,Default::default());assert_eq!((birth,free),(0,0));
                 if demand!=0 {
-                    let (denied,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(&source,spec,&mut output[..output_bytes],grant(demand-1,0)).unwrap());
+                    let (denied,birth,free)=turn(grant(demand-1,0),|effect|cursor.advance(&source,spec,&mut output[..output_bytes],effect).unwrap());
                     assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));assert_eq!(cursor.next_capacity_byte_demand().unwrap(),demand);
                 }
                 let admitted=grant(demand,0);
-                let (step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance(&source,spec,&mut output[..output_bytes],admitted).unwrap());
+                let (step,birth,free)=turn(admitted,|effect|cursor.advance(&source,spec,&mut output[..output_bytes],effect).unwrap());
                 assert_eq!(birth,step.progress.retained_capacity_bytes);assert_eq!(free,0);assert!(step.progress.fits(admitted));assert!(step.written_bytes<=64 && step.written_bytes<=output_bytes);
                 actual.extend_from_slice(&output[..step.written_bytes]);
                 if step.complete { complete=true;break; }
             }
             assert!(complete && cursor.is_complete());assert_eq!(actual,bytes);close(&mut cursor);
-            let (_,birth,free)=semio_framework_trace_memory_testing::observe_backing(||drop(cursor));assert_eq!((birth,free),(0,0));
+            let (_,birth,free)=turn(stock(),|effect|drop(cursor));assert_eq!((birth,free),(0,0));
         }
         for stop in corpus["cancelStops"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as usize) {
             let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();
-            for _ in 0..stop { let demand=cursor.next_capacity_byte_demand().unwrap();let step=cursor.advance(&source,spec,&mut output,grant(demand,0)).unwrap();actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break} }
+            for _ in 0..stop { let demand=cursor.next_capacity_byte_demand().unwrap();let step=turn(grant(demand,0),|effect|cursor.advance(&source,spec,&mut output,effect)).0.unwrap();actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break} }
             assert!(bytes.starts_with(&actual));close(&mut cursor);
         }
     }
@@ -166,17 +184,17 @@ fn borrowed_projected_pack_cursor_intrinsic_order_duplicates_and_exact_grants() 
                 let mut output=[0;256];let mut actual=Vec::new();let mut complete=false;
                 for _ in 0..20000 {
                     let demand=cursor.next_capacity_byte_demand().unwrap();let minimum=cursor.next_minimum_copy_bytes();let admitted=RetainedCloneGrant{maximum_copy_bytes:copy.max(minimum),..grant(demand,0)};
-                    let(zero,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_items:0,..admitted}).unwrap());assert_eq!(zero.progress,Default::default());assert_eq!((birth,free),(0,0));
-                    if minimum!=0 {let(denied,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_copy_bytes:minimum-1,..admitted}).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));}
-                    if demand!=0 {let(denied,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_capacity_bytes:demand-1,..admitted}).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));assert_eq!(cursor.next_capacity_byte_demand().unwrap(),demand);}
-                    let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],admitted).unwrap());assert!(step.progress.fits(admitted));assert_eq!(birth,step.progress.retained_capacity_bytes);assert_eq!(free,0);assert!(step.written_bytes<=copy.min(64).min(width));actual.extend_from_slice(&output[..step.written_bytes]);
+                    let(zero,birth,free)=turn(RetainedCloneGrant{maximum_items:0,..admitted},|effect|cursor.advance_intrinsic(&source,field,&mut output[..width],effect).unwrap());assert_eq!(zero.progress,Default::default());assert_eq!((birth,free),(0,0));
+                    if minimum!=0 {let(denied,birth,free)=turn(RetainedCloneGrant{maximum_copy_bytes:minimum-1,..admitted},|effect|cursor.advance_intrinsic(&source,field,&mut output[..width],effect).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));}
+                    if demand!=0 {let(denied,birth,free)=turn(RetainedCloneGrant{maximum_capacity_bytes:demand-1,..admitted},|effect|cursor.advance_intrinsic(&source,field,&mut output[..width],effect).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));assert_eq!(cursor.next_capacity_byte_demand().unwrap(),demand);}
+                    let(step,birth,free)=turn(admitted,|effect|cursor.advance_intrinsic(&source,field,&mut output[..width],effect).unwrap());assert!(step.progress.fits(admitted));assert_eq!(birth,step.progress.retained_capacity_bytes);assert_eq!(free,0);assert!(step.written_bytes<=copy.min(64).min(width));actual.extend_from_slice(&output[..step.written_bytes]);
                     if step.complete{complete=true;break;}
                 }
-                if complete {let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output,RetainedCloneGrant::default()).unwrap());assert!(step.complete);assert_eq!(step.progress,Default::default());assert_eq!((birth,free),(0,0));}close(&mut cursor);assert!(complete,"intrinsic case {} did not complete",row["name"].as_str().unwrap());assert_eq!(actual,bytes);
-                let(_,birth,free)=semio_framework_trace_memory_testing::observe_backing(||drop(cursor));assert_eq!((birth,free),(0,0));
+                if complete {let(step,birth,free)=turn(RetainedCloneGrant::default(),|effect|cursor.advance_intrinsic(&source,field,&mut output,effect).unwrap());assert!(step.complete);assert_eq!(step.progress,Default::default());assert_eq!((birth,free),(0,0));}close(&mut cursor);assert!(complete,"intrinsic case {} did not complete",row["name"].as_str().unwrap());assert_eq!(actual,bytes);
+                let(_,birth,free)=turn(stock(),|effect|drop(cursor));assert_eq!((birth,free),(0,0));
             }
         }
-        for stop in corpus["cancelStops"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();for _ in 0..stop{let demand=cursor.next_capacity_byte_demand().unwrap();let step=cursor.advance_intrinsic(&source,field,&mut output,grant(demand,0)).unwrap();actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}assert!(bytes.starts_with(&actual));close(&mut cursor);}
+        for stop in corpus["cancelStops"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();for _ in 0..stop{let demand=cursor.next_capacity_byte_demand().unwrap();let step=turn(grant(demand,0),|effect|cursor.advance_intrinsic(&source,field,&mut output,effect)).0.unwrap();actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}assert!(bytes.starts_with(&actual));close(&mut cursor);}
     }
 }
 
@@ -190,14 +208,14 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
     let mut cursor=BorrowedProjectedPackCursor::default();
     let mut retained=0;
     while !cursor.symbols.has_reserved_slot() {
-        let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.symbols.reserve_one(policy.maximum_capacity_bytes).unwrap());
+        let(outcome,birth,free)=turn(policy,|effect|cursor.symbols.reserve_one(effect));let step=match outcome.result{Ok(semio_framework_value_persistent::list::PagedListReservationOutcome::Ready(step))=>step,_=>panic!("original symbol reservation was refused or denied")};
         assert_eq!(birth,step.allocated_bytes);assert_eq!(free,0);assert!(birth<=policy.maximum_capacity_bytes);retained+=birth;
     }
     cursor.symbols.push_reserved(Symbol { path:[0;64], depth:0, occurrences:usize::MAX, selected:false, forced:false,key:None }).unwrap();
     cursor.note=Some(Symbol { path:[0;64], depth:0, occurrences:1, selected:false, forced:false,key:None });
     cursor.phase=Phase::Find;
     let mut output=[0xa5;64];
-    let(failure,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.advance_intrinsic(&source,1,&mut output,policy).unwrap_err());
+    let(failure,birth,free)=turn(policy,|effect|cursor.advance_intrinsic(&source,1,&mut output,effect).unwrap_err());
     let receipt=failure.reason.retained_progress();
     assert_eq!(failure.written_bytes,0);assert_eq!((birth,free),(0,0));assert_eq!(output,[0xa5;64]);
     assert_eq!(receipt.copied_items,1);assert_eq!(receipt.copied_bytes,rows["examples"][0]["failure"]["reason"]["retainedProgress"]["copiedBytes"].as_u64().unwrap()as usize);
@@ -205,7 +223,7 @@ fn borrowed_pack_failure_preserves_real_comparison_and_original_symbol_backing()
     assert_eq!(match &source {DslValue::String(text)=>text.as_ptr(),_=>unreachable!()},original);
     let mut released=0;
     for _ in 0..64 {
-        let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||cursor.close(policy).unwrap());
+        let(step,birth,free)=turn(policy,|effect|cursor.close(effect).unwrap());
         assert_eq!(birth,0);assert_eq!(free,step.progress.released_bytes);assert!(step.progress.fits(policy));released+=free;
         if step.complete {break;}
     }
@@ -220,13 +238,13 @@ fn borrowed_pack_flat_intrinsic_uses_only_original_actual_depth_and_receipts(){
     let p=&rows["policy"];let policy=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:4096,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};
     let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();
     for _ in 0..256{
-        let(denied,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance_intrinsic(&source,field,&mut output,RetainedCloneGrant{maximum_depth:0,..policy}).unwrap());
-        assert_eq!(denied.progress,Default::default());assert_eq!((event.requested_bytes,event.released_bytes),(0,0));
+        let(denied,requested,released)=turn(RetainedCloneGrant{maximum_depth:0,..policy},|effect|cursor.advance_intrinsic(&source,field,&mut output,effect).unwrap());
+        assert_eq!(denied.progress,Default::default());assert_eq!((requested,released),(0,0));
         assert!(cursor.next_advance_depth_demand().unwrap()<=policy.maximum_depth);
-        let(step,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance_intrinsic(&source,field,&mut output,policy).unwrap());
-        assert!(step.progress.fits(policy));assert_eq!(event.requested_bytes,step.progress.retained_capacity_bytes);assert_eq!(event.released_bytes,step.progress.released_bytes);actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}
+        let(step,requested,released)=turn(policy,|effect|cursor.advance_intrinsic(&source,field,&mut output,effect).unwrap());
+        assert!(step.progress.fits(policy));assert_eq!(requested,step.progress.retained_capacity_bytes);assert_eq!(released,step.progress.released_bytes);actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}
     }
     assert!(cursor.is_complete());assert_eq!(actual,expected(row["expectedHex"].as_str().unwrap()));
-    let mut step=BorrowedProjectedPackProgress::default();for _ in 0..256{let(next,event)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close(policy).unwrap());assert_eq!((event.requested_bytes,event.released_bytes),(next.progress.retained_capacity_bytes,next.progress.released_bytes));step=next;if step.complete{break;}}
+    let mut step=BorrowedProjectedPackProgress::default();for _ in 0..256{let(next,requested,released)=turn(policy,|effect|cursor.close(effect).unwrap());assert_eq!((requested,released),(next.progress.retained_capacity_bytes,next.progress.released_bytes));step=next;if step.complete{break;}}
     assert!(step.complete);assert!(step.progress.fits(policy));
 }

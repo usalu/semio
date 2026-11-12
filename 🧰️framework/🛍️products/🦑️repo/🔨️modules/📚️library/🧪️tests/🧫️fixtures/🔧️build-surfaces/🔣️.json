@@ -129,7 +129,7 @@
         "en": "🧪️ Build Tools · Bazel End To End",
         "de": "🧪️ Build-Werkzeuge · Bazel Vollständig Prüfen"
       },
-      "args": "run workspace:test-build-tool-bazel --exclude-dependencies --skip-cache",
+      "args": "run @semio-tech/repo-lib:test-build-tool-bazel --exclude-dependencies --skip-cache",
       "group": "4_gate",
       "order": 20.7
     },
@@ -138,7 +138,7 @@
         "en": "🧪️ Build Tools · Bazel Bootstrap",
         "de": "🧪️ Build-Werkzeuge · Bazel Einrichtung Prüfen"
       },
-      "args": "run workspace:test-build-tool-bazel-bootstrap --exclude-dependencies --skip-cache",
+      "args": "run @semio-tech/repo-lib:test-build-tool-bazel-bootstrap --exclude-dependencies --skip-cache",
       "group": "4_gate",
       "order": 20.8
     },
@@ -210,7 +210,7 @@
         "en": "🧪️ Runtime Build Producer · Verify",
         "de": "🧪️ Laufzeit-Build-Erzeuger · Prüfen"
       },
-      "args": "run workspace:test-runtime-build-producer --exclude-dependencies --skip-cache",
+      "args": "run @semio-tech/repo-lib:test-runtime-build-producer --exclude-dependencies --skip-cache",
       "group": "4_gate",
       "order": 21.6
     }

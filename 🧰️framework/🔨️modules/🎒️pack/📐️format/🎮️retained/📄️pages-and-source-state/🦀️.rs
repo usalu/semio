@@ -5,7 +5,7 @@ use super::*;
 pub fn retained_page_close_demands<T, const N: usize>(pages: &semio_framework_value_persistent::list::PagedList<T, N>) -> Result<RetirementDemand, ValueError> {
     let error = |error: PagedListError| ValueError::literal(ValueRefusalKind::OwnershipLimit, error.reason);
     if !pages.is_empty() { return Ok(RetirementDemand { copy_bytes: size_of::<T>(), depth: pages.next_pop_depth_demand().map_err(error)?, ..Default::default() }); }
-    Ok(RetirementDemand { release_bytes: pages.next_release_allocation_bytes().map_err(error)?, depth: pages.next_release_depth_demand().map_err(error)?.max(1), ..Default::default() })
+    Ok(RetirementDemand { copy_bytes: pages.next_release_copy_byte_demand().map_err(error)?, release_bytes: pages.next_release_allocation_bytes().map_err(error)?, depth: pages.next_release_depth_demand().map_err(error)?.max(1), ..Default::default() })
 }
 
 //#region 🔖️RetainedCanonicalSource

@@ -31,3 +31,4 @@ semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀�
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-value-testing-effect-bank = { path = "../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

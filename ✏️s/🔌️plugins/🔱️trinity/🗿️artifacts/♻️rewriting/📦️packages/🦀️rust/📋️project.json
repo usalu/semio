@@ -242,6 +242,44 @@
         "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts preview-generated"
       }
+    },
+    "verify-rewriting-window-config-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify rewriting-window-config oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-rewriting-map-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify rewriting-map-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-rewriting-reset-document-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify rewriting-reset-document-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "rewriting-reset-document-ownership"
+          ]
+        }
+      }
     }
   }
 }

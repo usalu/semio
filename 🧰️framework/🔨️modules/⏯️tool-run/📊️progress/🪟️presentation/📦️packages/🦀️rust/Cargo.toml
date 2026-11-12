@@ -32,3 +32,4 @@ semio-framework-tool-run-entities = { path = "../../../../👥️entities/📦�
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-framework-value-testing-effect-bank = { path = "../../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

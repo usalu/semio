@@ -22,7 +22,7 @@ pub fn close_publication_step(slot: &mut Option<Box<Publication>>, cx: &mut Step
         return semio_framework_job::close_original_retained_effect_step(cx, demand, |effect| publication.close_step(effect).result.map_err(OriginalRetirementFailure::from));
     }
     let demand = publication_retirement_demands(slot)?;
-    semio_framework_job::close_original_retained_step::<ValueError>(cx, demand, |_| {
+    semio_framework_job::close_original_retained_step(cx, demand, |_| {
         drop(slot.take());
         RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })), work: 1 }
     })

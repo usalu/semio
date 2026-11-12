@@ -37,8 +37,10 @@ semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️d
 
 [dev-dependencies]
 blake3 = "1.8.2"
+semio-framework-value-testing-effect-bank = { path = "../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-record-schema = { path = "../../../🌱️value/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = { version = "1.0.140", features = ["float_roundtrip"] }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -14,8 +14,7 @@ extern crate semio_s_plugin_energy_engine_schedule as schedule;
 pub use diff::original as native_diff;
 pub use snapshot::reference::{energy_model_from_structure, energy_structure_from_model};
 
-#[global_allocator]
-static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[path = "."]
 pub mod state {

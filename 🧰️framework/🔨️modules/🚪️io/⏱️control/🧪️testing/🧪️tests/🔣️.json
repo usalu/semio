@@ -5,7 +5,7 @@
     "copy": 1073741824,
     "capacity": 1073741824,
     "release": 1073741824,
-    "depth": 4096
+    "depth": 1024
   },
   "cases": [
     {

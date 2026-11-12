@@ -42,3 +42,4 @@ semio-framework-value = { path = "../../../../../../../../../../🔨️modules/�
 semio-framework-value-native-owned = { path = "../../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-os-space-testing-sqlite-native-caller = { path = "../../../../../../../🪐️space/🧪️tests/🪶️sqlite/🫴️native-caller/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

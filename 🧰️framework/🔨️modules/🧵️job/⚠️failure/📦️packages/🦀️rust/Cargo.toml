@@ -42,6 +42,7 @@ semio-framework-job-testing-caller = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-value-testing-effect-bank = { path = "../../../../🌱️value/🧪️testing/📥️admission/🎟️effect/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
 [[test]]

@@ -37,10 +37,10 @@ pub fn released(bytes: usize) -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..Default::default() }
 }
 
-/// 🏷️ A declared-tool close poll keeps a pending effect as an unfunded retry and surfaces a settled failure as the plugin fault.
+/// 🏷️ A declared-tool close turn keeps its settled progress and surfaces a failure as the plugin fault.
 #[doc(hidden)]
-pub fn declared_poll(step: Result<RetainedCloneStep, semio_framework_value::ValueError>) -> Result<RetainedCloneStep, Fault> {
-    step.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string()))
+pub fn declared_poll(result: Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, Fault> {
+    result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| plugin_sdk_fault(error.to_string()))
 }
 
 #[doc(hidden)]
@@ -586,7 +586,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         if self.stores.retired_window_transient_stores.empty_backing_byte_demand() != Some(0) { return CloseRung::WindowRetirements; }
         if self.close.close_owned_stage < ORIGINAL_STORE_LANES.len() as u8 || self.close.close_owned_advance_ready { return CloseRung::OwnedStores; }
         if !self.retained_fields_own_terminal_is_empty() { return CloseRung::RetainedFields; }
-        if self.tools.pending_tool_lease_admission.is_some(){return CloseRung::ToolLeaseAdmission;}
+        if self.tools.pending_tool_lease_admission.is_some()||self.media.pending_reserved_producer_permit.is_some(){return CloseRung::ToolLeaseAdmission;}
         if self.pending.pending_document_window_admission.is_some(){return CloseRung::DocumentWindowAdmission;}
         if self.tools.tool_cancellations.ready() && self.close.close_cancellation_cursor < CANCELLATION_SLOT_SPAN { return CloseRung::CancellationSlots; }
         if !self.tools.tool_cancellations.terminal_is_empty() { return CloseRung::CancellationIssuer; }

@@ -108,5 +108,4 @@ pub use connect_referenced_model::{connect_referenced_model, ConnectReferencedMo
 
 #[path="🧳️retained/🦀️.rs"]pub mod retained;
 
-#[cfg(test)]#[global_allocator]
-static ORIGINAL_MODEL_MUTATION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+#[cfg(test)]use semio_framework_value_testing_allocator as _;

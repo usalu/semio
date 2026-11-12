@@ -3,19 +3,11 @@
 extern crate semio_s_artifact_norm_en1990_checks as checks;
 extern crate semio_s_artifact_norm_en1990_inferences as inferences;
 extern crate semio_s_artifact_norm_en1990_model as model;
+extern crate semio_s_artifact_norm_en1990_scene_combinations as combinations;
+extern crate semio_s_artifact_norm_en1990_scene_kit as kit;
+extern crate semio_s_artifact_norm_en1990_scene_layout as layout;
 extern crate semio_s_plugin_norm_compliance as norm;
 extern crate semio_s_plugin_norm_structural_scene as scene;
-
-#[path = "🧰️kit/🦀️.rs"]
-mod kit;
-pub use kit::{EntityKindSpec, CheckRoute, CHECK_OWNERS, COMBINATION_ENTITY, DOCUMENT_CHECKS, ENTITY_KINDS, check_owner, entities_of, entity_dependencies, entity_kind_of, focus_of_outcome, owner_entity, route_of};
-
-#[path = "📍️layout/🦀️.rs"]
-pub mod layout;
-pub use layout::{Layout, Placement};
-
-#[path = "🧮️combinations/🦀️.rs"]
-pub mod combinations;
 
 #[path = "🎞️tracks/🦀️.rs"]
 mod dynamics;
@@ -35,16 +27,14 @@ mod analyses;
 #[path = "🗂️cases/🦀️.rs"]
 pub mod cases;
 
-#[path = "📈️diagrams/🦀️.rs"]
-pub mod diagrams;
-pub use diagrams::diagrams;
-
 #[path = "🕹️handles/🦀️.rs"]
 pub mod handles;
 pub use handles::{handles, COMBINATION_PATH, TRAFFIC_GROUP_PATH};
 pub use actions::{present_groups, traffic_group_at};
 
-use kit::Out;
+use kit::{entities_of, entity_dependencies, Out};
+use layout::Layout;
+use scene::projection_kit::Placement;
 use model::{En1990Snapshot, LoadGroup};
 use norm::CheckReport;
 use scene::projection::{project_whole, Fragment, Kit, KitDoc, Part, ProjectionContext, SceneKit, ViewKey, ViewOptions, ViewValue};
@@ -160,6 +150,9 @@ fn summary(input: &SceneInput, combinations: usize) -> LocalizedCopy {
         format!("EN-1990-Tragwerksplanung mit {} Bauteilen, {actions} Einwirkungen, {analyses} Analysezeilen und {combinations} Kombinationen; größte Ausnutzung {:.0} %.", d.members.len(), worst * 100.0),
     )
 }
+
+#[cfg(test)]
+extern crate semio_s_artifact_norm_en1990_scene_diagrams as diagrams;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

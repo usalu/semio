@@ -30,6 +30,8 @@ semio-framework-value-testing-effect-bank = { path = "../../../../../../🌱️v
 serde_json = { workspace = true }
 semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
 
+semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
 [[test]]
 name = "publisher-birth"
 path = "../../🧪️tests/🌱️birth/🦀️.rs"

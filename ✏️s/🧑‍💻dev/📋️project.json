@@ -223,7 +223,7 @@
       "options": { "cwd": "✏️s/🧑‍💻dev", "command": "repo ./📜️script.ts stdio-format-claims check" }
     },
     "generate": {
-      "dependsOn": ["generate-stdio-format-claims"],
+      "dependsOn": ["generate-stdio-format-claims", "@semio-tech/framework-os-dev:channel-version-descriptors-check"],
       "executor": "repo:script",
       "cache": true,
       "inputs": [

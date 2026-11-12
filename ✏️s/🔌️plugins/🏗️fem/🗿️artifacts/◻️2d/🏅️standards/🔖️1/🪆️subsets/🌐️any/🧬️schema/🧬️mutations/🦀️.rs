@@ -23,7 +23,7 @@ use store::ArtifactStore;
 /// 🧬️ Closed semantic mutation vocabulary for the fem2d document, derived per
 /// `📓️derivation-rules.md` from `Fem2dSnapshot`'s shape (8 id-keyed collections + one inseparable
 /// analysis-settings facet). Every generic `Set*`/`Remove*` variant this facet used to carry —
-/// including the banned `SetSnapshot` whole-document-replace variant — is gone; whole-document
+/// including the banned whole-document-replace variant — is gone; whole-document
 /// replace is not an in-history mutation at all (routed through `Effect::LoadDocument`, see
 /// `reset_document_effect` (io)).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

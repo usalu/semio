@@ -23,8 +23,7 @@ mod binding_source;
 pub use binding_source::*;
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 #[cfg(test)]
 #[path="page-source-tests.rs"]

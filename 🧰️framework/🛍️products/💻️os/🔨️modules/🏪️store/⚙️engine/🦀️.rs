@@ -10,7 +10,5 @@ pub mod lifted_store;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod unit_tests;
 
-/// 🧪️ Library unit tests observe every physical birth and release through the shared heap witness.
 #[cfg(test)]
-#[global_allocator]
-static ENGINE_LIBRARY_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;

@@ -40,18 +40,20 @@ def admits(row):
 def scenario(policy, row):
     """🚦️ Event model of one queue of owners that all take the same time: admit the head while the law allows, otherwise the oldest running owner completes and its kind learns the growth it took."""
     margin = row["limitMegabytes"] * policy["safetyMarginBasisPoints"] / 10000
-    learned = dict(row["persisted"])
+    window = policy["peakSamples"]
+    samples = {kind: [megabytes] for kind, megabytes in row["persisted"].items()}
+    peak_of = lambda kind: max(samples[kind])
     queue, running, peak = list(row["tasks"]), [], 0
     while queue or running:
         if queue and len(running) < row["workers"]:
             head = queue[0]
-            known = head["kind"] in learned
+            known = head["kind"] in samples
             live = sum(task["growthMegabytes"] for task in running)
             state = {
                 "headroomMegabytes": row["limitMegabytes"] - margin - row["currentMegabytes"] - live,
                 "running": len(running),
-                "inflight": [{"estimateMegabytes": learned.get(task["kind"], row["guessMegabytes"]), "takenMegabytes": task["growthMegabytes"]} for task in running],
-                "estimateMegabytes": learned[head["kind"]] if known else row["guessMegabytes"],
+                "inflight": [{"estimateMegabytes": peak_of(task["kind"]) if task["kind"] in samples else row["guessMegabytes"], "takenMegabytes": task["growthMegabytes"]} for task in running],
+                "estimateMegabytes": peak_of(head["kind"]) if known else row["guessMegabytes"],
                 "learned": known,
             }
             if admits(state):
@@ -59,8 +61,8 @@ def scenario(policy, row):
                 peak = max(peak, len(running))
                 continue
         done = running.pop(0)
-        learned[done["kind"]] = max(learned.get(done["kind"], 0), done["growthMegabytes"])
-    return {"peak": peak, "learned": learned}
+        samples[done["kind"]] = (samples.get(done["kind"], []) + [done["growthMegabytes"]])[-window:]
+    return {"peak": peak, "learned": {kind: max(values) for kind, values in samples.items()}}
 
 
 def languages(policy, environment):

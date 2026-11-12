@@ -7,8 +7,7 @@ use paint_input::input;
 #[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]
 mod funding;
 funding::physical_close!(PaintedPreparationRetirement,funding::PhysicalClose);
-#[global_allocator]
-static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 fn sources()->serde_json::Value{serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🔣️.json")).unwrap()}
 fn test_work()->funding::Wallet{let value:serde_json::Value=serde_json::from_str(include_str!("../../../🔤️text/🧪️tests/🎟️original/🔣️.json")).unwrap();let v=&value["stock"];funding::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:v["items"].as_u64().unwrap()as usize,maximum_copy_bytes:v["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:v["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:v["release"].as_u64().unwrap()as usize,maximum_depth:v["depth"].as_u64().unwrap()as usize},2_000_000)}
 #[test]

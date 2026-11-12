@@ -303,6 +303,554 @@
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test-pack-wire-materialization-source"
       }
+    },
+    "verify-browser-actor-host-context": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify browser-actor-host-context",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "browser-actor-host-context"
+          ]
+        }
+      }
+    },
+    "verify-browser-actor-host-context-worker": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify browser-actor-host-context worker",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-resolved-host-context": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify resolved-host-context",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "resolved-host-context"
+          ]
+        }
+      }
+    },
+    "verify-host-ownership": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify host-ownership",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "host-ownership"
+          ]
+        }
+      }
+    },
+    "verify-host-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify host-ownership native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-shared-artifact-addressing": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify shared-artifact-addressing",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "shared-artifact-addressing"
+          ]
+        }
+      }
+    },
+    "verify-shared-artifact-addressing-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify shared-artifact-addressing oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-retained-window-input": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify retained-window-input",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "retained-window-input"
+          ]
+        }
+      }
+    },
+    "verify-retained-window-input-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify retained-window-input oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-publication-retirement-authority": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify publication-retirement-authority",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "publication-retirement-authority"
+          ]
+        }
+      }
+    },
+    "verify-publication-retirement-authority-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify publication-retirement-authority oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-snapshot-read-retirement": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify snapshot-read-retirement",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "snapshot-read-retirement"
+          ]
+        }
+      }
+    },
+    "verify-snapshot-read-retirement-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify snapshot-read-retirement native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-semio-envelope-identity": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify semio-envelope-identity",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "semio-envelope-identity"
+          ]
+        }
+      }
+    },
+    "verify-semio-envelope-identity-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify semio-envelope-identity native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-shared-value-canonical-json": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify shared-value-canonical-json",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "shared-value-canonical-json"
+          ]
+        }
+      }
+    },
+    "verify-store-reload-publication": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify store-reload-publication",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "store-reload-publication"
+          ]
+        }
+      }
+    },
+    "verify-store-reload-publication-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify store-reload-publication native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-window-config-provisioning-lifecycle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-config-provisioning-lifecycle",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "window-config-provisioning-lifecycle"
+          ]
+        }
+      }
+    },
+    "verify-window-config-retained-pack-load": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-config-retained-pack-load",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "window-config-retained-pack-load"
+          ]
+        }
+      }
+    },
+    "verify-window-config-retained-pack-load-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-config-retained-pack-load native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-window-config-pack-identity": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-config-pack-identity",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "window-config-pack-identity"
+          ]
+        }
+      }
+    },
+    "verify-window-config-pack-identity-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-config-pack-identity native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-ephemeral-transfer-preparation": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify ephemeral-transfer-preparation",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "ephemeral-transfer-preparation"
+          ]
+        }
+      }
+    },
+    "verify-ephemeral-transfer-preparation-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify ephemeral-transfer-preparation native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-owned-document-closure": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify owned-document-closure",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "owned-document-closure"
+          ]
+        }
+      }
+    },
+    "verify-owned-document-closure-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify owned-document-closure native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-framework-empty-state-contract": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify framework-empty-state-contract",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "framework-empty-state-contract"
+          ]
+        }
+      }
+    },
+    "verify-framework-empty-state-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify framework-empty-state-contract native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-window-action-context": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-action-context",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "window-action-context"
+          ]
+        }
+      }
+    },
+    "verify-window-action-context-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-action-context oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-surface-view-context": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify surface-view-context",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "surface-view-context"
+          ]
+        }
+      }
+    },
+    "verify-surface-view-context-menu": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify surface-view-context menu",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-view-context-integer-carriers": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify view-context-integer-carriers",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "view-context-integer-carriers"
+          ]
+        }
+      }
+    },
+    "verify-view-context-integer-carriers-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify view-context-integer-carriers native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-window-view-context": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-view-context",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "window-view-context"
+          ]
+        }
+      }
+    },
+    "verify-window-view-context-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify window-view-context native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-video-render-export": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts verify video-render-export",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "video-render-export"
+          ]
+        }
+      }
     }
   }
 }

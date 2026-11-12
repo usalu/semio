@@ -21,7 +21,7 @@ impl semio_framework_value::retirement::RetireOwned for crate::FaultScope{
  fn boxed_original_demands(&self)->Result<Option<semio_framework_value::RetirementDemand>,semio_framework_value::ValueError>{Ok(Some(scope::demands()))}
  fn boxed_original_work_demand(&self)->Result<Option<u64>,semio_framework_value::ValueError>{Ok(Some(1))}
     fn native_boxed_original_admission()->Option<semio_framework_value::retirement::NativeBoxedRetirementAdmission<Self>>{Some(unsafe{semio_framework_value::retirement::NativeBoxedRetirementAdmission::new(<Self as semio_framework_value::retirement::RetireOwned>::boxed_original_retirement)})}
- fn boxed_original_retirement(original:&mut Option<semio_framework_value::retirement::original_box::BoxOriginal<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::retirement::RetirementCursor>,semio_framework_value::RetainedCloneProgress)>>{scope::admit(original,effect.grant())}
+ fn boxed_original_retirement(original:&mut Option<semio_framework_value::retirement::original_box::BoxOriginal<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::retirement::RetirementCursor>,semio_framework_value::RetainedCloneProgress)>>{scope::admit(original,effect)}
 }
 semio_framework_value::artifact_retire_struct!(crate::FaultCause { message, code, retained_progress });
 semio_framework_value::artifact_retire_struct!(crate::Diagnostic { code, severity, span, message, expected, scope });
@@ -38,7 +38,7 @@ impl semio_framework_value::retirement::RetireOwned for crate::FaultParams {
     fn boxed_original_demands(&self)->Result<Option<semio_framework_value::RetirementDemand>,semio_framework_value::ValueError>{Ok(Some(params::demands()))}
     fn boxed_original_work_demand(&self)->Result<Option<u64>,semio_framework_value::ValueError>{Ok(Some(1))}
     fn native_boxed_original_admission()->Option<semio_framework_value::retirement::NativeBoxedRetirementAdmission<Self>>{Some(unsafe{semio_framework_value::retirement::NativeBoxedRetirementAdmission::new(<Self as semio_framework_value::retirement::RetireOwned>::boxed_original_retirement)})}
-    fn boxed_original_retirement(original:&mut Option<semio_framework_value::retirement::original_box::BoxOriginal<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::retirement::RetirementCursor>,semio_framework_value::RetainedCloneProgress)>>{params::admit(original,effect.grant())}
+    fn boxed_original_retirement(original:&mut Option<semio_framework_value::retirement::original_box::BoxOriginal<Self>>,effect:&mut semio_framework_value::RetainedAllocationEffect<'_>)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::retirement::RetirementCursor>,semio_framework_value::RetainedCloneProgress)>>{params::admit(original,effect)}
 
 }
 semio_framework_value::artifact_retire_struct!(crate::Fault { retained_progress, origin, code, severity, message, scope, span, source, domain, causes, params, retryable });

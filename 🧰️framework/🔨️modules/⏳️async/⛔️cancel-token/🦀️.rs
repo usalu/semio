@@ -72,7 +72,7 @@ impl CancelToken {
 
     /// 📏️ Quotes one original cancellation Arc and its inline empty waiter owner.
     pub fn root_admission_demands()->semio_framework_value::RetirementDemand{
-        semio_framework_value::RetirementDemand{capacity_bytes:semio_framework_value_allocation_return::shared_allocation_bytes::<CancelNode>(),depth:1,..Default::default()}
+        semio_framework_value_allocation_return::shared_allocation_value_demand::<CancelNode>().expect("the cancellation node layout is bounded")
     }
 
     /// 🎟️ Creates one live root only after its original independent authority admits the actual birth.

@@ -18,7 +18,7 @@ use semio_framework_value_ordered::OrderedMap;
 // mount instead). Kept additive: `ViewModel` is consumed outside this pass by 🛍️products/💻️os
 // (plugin/renderer modules) and ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue
 // added alongside, not replacing, Serialize/Deserialize.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewModel {
@@ -114,6 +114,14 @@ pub struct ViewModel {
     #[serde(default)]
     #[value(default)]
     pub window_instances: Vec<ViewWindowInstance>,
+}
+
+/// 🛬️ Decodes through the one value decoder so an error retires every ordered map it already built instead of dropping it.
+impl<'de> Deserialize<'de> for ViewModel {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <semio_framework_value::DslValue as Deserialize>::deserialize(deserializer)?;
+        <Self as FromValue>::from_value(value).map_err(serde::de::Error::custom)
+    }
 }
 
 /// 📬️ One tree container's host-known state: whether the user opened or closed it (`None` = the
@@ -234,11 +242,12 @@ impl ViewModel {
 
     /// 🎬️ Overlays the host-owned mode tool, then binds the view to a window or the panel.
     pub fn for_host_armed_action(&self, host_active_tool_id: Option<&str>, window_id: Option<&str>) -> Option<Self> {
-        let armed = Self { active_tool_id: host_active_tool_id.map(str::to_string), ..self.clone() };
-        match window_id {
-            Some(id) => armed.for_window_instance(id),
-            None => Some(armed.for_panel()),
-        }
+        let mut projected = match window_id {
+            Some(id) => self.for_window_instance(id)?,
+            None => self.for_panel(),
+        };
+        projected.active_tool_id = host_active_tool_id.map(str::to_string);
+        Some(projected)
     }
 }
 
@@ -466,8 +475,7 @@ use semio_framework_value::Number;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 #[cfg(test)]
-#[global_allocator]
-static TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest

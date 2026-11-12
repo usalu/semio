@@ -281,6 +281,26 @@
         "command": "repo ./📜️script.ts verify original-widget-output native",
         "forwardAllArgs": true
       }
+    },
+    "verify-generation3d-document-io-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify generation3d-document-io native",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-generation3d-preview-window-transient-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify generation3d-preview-window-transient native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

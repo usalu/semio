@@ -7,8 +7,7 @@ use semio_framework_value::ValueError;
 use semio_framework_value_snapshot_read::{artifact_retirement_box_close_step, artifact_retirement_box_demands, SnapshotRead, SnapshotReadRegistryHandle};
 use std::sync::Arc;
 
-#[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 #[test]
 fn registered_owned_serializer_rejections_preserve_exact_read_and_options(){

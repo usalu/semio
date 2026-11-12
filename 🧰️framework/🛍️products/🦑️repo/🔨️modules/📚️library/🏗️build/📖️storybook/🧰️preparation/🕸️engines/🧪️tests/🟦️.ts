@@ -42,9 +42,9 @@ test("actual birth descendant resolver selects the same closed scoped requests a
  expect(await run("/repo",["test","storybook","--grep","puzzle"],env)).toBe(requests);
  expect(await run("/repo",["dev","storybook","puzzle","2d","--ci"],env)).toBe(requests);
  expect(await run("/repo",["dev","storybook"],env)).toBe(requests);
- expect(await run("/repo",["run","workspace:build-storybook"],env)).toBe(requests);
- expect(await run("/repo",["run","workspace:dev-storybook-puzzle-2d"],env)).toBe(requests);
- expect(await run("/repo",["run","workspace:dev-storybook","--","puzzle","2d"],env)).toBe(requests);
+ expect(await run("/repo",["run","repo-storybook:build-storybook"],env)).toBe(requests);
+ expect(await run("/repo",["run","repo-storybook:dev-storybook-puzzle-2d"],env)).toBe(requests);
+ expect(await run("/repo",["run","repo-storybook:dev-storybook","--","puzzle","2d"],env)).toBe(requests);
  expect(await run("/repo",["run","actual-owner:wasm"],env)).toEqual([]);
  expect(await run("/repo",["build","storybook","--help"],env)).toEqual([]);
  expect(await run("/repo",["dev","storybook-static"],env)).toEqual([]);

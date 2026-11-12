@@ -36,3 +36,4 @@ semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"]
 semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

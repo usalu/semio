@@ -140,6 +140,26 @@
         "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "verify-sequence-window-ownership-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify sequence-window-ownership oracle",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-sequence-window-ownership-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify sequence-window-ownership native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

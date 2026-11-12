@@ -1,5 +1,13 @@
 use super::*;
 
+use semio_framework_value::{OriginalRetirementPoll,RetainedAllocationEffect,retained_clone::RetainedCloneGrant as Grant};
+/// 🚗️ Runs one poll-shaped retirement turn under a real original Work action and observes only its heap.
+pub(super) fn drove(grant:Grant,call:impl FnMut(&mut RetainedAllocationEffect<'_>)->OriginalRetirementPoll)->(semio_framework_value::RetainedWorkOutcome<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::OriginalRetirementFailure>,(usize,usize)){
+    semio_framework_value_clone_source_testing::drive::warm();
+    semio_framework_value_testing_allocator::observe_retirement_allocations(||semio_framework_value_clone_source_testing::drive::drive(grant,WORK,call))
+}
+const WORK:u64=1<<16;
+
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap() }
 fn cases() -> serde_json::Value { serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏠️local-interaction/🔣️.json")).unwrap() }
 
@@ -14,9 +22,9 @@ fn local_interaction_root_composes_real_typed_payload_and_physical_retirement() 
             assert_eq!(dsl_to_json(&semio_framework_value::ToValue::to_value(&root)),*source);
             let(mut owner,birth,free)=semio_framework_trace_memory_testing::observe_backing(||ControlledRetirement::new(root).unwrap_or_else(|_|panic!("local interaction root requires defining typed retirement")));assert_eq!((birth,free),(0,0));let mut total=RetainedCloneProgress::default();let mut turns=0;
             while !owner.terminal_is_empty(){turns+=1;assert!(turns<500000);let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes,maximum_capacity_bytes:owner.next_capacity_byte_demand(maximum_copy_bytes).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-                let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((birth,free),(0,0));
-                for denied in [RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant}]{if denied.maximum_capacity_bytes==grant.maximum_capacity_bytes&&denied.maximum_release_bytes==grant.maximum_release_bytes{continue;}let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||owner.step(denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((birth,free),(0,0));}
-                let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||owner.step(grant).unwrap());let progress=step.progress();assert!(progress.fits(grant));assert_eq!(birth,progress.retained_capacity_bytes);assert_eq!(free,progress.released_bytes);total=total.checked_add(progress).unwrap();
+                let(step,(birth,free))=drove(RetainedCloneGrant {maximum_items:0,..grant},|effect|owner.step(maximum_copy_bytes,effect));let step=step.result.unwrap();assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((birth,free),(0,0));
+                for denied in [RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes.saturating_sub(1),..grant}]{if denied.maximum_capacity_bytes==grant.maximum_capacity_bytes&&denied.maximum_release_bytes==grant.maximum_release_bytes{continue;}let(step,(birth,free))=drove(denied,|effect|owner.step(maximum_copy_bytes,effect));let step=step.result.unwrap();assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((birth,free),(0,0));}
+                let(step,(birth,free))=drove(grant,|effect|owner.step(maximum_copy_bytes,effect));let progress=step.result.unwrap().progress();assert!(progress.fits(grant));assert_eq!(birth,progress.retained_capacity_bytes);assert_eq!(free,progress.released_bytes);total=total.checked_add(progress).unwrap();
             }
             assert_eq!(total.released_bytes,original+total.retained_capacity_bytes);
         }
@@ -27,13 +35,13 @@ pub(super) fn drain(owner:Result<semio_framework_value::retirement::controlled::
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
     let mut owner=owner.unwrap_or_else(|_|panic!("defining Root retirement must be supported"));
     let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:owner.next_capacity_byte_demand(bytes).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-    assert_eq!(owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap().progress(),RetainedCloneProgress::default());
-    assert_eq!(owner.step(RetainedCloneGrant {maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..grant}).unwrap().progress(),RetainedCloneProgress::default());
+    assert_eq!(drove(RetainedCloneGrant {maximum_items:0,..grant},|effect|owner.step(bytes,effect)).0.result.unwrap().progress(),RetainedCloneProgress::default());
+    assert_eq!(drove(RetainedCloneGrant {maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..grant},|effect|owner.step(bytes,effect)).0.result.unwrap().progress(),RetainedCloneProgress::default());
     let mut retired=0;
     for _ in 0..200000 {
         if owner.terminal_is_empty(){return retired;}
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:owner.next_capacity_byte_demand(bytes).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
-        let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||owner.step(grant).unwrap());let progress=step.progress();
+        let(step,(birth,free))=drove(grant,|effect|owner.step(bytes,effect));let progress=step.result.unwrap().progress();
         assert!(progress.fits(grant));assert_eq!(birth,progress.retained_capacity_bytes);assert_eq!(free,progress.released_bytes);assert!(progress.copied_items!=0);
         retired+=progress.copied_bytes;
     }

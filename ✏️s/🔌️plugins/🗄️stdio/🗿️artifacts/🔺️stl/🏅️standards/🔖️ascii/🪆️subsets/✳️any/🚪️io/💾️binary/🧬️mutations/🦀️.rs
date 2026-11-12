@@ -22,8 +22,7 @@ use protocol::{OpBinary, OpText};
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the prior `print_stl_op(self).into_bytes()` text-as-binary shortcut. `tag` is
 /// the `StlMutation` variant's declaration-order ordinal (1=`SetSolidName` .. 5=
-/// `SetTriangleVertices`, same order `enum StlMutation` declares them; `0` is retired along with
-/// `NoMutation`, not reused). Every variant's payload is real field-by-field binary
+/// `SetTriangleVertices`, same order `enum StlMutation` declares them; `0` is retired, not reused). Every variant's payload is real field-by-field binary
 /// (`write_varint_u64` for `index: usize`, `write_f64_bin`/`enc_vec3_bin`/`enc_vertices_bin`/
 /// `enc_triangle_bin`/`enc_snapshot_bin` for the rest) — `StlMutation`'s payload tree has ZERO
 /// self-recursion, so nothing here is opaque at the Rust layer; only the protocol-dialect file

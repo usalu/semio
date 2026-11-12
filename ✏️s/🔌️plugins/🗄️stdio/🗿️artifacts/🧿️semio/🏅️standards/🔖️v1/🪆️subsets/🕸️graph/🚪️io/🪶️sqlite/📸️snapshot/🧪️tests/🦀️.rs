@@ -109,7 +109,7 @@ fn graph_hex_float_decode(body:&str,limits:SqliteDatabaseLimits)->Result<SemioGr
  use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
  let mut callback=|_|true;let mut outer=SqliteSnapshotControl::new(&mut callback,limits);
  outer.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint,allocation|{
-  let mut callback=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_allocation=|request:semio_framework_value_native_owned::native_decoding::NativeAllocationRequest|allocation(request.bytes);let mut native=NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);
+  let mut callback=|event:NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native=allocation.decode(remaining,&mut callback);
   let recipient:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient=Box::leak(Box::new(semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new()));native.install_retirement_recipient(recipient).unwrap();
   let result=semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace::decode(&mut native,semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::empty,|output,native|semio_s_artifact_stdio_semio_graph::io::sqlite::snapshot::native_decoding::document_into(output,body,native,limits));(result,native.owned_bytes())
  }).unwrap()

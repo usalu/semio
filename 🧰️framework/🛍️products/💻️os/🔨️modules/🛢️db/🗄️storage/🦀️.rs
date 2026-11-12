@@ -55,8 +55,7 @@ extern crate semio_os_kernel as pack;
 #[path = "../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
 pub(crate) mod test_allocation;
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 use db_durability::{DurabilityClass, EpochFence};
 use db_ids::{ArtifactId, DbError};

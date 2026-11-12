@@ -10,6 +10,7 @@
 //! to, and the refusal a widened float earns (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 
 use super::*;
+use crate::resolved_host_context_tests::Retiring;
 use semio_framework_value::Number;
 
 #[derive(serde::Deserialize)]
@@ -49,15 +50,15 @@ fn replace(value: &mut DslValue, path: &[String], replacement: DslValue) {
     replace(slot, &path[1..], replacement);
 }
 
-fn scene_view(fixture: &IntegerCarrierFixture) -> ViewModel {
-    semio_framework_pack_json::from_json_str(&fixture.view_context.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the fixture context decodes")
+fn scene_view(fixture: &IntegerCarrierFixture) -> Retiring<ViewModel> {
+    Retiring::new(semio_framework_pack_json::from_json_str::<ViewModel>(&fixture.view_context.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the fixture context decodes"))
 }
 
 #[semio_framework_async_macros::async_test]
 async fn both_doors_carry_the_view_context_as_the_same_exact_pack_bytes() {
     let fixture = fixture();
     let mut accepted = |_| true;
-    let bytes = pack::record::intrinsic::encode_body(&semio_framework_value::ToValue::to_value(&scene_view(&fixture)), &pack::record::EncodeOptions::default(), &mut semio_framework_value::NativeEncodeControl::new(16 * 1024 * 1024, &mut accepted)).expect("the fixture context encodes");
+    let bytes = pack::record::intrinsic::encode_body(&semio_framework_value::ToValue::to_value(&*scene_view(&fixture)), &pack::record::EncodeOptions::default(), &mut semio_framework_value::NativeEncodeControl::new(16 * 1024 * 1024, &mut accepted)).expect("the fixture context encodes");
     assert_eq!(hex(&bytes), fixture.pack_hex, "the wgpu door's `view_state_pack_base64` and the React door's `encodePackValue` must agree byte for byte");
 }
 
@@ -73,23 +74,23 @@ async fn the_guest_decodes_every_integer_field_exactly() {
         }
         assert!(matches!(cursor, DslValue::Number(Number::UInt(_))), "{path:?} must cross as an exact integer carrier, found {cursor:?}");
     }
-    let ingress = <ViewModel as semio_framework_value::FromValue>::from_value(value.clone()).expect("actor ingress decodes the carried context");
+    let ingress = Retiring::new(<ViewModel as semio_framework_value::FromValue>::from_value(value.clone()).expect("actor ingress decodes the carried context"));
     assert_eq!(ingress.tool_run_trace_cursor_by_window_id.get("procedural-preview"), Some(&ToolRunTraceCursor { run: 1, generation: 0, page: 0 }), "actor ingress (`decode_wire_serialized`) keeps every echoed cursor");
-    let view: ViewModel = semio_framework_value::FromValue::from_value(value).expect("the carried context decodes in the guest");
+    let view = Retiring::new(<ViewModel as semio_framework_value::FromValue>::from_value(value).expect("the carried context decodes in the guest"));
     assert_eq!(view.tool_run_trace_cursor_by_window_id.get("procedural-preview"), Some(&ToolRunTraceCursor { run: 1, generation: 0, page: 0 }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_widened_float_is_refused_and_never_rounded() {
     let fixture = fixture();
-    let carried = semio_framework_value::ToValue::to_value(&scene_view(&fixture));
+    let carried = semio_framework_value::ToValue::to_value(&*scene_view(&fixture));
 
     let mut widened = carried.clone();
     replace(&mut widened, &fixture.integer_paths[0], semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(1.0)));
-    let error = <ViewModel as semio_framework_value::FromValue>::from_value(widened).expect_err("a whole float in a u64 slot must be refused");
+    let error = <ViewModel as semio_framework_value::FromValue>::from_value(widened).map(Retiring::new).expect_err("a whole float in a u64 slot must be refused");
     assert_eq!(error.to_string(), fixture.guest_refusal);
 
     let mut fractional = carried;
     replace(&mut fractional, &fixture.integer_paths[0], semio_framework_value::DslValue::Number(semio_framework_value::Number::Float(fixture.non_integral)));
-    assert!(<ViewModel as semio_framework_value::FromValue>::from_value(fractional).is_err(), "a non-integral float in a u64 slot must be refused");
+    assert!(<ViewModel as semio_framework_value::FromValue>::from_value(fractional).map(Retiring::new).is_err(), "a non-integral float in a u64 slot must be refused");
 }

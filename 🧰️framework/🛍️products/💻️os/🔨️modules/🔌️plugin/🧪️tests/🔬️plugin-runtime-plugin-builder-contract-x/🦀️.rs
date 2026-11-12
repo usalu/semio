@@ -94,8 +94,8 @@ pub struct TestAppCommandInputs {
     tool_id:Option<String>,
     schema_id:Option<String>,
     pub window_config: Option<semio_plugin_window_config::WindowConfigSnapshot>,
-    pub interaction_state: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionState>>,
-    pub interaction_hover: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionHoverState>>,
+    pub interaction_state: Option<semio_framework_value::retirement::arc_custody::ArcLease<InteractionState>>,
+    pub interaction_hover: Option<semio_framework_value::retirement::arc_custody::ArcLease<InteractionHoverState>>,
     pub instance_operation_owner: Option<semio_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
     pub output_chunks: Option<ArtifactOutputChunks>,
 }
@@ -108,8 +108,8 @@ impl TestAppCommandInputs {
         Ok(None)
     }
 
-    pub fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
-        macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.$field, active, grant).map(Some); } }; }
+    pub fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, effect: &mut semio_framework_value::RetainedAllocationEffect<'_>) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
+        macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.$field, active, effect).result.map(Some); } }; }
         owned!(controller_id);owned!(tool_id);owned!(schema_id);owned!(window_config);owned!(interaction_state);owned!(interaction_hover);owned!(instance_operation_owner);owned!(output_chunks);
         Ok(None)
     }
@@ -155,7 +155,8 @@ impl<const RETAINED: bool, const TOOLS: u8> TestAppCommandJob<RETAINED, TOOLS> {
 }
 
 impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob for TestAppCommandJob<RETAINED, TOOLS> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _return_claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+            semio_framework_job::InteractiveJobStep::from_callback((move || -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
         if self.admitted {
             return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into);
@@ -188,7 +189,8 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
         }
         self.admitted = true;
         JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into)
-    }
+    })())
+        }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         semio_plugin_testing_laws::artifact_app_laws::fixture_job_outcome(descriptor)
@@ -199,26 +201,30 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure> {
-        use semio_framework_job::{InteractiveJobCloseStep,close_original_retained_step};
-        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep};
+        use semio_framework_job::{InteractiveJobCloseStep,close_original_effect_step};
+        use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,RetirementPollExit as Exit};
         if !self.closing { return Ok(InteractiveJobCloseStep::Blocked); }
         let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
         if let Some(raw)=self.raw.as_mut() {
-            if !raw.terminal_is_empty(){return close_original_retained_step(cx,demand,|grant|raw.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress())));}
-            return close_original_retained_step(cx,demand,|_|{self.raw=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))});
+            if !raw.terminal_is_empty(){return close_original_effect_step(cx,demand,|effect|{let result=(||->Result<RetainedCloneStep,Exit>{let step=raw.close_step(effect.grant())?;Exit::pay(effect,1)?;Ok(RetainedCloneStep::Progress(step.progress()))})();Exit::settle(effect,result)});}
+            return close_original_effect_step(cx,demand,|effect|{self.raw=None;let result=Exit::pay(effect,1).map(|()|RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));Exit::settle(effect,result)});
         }
-        let step=close_original_retained_step(cx,demand,|grant|{
-            if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}
-            else if self.command.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command,&mut self.retirement,grant)}
-            else if self.snapshot.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.snapshot,&mut self.retirement,grant)}
-            else if self.config.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.config,&mut self.retirement,grant)}
-            else if self.history.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.history,&mut self.retirement,grant)}
-            else if self.completion.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.retirement,grant)}
-            else if self.metadata.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.metadata,&mut self.retirement,grant)}
-            else if self.context.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context,&mut self.retirement,grant)}
-            else if let Some(residual)=self.residual.as_mut(){match residual.step(&mut self.retirement,grant){Ok(Some(step))=>Ok(step),Ok(None)=>{self.residual=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}Err(error)=>Err(error)}}
-            else if self.snapshot_read.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot_read,&mut self.retirement,grant)}
-            else{Ok(RetainedCloneStep::Complete(Default::default()))}
+        let step=close_original_effect_step(cx,demand,|effect|{
+            let body=effect.grant().maximum_copy_bytes;
+            let result=(||->Result<RetainedCloneStep,Exit>{
+                if self.retirement.is_some(){Exit::resume(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,body,effect))}
+                else if self.command.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command,&mut self.retirement,effect).result?)}
+                else if self.snapshot.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.snapshot,&mut self.retirement,effect).result?)}
+                else if self.config.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.config,&mut self.retirement,effect).result?)}
+                else if self.history.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.history,&mut self.retirement,effect).result?)}
+                else if self.completion.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.retirement,effect).result?)}
+                else if self.metadata.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.metadata,&mut self.retirement,effect).result?)}
+                else if self.context.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context,&mut self.retirement,effect).result?)}
+                else if let Some(residual)=self.residual.as_mut(){match residual.step(&mut self.retirement,effect)?{Some(step)=>Ok(step),None=>{self.residual=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}}}
+                else if self.snapshot_read.is_some(){Ok(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot_read,&mut self.retirement,effect).result?)}
+                else{Ok(RetainedCloneStep::Complete(Default::default()))}
+            })();
+            Exit::settle(effect,result)
         })?;
         Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
@@ -310,7 +316,7 @@ pub fn test_restart_register<const RETAINED: bool, const TOOLS: u8>(registry: &m
 }
 
 #[doc(hidden)]
-pub fn test_restart_build<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture request absent"))?;if RETAINED{assert!(matches!(original.command.as_ref(),TestCommand::ApplyCountFromTask{..}));assert!(original.snapshot.label.is_empty());}else if TOOLS==TEST_APP_TOOLS_NONE||!TEST_APP_COMMAND_TOOL_IDS.contains(&original.tool_id.as_str()){return Ok(false)}test_app_command_job(request,output,cx)}
+pub fn test_restart_build<const RETAINED:bool,const TOOLS:u8>(request:&mut Option<ArtifactOwnedToolJobRequest<TestApp<RETAINED,TOOLS>>>,output:&mut Option<semio_framework::ErasedToolJob>,construction:&mut semio_framework_job::OriginalConstructionAdmission,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let original=request.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original fixture request absent"))?;if RETAINED{assert!(matches!(original.command.as_ref(),TestCommand::ApplyCountFromTask{..}));assert!(original.snapshot.label.is_empty());}else if TOOLS==TEST_APP_TOOLS_NONE||!TEST_APP_COMMAND_TOOL_IDS.contains(&original.tool_id.as_str()){return Ok(false)}test_app_command_job(request,output,construction,cx)}
 
 /// 🧵️ Builds the job on its OWN synchronous frame — every real editor's
 /// `ArtifactEditor::build_tool_job` is sync for the same bounded-stack reason.
@@ -320,7 +326,7 @@ pub fn test_app_command_job<const RETAINED:bool,const TOOLS:u8>(request:&mut Opt
     let job = TestAppCommandJob {
         rejected: None,
         admitted: false,
-        residual: Some(TestAppCommandInputs { controller_id:Some(request.controller_id),tool_id:Some(request.tool_id),schema_id:Some(request.payload_schema_id), window_config: request.window_config, interaction_state: Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_state)), interaction_hover: Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_hover)), instance_operation_owner: Some(request.instance_operation_owner), output_chunks: Some(request.output_chunks) }),
+        residual: Some(TestAppCommandInputs { controller_id:Some(request.controller_id),tool_id:Some(request.tool_id),schema_id:Some(request.payload_schema_id), window_config: request.window_config, interaction_state: Some(semio_framework_value::retirement::arc_custody::ArcLease::new(request.interaction_state)), interaction_hover: Some(semio_framework_value::retirement::arc_custody::ArcLease::new(request.interaction_hover)), instance_operation_owner: Some(request.instance_operation_owner), output_chunks: Some(request.output_chunks) }),
         metadata: Some(AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, retained: request.retained, authoring_seed: request.authoring_seed }),
         command: Some(request.command.into_box()),
         snapshot: Some(request.snapshot),

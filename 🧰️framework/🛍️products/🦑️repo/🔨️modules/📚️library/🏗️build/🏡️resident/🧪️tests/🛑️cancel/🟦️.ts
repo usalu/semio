@@ -233,6 +233,26 @@ describe("every slice load gets a hard memory limit of its own where cgroups are
   expect(at(undefined)).toBe(3540);expect(at(2000)).toBe(3540);expect(at(12000)).toBe(7464);expect(at(20000)).toBe(8192);
   expect(sliceLimitPolicyV1({limitBytes:4096*MiB,currentBytes:300*MiB,availableBytes:20000*MiB},256)!.memoryMegabytes).toBe(3540);
  });
+ test("a load is never reserved less than the peak earlier loads needed, however little the host has available at its start, and never more than the elasticity maximum",()=>{
+  const elasticity={maximumMegabytes:8192,hostShareBasisPoints:7500,hostFloorMegabytes:1536},at=(availableMegabytes:number,learned:number)=>sliceLimitPolicyV1({limitBytes:4096*MiB,currentBytes:300*MiB,availableBytes:availableMegabytes*MiB},256,elasticity,learned)!.memoryMegabytes;
+  expect(at(2000,0)).toBe(3540);expect(at(2000,6000)).toBe(6000);expect(at(12000,6000)).toBe(7464);expect(at(2000,20000)).toBe(8192);
+ });
+ test("a plan reserves its limit through the capacity gate before its worker starts, attaches the worker to the reservation and gives it back when the load ends, even when the load fails",async()=>{
+  const log:string[]=[],listeners:Record<string,(value:unknown)=>void>={},fake={pid:4242,on:(event:string,listener:(value:unknown)=>void)=>{listeners[event]=listener;},terminate:async()=>0},limiter={create:async()=>({attach:async()=>undefined,onBreach:()=>undefined,release:async()=>undefined})};
+  const harness=(answer:"done"|"error")=>createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,graceMilliseconds:50,headroom,marginMegabytes:L.marginMegabytes,limiter:limiter as never,learned:{read:()=>0,write:()=>undefined},reserve:async({megabytes}:{megabytes:number})=>{log.push("reserve "+megabytes);return{attach:(pid:number)=>{log.push("attach "+pid);},release:()=>{log.push("release");}};},createWorker:()=>{log.push("worker");queueMicrotask(()=>listeners.message?.(answer==="done"?{type:"done",graph:{}}:{type:"error",message:"broken"}));return fake;}});
+  const pool=harness("done");await pool.run({root:base});await pool.close();await waitFor(()=>log.at(-1)==="release",5000);
+  expect(log).toEqual(["reserve "+L.expect.memoryMaxMegabytes,"worker","attach 4242","release"]);
+  log.length=0;const failing=harness("error");await expect(failing.run({root:base})).rejects.toThrow("broken");await failing.close();await waitFor(()=>log.at(-1)==="release",5000);
+  expect(log).toEqual(["reserve "+L.expect.memoryMaxMegabytes,"worker","attach 4242","release"]);
+ });
+ test("a plan that waits for its reservation reports the wait, starts no worker while it waits, and a cancellation during the wait ends it without a worker",async()=>{
+  const log:string[]=[],progress:any[]=[],controller=new AbortController();let started=0;
+  const pool=createSlicePoolV1({workerUrl:new URL("file:///unused.mjs"),maximum:1,heartbeatMilliseconds:20,headroom:()=>({limitBytes:L.headroom.limitMegabytes*MiB,currentBytes:L.headroom.currentMegabytes*MiB,availableBytes:1024*MiB}),marginMegabytes:L.marginMegabytes,limiter:{create:async()=>undefined} as never,reserve:({signal}:{signal:AbortSignal})=>new Promise((_resolve,reject)=>{signal.addEventListener("abort",()=>reject(signal.reason),{once:true});}),createWorker:()=>{started++;throw new Error("no worker may start");}});
+  const running=pool.run({root:base},{signal:controller.signal,onProgress:(_ms:number,detail:any)=>progress.push(detail)}).then(()=>undefined,error=>error);
+  expect(await waitFor(()=>progress.length>=2,5000)).toBe(true);
+  expect(progress[0]).toMatchObject({phase:"reservation",done:0,total:L.expect.memoryMaxMegabytes,decision:{key:"waiting",used:L.expect.memoryMaxMegabytes,budget:1024}});
+  controller.abort(new Error("stop waiting"));expect((await running).message).toBe("stop waiting");expect(started).toBe(0);expect(log).toEqual([]);await pool.close();
+ });
  test("the host availability reads MemAvailable in kilobytes",()=>{expect(hostAvailableBytesV1(()=>"MemTotal: 1 kB\nMemAvailable:    2048 kB\n")).toBe(2048*1024);expect(hostAvailableBytesV1(()=>{throw Error("none");})).toBeGreaterThan(0);});
  test("a load is placed in its own cgroup with the computed limits and the group is killed and removed when the load ends",async()=>{
   const m=modelled(),pool=createSlicePoolV1({workerUrl:new URL("./🧒️spawning-worker.mjs",import.meta.url),maximum:1,graceMilliseconds:200,headroom,marginMegabytes:L.marginMegabytes,limiter:createCgroupLimiterV1("/cg/semio-jobs",m.ports)});

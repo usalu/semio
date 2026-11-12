@@ -342,7 +342,7 @@ async fn codec_retention_law() {
 //#region 🔖️OpTextBinaryRoundtripLaw
 /// 🧪️ `OpText`/`OpBinary` round-trip laws for the hand-rolled `SemioDocumentMutation`
 /// grammar -- exercises every variant, incl. `InsertBlock`'s bare `DocBlock` payload (a
-/// `Table` carrying nested rows/cells/blocks), `SetSnapshot`'s whole snapshot, and every
+/// `Table` carrying nested rows/cells/blocks), a whole snapshot payload, and every
 /// `Option`/tri-state field.
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {

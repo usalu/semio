@@ -10,11 +10,6 @@ use super::SceneInput;
 
 pub(crate) const COLLECTION: &str = "cases";
 
-/// 🧊️ Whether the entry of `row` declares geometry, so the case stands in the scene.
-pub(crate) fn declared(row: &CaseRow) -> bool {
-    forms::declared::<En1996Cases>(row).is_some()
-}
-
 /// 🎬️ Every case of the document as scene entities and label.
 pub(crate) fn project(input: &SceneInput, layout: &Layout, out: &mut Out) {
     for row in &input.document.cases {

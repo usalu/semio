@@ -35,7 +35,7 @@ impl OriginalReplayResident{
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let body=cx.retained_grant().maximum_copy_bytes;
   if !self.close.is_empty(){let d=close_demand(&self.close,body)?;close_original_effect_step(cx,d,|effect|self.close.step_granted(effect.grant().maximum_copy_bytes,effect))?;return Ok(false)}
-  if self.failure.is_none()&&self.admission.has_failure()&&self.admission.take_failure_into_step(&mut self.failure,cx)?{return Ok(false)}
+  if self.admission.failure_untaken()&&self.admission.take_failure_into_step(&mut self.failure,cx)?{return Ok(false)}
   if self.failure.is_some(){let d=self.close.next_owner_demands::<OriginalConstructionFailure>(true,&None,body)?;close_original_effect_step(cx,d,|effect|begun(&mut self.close,&mut self.failure,effect))?;return Ok(false)}
   if !self.admission.terminal_is_empty(){self.admission.close_step(cx)?;return Ok(false)}
   self.unit=None;self.constructing=false;Ok(true)

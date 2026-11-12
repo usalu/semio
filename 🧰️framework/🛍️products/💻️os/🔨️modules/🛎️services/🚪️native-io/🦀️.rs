@@ -226,10 +226,10 @@ impl NativeIoJob {
         let Some(result)=self.result.as_mut()else{return Ok(true)};
         match result{
          Ok(value)if !value.terminal_is_empty()=>{let demand=value.retirement_demands()?;semio_framework_job::close_original_effect_step(cx,demand,|effect|progress_poll(value.close_step(effect)))?;return Ok(false)},
-         Err(error)if error.capacity()!=0=>{let demand=RetirementDemand{release_bytes:error.capacity(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(std::mem::take(error));RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})?;return Ok(false)},
+         Err(error)if error.capacity()!=0=>{let demand=RetirementDemand{release_bytes:error.capacity(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(std::mem::take(error));RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})?;return Ok(false)},
          _=>{}
         }
-        semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.result=None;RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;Ok(self.result.is_none())
+        semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.result=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;Ok(self.result.is_none())
     }
 
     /// 🔁️ A fully acknowledged and retired page reuses its exact path under the same incoming caller.
@@ -330,11 +330,11 @@ impl NativeIoJob {
     fn step_owned<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if let Some(path) = self.retired_path.as_ref() {
             let demand = RetirementDemand { release_bytes: path.capacity(), depth: 1, ..Default::default() };
-            semio_framework_job::close_original_retained_step(cx, demand, |_| { drop(self.retired_path.take()); RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })),work:1} })?;
+            semio_framework_job::close_original_retained_step(cx, demand, |_| { drop(self.retired_path.take()); RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() })),work:1} })?;
             return Ok(None);
         }
-        if self.retired_file.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_file.take());RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
-        if self.retired_directory.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_directory.take());RetainedWorkOutcome::<RetainedCloneStep,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
+        if self.retired_file.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_file.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
+        if self.retired_directory.is_some(){semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{drop(self.retired_directory.take());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(None)}
         if matches!(&self.state, NativeIoState::ClosingWriterFault { .. } | NativeIoState::ClosingScanFault { .. } | NativeIoState::ClosingModifiedFault { .. }) {
             let (target, demand) = self.close_target()?;
             if matches!(target, NativeIoCloseTarget::RequestPath | NativeIoCloseTarget::RequestExtension | NativeIoCloseTarget::RetiredPath | NativeIoCloseTarget::ScannedPath | NativeIoCloseTarget::ModifiedPath | NativeIoCloseTarget::ModifiedEntry | NativeIoCloseTarget::RetiredDirectory | NativeIoCloseTarget::ReadBuffer | NativeIoCloseTarget::RetiredFile | NativeIoCloseTarget::PendingPayload | NativeIoCloseTarget::ClearPendingPayload | NativeIoCloseTarget::Writer | NativeIoCloseTarget::Paths | NativeIoCloseTarget::Modified | NativeIoCloseTarget::Extension | NativeIoCloseTarget::RejectedPath | NativeIoCloseTarget::RejectedModified) {

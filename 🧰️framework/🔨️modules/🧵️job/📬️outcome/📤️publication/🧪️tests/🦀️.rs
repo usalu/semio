@@ -1,8 +1,7 @@
 //! 🧪️ Real original publication preserves source identity, finite stock and exact physical custody.
 use semio_framework_job::*;
 use semio_framework_job_publication::{JobPublicationKind,RetainedJobPublication};
-#[global_allocator]
-static ORIGINAL_TEST_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 fn observed<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);assert!(!heap.overflowed);(value,(heap.requested_bytes,heap.released_bytes))}
 fn grant(row:&serde_json::Value)->RetainedCloneGrant{let p=row.as_array().unwrap();RetainedCloneGrant{maximum_items:p[0].as_u64().unwrap()as usize,maximum_copy_bytes:p[1].as_u64().unwrap()as usize,maximum_capacity_bytes:p[2].as_u64().unwrap()as usize,maximum_release_bytes:p[3].as_u64().unwrap()as usize,maximum_depth:p[4].as_u64().unwrap()as usize}}
 fn assert_physical(progress:RetainedCloneProgress,heap:(usize,usize),grant:RetainedCloneGrant){assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),heap)}
@@ -28,10 +27,10 @@ fn original_source_publication_preserves_native_identity_paid_stages_and_every_c
   assert_eq!(publication.retirement_work().unwrap(),if publication.terminal_is_empty(){law["closeWork"]["empty"].as_u64().unwrap()}else{law["closeWork"]["live"].as_u64().unwrap()});
   caller.cancel().cancel_now();let mut closes=0;while !publication.terminal_is_empty(){
    closes+=1;assert!(closes<law["maximumCloseTurns"].as_u64().unwrap()as usize,"original publication closure stalled");let(demand,heap)=observed(||publication.retirement_demands().unwrap());assert_eq!(heap,(0,0));
-   for denied in [Some(RetainedCloneGrant{maximum_items:0,..quantum}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..quantum}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..quantum})].into_iter().flatten(){let(turn,heap)=observed(||publication.close_step(denied));assert_eq!(turn.work,0);assert_eq!(heap,(0,0));assert_eq!(turn.result.unwrap().progress(),Default::default());assert!(!publication.terminal_is_empty());}
+   for denied in [Some(RetainedCloneGrant{maximum_items:0,..quantum}),(demand.release_bytes>0).then_some(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..quantum}),(demand.depth>0).then_some(RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..quantum})].into_iter().flatten(){let(turn,heap)=observed(||caller.with_effect(denied,|effect|publication.close_step(effect)).ok());assert_eq!(heap,(0,0));if let Some(turn)=turn{assert_eq!(turn.work,0);assert_eq!(turn.result.unwrap().progress(),Default::default());}assert!(!publication.terminal_is_empty());}
    let quote=publication.retirement_work().unwrap();assert_eq!(quote,law["closeWork"]["live"].as_u64().unwrap());
-   let fuel=caller.fuel_remaining();let(result,heap)=observed(||caller.turn(quantum,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(law["closeWork"]["deniedBudget"].as_u64().unwrap(),deadline,|cx|{let demand=publication.retirement_demands()?;close_original_quoted_retained_step(cx,demand,quote,|grant|publication.close_step(grant)).map(|_|())})}));result.unwrap();assert_eq!(heap,(0,0));assert_eq!(caller.receipt(),Default::default());assert_eq!(caller.fuel_remaining(),fuel);assert_eq!(publication.retirement_work().unwrap(),quote);
-   let(result,heap)=observed(||caller.turn(quantum,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(quote,deadline,|cx|{let demand=publication.retirement_demands()?;close_original_quoted_retained_step(cx,demand,quote,|grant|publication.close_step(grant)).map(|_|())})}));result.unwrap();assert_eq!(fuel-caller.fuel_remaining(),quote);assert_physical(caller.receipt(),heap,quantum);born+=heap.0;released+=heap.1;
+   let fuel=caller.fuel_remaining();let(result,heap)=observed(||caller.turn(quantum,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(law["closeWork"]["deniedBudget"].as_u64().unwrap(),deadline,|cx|{let demand=publication.retirement_demands()?;close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect))).map(|_|())})}));result.unwrap();assert_eq!(heap,(0,0));assert_eq!(caller.receipt(),Default::default());assert_eq!(caller.fuel_remaining(),fuel);assert_eq!(publication.retirement_work().unwrap(),quote);
+   let(result,heap)=observed(||caller.turn(quantum,|cx|{let deadline=cx.deadline_us();cx.with_original_work_loan(quote,deadline,|cx|{let demand=publication.retirement_demands()?;close_original_effect_step(cx,demand,|effect|semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect))).map(|_|())})}));result.unwrap();assert_eq!(fuel-caller.fuel_remaining(),quote);assert_physical(caller.receipt(),heap,quantum);born+=heap.0;released+=heap.1;
   }
   assert!(!publication.is_delivered());
   assert_eq!(publication.retirement_work().unwrap(),law["closeWork"]["empty"].as_u64().unwrap());
@@ -52,7 +51,7 @@ fn original_publication_refuses_another_real_caller_before_first_page_and_for_em
   let mut descriptor=None;for turn in 0..2000{if descriptor.is_some(){break}caller.turn(quantum,|cx|{if let Some(outcome)=publication.advance_from_source(JobPublicationKind::Preview,source,cx)?{descriptor=Some(outcome.into_descriptor())}Ok(())}).unwrap();assert!(turn<1999);}
   let mut descriptor=descriptor.unwrap();assert!(matches!(publication.borrow_outcome(&descriptor).unwrap(),JobOutcomeView::PreviewReady{..}));
   caller.turn(quantum,|cx|{receive_original_retained_work(cx,descriptor.acknowledge(cx.retained_grant()))?;Ok(())}).unwrap();drop(descriptor);
-  for turn in 0..10000{if publication.terminal_is_empty(){break}caller.turn(quantum,|cx|{close_original_quoted_retained_step(cx,publication.retirement_demands()?,publication.retirement_work()?,|grant|publication.close_step(grant))?;Ok(())}).unwrap();assert!(turn<9999);}
+  for turn in 0..10000{if publication.terminal_is_empty(){break}caller.turn(quantum,|cx|{close_original_effect_step(cx,publication.retirement_demands()?,|effect|semio_framework_value::RetainedWorkPoll::Complete(publication.close_step(effect)))?;Ok(())}).unwrap();assert!(turn<9999);}
   assert!(publication.terminal_is_empty());caller.retire(stock);foreign.retire(stock);
  }
 }

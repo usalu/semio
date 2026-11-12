@@ -489,7 +489,7 @@ test("a project that enters the closure through a build is verified in the same 
  }finally{clean(dir);}
 },30000);
 
-test("verification opens the fact index as a view that reads only the rows it checks; a build loads it whole to patch it",async()=>{
+test("verification opens the fact index as a view that reads only the rows it checks; a build patches it in its packed bytes and never decodes it whole",async()=>{
  const dir=scratch();
  try{
   const files:Record<string,string>={};
@@ -500,7 +500,7 @@ test("verification opens the fact index as a view that reads only the rows it ch
   expect(clean1.built).toBe(false);expect(stats.indexViews).toBeGreaterThanOrEqual(1);expect(stats.indexLoads).toBe(loads);
   await applyOps(dir,[{op:"write",path:"pkg/b/src/index.ts",content:"export const v=2;\n"}]);
   const dirty=await world.refreshClosure(["a"]);
-  expect(dirty.built).toBe(true);expect(stats.indexLoads).toBeGreaterThan(loads);
+  expect(dirty.built).toBe(true);expect(stats.indexLoads,"a build patches the packed bytes, it does not decode the index").toBe(loads);
   expect([...dirty.names].sort()).toEqual(["a","b"]);
  }finally{clean(dir);}
 },30000);

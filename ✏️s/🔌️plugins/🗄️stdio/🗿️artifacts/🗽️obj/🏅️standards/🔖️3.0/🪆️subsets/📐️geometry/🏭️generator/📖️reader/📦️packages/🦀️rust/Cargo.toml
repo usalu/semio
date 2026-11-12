@@ -1,3 +1,4 @@
+cargo-features = ["trim-paths"]
 # 🧭️ Own workspace root, exactly like this ticket's other scratch/oracle crates and the sibling
 # `🦀️engine` directory in this same folder — never joins the repository's root workspace or its
 # Cargo.lock.

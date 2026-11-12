@@ -42,7 +42,7 @@
       "reason": "one admitted scalar semantic mutation"
     },
     {
-      "id": "noMutation",
+      "id": "noOperation",
       "execution": "bounded-first-step",
       "lanes": [
         "HostOnly"

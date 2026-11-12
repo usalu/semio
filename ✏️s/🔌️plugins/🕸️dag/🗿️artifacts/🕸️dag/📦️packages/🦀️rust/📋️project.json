@@ -139,6 +139,26 @@
           ]
         }
       }
+    },
+    "verify-dag-document-contract-native-all": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify dag-document-contract native all",
+        "forwardAllArgs": true
+      }
+    },
+    "verify-dag-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify dag-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

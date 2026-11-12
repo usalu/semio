@@ -29,7 +29,7 @@ pub struct SetActiveExample {
 /// Also resets camera and result display to their defaults as two granular rows — never a whole-config
 /// `Snapshot`, which would also wipe the session locale.
 ///
-/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
+/// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (whole-snapshot replace — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `reset_document_effect` (io)
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {

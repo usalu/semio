@@ -110,7 +110,7 @@ const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
  signal?.addEventListener("abort",onAbort,{once:true});
 });
 
-/** 💾️ The durable learned owner peaks in one JSON file (atomic replace, a missing or damaged file reads as nothing learned). */
+/** 💾️ The durable learned owner peaks (the last growth samples of every kind, in bytes, oldest first) in one JSON file (atomic replace, a missing or damaged file reads as nothing learned). */
 export function createGraphOwnerPeaksFileV1(path){
  return Object.freeze({
   read:()=>{try{const value=JSON.parse(readFileSync(path,"utf8"));return value!==null&&typeof value==="object"&&!Array.isArray(value)?value:{};}catch{return{};}},
@@ -130,15 +130,15 @@ export function graphOwnerAdmissionV1({headroom,running,inflight,estimate,learne
 }
 
 /**
- * 🚦️ Admits project inferences against the headroom the service has left, soundly before any cost is learned: the estimate of an in-flight owner is the larger of the learned peak of its kind (else the declared guess) and the growth observed since it started (the measured growth of the headroom split between the running owners in proportion to what each is still expected to take); one more owner starts only when the measured headroom less the remaining estimates covers its own estimate; an owner of a kind without a learned peak runs alone until one of that kind completes; the peak of a kind is learned when an owner completes and persists through the `peaks` port; one owner always runs, so nothing deadlocks.
- * @param {{workers:number;headroom:()=>number;attributable?:()=>number;estimateBytes?:number;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;peaks?:{read:()=>Record<string,number>;write:(peaks:Record<string,number>)=>void};sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
+ * 🚦️ Admits project inferences against the headroom the service has left, soundly before any cost is learned: the estimate of an in-flight owner is the larger of the learned peak of its kind (else the declared guess) and the growth observed since it started (the measured growth of the headroom split between the running owners in proportion to what each is still expected to take); one more owner starts only when the measured headroom less the remaining estimates covers its own estimate; an owner of a kind without a learned peak runs alone until one of that kind completes; the peak of a kind is the largest growth of its last `peakSamples` completed owners (ageing: an outlier leaves the window after that many completions) and persists as those samples through the `peaks` port; when `attributable` is given, that growth is the change of this process, never what other processes took from the headroom; one owner always runs, so nothing deadlocks.
+ * @param {{workers:number;headroom:()=>number;attributable?:()=>number;estimateBytes?:number;decide?:(decision:{key:string;used:number;budget:number;kind?:string})=>void;peaks?:{read:()=>Record<string,number[]>;write:(peaks:Record<string,number[]>)=>void};sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
  */
 export function createMemoryGovernorV1({workers,headroom,attributable,estimateBytes=P.initialOwnerMegabytes*MEGABYTE,peaks,sleep=defaultSleep,now=()=>performance.now(),signal,report,decide,environment={},policy=P}){
  if(!Number.isSafeInteger(workers)||workers<1||typeof headroom!=="function"||!(estimateBytes>0))throw Error("Positive worker count, headroom reading and owner estimate required");
- const queue=[],owners=new Set(),stats={waits:0,waitedMilliseconds:0,peakOwners:0},learned=new Map(Object.entries(peaks?.read()??{}).filter(([,bytes])=>Number.isFinite(bytes)&&bytes>=0));
+ const queue=[],owners=new Set(),stats={waits:0,waitedMilliseconds:0,peakOwners:0},learned=new Map(Object.entries(peaks?.read()??{}).filter(([,samples])=>Array.isArray(samples)&&samples.length>0&&samples.every(bytes=>Number.isFinite(bytes)&&bytes>=0)).map(([kind,samples])=>[kind,samples.slice(-policy.peakSamples)]));
  let last=headroom(),own=attributable?.(),timer,pumping=false,serialSaid=false,lastReport=-Infinity,lastAdmit=-Infinity;
   const say=(key,fields)=>{decide?.({key,used:fields.used,budget:fields.budget,kind:fields.kind});for(const line of renderGraphMemoryMessagesV1(key,{running:owners.size,kind:"",...fields},environment))report?.(line);};
- const megabytes=bytes=>Math.round(bytes/MEGABYTE),peakOf=kind=>learned.has(kind)?learned.get(kind):estimateBytes;
+ const megabytes=bytes=>Math.round(bytes/MEGABYTE),peakOf=kind=>learned.has(kind)?Math.max(...learned.get(kind)):estimateBytes,largestLearned=()=>Math.max(0,...[...learned.values()].map(samples=>Math.max(...samples)));
  const sample=()=>{
   const free=headroom();
   const grown=attributable===undefined?undefined:(()=>{const now=attributable(),change=now-own;own=now;return change;})();
@@ -187,13 +187,12 @@ export function createMemoryGovernorV1({workers,headroom,attributable,estimateBy
    try{return await task();}
    finally{
     sample();
-    const known=learned.get(owner.kind);
-    if(known===undefined||owner.taken>known){learned.set(owner.kind,Math.max(owner.taken,known??0));peaks?.write(Object.fromEntries(learned));}
+    learned.set(owner.kind,[...(learned.get(owner.kind)??[]),owner.taken].slice(-policy.peakSamples));peaks?.write(Object.fromEntries(learned));
     owners.delete(owner);if(owners.size===0&&timer!==undefined){clearInterval(timer);timer=undefined;}if(queue.length)pump();
    }
   },
   pressure:()=>headroom()<policy.hostAvailableFloorMegabytes*MEGABYTE,
-  stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),peakOwners:stats.peakOwners,ownerCostMegabytes:megabytes(Math.max(estimateBytes*(learned.size===0?1:0),...learned.values())),kinds:Object.fromEntries([...learned].map(([kind,bytes])=>[kind,megabytes(bytes)]))}),
+  stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),peakOwners:stats.peakOwners,ownerCostMegabytes:megabytes(Math.max(estimateBytes*(learned.size===0?1:0),largestLearned())),kinds:Object.fromEntries([...learned].map(([kind,samples])=>[kind,megabytes(Math.max(...samples))]))}),
   dispose:()=>{signal?.removeEventListener("abort",onAbort);clearInterval(timer);timer=undefined;},
  });
 }

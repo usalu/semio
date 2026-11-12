@@ -1,0 +1,85 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "uniqueObligations", "activeInstances", "preservedFromInstances", "assertions", "debugStatements", "crates", "host", "original", "remaining"],
+  "properties": {
+    "version": { "const": 1 },
+    "uniqueObligations": { "const": 16 },
+    "activeInstances": { "const": 16 },
+    "preservedFromInstances": { "const": 32 },
+    "assertions": { "type": "integer", "minimum": 1 },
+    "debugStatements": { "const": 0 },
+    "host": { "type": "string" },
+    "original": { "type": "string" },
+    "remaining": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "functions"],
+        "properties": {
+          "path": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "functions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "sha256"],
+              "properties": {
+                "name": { "type": "string" },
+                "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "crates": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["package", "manifest", "target", "laws", "closure", "dependencies"],
+        "properties": {
+          "package": { "type": "string", "pattern": "^semio-plugin-child-group-[a-z-]+-laws$" },
+          "manifest": { "type": "string" },
+          "target": { "type": "string" },
+          "laws": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "sha256", "assertions"],
+              "properties": {
+                "name": { "type": "string" },
+                "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+                "assertions": { "type": "integer", "minimum": 0 }
+              }
+            }
+          },
+          "closure": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["path", "bytes", "nonblank", "sha256"],
+              "properties": {
+                "path": { "type": "string" },
+                "bytes": { "type": "integer", "minimum": 0 },
+                "nonblank": { "type": "integer", "minimum": 0 },
+                "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+              }
+            }
+          },
+          "dependencies": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

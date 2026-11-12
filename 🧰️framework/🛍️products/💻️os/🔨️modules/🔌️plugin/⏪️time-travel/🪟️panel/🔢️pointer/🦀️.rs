@@ -115,7 +115,7 @@ pub fn time_travel_pointer_remove(value: &mut DslValue, pointer: &str) -> bool {
 /// 🌱️ The value a new item of `schema` starts as: a number's lowest admitted value (a soft or hard minimum, an excluded one
 /// stepped over, else 0), a choice's first option, an empty text, `false`, a vector of such numbers, an empty reference
 /// list (an empty id for one reference), the fewest items a list admits, and an object of its required fields (their
-/// declared defaults first); the payload schema then judges it like any drafted value.
+/// declared defaults first) and only those of the variant its selector starts as; the payload schema then judges it like any drafted value.
 #[doc(hidden)]
 pub fn time_travel_default_value(schema: &ArgSchema) -> DslValue {
     let number = |min: Option<f64>, max: Option<f64>, exclusive: bool, step: Option<f64>, integer: bool| {
@@ -130,7 +130,12 @@ pub fn time_travel_default_value(schema: &ArgSchema) -> DslValue {
         ArgSchema::Reference { many: true, .. } => DslValue::Array(Vec::new()),
         ArgSchema::Reference { .. } => DslValue::String(String::new()),
         ArgSchema::Array { items, min_items, .. } => DslValue::Array((0..min_items.unwrap_or(0)).map(|_| time_travel_default_value(items)).collect()),
-        ArgSchema::Object { fields } => DslValue::Object(fields.iter().filter(|field| field.required).map(|field| (field.key(), field.default.clone().unwrap_or_else(|| time_travel_default_value(&field.schema)))).collect()),
+        ArgSchema::Object { fields } => {
+            let field_default = |field: &ActionArgDef| field.default.clone().unwrap_or_else(|| time_travel_default_value(&field.schema));
+            let active = time_travel_variant_selector(fields).map(field_default);
+            let active = active.as_ref().and_then(DslValue::as_str);
+            DslValue::Object(fields.iter().filter(|field| field.required && (field.group.is_none() || field.group.as_deref() == active)).map(|field| (field.key(), field_default(field))).collect())
+        }
         ArgSchema::Any => DslValue::Null,
     }
 }

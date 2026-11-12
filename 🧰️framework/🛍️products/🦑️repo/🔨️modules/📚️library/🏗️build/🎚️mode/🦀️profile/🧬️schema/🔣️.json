@@ -435,6 +435,13 @@
             "incremental": true,
             "lto": "off"
           },
+          "prototype-descriptor": {
+            "optLevel": "0",
+            "debug": 0,
+            "codegenUnits": 256,
+            "incremental": true,
+            "lto": "off"
+          },
           "prototype-host": {
             "optLevel": "0",
             "debug": 0,

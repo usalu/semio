@@ -14,6 +14,7 @@ import coreSchema from "../../📥️caller/🛰️service/🧬️schema/🔣️
 import {createFilterV1,createWorkspaceStateV1,outputSignatureV1} from "../🗃️state/🟨️.mjs";
 import {createWatchSupervisorV1} from "../🔭️watch/🟨️.mjs";
 import {BusyErrorV1,createGovernorV1} from "./🚦️governor/🟨️.mjs";
+import {failureRefusalV1} from "./🧯️failure/🟨️.mjs";
 import {runtimeCollectGarbageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 const validateClient=validatorV1("ClientFrame");
@@ -195,8 +196,8 @@ export function createResidentServiceV1(options){
     else if(reason?.code==="revoked")await refuse(connection,frame.id,"capability","revoked",{},"never");
     else await send(connection,{t:"result",id:frame.id,exit:130,signal:"SIGINT",served:"query",timing:roundTiming({...timing,totalMs:performance.now()-received})});
    }else{
-    log("request-failed",String(error?.stack??error));
-    await refuse(connection,frame.id,"internal","internal",{reason:String(error?.message??error).slice(0,200)},"never");
+    const failure=failureRefusalV1(error,{log,logPath:runtime.log,retry:"never"});
+    await refuse(connection,frame.id,failure.code,failure.key,failure.fields,failure.retry);
    }
   }finally{
    clearTimeout(deadline);release?.();connection.requests.delete(frame.id);touch();

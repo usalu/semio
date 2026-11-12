@@ -2,7 +2,7 @@ import {browserLaunchOptionsV1} from "../../../🧰️framework/🛍️products/
 // #region 🧲️Header
 // 💻️ .storybook/🧪️tests/🧪️browser-runner/🟦️.ts
 // Specs: Run Playwright end-to-end coverage against the built workspace Storybook.
-// Summary: `repo run workspace:test-storybook` builds, serves `storybook-static/` via `script.ts dev storybook-static`, then runs the owner-scoped Storybook cases with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
+// Summary: `repo run repo-storybook:test-storybook` builds, serves `storybook-static/` via `script.ts dev storybook-static`, then runs the owner-scoped Storybook cases with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 

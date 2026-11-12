@@ -42,7 +42,7 @@
     {
       "args": [
         "run",
-        "workspace:test-workspace-build"
+        "@semio-tech/repo-lib:test-workspace-build"
       ],
       "kind": "task"
     },

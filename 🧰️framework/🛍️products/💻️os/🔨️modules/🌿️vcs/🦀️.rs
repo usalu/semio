@@ -13,8 +13,7 @@ use protocol::{Edit, Mutation, MutationApplyError, MutationDiff};
 #[cfg(test)]
 pub(crate) use semio_framework_trace_memory_testing as test_allocation;
 #[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: test_allocation::RequestedAllocator = test_allocation::RequestedAllocator;
+use semio_framework_value_testing_allocator as _;
 
 #[path = "🌱️genesis/🦀️.rs"]
 mod genesis;

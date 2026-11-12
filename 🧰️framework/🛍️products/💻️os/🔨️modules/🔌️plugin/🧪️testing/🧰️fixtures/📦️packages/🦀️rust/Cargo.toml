@@ -28,7 +28,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing", "protocol-laws"] }
 semio-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
@@ -48,4 +48,5 @@ semio-framework-schema-state = { path = "../../../../../../../../🔨️modules/
 semio-framework-value-testing-admission = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-testing-admission = { path = "../../../../../../../../🔨️modules/🌱️value/🧪️testing/📥️admission/📦️packages/🦀️rust" }
 semio-os-store-one-item = { path = "../../../../../🏪️store/🎮️one-item/📦️packages/🦀️rust" }

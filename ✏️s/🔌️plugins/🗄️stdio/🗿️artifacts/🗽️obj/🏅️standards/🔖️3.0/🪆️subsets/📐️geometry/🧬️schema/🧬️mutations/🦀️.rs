@@ -85,7 +85,7 @@ pub mod set_usemtl;
 pub mod set_vertex;
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed content mutation for `stdio.obj`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
+/// 📐️ Typed content mutation for `stdio.obj`. `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no`
 /// is not an approved semantic verb.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

@@ -32,3 +32,4 @@ serde = { workspace = true, optional = true }
 [dev-dependencies]
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -1,7 +1,7 @@
 import {preparePrivateDirectoryV1} from "../📨️protocol/📍️endpoint/🔐️directory/🟨️.mjs";
 /** 🏗 Composition root of `repo service start --foreground`: binds the repository's graph, warm workers, custody and the native watcher to the resident service. */
 import {createHash} from "node:crypto";
-import {existsSync,readFileSync,readdirSync,statSync} from "node:fs";
+import {appendFileSync,existsSync,readFileSync,readdirSync,statSync} from "node:fs";
 import {dirname,join,relative,sep} from "node:path";
 import {fileURLToPath} from "node:url";
 import {createResidentServiceV1} from "../🏛️service/🟨️.mjs";
@@ -30,7 +30,7 @@ export function custodyPortFromPoolV1(pool){
 
 /** ▶ Builds the foreground runner. `dependencies` are injected by the CLI wiring so this module imports nothing from the repository. */
 export function createForegroundRunnerV1(dependencies){
- const{signal,loadGraph,script,execPath=process.execPath,warmModules=[],custody,salt,watcherBinary,generationOf,environmentPaths,environmentPrefixes,warmSize=process.platform==="win32"?0:1,executorSize=Number(dependencies.environment?.SEMIO_RESIDENT_EXECUTORS??process.env.SEMIO_RESIDENT_EXECUTORS??0),capacity,log=()=>{}}=dependencies;
+ const{signal,loadGraph,script,execPath=process.execPath,warmModules=[],custody,salt,watcherBinary,generationOf,environmentPaths,environmentPrefixes,warmSize=process.platform==="win32"?0:1,executorSize=Number(dependencies.environment?.SEMIO_RESIDENT_EXECUTORS??process.env.SEMIO_RESIDENT_EXECUTORS??0),capacity,log}=dependencies;
  return async({runtime,root,environment})=>{
   signal?.throwIfAborted();
   const binary=watcherBinary&&existsSync(watcherBinary)?watcherBinary:undefined,{implementation,implementationPaths}=dependencies.implementation??residentImplementationV1(root);
@@ -42,7 +42,7 @@ export function createForegroundRunnerV1(dependencies){
   const graph=createBuildGraphPortV1({loadGraph,salt,generation:generationOf,environmentPaths,environmentPrefixes,listing:async({root:r,exclude,filter})=>{Object.assign(filterHolder,filter);return scanListingV1({root:r,binary,exclude,filter});}});
   const executors=executorSize>0&&process.platform!=="win32"?createExecutorPoolV1({command:[execPath,script,"repo","service","executor"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root,size:executorSize,log}):undefined;
   const execution=createDelegatedExecutionPortV1({pool,executors,coldCommand:[execPath,script],argvFor:id=>["repo","run",id,"--service=off"],environment:{...environment,SEMIO_BUILD_SERVICE:"off"},cwd:root});
-  const service=createResidentServiceV1({root,runtime,implementation,implementationPaths,backend:binary?"auto":"portable",watcherBinary:binary,exclude,fenceDirectory:RESIDENT_FENCE_DIRECTORY_V1,ports:{graph,execution,custody,capacity},log});
+  const service=createResidentServiceV1({root,runtime,implementation,implementationPaths,backend:binary?"auto":"portable",watcherBinary:binary,exclude,fenceDirectory:RESIDENT_FENCE_DIRECTORY_V1,ports:{graph,execution,custody,capacity},log:log??((event,detail)=>{try{appendFileSync(runtime.log,new Date().toISOString()+" "+event+(detail===undefined?"":" "+detail)+"\n");}catch{}})});
   let stopping;const stop=reason=>{stopping??=Promise.resolve().then(()=>service.stop(reason));void stopping.catch(()=>{});},terminate=()=>stop("SIGTERM"),interrupt=()=>stop("SIGINT"),abort=()=>stop("cancelled");
   process.once("SIGTERM",terminate);process.once("SIGINT",interrupt);signal?.addEventListener("abort",abort,{once:true});
   let result,failed=false,primary;

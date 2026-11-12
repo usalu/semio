@@ -4,7 +4,7 @@ name = "semio-framework-io-sqlite-snapshot-testing-backing"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Test-only SQLite snapshot backing observation: the request-observing allocator and the snapshot backing laws every sqlite snapshot suite shares."
+description = "Test-only SQLite snapshot backing observation: the request observation and the snapshot backing laws every sqlite snapshot suite shares."
 
 [package.metadata.semio]
 role = "test"
@@ -24,3 +24,5 @@ doctest = false
 
 [dependencies]
 semio-os-kernel = { path = "../../../../../../../🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }

@@ -6,8 +6,7 @@ pub mod retained{pub use protocol::{RetainedDone as Done,RetainedFlight as Fligh
 #[macro_use]#[path="🛡️custody/🦀️.rs"]pub mod custody;
 #[path="🔢️scalar/🦀️.rs"]pub mod scalar;
 
-#[cfg(test)]#[global_allocator]
-static ORIGINAL_NATIVE_MUTATION_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+#[cfg(test)]use semio_framework_value_testing_allocator as _;
 
 extern crate semio_s_plugin_energy_engine_model as model;
 

@@ -88,7 +88,7 @@ pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Ve
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
-/// `BcfMutation` variant ordinal; tag 0 (formerly `NoMutation`) is retired rather than reused, so a
+/// `BcfMutation` variant ordinal; tag 0 is retired rather than reused, so a
 /// stray zero tag on the wire fails `decode_op` instead of silently resurrecting a dropped variant.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn write_opt_index_bin(out: &mut Vec<u8>, index: &Option<usize>) {

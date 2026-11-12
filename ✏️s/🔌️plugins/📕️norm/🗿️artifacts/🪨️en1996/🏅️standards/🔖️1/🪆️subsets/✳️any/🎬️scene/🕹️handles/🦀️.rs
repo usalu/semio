@@ -2,6 +2,7 @@
 //!
 //! 📏️ Wall length, height, thickness and held sides; opening width, height and sill; floor bearing depth and span; load eccentricities at top and bottom; concentrated bearing length; chase position, length and depth; movement joint position and panel spacing; the diaphragm stiffness on a logarithmic law; concentrated load position, lintel bearing length and flange thickness; and one gauge ([`gauges`]) for every other numeric field of the walls, load cases, concentrated loads, ties, tendons, confining columns and bars.
 
+use super::scene::projection_kit::{base_id, loc, binding_of_subjects as binding};
 use super::kit::*;
 use super::layout::{openings, Layout, WallPose, EPS};
 use super::model::{En1996Snapshot, MasonryWall};
@@ -150,7 +151,7 @@ pub(crate) fn build(document: &En1996Snapshot, layout: &Layout, id: &str) -> Vec
         None => [wall_handles(wall, pose), move_handles(document, wall, pose), gauges::of_wall(wall, pose)].concat(),
         Some(tag) if walls::ZONES.iter().any(|z| z.0 == tag) => wall_handles(wall, pose),
         Some(tag) if tag.starts_with(OPENING_TAG) => opening_handles(wall, pose, &tag[OPENING_TAG.len()..]),
-        Some(tag) if [LINTEL_TAG, PIER_TAG, TIE_TAG, TENDON_TAG, COLUMN_TAG, super::lateral::FLANGE_TAG, BAR_TAG].iter().any(|prefix| tag.starts_with(prefix)) => [members::handles(wall, pose, tag), gauges::of_member(wall, pose, tag)].concat(),
+        Some(tag) if [LINTEL_TAG, PIER_TAG, TIE_TAG, TENDON_TAG, COLUMN_TAG, FLANGE_TAG, BAR_TAG].iter().any(|prefix| tag.starts_with(prefix)) => [members::handles(wall, pose, tag), gauges::of_member(wall, pose, tag)].concat(),
         Some("slab-top") => slab_handles(wall, pose),
         Some("resultant-top") => resultant_handles(document, wall, pose, true),
         Some("resultant-bottom") => resultant_handles(document, wall, pose, false),

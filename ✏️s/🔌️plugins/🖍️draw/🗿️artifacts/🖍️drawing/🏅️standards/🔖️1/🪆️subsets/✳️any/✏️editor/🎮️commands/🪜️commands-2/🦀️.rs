@@ -30,6 +30,6 @@ pub mod load_document_json;
 pub mod set_active_example;
 #[path = "../🔭️set-camera-zoom/🦀️.rs"]
 pub mod set_camera_zoom;
-#[path = "../📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
+#[path = "../📸️replace-document/🦀️.rs"]
+pub mod replace_document;
 //#endregion 🪢️TaxonomyMounts

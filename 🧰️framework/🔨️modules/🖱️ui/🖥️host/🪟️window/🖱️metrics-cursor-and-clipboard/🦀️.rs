@@ -191,7 +191,7 @@ impl semio_framework_job::InteractiveJob for NativeClipboardJob {
         let bytes=match self.operation.as_ref(){Some(NativeClipboardOperation::Write(text))=>text.capacity(),_=>0};
         let step=semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{release_bytes:bytes,depth:1,..Default::default()},|_|{
             *self.operation=None;
-            semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Complete(Progress{copied_items:1,released_bytes:bytes,..Progress::default()})),work:1}
+            semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Progress{copied_items:1,released_bytes:bytes,..Progress::default()})),work:1}
         })?;
         Ok(if self.operation.is_none(){Close::Complete{progress:step.progress()}}else{step})
     }

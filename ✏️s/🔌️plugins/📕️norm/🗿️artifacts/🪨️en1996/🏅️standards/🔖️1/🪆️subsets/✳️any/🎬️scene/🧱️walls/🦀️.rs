@@ -1,5 +1,6 @@
 //! 🧱️ Walls: the wall as three utilisation zones (top, middle, bottom) cut by its openings, window and door plates, concrete lintels, the floor bearing on the top, the base and side supports, dimensions and failure glyphs.
 
+use super::scene::projection_kit::{self, loc, clause_of, tone_of, binding_of_subjects as binding};
 use super::kit::*;
 use super::layout::{openings, solid_rects, Layout, WallPose, EPS};
 use super::model::MasonryWall;
@@ -12,10 +13,6 @@ const SLAB_THICKNESS: f64 = 0.2;
 const SLAB_STUB_MAX: f64 = 3.0;
 const PLATE_THICKNESS: f64 = 0.03;
 pub(crate) const ZONES: [(&str, usize, &str, &str); 3] = [("zone-bottom", 2, "Bottom zone", "Unterer Bereich"), ("zone-mid", 1, "Middle zone", "Mittlerer Bereich"), ("zone-top", 0, "Top zone", "Oberer Bereich")];
-
-pub(crate) fn compression_id(wall: &str, load_case: &str, station: usize) -> String {
-    if station == 1 { format!("en1996.6.1.2.compression.mid.{wall}.{load_case}") } else { format!("en1996.6.1.2.compression.{wall}.{load_case}") }
-}
 
 fn frame_of(pose: &WallPose, origin: Vec3) -> Frame {
     Frame { origin, x: pose.axis_x(), y: pose.axis_y(), z: Vec3::Z }

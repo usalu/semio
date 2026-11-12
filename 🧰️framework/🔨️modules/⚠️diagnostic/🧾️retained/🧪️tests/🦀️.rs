@@ -1,7 +1,6 @@
 //! 🧪️ Original error effects remain present after diagnostic conversion and controlled wire transport.
 use super::*;
-#[global_allocator]
-static ORIGINAL_FAULT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 #[test]
 fn original_fault_keeps_actual_failed_progress_through_value_error_conversion_and_wire(){
  let mut original=Vec::<u8>::new();original.try_reserve_exact(64).unwrap();let pointer=original.as_ptr();

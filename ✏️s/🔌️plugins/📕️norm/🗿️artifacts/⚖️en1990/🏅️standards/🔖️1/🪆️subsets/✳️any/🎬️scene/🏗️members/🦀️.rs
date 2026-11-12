@@ -1,5 +1,6 @@
 //! 🏗️ Members: simply supported members with their SLS deflection components w_c, w_1, w_2, w_3 (Fig. A1.1), the vibration mode below the minimum frequency, bridge decks with deformation and vibration, supports, failure glyphs and the reliability badges.
 
+use super::scene::projection_kit::{loc, mul, unit, along, entity_ref, clause_of, tone_of, polyline};
 use super::combinations::{self, Column};
 use super::kit::*;
 use super::layout::Layout;

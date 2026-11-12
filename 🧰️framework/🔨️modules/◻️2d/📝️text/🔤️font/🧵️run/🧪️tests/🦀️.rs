@@ -2,8 +2,7 @@
 use super::*;
 use semio_framework_2d_text_font::*;
 use semio_framework_2d_text_font_testing::{bytes,close};
-#[global_allocator]
-static FONT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use semio_framework_value_testing_allocator as _;
 fn shape_features()->[rustybuzz::Feature;3]{[b"liga",b"clig",b"calt"].map(|tag|rustybuzz::Feature{tag:ttf_parser::Tag::from_bytes(tag),value:0,start:0,end:u32::MAX})}
 struct OracleRunPath<'a>{path:&'a mut tiny_skia::PathBuilder,origin:[f64;2],scale:f64}
 impl OracleRunPath<'_>{fn map(&self,x:f32,y:f32)->[f32;2]{[(self.origin[0]+f64::from(x)*self.scale)as f32,(self.origin[1]-f64::from(y)*self.scale)as f32]}}

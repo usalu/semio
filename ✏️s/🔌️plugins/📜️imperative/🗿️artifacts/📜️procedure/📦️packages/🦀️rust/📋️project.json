@@ -122,6 +122,16 @@
         "command": "repo ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "verify-procedure-document-contract-native": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify procedure-document-contract native",
+        "forwardAllArgs": true
+      }
     }
   }
 }

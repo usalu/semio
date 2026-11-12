@@ -14,7 +14,7 @@ pub struct PatchStep {
 }
 
 /// ✏️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: `FormMutation` has no whole-step-replace
-/// variant (the old `UpdateStep{step}` is banned `SetSnapshot`-shaped vocabulary at the
+/// variant (the old `UpdateStep{step}` is banned whole-snapshot-shaped vocabulary at the
 /// per-collection scale) — emits the granular `RenameStep`/`ChangeStepDescription` verb the field
 /// actually maps onto instead of building a whole replacement `FormStep`.
 pub fn handle(payload: &PatchStep, doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {

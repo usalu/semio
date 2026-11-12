@@ -32,6 +32,7 @@ semio-s-artifact-norm-en1996-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-artifact-norm-en1996-mutations = { workspace = true }
 semio-s-artifact-norm-en1996-scene = { workspace = true }
+semio-s-artifact-norm-en1996-scene-diagrams = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 semio-s-plugin-norm-structural-scene = { workspace = true }
 

@@ -141,7 +141,7 @@ impl RetainedValueDriver for RetainedDocumentDriver{
   use semio_framework_value::RetirementDemand;
   if self.terminal_is_empty(){return Ok(Default::default())}
   if !self.ids.is_empty(){return Ok(RetirementDemand{depth:self.ids.next_pop_depth_demand().map_err(paged)?,..Default::default()})}
-  if !self.ids.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:self.ids.next_release_allocation_bytes().map_err(paged)?,depth:self.ids.next_release_depth_demand().map_err(paged)?,..Default::default()})}
+  if !self.ids.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:self.ids.next_release_copy_byte_demand().map_err(paged)?,release_bytes:self.ids.next_release_allocation_bytes().map_err(paged)?,depth:self.ids.next_release_depth_demand().map_err(paged)?,..Default::default()})}
   if !self.value.terminal_is_empty(){return Ok(self.value.retirement_demands())}
   if !self.catalog.terminal_is_empty(){return self.catalog.retirement_demands().map_err(PackRefusal::from)}
   if !self.segment.terminal_is_empty(){return Ok(self.segment.retirement_demands())}

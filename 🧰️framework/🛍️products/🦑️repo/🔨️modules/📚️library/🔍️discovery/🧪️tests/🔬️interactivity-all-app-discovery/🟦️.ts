@@ -47,7 +47,7 @@ export async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   const declared = verifyTarget(declaredVerify);
   expect(interactivityAllAppGateFailures(declared, schema).length === 0, "declared dashboard verify command was falsely rejected");
   expect(JSON.stringify(JSON.parse(declared)) === await interactivityAllAppOracleJson(declared), "owned manifest parse disagrees with the TypeScript oracle");
-  expect(interactivityAllAppGateFailures(JSON.stringify({ name: "workspace", targets: {} }), schema).some((failure) => failure.includes("workspace:verify is missing")), "undeclared verify command self-test was falsely accepted");
+  expect(interactivityAllAppGateFailures(JSON.stringify({ name: "workspace", targets: {} }), schema).some((failure) => failure.includes("repo-policy:verify is missing")), "undeclared verify command self-test was falsely accepted");
   expect(interactivityAllAppGateFailures(verifyTarget({ ...declaredVerify, options: { command: "repo ./📜️script.ts verify" } }), schema).some((failure) => failure.includes("forward free arguments")), "non-forwarding verify command self-test was falsely accepted");
   expect(interactivityAllAppGateFailures(verifyTarget({ ...declaredVerify, metadata: {} }), schema).some((failure) => failure.includes("positional text parameter")), "parameterless verify command self-test was falsely accepted");
   expect(interactivityAllAppGateFailures(declared, JSON.stringify({ $defs: {} })).some((failure) => failure.includes("declares no text kind")), "schema without text parameters self-test was falsely accepted");
