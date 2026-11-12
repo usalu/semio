@@ -1,0 +1,366 @@
+{
+  "$schema": "../../../../🔀️morph/🧬️schema/🔣️.schema.json",
+  "version": 1,
+  "transitions": [
+    {
+      "id": "optimization.experiments.plot.runs-to-marks",
+      "intent": "abstraction",
+      "source": {
+        "entity": "optimization.experiments.plot.run-dots",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.plot.chart-marks",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.25,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": -0.7,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.experiments.plot.badges-colored",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.experiments.plot.badge",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.plot.colored-badge",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.experiments.saving.chain-small-to-large",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.experiments.saving.chain-small-window",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.saving.chain-large-window",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 3.5,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.experiments.interaction.chain-to-ratios",
+      "intent": "abstraction",
+      "source": {
+        "entity": "optimization.experiments.interaction.chain-large",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.interaction.ratios",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.5,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.experiments.interaction.ratios-to-rule",
+      "intent": "abstraction",
+      "source": {
+        "entity": "optimization.experiments.interaction.ratios",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.interaction.rule",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.experiments.difference.formula-to-meaning",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.experiments.difference.formula",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.difference.meaning",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.experiments.model.run-to-mean",
+      "intent": "abstraction",
+      "source": {
+        "entity": "optimization.experiments.model.run-chip",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.model.mean-chip",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 4.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.experiments.confirm.key-dots-to-true-line",
+      "intent": "concretization",
+      "source": {
+        "entity": "optimization.experiments.confirm.key-dots",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.experiments.confirm.true-line",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 6.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    }
+  ]
+}

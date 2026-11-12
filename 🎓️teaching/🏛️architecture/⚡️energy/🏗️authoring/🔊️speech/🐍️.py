@@ -374,7 +374,7 @@ def compose_final_video(clips: list[Path | str], output_path: Path) -> str:
 
 
 def build_section_video(base_dir: Path, scenes: list[tuple[Path, str, Path]], output_name: str) -> Path:
-    """🎬 Render every section beat and preserve its complete optional narration."""
+    """🎬 Render every section beat with the explicit `final` profile (delivered 1080p30 masters) and preserve its complete optional narration."""
     from hashlib import sha256
     _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
     render_config = _video_module.render_config
@@ -391,8 +391,8 @@ def build_section_video(base_dir: Path, scenes: list[tuple[Path, str, Path]], ou
         print(f"Rendering {scene} ({index}/{len(scenes)})", flush=True)
         name = f"b{index:02d}"
         run_command([
-            *manim_command(), "-qh", "--disable_caching", "--config_file", str(config), "-o", name, str(script), scene,
-        ], cwd=base_dir)
+            *manim_command(), *_video_module.profile_arguments("final"), "--disable_caching", "--config_file", str(config), "-o", name, str(script), scene,
+        ], cwd=base_dir, env=_video_module.profile_environment("final", scene))
         rendered = media_dir / "v" / f"{name}.mp4"
         if not rendered.is_file():
             raise FileNotFoundError(f"Rendered clip not found: {rendered}")

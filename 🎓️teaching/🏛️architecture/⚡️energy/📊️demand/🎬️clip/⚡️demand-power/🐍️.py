@@ -64,6 +64,8 @@ ripples = _manim_module.ripples
 energy_tank = _manim_module.energy_tank
 
 set_vo_language("de")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -354,18 +356,25 @@ def _snap(mob):
     return snap
 
 
-def _fill_panel(scene, panel, sources, *, run_time: float = 2.0):
+def _twin(scene, src):
+    """👯 Static on-screen copy of a readout (or of a list of readouts) that flies into a formula slot while the readout stays."""
+    twin = VGroup(*[_snap(m) for m in src]) if isinstance(src, (list, tuple)) else _snap(src)
+    scene.add(twin)
+    return twin
+
+
+def _fill_panel(scene, stage, prefix, panel, sources, *, run_time: float = 2.0):
     """🧲 Every named formula slot is fed by the drawn quantity it stands for, then the rest of the formula appears.
 
-    ``sources`` maps a slot key to the on-screen readout it is read from; a copy of the readout morphs into its slot.
+    ``sources`` maps a slot key to the on-screen readout it is read from; a copy of the readout morphs into its slot
+    through the declared transition ``prefix.key``.
     """
     row, box, items = panel
     targets = [items[key] for key in sources]
     rest = VGroup(*[m for m in row.submobjects if all(m is not t for t in targets)])
     for part in row.get_family():
         part._layout_zone = "formula"
-    scene.play(*[TransformFromCopy(VGroup(*[_snap(m) for m in src]) if isinstance(src, (list, tuple)) else _snap(src),
-                                   items[key]) for key, src in sources.items()], run_time=run_time * 0.75)
+    scene.play(*[stage.transition(f"{prefix}.{key}", source=_twin(scene, src), target=items[key]) for key, src in sources.items()], run_time=run_time * 0.75)
     scene.play(FadeIn(rest), Create(box), run_time=1.0)
 
 
@@ -417,6 +426,7 @@ class Beat1_LeistungUndEnergie(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Power is a rate, energy is an amount", "Leistung ist eine Rate, Energie eine Menge"))
@@ -510,7 +520,7 @@ class Beat1_LeistungUndEnergie(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "kwh"))
         q_final = math_label(rf"Q \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([-2.0, 1.30, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
-        self.play(ReplacementTransform(q_read, q_final), run_time=1.2)
+        self.play(stage.transition("demand.power.energy.readout-to-annual-sum", source=q_read, target=q_final), run_time=1.2)
         self.play(Indicate(q_final, color=ENERGY, scale_factor=1.15), run_time=1.4)
         hold_for(self, N, "kwh")
         _hide(self, tank["group"], tank["fill"], q_tag, knob)
@@ -533,7 +543,7 @@ class Beat1_LeistungUndEnergie(Scene):
             ("u1", r"1\,\mathrm{kW}", POWER), (None, r"\cdot", P_WHITE), ("u2", r"1\,\mathrm{h}", TIME),
             (None, "=", P_WHITE), ("u3", r"1\,\mathrm{kWh}", ENERGY),
         ])
-        _fill_panel(self, panel, {"q": q_final, "p": p_now, "dt": cell_h, "u1": cell_p, "u2": cell_h, "u3": cell_q})
+        _fill_panel(self, stage, "demand.power.energy.fill", panel, {"q": q_final, "p": p_now, "dt": cell_h, "u1": cell_p, "u2": cell_h, "u3": cell_q})
         hold_for(self, N, "produkt")
 
         caption = swap_caption(self, caption, subtitle_text(N, "trennung"))
@@ -612,6 +622,7 @@ class Beat2_Normheizlast(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
         H_T_VAL, H_V_VAL = 225.0, 87.5
 
@@ -716,7 +727,7 @@ class Beat2_Normheizlast(Scene):
         rooms = [Rectangle(width=hs["w_width"] - 0.2, height=storey - 0.06, color=P_PRIMARY, stroke_width=2.6)
                  .move_to(np.array([hs["center"][0], fy + storey / 2, 0.0])) for fy in (floor0, floor1)]
         self.play(Create(rooms[0]), run_time=1.6)
-        self.play(ReplacementTransform(rooms[0], rooms[1]), run_time=1.6)
+        self.play(stage.transition("demand.power.heat-load.room-frame-up", source=rooms[0], target=rooms[1]), run_time=1.6)
         self.play(FadeOut(rooms[1]), run_time=0.6)
         hold_for(self, N, "raumweise")
         _hide(self, th_i["group"], th_i["column"], th_e["group"], th_e["column"], row_i, row_e, row_d, phi_read,
@@ -804,7 +815,7 @@ class Beat2_Normheizlast(Scene):
             ("d", rf"{label_number(DESIGN_DT)}\,\mathrm{{K}}", DELTA_T), (None, "=", P_WHITE),
             ("phi", rf"{label_number(PEAK_KW)}\,\mathrm{{kW}}", POWER),
         ], size=FORMULA_FONT_SIZE - 5)
-        _fill_panel(self, panel, {"t": t_lbl, "v": v_lbl, "d": row_d, "phi": phi_read})
+        _fill_panel(self, stage, "demand.power.heat-load.fill", panel, {"t": t_lbl, "v": v_lbl, "d": row_d, "phi": phi_read})
         hold_for(self, N, "summe")
 
         caption = swap_caption(self, caption, subtitle_text(N, "kilowatt"))
@@ -872,6 +883,7 @@ class Beat3_Jahresdauerlinie(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("The annual load duration curve", "Die Jahresdauerlinie"))
@@ -930,8 +942,10 @@ class Beat3_Jahresdauerlinie(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "aufreihen"))
         sorted_curve = _partial(chart, ys_sorted, 1.0, width=3.0)
         sorted_area = _partial_area(chart, ys_sorted, 1.0, opacity=0.14)
-        self.play(Transform(curve, sorted_curve), Transform(area, sorted_area), FadeOut(months), FadeIn(hours),
+        self.play(stage.transition("demand.power.duration.curve-sorted", source=curve, target=sorted_curve),
+                  stage.transition("demand.power.duration.area-sorted", source=area, target=sorted_area), FadeOut(months), FadeIn(hours),
                   run_time=4.0)
+        curve, area = sorted_curve, sorted_area
         series["ys"] = ys_sorted
         x.set_value(0.0)
         knob = always_redraw(lambda: Dot(chart["pt"](x.get_value(), p_frac()), radius=0.07, color=POWER))
@@ -972,7 +986,7 @@ class Beat3_Jahresdauerlinie(Scene):
         self.play(_ramp(x, 1.0, rate_func=linear), run_time=6.0)
         q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
-        self.play(ReplacementTransform(q_read, q_final), run_time=1.0)
+        self.play(stage.transition("demand.power.duration.readout-to-annual-demand", source=q_read, target=q_final), run_time=1.0)
         hold_for(self, N, "flaeche_bedarf")
 
         caption = swap_caption(self, caption, subtitle_text(N, "nutzenergie"))
@@ -993,7 +1007,7 @@ class Beat3_Jahresdauerlinie(Scene):
         t_read = math_readout(lambda: rf"t_{{VL}} = {label_number(min(run.get_value(), full) * PROFILE_N, 0)}\,\mathrm{{h}}",
                               np.array([0.2, 0.55, 0.0]), size=BODY_FONT_SIZE, color=TIME)
         self.add(run)
-        self.play(ReplacementTransform(sweep, rect), FadeIn(phi_read), FadeIn(t_read), run_time=2.0)
+        self.play(stage.transition("demand.power.duration.sweep-to-rectangle", source=sweep, target=rect), FadeIn(phi_read), FadeIn(t_read), run_time=2.0)
         self.play(_ramp(run, 1.0, rate_func=linear), run_time=3.0)
         hold_for(self, N, "rechteck")
 
@@ -1005,7 +1019,7 @@ class Beat3_Jahresdauerlinie(Scene):
                   rf"{{\textcolor{{{POWER}}}{{{label_number(PEAK_KW)}\,\mathrm{{kW}}}}}}", P_WHITE),
             (None, "=", P_WHITE), ("res", rf"{label_number(t_vl)}\,\mathrm{{h/a}}", TIME),
         ], size=FORMULA_FONT_SIZE - 5)
-        _fill_panel(self, panel, {"f": [q_final, phi_read], "res": t_read, "t": t_read})
+        _fill_panel(self, stage, "demand.power.duration.fill", panel, {"f": [q_final, phi_read], "res": t_read, "t": t_read})
         hold_for(self, N, "vollstunden")
 
         caption = swap_caption(self, caption, subtitle_text(N, "bruchteil"))
@@ -1064,6 +1078,7 @@ class Beat4_RichtigAuslegen(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
         PEAK_F = 0.68
 
@@ -1208,7 +1223,7 @@ class Beat4_RichtigAuslegen(Scene):
         self.play(_ramp(x, 1.0, rate_func=linear), run_time=6.0)
         q_final = math_label(rf"Q_{{h}} \approx {label_number(q_year)}\,\mathrm{{kWh/a}}", np.array([0.2, 1.08, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")
-        self.play(ReplacementTransform(q_read, q_final), run_time=1.0)
+        self.play(stage.transition("demand.power.sizing.readout-to-annual-demand", source=q_read, target=q_final), run_time=1.0)
         hold_for(self, N, "bedarf")
 
         caption = swap_caption(self, caption, subtitle_text(N, "kosten"))
@@ -1217,7 +1232,7 @@ class Beat4_RichtigAuslegen(Scene):
             ("q", r"Q_{h}", ENERGY), (None, r"\to", P_WHITE), (None, tr(r"\text{Final energy}", r"\text{Endenergie}"), P_WHITE),
             (None, r"\to", P_WHITE), (None, tr(r"\text{Costs}", r"\text{Kosten}"), P_WHITE),
         ])
-        _fill_panel(self, panel, {"q": q_final})
+        _fill_panel(self, stage, "demand.power.sizing.fill", panel, {"q": q_final})
         hold_for(self, N, "kosten")
 
         _clear_stage(self, (subtitle, din))

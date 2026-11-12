@@ -127,7 +127,7 @@ class CursorInteractionTest(unittest.TestCase):
             unrelated = assets / "unrelated.svg"
             direct.write_text("<svg/>", encoding="utf-8")
             unrelated.write_text("<svg/>", encoding="utf-8")
-            settings = {"language": "en", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+            settings = {"language": "en", "audience": "speaker", "profile": "preview", "resolution": None, "fps": None}
             with patch.object(runtime, "teaching_root", return_value=folder), \
                     patch.object(runtime, "source_dependencies", return_value=[script]), \
                     patch.object(runtime, "source_narration", return_value=[]), \
@@ -470,7 +470,7 @@ class CursorNativeFrameTest(unittest.TestCase):
         cls.interaction = importlib.import_module(MODULE + ".🐍️")
         cls.output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) / "native-frames"
         cls.output.mkdir(parents=True, exist_ok=True)
-        cls.settings = {"audience": "speaker", "quality": "-ql", "resolution": ",".join(map(str, CASES["native"]["resolution"])),
+        cls.settings = {"audience": "speaker", "profile": "preview", "resolution": ",".join(map(str, CASES["native"]["resolution"])),
                         "fps": CASES["native"]["fps"], "language": CASES["native"]["language"]}
 
     def frame(self, name, t=0, *, phase="focus", point=None, pressed=None, menu_open=False):

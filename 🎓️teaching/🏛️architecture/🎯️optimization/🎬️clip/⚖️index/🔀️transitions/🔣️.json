@@ -1,0 +1,321 @@
+{
+  "$schema": "../../../../🔀️morph/🧬️schema/🔣️.schema.json",
+  "version": 1,
+  "transitions": [
+    {
+      "id": "optimization.index.units.rows",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.index.units.rows-chf-kg",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.index.units.rows-kchf-t",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.8,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "key"
+      }
+    },
+    {
+      "id": "optimization.index.units.legend",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.index.units.legend-chf-kg",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.index.units.legend-kchf-t",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.8,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.index.units.chip",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.index.units.chip-chf-kg",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.index.units.chip-kchf-t",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.8,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.index.units.head",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.index.units.head-unlike",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.index.units.head-still-unlike",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.8,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.index.shift.note",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.index.shift.note-before",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.index.shift.note-after",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "optimization.index.ruler.slots",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.index.ruler.slots-previous",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.index.ruler.slots-next",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "key"
+      }
+    },
+    {
+      "id": "optimization.index.ruler.header",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.index.ruler.header-previous",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.index.ruler.header-next",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    }
+  ]
+}

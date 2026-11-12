@@ -71,14 +71,12 @@ class ArchitectureTest(unittest.TestCase):
                 self.assertGreater(part.get_fill_opacity(), 0.5)
 
     def test_open_window_uses_oblique_projection_and_follows_section_transform(self):
-        from manim import Transform
-
         case = CASES["window"]
         window = VISUALS.window_glyph(case["x"], case["sill"], case["lintel"], depth=case["depth"])
         window["group"].scale(1.4).shift(np.array([0.8, -0.2, 0]))
         animation = VISUALS.open_window(window)
-        self.assertIsInstance(animation, Transform)
-        target = animation.target_mobject[0]
+        self.assertIs(animation.mobject, window["sash"])
+        target = animation.pose_target[0]
         vertices = target.get_vertices()
         near = np.linalg.norm(vertices[3] - vertices[0])
         far = np.linalg.norm(vertices[2] - vertices[1])

@@ -124,16 +124,17 @@ def cmd_synth(beat_arg: int | None) -> int:
 def cmd_trace(beat_arg: int | None) -> int:
     import os
 
-    env = {**os.environ, "VO_TRACE": "1"}
+    env = {**os.environ, "VO_TRACE": "1", **_runtime.profile_environment("preview", SCENE_FILE.stem)}
     config = render_config(TRACE_MEDIA_DIR)
     print("=== Recording subtitle timestamps (VO_TRACE=1) ===\n")
     for index, cls in _selected(beat_arg):
         print(f"Beat {index}: rendering {cls.__name__} …")
         run_command(
-            [*manim_command(), "-qh", "--disable_caching", "--config_file", str(config), str(SCENE_FILE), cls.__name__],
+            [*manim_command(), *_runtime.profile_arguments("preview"), "--disable_caching", "--config_file", str(config), str(SCENE_FILE), cls.__name__],
             cwd=BASE_DIR, env=env,
         )
         print("  ✓ traced")
+    _runtime.record_timing_profile(TRACE_MANIFEST)
     print(f"\n📍 Subtitle marks → {TRACE_MANIFEST.name}")
     return 0
 

@@ -65,6 +65,8 @@ tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 set_vo_language("de")
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
@@ -246,6 +248,7 @@ class Beat1_Zusammenfassung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Seven quantities, one chain", "Sieben Größen, eine Kette"))
@@ -288,10 +291,10 @@ class Beat1_Zusammenfassung(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "vdot"))
         self.play(FadeIn(rule), FadeIn(head_w), FadeIn(head_s), run_time=0.6)
         self.add(res1)
-        self.play(TransformFromCopy(cards["v"]["sym"], it1["v"]), TransformFromCopy(cards["n"]["sym"], it1["n"]),
+        self.play(stage.transition("ventilation.handoff.summary.vdot-v", source=cards["v"]["sym"], target=it1["v"]), stage.transition("ventilation.handoff.summary.vdot-n", source=cards["n"]["sym"], target=it1["n"]),
                   FadeIn(it1["vdot"]), FadeIn(_unkeyed(row1, it1)), k1.animate.set_value(1.0), run_time=1.6)
         self.add(cards["vdot"]["value"])
-        self.play(cards["vdot"]["frame"].animate.set_stroke(opacity=1.0), TransformFromCopy(it1["vdot"], cards["vdot"]["sym"]),
+        self.play(cards["vdot"]["frame"].animate.set_stroke(opacity=1.0), stage.transition("ventilation.handoff.summary.card-vdot", source=it1["vdot"], target=cards["vdot"]["sym"]),
                   FadeIn(cards["vdot"]["name"]), cards["vdot"]["tracker"].animate.set_value(1.0), run_time=1.2)
         hold_for(self, N, "vdot")
 
@@ -313,7 +316,7 @@ class Beat1_Zusammenfassung(Scene):
                              np.array([X_SUMMER, Y_ROWS[1], 0.0]), size=BODY_FONT_SIZE, color=COL_COOL, edge="center")
         caption = swap_caption(self, caption, subtitle_text(N, "sens"))
         self.add(res2w, res2s)
-        self.play(*[TransformFromCopy(cards[k]["sym"], it2[k]) for k in ("vdot", "c", "dt")], FadeIn(it2["q"]),
+        self.play(*[stage.transition(f"ventilation.handoff.summary.sens-{k}", source=cards[k]["sym"], target=it2[k]) for k in ("vdot", "c", "dt")], FadeIn(it2["q"]),
                   FadeIn(_unkeyed(row2, it2)), k2.animate.set_value(1.0), run_time=1.8)
         hold_for(self, N, "sens")
 
@@ -330,7 +333,7 @@ class Beat1_Zusammenfassung(Scene):
         none_w = math_label("–", np.array([X_WINTER, Y_ROWS[2], 0.0]), size=BODY_FONT_SIZE, color=P_PRIMARY)
         caption = swap_caption(self, caption, subtitle_text(N, "lat"))
         self.add(res3s)
-        self.play(*[TransformFromCopy(cards[k]["sym"], it3[k]) for k in ("vdot", "dx")], FadeIn(it3["q"]),
+        self.play(*[stage.transition(f"ventilation.handoff.summary.lat-{k}", source=cards[k]["sym"], target=it3[k]) for k in ("vdot", "dx")], FadeIn(it3["q"]),
                   FadeIn(_unkeyed(row3, it3)), FadeIn(none_w), k3.animate.set_value(1.0), run_time=1.8)
         hold_for(self, N, "lat")
 
@@ -347,7 +350,7 @@ class Beat1_Zusammenfassung(Scene):
                              np.array([X_SUMMER, Y_ROWS[3], 0.0]), size=BODY_FONT_SIZE, color=COL_COOL, edge="center")
         caption = swap_caption(self, caption, subtitle_text(N, "wrg"))
         self.add(res4w, res4s)
-        self.play(TransformFromCopy(cards["eta"]["sym"], it4["eta"]), FadeIn(it4["q"]), FadeIn(_unkeyed(row4, it4)),
+        self.play(stage.transition("ventilation.handoff.summary.wrg-eta", source=cards["eta"]["sym"], target=it4["eta"]), FadeIn(it4["q"]), FadeIn(_unkeyed(row4, it4)),
                   k4.animate.set_value(1.0), run_time=1.8)
         hold_for(self, N, "wrg")
 

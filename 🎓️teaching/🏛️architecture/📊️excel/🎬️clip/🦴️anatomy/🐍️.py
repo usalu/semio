@@ -37,6 +37,7 @@ BLUE, RED = _book.REFERENCE_COLORS[0], _book.REFERENCE_COLORS[1]
 DIM = {"width": BLUE, "length": RED, "height": STRUCT}
 FITTING_TONES = (ARCH, WARN, STRUCT, GOOD)
 AREA_FORMAT, VOLUME_FORMAT = '0.0 "m²"', '0.0 "m³"'
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 
 @lru_cache(maxsize=256)
@@ -252,20 +253,22 @@ class Beat1_Anatomy(_visuals.ClipScene):
         self._state(err=False, floor=True, floor_color=GOOD, interior=True, fit=len(self._fittings), fixchip=None)
         capsule.update(0)
 
-    def _fly(self, src, dst, ghosted=True, **kwargs):
+    def _fly(self, transition, src, dst, ghosted=True):
         """🕊️ A token flies to its partner with chip and text travelling together, so it stays readable mid-flight."""
-        move = _engine.ReplacementTransform(src, dst, **kwargs)
+        move = self._stage.transition(transition, source=src, target=dst)
         if not ghosted:
             return move
         ghost = src.copy().set_opacity(0.22)
         self._ghosts.append(ghost)
         return _engine.AnimationGroup(_engine.FadeIn(ghost, run_time=0.3), move, lag_ratio=0.0)
 
-    def _swarm(self, srcs, dsts, **kwargs):
-        """🎆 Tokens fly to their partners in order, chip and text together."""
-        run = kwargs.pop("run_time", 1.2)
-        lag = kwargs.pop("lag", 0.3)
-        return _engine.LaggedStart(*[self._fly(a, b, run_time=run, **kwargs) for a, b in zip(srcs, dsts)], lag_ratio=lag / run)
+    def _swarm(self, transition, srcs, dsts):
+        """🎆 Tokens fly to their partners in order, chip and text together; every source leaves a faint ghost at the declared stagger."""
+        lag = self._stage.document.transition(transition).timing.lag
+        ghosts = [src.copy().set_opacity(0.22) for src in srcs]
+        self._ghosts.extend(ghosts)
+        return _engine.AnimationGroup(_engine.LaggedStart(*[_engine.FadeIn(ghost, run_time=0.3) for ghost in ghosts], lag_ratio=lag / 0.3),
+                                      self._stage.transition(transition, source=srcs, target=dsts), lag_ratio=0.0)
 
     def _strip_points(self):
         """🟩 Screen corners of the floor strip that the widening adds, at the outer width."""
@@ -302,7 +305,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         text = _xl.localize_error(code, self.language())
         src = self._tok(text, window.cell(a1).get_center(), SERV, "number")
         dst = self._tok(text, np.array([CAP_AT[0], 0.95, 0.0]), SERV, "number")
-        return [lambda: self.add(src), [self._fly(src, dst, path_arc=0.5, run_time=1.1)], lambda: self._after.append(dst)]
+        return [lambda: self.add(src), [self._fly("excel.anatomy.error.code-to-capsule", src, dst)], lambda: self._after.append(dst)]
 
     def _veil(self, window, *cells, on):
         """🫥 Hide or show the text of cells while a flying token stands in for it."""
@@ -352,20 +355,21 @@ class Beat1_Anatomy(_visuals.ClipScene):
         window = self._window(book, selected="A1")
         small = self.tower_axon(**SIDE_FIT, lit=lit_one)
         small_display = _snapshot.capture(small, self.camera)
-        body = _morph.silhouette(tower)
+        stage = self._stage = _morph.stage(self, TRANSITIONS)
+        stage.bind("excel.anatomy.tower", lambda lod: tower if lod == "full" else tower_display, bounds=_box(tower_display))
         stripes = _engine.VGroup(*[_engine.Square(0.14, fill_color=_draw.type_color(letter), fill_opacity=1.0, stroke_width=0) for letter in "ABCD"]).arrange(_engine.RIGHT, buff=0.06)
         stripes.move_to(window.title.get_center() + np.array([1.9, 0.0, 0.0]))
         filename = getattr(window.view, "file_name", "Nakagin.xlsx")
         filetok = self._tok(filename, window.title.get_center(), DATA)
         count = self._tok(self.number(len(_nk.slots()), 0) + " " + self.tr("capsules", "Kapseln"), window.title.get_center() + np.array([2.6, 0.0, 0.0]), DATA, "number")
         self._clause("workbook", [_engine.FadeOut(chip), _engine.FadeOut(mark), _engine.FadeIn(window)],
-                     lambda: (self.add(body), self.remove(tower_display)), [_morph.morph(body, filetok, path_arc=0.4, run_time=1.6)],
-                     [_engine.TransformFromCopy(filetok, count)], [_engine.FadeOut(filetok), _engine.FadeIn(small_display), _engine.FadeIn(stripes)])
+                     lambda: (self.remove(tower_display), self.add(stage.mobject("excel.anatomy.tower"))), [stage.transition("excel.anatomy.workbook.tower-to-file", target=filetok)],
+                     [stage.transition("excel.anatomy.workbook.file-to-count", source=filetok, target=count)], [_engine.FadeOut(filetok), _engine.FadeIn(small_display), _engine.FadeIn(stripes)])
         kinds = [(letter, next(s for s in _nk.slots() if s.type == letter)) for letter in "ABCD"]
         srcs = [small.capsules[slot.path + (slot.item,)].copy() for _, slot in kinds]
         dsts = [_morph.token("", kind="item", color=_draw.type_color(letter)).move_to(window.tabs[f"Type {letter}"].get_center()) for letter, _ in kinds]
         self.add(*srcs)
-        self._clause("sheets", [_morph.scatter(srcs, dsts, lag=0.25, path_arc=0.5, run_time=2.0, pairs_fn=_morph.capsule_pairs)],
+        self._clause("sheets", [stage.transition("excel.anatomy.sheets.capsules-to-tabs", source=srcs, target=dsts)],
                      [_engine.FadeOut(*dsts), _engine.FadeOut(count), _engine.FadeOut(stripes), _engine.LaggedStart(*[_engine.Indicate(tab) for tab in window.tabs.values()], lag_ratio=0.25)])
         live_tower = small_display
         self.s.show = True
@@ -379,7 +383,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         lines = self._lines()
         src, dst = self._tok(self._gauge(window, "B2"), lines.width, BLUE), self._tok(self._gauge(window, "B2"), window.cell("B2").get_center(), BLUE)
         self.add(src)
-        self._clause("address", lambda: self._veil(window, "B2", on=True), [self._fly(src, dst, path_arc=0.5, run_time=1.3)], lambda: (self._veil(window, "B2", on=False), self.remove(dst)),
+        self._clause("address", lambda: self._veil(window, "B2", on=True), [self._fly("excel.anatomy.address.value-to-cell", src, dst)], lambda: (self._veil(window, "B2", on=False), self.remove(dst)),
                      [self._hop(window, ["B2"], 1.0), _engine.FadeIn(frame)])
         self._state(dims=("width", "length", "height"))
         self.s.status = window.view.number_format(SHEET, "B2")
@@ -387,7 +391,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         srcs = [self._tok(self._gauge(window, a1), point, tone) for a1, point, tone in zip(("B2", "B3", "B4"), (lines.width, lines.length, lines.height), tones)]
         dsts = [self._tok(self._gauge(window, a1), window.cell(a1).get_center(), tone) for a1, tone in zip(("B2", "B3", "B4"), tones)]
         self.add(*srcs)
-        self._clause("range", lambda: self._veil(window, "B2", "B3", "B4", on=True), [self._swarm(srcs, dsts, lag=0.3, path_arc=0.5, run_time=1.6)],
+        self._clause("range", lambda: self._veil(window, "B2", "B3", "B4", on=True), [self._swarm("excel.anatomy.range.values-to-cells", srcs, dsts)],
                      lambda: (self._veil(window, "B2", "B3", "B4", on=False), self.remove(*dsts)), [self._hop(window, ["B2:B4"], 1.0)])
         self.s.status = None
         self._state(dims=("length",))
@@ -414,7 +418,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         card = self._tok(stored, spot, GOOD, "number")
         back = self._tok(shown, window.cell("B9").get_center(), GOOD, "number")
         self._clause("display", [window.select("B9"), _engine.FadeIn(pop)], lambda: (self.add(there), self._veil(window, "B9", on=True)),
-                     [_morph.retext(there, card, run_time=1.4, path_arc=0.4)], [_morph.retext(card, back, run_time=1.4, path_arc=0.4)],
+                     [stage.transition("excel.anatomy.display.cell-to-stored", source=there, target=card)], [stage.transition("excel.anatomy.display.stored-to-cell", source=card, target=back)],
                      lambda: (self._veil(window, "B9", on=False), self.remove(back)))
         self.play(_engine.FadeOut(pop), run_time=0.01)
         self._state(show=True, dims=(), floor=True, floor_color=MUTED, interior=True)
@@ -425,14 +429,14 @@ class Beat1_Anatomy(_visuals.ClipScene):
         srcs = [self._tok(self._gauge(window, a1), point, tone) for a1, point, tone in (("B5", lines.front, BLUE), ("B6", lines.side, RED))]
         dsts = [self._tok(self._gauge(window, a1), window.cell(a1).get_center(), tone) for a1, tone in (("B5", BLUE), ("B6", RED))]
         self.add(*srcs)
-        self._clause("frames", lambda: self._veil(window, "B5", "B6", on=True), [self._swarm(srcs, dsts, lag=0.4, path_arc=0.5, run_time=1.6)],
+        self._clause("frames", lambda: self._veil(window, "B5", "B6", on=True), [self._swarm("excel.anatomy.frames.values-to-cells", srcs, dsts)],
                      lambda: (self._veil(window, "B5", "B6", on=False), self.remove(*dsts)), [_engine.FadeIn(frames, scale=1.4)])
         window.edit(None)
         self._state(floor_color=GOOD)
         total = self._gauge(window, "B9")
         src, dst = self._tok(total, window.cell("B9").get_center(), GOOD, "number"), self._tok(total, lines.floor, GOOD, "number")
         self.add(src)
-        self._clause("hatch", [_engine.FadeOut(frames)], lambda: self._veil(window, "B9", on=True), [self._fly(src, dst, ghosted=False, path_arc=0.5, run_time=1.5)],
+        self._clause("hatch", [_engine.FadeOut(frames)], lambda: self._veil(window, "B9", on=True), [self._fly("excel.anatomy.hatch.total-to-floor", src, dst, ghosted=False)],
                      lambda: (self._state(area=True), self.remove(dst), self._veil(window, "B9", on=False)))
         self._state(area=False, interior=False)
 
@@ -454,8 +458,8 @@ class Beat1_Anatomy(_visuals.ClipScene):
         bracket = _engine.VGroup(plate, glyph).move_to(bar + np.array([1.5, 0.0, 0.0]))
         landed = bracket.copy().move_to(lines.back_edge)
         self._clause("precedence", [_engine.FadeOut(window), _engine.FadeIn(window2)], lambda: self.add(*names, bracket),
-                     [self._swarm(names, edges, lag=0.5, path_arc=0.5, run_time=1.5)], [_engine.FadeOut(*edges)],
-                     [self._fly(bracket, landed, path_arc=0.5, run_time=1.4)], lambda: self._state(perim="right"), [self._hop(window2, ["B19"], 1.0), _engine.FadeOut(landed)])
+                     [self._swarm("excel.anatomy.precedence.names-to-edges", names, edges)], [_engine.FadeOut(*edges)],
+                     [self._fly("excel.anatomy.precedence.bracket-to-corner", bracket, landed)], lambda: self._state(perim="right"), [self._hop(window2, ["B19"], 1.0), _engine.FadeOut(landed)])
         self._state(perim=None, dims=(), floor=True, floor_color=GOOD)
 
         window3 = self._window(book, selected="G16", cols="C:G", rows=(10, 16), ribbon="Formulas")
@@ -463,14 +467,14 @@ class Beat1_Anatomy(_visuals.ClipScene):
         srcs = [self._tok(fit["area"], (3.5, -1.55 - 0.36 * i, 0.0), FITTING_TONES[i % 4], "number") for i, fit in enumerate(self._fittings)]
         sigma = self._tok(self._fitting_total, window3.cell("G16").get_center(), GOOD, "number")
         self._clause("function", [_engine.FadeOut(window2), _engine.FadeIn(window3)], lambda: (self.add(*srcs), self._veil(window3, "G16", on=True)),
-                     [_morph.gather(srcs, sigma, lag=0.25, run_time=1.6)], lambda: (self._veil(window3, "G16", on=False), self.remove(sigma)))
+                     [stage.transition("excel.anatomy.function.areas-to-total", source=srcs, target=sigma)], lambda: (self._veil(window3, "G16", on=False), self.remove(sigma)))
         self._state(chips=False)
         formula = "=SUM(G12:G15,1.5)"
         left, bar_y = window3.field_left + 0.12, window3.formula_bar.get_center()[1]
         wide = window3.right - window3.field_left - 0.5
         cover = _engine.Rectangle(width=wide, height=0.34, fill_color="#FFFFFF", fill_opacity=1.0, stroke_width=0).move_to((left + wide / 2 - 0.1, bar_y, 0.0))
         english, german = (self.xl_formula_text(formula, language=code, at=(left, bar_y - 0.1, 0.0), ink=_book.CELL_INK) for code in ("en", "de"))
-        self._clause("locale", [_engine.FadeIn(cover), _engine.FadeIn(english)], [_morph.retext(english, german, run_time=1.8)])
+        self._clause("locale", [_engine.FadeIn(cover), _engine.FadeIn(english)], [stage.transition("excel.anatomy.locale.english-to-german", source=english, target=german)])
         self.play(_engine.FadeOut(german), _engine.FadeOut(cover), run_time=0.3)
 
         window4 = self._window(book, selected="B5")
@@ -492,7 +496,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
             self.add(window4)
         self._clause("recalc", [_engine.FadeOut(window3), _engine.FadeIn(window4), window4.select("B9")], freeze_window,
                      [_ramp(self.s.iw, base_iw, self._outer["width"], 3.0)], restore_window,
-                     lambda: self.add(strip), [_morph.morph(strip, change, pairs=[(strip, change[0])], path_arc=0.5, run_time=1.5)], lambda: self._after.append(change))
+                     lambda: self.add(strip), [stage.transition("excel.anatomy.recalc.strip-to-chip", source=strip, target=change)], lambda: self._after.append(change))
         self._handoff(window4, capsule, lambda: (self.s.iw.set_value(base_iw), self._state(area=False, interior=False, delta=False)))
 
         window5 = self._window(book, selected="B9", rows=(4, 16))
@@ -501,9 +505,11 @@ class Beat1_Anatomy(_visuals.ClipScene):
         centre = lambda a1: window5.cell(a1).get_center()
         used = [self._tok(self._gauge(window5, a1), centre(a1), tone) for a1, tone in (("B5", BLUE), ("B6", RED))]
         result = [self._tok(self._gauge(window5, "B9"), centre("B9"), GOOD, "number") for _ in users]
+        gathered = [tok.copy().move_to(centre("B9")) for tok in used]
+        spread = [tok.copy().move_to(centre(a1)) for tok, a1 in zip(result, users)]
         self._clause("trace", [_engine.FadeIn(capsule), _engine.FadeIn(window5), _engine.FadeIn(arrows)], lambda: (self.add(*used), self._veil(window5, "B9", on=True)),
-                     [_morph.travel(tok, _engine.Line(centre(a1), centre("B9")), run_time=1.2) for tok, a1 in zip(used, ("B5", "B6"))], [_engine.FadeOut(*used)],
-                     lambda: (self._veil(window5, "B9", on=False), self.add(*result), self._veil(window5, *users, on=True)), [_morph.travel(tok, _engine.Line(centre("B9"), centre(a1)), run_time=1.2) for tok, a1 in zip(result, users)], [_engine.FadeOut(*result)], lambda: self._veil(window5, *users, on=False))
+                     [stage.transition("excel.anatomy.trace.precedents-to-formula", source=used, target=gathered)], [_engine.FadeOut(*gathered)],
+                     lambda: (self._veil(window5, "B9", on=False), self.add(*result), self._veil(window5, *users, on=True)), [stage.transition("excel.anatomy.trace.result-to-dependents", source=result, target=spread)], [_engine.FadeOut(*spread)], lambda: self._veil(window5, *users, on=False))
         self.play(_engine.FadeOut(arrows), run_time=0.01)
 
         window6 = self._window(_xl.apply(book, [{"type": "clear-cell", "sheet": SHEET, "cell": "B6"}]), selected="B15", rows=(6, 15))
@@ -517,15 +523,16 @@ class Beat1_Anatomy(_visuals.ClipScene):
         error = self._tip_aside(self.xl_error(window7, "G16", "#NAME?"))
         wrong, right = (self.xl_formula_text(text, language=lang, at=(3.0, 2.1, 0.0), ink=INK) for text in ("=SUMM(G12:G15)", "=SUM(G12:G15)"))
         self._clause("name", [_engine.FadeIn(capsule), _engine.FadeIn(window7), _engine.FadeIn(error), _engine.FadeIn(wrong)], *self._ship(window7, "G16", "#NAME?"),
-                     [_engine.FadeOut(error)], [_morph.retext(wrong, right, run_time=1.4)])
+                     [_engine.FadeOut(error)], [stage.transition("excel.anatomy.name.wrong-to-right", source=wrong, target=right)])
         self.play(_engine.FadeOut(right), run_time=0.3)
 
         window8 = self._window(_xl.apply(book, [{"type": "delete-row", "sheet": SHEET, "index": 6}]), selected="B8", rows=(5, 14))
         self._handoff(window7, capsule, lambda: self._state(err=True, floor=False, interior=True, fit=0, fixchip=self.tr("deleted: ", "gelöscht: ") + _xl.shown(book, values, SHEET, "A6", lang) + self.tr(" · undo", " · Rückgängig")))
         error = self._tip_aside(self.xl_error(window8, "B8", "#REF!"))
         gone = [self._tok(_xl.shown(book, values, SHEET, a1, lang), window8.cell(a1).get_center(), tone) for a1, tone in (("A6", RED), ("B6", RED))]
+        fallen = [tok.copy().shift(np.array([-0.4 + 0.8 * i, -1.3, 0.0])) for i, tok in enumerate(gone)]
         self._clause("ref", [_engine.FadeIn(capsule), _engine.FadeIn(window8), _engine.FadeIn(error)], lambda: self.add(*gone),
-                     [*[_morph.travel(tok, _engine.Line(tok.get_center(), tok.get_center() + np.array([-0.4 + 0.8 * i, -1.3, 0.0])), run_time=1.3) for i, tok in enumerate(gone)], _engine.FadeOut(*gone)],
+                     [stage.transition("excel.anatomy.ref.deleted-fall", source=gone, target=fallen), _engine.FadeOut(*fallen)],
                      *self._ship(window8, "B8", "#REF!"))
         self.play(_engine.FadeOut(error), run_time=0.01)
 
@@ -539,7 +546,7 @@ class Beat1_Anatomy(_visuals.ClipScene):
         fixed = _xl.display(self._base_il, '0.00 "m"', lang)
         back, line = self._tok(fixed, window9.cell("B6").get_center(), RED), self._tok(fixed, self._lines().side, RED)
         self.add(back)
-        self._clause("repair", [self._fly(back, line, path_arc=0.5, run_time=1.3)], lambda: self._repair_window(window9, book, line, capsule))
+        self._clause("repair", [self._fly("excel.anatomy.repair.value-to-line", back, line)], lambda: self._repair_window(window9, book, line, capsule))
 
         self._state(show=False)
         panel, pulse = self._legend(window9, lang)
@@ -548,9 +555,8 @@ class Beat1_Anatomy(_visuals.ClipScene):
         tab = _morph.token("", kind="item", color=_draw.type_color("A")).move_to(window9.tabs[SHEET].get_center())
         target = sky.capsules[self._one].copy()
         highlighted = sky.capsules[self._one].copy()
-        pairs = [(whole, part) for part, whole in _morph.capsule_pairs(target, tab)]
         self._clause("legend", [pulse], [_engine.FadeOut(panel)], lambda: self.add(tab),
-                     [_engine.FadeOut(window9, scale=0.3), _engine.FadeIn(sky_display)], [_morph.morph(tab, target, pairs=pairs, path_arc=0.4, run_time=1.8)],
+                     [_engine.FadeOut(window9, scale=0.3), _engine.FadeIn(sky_display)], [stage.transition("excel.anatomy.legend.tab-to-capsule", source=tab, target=target)],
                      lambda: (self.remove(target), self.add(highlighted)), [_engine.Indicate(highlighted, scale_factor=1.6)], lambda: self.remove(highlighted))
 
     def _legend(self, window, lang):
@@ -570,8 +576,14 @@ class Beat1_Anatomy(_visuals.ClipScene):
             y = 2.1 - 0.5 * index
             rows.add(_engine.VGroup(_engine.Square(0.2, stroke_width=0, fill_color=tone, fill_opacity=1.0).move_to((2.3, y, 0)), self._say(name, (2.6, y), size=SMALL, edge="l", width=4.2)))
         rows[5].add(self.xl_formula_text("=SUM(G12:G15)", language=lang, at=(4.1, 2.1 - 0.5 * 5 - 0.08, 0.0), size=SMALL, ink=INK))
-        pulse = _engine.LaggedStart(*[_engine.AnimationGroup(_engine.FadeIn(target), _engine.TransformFromCopy(target, row[0]), _engine.FadeIn(row[1:])) for row, target in zip(rows, targets)], lag_ratio=0.5, run_time=3.5)
+        pulse = _engine.AnimationGroup(_engine.LaggedStart(*[_engine.AnimationGroup(_engine.FadeIn(target), _engine.FadeIn(row[1:])) for row, target in zip(rows, targets)], lag_ratio=0.5, run_time=3.5),
+                                       self._stage.transition("excel.anatomy.legend.frames-to-swatches", source=list(targets), target=[row[0] for row in rows]))
         return _engine.VGroup(rows, *targets), pulse
+
+
+def _box(mob):
+    """📦 Logical bounds of a drawn mobject as a (min corner, max corner) pair of 3-tuples."""
+    return (tuple(float(v) for v in mob.get_corner(_engine.DL)), tuple(float(v) for v in mob.get_corner(_engine.UR)))
 
 
 def _ramp(tracker, start, stop, seconds):

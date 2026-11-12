@@ -45,6 +45,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 unit_text = _manim_module.unit_text
 begin_vo_beat = _manim_module.begin_vo_beat
 math_label = _manim_module.math_label
@@ -430,6 +432,7 @@ class Scene2(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "phi"))
@@ -606,13 +609,13 @@ class Scene2(Scene):
         _freeze(gt_read)
         thermo["column"].clear_updaters()
         self.play(
-            ReplacementTransform(VGroup(ie["loss"], ie["eq"]), VGroup(ce["q"], ce["eq"])),
-            ReplacementTransform(VGroup(mg["ht"], mg["plus"], mg["hv"]), VGroup(ce["ht"], ce["plus"], ce["hv"])),
-            ReplacementTransform(ie["t"], ce["lp"]),
-            ReplacementTransform(ie["v"], ce["rp"]),
-            ReplacementTransform(mg["arrow"], ce["times"]),
+            stage.transition("heating.calculation.balance.loss-equation", source=VGroup(ie["loss"], ie["eq"]), target=VGroup(ce["q"], ce["eq"])),
+            stage.transition("heating.calculation.balance.loss-terms", source=VGroup(mg["ht"], mg["plus"], mg["hv"]), target=VGroup(ce["ht"], ce["plus"], ce["hv"])),
+            stage.transition("heating.calculation.balance.open-bracket", source=ie["t"], target=ce["lp"]),
+            stage.transition("heating.calculation.balance.close-bracket", source=ie["v"], target=ce["rp"]),
+            stage.transition("heating.calculation.balance.arrow-to-times", source=mg["arrow"], target=ce["times"]),
             FadeOut(ie["plus"]),
-            ReplacementTransform(area_static, ce["gt"]),
+            stage.transition("heating.calculation.balance.degree-day-area-to-symbol", source=area_static, target=ce["gt"]),
             FadeOut(VGroup(x_axis, y_axis, y_name, y_ticks, m_marks, m_names, curve, gt_def, d_read,
                            thermo["group"], thermo["column"])),
             run_time=2.5,
@@ -620,7 +623,7 @@ class Scene2(Scene):
         self.remove(initial_eq, multiplier_group)
         self.play(FadeIn(VGroup(ce["times2"], ce["hd"]), shift=LEFT * 0.2), run_time=0.8)
         self.play(FadeIn(VGroup(vi["eq"], vi["h"], vi["d1"], vi["d2"], vi["hd"])),
-                  ReplacementTransform(gt_read, vi["gt"]), run_time=1.2)
+                  stage.transition("heating.calculation.balance.degree-day-readout-to-value", source=gt_read, target=vi["gt"]), run_time=1.2)
         self.add(q_read)
         self.play(q.animate.set_value(_Q_LOSS), run_time=2.2)
 
@@ -813,6 +816,7 @@ class Scene4(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "day"))
@@ -962,19 +966,19 @@ class Scene4(Scene):
         heavy_tag = _label(tr("heavy construction, high thermal mass", "schwere Bauweise, viel Speichermasse"), size=18, color=GREY_A).move_to(mass_tag, aligned_edge=LEFT)
         self.play(FadeIn(mass_tag), run_time=0.4)
         new_day()
-        self.play(mass.animate.set_value(1.0), Transform(mass_tag, heavy_tag), *sweep(3.5), run_time=3.5)
+        self.play(mass.animate.set_value(1.0), stage.transition("heating.calculation.mass.light-to-heavy-tag", source=mass_tag, target=heavy_tag), *sweep(3.5), run_time=3.5)
         hold_for(self, self.NARRATION, "mass")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "house"))
         light_tag = _label(tr("Example house, medium construction", "Beispielhaus, mittlere Bauweise"), size=18, color=GREY_A).move_to(mass_tag, aligned_edge=LEFT)
-        self.play(mass.animate.set_value(0.0), Transform(mass_tag, light_tag), run_time=2.5)
+        self.play(mass.animate.set_value(0.0), stage.transition("heating.calculation.mass.heavy-to-example-tag", source=heavy_tag, target=light_tag), run_time=2.5)
         hold_for(self, self.NARRATION, "house")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         green_static = green_area()
         self.remove(green)
         self.add(green_static)
-        self.play(FadeOut(VGroup(axes, loss_curve, gains, red, legend, a_gain_read, a_used_read, eta_read, mass_tag)),
+        self.play(FadeOut(VGroup(axes, loss_curve, gains, red, legend, a_gain_read, a_used_read, eta_read, light_tag)),
                   sky_alpha.animate.set_value(0.0), run_time=0.8)
         self.remove(sky_body)
 
@@ -995,7 +999,7 @@ class Scene4(Scene):
         target_group.move_to(UP * 1.1)
 
         self.play(
-            Transform(ie["q"], tg["q"]),
+            stage.transition("heating.calculation.use.heat-need-symbol", source=ie["q"], target=tg["q"]),
             ie["eq"].animate.move_to(tg["eq"]),
             ie["sol"].animate.move_to(tg["sol"]),
             ie["plus"].animate.move_to(tg["plus"]),
@@ -1004,7 +1008,7 @@ class Scene4(Scene):
         )
 
         self.play(
-            ReplacementTransform(green_static, tg["eta"]),
+            stage.transition("heating.calculation.use.eta-slot", source=green_static, target=tg["eta"]),
             FadeIn(tg["dot"]),
             FadeIn(tg["lp"], shift=RIGHT * 0.1),
             FadeIn(tg["rp"], shift=LEFT * 0.1),
@@ -1054,6 +1058,7 @@ class UltimateEnergyBalance(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "balance"))
@@ -1146,11 +1151,11 @@ class UltimateEnergyBalance(Scene):
 
         self.play(
             FadeOut(scene_house),
-            ReplacementTransform(q_loss_tag, me["loss"]),
-            ReplacementTransform(q_gain_tag, VGroup(me["eta"], me["dot"], me["gain"])),
+            stage.transition("heating.calculation.master.loss-tag-to-term", source=q_loss_tag, target=me["loss"]),
+            stage.transition("heating.calculation.master.gain-tag-to-term", source=q_gain_tag, target=VGroup(me["eta"], me["dot"], me["gain"])),
             FadeIn(VGroup(me["qh"], me["eq"], me["minus"])),
-            ReplacementTransform(_freeze(loss_read), nb["loss"]),
-            ReplacementTransform(_freeze(gain_read), nb["gain"]),
+            stage.transition("heating.calculation.master.loss-readout-to-value", source=_freeze(loss_read), target=nb["loss"]),
+            stage.transition("heating.calculation.master.gain-readout-to-value", source=_freeze(gain_read), target=nb["gain"]),
             FadeIn(VGroup(nb["qh"], nb["eq"], nb["minus"], nb["approx"])),
             run_time=1.5,
         )
@@ -1300,6 +1305,7 @@ class AnlagenVerluste(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -1455,7 +1461,7 @@ class AnlagenVerluste(Scene):
         for c in copies.values():
             for part in c.get_family():
                 part._layout_zone = "formula"
-        self.play(*[ReplacementTransform(copies[k], items[k]) for k in copies], *running(1.2), run_time=1.2)
+        self.play(stage.transition("heating.calculation.system.readouts-into-sum", source=copies, target={k: items[k] for k in copies}), *running(1.2), run_time=1.2)
         rest = VGroup(*[m for m in row.submobjects if all(m is not items[k] for k in copies)])
         self.play(FadeIn(rest), Create(box), *running(0.6), run_time=0.6)
         hold_for(self, N, "sum", during=running)

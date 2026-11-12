@@ -7,6 +7,12 @@ import json
 import math
 from pathlib import Path
 
+import importlib
+
+_cache = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.🐍️")
+_MEMO_ENTRIES = 32
+_KEYED_ENTRIES = 1024
+_EVALUATIONS = 2048
 STUDY = Path(__file__).with_name("🔣️.json")
 KEYS = ("orientation", "wwr", "overhang", "insulation")
 
@@ -25,14 +31,10 @@ def _frozen():
 
 
 def _memo(function):
-    """🧠 Cache deterministic results and hand out independent copies."""
-    cached = functools.lru_cache(maxsize=None)(function)
-
-    @functools.wraps(function)
-    def wrapper(*arguments):
-        """🪞 Return an independent copy of the cached result."""
-        return copy.deepcopy(cached(*arguments))
-    return wrapper
+    """🧠 Cache deterministic results in a bounded cache and share them as frozen data, so nothing is copied and nothing can be changed through a returned result."""
+    cached = functools.lru_cache(maxsize=_MEMO_ENTRIES)(lambda *arguments: _cache.freeze(function(*arguments)))
+    functools.update_wrapper(cached, function)
+    return cached
 
 
 def _design(design=None):
@@ -61,13 +63,13 @@ def _irradiance(season, phi):
     return max(0.0, mean + first * math.cos(phi) + second * math.cos(2 * phi))
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=2)
 def _peak(season):
     """🌞 Strongest vertical irradiance of the season over all bearings."""
     return max(_irradiance(season, math.radians(angle)) for angle in range(360))
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=2)
 def _sun_track(season):
     """🛤️ Solstice sun path as (compass bearing, altitude) pairs while the sun stands above the minimum altitude."""
     study, _ = _frozen()
@@ -83,7 +85,7 @@ def _sun_track(season):
     return tuple(track)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=_KEYED_ENTRIES)
 def _sun_point(orientation, season):
     """📌 Cached best-matching sun-path point of one façade bearing."""
     bearing, altitude = min(_sun_track(season), key=lambda point: abs((point[0] - orientation + 180) % 360 - 180))
@@ -98,7 +100,7 @@ def sun_state(orientation, season):
     return dict(_sun_point(float(orientation), season))
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=_KEYED_ENTRIES)
 def _beam_samples(orientation, season):
     """🔆 Hourly solstice sun positions in front of the façade plane (angle across the normal below 90°), each with its beam weight cos(altitude) × cos(incidence), which is 0 at 90°."""
     study, _ = _frozen()
@@ -117,7 +119,7 @@ def _beam_samples(orientation, season):
     return tuple(samples)
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=_KEYED_ENTRIES)
 def _sun_samples(orientation, season):
     """🕘 Hourly sun positions of the solstice that shine on the façade (angle across the normal below 89°), with their share of the beam (cos of incidence)."""
     return tuple(item for item in _beam_samples(orientation, season) if item["across"] < 89)
@@ -137,7 +139,7 @@ def _shading(season, orientation, overhang, window_height, gap):
     return shaded / max(beam, values["climate"]["beam_reference"]), beam
 
 
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=_EVALUATIONS)
 def _evaluate(orientation, wwr, overhang, insulation):
     """🔬 Evaluate one complete design with every intermediate quantity."""
     _, values = _frozen()

@@ -21,6 +21,7 @@ _snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️
 _sprites = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️sprites")
 
 INK, MUTED, ARCH, STRUCT, DATA, GOOD, WARN, SERV = (getattr(_visuals, name) for name in ("INK", "MUTED", "ARCH", "STRUCT", "DATA", "GOOD", "WARN", "SERV"))
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 PINK, ITEM_C, TOWER_GREY = "#ff9db0", "#9fb4ff", "#d8d8d8"
 STOREY_LIGHT, PEACH = _draft.mix(GOOD, INK, 0.55), "#ffcf9f"
 TOWER_COLORS = (ARCH, WARN)
@@ -57,12 +58,6 @@ def _release_tower(display):
         display._drawing_ref.value = None
 
 
-def _tower_flight(drawing, target, camera):
-    """🗼 Fly the exact projected tower from its current bounds to a recap label."""
-    sprite = _sprites.capture(drawing, camera)
-    return _engine.FadeOut(sprite, target_position=target, scale=max(target.width, .5) / max(sprite.width, 1e-6))
-
-
 class _DrawingRef:
     """🗼 Share a semantic vector drawing when presentation frames are copied."""
     def __init__(self, value):
@@ -78,39 +73,6 @@ class _Capsules(dict):
         return self
 
 
-class _Trip(_engine.Animation):
-    """✈️ A real object (a capsule copy, a chip, a digit, a leaf, a swatch; a plain dot without one) flying on a curved path, optionally round a waypoint, scaled from its first to its last width and visible only while in flight."""
-
-    def __init__(self, start, end, colors, widths=(0.26, 0.1), arc=0.45, mob=None, via=None, **kwargs):
-        flier = mob if mob is not None else _engine.Dot(start, radius=0.05, color=colors[0])
-        super().__init__(flier, introducer=True, remover=True, **kwargs)
-        self.a, self.b, self.arc, self.colors, self.widths, self.real = np.array(start, dtype=float), np.array(end, dtype=float), arc, colors, widths, mob is not None
-        self.via = None if via is None else np.array([via[0], via[1], 0.0], dtype=float)
-        self.base = [(m, m.get_fill_opacity(), m.get_stroke_opacity()) for m in flier.get_family()]
-
-    def interpolate_mobject(self, alpha):
-        t = float(self.rate_func(alpha))
-        chord = self.b - self.a
-        if self.via is None:
-            side = np.array([-chord[1], chord[0], 0.0]) * self.arc * float(np.sin(np.pi * t))
-            point = self.a + chord * t + side
-        else:
-            control = 2.0 * self.via - (self.a + self.b) / 2.0
-            point = (1 - t) ** 2 * self.a + 2 * (1 - t) * t * control + t ** 2 * self.b
-        wide = self.widths[0] + (self.widths[1] - self.widths[0]) * t
-        if self.mobject.width > 1e-6 and wide > 0:
-            self.mobject.scale(wide / self.mobject.width)
-        self.mobject.move_to(point)
-        level = min(1.0, 8.0 * alpha, 8.0 * (1.0 - alpha))
-        if self.real:
-            for member, fill, stroke in self.base:
-                member.set_fill(opacity=fill * level)
-                member.set_stroke(opacity=stroke * level)
-        else:
-            self.mobject.set_color(_engine.interpolate_color(_engine.ManimColor(self.colors[0]), _engine.ManimColor(self.colors[1]), t))
-            self.mobject.set_opacity(level)
-
-
 def _sequence(scene, builders, seconds, first=(), weights=None):
     """⏱️ Build each animation only when its stage begins."""
     weights = weights or [1 / len(builders)] * len(builders)
@@ -118,6 +80,7 @@ def _sequence(scene, builders, seconds, first=(), weights=None):
         raise ValueError("Stage weights must sum to one")
     for index, (build, weight) in enumerate(zip(builders, weights)):
         scene.play(*(tuple(first) if index == 0 else ()), build(), run_time=seconds * weight)
+        scene._settle()
 
 
 class Beat5_DataTrees(_visuals.ClipScene):
@@ -196,67 +159,70 @@ class Beat5_DataTrees(_visuals.ClipScene):
         """🈯 Localized word of an English and German pair."""
         return self.tr(*pair)
 
-    def _flight(self, starts, ends, colors, *, widths=(0.26, 0.1), lag=0.015, arc=0.45, mobs=None, via=None):
-        """✈️ Staggered fliers from ``starts`` to ``ends``: the real objects ``mobs`` (copies) when given, else dots with a ``(from, to)`` colour pair."""
-        trips = [_Trip(s, e, c, widths(m) if callable(widths) else widths, arc, mob=m, via=via) for s, e, c, m in zip(starts, ends, colors, mobs or [None] * len(starts))]
-        return _engine.LaggedStart(*trips, lag_ratio=lag) if trips else _engine.Wait(0.01)
+    @staticmethod
+    def _name(key):
+        """🔑 Part name of a capsule path in a bound entity."""
+        return "-".join(str(part) for part in key)
+
+    def step(self, key, *animations, seconds=1.2):
+        """⏱️ One narrated clause; flight targets that landed on identical drawn objects leave afterwards."""
+        super().step(key, *animations, seconds=seconds)
+        self._settle()
+
+    def _fly(self, name, sources, targets):
+        """✈️ Play the declared transition ``trees.<name>``; its target stays in ``self._born`` until ``_settle`` drops it from above the identical drawing."""
+        if isinstance(sources, (dict, list)) and not sources:
+            return _engine.Wait(0.01)
+        animation = self.stage.transition(f"trees.{name}", source=sources, target=targets)
+        self._born.append(self.stage.mobject(f"trees.{name}.target"))
+        return animation
+
+    def _copies(self, tower, keys):
+        """🧸 Capsule copies of a tower drawing by part name; projected sprites when there are many."""
+        if len(keys) <= 10:
+            return {self._name(key): tower.capsules[key].copy() for key in keys}
+        return {self._name(key): _sprites.capture(tower.capsules[key], self.camera) for key in keys}
 
     def _centre(self, drawing, prefix):
         """🎯 Centre of the capsules of a tower drawing whose path starts with ``prefix``."""
         return _engine.VGroup(*[mob for key, mob in drawing.capsules.items() if key[:len(prefix)] == tuple(prefix)]).get_center()
 
-    def _hatch(self, tower, keys, points, tones, size, label=""):
-        """🌱 Capsule copies of a tower drawing morph part-wise into item tokens (shell to ring, window to dot); the tokens stay in ``self._born`` until ``_settle``."""
-        if len(keys) <= 10:
-            return self._flight([tower.capsules[k].get_center() for k in keys], points, [(tone, tone) for tone in tones], widths=lambda m: (m.width * 1.8, 0.75 if len(keys) == 1 else 0.55), lag=0.0, arc=0.3, mobs=[tower.capsules[k].copy() for k in keys])
-        sources = [_sprites.capture(tower.capsules[k], self.camera) for k in keys]
-        targets = [_morph.token(label, kind="item", color=tone, size=size).move_to(point) for point, tone in zip(points, tones)]
-        self.add(*sources)
-        self._born.extend(targets)
-        lag = min(.012, .8 / max(len(sources) - 1, 1))
-        flights = [_engine.AnimationGroup(_engine.FadeOut(source, target_position=target, scale=.15),
-                                          _engine.FadeIn(target, target_position=source, scale=.15), run_time=1.2)
-                   for source, target in zip(sources, targets)]
-        return _engine.LaggedStart(*flights, lag_ratio=lag / 1.2, run_time=min(2., 1.2 + lag * (len(flights) - 1)))
+    def _hatch(self, name, tower, keys, targets):
+        """🌱 Capsule copies of a tower drawing fly into their ``{key: mobject}`` targets (one declared transition)."""
+        return self._fly(name, self._copies(tower, keys), {self._name(key): targets[key] for key in keys})
 
     def _settle(self):
         """🧹 Drop the item tokens of a finished birth; the diagram leaves lie underneath."""
         self.remove(*self._born)
         self._born = []
 
-    def _birth(self, tower, diagram):
+    def _birth(self, name, tower, diagram):
         """🌱 Capsules of a tower drawing turn into the leaves of a tree diagram, in list order, keeping their tower colour."""
         keys = sorted((k for k in diagram.leaves if k in tower.capsules), key=self._order.get)
-        return self._hatch(tower, keys, [diagram.leaves[k][0] for k in keys], [diagram.leaves[k][1] for k in keys], 0.35 if len(keys) > 10 else 0.8)
+        many = len(keys) > 10
+        leaf = lambda key: _morph.token("", kind="item", color=diagram.leaves[key][1], size=0.35).move_to(diagram.leaves[key][0]) if many else diagram.leaves[key][2].copy()
+        return self._hatch(name, tower, keys, {key: leaf(key) for key in keys})
 
-    def _regroup(self, old, new):
+    def _regroup(self, name, old, new):
         """🔀 Leaves of an old tree diagram fly to the same capsules in a new diagram (Flatten, Graft, Simplify, Path Mapper, Flip Matrix)."""
         before, after = getattr(old, "leaves", {}), getattr(new, "leaves", {})
         keys = sorted((k for k in after if k in before), key=self._order.get)
-        return self._flight([before[k][0] for k in keys], [after[k][0] for k in keys], [(before[k][1], after[k][1]) for k in keys], widths=lambda m: (m.width, m.width), lag=0.01, arc=0.3, mobs=[before[k][2].copy() for k in keys])
+        return self._fly(name, {self._name(k): before[k][2].copy() for k in keys}, {self._name(k): after[k][2].copy() for k in keys})
 
-    def _gather(self, tower, keys, point, color):
+    def _gather(self, name, tower, keys, chip):
         """🧲 Capsules of a tower drawing collapse into one number or chip."""
         keys = sorted(keys, key=self._order.get)
-        if len(keys) > 10:
-            sources = [_sprites.capture(tower.capsules[key], self.camera) for key in keys]
-            lag = min(.012, 1.2 / max(len(sources) - 1, 1))
-            return _engine.LaggedStart(*[_engine.FadeOut(source, target_position=point, scale=.15, run_time=1.2) for source in sources],
-                                       lag_ratio=lag / 1.2, run_time=min(2.4, 1.2 + lag * (len(sources) - 1)))
-        return self._flight([tower.capsules[k].get_center() for k in keys], [point] * len(keys), [(color, color)] * len(keys), widths=lambda m: (m.width, 0.12), lag=0.012, arc=0.25, mobs=[tower.capsules[k].copy() for k in keys])
+        return self._fly(name, self._copies(tower, keys), chip.copy())
 
-    def _paint(self, tower, sources, colour_of):
-        """🎨 Colour tokens leave their swatches and land on the capsules they paint."""
+    def _paint(self, name, tower, swatches, colour_of):
+        """🎨 Colour swatch copies leave their swatches and land on the capsules they paint."""
         keys = sorted((k for k in tower.capsules if k in self._order), key=self._order.get)
-        names = [colour_of[k] for k in keys]
-        return self._flight([sources[name].get_center() for name in names], [tower.capsules[k].get_center() for k in keys], [(MATERIALS[name], MATERIALS[name]) for name in names], widths=lambda m: (m.width, 0.26), lag=0.01, mobs=[sources[name].copy() for name in names], via=(-1.2, 0.8))
+        return self._fly(name, {self._name(k): swatches[colour_of[k]].copy() for k in keys}, {self._name(k): tower.capsules[k].copy() for k in keys})
 
-    def _fan(self, sources, diagram, colour_of):
+    def _fan(self, name, swatches, diagram, colour_of):
         """🎆 The grafted colour swatches fan out: a swatch copy flies to every leaf of the diagram and paints it in its item's colour."""
         keys = sorted((k for k in diagram.leaves if k in colour_of), key=self._order.get)
-        names = [colour_of[k] for k in keys]
-        return self._flight([sources[name].get_center() for name in names], [diagram.leaves[k][0] for k in keys], [(MATERIALS[name], MATERIALS[name]) for name in names],
-                            widths=lambda m: (m.width, 0.14), lag=0.01, arc=0.35, mobs=[sources[name].copy() for name in names])
+        return self._fly(name, {self._name(k): swatches[colour_of[k]].copy() for k in keys}, {self._name(k): diagram.leaves[k][2].copy() for k in keys})
 
     def _tokens(self, parts, point, *, size=LABEL, edge="c"):
         """🎨 A monospace row of coloured ``(text, colour)`` tokens that touch each other."""
@@ -306,7 +272,8 @@ class Beat5_DataTrees(_visuals.ClipScene):
         """🔁 Cross-fade the mobject held in a named slot with a new one; head and thread texts retext in place so old and new strings never overlap."""
         old = self._slots.get(slot)
         if slot in ("head", "thread") and old is not None and new is not None:
-            return _engine.Transform(old, new)
+            self._slots[slot] = new
+            return self.stage.transition(f"trees.{slot}-retext", source=old, target=new)
         self._slots[slot] = new
         moves = [*([_engine.FadeOut(old)] if old is not None else []), *([_engine.FadeIn(new)] if new is not None else [])]
         if slot == "tower" and old is not new:
@@ -487,6 +454,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
 
     def present_trees(self):
         """🎞️ The whole data-tree animation on the aggregated tower, following capsule 21."""
+        self.stage = _morph.stage(self, TRANSITIONS)
         self._def = _model.canvas("trees")
         self._sol = _model.evaluate(self._def)
         self._tree = self._sol.tree(SOURCE)
@@ -528,12 +496,12 @@ class Beat5_DataTrees(_visuals.ClipScene):
         panel21 = self._pipe(None, None, rows=rows21)
         frame.move_to(panel21[0].parts["rows"][3].get_center()).match_x(panel21[0].body)
         question = self._say(self.tr("tower? storey? facade?", "Turm? Geschoss? Fassade?"), (2.2, 3.5), color=DATA)
-        self.step("flat", self._hatch(self._slots["tower"], [self._probe], [frame.get_center()], [DATA], 1.0, "21"), self._swap("pipe", panel21), self._swap("tower", self._tower(tint=lambda key: dim(TOWER_COLORS[0]) if key == self._probe else None)), self._swap("thread", self._thread()), _engine.FadeIn(frame), _engine.FadeIn(question), seconds=1.4)
+        self.step("flat", self._hatch("flat-probe", self._slots["tower"], [self._probe], {self._probe: frame.copy()}), self._swap("pipe", panel21), self._swap("tower", self._tower(tint=lambda key: dim(TOWER_COLORS[0]) if key == self._probe else None)), self._swap("thread", self._thread()), _engine.FadeIn(frame), _engine.FadeIn(question), seconds=1.4)
         self._settle()
 
         full_diag = self._diagram(self._tree, FULL, leaf_color=lambda path, index: TOWER_COLORS[path[1] % 2])
         coloured = self._tower(tint=lambda key: TOWER_COLORS[key[1]], ring=False)
-        birth = self._birth(coloured, full_diag)
+        birth = self._birth("birth-tree", coloured, full_diag)
         _release_tower(coloured)
         self.step("tree", birth, self._swap("tower", self._tower(tint=lambda key: dim(TOWER_COLORS[key[1]]))), _engine.FadeOut(frame), _engine.FadeOut(question), self._swap("pipe", self._pipe(None, self._tree, count=2)), self._swap("head", self._head(self._count_text(self._tree))),
                   _engine.FadeIn(full_diag, lag_ratio=0.01), seconds=2.4)
@@ -542,7 +510,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
 
         branch_pipe = self._pipe(None, branch_tree, rows=self._rows(branch_tree, 1))
         branch_diag = self._diagram(branch_tree, FULL, big=True)
-        self.step("branch", self._birth(self._slots["tower"], branch_diag), self._swap("diag", branch_diag), self._swap("pipe", branch_pipe), self._swap("tower", self._tower(lit=[(0, 0, 0, 0)])),
+        self.step("branch", self._birth("birth-branch", self._slots["tower"], branch_diag), self._swap("diag", branch_diag), self._swap("pipe", branch_pipe), self._swap("tower", self._tower(lit=[(0, 0, 0, 0)])),
                   self._swap("head", self._head(self.tr("1 branch · 2 items", "1 Ast · 2 Elemente"))), seconds=1.4)
         self._settle()
 
@@ -580,7 +548,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
             digit = plate[1][2 * stage - 1]
             return _engine.AnimationGroup(self._swap("diag", route(stage)), self._swap("tower", view), self._swap("pipe", plate),
                                           *([self._swap("thread", self._thread(self._tree))] if stage == 4 else []),
-                                          self._flight([self._centre(view, segments[:stage])], [digit.get_center()], [(roles_c[stage - 1], roles_c[stage - 1])], widths=(digit.width * 4, digit.width), arc=0.35, mobs=[digit.copy()]))
+                                          self._fly("path-segment", digit.copy().scale(4).move_to(self._centre(view, segments[:stage])), digit.copy()))
 
         self._staged_step("path", [lambda stage=stage: born(stage) for stage in (1, 2, 3, 4)], seconds=7.0,
                           first=[self._swap("head", self._head(self.tr("path = address of a branch", "Pfad = Adresse eines Asts")))])
@@ -591,8 +559,8 @@ class Beat5_DataTrees(_visuals.ClipScene):
         right_capsule = self._ring(self._detail(lambda key: key == self._probe, lambda key: ITEM_C if key == self._probe else None, 0.3, 1))
         seat = right_capsule.capsules[self._probe].get_center()
         index_chip, whole_chip = item_pipe[2][1], item_pipe[2]
-        index_out = self._flight([seat], [index_chip.get_center()], [(ITEM_C, ITEM_C)], widths=(index_chip.width * 3, index_chip.width), arc=0.3, mobs=[index_chip.copy()])
-        chip_back = self._flight([whole_chip.get_center()], [seat], [(DATA, DATA)], widths=(whole_chip.width, 0.35), arc=-0.3, mobs=[whole_chip.copy()])
+        index_out = self._fly("index-out", index_chip.copy().scale(3).move_to(seat), index_chip.copy())
+        chip_back = self._fly("chip-back", whole_chip.copy(), whole_chip.copy().scale(0.35 / whole_chip.width).move_to(seat))
         self.step("item", _engine.AnimationGroup(index_out, chip_back, lag_ratio=0.3), self._swap("diag", self._diagram(self._tree, FULL, lit=[(*segments, index21)], big=True)), self._swap("pipe", item_pipe), self._swap("tower", right_capsule),
                   self._swap("head", self._head(self.tr("index = position in the branch", "Index = Position im Ast"))), seconds=2.4)
 
@@ -616,8 +584,8 @@ class Beat5_DataTrees(_visuals.ClipScene):
             return _engine.AnimationGroup(self._swap("pipe", viewer_pipe), self._swap("diag", self._diagram(self._tree, FULL)), self._swap("tower", self._tower(tint=lambda key: TOWER_COLORS[key[1]])),
                                           self._swap("head", self._head(self._count_text(self._tree))))
         def panel_second():
-            pulls = [self._gather(uneven, [k for k in uneven.capsules if k[:3] == (0, 1, level)], tags[index].get_center(), color)
-                     for level, index, color in ((top_level, 0, GOOD), (top_level - 1, 1, STOREY_LIGHT))]
+            pulls = [self._gather(f"gather-storey-{index}", uneven, [k for k in uneven.capsules if k[:3] == (0, 1, level)], tags[index])
+                     for level, index in ((top_level, 0), (top_level - 1, 1))]
             return _engine.AnimationGroup(self._swap("pipe", stats_pipe), self._swap("tower", uneven), self._swap("tags", tags), *pulls)
         self._staged_step("panel", [panel_first, panel_second], seconds=3.6)
 
@@ -628,9 +596,9 @@ class Beat5_DataTrees(_visuals.ClipScene):
         def operate(key, op, small, big, levels, small_lit, seconds, tower_big):
             """🔬 Introduce an operation on the smallest example in its own clause, then run it on the whole tower in the next."""
             first, second = derived(op, small, levels[0]), derived(op, big, levels[1])
-            stage = lambda parts, tower: [self._regroup(self._slots.get("diag"), parts[1]), self._swap("pipe", parts[0]), self._swap("diag", parts[1]), self._swap("head", parts[2]), self._swap("thread", parts[3]), self._swap("tower", tower)]
-            self.step(key + "_one", self._swap("tags", None), *stage(first, self._tower(lit=[small_lit])), seconds=seconds[0])
-            self.step(key, *stage(second, tower_big), seconds=seconds[1])
+            stage = lambda parts, tower, name: [self._regroup(f"regroup-{name}", self._slots.get("diag"), parts[1]), self._swap("pipe", parts[0]), self._swap("diag", parts[1]), self._swap("head", parts[2]), self._swap("thread", parts[3]), self._swap("tower", tower)]
+            self.step(key + "_one", self._swap("tags", None), *stage(first, self._tower(lit=[small_lit]), key + "-one"), seconds=seconds[0])
+            self.step(key, *stage(second, tower_big, key), seconds=seconds[1])
 
         sample_storey = next(path for path in storey_tree.paths() if len(storey_tree.branch(path)) > 2)
         one_storey = self._small(self._tree, sample_storey)
@@ -657,15 +625,14 @@ class Beat5_DataTrees(_visuals.ClipScene):
                     self._say(self.tr(f"index {index21} becomes {j21[1]}.", f"verbunden: Index {index21} wird {j21[1]}."), (-2.7, 1.5), size=SMALL, color=INK))
         eight = len(storey_tree.branch(j21[0]))
         example_tower = self._tower(tint=lambda key: GOOD if key[:3] == group21 else None)
-        letter_flight = self._flight([self._centre(example_tower, segments[:n + 1]) for n in range(4)], [letters_row[n].get_center() for n in range(4)], [(roles_c[n], roles_c[n]) for n in range(4)],
-                                     widths=lambda m: (m.width * 3, m.width), lag=0.25, arc=0.3, mobs=[letters_row[n].copy() for n in range(4)])
+        letter_flight = self._fly("letters", {str(n): letters_row[n].copy().scale(3).move_to(self._centre(example_tower, segments[:n + 1])) for n in range(4)}, {str(n): letters_row[n].copy() for n in range(4)})
         self.step("mapper_example", letter_flight, self._swap("pipe", binding), self._swap("diag", self._diagram(self._tree, FULL, lit=[group21])), self._swap("tower", example_tower), self._swap("thread", self._thread(self._tree)),
                   self._swap("tags", self._chips((self.tr(f"tower {tower_key}, storey {segments[2]}: {width(eight)} capsules", f"Turm {tower_key}, Geschoss {segments[2]}: {width(eight)} Kapseln"), GOOD))), seconds=2.6)
 
         map_pipe = self._pipe("Path Mapper", storey_tree, mapping="{A;B;C;D}(i)->{A;B;C}(i)")
         map_pipe.add(self._mapping("{A;B;C;D}(i)", "{A;B;C}(i)", (-3.1, 1.17)))
         storey_diag = self._diagram(storey_tree, (0, 1, 2), big=True)
-        self.step("mapper", self._regroup(self._slots.get("diag"), storey_diag), self._swap("pipe", map_pipe), self._swap("diag", storey_diag), self._swap("head", self._head(self._count_text(storey_tree))),
+        self.step("mapper", self._regroup("regroup-mapper", self._slots.get("diag"), storey_diag), self._swap("pipe", map_pipe), self._swap("diag", storey_diag), self._swap("head", self._head(self._count_text(storey_tree))),
                   self._swap("thread", self._thread(storey_tree)), self._swap("tower", plain()), self._swap("tags", None), seconds=1.6)
 
         examples = (storey_tree.paths()[0], sample_storey, storey_tree.paths()[-1])
@@ -674,7 +641,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
         def storey_stage(prefixes):
             chips = self._chips(*[(self.tr(f"{names_s[p][0]}: {width(sizes[p])} capsules", f"{names_s[p][1]}: {width(sizes[p])} Kapseln"), GOOD) for p in prefixes])
             drawing = self._tower(tint=lambda key: GOOD if any(key[:3] == p for p in prefixes) else None)
-            pulls = [self._gather(drawing, [k for k in drawing.capsules if k[:3] == p], chips[len(prefixes) - 1 - j].get_center(), GOOD) for j, p in enumerate(prefixes)]
+            pulls = [self._gather(f"gather-storey-{j}", drawing, [k for k in drawing.capsules if k[:3] == p], chips[len(prefixes) - 1 - j]) for j, p in enumerate(prefixes)]
             return _engine.AnimationGroup(self._swap("tower", drawing), self._swap("tags", chips), *pulls)
         self._staged_step("perstorey", [lambda prefixes=prefixes: storey_stage(prefixes) for prefixes in ((examples[0],), (examples[-1],), (examples[1], examples[-1]))], seconds=4.0)
 
@@ -683,11 +650,11 @@ class Beat5_DataTrees(_visuals.ClipScene):
         def tower_stage(group):
             chips = self._chips(*[(self.tr(f"tower {towers[i].key}: {width(per_tower[i])} capsules", f"Turm {towers[i].key}: {width(per_tower[i])} Kapseln"), TOWER_COLORS[i]) for i in group])
             drawing = self._tower(tint=lambda key: TOWER_COLORS[key[1]] if key[1] in group else None)
-            pulls = [self._gather(drawing, [k for k in drawing.capsules if k[1] == i], chips[len(group) - 1 - j].get_center(), TOWER_COLORS[i]) for j, i in enumerate(group)]
+            pulls = [self._gather(f"gather-tower-{j}", drawing, [k for k in drawing.capsules if k[1] == i], chips[len(group) - 1 - j]) for j, i in enumerate(group)]
             return _engine.AnimationGroup(self._swap("tower", drawing), self._swap("tags", chips), *pulls)
         tower_diag = self._diagram(tower_tree, (0, 1), big=True)
         self._staged_step("pertower", [lambda group=group: tower_stage(group) for group in ((0,), (1,), (0, 1))], seconds=3.2,
-                          first=[self._regroup(self._slots.get("diag"), tower_diag), self._swap("pipe", tower_pipe), self._swap("diag", tower_diag),
+                          first=[self._regroup("regroup-pertower", self._slots.get("diag"), tower_diag), self._swap("pipe", tower_pipe), self._swap("diag", tower_diag),
                                  self._swap("head", self._head(self._count_text(tower_tree))), self._swap("thread", self._thread(tower_tree))])
 
         item_tone = (ITEM_C, PEACH)
@@ -701,7 +668,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
             return _engine.AnimationGroup(self._swap("tower", side_tower), self._swap("diag", before_diag), self._swap("head", self._head(self._count_text(self._tree))),
                                           self._swap("tags", chips), self._swap("pipe", None))
         def flip_second():
-            return _engine.AnimationGroup(self._regroup(before_diag, after_diag), self._swap("pipe", flip_pipe), self._swap("diag", after_diag),
+            return _engine.AnimationGroup(self._regroup("regroup-flip", before_diag, after_diag), self._swap("pipe", flip_pipe), self._swap("diag", after_diag),
                                           self._swap("head", self._head(self.tr(f"ragged → {flip_tree.path_count} × {self._tree.path_count}, nulls", f"unregelmäßig → {flip_tree.path_count} × {self._tree.path_count}, Nullwerte"))),
                                           self._swap("thread", self._thread(flip_tree)))
         self._staged_step("flip", [flip_first, flip_second], seconds=3.6)
@@ -719,7 +686,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
         wrong_counts = {colour: sum(value == colour for value in paint["cp1"].values()) for colour in ("teal", "orange")}
         warn_note = self._chips((self.tr(f"no error: {wrong_counts['teal']} teal, {wrong_counts['orange']} orange", f"kein Fehler: {wrong_counts['teal']} türkis, {wrong_counts['orange']} orange"), INK))
         mistake_diag = self._diagram(self._tree, FULL, leaf_color=lambda path, index: MATERIALS[paint["cp1"][tuple(self._tree.branch(path)[index].tag["slot"])]])
-        self._staged_step("mistake", [lambda: self._paint(stripes, {"teal": swatches[0], "orange": swatches[1]}, paint["cp1"]),
+        self._staged_step("mistake", [lambda: self._paint("paint-mistake", stripes, {"teal": swatches[0], "orange": swatches[1]}, paint["cp1"]),
                                        lambda: _engine.AnimationGroup(self._swap("tower", stripes), self._swap("tags", warn_note), self._swap("diag", mistake_diag))], seconds=2.4)
 
         viewer_a = self.gh_param_viewer(_model.Tree({path: self._tree.branch(path) for path in self._tree.paths()[:3]}), at=(-3.95, 2.4), max_items=2)
@@ -731,7 +698,7 @@ class Beat5_DataTrees(_visuals.ClipScene):
         mini = lambda tint, x: _snapshot.capture(self.tower_axon(**_canvas.building_fit(1.8, 2.5, centre=(x, -1.15, 0.0)), view="axon", tint=tint, types=False), self.camera)
         compare = _engine.Group(mini(lambda key: TOWER_COLORS[key[1]], -5.2), mini(lambda key: MATERIALS[paint["cp1"][key]], -3.2),
                                  self._say(self.tr("expected", "erwartet"), (-5.2, 0.42), size=SMALL, color=INK), self._say(self.tr("actual", "tatsächlich"), (-3.2, 0.42), size=SMALL, color=INK))
-        short_list = self._flight([paths_plate[2].get_center()] * 2, [paths_plate[1].get_center()] * 2, [(INK, INK)] * 2, widths=lambda m: (m.width, m.width), lag=0.5, arc=0.3, mobs=[paths_plate[2].copy(), paths_plate[2].copy()])
+        short_list = self._fly("short-list", [paths_plate[2].copy(), paths_plate[2].copy()], [paths_plate[2].copy().move_to(paths_plate[1].get_center()) for _ in range(2)])
         self.step("why", short_list, self._swap("pipe", _engine.VGroup(viewer_a, viewer_b, paths_plate)), self._swap("diag", compare), self._swap("head", None),
                   self._swap("tags", self._chips((self.tr("different paths", "verschiedene Pfade"), SERV))), seconds=2.4)
 
@@ -756,18 +723,18 @@ class Beat5_DataTrees(_visuals.ClipScene):
             return _engine.AnimationGroup(_engine.FadeIn(second_part), self._swap("tags", self._chips((self.tr("equal paths", "gleiche Pfade"), GOOD))),
                                            self._swap("head", self._head(self.tr("{0;0} meets {0;0} · {0;1} meets {0;1}", "{0;0} trifft {0;0} · {0;1} trifft {0;1}"))))
         self._anchors = {"diag": fix_diag, "Branch": fix_colors, "Index": fix_colors.parts["rows"][0], "Graft": fix_graft, "Path Mapper": fix_map}
-        self._staged_step("fix", [fix_first, fix_second, lambda: self._fan({"teal": fix_swatches[0], "orange": fix_swatches[1]}, fix_diag, paint["cp2"]),
+        self._staged_step("fix", [fix_first, fix_second, lambda: self._fan("fan-fix", {"teal": fix_swatches[0], "orange": fix_swatches[1]}, fix_diag, paint["cp2"]),
                                   lambda: self._swap("diag", fix_diag)], seconds=3.2, weights=(.5, 1/6, 1/6, 1/6))
 
         counts = {name: sum(1 for value in paint["cp2"].values() if value == name) for name in ("teal", "orange")}
         done = self._tower(tint=lambda key: MATERIALS[paint["cp2"][key]])
         result_tags = self._chips((self.tr(f"tower A: {width(counts['teal'])} teal", f"Turm A: {width(counts['teal'])} türkis"), ARCH),
                                   (self.tr(f"tower B: {width(counts['orange'])} orange", f"Turm B: {width(counts['orange'])} orange"), WARN))
-        self._staged_step("result", [lambda: self._paint(done, {"teal": fix_swatches[0], "orange": fix_swatches[1]}, paint["cp2"]),
+        self._staged_step("result", [lambda: self._paint("paint-result", done, {"teal": fix_swatches[0], "orange": fix_swatches[1]}, paint["cp2"]),
                                       lambda: _engine.AnimationGroup(self._swap("tower", done), self._swap("tags", result_tags))], seconds=2.4)
 
         chip = self._slots["thread"]
-        home = self._flight([chip.get_center()], [self._slots["tower"].capsules[self._probe].get_center()], [(DATA, DATA)], widths=(chip.width, 0.4), arc=0.3, mobs=[chip.copy()])
+        home = self._fly("home-probe", chip.copy(), self._slots["tower"].capsules[self._probe].copy())
         gone, legend = self._recap()
         self.step("recap", home, _engine.AnimationGroup(*gone, legend), seconds=3.6)
 
@@ -813,10 +780,8 @@ class Beat5_DataTrees(_visuals.ClipScene):
             result_label = self._recap_result_label(result, y) if term[0] in ("Flatten", "Graft") else self._mono(result, (-2.15, y), size=SMALL, color=DATA, edge="l")
             row = _engine.VGroup(self._say(label, (HEAD_X, y), size=SMALL, color=INK, edge="l"), self._mini(tree, (-2.75, y), 0.62), result_label)
             source = origins[term[0]]
-            if term[0] == "Flip Matrix":
-                flight = _tower_flight(source, row[0], self.camera)
-            else:
-                flight = self._flight([source.get_center()], [row[0].get_center()], [(INK, INK)], widths=(source.width, max(row[0].width, 0.5)), arc=0.35, mobs=[source.copy()])
+            flier = _sprites.capture(source, self.camera) if term[0] == "Flip Matrix" else source.copy()
+            flight = self._fly("recap-" + term[0].lower().replace(" ", "-"), flier, row[0].copy())
             flights.append(_engine.Succession(flight, _engine.FadeIn(row)))
         path21, index21 = found["src"]
         tag = self._tag(self.tr(f"capsule {PROBE} = ", f"Kapsel {PROBE} = ") + f"{_model.format_path(path21)}[{index21}]", (6.8, 3.65), DATA, "r")

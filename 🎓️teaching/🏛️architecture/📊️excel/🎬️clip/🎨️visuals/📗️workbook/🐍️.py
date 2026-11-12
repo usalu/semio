@@ -310,12 +310,39 @@ def as_view(workbook, language: str, values: dict | None = None):
     return EngineView(workbook, language, values) if hasattr(workbook, "order") and hasattr(workbook, "names") else workbook
 
 
+class Slide:
+    """🪄 One window part sliding in place onto the look of a target part, point and colour for point and colour with Manim's smooth easing: a widget-local interpolation (selection tint, active border) that never adds anything to the scene."""
+
+    def __init__(self, part, target):
+        self.part, self.target = part, target
+
+    def begin(self):
+        """▶️ Align the part with a copy of its target and remember the start look."""
+        self.goal = self.target.copy()
+        self.part.align_data(self.goal)
+        self.start = self.part.copy()
+
+    def interpolate(self, alpha):
+        """📈 Blend every family member of the part between the start and the goal."""
+        eased = _engine.smooth(float(min(max(alpha, 0.0), 1.0)))
+        for member, first, last in zip(self.part.get_family(), self.start.get_family(), self.goal.get_family()):
+            member.interpolate(first, last, eased)
+
+    def finish(self):
+        """🏁 Land exactly on the goal."""
+        self.interpolate(1.0)
+
+    def clean_up_from_scene(self, scene):
+        """🧹 Nothing to remove: the part stays where the window keeps it."""
+        return None
+
+
 class Glide(_engine.Animation):
     """🛝 Morph parts of a window in place. It never adds anything to the scene (the parts keep their place in the window's drawing order, so the tint stays under the text and the frames above), it does not suspend the window's live parts, and the whole window counts as moving so Cairo draws it in one pass."""
 
     def __init__(self, window, anchor, pairs=(), retexts=(), **kwargs):
         self.window, self.retexts = window, list(retexts)
-        self.parts = [_engine.Transform(part, target) for part, target in pairs]
+        self.parts = [Slide(part, target) for part, target in pairs]
         super().__init__(anchor, introducer=True, **kwargs)
 
     @property

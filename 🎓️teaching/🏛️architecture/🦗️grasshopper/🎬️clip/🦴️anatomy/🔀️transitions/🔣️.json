@@ -1,0 +1,1383 @@
+{
+  "$schema": "../../../../🔀️morph/🧬️schema/🔣️.schema.json",
+  "version": 1,
+  "transitions": [
+    {
+      "id": "anatomy.script-capsule-to-chip",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.script-capsule-to-chip.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.script-capsule-to-chip.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.4,
+        "dip": 0.15,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "capsule-item"
+      }
+    },
+    {
+      "id": "anatomy.slider-width-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.slider-width-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.slider-width-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.box-width-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.box-width-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.box-width-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.box-length-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.box-length-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.box-length-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.box-height-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.box-height-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.box-height-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.box-dimension-width-to-wire",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.box-dimension-width-to-wire.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.box-dimension-width-to-wire.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.4,
+        "dip": 0.1,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.box-dimension-length-to-wire",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.box-dimension-length-to-wire.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.box-dimension-length-to-wire.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.4,
+        "dip": 0.1,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.box-dimension-height-to-wire",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.box-dimension-height-to-wire.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.box-dimension-height-to-wire.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.4,
+        "dip": 0.1,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.box-output-token",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.box-output-token.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.box-output-token.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.1,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.sliders-length-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.sliders-length-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.sliders-length-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 2.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.sliders-height-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.sliders-height-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.sliders-height-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 2.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.volume-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.volume-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.volume-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.preview-eye-off",
+      "intent": "transformation",
+      "source": {
+        "entity": "anatomy.preview-eye-off.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.preview-eye-off.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.volume-ghost",
+      "intent": "concretization",
+      "source": {
+        "entity": "anatomy.volume-ghost.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.volume-ghost.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.7,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.repair-text",
+      "intent": "transformation",
+      "source": {
+        "entity": "anatomy.repair-text.source",
+        "revision": 1,
+        "sampling": "live",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.repair-text.target",
+        "revision": 1,
+        "sampling": "live",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "retext",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.repair-box",
+      "intent": "transformation",
+      "source": {
+        "entity": "anatomy.repair-box.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.repair-box.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.repair-panel",
+      "intent": "transformation",
+      "source": {
+        "entity": "anatomy.repair-panel.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.repair-panel.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.panel-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.panel-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.panel-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.params-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.params-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.params-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.toggle-true-to-window",
+      "intent": "concretization",
+      "source": {
+        "entity": "anatomy.toggle-true-to-window.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.toggle-true-to-window.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.valuelist-pick-hop",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.valuelist-pick-hop.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.valuelist-pick-hop.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 2.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      }
+    },
+    {
+      "id": "anatomy.plugin-ring-to-token",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.plugin-ring-to-token.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.plugin-ring-to-token.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.6,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "body-whole"
+      }
+    },
+    {
+      "id": "anatomy.item-capsule-to-token",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.item-capsule-to-token.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.item-capsule-to-token.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "parts",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.15,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "capsule-item"
+      }
+    },
+    {
+      "id": "anatomy.series-capsules-to-tokens",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.series-capsules-to-tokens.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.series-capsules-to-tokens.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "scatter",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.1,
+        "limit": 2.2
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "capsule-items"
+      }
+    },
+    {
+      "id": "anatomy.count-capsule-hops",
+      "intent": "continuation",
+      "source": {
+        "entity": "anatomy.count-capsule-hops.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.count-capsule-hops.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "scatter",
+      "copy": false,
+      "timing": {
+        "duration": 1.6,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "none",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.12,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "anatomy.tree-capsules-to-leaves",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.tree-capsules-to-leaves.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.tree-capsules-to-leaves.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "scatter",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.5,
+        "dip": 0.15,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "capsule-items"
+      }
+    },
+    {
+      "id": "anatomy.path-segments-to-chip",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.path-segments-to-chip.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.path-segments-to-chip.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-one",
+      "recipe": "gather",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.2,
+        "limit": 3.0
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.4,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "fan-in"
+      }
+    },
+    {
+      "id": "anatomy.index-token-to-flock",
+      "intent": "concretization",
+      "source": {
+        "entity": "anatomy.index-token-to-flock.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.index-token-to-flock.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-many",
+      "recipe": "split",
+      "copy": false,
+      "timing": {
+        "duration": 0.9,
+        "easing": "smooth",
+        "lag": 0.04,
+        "limit": 2.4
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.3,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "recipe",
+        "name": "fan-out"
+      }
+    },
+    {
+      "id": "anatomy.legend-tool-discs",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.legend-tool-discs.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.legend-tool-discs.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "scatter",
+      "copy": false,
+      "timing": {
+        "duration": 1.3,
+        "easing": "smooth",
+        "lag": 0.15,
+        "limit": 3.2
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.8,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "anatomy.legend-data-discs",
+      "intent": "abstraction",
+      "source": {
+        "entity": "anatomy.legend-data-discs.source",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "anatomy.legend-data-discs.target",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "many-to-many",
+      "recipe": "scatter",
+      "copy": false,
+      "timing": {
+        "duration": 1.3,
+        "easing": "smooth",
+        "lag": 0.15,
+        "limit": 3.2
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.8,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    }
+  ]
+}

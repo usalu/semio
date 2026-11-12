@@ -1,0 +1,19 @@
+Batch E1 scenes with migrated transitions (module below 🎓️teaching.🏛️architecture, then scenes). Run each with profile preview, then final.
+
+⚡️energy.🔥️heating.🎬️clip.🌬️convection  Beat1_LueftungImWinter
+⚡️energy.🔥️heating.🎬️clip.👥️internal-gains  Beat5_SummeUndDichte
+⚡️energy.🔥️heating.🎬️clip.☀️solar-gains  Beat2_BestrahlungUndFlaeche Beat3_GWert Beat4_SaisonaleWinkel Beat5_Verschattung Beat8_Hauptgleichung
+⚡️energy.🔥️heating.🎬️clip.🧱️conduction  Beat1_MakroUndMikro Beat2_RWert Beat3_UWertUndGradient Beat4_WattVergleich Beat5_Gebaeudehuelle Beat6_Waermebruecken
+⚡️energy.🔥️heating.🎬️clip.🧮️calculation  Scene2 Scene4 UltimateEnergyBalance AnlagenVerluste
+⚡️energy.🔥️heating.🎬️clip.🧲️fundamentals  Beat1_DreiWegeDerWaerme Beat2_Waermeleitung Beat3_Konvektion Beat4_Strahlung Beat5_Zusammenfassung Beat7_Waermedurchlasswiderstand Beat8_UWert Beat9_WaermestromFormel
+⚡️energy.❄️cooling.🎬️clip.📐️system-sizing  Beat3_IsolateAirflow
+⚡️energy.❄️cooling.🎬️clip.💧️transmission-humidity  Beat1_TransmissionOpaque
+⚡️energy.❄️cooling.🎬️clip.👥️internal-gains  Beat1_OfficeRoom Beat2_HumanFactor
+⚡️energy.❄️cooling.🎬️clip.☀️solar-radiation  Beat1_SolarIrradiance
+⚡️energy.❄️cooling.🎬️clip.🌤️summer-strategy  Beat1_LastZuerstSenken
+⚡️energy.🧲️physics.🎬️clip.🧲️fundamentals  Beat1_Leistung Beat2_EnergieImAlltag Beat3_Energieerhaltung Beat4_Waermepumpe Beat5_Strahlung Beat6_ThermischeMasse Beat7_SensibelLatent
+🎯️optimization.🎬️clip.⚖️index  Beat4_NormalizedIndex
+🎯️optimization.🎬️clip.🏆️pareto  Beat5_ParetoFront
+🎯️optimization.🎬️clip.📉️extrema  Beat1_LocalGlobalExtrema
+🎯️optimization.🎬️clip.🧪️experiments  Beat3_FactorialExperiments
+🎯️optimization.🎬️clip.🧬️algorithms  Beat6_EvolutionarySearch

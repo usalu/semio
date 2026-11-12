@@ -57,6 +57,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
@@ -225,6 +227,7 @@ class Beat1_TransmissionOpaque(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Opaque components under summer radiation", "Opake Bauteile unter Sommerstrahlung"))
@@ -322,14 +325,14 @@ class Beat1_TransmissionOpaque(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(LaggedStart(*[FadeIn(p) for p in area_fill], lag_ratio=0.12), run_time=0.8)
         self.play(
-            ReplacementTransform(opaque_borders.copy(), u_token),
-            ReplacementTransform(area_fill, a_token),
+            stage.transition("cooling.transmission-humidity.formula.borders-to-u", source=opaque_borders, target=u_token),
+            stage.transition("cooling.transmission-humidity.formula.area-to-a", source=area_fill, target=a_token),
             run_time=1.4,
         )
         self.play(Create(box), FadeIn(rest), run_time=0.6)
         self.play(
-            ReplacementTransform(u_token, items["u"]),
-            ReplacementTransform(a_token, items["a"]),
+            stage.transition("cooling.transmission-humidity.formula.u-into-slot", source=u_token, target=items["u"]),
+            stage.transition("cooling.transmission-humidity.formula.a-into-slot", source=a_token, target=items["a"]),
             run_time=1.2,
         )
         hold_for(self, self.NARRATION, "formula", during=surface_heat)

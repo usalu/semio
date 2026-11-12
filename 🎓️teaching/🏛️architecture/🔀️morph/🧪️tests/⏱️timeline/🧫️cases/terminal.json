@@ -1,0 +1,166 @@
+{
+  "description": "Frame range, count and identity ownership of one transition on an output schedule. Language-agnostic: window and schedule in, frames/count/boundary/samples out. owner: before | source | target; progress is linear clamp((frame - f0) / (f1 - f0), 0, 1).",
+  "cases": [
+    {
+      "name": "ten frames 100..109: source on 100..108, target on 109",
+      "fps": 10, "origin": 0.0, "window": { "start": 10.0, "duration": 1.0 },
+      "count": 10, "frames": [100, 109], "boundary": 10.9,
+      "samples": [
+        { "frame": 99, "owner": "before", "progress": 0.0 },
+        { "frame": 100, "owner": "source", "progress": 0.0 },
+        { "frame": 104, "owner": "source", "progress": 0.4444444444444444 },
+        { "frame": 108, "owner": "source", "progress": 0.8888888888888888 },
+        { "frame": 109, "owner": "target", "progress": 1.0 },
+        { "frame": 110, "owner": "target", "progress": 1.0 },
+        { "frame": 500, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "one frame (shorter than a frame): the sole frame is the target",
+      "fps": 30, "origin": 0.0, "window": { "start": 1.0, "duration": 0.01 },
+      "count": 1, "frames": [30, 30], "boundary": 1.0,
+      "samples": [
+        { "frame": 29, "owner": "before", "progress": 0.0 },
+        { "frame": 30, "owner": "target", "progress": 1.0 },
+        { "frame": 31, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "one frame (exactly one frame long)",
+      "fps": 24, "origin": 0.0, "window": { "start": 0.0, "duration": 0.041666666666666664 },
+      "count": 1, "frames": [0, 0], "boundary": 0.0,
+      "samples": [
+        { "frame": -1, "owner": "before", "progress": 0.0 },
+        { "frame": 0, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "zero duration: atomic switch at its declared frame, no frames",
+      "fps": 24, "origin": 0.0, "window": { "start": 2.0, "duration": 0.0 },
+      "count": 0, "frames": null, "boundary": 2.0,
+      "samples": [
+        { "frame": 47, "owner": "before", "progress": 0.0 },
+        { "frame": 48, "owner": "target", "progress": 1.0 },
+        { "frame": 49, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "two frames: source on f0, target on f1",
+      "fps": 30, "origin": 0.0, "window": { "start": 0.0, "duration": 0.0666666666 },
+      "count": 2, "frames": [0, 1], "boundary": 0.03333333333333333,
+      "samples": [
+        { "frame": 0, "owner": "source", "progress": 0.0 },
+        { "frame": 1, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "15 fps one second",
+      "fps": 15, "origin": 0.0, "window": { "start": 3.0, "duration": 1.0 },
+      "count": 15, "frames": [45, 59],
+      "samples": [
+        { "frame": 58, "owner": "source", "progress": 0.9285714285714286 },
+        { "frame": 59, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "24 fps one second",
+      "fps": 24, "origin": 0.0, "window": { "start": 3.0, "duration": 1.0 },
+      "count": 24, "frames": [72, 95],
+      "samples": [
+        { "frame": 94, "owner": "source", "progress": 0.9565217391304348 },
+        { "frame": 95, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "25 fps one second",
+      "fps": 25, "origin": 0.0, "window": { "start": 3.0, "duration": 1.0 },
+      "count": 25, "frames": [75, 99],
+      "samples": [
+        { "frame": 98, "owner": "source", "progress": 0.9583333333333334 },
+        { "frame": 99, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "30 fps one second",
+      "fps": 30, "origin": 0.0, "window": { "start": 3.0, "duration": 1.0 },
+      "count": 30, "frames": [90, 119],
+      "samples": [
+        { "frame": 118, "owner": "source", "progress": 0.9655172413793104 },
+        { "frame": 119, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "60 fps one second",
+      "fps": 60, "origin": 0.0, "window": { "start": 3.0, "duration": 1.0 },
+      "count": 60, "frames": [180, 239],
+      "samples": [
+        { "frame": 238, "owner": "source", "progress": 0.9830508474576272 },
+        { "frame": 239, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "float noise: 0.28 s at 25 fps is exactly 7 frames (0.28 / 0.04 = 7.000000000000001 gives stock Manim an 8th sample, the shared evaluator and the scene clock do not)",
+      "fps": 25, "origin": 0.0, "window": { "start": 0.0, "duration": 0.28 },
+      "count": 7, "frames": [0, 6],
+      "samples": [
+        { "frame": 5, "owner": "source", "progress": 0.8333333333333334 },
+        { "frame": 6, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "absolute grid: 0.1 s from 0.1 s at 15 fps covers the grid points in [0.1, 0.2) which is frame 2 only (ceil(3) - ceil(1.5) = 1), which is also the terminal sample",
+      "fps": 15, "origin": 0.0, "window": { "start": 0.1, "duration": 0.1 },
+      "count": 1, "frames": [2, 2],
+      "samples": [
+        { "frame": 1, "owner": "before", "progress": 0.0 },
+        { "frame": 2, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "absolute grid: 0.1 s from 0 at 15 fps is two frames (ceil(1.5) - 0)",
+      "fps": 15, "origin": 0.0, "window": { "start": 0.0, "duration": 0.1 },
+      "count": 2, "frames": [0, 1],
+      "samples": [
+        { "frame": 0, "owner": "source", "progress": 0.0 },
+        { "frame": 1, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "sub-frame window off the grid borrows its next grid frame: 0.02 s from 0.01 s at 15 fps would hold no frame",
+      "fps": 15, "origin": 0.0, "window": { "start": 0.01, "duration": 0.02 },
+      "count": 1, "frames": [1, 1],
+      "samples": [
+        { "frame": 0, "owner": "before", "progress": 0.0 },
+        { "frame": 1, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "fractional duration rounds the count up: 0.5 s at 15 fps is 8 samples",
+      "fps": 15, "origin": 0.0, "window": { "start": 0.0, "duration": 0.5 },
+      "count": 8, "frames": [0, 7],
+      "samples": [
+        { "frame": 7, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "schedule origin shifts the frame grid: scene time 1.5 is frame 24 when frame 0 is at 0.5",
+      "fps": 24, "origin": 0.5, "window": { "start": 1.5, "duration": 0.5 },
+      "count": 12, "frames": [24, 35], "boundary": 1.9583333333333333,
+      "samples": [
+        { "frame": 23, "owner": "before", "progress": 0.0 },
+        { "frame": 24, "owner": "source", "progress": 0.0 },
+        { "frame": 35, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "start between frames snaps to the nearest frame (half up)",
+      "fps": 30, "origin": 0.0, "window": { "start": 1.0166667, "duration": 0.1 },
+      "count": 3, "frames": [31, 33],
+      "samples": [
+        { "frame": 30, "owner": "before", "progress": 0.0 },
+        { "frame": 32, "owner": "source", "progress": 0.5 },
+        { "frame": 33, "owner": "target", "progress": 1.0 }
+      ]
+    }
+  ]
+}

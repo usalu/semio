@@ -1,0 +1,636 @@
+{
+  "$schema": "../../../../../🔀️morph/🧬️schema/🔣️.schema.json",
+  "version": 1,
+  "transitions": [
+    {
+      "id": "heating.fundamentals.direction.indoor-readout",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.direction.indoor-readout",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.direction.indoor-cooled",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.direction.outdoor-readout",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.direction.outdoor-readout",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.direction.outdoor-warmed",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.lattice.marker-to-lens",
+      "intent": "concretization",
+      "source": {
+        "entity": "heating.fundamentals.lattice.marker",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.lattice.lens-rim",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.symbol.lattice-to-k",
+      "intent": "abstraction",
+      "source": {
+        "entity": "heating.fundamentals.symbol.lattice",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.symbol.k-token",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.symbol.energy-to-k-label",
+      "intent": "abstraction",
+      "source": {
+        "entity": "heating.fundamentals.symbol.energy-chain",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.symbol.k-chain",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.wall.rise-to-loop",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.wall.rise-guide",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.wall.loop-guide",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 0.8,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.symbol.loop-to-c",
+      "intent": "abstraction",
+      "source": {
+        "entity": "heating.fundamentals.symbol.loop-guide",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.symbol.c-token",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.vacuum.air-tag-to-none",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.vacuum.air-tag",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.vacuum.no-air-tag",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.6,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.symbol.surfaces-to-r",
+      "intent": "abstraction",
+      "source": {
+        "entity": "heating.fundamentals.symbol.surfaces",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.symbol.r-token",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.2,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.lam.material-to-insulation",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.lam.material-tag",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.lam.insulation-tag",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.9,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.flip.r-equation-to-u",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.flip.r-equation",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.flip.u-equation",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.3,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.flip.r-box-to-u",
+      "intent": "continuation",
+      "source": {
+        "entity": "heating.fundamentals.flip.r-box",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.flip.u-box",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.3,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.dt.outdoor-to-cold",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.dt.outdoor-value",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.dt.cold-value",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.4,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    },
+    {
+      "id": "heating.fundamentals.dt.cold-back",
+      "intent": "transformation",
+      "source": {
+        "entity": "heating.fundamentals.dt.cold-value",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "heating.fundamentals.dt.restored-value",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 1.0,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    }
+  ]
+}

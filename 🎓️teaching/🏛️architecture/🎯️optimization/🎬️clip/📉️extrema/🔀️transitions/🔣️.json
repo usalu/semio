@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../🔀️morph/🧬️schema/🔣️.schema.json",
+  "version": 1,
+  "transitions": [
+    {
+      "id": "optimization.extrema.negate.curve-sign-flip",
+      "intent": "transformation",
+      "source": {
+        "entity": "optimization.extrema.negate.saving-curve",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "target": {
+        "entity": "optimization.extrema.negate.sign-flipped-curve",
+        "revision": 1,
+        "sampling": "snapshot",
+        "view": null,
+        "scale": null,
+        "pose": null,
+        "scenario": null
+      },
+      "relation": "one-to-one",
+      "recipe": "replace",
+      "copy": false,
+      "timing": {
+        "duration": 2.6,
+        "easing": "smooth",
+        "lag": 0.0,
+        "limit": null
+      },
+      "placement": {
+        "space": "scene",
+        "anchor": "center",
+        "fit": "contain",
+        "uniform": true
+      },
+      "final": {
+        "pathArc": 0.0,
+        "dip": 0.0,
+        "ghost": 0.0
+      },
+      "correspondence": {
+        "kind": "order"
+      }
+    }
+  ]
+}

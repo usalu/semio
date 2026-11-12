@@ -56,6 +56,8 @@ subtitle_text = _manim_module.subtitle_text
 watt_anchor = _manim_module.watt_anchor
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 label_number = _manim_module.label_number
 house_section = _manim_module.house_section
 room_section = _manim_module.room_section
@@ -175,7 +177,8 @@ def _sum_parts(keys, *, lead=None):
 #endregion
 
 #region Live readouts
-_READOUT_CACHE: dict = {}
+_cache = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.🐍️")
+_READOUT_CACHE = _cache.BoundedCache("heating.readout", max_entries=256, max_bytes=16 << 20, sizeof=_cache.mobject_bytes)
 
 
 def _live(fn, at, *, size=None, color=PASTEL_WHITE, edge="left"):
@@ -184,10 +187,9 @@ def _live(fn, at, *, size=None, color=PASTEL_WHITE, edge="left"):
     https://docs.manim.community/en/stable/reference/manim.animation.updaters.mobject_update_utils.html
     """
     def build():
-        key = (fn(), size, color)
-        if key not in _READOUT_CACHE:
-            _READOUT_CACHE[key] = math_label(key[0], size=size, color=color)
-        return place_math(_READOUT_CACHE[key].copy(), np.array(at() if callable(at) else at, dtype=float), edge)
+        source = fn()
+        label = _READOUT_CACHE.get_or_build(_cache.scoped_key("heating.readout", source, size, color), lambda: math_label(source, size=size, color=color))
+        return place_math(label.copy(), np.array(at() if callable(at) else at, dtype=float), edge)
 
     return always_redraw(build)
 #endregion
@@ -645,6 +647,7 @@ class Beat5_SummeUndDichte(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Sum and heat flux density", "Summe und Wärmestromdichte"))
@@ -727,7 +730,7 @@ class Beat5_SummeUndDichte(Scene):
         targets = [items[f"phi_{k}"] for k in ("p", "e", "l")]
         rest = VGroup(*[m for m in row if all(m is not t for t in targets)])
         self.play(
-            *[ReplacementTransform(tok, target) for tok, target in zip(tokens, targets)],
+            stage.transition("heating.internal-gains.sum.source-tokens-into-formula", source=tokens, target=targets),
             FadeIn(rest), Create(box),
             run_time=1.6,
         )
@@ -740,7 +743,7 @@ class Beat5_SummeUndDichte(Scene):
 
         density_sub = section_heading(tr("Specific heat flux density (DIN V 18599-10)", "Spezifische Wärmestromdichte (DIN V 18599-10)"))
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "density"))
-        self.play(ReplacementTransform(subtitle, density_sub), run_time=0.7)
+        self.play(stage.transition("heating.internal-gains.sum.subtitle-to-density", source=subtitle, target=density_sub), run_time=0.7)
         subtitle = density_sub
 
         row2, box2, items2 = math_panel([
@@ -749,7 +752,7 @@ class Beat5_SummeUndDichte(Scene):
             ("frac", rf"\frac{{{_phi('int')}}}{{\textcolor{{{PASTEL_CYAN}}}{{A_{{\mathrm{{N}}}}}}}}", PASTEL_WHITE),
             (None, r"\;[\mathrm{W/m^{2}}]", PASTEL_WHITE),
         ], edge_buff=FORMULA_EDGE_BUFF)
-        self.play(ReplacementTransform(row, row2), ReplacementTransform(box, box2), run_time=1.4)
+        self.play(stage.transition("heating.internal-gains.sum.formula-to-density", source=row, target=row2), stage.transition("heating.internal-gains.sum.formula-box-to-density", source=box, target=box2), run_time=1.4)
         row, box, items = row2, box2, {**items2, "a_n": items2["frac"][0][2]}
 
         pw, pd = ROOM_W_M * B5_PLAN_UNIT, ROOM_D_M * B5_PLAN_UNIT

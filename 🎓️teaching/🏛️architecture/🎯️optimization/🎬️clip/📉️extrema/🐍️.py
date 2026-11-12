@@ -709,7 +709,7 @@ class Beat1_LocalGlobalExtrema(_visuals.ClipScene):
         worse = _mn.VGroup(self._l("S < 0:", "S < 0:", (centre, zero - .16, 0), size=14, color=WARN, width=1.0), self._l("worse than east", "schlechter als Ost", (centre, zero - .36, 0), size=14, color=WARN, width=1.6))
         curve2 = self._curve(axes2, self.saving, self.low, self.high, color=GOOD)
         marker2 = self._marker(axes2, lambda d: self.saving(d["orientation"]), lambda d: self.saving(d["orientation"]), "S")
-        self.step("negate", _mn.ReplacementTransform(m["curve"], curve2), _mn.FadeOut(m["axes"]), _mn.FadeOut(m["y_labels_e"]), _mn.FadeOut(m["y_title_e"]), _mn.FadeIn(axes2), _mn.FadeIn(y_labels2), _mn.FadeIn(y_title2),
+        self.step("negate", self.morphs.transition("optimization.extrema.negate.curve-sign-flip", source=m["curve"], target=curve2), _mn.FadeOut(m["axes"]), _mn.FadeOut(m["y_labels_e"]), _mn.FadeOut(m["y_title_e"]), _mn.FadeIn(axes2), _mn.FadeIn(y_labels2), _mn.FadeIn(y_title2),
                   _mn.FadeOut(line), _mn.FadeOut(line_tag), _mn.FadeOut(gap_mark), _mn.FadeIn(zero_tag), _mn.FadeIn(worse), *self._swap(m["marker"], marker2), *self._zone(formula), seconds=2.6)
         m["axes"], m["y_labels_s"], m["y_title_s"], m["marker"], m["curve"] = axes2, y_labels2, y_title2, marker2, curve2
         m["zero_tag"], m["worse"], m["formula"] = zero_tag, worse, formula

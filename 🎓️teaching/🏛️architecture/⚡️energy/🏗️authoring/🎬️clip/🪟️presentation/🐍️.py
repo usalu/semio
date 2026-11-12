@@ -20,6 +20,9 @@ _interaction = importlib.import_module("🎓️teaching.🏛️architecture.⚡�
 _interaction_render = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖱️interaction.🖌️render.🐍️")
 _hierarchy = importlib.import_module(_PACKAGE + ".🎬️clip.🪟️presentation.🥞️hierarchy.🐍️")
 _hierarchy_render = importlib.import_module(_PACKAGE + ".🎬️clip.🪟️presentation.🥞️hierarchy.🖌️render.🐍️")
+_profile = importlib.import_module(_PACKAGE + ".🎬️clip.🎚️profile.🐍️")
+_export = importlib.import_module(_PACKAGE + ".🎬️clip.📤️export.🐍️")
+_timeline = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.⏱️timeline.🐍️")
 
 
 def presentation_contract() -> dict:
@@ -33,7 +36,7 @@ def source_files() -> tuple[Path, ...]:
     authoring = _ROOT.parents[1]
     visuals = authoring / "🎨️visuals"
     helpers = (visuals / "🐍️.py", authoring / "🔤️fonts/🐍️.py", Path(runtime.__file__))
-    paths = {Path(__file__), _ROOT / "🔣️.json", _ROOT / "🧬️schema.json", *_theme.source_files(), *_interaction.source_files(), *_geometry.source_files(), *_typography.source_files(), *_browser.source_files(), *_hierarchy.source_files(), Path(_hierarchy_render.__file__),
+    paths = {Path(__file__), Path(_timeline.__file__), _ROOT / "🔣️.json", _ROOT / "🧬️schema.json", *_theme.source_files(), *_interaction.source_files(), *_geometry.source_files(), *_typography.source_files(), *_browser.source_files(), *_hierarchy.source_files(), Path(_hierarchy_render.__file__),
              Path(_interaction_render.__file__), _ROOT / "🖱️interaction/🎬️scene/🐍️.py", _ROOT / "🖱️interaction/🎬️scene/🔣️.schema.json",
              visuals / "🔣️.json", visuals / "🔣️icons/🔣️.json", visuals / "🧍️staffage/🔣️.json"}
     for helper in helpers:
@@ -64,16 +67,22 @@ def transition_duration(phase: str, chapter_id: str) -> float:
     return _hierarchy_render.transition_duration(chapter_id, phase)
 
 
+def frame_count(duration: float, fps: float, *, minimum: int = 1) -> int:
+    """🔢 Count the output frames of a span through the shared timeline evaluator, never by local rounding. See `🔀️morph/⏱️timeline`."""
+    return max(minimum, _timeline.count(_timeline.Window(0.0, round(duration, 9)), _timeline.Schedule(fps)))
+
+
 def _settings(settings: dict) -> tuple[int, int, float, str]:
     """⚙️ Validate explicitly localized presentation output settings."""
     language = settings.get("language")
     if language not in presentation_contract()["locales"]:
         raise ValueError("An explicit presentation language is required: en or de")
-    quality = {"-ql": ("854,480", 15), "-qm": ("1280,720", 30), "-qh": ("1920,1080", 60)}
-    default_resolution, default_fps = quality.get(settings.get("quality", "-ql"), quality["-ql"])
-    resolution = settings.get("resolution") or default_resolution
+    if not settings.get("profile"):
+        raise ValueError("An explicit render profile is required: preview or final")
+    selected = _profile.profile(settings["profile"])
+    resolution = settings.get("resolution") or f"{selected.width},{selected.height}"
     width, height = (int(part) for part in resolution.replace("x", ",").split(","))
-    fps = float(settings["fps"]) if settings.get("fps") is not None else float(default_fps)
+    fps = float(settings["fps"]) if settings.get("fps") is not None else float(selected.fps)
     if width < 2 or height < 2 or width % 2 or height % 2 or not math.isfinite(fps) or fps <= 0:
         raise ValueError("Presentation needs positive even dimensions and a positive frame rate")
     if abs(width / height - 16 / 9) > 0.01:
@@ -120,7 +129,7 @@ def render_overview(output: Path, settings: dict) -> Path:
 def _transition(video_id: str, snapshot: Path, output: Path, settings: dict, session, *, phase: str = "focus") -> tuple[Path, int]:
     """🎞️ Replay a distinct committed fullscreen or restore click before moving its window."""
     _, _, fps, _ = _settings(settings)
-    count = max(3, round(transition_duration(phase, video_id) * fps))
+    count = frame_count(transition_duration(phase, video_id), fps, minimum=3)
     frames = output / ("i" if phase == "focus" else "o")
     requests = [{"video_id": video_id, "phase": phase, "t": index / (count - 1),
                  "output": frames / f"{index:04d}.png", "snapshot": snapshot} for index in range(count)]
@@ -208,7 +217,7 @@ def _render_chapter(video_id: str, content: Path, output: Path, settings: dict, 
     if not frames or not rate or float(rate.group(1)) <= 0:
         raise RuntimeError("Cannot determine the authored video's frame count and frame rate")
     source_fps = float(rate.group(1))
-    body_count = max(1, math.ceil(int(frames[-1]) * fps / source_fps - 1e-6))
+    body_count = frame_count(int(frames[-1]) / source_fps, fps)
     first, last = work / "first.png", work / "last.png"
     dark = _theme.color("dark").replace("#", "0x")
     fit = (f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
@@ -275,6 +284,7 @@ def render_presentation(video_id: str, content: Path, output: Path, settings: di
     success = False
     try:
         state = json.loads(content.with_suffix(".render.json").read_text(encoding="utf-8"))
+        _export.require_state_profile(state, settings["profile"], label=str(content))
         owned_session = session or runtime.ToolSession()
         if "scene" in state:
             scene = state["scene"]

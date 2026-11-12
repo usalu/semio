@@ -43,6 +43,9 @@ staffage_height = _staffage.staffage_height
 staffage_width = _staffage.staffage_width
 staffage_parts = _staffage.staffage_parts
 ensure_casts = _staffage.ensure_casts
+resolve = _staffage.resolve
+bind_staffage = _staffage.bind_staffage
+lod_scope = _staffage.lod_scope
 staffage_provenance = _staffage.staffage_provenance
 drawn_casts = _staffage.drawn_casts
 clear_drawn_casts = _staffage.clear_drawn_casts
@@ -300,11 +303,11 @@ def fitted_staffage(cast: str, *, width: float | None = None, height: float | No
                     mirror: bool = False):
     """🧑‍🤝‍🧑 Draw a staffage cast (a motion's whole clip) at the largest uniform scale that fits ``width`` and ``height`` Manim units, feet on the origin; a ``rate`` plays its clip through scene time, repeating it when ``loop`` is set. A ``window`` (cast metres) crops the cast to that region and fits the window itself, so a tall cast can show just its head as an icon.
 
+    The size comes from the level-independent descriptor of the resolved cast: no mobject is built to be measured and thrown away, and a preview and a final job fit the same unit.
+
     @see ./🧍️staffage/🐍️.py — the cast API this wraps
     """
-    with _staffage.unrecorded():
-        probe = staffage(cast, unit=1.0) if rate is None else staffage_motion(cast, unit=1.0, rate=rate)
-    extent = (window[2] - window[0], window[3] - window[1]) if window is not None else (probe.width, probe.height)
+    extent = (window[2] - window[0], window[3] - window[1]) if window is not None else _staffage.staffage_extent(cast)
     limits = [limit / size for limit, size in ((width, extent[0]), (height, extent[1])) if limit is not None]
     unit = min(limits)
     if rate is None:
@@ -359,6 +362,13 @@ def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = No
 # A drawn streamline says "air could move here"; only moving particles say
 # "air is moving now". Anything showing an exchange of air uses these.
 
+def effect_density(budget: str, authored: int, units: int) -> int:
+    """🎚️ Per-unit count of an effect under the active profile budget; the authored count when the budget is null (final), never below one per unit."""
+    profile = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🐍️").active()
+    units = max(1, int(units))
+    return max(1, min(int(authored), profile.cap(budget, int(authored) * units) // units))
+
+
 def smooth_path(points):
     """〰️ Smooth polyline through ``points`` — the track particles travel along."""
     from manim import TipableVMobject
@@ -411,6 +421,7 @@ def animate_flows(
     )
 
     dots = VGroup()
+    waves = effect_density("particles", waves, sum(len(entry[0]) for entry in streams))
     meta = []
     for entry in streams:
         paths, color = entry[0], entry[1]
@@ -497,6 +508,7 @@ def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: fl
     from manim import Ellipse, ManimColor, UpdateFromAlphaFunc, VGroup, interpolate_color, linear
 
     dots, meta = VGroup(), []
+    waves = effect_density("particles", waves, sum(len(entry[0]) for entry in streams))
     for entry in streams:
         paths, color = entry[0], entry[1]
         start_c = ManimColor(color)
@@ -741,6 +753,7 @@ def ripples(centers, *, r_max: float = 0.8, rings: int = 3, cycles: float = 2.0,
 
     centers = [np.array(c, dtype=float) for c in centers]
     start = (facing - PI / 2) if facing is not None else (PI if down else 0.0)
+    rings = effect_density("trails", rings, len(centers))
     arcs = VGroup(*[Arc(radius=0.05, start_angle=start, angle=PI, arc_center=c, color=color, stroke_width=2)
                     for c in centers for _ in range(rings)])
 
@@ -889,13 +902,22 @@ def window_opening(window, *, fraction: float = 1.0, tilt: bool = False):
     return VGroup(frame, mullion)
 
 
+def pose_animation(mobject, target, **kwargs):
+    """🎚 Same-identity pose change: ``mobject`` interpolates its points and style in place into an equally structured ``target`` (no identity swap, nothing enters or leaves the scene); ``animation.pose_target`` is the exact end pose. https://docs.manim.community/en/stable/reference/manim.animation.updaters.update.UpdateFromAlphaFunc.html"""
+    from manim import UpdateFromAlphaFunc
+
+    goal, start = target.copy(), mobject.copy()
+    mobject.align_data(goal)
+    start.align_data(goal)
+    animation = UpdateFromAlphaFunc(mobject, lambda m, alpha: m.interpolate(start, goal, alpha), **kwargs)
+    animation.pose_target = goal
+    return animation
+
+
 def open_window(window, *, run_time: float = 0.9, fraction: float = 1.0, tilt: bool = False,
                 close: bool = False):
     """🚪 Animate a projected window without losing its section's current transform."""
-    from manim import Transform
-
-    return Transform(window["sash"], window_opening(window, fraction=0 if close else fraction, tilt=tilt),
-                     run_time=run_time)
+    return pose_animation(window["sash"], window_opening(window, fraction=0 if close else fraction, tilt=tilt), run_time=run_time)
 
 
 def house_section(center=None, scale: float = 1.0):

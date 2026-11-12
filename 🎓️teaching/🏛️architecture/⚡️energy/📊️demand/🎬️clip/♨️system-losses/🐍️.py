@@ -55,6 +55,8 @@ ripples = _manim_module.ripples
 droplets = _manim_module.droplets
 
 set_vo_language("de")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -562,6 +564,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Emission, distribution, storage", "Übergabe, Verteilung, Speicherung"))
         din = _din_ref("DIN V 18599-5:2018-09 · -6")
@@ -688,7 +691,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
             ("es", tr(r"e_{s}\approx 1.06", r"e_{s}\approx 1{,}06"), SPEI_YELLOW),
         ])
         self.play(Create(eq_box), FadeIn(gt_note),
-                  *[ReplacementTransform(final[k]["symbol"].copy(), items[i])
+                  *[stage.transition(f"demand.system-losses.expense.{k}-symbol-into-product", source=final[k]["symbol"], target=items[i])
                     for k, i in (("ue", "eu"), ("ve", "ed"), ("sp", "es"))],
                   FadeIn(VGroup(*[m for m in eq if all(m is not items[i] for i in ("eu", "ed", "es"))])),
                   run_time=1.6)
@@ -747,6 +750,7 @@ class Beat3_Erzeugung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Generation: efficiency or coefficient of performance", "Erzeugung: Wirkungsgrad oder Arbeitszahl"))
         din = _din_ref("DIN V 18599-5 · VDI 4650-1")
@@ -860,7 +864,7 @@ class Beat3_Erzeugung(Scene):
         caption = step(caption, "latent")
         self.add(recov.ribbons)
         active[:] = [gas_in, flue, heat_l, recov]
-        self.play(ReplacementTransform(gas_row["label"], cond_label), t["loss"].animate.set_value(7.0),
+        self.play(stage.transition("demand.system-losses.generation.gas-label-to-condensing", source=gas_row["label"], target=cond_label), t["loss"].animate.set_value(7.0),
                   t["recov"].animate.set_value(11.0), *live(2.4), run_time=2.4)
         hold_for(self, self.NARRATION, "latent", during=live)
 
@@ -910,7 +914,7 @@ class Beat3_Erzeugung(Scene):
         self.play(FadeOut(env_in.ribbons), FadeOut(env_lbl), FadeOut(bought), FadeOut(free), FadeOut(bought_leader),
                   FadeOut(free_leader), run_time=0.8)
         self.play(Create(eq_box), FadeIn(items["jaz"]), FadeIn(eq[1]),
-                  ReplacementTransform(sources, items["frac"]),
+                  stage.transition("demand.system-losses.generation.parts-into-spf", source=sources, target=items["frac"]),
                   Circumscribe(hp_out.ribbons, color=NUTZ_BLUE, buff=0.06, stroke_width=3, fade_out=True),
                   Circumscribe(el_in.ribbons, color=P_YELLOW, buff=0.06, stroke_width=3, fade_out=True),
                   *live(2.0), run_time=2.0)
@@ -974,6 +978,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The system expenditure factor e_p", "Die Anlagenaufwandszahl e_p"))
         din = _din_ref("DIN V 18599-5:2018-09")
@@ -1062,8 +1067,8 @@ class Beat4_Anlagenaufwandszahl(Scene):
             ("eg", r"e_{g}", ERZ_AMBER),
         ])
         self.play(Create(eq_box),
-                  ReplacementTransform(product["symbol"].copy(), items["ep"]),
-                  *[ReplacementTransform(rows[k]["symbol"].copy(), items[i])
+                  stage.transition("demand.system-losses.chain.product-symbol-into-ep", source=product["symbol"], target=items["ep"]),
+                  *[stage.transition(f"demand.system-losses.chain.{k}-symbol-into-term", source=rows[k]["symbol"], target=items[i])
                     for k, i in zip(keys, ("eu", "ed", "es", "eg"))],
                   FadeIn(VGroup(*[m for m in eq if all(m is not items[i] for i in ("ep", "eu", "ed", "es", "eg"))])),
                   run_time=1.6)
@@ -1085,8 +1090,9 @@ class Beat4_Anlagenaufwandszahl(Scene):
             ("es", tr(r"1.06", r"1{,}06"), SPEI_YELLOW), (None, r"\cdot", P_WHITE),
             ("eg", tr(r"1.18", r"1{,}18"), ERZ_AMBER), (None, tr(r"\approx 1.40", r"\approx 1{,}40"), P_WHITE),
         ])
-        self.play(FadeOut(schematic_note), ReplacementTransform(rows["eg"]["label"], gas_label),
-                  ReplacementTransform(eq_box, eq2_box), ReplacementTransform(eq, eq2), run_time=1.8)
+        self.play(FadeOut(schematic_note), stage.transition("demand.system-losses.chain.generator-label-to-gas-boiler", source=rows["eg"]["label"], target=gas_label),
+                  stage.transition("demand.system-losses.chain.formula-box-to-gas-numbers", source=eq_box, target=eq2_box),
+                  stage.transition("demand.system-losses.chain.formula-to-gas-numbers", source=eq, target=eq2), run_time=1.8)
         hold_for(self, self.NARRATION, "gas")
 
         caption = step(caption, "gas_kwh")
@@ -1119,12 +1125,14 @@ class Beat4_Anlagenaufwandszahl(Scene):
         out_x_wp = math_label(tr(r"\cdot\,e_{p}\approx 0.31", r"\cdot\,e_{p}\approx 0{,}31"), np.array([4.5, 0.9, 0.0]), size=LABEL_FONT_SIZE,
                               color=P_WHITE, edge="left")
         self.play(
-            ReplacementTransform(gas_label, pump_label),
+            stage.transition("demand.system-losses.chain.gas-label-to-heat-pump-label", source=gas_label, target=pump_label),
             *[v[n].animate(run_time=3.0).set_value(0.0) for n in ("z4n", "z4u", "z4v", "z4s", "z4e", "flue")],
             v["z4w"].animate(run_time=3.0).set_value(WP_STROM), v["env"].animate(run_time=3.0).set_value(WP_UMWELT),
             mix.animate(run_time=3.0).set_value(1.0),
-            ReplacementTransform(eq2_box, eq3_box), ReplacementTransform(eq2, eq3),
-            ReplacementTransform(out_e, out_e_wp), ReplacementTransform(out_x, out_x_wp), run_time=3.0)
+            stage.transition("demand.system-losses.chain.formula-box-to-heat-pump", source=eq2_box, target=eq3_box),
+            stage.transition("demand.system-losses.chain.formula-to-heat-pump-numbers", source=eq2, target=eq3),
+            stage.transition("demand.system-losses.chain.final-energy-gas-to-heat-pump", source=out_e, target=out_e_wp),
+            stage.transition("demand.system-losses.chain.primary-factor-gas-to-heat-pump", source=out_x, target=out_x_wp), run_time=3.0)
         hold_for(self, self.NARRATION, "wp")
 
         caption = step(caption, "umwelt")
@@ -1162,7 +1170,8 @@ class Beat4_Anlagenaufwandszahl(Scene):
                 product["readout"], pump_label, why, gen["bars"], env_tag,
                 el_tag]
         self.play(*[FadeOut(m) for m in gone], run_time=1.2)
-        self.play(ReplacementTransform(eq3_box, bridge_box), ReplacementTransform(eq3, bridge),
+        self.play(stage.transition("demand.system-losses.chain.formula-box-to-bridge", source=eq3_box, target=bridge_box),
+                  stage.transition("demand.system-losses.chain.formula-to-bridge", source=eq3, target=bridge),
                   FadeIn(gas_meter), FadeIn(gas_name), FadeIn(gas_val), FadeIn(power_meter), FadeIn(power_name),
                   FadeIn(power_val), FadeIn(not_equal), run_time=1.8)
         hold_for(self, self.NARRATION, "brueck")

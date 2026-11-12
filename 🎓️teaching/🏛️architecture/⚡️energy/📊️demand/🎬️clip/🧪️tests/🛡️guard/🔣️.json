@@ -1,0 +1,35 @@
+{
+  "forbidden": ["ReplacementTransform", "TransformFromCopy", "Transform", "FadeTransform", "FadeTransformPieces", "TransformMatchingShapes", "TransformMatchingTex", "MoveToTarget", "ClockwiseTransform", "CounterclockwiseTransform", "CyclicReplace", "Swap"],
+  "become": [
+    {"clip": "♨️system-losses", "function": "refresh", "reason": "live typeset readout rebuilt by its updater when the text changes"},
+    {"clip": "⚖️regulations", "function": "_north_window", "reason": "one-shot construction of the cut wall before any animation"},
+    {"clip": "🧪️practice", "function": "swing", "reason": "analytical sash angle driven by a tracker"},
+    {"clip": "🧪️practice", "function": "_place_cloud", "reason": "analytical cloud position driven by a tracker"}
+  ],
+  "clips": {
+    "🔁️recap": {
+      "minimum": 39,
+      "chains": [
+        ["demand.recap.loss.ring-u-to-a", "demand.recap.loss.ring-a-to-dt", "demand.recap.loss.ring-dt-to-t"],
+        ["demand.recap.gain.ring-a-to-i", "demand.recap.gain.ring-i-to-g", "demand.recap.gain.ring-g-to-f"]
+      ]
+    },
+    "🏭️primary-energy": {"minimum": 19, "chains": []},
+    "♨️system-losses": {
+      "minimum": 20,
+      "chains": [
+        ["demand.system-losses.chain.formula-to-gas-numbers", "demand.system-losses.chain.formula-to-heat-pump-numbers", "demand.system-losses.chain.formula-to-bridge"]
+      ]
+    },
+    "⚖️regulations": {
+      "minimum": 7,
+      "chains": [
+        ["demand.regulations.balance.ring-to-sum", "demand.regulations.balance.ring-to-sink", "demand.regulations.balance.ring-to-eta"],
+        ["demand.regulations.balance.rest-shrinks-by-credit", "demand.regulations.balance.rest-restores-full", "demand.regulations.balance.months-into-annual-bar"]
+      ]
+    },
+    "⚡️demand-power": {"minimum": 21, "chains": []},
+    "🧪️practice": {"minimum": 4, "chains": []},
+    "🏷️certificate": {"minimum": 5, "chains": []}
+  }
+}

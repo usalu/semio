@@ -1,0 +1,52 @@
+{
+  "fixture": {
+    "curriculum": {
+      "videos": [
+        {
+          "id": "demo",
+          "script": "🏛️architecture/demo/🎬️clip/🐍️.py",
+          "chapters": [
+            {
+              "scene": "DemoChapter",
+              "segments": [
+                { "script": "🏛️architecture/demo/🎬️clip/🐍️.py", "scene": "Beat1" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "script": "class Beat1:\n    def construct(self):\n        self.play(stage.transition(\"demo.birth.capsules-to-leaves\"))\n",
+    "document": {
+      "$schema": "../../../../🔀️morph/🧬️schema/🔣️.schema.json",
+      "version": 1,
+      "transitions": [
+        {
+          "id": "demo.birth.capsules-to-leaves",
+          "intent": "abstraction",
+          "source": { "entity": "demo.capsules", "revision": 1, "sampling": "snapshot", "view": "front", "scale": "1:200", "pose": null, "scenario": null },
+          "target": { "entity": "demo.leaves", "revision": 1, "sampling": "snapshot", "view": null, "scale": null, "pose": null, "scenario": null },
+          "relation": "many-to-many",
+          "correspondence": { "kind": "key" },
+          "recipe": "parts",
+          "timing": { "duration": 1.2, "easing": "smooth", "lag": 0.012, "limit": 2.0 },
+          "placement": { "space": "scene", "anchor": "center", "fit": "contain", "uniform": true },
+          "final": { "pathArc": 0.3, "dip": 0.0, "ghost": 0.0 }
+        }
+      ]
+    }
+  },
+  "edits": [
+    { "name": "duration", "id": "demo.birth.capsules-to-leaves", "pointer": "/timing/duration", "value": "1.5", "exit": 0, "expect": { "/timing/duration": 1.5 } },
+    { "name": "easing", "id": "demo.birth.capsules-to-leaves", "pointer": "/timing/easing", "value": "\"linear\"", "exit": 0, "expect": { "/timing/easing": "linear" } },
+    { "name": "plain string", "id": "demo.birth.capsules-to-leaves", "pointer": "/placement/anchor", "value": "bottom", "exit": 0, "expect": { "/placement/anchor": "bottom" } },
+    { "name": "view cleared", "id": "demo.birth.capsules-to-leaves", "pointer": "/source/view", "value": "null", "exit": 0, "expect": { "/source/view": null } },
+    { "name": "negative duration", "id": "demo.birth.capsules-to-leaves", "pointer": "/timing/duration", "value": "-1", "exit": 1, "message": "duration" },
+    { "name": "unknown easing", "id": "demo.birth.capsules-to-leaves", "pointer": "/timing/easing", "value": "bouncy", "exit": 1, "message": "easing" },
+    { "name": "unknown key", "id": "demo.birth.capsules-to-leaves", "pointer": "/timing/speed", "value": "3", "exit": 1, "message": "speed" },
+    { "name": "bad pointer", "id": "demo.birth.capsules-to-leaves", "pointer": "timing", "value": "1", "exit": 1, "message": "pointer" },
+    { "name": "missing key", "id": "demo.birth.capsules-to-leaves", "pointer": "/nothing/here", "value": "1", "exit": 1, "message": "does not exist" },
+    { "name": "unknown id", "id": "demo.nothing", "pointer": "/timing/duration", "value": "1", "exit": 1, "message": "not declared" },
+    { "name": "rename breaks scene reference", "id": "demo.birth.capsules-to-leaves", "pointer": "/id", "value": "demo.birth.renamed", "exit": 1, "message": "plays transition" }
+  ]
+}

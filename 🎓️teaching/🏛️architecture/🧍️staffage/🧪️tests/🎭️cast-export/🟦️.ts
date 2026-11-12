@@ -82,7 +82,7 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
       expect(index.frames[0]).toBe("0000.svg");
       expect(readdirSync(join(root, id)).sort()).toEqual(["🔣️.json", ...new Set(index.frames)].sort());
       expect(indexes.find((candidate) => candidate.cast === id)).toEqual(index);
-      expect(index.heightM).toBeGreaterThan(0.3);
+      expect(index.logical.heightM).toBeGreaterThan(0.3);
     }
   });
 
@@ -133,9 +133,9 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
     for (const [a, b] of vectors.viewpointsDiffer) expect(svgOf(root, a, "0000.svg"), `${a} against ${b}`).not.toBe(svgOf(root, b, "0000.svg"));
     const plan = read(root, "commuter-plan");
     const elevation = read(root, "walker-line");
-    expect(plan.heightM, "heightM is the physical figure height whatever the viewpoint").toBeCloseTo(elevation.heightM, 5);
+    expect(plan.logical.heightM, "heightM is the physical figure height whatever the viewpoint").toBeCloseTo(elevation.logical.heightM, 5);
     const depth = plan.boundsM.maxY - plan.boundsM.minY;
-    expect(depth).toBeLessThan(elevation.heightM / 2);
+    expect(depth).toBeLessThan(elevation.logical.heightM / 2);
     expect(depth).toBeGreaterThan(0.4);
   });
 
@@ -225,9 +225,9 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
       expect(lines("warm", 0).length).toBeGreaterThan(20);
       expect(new Set(lines("warm", 0))).toEqual(new Set(["0.3"]));
       const warm = read(out, "warm");
-      expect(warm.figureBoundsM!.maxY).toBeLessThan(warm.boundsM.maxY - 0.3);
-      expect(warm.figureBoundsM!.maxY).toBeCloseTo(warm.heightM, 1);
-      expect(read(out, "cold").figureBoundsM).toBeDefined();
+      expect(warm.logical.figureBoundsM.maxY).toBeLessThan(warm.boundsM.maxY - 0.3);
+      expect(warm.logical.figureBoundsM.maxY).toBeCloseTo(warm.logical.heightM, 1);
+      expect(read(out, "cold").logical.figureBoundsM).toBeDefined();
     } finally {
       rmSync(out, { recursive: true, force: true });
     }
@@ -260,15 +260,23 @@ describe("🎭️ cast export", { timeout: 60_000 }, () => {
 
 describe("🎭️ cast command", () => {
   it("parses the contract invocation", () => {
-    const parsed = parseArguments(["--manifest", "m.json", "--ids", "a,b", "--out", "o"]);
+    const parsed = parseArguments(["--manifest", "m.json", "--ids", "a,b", "--out", "o", "--lod", "preview", "--output-fps", "15"]);
     expect(parsed.ids).toEqual(["a", "b"]);
+    expect(parsed.lod.id).toBe("preview");
+    expect(parsed.lod.fpsCap).toBe(7.5);
     expect(parsed).not.toHaveProperty("language");
-    expect(() => parseArguments(["--manifest", "m.json", "--out", "o"])).not.toThrow();
-    expect(() => parseArguments(["--manifest", "m.json"])).toThrow(/--out/u);
+    expect(() => parseArguments(["--manifest", "m.json", "--out", "o", "--lod", "full", "--output-fps", "30"])).not.toThrow();
+    expect(() => parseArguments(["--manifest", "m.json", "--lod", "full", "--output-fps", "30"])).toThrow(/--out/u);
+  });
+
+  it("names the level of detail explicitly: no default", () => {
+    expect(() => parseArguments(["--manifest", "m.json", "--out", "o", "--output-fps", "30"])).toThrow(/--lod/u);
+    expect(() => parseArguments(["--manifest", "m.json", "--out", "o", "--lod", "full"])).toThrow(/--output-fps/u);
+    expect(() => parseArguments(["--manifest", "m.json", "--out", "o", "--lod", "thumb", "--output-fps", "30"])).toThrow(/unknown level of detail/u);
   });
 
   it("knows no language: --lang is refused", () => {
-    expect(() => parseArguments(["--manifest", "m.json", "--out", "o", "--lang", "de"])).toThrow(/--lang/u);
+    expect(() => parseArguments(["--manifest", "m.json", "--out", "o", "--lod", "full", "--output-fps", "30", "--lang", "de"])).toThrow(/--lang/u);
   });
 
   it("stops on an aborted signal and leaves nothing behind", async () => {
@@ -346,7 +354,7 @@ describe("🛑 cast export cancellation and progress", () => {
     await withScratch(async (directory) => {
       const manifest = join(directory, "manifest.json");
       writeFileSync(manifest, JSON.stringify(cancellation.manifest));
-      const run = spawnSync(bun, [cli, "--manifest", manifest, "--ids", cancellation.completeIds.join(","), "--out", join(directory, "out")], { encoding: "utf8" });
+      const run = spawnSync(bun, [cli, "--manifest", manifest, "--ids", cancellation.completeIds.join(","), "--out", join(directory, "out"), "--lod", "full", "--output-fps", "30"], { encoding: "utf8" });
       expect(run.status, run.stderr).toBe(0);
       const lines = run.stderr.split(/\r?\n/u);
       expect(lines.some((line) => new RegExp(cancellation.progress.pid, "u").test(line))).toBe(true);
@@ -361,7 +369,7 @@ describe("🛑 cast export cancellation and progress", () => {
     await withScratch(async (directory) => {
       const manifest = join(directory, "manifest.json");
       writeFileSync(manifest, JSON.stringify(cancellation.manifest));
-      const child = spawn(bun, [cli, "--manifest", manifest, "--ids", cancellation.slowIds.join(","), "--out", join(directory, "out")]);
+      const child = spawn(bun, [cli, "--manifest", manifest, "--ids", cancellation.slowIds.join(","), "--out", join(directory, "out"), "--lod", "full", "--output-fps", "30"]);
       let stderr = "";
       let sent = false;
       child.stderr.on("data", (chunk: Buffer) => {
@@ -390,7 +398,7 @@ describe("🛑 cast export cancellation and progress", () => {
       symlinkSync(STAFFAGE_ROOT, link, "junction");
       const linked = join(link, "🔨️modules/📤️export/🎭️cast/🟦️.ts");
       expect(isEntry(pathToFileURL(cli).href, linked)).toBe(true);
-      const run = spawnSync(bun, [linked, "--manifest", manifest, "--ids", cancellation.linkedEntry.ids.join(","), "--out", join(directory, "out")], { encoding: "utf8" });
+      const run = spawnSync(bun, [linked, "--manifest", manifest, "--ids", cancellation.linkedEntry.ids.join(","), "--out", join(directory, "out"), "--lod", "full", "--output-fps", "30"], { encoding: "utf8" });
       expect(run.stderr).toContain(cancellation.linkedEntry.mustReport);
       expect(run.status, run.stderr).toBe(0);
       expect(existsSync(join(directory, "out", cancellation.linkedEntry.mustWrite))).toBe(true);
@@ -398,7 +406,7 @@ describe("🛑 cast export cancellation and progress", () => {
   });
 
   it("parses --parent and refuses a bad process id", () => {
-    const base = ["--manifest", "m.json", "--out", "o"];
+    const base = ["--manifest", "m.json", "--out", "o", "--lod", "full", "--output-fps", "30"];
     expect(parseArguments(base).parent).toBeUndefined();
     expect(parseArguments([...base, "--parent", "4242"]).parent).toBe(4242);
     for (const bad of ["abc", "0", "-3", "1.5"]) expect(() => parseArguments([...base, "--parent", bad])).toThrow(/--parent/u);
@@ -429,7 +437,7 @@ describe("🛑 cast export cancellation and progress", () => {
       writeFileSync(manifest, JSON.stringify(cancellation.manifest));
       const parent = spawn(bun, ["-e", "setTimeout(() => {}, 120000)"], { stdio: "ignore" });
       const parentPid = parent.pid!;
-      const child = spawn(bun, [cli, "--manifest", manifest, "--ids", cancellation.slowIds.join(","), "--out", join(directory, "out"), "--parent", String(parentPid)]);
+      const child = spawn(bun, [cli, "--manifest", manifest, "--ids", cancellation.slowIds.join(","), "--out", join(directory, "out"), "--lod", "full", "--output-fps", "30", "--parent", String(parentPid)]);
       let stderr = "";
       let killedAt = 0;
       child.stderr.on("data", (chunk: Buffer) => {

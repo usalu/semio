@@ -24,6 +24,18 @@ from manim import VGroup
 S = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧍️staffage.🐍️")
 V = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 CASE = json.loads(Path(__file__).with_name("🔣️.json").read_text(encoding="utf-8"))
+LOD = S.lod_level("full", 15)
+CASE["index"]["lod"] = {"id": LOD.id, "revision": LOD.revision, "canonicalFrames": 3, "canonicalFps": 10}
+CASE["index"]["provenance"]["lod"] = {"id": LOD.id, "revision": LOD.revision}
+
+
+def setUpModule():
+    """🔭 Draw every cast of this module at the full level: a cast API call has no level of its own."""
+    S._SCOPE.append(LOD)
+
+
+def tearDownModule():
+    S._SCOPE.remove(LOD)
 
 
 def synthetic(root: Path, *, view: str = "dark-line") -> Path:
@@ -40,10 +52,10 @@ def synthetic(root: Path, *, view: str = "dark-line") -> Path:
 
 def stamped(index: dict, cast: str) -> dict:
     """🔖 Add the provenance the exporter writes for a manifest cast to a hand-made index."""
-    provenance = S.expected_provenance(cast)
+    provenance = S.expected_provenance(cast, LOD)
     provenance["asset"]["category"] = "humans"
     clock = {"fps": index.get("fps"), "durationS": index.get("durationS"), "loop": index.get("loop"), "offsetS": 0, "frames": len(index["frames"])}
-    return {**index, "cast": cast, "provenance": {**provenance, "clock": clock}}
+    return {**index, "cast": cast, "lod": {**CASE["index"]["lod"], "canonicalFrames": len(index["frames"]), "canonicalFps": index.get("fps")}, "provenance": {**provenance, "clock": clock}}
 
 
 def pieces(group):
@@ -94,7 +106,7 @@ class Placement(unittest.TestCase):
             for member in members:
                 self.assertAlmostEqual(float(np.max(member.get_stroke_width())), CASE["expected"]["strokeWidth"], places=6)
             thin, _ = pieces(S._place(synthetic(Path(root) / "thin"), 0, 0.1, [0, 0, 0], None, 1.0))
-            self.assertTrue(all(float(np.max(m.get_stroke_width())) >= S._MIN_STROKE for m in thin))
+            self.assertTrue(all(float(np.max(m.get_stroke_width())) >= LOD.level["strokeMin"] for m in thin))
 
     def test_opacity_scales_strokes(self):
         with tempfile.TemporaryDirectory() as root:
@@ -103,31 +115,19 @@ class Placement(unittest.TestCase):
 
 
 class Parts(unittest.TestCase):
-    def test_shape_polygons_follow_the_group_transform_in_world_metres(self):
-        import svgelements
-
-        body = ('<g id="staffage-cast" transform="matrix(-1 0 0 1 100 0)"><g id="shape-slat-0" data-bone="slat-0">'
-                '<path d="M60 40L80 50L80 52L60 42Z" fill="#000000" fill-rule="evenodd"/></g>'
-                '<g id="shape-box" data-bone="box"><path d="M40 10L60 10L60 20L40 20Z" fill="#000000"/></g></g>')
+    def test_shape_polygons_come_from_the_logical_descriptor_in_world_metres(self):
         with tempfile.TemporaryDirectory() as root:
-            folder = Path(root) / "case"
-            folder.mkdir()
-            index = {**CASE["index"], "frames": ["0000.svg"]}
-            (folder / "🔣️.json").write_text(json.dumps(index), encoding="utf-8")
-            head = '<svg xmlns="http://www.w3.org/2000/svg" width="100mm" height="100mm" viewBox="0 0 100 100">'
-            (folder / "0000.svg").write_text(head + body + "</svg>", encoding="utf-8")
-            parts = S._parts(folder, "slat")
-            self.assertEqual(list(parts), ["slat-0"])
-            parsed = svgelements.SVG.parse(str(folder / "0000.svg"))
-            pixels = float(parsed.width) / 100
-            slat = next(e for e in parsed.elements() if isinstance(e, svgelements.Shape) and abs((e.bbox()[3] - e.bbox()[1]) / pixels - 12) < 1e-6)
-            ox, oy = index["originMm"]
-            scale = index["mmPerMetre"]
-            x0, y0, x1, y1 = (value / pixels for value in slat.bbox())
-            polygon = parts["slat-0"]
-            np.testing.assert_allclose([polygon[:, 0].min(), polygon[:, 0].max(), polygon[:, 1].min(), polygon[:, 1].max()],
-                                       [(x0 - ox) / scale, (x1 - ox) / scale, (oy - y1) / scale, (oy - y0) / scale], atol=1e-9)
-            self.assertAlmostEqual(float(polygon[:, 0].min()), (20 - ox) / scale, places=9)
+            folder = synthetic(Path(root))
+            with serving(folder):
+                every = S.staffage_parts("case")
+                slats = S.staffage_parts("case", "slat")
+                nothing = S.staffage_parts("case", "nothing")
+            expected = CASE["index"]["logical"]["partsM"]
+            self.assertEqual(list(every), list(expected))
+            self.assertEqual(list(slats), ["slat-0", "slat-1"])
+            for name, polygon in every.items():
+                np.testing.assert_array_equal(polygon, np.array(expected[name], dtype=float))
+            self.assertEqual(nothing, {})
 
 
 class Window(unittest.TestCase):
@@ -362,17 +362,6 @@ class Parser(unittest.TestCase):
         a, b = (S._parse_frame(head + body + "</svg>", index) for body in (long, compact))
         np.testing.assert_array_equal(a.points, b.points)
         self.assertEqual((a.spans, a.shapes), (b.spans, b.shapes))
-        with tempfile.TemporaryDirectory() as root:
-            parts = []
-            for body in (long, compact):
-                folder = Path(root) / str(len(parts))
-                folder.mkdir()
-                (folder / "🔣️.json").write_text(json.dumps({**index, "frames": ["0000.svg"]}), encoding="utf-8")
-                (folder / "0000.svg").write_text(head + body + "</svg>", encoding="utf-8")
-                parts.append(S._parts(folder, ""))
-        self.assertEqual(list(parts[0]), list(parts[1]))
-        np.testing.assert_array_equal(parts[0]["a"], parts[1]["a"])
-        self.assertEqual(len(parts[1]["a"]), 4)
 
 
 class FrameSwap(unittest.TestCase):
@@ -443,7 +432,7 @@ def serving(folder: Path):
     from unittest.mock import patch
 
     S._INDEXES.pop(folder, None)
-    return patch.object(S, "ensure_casts", lambda ids=None: {cast: folder for cast in (ids or ["case"])})
+    return patch.object(S, "ensure_casts", lambda ids=None, progress=None, lod=None: {cast: folder for cast in (ids or ["case"])})
 
 
 class Schema(unittest.TestCase):
@@ -528,9 +517,9 @@ class Reference(unittest.TestCase):
             matrix = [float(value) for value in group.get("transform")[len("matrix("):-1].split()]
             frame = S._parse_frame(head + body + "</svg>", index)
             self.assertEqual(len(frame.shapes), len(paths))
-            S._SLOT_COUNTS.pop(folder, None)
             S._INDEXES.pop(folder, None)
-            self.assertEqual(S._slot_count(folder), len(paths))
+            self.assertEqual(S._slot_count(folder), CASE["index"]["logical"]["maxPaths"])
+            self.assertEqual(S._slot_count(folder), len(CASE["frames"][0].split("<path")) - 1)
             first = paths[0].get("d").split("L")[0][1:].split()
             x = matrix[0] * float(first[0]) + matrix[2] * float(first[1]) + matrix[4]
             y = matrix[1] * float(first[0]) + matrix[3] * float(first[1]) + matrix[5]
@@ -540,26 +529,24 @@ class Reference(unittest.TestCase):
 
 class Fit(unittest.TestCase):
     def test_the_unit_is_the_largest_that_fits_and_matches_an_independent_bounding_box(self):
-        import svgelements
+        from manim import Rectangle
 
-        extent = CASE["fit"]["worldMetres"]
+        bounds = CASE["index"]["logical"]["figureBoundsM"]
         with tempfile.TemporaryDirectory() as root:
             folder = synthetic(Path(root))
-            parsed = svgelements.SVG.parse(str(folder / "0000.svg"))
-            pixels = float(parsed.width) / CASE["width"]
-            boxes = [e.bbox() for e in parsed.elements() if isinstance(e, svgelements.Shape) and e.bbox()]
-            width = (max(b[2] for b in boxes) - min(b[0] for b in boxes)) / pixels / CASE["index"]["mmPerMetre"]
-            self.assertAlmostEqual(width, extent["width"], places=6)
             with serving(folder):
-                for case in CASE["fit"]["cases"]:
+                for case in CASE["fit"]["animatedCases"]:
+                    oracle = Rectangle(width=bounds["maxX"] - bounds["minX"], height=bounds["maxY"] - bounds["minY"])
+                    oracle.scale(case["unit"])
                     fitted = V.fitted_staffage("case", width=case["width"], height=case["height"])
-                    self.assertAlmostEqual(fitted.width, width * case["unit"], places=6, msg=case)
+                    self.assertAlmostEqual(fitted.width, oracle.width, places=9, msg=case)
+                    self.assertAlmostEqual(fitted.height, oracle.height, places=9, msg=case)
                     self.assertLessEqual(fitted.height, (case["height"] or 1e9) + 1e-9)
 
     def test_motion_fits_the_whole_clip_and_matches_an_independent_rectangle(self):
         from manim import Rectangle
 
-        bounds = CASE["index"]["boundsM"]
+        bounds = CASE["index"]["logical"]["figureBoundsM"]
         with tempfile.TemporaryDirectory() as root:
             folder = synthetic(Path(root))
             with serving(folder):
@@ -655,9 +642,11 @@ class Cache(unittest.TestCase):
         for relative in ("🔨️modules/a.ts", "🧬️schema/b.ts", "🗂️catalog/humans/case-asset/🔣️.json"):
             with tempfile.TemporaryDirectory() as root:
                 tree = Path(root)
-                for folder in ("🔨️modules", "🧬️schema", "🗂️catalog/humans/case-asset"):
+                for folder in ("🔨️modules/📤️export/🎭️cast", "🧬️schema", "🗂️catalog/humans/case-asset"):
                     (tree / folder).mkdir(parents=True)
+                (tree / "🔨️modules/📤️export/🎭️cast/🟦️.ts").write_text('import { a } from "../../a.ts";', encoding="utf-8")
                 (tree / "🔨️modules/a.ts").write_text("a", encoding="utf-8")
+                (tree / "🔨️modules/dxf.ts").write_text("never loaded", encoding="utf-8")
                 (tree / "🧬️schema/b.ts").write_text("b", encoding="utf-8")
                 (tree / "🗂️catalog/humans/case-asset/🔣️.json").write_text("{}", encoding="utf-8")
                 before = S.cast_key(entry, tree)
@@ -665,6 +654,18 @@ class Cache(unittest.TestCase):
                 S._catalog_bytes.cache_clear()
                 (tree / relative).write_text("changed", encoding="utf-8")
                 self.assertNotEqual(before, S.cast_key(entry, tree), relative)
+        with tempfile.TemporaryDirectory() as root:
+            tree = Path(root)
+            for folder in ("🔨️modules/📤️export/🎭️cast", "🧬️schema", "🗂️catalog/humans/case-asset"):
+                (tree / folder).mkdir(parents=True)
+            (tree / "🔨️modules/📤️export/🎭️cast/🟦️.ts").write_text('import { a } from "../../a.ts";', encoding="utf-8")
+            (tree / "🔨️modules/a.ts").write_text("a", encoding="utf-8")
+            (tree / "🔨️modules/dxf.ts").write_text("never loaded", encoding="utf-8")
+            (tree / "🗂️catalog/humans/case-asset/🔣️.json").write_text("{}", encoding="utf-8")
+            before = S.cast_key(entry, tree)
+            S._source_digest.cache_clear()
+            (tree / "🔨️modules/dxf.ts").write_text("edited", encoding="utf-8")
+            self.assertEqual(before, S.cast_key(entry, tree), "a module the cast exporter never imports must not re-key the casts")
 
     def test_a_clip_names_the_content_key_of_every_cast_it_draws_so_a_catalog_edit_changes_it(self):
         entry = CASE["key"]["entry"]
@@ -725,7 +726,8 @@ class Cache(unittest.TestCase):
         self.assertEqual(key(endings["lf"], names), key(endings["lf"], list(reversed(names))))
         with tempfile.TemporaryDirectory() as root:
             tree = Path(root)
-            (tree / "🔨️modules").mkdir()
+            (tree / "🔨️modules/📤️export/🎭️cast").mkdir(parents=True)
+            (tree / "🔨️modules/📤️export/🎭️cast/🟦️.ts").write_text("".join(f'import "../../{name}";' for name in names), encoding="utf-8")
             for name in names:
                 (tree / "🔨️modules" / name).write_text("x", encoding="utf-8")
             S._source_digest.cache_clear()
@@ -746,7 +748,7 @@ class Cache(unittest.TestCase):
             with patch.object(S.hashlib, "sha256", Spy):
                 S._source_digest(tree)
             S._source_digest.cache_clear()
-        self.assertEqual([Path(name).name for name in seen if name], sorted(names))
+        self.assertEqual([Path(name).name for name in seen if name.endswith(".ts") and Path(name).name != "🟦️.ts"], sorted(names))
 
     def test_bundled_inputs_outside_the_sources_change_the_key(self):
         entry = CASE["key"]["entry"]
@@ -825,7 +827,7 @@ class Cache(unittest.TestCase):
     def test_missing_casts_render_in_one_batch_and_land_atomically(self):
         calls = []
 
-        def fake(command, progress=None):
+        def fake(command, progress=None, **_):
             calls.append(command)
             out = Path(command[command.index("--out") + 1])
             for cast in command[command.index("--ids") + 1].split(","):
@@ -863,12 +865,14 @@ import hashlib, importlib, json, sys, time
 from pathlib import Path
 S = importlib.import_module(sys.argv[1])
 def stamped(index, cast):
-    provenance = S.expected_provenance(cast)
+    lod = S.lod_level("full", 15)
+    provenance = S.expected_provenance(cast, lod)
     provenance["asset"]["category"] = "humans"
     clock = {"fps": index.get("fps"), "durationS": index.get("durationS"), "loop": index.get("loop"), "offsetS": 0, "frames": len(index["frames"])}
-    return {**index, "cast": cast, "provenance": {**provenance, "clock": clock}}
+    return {**index, "cast": cast, "lod": {"id": lod.id, "revision": lod.revision, "canonicalFrames": len(index["frames"]), "canonicalFps": index["fps"]}, "provenance": {**provenance, "clock": clock}}
+S._SCOPE.append(S.lod_level("full", 15))
 counter, spec, cast = Path(sys.argv[2]), json.loads(sys.argv[3]), sys.argv[4]
-def fake(command, progress=None):
+def fake(command, progress=None, **_):
     with counter.open("a") as handle:
         handle.write("x")
     time.sleep(spec["exportS"])
@@ -887,7 +891,7 @@ print(json.dumps({"sha": hashlib.sha256((folders[cast] / S._INDEX).read_bytes())
 OWNER = """
 import importlib, sys, time
 S = importlib.import_module(sys.argv[1])
-lock = S._lock(sys.argv[2])
+lock = S._lock(sys.argv[2], S.lod_level("full", 15))
 print(lock.acquire(), flush=True)
 print(lock.path, flush=True)
 time.sleep(60)
@@ -919,7 +923,7 @@ class Exclusive(unittest.TestCase):
             yield
 
     def fake(self, calls: list[list[str]]):
-        def run(command, progress=None):
+        def run(command, progress=None, **_):
             calls.append(command)
             out = Path(command[command.index("--out") + 1])
             for name in command[command.index("--ids") + 1].split(","):
@@ -973,7 +977,7 @@ class Exclusive(unittest.TestCase):
     def test_a_waiting_renderer_takes_the_result_of_the_owner_without_exporting(self):
         with tempfile.TemporaryDirectory() as root, self.cache(root):
             cast = self.cast()
-            owner = S._lock(cast)
+            owner = S._lock(cast, LOD)
             self.assertTrue(owner.acquire())
             folder = S._directory(cast)
 
@@ -1002,7 +1006,7 @@ class Exclusive(unittest.TestCase):
             raise Stop
 
         with tempfile.TemporaryDirectory() as root, self.cache(root):
-            owner = S._lock(self.cast())
+            owner = S._lock(self.cast(), LOD)
             self.assertTrue(owner.acquire())
             calls: list[list[str]] = []
             try:
@@ -1011,16 +1015,16 @@ class Exclusive(unittest.TestCase):
             finally:
                 owner.release()
             self.assertEqual(calls, [])
-            again = S._lock(self.cast())
+            again = S._lock(self.cast(), LOD)
             self.assertTrue(again.acquire())
             again.release()
 
     def test_a_failed_export_hands_the_lock_on(self):
         with tempfile.TemporaryDirectory() as root, self.cache(root):
-            with patch.multiple(S, _run=lambda command, progress=None: (_ for _ in ()).throw(RuntimeError("boom")), _repo=lambda: "repo"):
+            with patch.multiple(S, _run=lambda command, progress=None, **_: (_ for _ in ()).throw(RuntimeError("boom")), _repo=lambda: "repo"):
                 with self.assertRaises(RuntimeError):
                     S.ensure_casts([self.cast()])
-            again = S._lock(self.cast())
+            again = S._lock(self.cast(), LOD)
             self.assertTrue(again.acquire())
             again.release()
 
@@ -1241,7 +1245,7 @@ class Cancellation(unittest.TestCase):
         commands: list[list[str]] = []
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            with patch.object(S, "_run", lambda command, progress=None: commands.append(command)):
+            with patch.object(S, "_run", lambda command, progress=None, **_: commands.append(command)):
                 try:
                     self.run_with(root, self.VECTORS["completeIds"], None)
                 except OSError:

@@ -32,10 +32,15 @@ const commands: Record<string, string[]> = {
 
   render: [join(root, "🎬️clip", "🖌️render", "🐍️.py"), ...args],
 
+  morph: [join(workspace, "🎓️teaching", "🏛️architecture", "🔀️morph", "✏️authoring", "🐍️.py"), ...args],
+
   test: [
     "-m",
     "unittest",
     "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.♻️cache.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📤️export.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📤️export.🎞️course.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📤️export.🧪️tests.🎬️e2e.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🌐️browser.🧪️tests.📚️closure.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🌐️browser.🧪️tests.🧹️staging.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🌐️browser.🧪️tests.🎥️camera.🐍️",
@@ -55,7 +60,14 @@ const commands: Record<string, string[]> = {
     "🎓️teaching.🏛️architecture.🏢️nakagin.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.🏢️nakagin.🧪️tests.🧺️paint-batch.🐍️",
     "🎓️teaching.🏛️architecture.🏢️nakagin.🧪️tests.🖼️snapshot.🐍️",
-    "🎓️teaching.🏛️architecture.🔀️morph.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.🔀️morph.🧪️tests.🎞️full.🐍️",
+    "🎓️teaching.🏛️architecture.🔀️morph.🧪️tests.🪙️token.🐍️",
+
+    "🎓️teaching.🏛️architecture.🔀️morph.🧪️tests.✏️authoring.🐍️",
+
+    "🎓️teaching.🏛️architecture.🔀️morph.🧪️tests.✏️authoring.💾️persist.🐍️",
+
+    "🎓️teaching.🏛️architecture.⚡️energy.📊️demand.🎬️clip.🧪️tests.🛡️guard.🐍️",
     "🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip.🧪️tests.🗼️live-snapshot.🐍️",
     "🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip.🧪️tests.📦️preview.🐍️",
@@ -69,6 +81,7 @@ const commands: Record<string, string[]> = {
     "🎓️teaching.🏛️architecture.📊️excel.🎬️clip.⚡️energy.🧪️tests.📐️result.🐍️",
     "🎓️teaching.🏛️architecture.📊️excel.🎬️clip.🧪️tests.🎭️presentation.🐍️",
     "🎓️teaching.🏛️architecture.📊️excel.🎬️clip.🧪️tests.📇️registry.🐍️",
+    "🎓️teaching.🏛️architecture.📊️excel.🎬️clip.🧪️tests.🔀️transitions.🐍️",
     "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🔗️consistency.🧪️tests.🔄️lifecycle.🐍️",
     "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧩️models.🧪️tests.📏️footer.🐍️",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🧪️tests.🖼️stream.🐍️",
@@ -105,6 +118,7 @@ const commands: Record<string, string[]> = {
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.🐍️sections",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧪️tests.🐍️section_consumers",
     "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧍️staffage.🧪️tests.🐍️",
+    "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🧍️staffage.🧪️tests.🐍️lod",
     "🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip.💊️capsule.🧪️tests.🐍️",
     "🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip.💊️capsule.🧪️tests.👻️ghost",
     "🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip.💊️capsule.🧪️tests.🎚️ui",
@@ -115,7 +129,7 @@ const commands: Record<string, string[]> = {
 
 };
 
-if (!commands[command]) throw new Error("Expected render or test");
+if (!commands[command]) throw new Error("Expected render, morph or test");
 
 if (command === "test") {
 
@@ -138,6 +152,8 @@ const native = await provisionNative({ onProgress: ({ step, fraction }) => { if 
 const environment = process.env.SEMIO_TEACHING_ENV ?? join(cache, "python");
 
 const env = { ...process.env, ...native?.environment, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEST_MANIM: command === "test" ? "1" : process.env.SEMIO_TEST_MANIM, SEMIO_TEACHING_LANGUAGE: command === "test" ? process.env.SEMIO_TEACHING_LANGUAGE ?? "en" : process.env.SEMIO_TEACHING_LANGUAGE,
+
+  SEMIO_TEACHING_PROFILE: command === "test" ? "final" : process.env.SEMIO_TEACHING_PROFILE,
 
   UV_PROJECT_ENVIRONMENT: environment,
 

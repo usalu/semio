@@ -247,27 +247,28 @@ class VideoContractTest(unittest.TestCase):
                 path.write_text("authored render input", encoding="utf-8")
             video = {"id": "fixture", "script": "wrapper.py", "playlist": "PLAYLIST",
                      "chapters": [{"scene": "Chapter", "segments": [beat]}], "output": "Full_Fixture"}
-            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+            settings = {"language": "de", "audience": "speaker", "profile": "preview", "resolution": None, "fps": None}
             media = folder / "media"
             with patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "load_manifest", return_value=[video]):
                 for scene, segments in (("Chapter", [beat]),):
-                    clip = media / "de" / "speaker" / "v" / f"{scene}.mp4"
+                    clip = media / "preview" / "de" / "speaker" / "v" / f"{scene}.mp4"
                     clip.parent.mkdir(parents=True, exist_ok=True)
                     clip.write_bytes(b"0" * 1200)
                     runtime.publish_cursor_intervals(clip, [])
-                    clip.with_suffix(".render.json").write_text(json.dumps(runtime._logical_state(scene, segments, settings, [media / "de" / "speaker" / "s" / "1" / "v" / "Beat.mp4"])), encoding="utf-8")
+                    clip.with_suffix(".render.json").write_text(json.dumps(runtime._logical_state(scene, segments, settings, [media / "preview" / "de" / "speaker" / "s" / "1" / "v" / "Beat.mp4"])), encoding="utf-8")
 
-                def concatenate(clips, output, list_path):
+                def concatenate(clips, output, list_path, **_):
                     output.parent.mkdir(parents=True, exist_ok=True)
                     output.write_bytes(b"0" * 1200)
                     runtime.publish_cursor_intervals(output, [])
 
-                with patch.object(runtime, "run_command") as command, patch.object(runtime, "concat_videos", side_effect=concatenate) as concat:
-                    result = runtime.compose_video("fixture", language="de", audience="speaker", media_dir=media, output_dir=folder / "out", concat_only=True)
+                with patch.object(runtime, "run_command") as command, patch.object(runtime, "concat_videos", side_effect=concatenate) as concat, patch.object(runtime._export, "publish_export") as exported:
+                    result = runtime.compose_video("fixture", profile="preview", language="de", audience="speaker", media_dir=media, output_dir=folder / "out", concat_only=True)
                 self.assertTrue(result.is_file())
                 command.assert_not_called()
                 concat.assert_called_once()
-                self.assertFalse((media / "de" / "speaker" / "s").exists())
+                self.assertEqual((exported.call_args.args[0], exported.call_args.kwargs["settings"]["profile"], exported.call_args.kwargs["movies"]), ("master", "preview", [clip]))
+                self.assertFalse((media / "preview" / "de" / "speaker" / "s").exists())
 
     @unittest.skipUnless(os.environ.get("SEMIO_TEST_MANIM") == "1", "Enable real segment rendering with SEMIO_TEST_MANIM=1")
     def test_real_manim_segments_preserve_order_and_full_frame_counts(self):
@@ -290,11 +291,11 @@ class VideoContractTest(unittest.TestCase):
                      "chapters": [{"scene": "FixtureChapter", "segments": segments}], "output": "Full_Fixture"}
             output = folder / "output"
             with patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "load_manifest", return_value=[video]):
-                movie = runtime.compose_videos(language="de", audience="speaker", output_root=output, jobs=2, log_output=True)["fixture"]
+                movie = runtime.compose_videos(profile="preview", language="de", audience="speaker", output_root=output, jobs=2, log_output=True)["fixture"]
             for ordinal, segment in enumerate(segments, 1):
-                with av.open(output / "de" / "speaker" / "s" / str(ordinal) / "v" / f"{segment['scene']}.mp4") as container:
+                with av.open(output / "preview" / "de" / "speaker" / "s" / str(ordinal) / "v" / f"{segment['scene']}.mp4") as container:
                     self.assertEqual(sum(1 for _ in container.decode(video=0)), case["frames_per_segment"])
-            with av.open(output / "de/speaker/1/v/FixtureChapter.mp4") as container:
+            with av.open(output / "preview/de/speaker/1/v/FixtureChapter.mp4") as container:
                 self.assertEqual(sum(1 for _ in container.decode(video=0)), case["chapter_frames"])
             with av.open(movie) as container:
                 frames = list(container.decode(video=0))
@@ -339,7 +340,7 @@ class VideoContractTest(unittest.TestCase):
             profile = folder / case["profile"]
             profile.parent.mkdir(parents=True, exist_ok=True)
             profile.write_text(case["before"], encoding="utf-8")
-            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+            settings = {"language": "de", "audience": "speaker", "profile": "preview", "resolution": None, "fps": None}
             segment = {"script": "fixture/scene.py", "scene": "Fixture"}
             clip = folder / "fixture.mp4"
             clip.write_bytes(b"0" * 1200)
@@ -365,7 +366,7 @@ class VideoContractTest(unittest.TestCase):
             speech.mkdir(parents=True)
             files = [speech / f"clause_{index:02d}.wav" for index in range(2)]
             segment = {"script": "source/scene.py", "scene": "Beat1_Source"}
-            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+            settings = {"language": "de", "audience": "speaker", "profile": "preview", "resolution": None, "fps": None}
             with patch.object(runtime, "teaching_root", return_value=folder):
                 self.assertEqual(runtime.source_narration(segment, language="de"), [])
                 files[0].write_bytes(b"first canonical recording")
@@ -484,11 +485,11 @@ class VideoContractTest(unittest.TestCase):
             output = folder / "output"
             with patch.object(runtime, "_WORKSPACE_ROOT", folder), patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "load_manifest", return_value=[video]):
                 with patch.object(runtime, "render_segment", wraps=runtime.render_segment) as render, patch.object(runtime, "cut_clip", wraps=runtime.cut_clip) as cut:
-                    results = runtime.compose_videos(language="de", audience="speaker", output_root=output, chapter_scenes=["Chapter"], force=True, jobs=2, log_output=True)
+                    results = runtime.compose_videos(profile="preview", language="de", audience="speaker", output_root=output, chapter_scenes=["Chapter"], force=True, jobs=2, log_output=True)
                     self.assertEqual(render.call_count, 1)
                     self.assertEqual(cut.call_count, 2)
                 with patch.object(runtime, "render_segment") as render, patch.object(runtime, "cut_clip") as cut:
-                    self.assertEqual(runtime.compose_videos(language="de", audience="speaker", output_root=output, chapter_scenes=["Chapter"], concat_only=True), results)
+                    self.assertEqual(runtime.compose_videos(profile="preview", language="de", audience="speaker", output_root=output, chapter_scenes=["Chapter"], concat_only=True), results)
                     render.assert_not_called()
                     cut.assert_not_called()
             self.assertEqual(list(results), ["Chapter"])
@@ -615,24 +616,24 @@ class VideoContractTest(unittest.TestCase):
             pdf.write_bytes(case["before"].encode())
             clip = folder / "intro.mp4"
             clip.write_bytes(b"0" * 1001)
-            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+            settings = {"language": "de", "audience": "speaker", "profile": "preview", "resolution": None, "fps": None}
             clip.with_suffix(".render.json").write_text(json.dumps(clip_state(settings, [pdf])), encoding="utf-8")
             self.assertEqual(reusable_clip(clip, clip_state(settings, [pdf])), case["reusable_before"])
             pdf.write_bytes(case["after"].encode())
             self.assertEqual(reusable_clip(clip, clip_state(settings, [pdf])), case["reusable_after"])
 
-    def test_interrupted_quality_change_keeps_only_completed_matching_clips(self):
+    def test_interrupted_profile_change_keeps_only_completed_matching_clips(self):
         _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
         clip_state = _video_module.clip_state
         reusable_clip = _video_module.reusable_clip
 
         with tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
-            case = CONTRACT["interrupted_quality_switch"]
+            case = CONTRACT["interrupted_profile_switch"]
             folder = Path(directory)
             source = folder / "scene.py"
             source.write_text("authored scene", encoding="utf-8")
-            low = {"language": "de", "audience": "speaker", "quality": case["previous_quality"], "resolution": None, "fps": None}
-            high = {**low, "audience": "speaker", "quality": case["target_quality"]}
+            low = {"language": "de", "audience": "speaker", "profile": case["previous_profile"], "resolution": None, "fps": None}
+            high = {**low, "audience": "speaker", "profile": case["target_profile"]}
             clips = [folder / "completed.mp4", folder / "pending.mp4"]
             for clip, settings in zip(clips, [high, low]):
                 clip.write_bytes(b"0" * 1001)
@@ -656,7 +657,7 @@ class VideoContractTest(unittest.TestCase):
                 clip = media / "v" / "Intro.mp4"
                 clip.parent.mkdir(parents=True)
                 clip.write_bytes(b"0" * case["cached_bytes"])
-                settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+                settings = {"language": "de", "audience": "speaker", "profile": "preview", "resolution": None, "fps": None}
                 segment = {"script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py", "scene": "Intro"}
                 with patch.object(runtime, "teaching_root", return_value=folder):
                     state = runtime.segment_state(segment, settings)
@@ -692,7 +693,7 @@ class VideoContractTest(unittest.TestCase):
                 clip.write_bytes(b"0" * 1200)
                 if sidecar_kind == "mismatched":
                     clip.with_suffix(".render.json").write_text(json.dumps({"stale": True}), encoding="utf-8")
-                settings = {"language": "de", "audience": "speaker", "quality": case["quality"], "resolution": None, "fps": None}
+                settings = {"language": "de", "audience": "speaker", "profile": case["profile"], "resolution": None, "fps": None}
                 (media / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
                 segment = {"script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py", "scene": "Intro"}
                 with patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "run_command") as command:
@@ -784,6 +785,9 @@ class VideoContractTest(unittest.TestCase):
         from manim import Scene
         from manim.utils.module_ops import get_scene_classes_from_module
         runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        language = patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": "en"})
+        language.start()
+        self.addCleanup(language.stop)
         for job in runtime.source_plan(runtime.segment_plan()):
             segment = job["segment"]
             with self.subTest(scene=segment["scene"]):

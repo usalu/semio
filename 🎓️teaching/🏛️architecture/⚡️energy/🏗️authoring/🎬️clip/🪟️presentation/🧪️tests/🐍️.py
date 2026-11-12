@@ -69,7 +69,7 @@ class PresentationContractTest(unittest.TestCase):
         from unittest.mock import patch
 
         runtime = importlib.import_module(MODULE + ".⚙️runtime.🐍️")
-        settings = {"audience": "speaker", "quality": "-ql", "resolution": "320,180", "fps": 4}
+        settings = {"audience": "speaker", "profile": "preview", "resolution": "320,180", "fps": 4}
         with tempfile.TemporaryDirectory(dir=os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) as directory:
             content, output = Path(directory) / "raw.mp4", Path(directory) / "lesson.mp4"
             content.write_bytes(b"raw" * 500)
@@ -94,7 +94,7 @@ class PresentationContractTest(unittest.TestCase):
         from unittest.mock import patch
 
         runtime = importlib.import_module(MODULE + ".⚙️runtime.🐍️")
-        settings = {"audience": "speaker", "quality": "-ql", "resolution": "320,180", "fps": 4}
+        settings = {"audience": "speaker", "profile": "preview", "resolution": "320,180", "fps": 4}
         for changed in ("presentation", "content", "source", "cursor"):
             with self.subTest(changed=changed), tempfile.TemporaryDirectory(dir=os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) as directory:
                 folder = Path(directory)
@@ -133,7 +133,7 @@ class PresentationContractTest(unittest.TestCase):
         from hashlib import sha256
 
         runtime = importlib.import_module(MODULE + ".⚙️runtime.🐍️")
-        settings = {"audience": "speaker", "quality": "-ql", "resolution": "320,180", "fps": 4}
+        settings = {"audience": "speaker", "profile": "preview", "resolution": "320,180", "fps": 4}
         de = runtime.presentation_state("heating", settings, "de")
         self.assertNotEqual(de, runtime.presentation_state("heating", settings, "en"))
         catalog_path = Path(self.presentation.__file__).with_name("🔣️.json").resolve()
@@ -154,7 +154,7 @@ class PresentationContractTest(unittest.TestCase):
         first_model = hierarchy.hierarchy_contract()
         second_model = deepcopy(first_model)
         second_model["identity"]["brand"] = "Another captured model"
-        settings = {"audience":"speaker","quality":"-ql","resolution":"320,180","fps":4}
+        settings = {"audience":"speaker","profile":"preview","resolution":"320,180","fps":4}
         with patch.object(self.presentation,"source_files",return_value=hierarchy.source_files()):
             with hierarchy.capture_catalog(first_model):
                 first = runtime.presentation_state("heating",settings,"de")
@@ -204,7 +204,7 @@ class PresentationContractTest(unittest.TestCase):
             return original_write(path, state)
 
         with tempfile.TemporaryDirectory(dir=output_root) as directory:
-            chapter = Path(directory) / "de" / "speaker" / "1" / "v" / (video["chapters"][0]["scene"] + ".mp4")
+            chapter = Path(directory) / "preview" / "de" / "speaker" / "1" / "v" / (video["chapters"][0]["scene"] + ".mp4")
             chapter.parent.mkdir(parents=True, exist_ok=True)
             chapter.write_bytes(b"raw-chapter" * 200)
             runtime.publish_cursor_intervals(chapter, [])
@@ -215,7 +215,7 @@ class PresentationContractTest(unittest.TestCase):
                     patch.object(runtime, "concat_videos", side_effect=concatenate), \
                     patch.object(runtime, "render_presentation", side_effect=present) as envelope, \
                     patch.object(runtime, "_write_state", side_effect=publish):
-                result = runtime.compose_videos([video["id"]], language="de", audience="speaker", output_root=Path(directory))
+                result = runtime.compose_videos([video["id"]], profile="preview", language="de", audience="speaker", output_root=Path(directory))
             self.assertEqual(events, ["concat", "presentation", "published"])
             envelope.assert_called_once()
             self.assertTrue(result[video["id"]].read_bytes().startswith(b"enveloped"))
@@ -229,7 +229,7 @@ class PresentationNativeTest(unittest.TestCase):
         output.mkdir(parents=True, exist_ok=True)
         cls.directory = tempfile.TemporaryDirectory(dir=output)
         cls.output = Path(cls.directory.name)
-        cls.settings = {"audience": "speaker", "quality": "-ql", "resolution": "320,180", "fps": 4, "language": "de"}
+        cls.settings = {"audience": "speaker", "profile": "preview", "resolution": "320,180", "fps": 4, "language": "de"}
 
     @classmethod
     def tearDownClass(cls):

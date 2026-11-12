@@ -26,7 +26,7 @@ class CameraFrame(unittest.TestCase):
             Image.new("RGB", tuple(CASES["viewport"]), "#222222").save(snapshot)
             requests = [{"video_id": CASES["scene"], **frame, "output": work / f"{index}.png", "snapshot": snapshot}
                         for index, frame in enumerate(CASES["frames"])]
-            settings = {"language": "en", "quality": "-ql", "resolution": None, "fps": 15, "audience": "speaker"}
+            settings = {"language": "en", "profile": "preview", "resolution": None, "fps": 15, "audience": "speaker"}
             results = RENDER.frame_batch(requests, settings)
             self.assertEqual(len(results), len(requests))
             for result in results:

@@ -1,0 +1,28 @@
+{
+  "description": "Language-agnostic expectations of the ventilation clip migration to declarative transitions: forbidden direct Manim transform calls, the only allowed .become sites (analytical updaters and static builds), per-clip transition counts, the teaching-critical transitions and the frames they occupy on every representative output rate.",
+  "forbidden": ["Transform", "ReplacementTransform", "TransformFromCopy", "FadeTransform", "FadeTransformPieces", "TransformMatchingShapes", "TransformMatchingTex", "ClockwiseTransform", "CounterclockwiseTransform"],
+  "become": [
+    {"clip": "🪟️natural", "function": "_window", "why": "static build of the initial sash pose"},
+    {"clip": "🪟️natural", "function": "_shape_window", "why": "analytical updater following the opening tracker"},
+    {"clip": "❓️need", "function": "_window", "why": "static build of the initial sash pose"},
+    {"clip": "❓️need", "function": "icon", "why": "static build of the window icon pose"}
+  ],
+  "counts": {"🪟️natural": 31, "❓️need": 4, "📦️volume": 40, "⚙️mechanical": 18, "🌡️heat-flow": 8, "🤝️handoff": 9},
+  "derivedDurations": [
+    {"pattern": "ventilation\\.need\\.demand\\.formula-.*", "duration": 1.5, "why": "_fill_panel plays run_time * 0.75 with the default run_time 2.0"}
+  ],
+  "fps": [15, 24, 25, 30, 60],
+  "critical": [
+    {"id": "ventilation.natural.window-rules.opening-partial", "duration": 1.6, "why": "opening chain: 35 %"},
+    {"id": "ventilation.natural.window-rules.opening-wide", "duration": 1.5, "why": "opening chain: 85 %"},
+    {"id": "ventilation.natural.window-rules.opening-thin", "duration": 1.6, "why": "opening chain: 15 %"},
+    {"id": "ventilation.natural.window-rules.opening-short", "duration": 1.5, "why": "opening chain: 85 % short"},
+    {"id": "ventilation.natural.window-rules.outdoor-hot", "duration": 1.6, "why": "outdoor sign flips to hot"},
+    {"id": "ventilation.natural.window-rules.outdoor-winter", "duration": 1.5, "why": "outdoor sign flips to winter"},
+    {"id": "ventilation.natural.cross-ventilation.aeff-thin", "duration": 1.3, "why": "A_eff governed by the smallest opening"},
+    {"id": "ventilation.natural.cross-ventilation.aeff-wide-again", "duration": 1.1, "why": "A_eff recovers with the wide opening"},
+    {"id": "ventilation.natural.stack-effect.height-token-taller", "duration": 1.6, "why": "stack height 2.5 m to 4.4 m", "frames": {"15": [0, 23], "30": [0, 47]}},
+    {"id": "ventilation.mechanical.heat-recovery.winter-bar-share", "duration": 2.0, "why": "WRG share bar 1500 W to 300 W", "frames": {"30": [0, 59], "60": [0, 119]}},
+    {"id": "ventilation.mechanical.heat-recovery.winter-value-remaining", "duration": 2.0, "why": "WRG value 1500 W to 300 W", "frames": {"30": [0, 59], "60": [0, 119]}}
+  ]
+}

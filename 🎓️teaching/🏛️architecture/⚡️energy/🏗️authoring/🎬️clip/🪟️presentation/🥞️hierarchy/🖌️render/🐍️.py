@@ -9,6 +9,8 @@ import uuid
 from pathlib import Path
 
 _PACKAGE = "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring"
+SETTLED_MS = 1000
+SETTLED_CANONICAL_MS = 2000
 _hierarchy = importlib.import_module(_PACKAGE + ".🎬️clip.🪟️presentation.🥞️hierarchy.🐍️")
 _core = importlib.import_module(_PACKAGE + ".🎬️clip.🪟️presentation.🖱️interaction.🐍️")
 
@@ -59,7 +61,7 @@ def _probes(video_id, work, settings, session):
     states = [{**initial_hierarchy(), "opened_path": branch[:index]} for index in range(5)]
     frames = [{"output": str(path), "hierarchy": state, "media": [],
         "cursor": {"point": None, "kind": "arrow", "pressed": False},
-        "transition_elapsed": 2000, "canonical_overview": index < 4}
+        "transition_elapsed": SETTLED_CANONICAL_MS, "canonical_overview": index < 4}
         for index, (path, state) in enumerate(zip(paths, states, strict=True))]
     try:
         metadata = _presentation()._browser.render_batch(_packet(frames, work, settings), session=session)["metadata"]
@@ -222,7 +224,7 @@ def frame_batch(requests, settings, *, session=None):
         _hierarchy.chapter(request["video_id"])
         if request.get("hierarchy") is None and request["video_id"] not in controls:
             controls[request["video_id"]] = _probes(request["video_id"], work, settings, session)
-    projected, previous = [], None
+    projected = []
     for request, output in zip(requests, paths):
         video_id = request["video_id"]
         if request.get("hierarchy") is None:
@@ -244,17 +246,13 @@ def frame_batch(requests, settings, *, session=None):
                      and point == _core.interaction_contract()["timeline"]["park"])
         elapsed = request.get("transition_elapsed")
         if elapsed is None:
-            continuous = previous is not None and previous["phase"] == timeline["phase"] and previous["seconds"] is not None and timeline["seconds"] is not None and timeline["seconds"] >= previous["seconds"]
-            elapsed = max(0, (timeline["seconds"] - previous["seconds"]) * 1000) if continuous else 1000
-            if canonical:
-                elapsed = 2000
+            elapsed = SETTLED_CANONICAL_MS if canonical else SETTLED_MS
         media = [{"id": video_id, "body_image": str(Path(request["snapshot"]).resolve()), "body_opacity": 1}] if request.get("snapshot") and not canonical else []
         frame = {"output": str(output), "hierarchy": timeline["hierarchy"], "media": media,
                  "cursor": {"point": point, "visible": timeline["content_camera"] == 0, "kind": "pointer" if pressed else "arrow", "pressed": pressed},
                  "menu_open": bool(request.get("menu_open")), "transition_elapsed": elapsed, "canonical_overview": canonical}
         frame["content_camera"] = {"video_id": video_id, "progress": timeline["content_camera"]}
         projected.append((frame, timeline, request))
-        previous = timeline
     result = p._browser.render_batch(_packet([frame for frame, _, _ in projected], work, settings), session=session)
     output = []
     for (frame, timeline, request), browser in zip(projected, result["metadata"]):

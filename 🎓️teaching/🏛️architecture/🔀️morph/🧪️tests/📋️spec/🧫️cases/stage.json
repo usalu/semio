@@ -1,0 +1,243 @@
+{
+  "correspondences": [
+    "capsule-item"
+  ],
+  "bindings": {
+    "tower.capsules": {
+      "parts": [
+        "a",
+        "b",
+        "c"
+      ],
+      "revision": 1,
+      "provides": {
+        "view": [
+          "front",
+          "side"
+        ],
+        "scale": [
+          "1:200"
+        ]
+      }
+    },
+    "diagram.leaves": {
+      "parts": [
+        "a",
+        "b",
+        "c"
+      ],
+      "revision": 1,
+      "provides": {}
+    },
+    "tree.leaf": {
+      "parts": null,
+      "revision": 1,
+      "provides": {}
+    }
+  },
+  "cases": [
+    {
+      "name": "everything bound",
+      "only": "trees.birth.capsules-to-leaves",
+      "expect": []
+    },
+    {
+      "name": "unbound target",
+      "only": "trees.birth.capsules-to-leaves",
+      "unbind": [
+        "diagram.leaves"
+      ],
+      "expect": [
+        {
+          "path": "$.transitions[0].target.entity",
+          "code": "unbound-entity"
+        }
+      ]
+    },
+    {
+      "name": "revision mismatch",
+      "only": "trees.leaf.relabel",
+      "bind": {
+        "tree.leaf": {
+          "parts": null,
+          "revision": 3,
+          "provides": {}
+        }
+      },
+      "expect": [
+        {
+          "path": "$.transitions[1].source.revision",
+          "code": "revision-mismatch"
+        }
+      ]
+    },
+    {
+      "name": "unsupported view",
+      "only": "trees.birth.capsules-to-leaves",
+      "set": {
+        "/transitions/0/source/view": "top"
+      },
+      "expect": [
+        {
+          "path": "$.transitions[0].source.view",
+          "code": "unsupported-view"
+        }
+      ]
+    },
+    {
+      "name": "unsupported scale",
+      "only": "trees.birth.capsules-to-leaves",
+      "set": {
+        "/transitions/0/source/scale": "1:50"
+      },
+      "expect": [
+        {
+          "path": "$.transitions[0].source.scale",
+          "code": "unsupported-scale"
+        }
+      ]
+    },
+    {
+      "name": "key mismatch",
+      "only": "trees.birth.capsules-to-leaves",
+      "bind": {
+        "diagram.leaves": {
+          "parts": [
+            "a",
+            "b",
+            "z"
+          ],
+          "revision": 1,
+          "provides": {}
+        }
+      },
+      "expect": [
+        {
+          "path": "$.transitions[0].correspondence.kind",
+          "code": "key-mismatch"
+        }
+      ]
+    },
+    {
+      "name": "order mismatch",
+      "only": "trees.birth.capsules-to-leaves",
+      "set": {
+        "/transitions/0/correspondence": {
+          "kind": "order"
+        }
+      },
+      "bind": {
+        "diagram.leaves": {
+          "parts": [
+            "a",
+            "b"
+          ],
+          "revision": 1,
+          "provides": {}
+        }
+      },
+      "expect": [
+        {
+          "path": "$.transitions[0].correspondence.kind",
+          "code": "order-mismatch"
+        }
+      ]
+    },
+    {
+      "name": "pair names an unknown part",
+      "only": "trees.birth.capsules-to-leaves",
+      "set": {
+        "/transitions/0/correspondence": {
+          "kind": "pairs",
+          "pairs": [
+            [
+              "a",
+              "a"
+            ],
+            [
+              "q",
+              "b"
+            ]
+          ]
+        }
+      },
+      "expect": [
+        {
+          "path": "$.transitions[0].correspondence.pairs[1]",
+          "code": "pair-unknown-part"
+        }
+      ]
+    },
+    {
+      "name": "registered correspondence recipe",
+      "only": "trees.birth.capsules-to-leaves",
+      "set": {
+        "/transitions/0/correspondence": {
+          "kind": "recipe",
+          "name": "capsule-item"
+        }
+      },
+      "expect": []
+    },
+    {
+      "name": "unregistered correspondence recipe",
+      "only": "trees.birth.capsules-to-leaves",
+      "set": {
+        "/transitions/0/correspondence": {
+          "kind": "recipe",
+          "name": "mystery"
+        }
+      },
+      "expect": [
+        {
+          "path": "$.transitions[0].correspondence.name",
+          "code": "unknown-correspondence"
+        }
+      ]
+    },
+    {
+      "name": "only checks the named transition",
+      "only": "trees.leaf.relabel",
+      "unbind": [
+        "diagram.leaves",
+        "tower.capsules"
+      ],
+      "bind": {
+        "tree.leaf": {
+          "parts": null,
+          "revision": 1,
+          "provides": {}
+        }
+      },
+      "expect": [
+        {
+          "path": "$.transitions[1].target.revision",
+          "code": "revision-mismatch"
+        }
+      ]
+    },
+    {
+      "name": "unknown only id",
+      "only": "trees.nothing",
+      "expect": [
+        {
+          "path": "$.transitions",
+          "code": "unknown-transition"
+        }
+      ]
+    },
+    {
+      "name": "vanish needs no target binding",
+      "only": "trees.leaf.relabel",
+      "set": {
+        "/transitions/1/target": null,
+        "/transitions/1/recipe": "vanish",
+        "/transitions/1/intent": "abstraction"
+      },
+      "remove": [
+        "/transitions/1/correspondence"
+      ],
+      "expect": []
+    }
+  ]
+}

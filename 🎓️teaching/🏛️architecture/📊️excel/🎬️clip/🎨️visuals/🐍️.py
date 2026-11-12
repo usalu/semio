@@ -36,7 +36,7 @@ def source_files() -> tuple[Path, ...]:
     clip = Path(__file__).resolve().parents[1]
     nakagin = clip.parents[1] / "🏢️nakagin"
     widgets = sorted(Path(__file__).parent.rglob("🐍️.py"))
-    own = (Path(__file__), *widgets, *Path(__file__).parent.rglob("🔣️.json"), clip / "🧱️model/🐍️.py", clip / "🧱️model/🔣️.json", clip / "🧱️model/🧬️schema/🔣️.schema.json",
+    own = (Path(__file__), *widgets, *Path(__file__).parent.rglob("🔣️.json"), *sorted(clip.rglob("🔀️transitions/🔣️.json")), clip / "🧱️model/🐍️.py", clip / "🧱️model/🔣️.json", clip / "🧱️model/🧬️schema/🔣️.schema.json",
            nakagin / "🐍️.py", nakagin / "🔣️.json", nakagin / "🧬️schema/🔣️.schema.json", nakagin / "🎨️visuals/🐍️.py",
            clip.parents[1] / "🔀️morph/🐍️.py", clip.parents[1] / "🧲️fit/🐍️.py")
     return tuple(dict.fromkeys(path for path in (*own, *_nakagin.source_files(), *_theme.source_files()) if path.is_file()))

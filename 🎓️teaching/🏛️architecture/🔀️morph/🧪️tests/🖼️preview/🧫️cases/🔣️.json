@@ -1,0 +1,13 @@
+{
+  "description": "Language-agnostic preview-swap schedule cases: Manim samples t = k / fps for k in [0, n) inside play; S = only the source visible, T = only the exact target visible. The last sampled frame f1 = n - 1 is the terminal sample (CONTRACT section 4, acceptance 'Terminal sample definition').",
+  "cases": [
+    {"name": "ten-frames-source-until-terminal", "fps": 10, "duration": 1.0, "easing": "smooth", "owners": "SSSSSSSSST"},
+    {"name": "ten-frames-linear", "fps": 10, "duration": 1.0, "easing": "linear", "owners": "SSSSSSSSST"},
+    {"name": "overshoot-never-switches-early", "fps": 10, "duration": 1.0, "easing": "overshoot", "owners": "SSSSSSSSST"},
+    {"name": "one-frame-sole-sample-is-target", "fps": 10, "duration": 0.1, "easing": "smooth", "owners": "T"},
+    {"name": "two-frames", "fps": 10, "duration": 0.2, "easing": "smooth", "owners": "ST"},
+    {"name": "fifteen-fps-three-frames", "fps": 15, "duration": 0.2, "easing": "smooth", "owners": "SST"},
+    {"name": "twenty-four-fps-non-integer-length", "fps": 24, "duration": 0.3, "easing": "smooth", "owners": "SSSSSSST"},
+    {"name": "thirty-fps-one-second", "fps": 30, "duration": 1.0, "easing": "smooth", "owners": "SSSSSSSSSSSSSSSSSSSSSSSSSSSSST"}
+  ]
+}

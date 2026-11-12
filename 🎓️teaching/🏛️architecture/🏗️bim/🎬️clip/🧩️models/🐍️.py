@@ -28,9 +28,9 @@ P, polygon, region, segments, polyline, circle_points, mix, hatch = (_drafting.P
                                                                      _drafting.circle_points, _drafting.mix, _drafting.hatch)
 BACKGROUND = _drafting.BACKGROUND
 frame_box = _panels.frame_box
-(VGroup, FadeIn, FadeOut, Indicate, LaggedStart, AnimationGroup, Succession, ValueTracker, Wait, Dot, Circle, Rectangle, Flash, Line, Arrow, ReplacementTransform) = (
+(VGroup, FadeIn, FadeOut, Indicate, LaggedStart, AnimationGroup, Succession, ValueTracker, Wait, Dot, Circle, Rectangle, Flash, Line, Arrow) = (
     getattr(_engine, name) for name in ("VGroup", "FadeIn", "FadeOut", "Indicate", "LaggedStart", "AnimationGroup", "Succession", "ValueTracker", "Wait",
-                                         "Dot", "Circle", "Rectangle", "Flash", "Line", "Arrow", "ReplacementTransform"))
+                                         "Dot", "Circle", "Rectangle", "Flash", "Line", "Arrow"))
 LINEAR, SMOOTH = _engine.linear, _engine.smooth
 DISCIPLINES = ("architecture", "structure", "services")
 COLORS = dict(zip(DISCIPLINES, (ARCH, STRUCT, SERV)))

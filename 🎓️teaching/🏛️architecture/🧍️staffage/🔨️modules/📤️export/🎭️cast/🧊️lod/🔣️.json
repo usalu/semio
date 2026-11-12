@@ -1,0 +1,30 @@
+{
+  "$schema": "./🔣️.schema.json",
+  "version": 1,
+  "levels": {
+    "full": {
+      "title": { "en": "Full detail", "de": "Volle Detailstufe" },
+      "frames": { "outputFpsFraction": null, "maxFrames": 600, "phase": 0 },
+      "roles": ["body", "detail", "texture", "glazing", "ground"],
+      "patterns": true,
+      "transportDensity": 1,
+      "strokeMin": 1
+    },
+    "preview": {
+      "title": { "en": "Preview detail", "de": "Vorschau-Detailstufe" },
+      "frames": { "outputFpsFraction": 0.5, "maxFrames": 90, "phase": 0 },
+      "roles": ["body", "glazing", "ground"],
+      "patterns": false,
+      "transportDensity": 0.25,
+      "strokeMin": 1
+    },
+    "poster": {
+      "title": { "en": "Poster frame", "de": "Posterbild" },
+      "frames": { "outputFpsFraction": null, "maxFrames": 1, "phase": 0 },
+      "roles": ["body", "glazing", "ground"],
+      "patterns": false,
+      "transportDensity": 0.25,
+      "strokeMin": 1
+    }
+  }
+}

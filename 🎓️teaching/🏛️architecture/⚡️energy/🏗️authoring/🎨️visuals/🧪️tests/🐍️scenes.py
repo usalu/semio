@@ -261,7 +261,7 @@ class SceneScaleTest(unittest.TestCase):
         for cast in case["casts"]:
             with self.subTest(cast=cast):
                 index = shared._staffage._index(shared._staffage.ensure_casts([cast])[cast])
-                figure = index["figureBoundsM"]
+                figure = index["logical"]["figureBoundsM"]
                 width, height = figure["maxX"] - figure["minX"], figure["maxY"] - figure["minY"]
                 unit = case["height"] / height
                 self.assertAlmostEqual(shared.staffage_height(cast), height, delta=case["tolerance"] * height)
@@ -276,7 +276,7 @@ class SceneScaleTest(unittest.TestCase):
         shared = importlib.import_module(BASE + "🏗️authoring.🎨️visuals.🐍️")
         case = CASES["transport_figure"]
         cast = case["casts"][0]
-        figure = shared._staffage._index(shared._staffage.ensure_casts([cast])[cast])["figureBoundsM"]
+        figure = shared._staffage._index(shared._staffage.ensure_casts([cast])[cast])["logical"]["figureBoundsM"]
         for mirror in (False, True):
             with self.subTest(mirror=mirror):
                 plain, flipped = (shared.staffage(cast, unit=1.0, mirror=flag) for flag in (False, mirror))

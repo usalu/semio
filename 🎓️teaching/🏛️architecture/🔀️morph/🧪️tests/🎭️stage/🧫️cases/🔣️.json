@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "transitions": [
+    {
+      "id": "demo.blocks-to-tiles",
+      "intent": "abstraction",
+      "source": {"entity": "demo.blocks", "revision": 1, "sampling": "snapshot"},
+      "target": {"entity": "demo.tiles", "revision": 1, "sampling": "snapshot"},
+      "relation": "many-to-many",
+      "correspondence": {"kind": "order"},
+      "recipe": "parts",
+      "timing": {"duration": 1.0, "easing": "smooth", "lag": 0.0},
+      "placement": {"space": "scene", "anchor": "center", "fit": "contain", "uniform": true}
+    },
+    {
+      "id": "demo.blocks-cut-to-tiles",
+      "intent": "abstraction",
+      "source": {"entity": "demo.blocks", "revision": 1, "sampling": "snapshot"},
+      "target": {"entity": "demo.tiles", "revision": 1, "sampling": "snapshot"},
+      "relation": "many-to-many",
+      "correspondence": {"kind": "order"},
+      "recipe": "parts",
+      "timing": {"duration": 0.0, "easing": "smooth", "lag": 0.0},
+      "placement": {"space": "scene", "anchor": "center", "fit": "contain", "uniform": true}
+    }
+  ]
+}

@@ -70,6 +70,8 @@ tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -402,6 +404,7 @@ class Beat1_DreiBilanzgrenzen(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Three system boundaries", "Drei Bilanzgrenzen"))
         din = _din_ref("DIN V 18599-1:2018-09 · GEG § 20")
@@ -540,8 +543,8 @@ class Beat1_DreiBilanzgrenzen(Scene):
             (1.0, [FadeOut(m) for m in scenery]),
             (1.6, [FadeIn(rc["card"]) for rc in row_cards] + [GrowArrow(h) for h in hops] + [FadeIn(hop_names)]),
             (1.4, [Create(box), FadeIn(items["eq"]), FadeIn(items["dot"]), FadeIn(items["cap"]),
-                   TransformFromCopy(row_cards[2]["sym"], items["qp"]),
-                   TransformFromCopy(row_cards[1]["sym"], items["qe"]),
+                   stage.transition("demand.primary-energy.boundaries.symbol-qp-into-formula", source=row_cards[2]["sym"], target=items["qp"]),
+                   stage.transition("demand.primary-energy.boundaries.symbol-qe-into-formula", source=row_cards[1]["sym"], target=items["qe"]),
                    FadeIn(items["fp"], shift=UP * 0.2)]),
             (0.8, lambda: [Create(rings.setdefault("p", highlight_param(items, "qp", color=P_YELLOW)))]))
 
@@ -607,6 +610,7 @@ class Beat2_Primaerenergiefaktor(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The non-renewable primary energy factor", "Der nicht erneuerbare Primärenergiefaktor"))
         din = _din_ref(tr("GEG Annex 4", "GEG Anlage 4"))
@@ -781,7 +785,7 @@ class Beat2_Primaerenergiefaktor(Scene):
         ])
         say("erneuerbar",
             (1.0, unlane("umwelt")),
-            (1.4, [Create(box2), *[ReplacementTransform(items[k], items2[k]) for k in ("qp", "eq", "qe", "dot", "fp")],
+            (1.4, [Create(box2), *[stage.transition(f"demand.primary-energy.factor.formula-{k}-to-non-renewable", source=items[k], target=items2[k]) for k in ("qp", "eq", "qe", "dot", "fp")],
                    FadeIn(items2["unit"]), Indicate(VGroup(*reads.values()), color=P_YELLOW, scale_factor=1.06)]))
 
         note = note_line(tr("f_p per GEG Annex 4: non-renewable share — defined calculation value", "f_p nach GEG Anlage 4: nicht erneuerbarer Anteil — festgelegter Rechenwert"), color=P_PRIMARY)
@@ -924,6 +928,7 @@ class Beat3_Rechenbeispiel(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("One building, two systems", "Ein Gebäude, zwei Anlagen"))
         din = _din_ref("GEG § 20 · DIN V 18599:2018-09")
@@ -990,7 +995,7 @@ class Beat3_Rechenbeispiel(Scene):
             first=True)
 
         say("nutz",
-            (1.0, [ReplacementTransform(schematic_note, legend_unit), FadeIn(words["nutz"])]),
+            (1.0, [stage.transition("demand.primary-energy.worked-example.note-to-unit-legend", source=schematic_note, target=legend_unit), FadeIn(words["nutz"])]),
             (1.6, lambda: shown(*[m for p in panels for m in (p["bars"]["h"], p["reads"]["h"]["num"],
                                                               p["reads"]["h"]["sym"])],
                                 anims=[p["trackers"]["h"].animate.set_value(Q_NUTZ) for p in panels])))
@@ -1021,7 +1026,7 @@ class Beat3_Rechenbeispiel(Scene):
         split_bar = _bar_rects(Q_NUTZ, wp["split"], wp["xs"]["h"], G3, unit=U3)
         say("end_umwelt",
             (1.2, [FadeIn(wp["sun"]), FadeIn(words["env"])]),
-            (1.6, [ReplacementTransform(wp["rect_h"], split_bar)]))
+            (1.6, [stage.transition("demand.primary-energy.worked-example.heat-bar-splits-ambient", source=wp["rect_h"], target=split_bar)]))
         wp["rect_h"] = split_bar
 
         streams.clear()
@@ -1083,11 +1088,11 @@ class Beat3_Rechenbeispiel(Scene):
         ]
         row, box, items = math_panel(parts)
         copies = []
-        for p, tag in ((gas, "g"), (wp, "w")):
+        for p, tag, name in ((gas, "g", "gas"), (wp, "w", "heat-pump")):
             copies += [
-                TransformFromCopy(p["static"]["e"]["num"], items[f"{tag}_qe"]),
-                TransformFromCopy(p["static"]["f"], items[f"{tag}_fp"]),
-                TransformFromCopy(p["static"]["q"]["num"], items[f"{tag}_qp"]),
+                stage.transition(f"demand.primary-energy.worked-example.{name}-final-energy-into-formula", source=p["static"]["e"]["num"], target=items[f"{tag}_qe"]),
+                stage.transition(f"demand.primary-energy.worked-example.{name}-factor-into-formula", source=p["static"]["f"], target=items[f"{tag}_fp"]),
+                stage.transition(f"demand.primary-energy.worked-example.{name}-primary-energy-into-formula", source=p["static"]["q"]["num"], target=items[f"{tag}_qp"]),
                 FadeIn(items[f"{tag}_dot"]), FadeIn(items[f"{tag}_eq"]),
             ]
         say("effizienz",
@@ -1149,6 +1154,7 @@ class Beat4_Referenzgebaeude(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The limit: the reference building", "Der Grenzwert: das Referenzgebäude"))
         din = _din_ref("GEG §§ 15–17 · § 71 · Anlage 1")
@@ -1258,9 +1264,9 @@ class Beat4_Referenzgebaeude(Scene):
 
         warm.append(reference_in["warm"])
         say("referenz",
-            (1.8, [TransformFromCopy(design["group"], reference["group"]),
+            (1.8, [stage.transition("demand.primary-energy.reference.design-house-copies-to-reference", source=design["group"], target=reference["group"]),
                    FadeIn(reference_in["group"], shift=reference_in["group"].get_center() - design_in["group"].get_center()),
-                   TransformFromCopy(dims_d, dims_r), FadeIn(tag_r)]))
+                   stage.transition("demand.primary-energy.reference.dimension-copies-to-reference", source=dims_d, target=dims_r), FadeIn(tag_r)]))
 
         say("anlage1", (1.4, [Create(envelope_r)]), (1.0, [FadeIn(spec)]))
 
@@ -1297,7 +1303,7 @@ class Beat4_Referenzgebaeude(Scene):
             (1.2, [FadeOut(m) for m in chart]),
             (1.4, [Create(design["group"]), FadeIn(design_in["group"])]),
             (1.2, [Create(envelope_d)]),
-            (1.4, [Create(box), FadeIn(items["ht_ref"]), TransformFromCopy(envelope_d, items["ht"]),
+            (1.4, [Create(box), FadeIn(items["ht_ref"]), stage.transition("demand.primary-energy.reference.envelope-into-ht", source=envelope_d, target=items["ht"]),
                    Indicate(envelope_d, color=P_CYAN, scale_factor=1.02)]),
             (0.5, [Create(ring_ht)]))
 
@@ -1309,7 +1315,7 @@ class Beat4_Referenzgebaeude(Scene):
         def freeze_ee():
             frozen["ee"] = _freeze(self, ee_read, rf"{label_number(100.0 * EE_SHARE)}\,\%", (3.65, 0.44), AMBIENT_GREEN,
                                    edge="left")
-            return [Create(box2), TransformFromCopy(frozen["ee"], items2["ee"]), FadeIn(items2["ee_text"])]
+            return [Create(box2), stage.transition("demand.primary-energy.reference.share-reading-into-formula", source=frozen["ee"], target=items2["ee"]), FadeIn(items2["ee_text"])]
 
         say("erneuerbar",
             (1.0, [FadeOut(box), FadeOut(row), FadeOut(ring_ht)]),

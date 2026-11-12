@@ -84,10 +84,11 @@ export function transportView(ctx: Ctx, field: TransportField, layers: readonly 
     });
   };
 
+  const stride = Math.max(1, Math.ceil(1 / (ctx.options.transportDensity ?? 1)));
   const overlay = (canvas: Canvas): void => {
     if (want.has("pathlines"))
       field.pathlines.forEach((line, i) => {
-        if (line.points.length < 2) return;
+        if (line.points.length < 2 || i % stride !== 0) return;
         const opacity = ctx.options.transportStrokeMm === undefined ? 0.55 : 0.8;
         const widthMm = ctx.options.transportStrokeMm ?? PATHLINE_MM;
         const value = { quantity: "pathline-age", value: line.ages[line.ages.length - 1] ?? 0, unit: "s", label: tx(`Particle pathline ${i + 1} of ${title(line.emitter).en}`, `Teilchenbahn ${i + 1} von ${title(line.emitter).de}`) };
@@ -109,6 +110,7 @@ export function transportView(ctx: Ctx, field: TransportField, layers: readonly 
     if (want.has("parcels"))
       field.parcels
         .map((p, i) => ({ p, i, depth: nearness(ctx.options.viewpoint, p.at, ctx.camera) }))
+        .filter(({ i }) => i % stride === 0)
         .sort((a, b) => a.depth - b.depth || a.i - b.i)
         .forEach(({ p, i }) => disc(canvas, p, i));
     if (want.has("condensation"))

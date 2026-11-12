@@ -258,10 +258,10 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         gone, self.temp = [_engine.FadeOut(m) for m in self.temp], []
         return gone
 
-    @staticmethod
-    def _ghosts(swarm):
-        """👻 The faint source copies a morph swarm left behind."""
-        return [a.ghost_mobject for a in swarm.animations if getattr(a, "ghost_mobject", None) is not None]
+    def _ghosted(self, transition, sources, targets):
+        """👻 The declared transition together with one faint copy of every source left behind; returns the animation and the ghosts."""
+        ghosts = [source.copy().set_opacity(0.35) for source in sources]
+        return _engine.AnimationGroup(*[_engine.FadeIn(ghost, run_time=0.3) for ghost in ghosts], self._stage.transition(transition, source=sources, target=targets)), ghosts
 
     def _heat(self, value):
         """🌡️ Surface colour of a U-value from green (tight) to red (leaky)."""
@@ -450,6 +450,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
     def present_energy(self):
         """🎞️ The whole animation: from the capsule dimensions to the building total and a live what-if."""
         self._prepare()
+        stage = self._stage = _morph.stage(self, TRANSITIONS)
         T, CL, EN = self.T, self.CL, self.EN
         kinds = self._slot_types()
         ramp = lambda tracker, start, stop, seconds=2.5: _engine.UpdateFromAlphaFunc(tracker, lambda mob, a: mob.set_value(start + (stop - start) * a), run_time=seconds)
@@ -471,8 +472,8 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         big = self.capsule_axon(self.cap, at=(self.dx, 0.1, 0.0), scale=0.6)
         tab = self._tok(self.tr("Type A", "Typ A"), "cell", _drawing.type_color("A"), self.win.tabs[T].get_center())
         self.add(flyer, flyer_tab)
-        self.step("sheet", _engine.FadeOut(tower_display), _engine.FadeOut(mark), _engine.FadeOut(outside), _engine.FadeIn(self.win), _engine.FadeIn(title), _morph.morph(flyer, big, run_time=1.6),
-                  _morph.morph(flyer_tab, tab, pairs=_morph.capsule_pairs(flyer_tab, tab), dip=0.15, run_time=1.6), seconds=None)
+        self.step("sheet", _engine.FadeOut(tower_display), _engine.FadeOut(mark), _engine.FadeOut(outside), _engine.FadeIn(self.win), _engine.FadeIn(title), stage.transition("excel.energy.sheet.capsule-to-large", source=flyer, target=big),
+                  stage.transition("excel.energy.sheet.capsule-to-tab", source=flyer_tab, target=tab), seconds=None)
         self.remove(big)
         self.add(capsule)
         self.frames.append(tab)
@@ -480,9 +481,9 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         dims = ("width", "length", "height")
         fly = [self._static(cs, dims).dims[name] for name in dims]
         cells = [self._tok(self._show(T, f"B{2 + i}"), "cell", DATA, self._cell_pt(f"B{2 + i}")) for i in range(3)]
-        swarm = _morph.scatter(fly, cells, ghost=0.35, path_arc=0.5, run_time=1.4)
+        swarm, ghosts = self._ghosted("excel.energy.dims.lines-to-cells", fly, cells)
         self.step("dims", *[_engine.FadeIn(f) for f in fly], self.win.select("B2:B4"), seconds=1.0, then=(swarm, _engine.FadeIn(self._frame("B2:B4", DATA))))
-        self.frames.extend([*cells, *self._ghosts(swarm)])
+        self.frames.extend([*cells, *ghosts])
 
         cs.tint = "face"
         new = self._window(T, (2, 11), "D3:D9", "C:F")
@@ -493,7 +494,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.add(*fly)
         swap = self._swap(new)
         frames = [self._frame(f"D{r}", ROW_COLOR[r]) for r in ROWS]
-        self.step("areas", *swap, seconds=1.2, then=(_morph.unfold(fly, cells, run_time=1.4), _engine.LaggedStart(*[_engine.FadeIn(f) for f in frames], lag_ratio=0.2)), after=(ramp(cs.tint_a, 0, 1, 1.2),))
+        self.step("areas", *swap, seconds=1.2, then=(stage.transition("excel.energy.areas.faces-to-cells", source=fly, target=cells), _engine.LaggedStart(*[_engine.FadeIn(f) for f in frames], lag_ratio=0.2)), after=(ramp(cs.tint_a, 0, 1, 1.2),))
         self.frames.extend(cells)
 
         cs.view, cs.bolts, cs.hatch, cs.tint = "axon_back", True, ("attached",), "exposed"
@@ -513,7 +514,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
 
         cells = [self._tok(self._show(T, f"F{r}"), "cell", SERV, self._cell_pt(f"F{r}")) for r in ROWS]
         arrows = self._arrows(cs, ROWS)
-        swarm = _morph.scatter(cells, arrows, path_arc=0.4, run_time=1.2)
+        swarm = stage.transition("excel.energy.ua.cells-to-arrows", source=cells, target=arrows)
         self.step("ua", self.win.select("F3:F9"), _engine.FadeIn(self._frame("F3:F9", SERV)), *[_engine.FadeIn(c) for c in cells], seconds=1.0,
                   then=(swarm, ramp(cs.tint_a, 1, 0, 2.0), _engine.FadeOut(chips)))
         self.remove(*arrows)
@@ -523,7 +524,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         card = self._sumproduct()
         pile = self._arrows(cs, ROWS)
         total = self._tok("H_T = " + self.xl_display(self.vals_base[(T, "B11")], '0.00 "W/K"'), "number", SERV, (self.dx + 1.4, -2.15))
-        self.step("ht", self.win.select("F3:F9"), _engine.FadeIn(card), self._nudge(), seconds=1.2, between=lambda: self.add(*pile), then=(_morph.gather(pile, total), ramp(cs.grow, 1, 0, 0.5)))
+        self.step("ht", self.win.select("F3:F9"), _engine.FadeIn(card), self._nudge(), seconds=1.2, between=lambda: self.add(*pile), then=(stage.transition("excel.energy.ht.arrows-to-total", source=pile, target=total), ramp(cs.grow, 1, 0, 0.5)))
         self.h_token = total
 
         new = self._window(CL, (1, 9), "B6", "A:B+")
@@ -533,7 +534,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         hdd = self._hdd_chart((self.dx, 0.2))
         sigma = self._tok("Σ = " + self._show(CL, "B5"), "number", SERV, self.sigma_at)
         self.step("degreedays", self.win.select("B5"), _engine.FadeOut(names), _engine.FadeIn(hdd), *[_engine.FadeIn(m) for m in self.short], seconds=1.4,
-                  then=(_morph.gather(self.short, sigma),))
+                  then=(stage.transition("excel.energy.degreedays.shortfalls-to-sum", source=self.short, target=sigma),))
         self.sigma = sigma
 
         cs.at, cs.scale = (self.dx - 0.3, 0.1, 0.0), 0.46
@@ -548,12 +549,12 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.add(b_cell)
         self.step("mistake", _engine.FadeOut(hdd), *self._clear(), self.sigma.animate.scale(0.8).move_to(np.array([5.6, -2.3, 0.0])), seconds=1.0,
                   then=(moving, self.win.select("B6"), *self._recalc(*self.books["back_wall_exposed"]), _engine.FadeIn(self._frame("B6", SERV)), _engine.FadeIn(capsule), _engine.FadeIn(delta),
-                        _engine.FadeIn(formula_card), ramp(cs.grow, 0, 1, 2.0), _morph.morph(b_cell, b_item, path_arc=0.6, run_time=2.0)))
+                        _engine.FadeIn(formula_card), ramp(cs.grow, 0, 1, 2.0), stage.transition("excel.energy.mistake.b-to-item", source=b_cell, target=b_item)))
         self._end(exposed_vals)
 
         moving = self._begin(self.vals_base)
         b_back = self._tok("b = " + self.xl_display(self.vals_base[(CL, "B6")], "0.00"), "cell", MUTED, self._cell_pt("B6"))
-        self.step("fix", moving, self.win.select("B6"), *self._recalc(self.book, self.vals_base), _engine.FadeOut(formula_card), _morph.morph(b_item, b_back, path_arc=0.6, run_time=2.0), seconds=3.0)
+        self.step("fix", moving, self.win.select("B6"), *self._recalc(self.book, self.vals_base), _engine.FadeOut(formula_card), stage.transition("excel.energy.fix.b-to-cell", source=b_item, target=b_back), seconds=3.0)
         self._end(self.vals_base)
         self.frames.append(b_back)
 
@@ -564,7 +565,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         box = list(self._volume_box(self._static(cs), 1.0))
         v_cell = self._tok("V = " + self._show(T, "B10"), "cell", BLUE, self._cell_pt("B10", new))
         self.step("volume", *self._swap(new), _engine.FadeIn(refs), _engine.FadeOut(delta), ramp(cs.vol, 0, 1, 1.4), _engine.FadeIn(vol_label), seconds=1.6, between=lambda: self.add(*box),
-                  then=(_morph.gather(box, v_cell), ramp(cs.vol, 1, 0, 0.3), ramp(cs.vent, 0, 1, 1.6)))
+                  then=(stage.transition("excel.energy.volume.box-to-cell", source=box, target=v_cell), ramp(cs.vol, 1, 0, 0.3), ramp(cs.vent, 0, 1, 1.6)))
         self.frames.append(v_cell)
 
         self.remove(refs)
@@ -574,7 +575,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         h_v = self._tok("H_V = " + self.xl_display(self.vals_base[(T, "B12")], '0.00 "W/K"'), "cell", BLUE, self._cell_pt("B12"))
         self.add(h_t, h_v)
         self.step("total", self.win.select("B11:B12"), _engine.FadeIn(self._frame("B11", SERV)), _engine.FadeIn(self._frame("B12", BLUE)), _engine.FadeOut(vol_label), seconds=1.2,
-                  then=(_morph.morph(h_t, _engine.VGroup(seg[0], seg[2]), run_time=1.3), _morph.morph(h_v, _engine.VGroup(seg[1], seg[3]), run_time=1.3), ramp(cs.grow, 1, 0, 1.5), ramp(cs.vent, 1, 0, 1.5)))
+                  then=(stage.transition("excel.energy.total.ht-to-bar", source=h_t, target=_engine.VGroup(seg[0], seg[2])), stage.transition("excel.energy.total.hv-to-bar", source=h_v, target=_engine.VGroup(seg[1], seg[3])), ramp(cs.grow, 1, 0, 1.5), ramp(cs.vent, 1, 0, 1.5)))
         self.remove(*seg)
         self.add(bar)
 
@@ -586,7 +587,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         pieces = [_engine.Rectangle(width=4.2 / 9, height=0.36, stroke_width=0, fill_color=BLUE if i == 7 else SERV, fill_opacity=0.9).move_to(np.array([self.dx - 2.1 + 4.2 / 18 + i * 4.2 / 9, -1.6, 0.0])) for i in range(9)]
         phi = self._tok(self.xl_display(self.vals_base[(T, "B13")], '0 "W"'), "cell", SERV, self._cell_pt("B13", new))
         self.add(*pieces)
-        self.step("load", *self._swap(new), _engine.FadeIn(refs), _engine.FadeOut(bar), _engine.FadeIn(temps), seconds=1.2, then=(_morph.scatter(pieces, [*arrows_w, phi], lag=0.08, path_arc=0.3, run_time=1.2),))
+        self.step("load", *self._swap(new), _engine.FadeIn(refs), _engine.FadeOut(bar), _engine.FadeIn(temps), seconds=1.2, then=(stage.transition("excel.energy.load.pieces-to-arrows", source=pieces, target=[*arrows_w, phi]),))
         self.frames.extend((phi, refs))
         self.remove(*arrows_w)
         cs.grow.set_value(1.0)
@@ -604,7 +605,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         h_tile = units[0]
         units.remove(h_tile)
         self.step("annual", *self._swap(new), _engine.FadeIn(refs), _engine.FadeIn(per_area), ramp(cs.grow, 1, 0, 1.4), ramp(cs.vent, 1, 0, 1.4), _engine.FadeOut(temps), _engine.FadeOut(capsule), _engine.FadeIn(units), _engine.FadeIn(plan), *self._clear(), seconds=1.5,
-                  then=(_morph.morph(plan[0], floor_tile, run_time=1.6), _morph.morph(self.sigma, days_tile, path_arc=0.5, run_time=1.6), _morph.morph(self.h_token, h_tile, path_arc=0.5, run_time=1.6), _engine.FadeOut(plan[1])))
+                  then=(stage.transition("excel.energy.annual.plan-to-floor-tile", source=plan[0], target=floor_tile), stage.transition("excel.energy.annual.sum-to-days-tile", source=self.sigma, target=days_tile), stage.transition("excel.energy.annual.ht-to-tile", source=self.h_token, target=h_tile), _engine.FadeOut(plan[1])))
         self.frames.extend((refs, per_area))
 
         new = self._window(EN, (3, 12), "B4:D7", "A:D")
@@ -614,7 +615,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         chips = [_engine.VGroup(counts[2 * i], counts[2 * i + 1]) for i in range(4)]
         proxies = {key: [_engine.Dot(tower.parts["capsules"][k].get_center(), radius=0.045, color=_drawing.type_color(key)) for k in sorted(kinds) if kinds[k] == key] for key in "ABCD"}
         pits = {key: [_engine.Dot(chips[i].get_left() + np.array([-0.2, 0.0, 0.0]), radius=0.045, color=_drawing.type_color(key)) for _ in proxies[key]] for i, key in enumerate("ABCD")}
-        swarms = [_morph.scatter(proxies[key], pits[key], lag=0.03, path_arc=0.5, run_time=1.0, limit=2.6) for key in "ABCD"]
+        swarms = [stage.transition("excel.energy.energy.dots-to-counts", source=proxies[key], target=pits[key]) for key in "ABCD"]
         self.step("energy", *self._swap(new), _engine.FadeOut(units), _engine.FadeOut(floor_tile), _engine.FadeOut(days_tile), _engine.FadeOut(h_tile), _engine.FadeIn(tower_display), seconds=1.4, between=lambda: self.add(*[m for group in proxies.values() for m in group]),
                   then=(*swarms, _engine.LaggedStart(*[_engine.FadeIn(chip) for chip in chips], lag_ratio=0.5, run_time=2.4)))
         self.remove(*[m for group in pits.values() for m in group])
@@ -634,7 +635,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         slot = (3.7 - 1.2) / 4
         marks = [self._tok(self.xl_display(values[i], "0"), "item", _drawing.type_color(key), (plot_l + slot * (i + 0.5), plot_b + (plot_t - plot_b) * values[i] / peak)) for i, key in enumerate("ABCD")]
         self.step("compare", *self._swap(new), _engine.FadeIn(badges), _engine.FadeOut(tower_display), _engine.FadeOut(counts), _engine.FadeOut(*chips), _engine.FadeIn(types_row), _engine.FadeIn(chart), seconds=1.4, between=lambda: self.add(*copies),
-                  then=(_morph.scatter(copies, marks, lag=0.15, path_arc=0.3, run_time=1.3, pairs_fn=_morph.capsule_pairs, dip=0.15),))
+                  then=(stage.transition("excel.energy.compare.capsules-to-marks", source=copies, target=marks),))
         self.temp.extend(marks)
 
         shape = self._shape((self.dx, 0.0))
@@ -652,7 +653,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
                 left += width
             nets.append((fly, spots))
         self.step("shape", _engine.FadeOut(chart), _engine.FadeOut(types_row), _engine.FadeOut(*[m for m in self.temp]), _engine.FadeIn(shape), seconds=1.2, between=lambda: self.add(*[f for fly, _ in nets for f in fly]),
-                  then=tuple(_morph.unfold(fly, spots, lag=0.1, run_time=1.2) for fly, spots in nets))
+                  then=tuple(stage.transition("excel.energy.shape.faces-to-net", source=fly, target=spots) for fly, spots in nets))
         self.temp = [m for _, spots in nets for m in spots]
 
         new = self._window(EN, (3, 14), "B14", "A:D")
@@ -676,7 +677,7 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         seeds = [_engine.Dot(self._cell_pt("B14"), radius=0.03, color=BLUE) for _ in dots]
         self.add(u_cell)
         self.step("whatif", self.win.select("B14"), seconds=0.8, between=lambda: self.add(*seeds),
-                  then=(_morph.scatter(seeds, dots, lag=0.012, path_arc=0.3, run_time=1.0, limit=2.4), moving, *self._recalc(better_book, better_vals), *[dot.animate.set_color(GOOD).set_run_time(2.0) for dot in dots]))
+                  then=(stage.transition("excel.energy.whatif.seeds-to-dots", source=seeds, target=dots), moving, *self._recalc(better_book, better_vals), *[dot.animate.set_color(GOOD).set_run_time(2.0) for dot in dots]))
         self._end(better_vals)
         self.dots = dots
         self.temp.append(u_cell)
@@ -873,5 +874,5 @@ class Beat4_Energy(_live_scene.RefreshMoving, _visuals.ClipScene):
         legend.remove(*symbols)
         self.add(*starts)
         self.step("recap", _engine.FadeOut(window), *[_engine.FadeOut(m) for m in self.frames], _engine.FadeOut(chain), _engine.FadeOut(counted), _engine.FadeOut(small), _engine.FadeIn(legend), seconds=1.4,
-                  then=(_morph.scatter(starts, symbols, lag=0.06, path_arc=0.3, run_time=1.1, limit=2.0), _morph.scatter(self.dots, goals, lag=0.012, path_arc=0.3, run_time=1.0, limit=2.4), _engine.FadeIn(big_tower_display, run_time=2.0)))
+                  then=(stage.transition("excel.energy.recap.symbols-to-legend", source=starts, target=symbols), stage.transition("excel.energy.recap.dots-to-goals", source=self.dots, target=goals), _engine.FadeIn(big_tower_display, run_time=2.0)))
         self.remove(*goals)

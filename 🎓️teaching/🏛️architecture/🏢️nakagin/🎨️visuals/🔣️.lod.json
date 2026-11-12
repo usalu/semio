@@ -1,0 +1,9 @@
+{
+  "$schema": "./🔣️.lod.schema.json",
+  "version": 1,
+  "lods": {
+    "full": { "towerSegments": null, "coreAssembly": "full", "templateEntries": 2, "templateFacets": 400000 },
+    "preview": { "towerSegments": 1, "coreAssembly": "exterior", "templateEntries": 16, "templateFacets": 200000 },
+    "poster": { "towerSegments": 1, "coreAssembly": "exterior", "templateEntries": 16, "templateFacets": 200000 }
+  }
+}

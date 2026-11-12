@@ -1133,7 +1133,7 @@ def place_assembly(assembly: Assembly, plane: Plane) -> Assembly:
 
 
 def core_assembly(tower, detail="full", cancelled=None) -> Assembly:
-    """🗼 Reconstructed core with local staggered landings, ground/office floors, turning stairs and enclosed central lift; detailed dimensions are assumptions."""
+    """🗼 Reconstructed core (``detail="exterior"`` omits the interior stairs, lift compound and risers that no exterior view shows) with local staggered landings, ground/office floors, turning stairs and enclosed central lift; detailed dimensions are assumptions."""
     t = _tower(tower)
     cx, cy = t.center
     s, wall, slab = t.core_side / 2, _detail_value("wall_thickness"), _detail_value("floor_thickness")
@@ -1203,13 +1203,14 @@ def core_assembly(tower, detail="full", cancelled=None) -> Assembly:
     for index, (sx, sy) in enumerate(((1, 1), (-1, 1), (-1, -1), (1, -1))):
         points = ((sx * inside, sy * inside), (sx * (inside - leg), sy * inside), (sx * inside, sy * (inside - leg)))
         parts.append(NamedPart(f"corner-pier-{index}", "core_corner_pier", place(_polygon_prism(points, 0, t.height), _core_frame(t)), "concrete"))
-    parts.extend(_circulation_parts(t, detail, cancelled))
-    for j, y in enumerate((-.45, .45)):
-        for level in range(t.storeys):
-            bottom = level * t.height / t.storeys
-            top = (level + 1) * t.height / t.storeys
-            solid = _cylinder((-.79, y, bottom), _detail_value("core_service_radius"), top - bottom, "z", 12)
-            parts.append(NamedPart(f"service-riser-{j}-{level}", "service_riser", place(solid, _core_frame(t)), "metal"))
+    if detail != "exterior":
+        parts.extend(_circulation_parts(t, detail, cancelled))
+        for j, y in enumerate((-.45, .45)):
+            for level in range(t.storeys):
+                bottom = level * t.height / t.storeys
+                top = (level + 1) * t.height / t.storeys
+                solid = _cylinder((-.79, y, bottom), _detail_value("core_service_radius"), top - bottom, "z", 12)
+                parts.append(NamedPart(f"service-riser-{j}-{level}", "service_riser", place(solid, _core_frame(t)), "metal"))
     opening = _v("core.circulation.flight_inner") + _v("core.circulation.flight_width")
     roof_bounds = ((cx - s + wall, cx - opening, cy - s + wall, cy + s - wall), (cx + opening, cx + s - wall, cy - s + wall, cy + s - wall), (cx - opening, cx + opening, cy - s + wall, cy - opening), (cx - opening, cx + opening, cy + opening, cy + s - wall))
     for i, bounds in enumerate(roof_bounds):

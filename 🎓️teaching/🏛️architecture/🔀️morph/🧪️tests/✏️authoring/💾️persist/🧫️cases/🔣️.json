@@ -1,0 +1,15 @@
+{
+  "document": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🔀️transitions/🔣️.json",
+  "transition": "demand.recap.loss.ring-u-to-a",
+  "resolution": "96,54",
+  "profiles": ["preview", "final"],
+  "edit": {"pointer": "/timing/duration", "value": "1.0", "before": 1.6, "after": 1.0},
+  "standIns": {
+    "source": {"shape": "square", "side": 1.2, "at": [-2.5, 0.0, 0.0], "color": "#E8A33D"},
+    "target": {"shape": "circle", "radius": 0.45, "at": [2.5, 0.5, 0.0], "color": "#3D8BE8"}
+  },
+  "expect": {
+    "preview": {"fullMorphWork": false},
+    "final": {"fullMorphWork": true}
+  }
+}

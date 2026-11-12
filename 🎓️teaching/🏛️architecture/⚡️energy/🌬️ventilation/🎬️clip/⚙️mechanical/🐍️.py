@@ -82,6 +82,8 @@ room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 color_ramp = _manim_module.color_ramp
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
@@ -449,6 +451,7 @@ class Beat2_Waermerueckgewinnung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Heat recovery in a plate heat exchanger", "Wärmerückgewinnung im Plattenübertrager"))
@@ -624,18 +627,18 @@ class Beat2_Waermerueckgewinnung(Scene):
         w_rest_val = value(rf"{label_number(Q_V_WINTER * (1 - ETA_WRG))}\,\mathrm{{W}}",
                            bx0 + full_w * (ETA_WRG + (1 - ETA_WRG) / 2), y_w, P_RED)
         lp = loss_panel(r"300\,\mathrm{W}")
-        self.play(ReplacementTransform(w_full, w_rest), GrowFromEdge(w_green, LEFT),
-                  ReplacementTransform(w_val, w_rest_val), FadeIn(w_green_val),
-                  ReplacementTransform(eq, lp[0]), ReplacementTransform(eq_box, lp[1]),
+        self.play(stage.transition("ventilation.mechanical.heat-recovery.winter-bar-share", source=w_full, target=w_rest), GrowFromEdge(w_green, LEFT),
+                  stage.transition("ventilation.mechanical.heat-recovery.winter-value-remaining", source=w_val, target=w_rest_val), FadeIn(w_green_val),
+                  stage.transition("ventilation.mechanical.heat-recovery.winter-formula-to-loss", source=eq, target=lp[0]), stage.transition("ventilation.mechanical.heat-recovery.winter-box-to-loss", source=eq_box, target=lp[1]),
                   *exchanger(2.0), run_time=2.0)
         hold_for(self, N, "winter_bars", during=exchanger)
 
         caption = swap_caption(self, caption, subtitle_text(N, "summer"))
         eq2, eq2_box, items2 = eta_panel(tr(r"\frac{5\,\mathrm{K}}{6\,\mathrm{K}} \approx 0.8", r"\frac{5\,\mathrm{K}}{6\,\mathrm{K}} \approx 0{,}8"))
-        self.play(ReplacementTransform(chip_winter, chip_summer),
-                  ReplacementTransform(arrows_up, arrows_down),
+        self.play(stage.transition("ventilation.mechanical.heat-recovery.season-chip-summer", source=chip_winter, target=chip_summer),
+                  stage.transition("ventilation.mechanical.heat-recovery.season-arrows-down", source=arrows_up, target=arrows_down),
                   season.animate(rate_func=smooth).set_value(1.0),
-                  ReplacementTransform(lp[0], eq2), ReplacementTransform(lp[1], eq2_box),
+                  stage.transition("ventilation.mechanical.heat-recovery.loss-to-efficiency-formula", source=lp[0], target=eq2), stage.transition("ventilation.mechanical.heat-recovery.loss-to-efficiency-box", source=lp[1], target=eq2_box),
                   *exchanger(3.0), run_time=3.0)
         ring_val = highlight_param(items2, "val", color=P_YELLOW)
         self.play(Create(ring_val), Indicate(zul_box, color=P_CYAN), Indicate(abl_box, color=P_TEAL), *exchanger(1.2),
@@ -675,9 +678,9 @@ class Beat2_Waermerueckgewinnung(Scene):
             ("eta", r"(1-\eta)", P_GREEN), (None, r"\approx", P_WHITE),
             ("val", r"90\,\mathrm{W}", P_RED),
         ], color=P_GREEN)
-        self.play(ReplacementTransform(s_full, s_rest), GrowFromEdge(s_green, LEFT),
-                  ReplacementTransform(s_val, s_rest_val), FadeIn(s_green_val),
-                  ReplacementTransform(eq2, sp[0]), ReplacementTransform(eq2_box, sp[1]),
+        self.play(stage.transition("ventilation.mechanical.heat-recovery.summer-bar-share", source=s_full, target=s_rest), GrowFromEdge(s_green, LEFT),
+                  stage.transition("ventilation.mechanical.heat-recovery.summer-value-remaining", source=s_val, target=s_rest_val), FadeIn(s_green_val),
+                  stage.transition("ventilation.mechanical.heat-recovery.efficiency-to-sensible-formula", source=eq2, target=sp[0]), stage.transition("ventilation.mechanical.heat-recovery.efficiency-to-sensible-box", source=eq2_box, target=sp[1]),
                   *exchanger(2.0), run_time=2.0)
         hold_for(self, N, "summer_bars", during=exchanger)
 
@@ -689,7 +692,7 @@ class Beat2_Waermerueckgewinnung(Scene):
             ("lat", r"\dot{Q}_{\mathrm{V,lat}}", P_CYAN), (None, "=", P_WHITE),
             ("val", r"90\,\mathrm{W} + 810\,\mathrm{W}", P_WHITE),
         ], color=P_CYAN)
-        self.play(ReplacementTransform(sp[0], lp2[0]), ReplacementTransform(sp[1], lp2[1]), FadeIn(keep),
+        self.play(stage.transition("ventilation.mechanical.heat-recovery.sensible-to-latent-formula", source=sp[0], target=lp2[0]), stage.transition("ventilation.mechanical.heat-recovery.sensible-to-latent-box", source=sp[1], target=lp2[1]), FadeIn(keep),
                   Indicate(l_full, color=P_CYAN, scale_factor=1.06), *exchanger(1.6), run_time=1.6)
         hold_for(self, N, "latent", during=exchanger)
 
@@ -927,6 +930,7 @@ class Beat4_Kanalquerschnitt(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("From airflow to duct cross-section", "Vom Luftstrom zum Kanalquerschnitt"))
@@ -1048,7 +1052,7 @@ class Beat4_Kanalquerschnitt(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "area"))
         ap, ap_box, ap_items = area_panel()
-        self.play(ReplacementTransform(cp, ap), ReplacementTransform(cp_box, ap_box), *duct_air(1.2), run_time=1.2)
+        self.play(stage.transition("ventilation.mechanical.duct.continuity-to-area-formula", source=cp, target=ap), stage.transition("ventilation.mechanical.duct.continuity-to-area-box", source=cp_box, target=ap_box), *duct_air(1.2), run_time=1.2)
         self.play(r.animate(rate_func=smooth).set_value(r_final), *duct_air(3.4), run_time=3.4)
         ring_a = SurroundingRectangle(a_read, color=P_BLUE, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
         ring_ok = SurroundingRectangle(v_read, color=P_GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
@@ -1064,7 +1068,7 @@ class Beat4_Kanalquerschnitt(Scene):
                                                  color=P_YELLOW))
         self.remove(a_tag)
         self.add(r_read, d_read)
-        self.play(ReplacementTransform(ap, rp), ReplacementTransform(ap_box, rp_box), FadeIn(radius_dot),
+        self.play(stage.transition("ventilation.mechanical.duct.area-to-radius-formula", source=ap, target=rp), stage.transition("ventilation.mechanical.duct.area-to-radius-box", source=ap_box, target=rp_box), FadeIn(radius_dot),
                   Create(radius_line), FadeIn(r_tag), *duct_air(1.6), run_time=1.6)
         ring_root = highlight_param(rp_items, "root", color=P_BLUE)
         self.play(Create(ring_root), Indicate(duct_disc, color=P_BLUE), *duct_air(1.0), run_time=1.0)

@@ -142,8 +142,8 @@ describe("🧍️ front casts", () => {
       const width = index.boundsM.maxX - index.boundsM.minX;
       expect(width, `${id} width`).toBeGreaterThan(min);
       expect(width, `${id} width`).toBeLessThan(max);
-      expect(index.heightM, `${id} height`).toBeGreaterThan(vectors.casts.heightM[id]!.min);
-      expect(index.heightM, `${id} height`).toBeLessThan(vectors.casts.heightM[id]!.max);
+      expect(index.logical.heightM, `${id} height`).toBeGreaterThan(vectors.casts.heightM[id]!.min);
+      expect(index.logical.heightM, `${id} height`).toBeLessThan(vectors.casts.heightM[id]!.max);
     }
   });
 });

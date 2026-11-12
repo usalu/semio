@@ -82,6 +82,8 @@ staffage = _manim_module.staffage
 room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 set_vo_language("de")
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
@@ -330,6 +332,7 @@ class Beat1_Fensterregeln(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The window is a control", "Das Fenster ist ein Regler"))
         din = _din_ref("DIN 1946-6")
@@ -446,8 +449,8 @@ class Beat1_Fensterregeln(Scene):
         self.play(
             opening.animate.set_value(0.35),
             rate.animate.set_value(0.45),
-            ReplacementTransform(open_pct, open_mid),
-            ReplacementTransform(n_low, n_mid),
+            stage.transition("ventilation.natural.window-rules.opening-partial", source=open_pct, target=open_mid),
+            stage.transition("ventilation.natural.window-rules.rate-partial", source=n_low, target=n_mid),
             recolor_meter(air, P_GREEN),
             wash.animate.set_fill(P_CYAN, opacity=0.07),
             *stuffy(1.6, 0.35),
@@ -462,8 +465,8 @@ class Beat1_Fensterregeln(Scene):
         self.play(
             opening.animate.set_value(0.85),
             rate.animate.set_value(0.85),
-            ReplacementTransform(open_mid, open_wide),
-            ReplacementTransform(n_mid, n_high),
+            stage.transition("ventilation.natural.window-rules.opening-wide", source=open_mid, target=open_wide),
+            stage.transition("ventilation.natural.window-rules.rate-wide", source=n_mid, target=n_high),
             recolor_meter(air, P_BLUE),
             wash.animate.set_fill(P_BLUE, opacity=0.14),
             FadeIn(tag_flush), *draft(1.5, 1.2, P_BLUE, P_ORANGE, 4),
@@ -474,14 +477,14 @@ class Beat1_Fensterregeln(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "hotter"))
         self.play(
-            ReplacementTransform(outdoor_cool, outdoor_hot),
+            stage.transition("ventilation.natural.window-rules.outdoor-hot", source=outdoor_cool, target=outdoor_hot),
             opening.animate.set_value(0.15),
             rate.animate.set_value(0.18),
-            ReplacementTransform(open_wide, open_thin),
-            ReplacementTransform(n_high, n_thin),
+            stage.transition("ventilation.natural.window-rules.opening-thin", source=open_wide, target=open_thin),
+            stage.transition("ventilation.natural.window-rules.rate-thin", source=n_high, target=n_thin),
             recolor_meter(air, P_ORANGE),
             wash.animate.set_fill(P_RED, opacity=0.12),
-            ReplacementTransform(tag_flush, tag_throttle),
+            stage.transition("ventilation.natural.window-rules.tag-throttle", source=tag_flush, target=tag_throttle),
             *draft(1.6, 0.45, P_ORANGE, None, 2),
             run_time=1.6,
         )
@@ -495,15 +498,15 @@ class Beat1_Fensterregeln(Scene):
             np.array([2.15, -1.02, 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN, edge="center",
         )
         self.play(
-            ReplacementTransform(outdoor_hot, outdoor_winter),
-            ReplacementTransform(inside_summer, inside_winter),
+            stage.transition("ventilation.natural.window-rules.outdoor-winter", source=outdoor_hot, target=outdoor_winter),
+            stage.transition("ventilation.natural.window-rules.inside-winter", source=inside_summer, target=inside_winter),
             opening.animate.set_value(0.85),
             rate.animate.set_value(0.85),
-            ReplacementTransform(open_thin, open_short),
-            ReplacementTransform(n_thin, n_short),
+            stage.transition("ventilation.natural.window-rules.opening-short", source=open_thin, target=open_short),
+            stage.transition("ventilation.natural.window-rules.rate-short", source=n_thin, target=n_short),
             recolor_meter(air, P_BLUE),
             wash.animate.set_fill(P_BLUE, opacity=0.14),
-            ReplacementTransform(tag_throttle, tag_short),
+            stage.transition("ventilation.natural.window-rules.tag-short", source=tag_throttle, target=tag_short),
             FadeIn(dial["group"]), FadeIn(dial_read),
             *draft(1.5, 1.2, P_BLUE, P_ORANGE, 4),
             run_time=1.5,
@@ -567,6 +570,7 @@ class Beat2_StossOderKipp(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
         vol = ROOM_A * ROOM_H
         e_air = C_LUFT * vol * D_THETA
@@ -729,8 +733,8 @@ class Beat2_StossOderKipp(Scene):
         tot_k_final.move_to(tot_k.get_left() + RIGHT * tot_k_final.width / 2)
         ratio = math_label(rf"\approx {label_number(e_kipp / e_air, 1)} \times", size=BODY_FONT_SIZE, color=P_ORANGE)
         ratio.next_to(tot_k_final, RIGHT, buff=0.3)
-        self.play(ReplacementTransform(tot_k, tot_k_final), *running(0.6), run_time=0.6)
-        self.play(TransformFromCopy(row_s, ratio), *running(0.8), run_time=0.8)
+        self.play(stage.transition("ventilation.natural.purge-or-tilt.tilted-total-final", source=tot_k, target=tot_k_final), *running(0.6), run_time=0.6)
+        self.play(stage.transition("ventilation.natural.purge-or-tilt.ratio-from-purge-row", source=row_s, target=ratio), *running(0.8), run_time=0.8)
         hold_for(self, N, "sum", during=running)
 
         caption = swap_caption(self, caption, subtitle_text(N, "rule"))
@@ -792,6 +796,7 @@ class Beat3_Querlueftung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Cross ventilation: both openings count", "Querlüftung: beide Öffnungen zählen"))
         din = _din_ref("DIN EN 16798-7")
@@ -891,8 +896,8 @@ class Beat3_Querlueftung(Scene):
         ])
         self.play(Create(eq_box), FadeIn(rest), FadeIn(aeff_wide), *through(0.9), run_time=0.9)
         self.play(
-            ReplacementTransform(a1_lbl.copy(), items["a1"]),
-            ReplacementTransform(a2_lbl.copy(), items["a2"]),
+            stage.transition("ventilation.natural.cross-ventilation.a1-into-formula", source=a1_lbl, target=items["a1"]),
+            stage.transition("ventilation.natural.cross-ventilation.a2-into-formula", source=a2_lbl, target=items["a2"]),
             *through(1.2),
             run_time=1.2,
         )
@@ -910,8 +915,8 @@ class Beat3_Querlueftung(Scene):
         guides_thin = flow_guides(cross_thin, P_RED)
         self.play(
             open_window(right_win.window, fraction=0.26),
-            ReplacementTransform(aeff_wide, aeff_thin),
-            ReplacementTransform(guides, guides_thin),
+            stage.transition("ventilation.natural.cross-ventilation.aeff-thin", source=aeff_wide, target=aeff_thin),
+            stage.transition("ventilation.natural.cross-ventilation.guides-thin", source=guides, target=guides_thin),
             Create(a2_ring),
             run_time=1.3,
         )
@@ -919,8 +924,8 @@ class Beat3_Querlueftung(Scene):
         guides = flow_guides(cross, P_GREEN)
         self.play(
             open_window(right_win.window),
-            ReplacementTransform(aeff_thin, aeff_wide),
-            ReplacementTransform(guides_thin, guides),
+            stage.transition("ventilation.natural.cross-ventilation.aeff-wide-again", source=aeff_thin, target=aeff_wide),
+            stage.transition("ventilation.natural.cross-ventilation.guides-wide-again", source=guides_thin, target=guides),
             FadeOut(a2_ring),
             run_time=1.1,
         )
@@ -928,13 +933,13 @@ class Beat3_Querlueftung(Scene):
         hold_for(self, self.NARRATION, "limit", during=through)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "summer"))
-        self.play(ReplacementTransform(aeff_wide, tip), *through(0.9, color=P_BLUE, end=P_ORANGE), run_time=0.9)
+        self.play(stage.transition("ventilation.natural.cross-ventilation.tip-summer", source=aeff_wide, target=tip), *through(0.9, color=P_BLUE, end=P_ORANGE), run_time=0.9)
         hold_for(self, self.NARRATION, "summer", during=lambda rt: through(rt, color=P_BLUE, end=P_ORANGE))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "winter"))
         self.add(wash)
         wash.set_z_index(-1)
-        self.play(ReplacementTransform(tip, tip_winter), wash.animate.set_fill(P_BLUE, opacity=0.14),
+        self.play(stage.transition("ventilation.natural.cross-ventilation.tip-winter", source=tip, target=tip_winter), wash.animate.set_fill(P_BLUE, opacity=0.14),
                   *through(1.0, speed=1.2, color=P_BLUE, end=P_ORANGE), run_time=1.0)
         self.play(*through(2.0, speed=1.2, color=P_BLUE, end=P_ORANGE), run_time=2.0)
         hold_for(self, self.NARRATION, "winter", during=lambda rt: through(rt, speed=1.2, color=P_BLUE, end=P_ORANGE))
@@ -991,6 +996,7 @@ class Beat4_Auftrieb(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Stack effect: height creates pressure", "Auftrieb: Höhe erzeugt Druck"))
         din = _din_ref("DIN EN 16798-7")
@@ -1139,8 +1145,8 @@ class Beat4_Auftrieb(Scene):
             ],
             outlet.animate.shift(UP * rise),
             outlet_lbl.animate.shift(UP * rise),
-            Transform(h_dim, tall_dim),
-            ReplacementTransform(h_tok, h_tok_tall),
+            stage.transition("ventilation.natural.stack-effect.height-dimension-taller", source=h_dim, target=tall_dim),
+            stage.transition("ventilation.natural.stack-effect.height-token-taller", source=h_tok, target=h_tok_tall),
             FadeOut(guides_low),
             press.animate.set_value(dp_high / dp_max),
             run_time=1.6,
@@ -1154,7 +1160,7 @@ class Beat4_Auftrieb(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "winter"))
         stack["speed"] = 1.8
         self.play(
-            ReplacementTransform(legend, legend_winter),
+            stage.transition("ventilation.natural.stack-effect.legend-winter", source=legend, target=legend_winter),
             press.animate.set_value(dp_winter / dp_max),
             recolor_meter(dp, P_CYAN),
             *rising(1.6),
@@ -1219,6 +1225,7 @@ class Beat5_Nachtlueftung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Night ventilation: discharging the thermal mass", "Nachtlüftung: den Speicher entladen"))
         din = _din_ref("DIN 4108-2")
@@ -1367,7 +1374,7 @@ class Beat5_Nachtlueftung(Scene):
         self.play(
             Create(purged), FadeIn(keys[2]),
             mass.animate.set_fill(P_BLUE, opacity=0.45),
-            ReplacementTransform(mass_hot, mass_cool),
+            stage.transition("ventilation.natural.night-ventilation.mass-cooled", source=mass_hot, target=mass_cool),
             _streams([(sweep, P_BLUE, P_ORANGE)], 2.2, speed=1.0, waves=4),
             run_time=2.2,
         )
@@ -1388,10 +1395,10 @@ class Beat5_Nachtlueftung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "winter"))
         self.play(
-            ReplacementTransform(schedule, schedule_winter),
-            ReplacementTransform(season_lbl, season_lbl_winter),
+            stage.transition("ventilation.natural.night-ventilation.schedule-winter", source=schedule, target=schedule_winter),
+            stage.transition("ventilation.natural.night-ventilation.season-winter", source=season_lbl, target=season_lbl_winter),
             mass.animate.set_fill(P_ORANGE, opacity=0.5),
-            ReplacementTransform(mass_cool, mass_warm),
+            stage.transition("ventilation.natural.night-ventilation.mass-warm", source=mass_cool, target=mass_warm),
             *stored(1.4, P_ORANGE),
             run_time=1.4,
         )
@@ -1429,6 +1436,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Limits of natural ventilation", "Grenzen der freien Lüftung"))
         din = _din_ref("DIN EN 16798-7")
@@ -1538,7 +1546,7 @@ class Beat6_GrenzenDerFreienLueftung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "cold"))
         air["in"] = (P_BLUE, P_ORANGE)
-        self.play(ReplacementTransform(outdoor, outdoor_cold), wash.animate.set_fill(P_BLUE, opacity=0.16),
+        self.play(stage.transition("ventilation.natural.limits.outdoor-cold", source=outdoor, target=outdoor_cold), wash.animate.set_fill(P_BLUE, opacity=0.16),
                   *exchange(1.2), run_time=1.2)
         self.play(*exchange(2.0), run_time=2.0)
         hold_for(self, self.NARRATION, "cold", during=exchange)

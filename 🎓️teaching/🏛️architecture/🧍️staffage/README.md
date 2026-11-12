@@ -191,7 +191,7 @@ cancel the export between two frames with exit 130 and leave no partial cast (a 
 
 A cast of an elevation, front or plan viewpoint that the asset draws as a section also writes `section` (`{ plane, label }`, as declared in `sections` of the representation) to its index.
 
-The index holds the paper extents in `boundsM` (everything drawn). A cast with `transport` also writes `figureBoundsM` (the person without the air layer). `heightM` is always the physical figure height for every viewpoint, never a paper measure (D13). Playback of a cast reads `loop` and `fps` from the index: a clip with `loop: false` (fan spin,
+The index holds the paper extents of the level it was drawn at in `boundsM` (everything drawn) and the level-independent physical truth in `logical`: `heightM` (the physical figure height for every viewpoint, never a paper measure, D13), `figureBoundsM` (the paper extent of the figure in world metres without any air layer: the rig bounds in the side elevation, the drawn shapes of the front and plan), `partsM` (the polygons of frame 0 by shape id) and `maxPaths`. Playback of a cast reads `loop` and `fps` from the index: a clip with `loop: false` (fan spin,
 tealight flicker) is repeated by `fitted_staffage(..., loop=True)`.
 
 ### Textless casts and the frame cap
@@ -201,6 +201,18 @@ for every language. A schedule of more than 600 frames (the toaster, the laptop,
 with a fractional `fps` in the index; play such a cast with `rate` (clip seconds divided by scene seconds), at `rate=1` only its first seconds are
 seen in coarse steps.
 
+### Levels of detail
+
+Five concepts stay independent: the canonical reference (the cast id and the asset revision), viewport zoom (the Manim `unit`, applied only at placement), the authored print scale (`scale`: mm per metre and the authored geometry and pens), the render level of detail and the render profile. A profile names a level (`lod` of `🎬️clip/🎚️profile`); `🔨️modules/📤️export/🎭️cast/🧊️lod/🔣️.json` defines what each level samples and draws:
+
+| Level | Frames | Shape roles | Patterns | Transport | Use |
+|---|---|---|---|---|---|
+| `full` | the canonical schedule (600 samples at most) | all | yes | as authored | final renders |
+| `preview` | at most half the output rate, at most 90, both endpoints (loops wrap in whole periods) | `body`, `glazing`, `ground` and, per thermal region the roles leave unpainted, its largest shape | no | every 4th parcel and pathline | preview renders and scrubbing |
+| `poster` | one, at `phase` of the duration | as `preview` | no | as `preview` | thumbnails and posters |
+
+A level samples the same analytical state at canonical times (a thermal history is a pure function of asset, query and environment, so a sampled frame carries exactly the fills of the full frame at that time) and draws a subset of the same authored shapes; units, origin, anchors, scenario and the clock never change, `logical` is identical for every level, and the paper extent still reaches every shape. The exporter takes `--lod` and `--output-fps` explicitly; the bridge resolves the level from the render profile (`lod_scope` for explicit callers) and a call without either fails. Scope decision: there is no `detailScale` tier in this iteration (a coarser authored geometry source for far use); only frame sampling, roles, patterns and transport density vary. Language-agnostic vectors: `🧫️fixtures/🧊️cast-lod/🔣️.json`, run by `🧪️tests/🧊️cast-lod` and the Python bridge tests.
+
 ### Python API (`🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals`)
 
 | Call | Result |
@@ -208,16 +220,18 @@ seen in coarse steps.
 | `staffage(cast, unit=, anchor=, color=, opacity=, window=)` | the first frame as a `VGroup`, world origin (the feet) on `anchor`, `unit` Manim units per metre |
 | `staffage_motion(cast, unit=, anchor=, rate=1.0, color=, window=)` | a clip or transient swapped from scene time at `rate` times real time; it plays during `wait` and `play` |
 | `fitted_staffage(cast, width=, height=, color=, rate=, loop=, window=)` (module `visuals`) | the largest uniform scale that fits `width` and `height`, feet on the origin; with `rate` it plays; `loop` repeats a non-looping clip |
-| `staffage_height(cast)` | the physical figure height in metres for every viewpoint (landing in the exporter, D13), never the air layer of a transport cast |
-| `staffage_parts(cast, prefix="")` | the filled polygons of the first frame as world-metre arrays, for attachment points (straight `M`/`L`/`H`/`V`/`Z` outlines) |
-| `ensure_casts(ids=None, progress=None)` | renders every missing cast in one exporter call; `progress` receives each stderr line |
+| `staffage_height(cast)` | the physical figure height in metres for every viewpoint (D13), never the air layer of a transport cast |
+| `resolve(cast, lod=None, output_fps=None, revision=None, view=, viewpoint=, scale=, pose=, scenario=)` | the cast at a level of detail before anything is decoded: cache folder, level-independent descriptor (height, figure bounds, parts, clock, `maxPaths`) and checked provenance; declared axes are checked against the manifest and a mismatch names the casts that do match |
+| `bind_staffage(stage, entity_id, cast_ref, unit=, anchor=, rate=, ...)` | the morph stage binder `staffage`: bounds and anchors frozen from the descriptor, a factory per level |
+| `staffage_parts(cast, prefix="")` | the filled polygons of the first frame as world-metre arrays, for attachment points, from `logical.partsM` |
+| `ensure_casts(ids=None, progress=None, lod=None)` | renders every missing cast at the active level in one exporter call; `progress` receives each stderr line |
 
-- Sizing is figure-bounded: a cast with `figureBoundsM` has its width, height, top, bottom and centre measured on the figure alone, so a
-  breathing plume never shrinks or shifts the person; `window` (min x, min y, max x, max y in cast metres) keeps only the paths fully inside it and
+- Sizing is figure-bounded: every cast has its width, height, top, bottom and centre measured on `logical.figureBoundsM` alone, so a
+  breathing plume never shrinks or shifts the person and no level of detail changes a layout; `window` (min x, min y, max x, max y in cast metres) keeps only the paths fully inside it and
   sizes by the window, for example a blind without its wall stubs or a head as an icon.
-- Cache: casts live in `.🧬semio/🎓️teaching/⚡️cache/staffage/<key>/<cast>` (`SEMIO_TEACHING_CACHE_ROOT` moves it). The key hashes the manifest
-  row, the asset's catalog file, the environment presets the cast names, and the exporter and schema sources and print profiles with LF line
-  endings, so it is the same on every platform. After a render, key folders no manifest cast maps to and abandoned `.tmp-*` folders older than
+- Cache: casts live in `.🧬semio/🎓️teaching/⚡️cache/staffage/<key>/<cast>/<level>-<revision>` (`SEMIO_TEACHING_CACHE_ROOT` moves it). The key hashes the manifest
+  row, the asset's catalog file, the environment presets the cast names, and the cast exporter closure (the exporter, everything it imports, its schema and levels file), the schema and the print profiles with LF line
+  endings (editing a module the exporter never imports re-keys nothing), so it is the same on every platform. After a render, key folders no manifest cast maps to and abandoned `.tmp-*` folders older than
   24 h are pruned; a cast another process is rendering is waited for, not rendered twice.
 - Cancellation: the exporter runs in its own process tree (job object on Windows, process group on POSIX). An exception, KeyboardInterrupt,
   SIGTERM or SIGHUP in the caller stops the tree (grace period, then kill), and the exporter's `--parent` watchdog covers a hard-killed caller.

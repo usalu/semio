@@ -206,7 +206,7 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
                          {"video_id": case["right"], "phase": "focus", "t": 0, "output": right}]
             pairs.append((left, right, case["path"]))
         requests += [{"video_id": CASES["boundaries"][-1]["left"], "phase": "restore", "t": 1, "output": work / "last.png"}]
-        settings = {"language": "de", "audience": "spectator", "resolution": "480,270", "fps": 4.0, "quality": "-ql"}
+        settings = {"language": "de", "audience": "spectator", "resolution": "480,270", "fps": 4.0, "profile": "preview"}
         measured = renderer.frame_batch(requests, settings)
         self.assertEqual(len(measured), len(requests))
         for request, result in zip(requests, measured, strict=True):
@@ -326,7 +326,7 @@ class ChapterMediaPortContract(unittest.TestCase):
                 container.mux(packet)
         collection = importlib.import_module(PACKAGE + ".📚️collection.🐍️")
         runtime = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
-        settings = {"language": "de", "audience": "spectator", "resolution": "480,270", "fps": 4.0, "quality": "-ql"}
+        settings = {"language": "de", "audience": "spectator", "resolution": "480,270", "fps": 4.0, "profile": "preview"}
         session = runtime.ToolSession()
         for expected in case["measurements"]:
             self.assertEqual(collection.body_frames(source, settings, work, session), expected)
@@ -411,7 +411,7 @@ class ChapterMediaPortContract(unittest.TestCase):
                 container.mux(packet)
         presentation = importlib.import_module(PACKAGE + ".🐍️")
         runtime = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
-        settings = {"language": "de", "audience": "spectator", "resolution": "480,270", "fps": 4.0, "quality": "-ql"}
+        settings = {"language": "de", "audience": "spectator", "resolution": "480,270", "fps": 4.0, "profile": "preview"}
         render_work = work / "render"
         render_work.mkdir()
 

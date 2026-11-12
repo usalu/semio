@@ -12,6 +12,7 @@ semio_color = _theme_module.color
 
 import numpy as np
 from manim import *
+_clock = importlib.import_module("🎓️teaching.🧰️interop.🕐️clock.🐍️")
 
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -83,6 +84,8 @@ tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -167,21 +170,20 @@ def _stream(path, rate, *, color, color_end=None, count: int = 5, speed: float =
         Ellipse(width=radius * 3.0, height=radius * 1.2, stroke_width=0) if streak else Dot(radius=radius, stroke_width=0)
         for _ in range(count)
     ])
-    state = {"phase": 0.0}
+    phase = _clock.rate_integral(speed)
 
-    def advance(group, dt):
+    def advance(group):
         value = float(rate.get_value())
-        state["phase"] = (state["phase"] + dt * speed * value) % 1.0
         show = float(np.clip(value * 5.0, 0.0, 1.0))
         for i, drop in enumerate(group):
-            t = (state["phase"] + i / count) % 1.0
+            t = (phase(value) + i / count) % 1.0
             drop.move_to(path.point_from_proportion(t))
             if streak:
                 tangent = path.point_from_proportion(min(1.0, t + 0.02)) - path.point_from_proportion(max(0.0, t - 0.02))
                 drop.set_angle(float(np.arctan2(tangent[1], tangent[0])))
             drop.set_fill(interpolate_color(start_c, end_c, t), opacity=show * min(1.0, t / 0.10, (1.0 - t) / 0.12))
 
-    advance(drops, 0.0)
+    advance(drops)
     drops.add_updater(advance)
     return drops
 
@@ -305,6 +307,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        morph_stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Why calculation and billing diverge", "Warum Rechnung und Abrechnung auseinanderlaufen"))
         din = _din_ref("DIN V 18599-10:2018-09")
@@ -530,8 +533,8 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         self.play(
             FadeOut(scenery), FadeOut(calc_lbl), FadeOut(meas_lbl),
             Create(axes["group"]), FadeIn(y_cap),
-            ReplacementTransform(calc_segs, x_seg),
-            ReplacementTransform(meas_frozen, y_seg),
+            morph_stage.transition("demand.practice.calculation.calculated-segments-to-axis", source=calc_segs, target=x_seg),
+            morph_stage.transition("demand.practice.calculation.measured-segments-to-axis", source=meas_frozen, target=y_seg),
             run_time=1.8,
         )
         self.play(Create(proj), FadeIn(me_dot, scale=0.4), run_time=1.4)
@@ -964,11 +967,10 @@ def _class_chip(letter, colour, at):
 def _gas_meter(center, rate):
     """⏱️ Handcrafted bellows gas meter on the house line — the test-dial pointer turns with the gas ``rate`` tracker by seeking through the ``run`` clip."""
     group = fitted_staffage("shared-gas-meter-run", width=0.50, height=0.60, rate=0.0).move_to(np.array(center, dtype=float))
-    turns = ValueTracker(0.0)
+    turns = _clock.rate_integral(0.25)
 
-    def turn(m, dt):
-        turns.increment_value(dt * 0.25 * float(rate.get_value()))
-        m.seek((turns.get_value() % 1.0) * GAS_METER_TURN_S)
+    def turn(m):
+        m.seek((turns(float(rate.get_value())) % 1.0) * GAS_METER_TURN_S)
 
     group.add_updater(turn)
     return group
@@ -1055,6 +1057,7 @@ class Beat3_SerienAbschluss(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        morph_stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The series in review", "Die Serie im Rückblick"))
         din = _din_ref("GEG · DIN V 18599:2018-09")
@@ -1169,7 +1172,7 @@ class Beat3_SerienAbschluss(Scene):
         self.play(FadeOut(tiles),
                   FadeOut(VGroup(lamp["group"], gauge["group"], gauge["column"], hs_vent["group"], hs_heat["group"], hs_cool["group"], sun_small,
                                  sun_beams["group"])),
-                  ReplacementTransform(hs_small["group"], hs["group"]), run_time=1.5)
+                  morph_stage.transition("demand.practice.series.small-house-to-balance-house", source=hs_small["group"], target=hs["group"]), run_time=1.5)
         self.play(FadeIn(rad), FadeIn(boiler), FadeIn(person), Create(cuts[0]), FadeIn(names[0]), *heat(1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "bilanz", during=heat)
 
@@ -1282,7 +1285,7 @@ class Beat3_SerienAbschluss(Scene):
         hold_for(self, self.NARRATION, "zahlen_wp")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zahlen_wp_buchstabe"))
-        self.play(TransformFromCopy(chip_gas, chip_wp), FadeIn(link_wp), FadeIn(tag_wp), run_time=1.6)
+        self.play(morph_stage.transition("demand.practice.series.gas-class-chip-to-heat-pump-chip", source=chip_gas, target=chip_wp), FadeIn(link_wp), FadeIn(tag_wp), run_time=1.6)
         hold_for(self, self.NARRATION, "zahlen_wp_buchstabe")
 
         ho = house_section(np.array([-3.0, -0.50, 0.0]), scale=0.95)

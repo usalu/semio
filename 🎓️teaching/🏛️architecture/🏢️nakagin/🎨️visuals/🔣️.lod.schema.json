@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:teaching/nakagin/visuals/lod",
+  "title": "Nakagin drawing detail per render-profile lod",
+  "description": "Maps the lod of the active render profile (full, preview, poster) to the geometric detail of tower drawings. towerSegments caps the authored corner segments of capsules (null keeps the authored value); coreAssembly is full or exterior (no interior circulation); templateEntries and templateFacets bound the in-memory whole-tower template cache (entries, and total facets of resident templates).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "lods"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "lods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["full", "preview", "poster"],
+      "properties": {
+        "full": { "$ref": "#/$defs/detail" },
+        "preview": { "$ref": "#/$defs/detail" },
+        "poster": { "$ref": "#/$defs/detail" }
+      }
+    }
+  },
+  "$defs": {
+    "detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["towerSegments", "coreAssembly", "templateEntries", "templateFacets"],
+      "properties": {
+        "towerSegments": { "type": ["integer", "null"], "minimum": 1 },
+        "coreAssembly": { "enum": ["full", "exterior"] },
+        "templateEntries": { "type": "integer", "minimum": 1 },
+        "templateFacets": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

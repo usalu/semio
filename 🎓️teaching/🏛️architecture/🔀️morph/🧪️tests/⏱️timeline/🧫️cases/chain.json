@@ -1,0 +1,48 @@
+{
+  "description": "Adjacent transitions: the later window owns every frame from its own first frame, so every frame from the first window on has exactly one owner. `owners` lists [frame, index, owner] triples.",
+  "cases": [
+    {
+      "name": "back to back (Manim sequential plays): no overlap, no gap",
+      "fps": 10, "origin": 0.0,
+      "windows": [ { "start": 0.0, "duration": 1.0 }, { "start": 1.0, "duration": 1.0 } ],
+      "links": [ { "index": 0, "f0": 0, "f1": 9, "until": 9, "terminalOwned": true }, { "index": 1, "f0": 10, "f1": 19, "until": null, "terminalOwned": true } ],
+      "owners": [ [0, 0, "source"], [8, 0, "source"], [9, 0, "target"], [10, 1, "source"], [18, 1, "source"], [19, 1, "target"], [40, 1, "target"] ],
+      "before": [ -1 ]
+    },
+    {
+      "name": "overlap: later window takes the earlier terminal frame, its source is the same object",
+      "fps": 15, "origin": 0.0,
+      "windows": [ { "start": 0.0, "duration": 0.4866666666666667 }, { "start": 0.4, "duration": 1.0 } ],
+      "links": [ { "index": 0, "f0": 0, "f1": 7, "until": 5, "terminalOwned": false }, { "index": 1, "f0": 6, "f1": 20, "until": null, "terminalOwned": true } ],
+      "owners": [ [5, 0, "source"], [6, 1, "source"], [7, 1, "source"], [20, 1, "target"] ]
+    },
+    {
+      "name": "adjacent windows partition the grid: the earlier target frame is its own, the later source starts on the next frame",
+      "fps": 15, "origin": 0.0,
+      "windows": [ { "start": 0.0, "duration": 0.4866666666666667 }, { "start": 0.4866666666666667, "duration": 1.0 } ],
+      "links": [ { "index": 0, "f0": 0, "f1": 7, "until": 7, "terminalOwned": true }, { "index": 1, "f0": 8, "f1": 22, "until": null, "terminalOwned": true } ],
+      "owners": [ [7, 0, "target"], [8, 1, "source"], [22, 1, "target"] ]
+    },
+    {
+      "name": "gap between windows keeps the earlier target",
+      "fps": 10, "origin": 0.0,
+      "windows": [ { "start": 0.0, "duration": 0.5 }, { "start": 2.0, "duration": 0.5 } ],
+      "links": [ { "index": 0, "f0": 0, "f1": 4, "until": 19, "terminalOwned": true }, { "index": 1, "f0": 20, "f1": 24, "until": null, "terminalOwned": true } ],
+      "owners": [ [4, 0, "target"], [12, 0, "target"], [19, 0, "target"], [20, 1, "source"], [24, 1, "target"] ]
+    },
+    {
+      "name": "zero-duration window between two animated ones switches atomically",
+      "fps": 10, "origin": 0.0,
+      "windows": [ { "start": 0.0, "duration": 0.5 }, { "start": 0.5, "duration": 0.0 }, { "start": 0.5, "duration": 0.5 } ],
+      "links": [ { "index": 0, "f0": 0, "f1": 4, "until": 4, "terminalOwned": true }, { "index": 1, "f0": 5, "f1": 5, "until": 4, "terminalOwned": false }, { "index": 2, "f0": 5, "f1": 9, "until": null, "terminalOwned": true } ],
+      "owners": [ [4, 0, "target"], [5, 2, "source"], [9, 2, "target"] ]
+    },
+    {
+      "name": "one-frame window in a chain",
+      "fps": 10, "origin": 0.0,
+      "windows": [ { "start": 0.0, "duration": 0.3 }, { "start": 0.3, "duration": 0.01 }, { "start": 0.4, "duration": 0.2 } ],
+      "links": [ { "index": 0, "f0": 0, "f1": 2, "until": 2, "terminalOwned": true }, { "index": 1, "f0": 3, "f1": 3, "until": 3, "terminalOwned": true }, { "index": 2, "f0": 4, "f1": 5, "until": null, "terminalOwned": true } ],
+      "owners": [ [2, 0, "target"], [3, 1, "target"], [4, 2, "source"], [5, 2, "target"] ]
+    }
+  ]
+}

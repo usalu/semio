@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canonical scene clock cases",
+  "type": "object",
+  "required": [
+    "counts",
+    "schedule",
+    "sequences"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "counts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "duration",
+          "fps",
+          "frames"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "duration": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "fps": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "frames": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "schedule": {
+      "type": "object",
+      "required": [
+        "fps",
+        "plays",
+        "skipFrom"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "fps": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "skipFrom": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "plays": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "duration",
+              "frames"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "play",
+                  "wait"
+                ]
+              },
+              "duration": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "frozen": {
+                "type": "boolean"
+              },
+              "frames": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "sequences": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "fps",
+          "durations",
+          "frames"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "fps": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "durations": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "frames": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "direct": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

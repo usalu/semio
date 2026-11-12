@@ -1,0 +1,26 @@
+{
+  "environment": {
+    "missing": { "env": {}, "message": "SEMIO_TEACHING_PROFILE" },
+    "unknown": { "env": { "SEMIO_TEACHING_PROFILE": "draft" }, "message": "Unknown render profile" },
+    "preview": { "env": { "SEMIO_TEACHING_PROFILE": "preview", "SEMIO_TEACHING_JOB": "job-a" }, "morph": "swap", "lod": "preview", "width": 854, "height": 480, "fps": 15 },
+    "final": { "env": { "SEMIO_TEACHING_PROFILE": "final", "SEMIO_TEACHING_JOB": "job-b", "SEMIO_TEACHING_FPS": "24", "SEMIO_TEACHING_RESOLUTION": "1280,720" }, "morph": "full", "lod": "full", "width": 1280, "height": 720, "fps": 24 }
+  },
+  "keys": [["staffage.mesh", "cast-1", "preview"], ["asset", 3], []],
+  "cache": {
+    "entries": { "max_entries": 2, "puts": ["a", "b", "c"], "kept": ["b", "c"] },
+    "bytes": { "max_entries": 10, "max_bytes": 5, "puts": [["a", 3], ["b", 3], ["c", 9]], "kept": ["b"] }
+  },
+  "cli": {
+    "missing_profile": ["--language", "de", "--no-play"],
+    "old_quality": ["--language", "de", "--quality", "l", "--no-play"],
+    "unknown_profile": ["--language", "de", "--profile", "draft", "--no-play"]
+  },
+  "density": [
+    { "budget": "particles", "authored": 5, "units": 8, "final": 5, "preview": 3 },
+    { "budget": "particles", "authored": 5, "units": 100, "final": 5, "preview": 1 },
+    { "budget": "particles", "authored": 5, "units": 2, "final": 5, "preview": 5 },
+    { "budget": "trails", "authored": 3, "units": 10, "final": 3, "preview": 1 },
+    { "budget": "trails", "authored": 3, "units": 2, "final": 3, "preview": 3 }
+  ],
+  "counts": { "calls": [["full.prepare", 1], ["preview.swap", 2], ["preview.swap", 3]], "expected": { "full.prepare": 1, "preview.swap": 5 } }
+}

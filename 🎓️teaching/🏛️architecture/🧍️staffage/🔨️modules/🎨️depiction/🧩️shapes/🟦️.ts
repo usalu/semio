@@ -99,6 +99,21 @@ export function prepare(state: EvaluatedState, viewpoint: PlanarViewpoint, sourc
   }));
 }
 
+/** 🧊️ The shapes a level of detail draws: those of the `roles`, plus, for every thermal region the roles would leave unpainted, its largest dropped shape, so a heatmap keeps every value it carries. Order and z order stay those of {@link prepare}. */
+export function selectRoles(shapes: readonly Prepared[], roles: readonly ShapeRole[]): Prepared[] {
+  const keep = new Set(shapes.filter((p) => roles.includes(p.shape.role)));
+  const painted = new Set([...keep].flatMap((p) => regionsOf(p.shape)));
+  const area = (p: Prepared): number => (p.box.maxX - p.box.minX) * (p.box.maxY - p.box.minY);
+  for (const p of [...shapes].sort((a, b) => area(b) - area(a))) {
+    if (keep.has(p)) continue;
+    const missing = regionsOf(p.shape).filter((region) => !painted.has(region));
+    if (missing.length === 0) continue;
+    keep.add(p);
+    for (const region of missing) painted.add(region);
+  }
+  return shapes.filter((p) => keep.has(p));
+}
+
 function hash(text: string): number {
   let h = 2166136261;
   for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619);

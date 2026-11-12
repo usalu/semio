@@ -10,6 +10,7 @@ import sys
 import unittest
 from unittest import mock
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 from manim import Camera, Dot, ReplacementTransform, Square, SurroundingRectangle, VGroup, tempconfig
@@ -84,10 +85,11 @@ class CoolingAnimationTest(unittest.TestCase):
         return module, building, scope
 
     def boundary(self, module, name, source, scope):
-        """▶️ Execute the actual authored freeze statements and original concurrent morph play."""
+        """▶️ Execute the actual authored freeze statements and the declarative concurrent morph play under the final profile."""
         body = self.construct(module, name)
-        index = next(index for index, node in enumerate(body.body) if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call) and any(isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == "ReplacementTransform" and call.args and isinstance(call.args[0], ast.Name) and call.args[0].id == source for call in ast.walk(node)))
-        nodes = [copy.deepcopy(node) for node in body.body[:index] if isinstance(node, ast.Expr) and any(isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == "freeze_drawables" for call in ast.walk(node))]
+        index = next(index for index, node in enumerate(body.body) if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call) and any(isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute) and call.func.attr == "transition" and any(keyword.arg == "source" and isinstance(keyword.value, ast.Name) and keyword.value.id == source for keyword in call.keywords) for call in ast.walk(node)))
+        nodes = [copy.deepcopy(node) for node in body.body[:index] if isinstance(node, ast.Assign) and any(isinstance(target, ast.Name) and target.id == "stage" for target in node.targets)]
+        nodes += [copy.deepcopy(node) for node in body.body[:index] if isinstance(node, ast.Expr) and any(isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == "freeze_drawables" for call in ast.walk(node))]
         nodes.append(copy.deepcopy(body.body[index]))
         drive = self.drive
 
@@ -100,7 +102,9 @@ class CoolingAnimationTest(unittest.TestCase):
                     drive(animation)
 
         namespace = {**vars(module), **scope, "self": Driver()}
-        exec(compile(ast.fix_missing_locations(ast.Module(body=nodes, type_ignores=[])), str(module.__file__), "exec"), namespace)
+        stage_module = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🎭️stage.🐍️")
+        with mock.patch.object(stage_module, "_profile", lambda: SimpleNamespace(morph="full", lod="final")):
+            exec(compile(ast.fix_missing_locations(ast.Module(body=nodes, type_ignores=[])), str(module.__file__), "exec"), namespace)
 
     def test_translucent_aliases_paint_once_and_root_points_keep_exact_pixels(self):
         """🔒 Preserve native alpha, layer order, root identity and independent point ownership."""

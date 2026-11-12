@@ -219,9 +219,9 @@
     "reusable_before": true,
     "reusable_after": false
   },
-  "interrupted_quality_switch": {
-    "previous_quality": "-ql",
-    "target_quality": "-qh",
+  "interrupted_profile_switch": {
+    "previous_profile": "preview",
+    "target_profile": "final",
     "completed_clip_reusable": true,
     "pending_clip_reusable": false
   },
@@ -307,7 +307,7 @@
     ]
   },
   "non_reusable_segment_render": {
-    "quality": "-ql",
+    "profile": "preview",
     "force": false,
     "sidecars": [
       "missing",

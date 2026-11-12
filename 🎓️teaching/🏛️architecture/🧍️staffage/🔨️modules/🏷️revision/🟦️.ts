@@ -7,6 +7,7 @@
  */
 import type { Asset, EnvironmentPreset } from "../../🧬️schema/🟦️.ts";
 import type { Cast, CastProvenance, CastScenario, Revision } from "../📤️export/🎭️cast/🧬️schema/🟦️.ts";
+import type { LodId } from "../📤️export/🎭️cast/🧊️lod/🟦️.ts";
 import * as portable from "../../../../../🧰️framework/🔨️modules/🧊️3d/🗿️model/🧮️math/🎯️portable/🟦️.ts";
 
 const PRIMES = Array.from({ length: 311 }, (_, n) => n + 2)
@@ -60,7 +61,7 @@ export const presetRevision = (preset: EnvironmentPreset): Revision => `sha256:$
 
 /** 🔖️ The provenance record of a cast: every dimension of the drawing named by the cast contract, with the asset and environment revisions. The exporter writes it into the index, the library browser shows the same record for what it draws.
  * @see ../📤️export/🎭️cast/🧬️schema/🟦️.ts — `CastProvenance` */
-export function castProvenance(cast: Cast, asset: Asset, revision: Revision, presets: ReadonlyMap<string, EnvironmentPreset>, clock: { readonly fps: number; readonly durationS: number; readonly loop: boolean; readonly frames: number }): CastProvenance {
+export function castProvenance(cast: Cast, asset: Asset, revision: Revision, presets: ReadonlyMap<string, EnvironmentPreset>, clock: { readonly fps: number; readonly durationS: number; readonly loop: boolean; readonly frames: number }, lod: { readonly id: LodId; readonly revision: string }): CastProvenance {
   const revisionOf = (slug: string): Revision => presetRevision(presets.get(slug)!);
   const thermal = { spanK: cast.thermalSpanK ?? null, transport: cast.transport ?? [] };
   const scenario: CastScenario =
@@ -78,6 +79,7 @@ export function castProvenance(cast: Cast, asset: Asset, revision: Revision, pre
     scale: { denominator: cast.scale },
     state: cast.clip !== undefined ? { kind: "clip", id: cast.clip } : { kind: "pose", id: cast.pose! },
     clock: { ...clock, offsetS: cast.clip !== undefined ? cast.transportAgeS ?? 0 : 0 },
+    lod: { id: lod.id, revision: lod.revision },
     scenario,
   };
 }

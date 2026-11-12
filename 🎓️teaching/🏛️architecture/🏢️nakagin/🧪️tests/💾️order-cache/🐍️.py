@@ -43,7 +43,7 @@ class OrderCache(unittest.TestCase):
         self.addCleanup(patch.stop)
         V._OCCLUSION_ORDERS.clear()
 
-    def files(self, suffix='.json'):
+    def files(self, suffix='.jsonl'):
         return sorted(V._order_directory().glob(f'*{suffix}')) if V._order_directory().is_dir() else []
 
     def test_cold_build_persists_and_warm_build_reuses_without_ordering(self):
@@ -51,8 +51,9 @@ class OrderCache(unittest.TestCase):
         cold = V._section_order(items, view)
         self.assertEqual(len(self.files()), C['expected']['files'])
         self.assertEqual(len(self.files('.tmp')), C['expected']['temporary_files'])
-        data = json.loads(self.files()[0].read_text(encoding='utf-8'))
-        self.assertEqual(any(not isinstance(row, int) for row in data['order']), C['expected']['fragmented'])
+        header, *rows = [json.loads(line) for line in self.files()[0].read_text(encoding='utf-8').splitlines()]
+        self.assertEqual(header['sources'], V._source_digest())
+        self.assertEqual(any(not isinstance(row, int) for row in rows), C['expected']['fragmented'])
         V._OCCLUSION_ORDERS.clear()
         with mock.patch.object(V._fragments, 'ordered_fragments', side_effect=AssertionError('ordering recomputed')):
             warm = V._section_order(items, view)
@@ -74,11 +75,11 @@ class OrderCache(unittest.TestCase):
         view, items = scene(C)
         expected = labels(V._section_order(items, view))
         path = self.files()[0]
-        for damage in ('{', json.dumps({'key': 'other', 'sources': V._source_digest(), 'order': []}), json.dumps({'key': path.stem, 'sources': 'stale', 'order': []})):
+        for damage in ('{', json.dumps({'key': 'other', 'sources': V._source_digest()}), json.dumps({'key': path.stem, 'sources': 'stale'})):
             path.write_text(damage, encoding='utf-8')
             V._OCCLUSION_ORDERS.clear()
             self.assertEqual(labels(V._section_order(items, view)), expected)
-            self.assertEqual(json.loads(path.read_text(encoding='utf-8'))['sources'], V._source_digest())
+            self.assertEqual(json.loads(path.read_text(encoding='utf-8').splitlines()[0])['sources'], V._source_digest())
 
     def test_failed_write_leaves_no_partial_entry(self):
         view, items = scene(C)
@@ -86,6 +87,35 @@ class OrderCache(unittest.TestCase):
             V._section_order(items, view)
         self.assertEqual(self.files(), [])
         self.assertEqual(self.files('.tmp'), [])
+
+    def test_orphans_age_and_bytes_are_pruned_and_streaming_matches_whole_document(self):
+        view, items = scene(C)
+        V._section_order(items, view)
+        live = self.files()[0]
+        directory = V._order_directory()
+        orphan = directory / ('0' * 12 + '-orphan.jsonl')
+        orphan.write_text('{}', encoding='utf-8')
+        stale = directory / '.leftover.1.tmp'
+        stale.write_text('x', encoding='utf-8')
+        os.utime(stale, (0, 0))
+        report = V._prune_orders()
+        self.assertEqual((report['orphans'], report['temporary']), (1, 1))
+        self.assertEqual(self.files(), [live])
+        rows = [json.loads(line) for line in live.read_text(encoding='utf-8').splitlines()[1:]]
+        self.assertEqual(json.loads(json.dumps(list(V._order_rows(V._order_recipes(rows))))), rows)
+        with mock.patch.object(V, '_ORDER_DISK_BYTES', 1):
+            report = V._prune_orders()
+        self.assertEqual((report['evicted'], self.files()), (1, []))
+
+    def test_source_digest_follows_source_changes_in_a_long_lived_process(self):
+        before = V._source_digest()
+        with mock.patch.object(V, 'source_files', return_value=(*V.source_files(), Path(self.directory.name) / 'extra.py')):
+            (Path(self.directory.name) / 'extra.py').write_text('1', encoding='utf-8')
+            changed = V._source_digest()
+            (Path(self.directory.name) / 'extra.py').write_text('22', encoding='utf-8')
+            self.assertNotEqual(V._source_digest(), changed)
+        self.assertNotEqual(before, changed)
+        self.assertEqual(V._source_digest(), before)
 
 
 if __name__ == '__main__':

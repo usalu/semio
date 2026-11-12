@@ -64,6 +64,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 label_number = _manim_module.label_number
 load_vo_timing = _manim_module.load_vo_timing
 begin_vo_beat = _manim_module.begin_vo_beat
@@ -108,7 +110,7 @@ def _panel(parts, *, color: str = P_PRIMARY, size: float = FORMULA_FONT_SIZE):
     return row, box, items
 
 
-def _fill_panel(scene, panel, sources, *, run_time: float = 1.2, fly: bool = True):
+def _fill_panel(scene, stage, prefix, panel, sources, *, run_time: float = 1.2, fly: bool = True):
     """🧲 Bring source values into their empty panel slots first, then reveal the rest of the formula and its box.
 
     ``fly`` morphs a copy along a clear path; without it the source pulses while its slot appears in the
@@ -123,7 +125,7 @@ def _fill_panel(scene, panel, sources, *, run_time: float = 1.2, fly: bool = Tru
             for part in copy.get_family():
                 part._layout_zone = "formula"
         scene.play(*[copies[key].animate.move_to(items[key]) for key in sources], run_time=run_time * 0.7)
-        scene.play(*[FadeTransform(copies[key], items[key]) for key in sources], run_time=run_time * 0.4)
+        scene.play(*[stage.transition(f"{prefix}.{key}", source=copies[key], target=items[key]) for key in sources], run_time=run_time * 0.4)
     else:
         scene.play(*[Indicate(src, scale_factor=1.15) for src in sources.values()],
                    *[FadeIn(items[key], scale=1.3) for key in sources], run_time=run_time)
@@ -617,6 +619,7 @@ class Beat1_Leistung(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
         subtitle = section_heading(tr("Power — how fast energy flows", "Leistung — wie schnell Energie fließt"))
@@ -630,7 +633,7 @@ class Beat1_Leistung(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "unit"))
         unit_definition = _m(r"1\,\mathrm{W} = 1\,\frac{\mathrm{J}}{\mathrm{s}}\quad\quad 1\,\mathrm{kW} = 1\,000\,\mathrm{W}",
                              size=FORMULA_FONT_SIZE, color=P_CYAN)
-        self.play(ReplacementTransform(power_unit, unit_definition), run_time=0.8)
+        self.play(stage.transition("physics.fundamentals.unit.watt-name-to-definition", source=power_unit, target=unit_definition), run_time=0.8)
         hold_for(self, N, "unit")
         self.play(FadeOut(unit_definition), run_time=0.4)
 
@@ -672,7 +675,7 @@ class Beat1_Leistung(Scene):
         self.remove(tank["group"], tank["fill"])
         self.add(tank_static)
         self.play(FadeIn(ax["group"]), FadeIn(t_ticks), FadeIn(p_ticks), FadeIn(t_lbls), FadeIn(p_lbls),
-                  ReplacementTransform(tank_static, target), tank_lbl.animate.move_to(pt(0.5, 0.5)), run_time=1.4)
+                  stage.transition("physics.fundamentals.power.tank-to-area", source=tank_static, target=target), tank_lbl.animate.move_to(pt(0.5, 0.5)), run_time=1.4)
         self.remove(target)
         self.add(rect)
         self.bring_to_front(tank_lbl)
@@ -710,15 +713,19 @@ class Beat1_Leistung(Scene):
         locked["on"] = True
         kettle_icon = _fitted_staffage("physics-fundamentals-kettle", width=0.8, height=0.6, rate=0.0, window=(-0.12, 0.0, 0.13, 0.25)).move_to(np.array([4.8, 1.95, 0.0]))
         shower_icon = _fitted_staffage("physics-fundamentals-shower", width=0.8, height=0.6, rate=0.0, window=(-0.02, 0.5, 0.24, 0.83)).move_to(np.array([4.8, 1.95, 0.0]))
-        self.play(Transform(name, Text(tr("Kettle", "Wasserkocher"), font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(name)),
+        kettle_name = Text(tr("Kettle", "Wasserkocher"), font_size=BODY_FONT_SIZE, color=P_ORANGE).move_to(name)
+        self.play(stage.transition("physics.fundamentals.devices.vacuum-to-kettle-name", source=name, target=kettle_name),
                   FadeOut(device_icon), FadeIn(kettle_icon), run_time=0.5)
+        name = kettle_name
         cursor_click(self, power_control, lambda: (setattr(kettle_icon, "rate", KETTLE_RATE), self.play(P.animate.set_value(2.0), run_time=2.2)),
                      parents=(device_frame,), role="device")
         hold_for(self, N, "kettle")
 
         caption = swap_caption(self, caption, subtitle_text(N, "shower"))
-        self.play(Transform(name, Text(tr("Shower (instantaneous heater)", "Dusche (Durchlauferhitzer)"), font_size=BODY_FONT_SIZE,
-                                       color=P_CYAN).move_to(name)), FadeOut(kettle_icon), FadeIn(shower_icon), run_time=0.5)
+        shower_name = Text(tr("Shower (instantaneous heater)", "Dusche (Durchlauferhitzer)"), font_size=BODY_FONT_SIZE,
+                           color=P_CYAN).move_to(name)
+        self.play(stage.transition("physics.fundamentals.devices.kettle-to-shower-name", source=name, target=shower_name), FadeOut(kettle_icon), FadeIn(shower_icon), run_time=0.5)
+        name = shower_name
         cursor_click(self, power_control,
                      lambda: (setattr(shower_icon, "rate", SHOWER_RATE), self.play(P.animate.set_value(20.0), run_time=2.6, rate_func=rate_functions.ease_in_out_sine)),
                      parents=(device_frame,), role="device")
@@ -762,9 +769,9 @@ class Beat1_Leistung(Scene):
         w_panel = _panel([
             (None, r"1\,\mathrm{W}", P_CYAN), (None, "=", P_WHITE), (None, r"1\,\frac{\mathrm{J}}{\mathrm{s}}", P_YELLOW),
         ])
-        self.play(ReplacementTransform(ax["xl"], new_xl), ReplacementTransform(ax["yl"], new_yl),
-                  ReplacementTransform(t_lbls, new_t), ReplacementTransform(p_lbls, new_p),
-                  ReplacementTransform(h_lbl, new_h), ReplacementTransform(v_lbl, new_v), run_time=1.2)
+        self.play(stage.transition("physics.fundamentals.watt.x-label", source=ax["xl"], target=new_xl), stage.transition("physics.fundamentals.watt.y-label", source=ax["yl"], target=new_yl),
+                  stage.transition("physics.fundamentals.watt.time-ticks", source=t_lbls, target=new_t), stage.transition("physics.fundamentals.watt.power-ticks", source=p_lbls, target=new_p),
+                  stage.transition("physics.fundamentals.watt.time-brace", source=h_lbl, target=new_h), stage.transition("physics.fundamentals.watt.power-brace", source=v_lbl, target=new_v), run_time=1.2)
         _swap_panel(self, (row, box), w_panel[:2])
         hold_for(self, N, "watt")
 
@@ -870,7 +877,7 @@ class Beat1_Leistung(Scene):
         self.play(sweep.animate.set_value(365), run_time=4.0, rate_func=linear)
         year_lbl = _m(tr(r"\text{Heating demand} \approx 15\,000\,\mathrm{kWh/a}", r"\text{Heizwärmebedarf} \approx 15\,000\,\mathrm{kWh/a}"), ypt(200, 6.2), color=P_CYAN,
                       edge="left")
-        self.play(ReplacementTransform(q_read, year_lbl), run_time=0.6)
+        self.play(stage.transition("physics.fundamentals.demand.readout-to-year", source=q_read, target=year_lbl), run_time=0.6)
         hold_for(self, N, "demand")
 
         caption = swap_caption(self, caption, subtitle_text(N, "summer"))
@@ -945,6 +952,7 @@ class Beat2_EnergieImAlltag(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
         subtitle = section_heading(tr("Work and energy — the kilowatt-hour", "Arbeit und Energie — die Kilowattstunde"))
@@ -1011,8 +1019,9 @@ class Beat2_EnergieImAlltag(Scene):
         _place(h_target, np.array([kw.get_right()[0] + 0.07, kw.base.get_center()[1], 0.0]), "left")
         shift = h_target.width + 0.09
         wide = _cloud(Rectangle(width=said.width + shift, height=said.height).move_to(said).shift(RIGHT * shift / 2))
-        self.play(said_items["v"].animate.shift(RIGHT * shift), kw.animate.set_color(P_CYAN), Transform(cloud, wide),
+        self.play(said_items["v"].animate.shift(RIGHT * shift), kw.animate.set_color(P_CYAN), stage.transition("physics.fundamentals.said.cloud-widens", source=cloud, target=wide),
                   run_time=0.7)
+        cloud = wide
         self.play(h_glyph.animate.move_to(np.array([h_target.get_center()[0],
                                                     cloud.get_top()[1] + h_glyph.height / 2 + 0.15, 0.0])),
                   run_time=0.7)
@@ -1030,7 +1039,7 @@ class Beat2_EnergieImAlltag(Scene):
         ])
         row, box, items = panel
         self.play(FadeOut(person), FadeOut(bubble), run_time=0.5)
-        _fill_panel(self, panel, {"kw": kw, "h": h_glyph})
+        _fill_panel(self, stage, "physics.fundamentals.said.fly", panel, {"kw": kw, "h": h_glyph})
         hold_for(self, N, "product")
 
         caption = swap_caption(self, caption, subtitle_text(N, "vacuum"))
@@ -1126,7 +1135,7 @@ class Beat2_EnergieImAlltag(Scene):
         ])
         self.play(FadeOut(row), FadeOut(box), FadeOut(floor), run_time=0.4)
         h_row, h_box, h_items = heat_panel
-        _fill_panel(self, heat_panel, {"m": litre_read, "dt": temp_read})
+        _fill_panel(self, stage, "physics.fundamentals.heat.fly", heat_panel, {"m": litre_read, "dt": temp_read})
         self.play(Indicate(h_items["res"], color=P_ORANGE), run_time=0.9)
         hold_for(self, N, "heat")
 
@@ -1177,7 +1186,7 @@ class Beat2_EnergieImAlltag(Scene):
         tank_static = VGroup(tank["frame"].copy(), tank["cap"].copy())
         self.remove(tank["group"], tank["fill"])
         self.add(tank_static)
-        self.play(Create(ladder["axis"]), FadeIn(ladder["ticks"]), ReplacementTransform(tank_static, dots[1]),
+        self.play(Create(ladder["axis"]), FadeIn(ladder["ticks"]), stage.transition("physics.fundamentals.zeros.tank-to-dot", source=tank_static, target=dots[1]),
                   run_time=1.2)
         _reveal_zeros(self, ladder)
         hold_for(self, N, "zeros")
@@ -1285,7 +1294,7 @@ class Beat2_EnergieImAlltag(Scene):
         self.play(Indicate(win_hi["sash"], color=P_YELLOW, scale_factor=1.0),
                   LaggedStart(*[Create(r) for r in rays["in"]], lag_ratio=0.25), run_time=0.8)
         self.play(FadeIn(sun_patch, scale=0.6), run_time=0.4)
-        self.play(ReplacementTransform(house2["level_1"].copy(), slab), FadeIn(right_tags[0]),
+        self.play(stage.transition("physics.fundamentals.house.slab-from-level", source=house2["level_1"], target=slab), FadeIn(right_tags[0]),
                   Create(right_leaders[0]), sun_patch.animate.set_stroke(color=P_ORANGE, opacity=0.9), run_time=1.0)
         self.play(_open_window(win_lo), FadeIn(left_tags[1]), Create(left_leaders[1]), run_time=0.9)
         self.play(FadeIn(guides), run_time=0.4)
@@ -1347,6 +1356,7 @@ class Beat3_Energieerhaltung(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
         subtitle = section_heading(tr("Energy is conserved — every watt becomes heat", "Energie bleibt erhalten — jedes Watt wird Wärme"))
@@ -1402,12 +1412,12 @@ class Beat3_Energieerhaltung(Scene):
         self.play(GrowFromCenter(form_brace), FadeIn(form_sum), run_time=1.0)
         _paced_flow(self, [([law_cable], P_CYAN, None, None, False)], run_time=2.0, waves=3, cycles=1.5, radius=0.045)
         self.play(FadeOut(form_lbls[0]), run_time=0.5)
-        self.play(ReplacementTransform(forms[0], forms[1], rate_func=linear), FadeIn(law_glow, scale=0.4),
+        self.play(stage.transition("physics.fundamentals.law.sum-to-heat", source=forms[0], target=forms[1]), FadeIn(law_glow, scale=0.4),
                   LaggedStart(*[Create(r) for r in law_rays], lag_ratio=0.2), law_heat(4.0), run_time=4.0)
         self.play(FadeIn(form_lbls[1]), run_time=0.7)
         self.play(law_heat(2.5), run_time=2.5)
         self.play(FadeOut(form_lbls[1]), run_time=0.5)
-        self.play(ReplacementTransform(forms[1], forms[2], rate_func=linear), law_rays.animate.set_color(P_ORANGE),
+        self.play(stage.transition("physics.fundamentals.law.heat-to-room", source=forms[1], target=forms[2]), law_rays.animate.set_color(P_ORANGE),
                   LaggedStart(*[Flash(r.get_end(), color=P_ORANGE, flash_radius=0.18, line_length=0.12)
                                 for r in law_rays], lag_ratio=0.3),
                   room["air"].animate.set_fill(P_RED, opacity=0.1), law_heat(4.0), run_time=4.0)
@@ -1553,7 +1563,7 @@ class Beat3_Energieerhaltung(Scene):
         light_heat = _m(rf"\text{{{tr('Light', 'Licht')}}} \to \text{{{tr('Heat', 'Wärme')}}}\;3\,\mathrm{{W}}", np.array([lane_x0, top_y + 0.22, 0.0]),
                         size=LABEL_FONT_SIZE, color=P_RED, edge="left")
         self.play(merged_light.animate.set_fill(P_RED, opacity=0.45), FadeOut(light_rays),
-                  ReplacementTransform(light_read, light_heat), run_time=1.0)
+                  stage.transition("physics.fundamentals.absorb.light-to-heat", source=light_read, target=light_heat), run_time=1.0)
         hold_for(self, N, "absorb")
 
         caption = swap_caption(self, caption, subtitle_text(N, "total"))
@@ -1708,6 +1718,7 @@ class Beat4_Waermepumpe(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
         subtitle = section_heading(tr("Heat pump — lifting energy to a higher temperature level", "Wärmepumpe — Energie auf höheres Temperaturniveau übertragen"))
@@ -1844,7 +1855,7 @@ class Beat4_Waermepumpe(Scene):
                               size=LABEL_FONT_SIZE, color=P_CYAN, edge="center")
         _reveal(self, count_read)
         for k in range(4):
-            self.play(TransformFromCopy(w_bar, tower[k]), count.animate.set_value(k + 1), run_time=0.45)
+            self.play(stage.transition("physics.fundamentals.cop.bar-copy", source=w_bar, target=tower[k]), count.animate.set_value(k + 1), run_time=0.45)
         row, box, items = _panel([
             (None, r"\mathrm{COP}", P_PRIMARY), (None, "=", P_WHITE),
             ("f", r"\frac{\textcolor{semio_primary}{Q_{\mathrm{H}}}}{\textcolor{semio_secondary}{W_{\mathrm{el}}}}".replace("semio_primary", semio_color("primary")).replace("semio_secondary", semio_color("secondary")), P_WHITE),
@@ -2052,6 +2063,7 @@ class Beat5_Strahlung(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
         subtitle = section_heading(tr("Radiation — shortwave in, longwave trapped", "Strahlung — kurzwellig hinein, langwellig gefangen"))
@@ -2129,7 +2141,7 @@ class Beat5_Strahlung(Scene):
             ("av", tr(r"1.5\,\mathrm{m^{2}}", r"1{,}5\,\mathrm{m^{2}}"), P_CYAN), (None, r"\cdot", P_WHITE),
             ("iv", r"500\,\mathrm{W/m^{2}}", P_YELLOW), (None, "=", P_WHITE), ("r", r"375\,\mathrm{W}", P_ORANGE),
         ])
-        _fill_panel(self, (row, box, items), {"gv": g_lbl, "av": a_read, "iv": i_lbl}, fly=False)
+        _fill_panel(self, stage, "physics.fundamentals.gain.fly", (row, box, items), {"gv": g_lbl, "av": a_read, "iv": i_lbl}, fly=False)
         hold_for(self, N, "gain")
 
         surface_heat = {key: room[key].copy().set_fill(P_ORANGE, opacity=0) for key in ("floor", "wall_lo", "wall_hi")}
@@ -2232,7 +2244,7 @@ class Beat5_Strahlung(Scene):
         self.play(FadeOut(radiator), FadeOut(need_read), FadeOut(lowe_lbl), FadeOut(lowe_leader), FadeOut(plain_lbl), FadeOut(plain_leader),
                   run_time=0.4)
         self.play(FadeIn(blind_group, shift=DOWN * 0.25), FadeIn(blind_lbl), run_time=1.2)
-        self.play(ReplacementTransform(beams_out, stopped), shaft.animate.set_fill(opacity=0.03), FadeOut(patch),
+        self.play(stage.transition("physics.fundamentals.shade.beams-stopped", source=beams_out, target=stopped), shaft.animate.set_fill(opacity=0.03), FadeOut(patch),
                   t_room.animate.set_value(22.0), room["air"].animate.set_fill(P_RED, opacity=0.04),
                   surface_heat["floor"].animate.set_fill(opacity=0),
                   surface_heat["wall_lo"].animate.set_fill(opacity=0),
@@ -2328,6 +2340,7 @@ class Beat6_ThermischeMasse(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
         subtitle = section_heading(tr("Thermal mass — store and release with a delay", "Thermische Masse — speichern und zeitversetzt abgeben"))
@@ -2416,9 +2429,9 @@ class Beat6_ThermischeMasse(Scene):
             lambda: rf"{int(n_tiles.get_value())}\,\mathrm{{m^{{2}}}} \cdot {label_number(0.133, 3)}\,\mathrm{{kWh}} = "
                     rf"{label_number(0.1333 * n_tiles.get_value(), 1)}\,\mathrm{{kWh}}",
             np.array([col_x, rows[1], 0.0]), color=P_YELLOW)
-        self.play(ReplacementTransform(slab, tiles[0]), FadeOut(kwh_read), run_time=1.0)
+        self.play(stage.transition("physics.fundamentals.tiles.slab-to-first", source=slab, target=tiles[0]), FadeOut(kwh_read), run_time=1.0)
         _reveal(self, total_read)
-        self.play(LaggedStart(*[TransformFromCopy(tiles[0], t) for t in tiles[1:]], lag_ratio=0.08),
+        self.play(stage.transition("physics.fundamentals.tiles.first-to-grid", source=[tiles[0]], target=list(tiles[1:])),
                   n_tiles.animate.set_value(20), GrowFromCenter(g_w), FadeIn(g_w_lbl), GrowFromCenter(g_h),
                   FadeIn(g_h_lbl), run_time=2.4)
         vac = _vacuum().scale(0.8)
@@ -2619,7 +2632,7 @@ class Beat6_ThermischeMasse(Scene):
                               np.array([big["center"][0] + 0.5, big["y_c"] - 0.15 - dy, 0.0]),
                               np.array([gx + 0.25, hi - 0.1 - dy, 0.0]), np.array([gx - 1.2, hi + 0.25 - dy, 0.0])])
                  for dy in (0.0, 0.12)]
-        self.play(ReplacementTransform(sun, moon), _open_window(night_window, tilt=True), FadeOut(day_flux), run_time=0.9)
+        self.play(stage.transition("physics.fundamentals.night.sun-to-moon", source=sun, target=moon), _open_window(night_window, tilt=True), FadeOut(day_flux), run_time=0.9)
         purge_guide = flow_guides(purge[:1], P_CYAN, opacity=0.18)
         self.play(FadeIn(purge_guide), run_time=0.3)
         animate_flows(self, [(purge, P_BLUE, P_ORANGE)], run_time=3.0, waves=6, cycles=2.0, radius=0.06,
@@ -2634,7 +2647,7 @@ class Beat6_ThermischeMasse(Scene):
         patch = Line(lands[0], lands[-1], color=P_RED, stroke_width=6, stroke_opacity=0.4)
         floor_lbl = Text(tr("The floor warms up too", "Boden erwärmt sich auch"), font_size=LABEL_FONT_SIZE, color=P_RED).move_to(
             np.array([(lands[0][0] + lands[-1][0]) / 2, big["y_f"] - big["slab"] - 0.3, 0.0]))
-        self.play(ReplacementTransform(moon, sun2), _open_window(night_window, close=True), FadeOut(purge_guide),
+        self.play(stage.transition("physics.fundamentals.night.moon-to-sun", source=moon, target=sun2), _open_window(night_window, close=True), FadeOut(purge_guide),
                   run_time=0.8)
         self.play(_shine(winter_rays), run_time=1.2)
         self.play(FadeIn(patch, scale=0.6), run_time=0.3)
@@ -2642,7 +2655,7 @@ class Beat6_ThermischeMasse(Scene):
                   ceil_fill.animate.set_value(0.75), t_ceil.animate.set_value(24.0),
                   floor_heat.animate.set_fill(opacity=0.5), FadeIn(floor_lbl), run_time=2.0)
         evening = _moon(sky_pos)
-        self.play(ReplacementTransform(sun2, evening), FadeOut(winter_rays["group"]), FadeOut(patch), FadeOut(floor_lbl),
+        self.play(stage.transition("physics.fundamentals.night.sun-to-evening", source=sun2, target=evening), FadeOut(winter_rays["group"]), FadeOut(patch), FadeOut(floor_lbl),
                   floor_heat.animate.set_fill(opacity=0), run_time=0.7)
         self.play(_ripples(emit, r_max=1.1, color=P_ORANGE, down=True), ceil_fill.animate.set_value(0.3),
                   t_ceil.animate.set_value(22.0), run_time=2.4)
@@ -2709,6 +2722,7 @@ class Beat7_SensibelLatent(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
         subtitle = section_heading(tr("Sensible and latent heat", "Sensible und latente Wärme"))
@@ -2913,7 +2927,7 @@ class Beat7_SensibelLatent(Scene):
         drops = VGroup(*[droplet(sp) for sp in spots])
         drop_tag = Text(tr("Droplets", "Tropfen"), font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(
             np.array([surf_x - 0.75, box_c[1] + air_box.height / 2 + 0.3, 0.0]))
-        self.play(*[ReplacementTransform(m, d) for m, d in zip(movers, drops)], FadeIn(drop_tag), FadeIn(trough),
+        self.play(stage.transition("physics.fundamentals.condensation.movers-to-drops", source=movers, target=drops), FadeIn(drop_tag), FadeIn(trough),
                   FadeIn(cond_read), run_time=0.8)
         self.add(trough_fill)
         self.play(LaggedStart(*[d.animate.scale(1.9) for d in drops], lag_ratio=0.3), run_time=2.0)

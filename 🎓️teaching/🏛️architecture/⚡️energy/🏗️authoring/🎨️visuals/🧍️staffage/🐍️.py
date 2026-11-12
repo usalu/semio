@@ -1,16 +1,20 @@
 """🧍 Handcrafted staffage casts as Manim mobjects: the course draws people, furniture, devices and building parts only from the staffage archive.
 
 A cast is a named, figure-only rendering listed in `🔣️.json`. The TypeScript exporter renders missing casts in one batch into a content-addressed cache,
-and this module turns the frames into transformed VGroups with the world origin on `anchor` and `unit` Manim units per metre.
+one folder per level of detail (`full`, `preview`, `poster`), and this module turns the frames into transformed VGroups with the world origin on `anchor` and `unit` Manim units per metre.
+`resolve` is the one entry that selects the level before anything is decoded: the level comes from the render profile (`lod_scope` for explicit callers), never from a clip.
 
 @see ../../../../🧍️staffage/🔨️modules/📤️export/🎭️cast/🟦️.ts — the cast exporter
 @see ../../../../🧍️staffage/🔨️modules/📤️export/🎭️cast/🧬️schema/🔣️.schema.json — the manifest schema
+@see ../../../../🧍️staffage/🔨️modules/📤️export/🎭️cast/🧊️lod/🔣️.json — the levels of detail
 """
 
 from __future__ import annotations
 
 import contextlib
+import importlib
 import errno
+import functools
 import hashlib
 import ast
 import json
@@ -26,7 +30,7 @@ import uuid
 from collections import OrderedDict
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, NamedTuple
+from typing import Callable, Iterator, NamedTuple
 
 import numpy as np
 from manim import ORIGIN, VectorizedPoint, VGroup, VMobject
@@ -34,6 +38,9 @@ from manim import ORIGIN, VectorizedPoint, VGroup, VMobject
 _WORKSPACE = next(path for path in Path(__file__).resolve().parents if (path / "🧰️framework").is_dir())
 _SOURCES = _WORKSPACE / "🎓️teaching/🏛️architecture/🧍️staffage"
 _EXPORTER = _SOURCES / "🔨️modules/📤️export/🎭️cast/🟦️.ts"
+_LEVELS_FILE = _EXPORTER.with_name("🧊️lod") / "🔣️.json"
+_PROFILE = "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🐍️"
+_INSTRUMENT = "🎓️teaching.🏛️architecture.🔀️morph.📊️instrument.🐍️"
 _MANIFEST = Path(__file__).with_name("🔣️.json")
 _INDEX = "🔣️.json"
 _VIEWPOINTS = ("elevation", "front", "plan", "axonometric")
@@ -49,15 +56,15 @@ _PUBLISH_PAUSE = 0.05
 _PRUNE_AGE_S = 24 * 3600
 _WAIT_POLL_S = 0.1
 _WAIT_REPORT_S = 1.0
+_FRESH_S = 2.0
+_WAIT_TIMEOUT_S = 900.0
+_EXPORT_TIMEOUT_S = 3600.0
 _CONTENDED = frozenset({errno.EACCES, errno.EAGAIN, errno.EWOULDBLOCK, errno.EDEADLK, getattr(errno, "EDEADLOCK", errno.EDEADLK)})
 _STROKE_UNIT = 0.01
-_MIN_STROKE = 1.0
+_IMPORT = re.compile(r"""(?:from|import)\s*\(?\s*["']([.][^"']+)["']""")
 _LINE_SUFFIX = "-line"
 _GROUP_MATRIX = re.compile(r'<g id="staffage-cast" transform="matrix\(([^)]*)\)')
 _GROUP_TRANSLATE = re.compile(r'<g id="staffage-cast" transform="translate\(([^)]*)\)')
-_SHAPE = re.compile(r'<g id="shape-([^"]+)"[^>]*>\s*(?:<title>[^<]*</title>\s*)?<path d="([^"]+)"')
-_COMMAND = re.compile(r"([MLHVZmlhvz])([^MLHVZmlhvz]*)")
-_NUMBER = re.compile(r"-?\d*\.?\d+(?:e-?\d+)?")
 _PATH = re.compile(r"<path\b([^>]*?)/?>")
 _ATTRIBUTE = re.compile(r'([\w:-]+)="([^"]*)"')
 _PATH_COMMAND = re.compile(r"([A-Za-z])([^A-Za-z]*)")
@@ -65,7 +72,7 @@ _PATH_NUMBER = re.compile(r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?")
 _CLOSE_TOLERANCE = 1e-4
 _FRAME_CACHE = 256
 _FRAMES: OrderedDict[tuple[str, int, int], "_Frame"] = OrderedDict()
-_SLOT_COUNTS: dict[Path, int] = {}
+_SCOPE: list["ResolvedLod"] = []
 _INDEXES: dict[Path, dict] = {}
 _CHECKED: set[Path] = set()
 _MANIFESTS: dict[Path, tuple[int, dict]] = {}
@@ -111,12 +118,50 @@ def _entry(cast: str) -> dict:
     return casts[cast]
 
 
-@lru_cache(maxsize=None)
+def _imports(root: Path) -> set[Path]:
+    """🕸️ The files the cast exporter reaches through relative imports, transitively: the evaluation, depiction, thermal, transport and structure code it runs, and nothing it never loads (DXF, PDF, video, ZIP, sheets, the command line)."""
+    start = root / "🔨️modules/📤️export/🎭️cast/🟦️.ts"
+    seen: set[Path] = set()
+    stack = [start]
+    while stack:
+        file = stack.pop()
+        if file in seen or not file.is_file():
+            continue
+        seen.add(file)
+        if file.suffix == ".ts":
+            stack.extend(Path(os.path.normpath(file.parent / name)) for name in _IMPORT.findall(file.read_text(encoding="utf-8")))
+    return seen
+
+
+def _fresh(entries: int, seconds: float = _FRESH_S):
+    """⏳ Memoise a function of its arguments for at most `seconds` and `entries` results, so a long-lived editor or render process sees an edited source within seconds instead of serving a digest from its first call forever; `.cache_clear()` drops everything at once."""
+    def decorate(function):
+        found: OrderedDict = OrderedDict()
+
+        @functools.wraps(function)
+        def call(*arguments):
+            hit = found.get(arguments)
+            if hit is not None and time.monotonic() - hit[0] < seconds:
+                found.move_to_end(arguments)
+                return hit[1]
+            value = function(*arguments)
+            found[arguments] = (time.monotonic(), value)
+            while len(found) > entries:
+                found.popitem(last=False)
+            return value
+
+        call.cache_clear = found.clear
+        return call
+    return decorate
+
+
+@_fresh(4)
 def _source_digest(root: Path = _SOURCES) -> str:
-    """🔐 Hash every exporter and schema source file and the bundled print profiles once per provenance checkpoint, in path order."""
+    """🔐 Hash the cast dependency closure (the exporter, everything it imports, its schema and level files), the staffage schema and the bundled print profiles once per provenance checkpoint, in path order; editing a module the exporter never loads leaves every cast key unchanged."""
     digest = hashlib.sha256()
-    files = sorted([file for folder in ("🔨️modules", "🧬️schema") for file in (root / folder).rglob("*") if file.is_file() and "node_modules" not in file.parts]
-                   + [root / name for name in _BUNDLED if (root / name).is_file()], key=lambda file: file.relative_to(root).as_posix())
+    owned = root / "🔨️modules/📤️export/🎭️cast"
+    files = sorted({*_imports(root), *(file for folder in (owned, root / "🧬️schema") if folder.is_dir() for file in folder.rglob("*") if file.is_file() and "node_modules" not in file.parts),
+                    *(root / name for name in _BUNDLED if (root / name).is_file())}, key=lambda file: file.relative_to(root).as_posix())
     for file in files:
         digest.update(file.relative_to(root).as_posix().encode("utf-8") + b"\0" + _lf(file.read_bytes()) + b"\0")
     return digest.hexdigest()
@@ -127,7 +172,7 @@ def _lf(data: bytes) -> bytes:
     return data.replace(b"\r\n", b"\n")
 
 
-@lru_cache(maxsize=None)
+@_fresh(512)
 def _catalog_bytes(slug: str, root: Path = _SOURCES) -> bytes:
     """🗂️ Read the catalog file of an asset, with LF line endings."""
     matches = sorted((root / "🗂️catalog").glob(f"*/{slug}/{_INDEX}"), key=lambda file: file.as_posix())
@@ -136,7 +181,7 @@ def _catalog_bytes(slug: str, root: Path = _SOURCES) -> bytes:
     return _lf(matches[0].read_bytes())
 
 
-@lru_cache(maxsize=None)
+@_fresh(4)
 def _presets(root: Path = _SOURCES) -> dict[str, dict]:
     """🌤️ Read the environment presets by id once per provenance checkpoint."""
     return {preset["id"]: preset for file in sorted((root / "🗂️catalog").glob(f"*environments*/{_INDEX}")) for preset in json.loads(file.read_text(encoding="utf-8"))["presets"]}
@@ -274,6 +319,73 @@ def entry_issues(entry, path: str = "cast") -> list[str]:
     return issues
 
 
+class ResolvedLod(NamedTuple):
+    """🧊 A level of detail with the output frame rate of the job applied: the exact parameters a cached cast was drawn with; `revision` is eight hex digits of their canonical-JSON hash, the twin of `resolveLod`."""
+
+    id: str
+    level: dict
+    fps_cap: float | None
+    revision: str
+
+
+@lru_cache(maxsize=None)
+def _levels() -> dict:
+    """🧊 Read the levels file shared with the TypeScript exporter."""
+    return json.loads(_LEVELS_FILE.read_text(encoding="utf-8"))["levels"]
+
+
+def lod_level(lod: str, output_fps: float) -> ResolvedLod:
+    """🧊 Resolve a level id for a job that outputs `output_fps` frames per second; an unknown level or rate raises an actionable error."""
+    levels = _levels()
+    if lod not in levels:
+        raise ValueError(f"unknown level of detail {lod!r}; levels: {', '.join(levels)}")
+    if isinstance(output_fps, bool) or not isinstance(output_fps, (int, float)) or not 0 < output_fps <= 240:
+        raise ValueError(f"the output frame rate must be a number in (0, 240], got {output_fps!r}")
+    level = levels[lod]
+    fraction = level["frames"]["outputFpsFraction"]
+    cap = None if fraction is None else fraction * output_fps
+    digest = hashlib.sha256(canonical_json({"id": lod, "level": level, "fpsCap": cap}).encode("utf-8")).hexdigest()
+    return ResolvedLod(lod, level, cap, digest[:8])
+
+
+def lod_schedule(canonical: dict, lod: ResolvedLod) -> dict:
+    """📅 The samples a level takes of a canonical clock `{fps, durationS, loop, count}`: the clock itself when the level keeps every frame, otherwise at most `maxFrames` samples at `fps_cap` frames per second; a single sample sits at `phase` of the duration. Returns `{count, fps, times}`; the twin of `lodSchedule`, read against `🧫️fixtures/🧊️cast-lod/🔣️.json`."""
+    frames = lod.level["frames"]
+    count, duration, loop = canonical["count"], canonical["durationS"], canonical["loop"]
+    rate = canonical["fps"] if lod.fps_cap is None else min(canonical["fps"], lod.fps_cap)
+    kept = min(count, int(np.floor(duration * rate + 0.5)) + (0 if loop else 1), frames["maxFrames"])
+    samples = max(2, kept) if count >= 2 and frames["maxFrames"] >= 2 else kept
+    if samples >= count:
+        return {"count": count, "fps": canonical["fps"], "times": [frame / canonical["fps"] for frame in range(count)]}
+    if samples == 1:
+        return {"count": 1, "fps": canonical["fps"], "times": [frames["phase"] * duration]}
+    intervals = samples if loop else samples - 1
+    return {"count": samples, "fps": intervals / duration, "times": [frame * duration / intervals for frame in range(samples)]}
+
+
+@contextlib.contextmanager
+def lod_scope(lod: str, output_fps: float) -> Iterator[ResolvedLod]:
+    """🔭 Draw casts at an explicitly named level inside the block (tests, parent processes); a scene process gets its level from the render profile and clips never name one."""
+    resolved = lod_level(lod, output_fps)
+    _SCOPE.append(resolved)
+    try:
+        yield resolved
+    finally:
+        _SCOPE.pop()
+
+
+def active_lod() -> ResolvedLod:
+    """🎯 The level of the running job: the innermost `lod_scope`, else the level of the render profile at the output rate of the job; without either there is no level and the call fails (there is no default)."""
+    if _SCOPE:
+        return _SCOPE[-1]
+    profile = importlib.import_module(_PROFILE)
+    try:
+        job = profile.job()
+    except profile.ProfileError as error:
+        raise profile.ProfileError(f"no level of detail for the staffage casts: no render profile is active ({error}). Render through `render --profile preview|final`, or draw inside `lod_scope(level, output_fps)`; there is no default level.") from error
+    return lod_level(job.profile.lod, job.fps)
+
+
 def cast_key(entry: dict, root: Path = _SOURCES) -> str:
     """🔑 Derive the content address of a cast from its validated entry (every view, scale, state, clock and scenario field), the revision of its asset, the revision of every environment preset it names and the exporter sources."""
     issues = entry_issues(entry, f"cast entry for {entry.get('asset')!r}")
@@ -287,9 +399,10 @@ def cast_key(entry: dict, root: Path = _SOURCES) -> str:
     return digest.hexdigest()[:_KEY_LENGTH]
 
 
-def _directory(cast: str) -> Path:
-    """📁 Name the cache folder of a cast."""
-    return _cache_root() / cast_key(_entry(cast)) / cast
+def _directory(cast: str, lod: ResolvedLod | None = None) -> Path:
+    """📁 Name the cache folder of a cast at a level of detail: `<key>/<cast>/<level>-<revision>`, so a level never serves another."""
+    lod = lod or active_lod()
+    return _cache_root() / cast_key(_entry(cast)) / cast / f"{lod.id}-{lod.revision}"
 
 
 class _Tree:
@@ -417,14 +530,18 @@ def _terminable():
             signal.signal(number, handler)
 
 
-def _run(command: list[str], progress: Callable[[str], None] | None = None) -> None:
-    """🔧 Run the exporter; every stderr line goes to stderr with a `[staffage]` prefix and to `progress`, and a cancelled render (any `BaseException`, `KeyboardInterrupt` and `SystemExit` included) stops the whole process tree."""
+def _run(command: list[str], progress: Callable[[str], None] | None = None, *, cancelled: Callable[[], bool] | None = None, timeout: float | None = _EXPORT_TIMEOUT_S, label: str = "Staffage export") -> None:
+    """🔧 Run a command tree; every stderr line goes to stderr with a `[staffage]` prefix and to `progress`, and a cancelled run (`cancelled()` true, `timeout` seconds exceeded, or any `BaseException` such as `KeyboardInterrupt` and `SystemExit`) stops the whole process tree."""
     with _terminable():
-        _supervise(command, progress)
+        _supervise(command, progress, cancelled, timeout, label)
 
 
-def _supervise(command: list[str], progress: Callable[[str], None] | None) -> None:
-    """👁️ Start the exporter tree and wait for it."""
+run_tree = _run
+
+
+def _supervise(command: list[str], progress: Callable[[str], None] | None, cancelled: Callable[[], bool] | None, timeout: float | None, label: str) -> None:
+    """👁️ Start the command tree and wait for it."""
+    deadline = None if timeout is None else time.monotonic() + timeout
     tree = _Tree(command)
     process = tree.process
     tail: list[str] = []
@@ -447,6 +564,10 @@ def _supervise(command: list[str], progress: Callable[[str], None] | None) -> No
         while True:
             if failure:
                 raise failure[0]
+            if cancelled is not None and cancelled():
+                raise InterruptedError(f"{label} cancelled")
+            if deadline is not None and time.monotonic() > deadline:
+                raise TimeoutError(f"{label} exceeded {timeout:g} s and was stopped")
             try:
                 code = process.wait(timeout=0.1)
                 break
@@ -463,7 +584,7 @@ def _supervise(command: list[str], progress: Callable[[str], None] | None) -> No
         tree.close()
         process.stderr.close()
     if code != 0:
-        raise RuntimeError("Staffage export failed:\n" + "\n".join(tail))
+        raise RuntimeError(f"{label} failed:\n" + "\n".join(tail))
 
 
 def _publish(source: Path, target: Path) -> None:
@@ -538,14 +659,18 @@ class _Lock:
         handle.close()
 
 
-def _lock(cast: str) -> _Lock:
-    """🏷️ Name the lock of one cast beside its cache folder, so renderers of the same source and entry share it."""
-    return _Lock(_directory(cast).parent / f".lock-{cast}")
+def _lock(cast: str, lod: ResolvedLod) -> _Lock:
+    """🏷️ Name the lock of one cast at one level beside its cache folder, so renderers of the same source, entry and level share it."""
+    return _Lock(_directory(cast, lod).parent.parent / f".lock-{cast}-{lod.id}")
 
 
-def _wait(pending: list[str], progress: Callable[[str], None] | None, since: list[float]) -> None:
-    """⏱️ Sleep one poll while other renderers export the `pending` casts and tell `progress` (which may raise to cancel) about it once per second."""
+def _wait(pending: list[str], progress: Callable[[str], None] | None, since: list[float], deadline: float | None = None, cancelled: Callable[[], bool] | None = None) -> None:
+    """⏱️ Sleep one poll while other renderers export the `pending` casts and tell `progress` (which may raise to cancel) about it once per second; `cancelled()` and the `deadline` end the wait with `InterruptedError` and `TimeoutError` instead of waiting forever for a holder that never publishes."""
     now = time.monotonic()
+    if cancelled is not None and cancelled():
+        raise InterruptedError(f"waiting for casts {','.join(pending)} cancelled")
+    if deadline is not None and now > deadline:
+        raise TimeoutError(f"casts {','.join(pending)} were not published by another renderer within the wait limit; its lock is held under {_cache_root()}")
     if not since or now - since[0] >= _WAIT_REPORT_S:
         since[:] = [now]
         if progress is not None:
@@ -553,15 +678,15 @@ def _wait(pending: list[str], progress: Callable[[str], None] | None, since: lis
     time.sleep(_WAIT_POLL_S)
 
 
-def _render(casts: list[str], folders: dict[str, Path], progress: Callable[[str], None] | None) -> None:
-    """🎬 Export `casts` in one exporter call and publish each into the cache."""
+def _render(casts: list[str], folders: dict[str, Path], lod: ResolvedLod, output_fps: float, progress: Callable[[str], None] | None, cancelled: Callable[[], bool] | None = None) -> None:
+    """🎬 Export `casts` at one level in one exporter call and publish each into the cache."""
     root = _cache_root()
     temporary = root / f".tmp-{uuid.uuid4().hex[:12]}"
     temporary.mkdir(parents=True)
     try:
         batch = temporary / "🔣️.json"
         batch.write_text(json.dumps({"version": 1, "casts": {cast: _entry(cast) for cast in casts}}, ensure_ascii=False), encoding="utf-8")
-        _run([_repo(), "tools", "exec", "--light", "bun", "--", str(_EXPORTER), "--manifest", str(batch), "--ids", ",".join(casts), "--out", str(temporary / "out"), "--parent", str(os.getpid())], progress)
+        _run([_repo(), "tools", "exec", "--light", "bun", "--", str(_EXPORTER), "--manifest", str(batch), "--ids", ",".join(casts), "--out", str(temporary / "out"), "--lod", lod.id, "--output-fps", _number(output_fps), "--parent", str(os.getpid())], progress, cancelled=cancelled)
         for cast in casts:
             folders[cast].parent.mkdir(parents=True, exist_ok=True)
             _publish(temporary / "out" / cast, folders[cast])
@@ -569,18 +694,20 @@ def _render(casts: list[str], folders: dict[str, Path], progress: Callable[[str]
         shutil.rmtree(temporary, ignore_errors=True)
 
 
-def ensure_casts(ids: list[str] | tuple[str, ...] | None = None, progress: Callable[[str], None] | None = None) -> dict[str, Path]:
-    """📦 Render every missing cast of `ids` (default: the whole manifest) in one exporter call and return the cache folder of each; a cast that another process is already exporting is waited for instead of exported twice. `progress` receives each exporter stderr line (`[pid]`, `[cast i/n] id`, `[done/total]`) and `[wait] ids` while waiting, and may raise to cancel."""
+def ensure_casts(ids: list[str] | tuple[str, ...] | None = None, progress: Callable[[str], None] | None = None, lod: ResolvedLod | None = None, *, cancelled: Callable[[], bool] | None = None, wait_timeout: float | None = _WAIT_TIMEOUT_S) -> dict[str, Path]:
+    """📦 Render every missing cast of `ids` (default: the whole manifest) in one exporter call and return the cache folder of each; a cast that another process is already exporting is waited for instead of exported twice, for at most `wait_timeout` seconds. `progress` receives each exporter stderr line (`[pid]`, `[cast i/n] id`, `[done/total]`) and `[wait] ids` while waiting, and may raise to cancel; `cancelled()` cancels the wait and the exporter without a progress callback."""
+    lod = lod or active_lod()
     wanted = list(dict.fromkeys(ids if ids is not None else _manifest()["casts"]))
-    folders = {cast: _directory(cast) for cast in wanted}
+    folders = {cast: _directory(cast, lod) for cast in wanted}
     pending = [cast for cast, folder in folders.items() if not (folder / _INDEX).is_file()]
     rendered = bool(pending)
     since: list[float] = []
+    deadline = None if wait_timeout is None else time.monotonic() + wait_timeout
     while pending:
         held: dict[str, _Lock] = {}
         try:
             for cast in sorted(pending):
-                lock = _lock(cast)
+                lock = _lock(cast, lod)
                 if not lock.acquire():
                     continue
                 if (folders[cast] / _INDEX).is_file():
@@ -588,13 +715,13 @@ def ensure_casts(ids: list[str] | tuple[str, ...] | None = None, progress: Calla
                 else:
                     held[cast] = lock
             if held:
-                _render([cast for cast in pending if cast in held], folders, progress)
+                _render([cast for cast in pending if cast in held], folders, lod, _output_fps(lod), progress, cancelled)
         finally:
             for lock in held.values():
                 lock.release()
         pending = [cast for cast in pending if cast not in held and not (folders[cast] / _INDEX).is_file()]
         if pending and not held:
-            _wait(pending, progress, since)
+            _wait(pending, progress, since, deadline, cancelled)
     if rendered:
         _prune(_cache_root(), {cast_key(entry) for entry in _manifest()["casts"].values()})
     for cast, folder in folders.items():
@@ -602,9 +729,16 @@ def ensure_casts(ids: list[str] | tuple[str, ...] | None = None, progress: Calla
         if drawn != named:
             raise ValueError(f"cast {cast!r} is named {named!r} in the manifest but its rendered index {folder / _INDEX} drew {drawn!r}")
         if folder not in _CHECKED:
-            _provenance(cast, _index(folder))
+            _provenance(cast, _index(folder), lod)
             _CHECKED.add(folder)
+            importlib.import_module(_INSTRUMENT).count(f"asset.load[{lod.id}]")
     return folders
+
+
+def _output_fps(lod: ResolvedLod) -> float:
+    """🎞️ The output frame rate to hand the exporter for a resolved level: the rate whose fraction gave its sample cap; a level without a cap does not depend on it, so any valid rate names it."""
+    fraction = lod.level["frames"]["outputFpsFraction"]
+    return 30.0 if fraction is None or lod.fps_cap is None else lod.fps_cap / fraction
 
 
 def casts_in(sources, manifest: dict | None = None, root: Path = _SOURCES) -> dict[str, str]:
@@ -629,7 +763,7 @@ def casts_in(sources, manifest: dict | None = None, root: Path = _SOURCES) -> di
     return {name: cast_key(casts[name], root) for name in sorted(named)}
 
 
-def expected_provenance(cast: str, root: Path = _SOURCES) -> dict:
+def expected_provenance(cast: str, lod: ResolvedLod, root: Path = _SOURCES) -> dict:
     """🔖 Derive what the provenance of a rendered cast must say from its manifest entry, the catalog asset and the environment presets: every dimension except the clock, which the exporter measures."""
     entry = _entry(cast)
     found = {
@@ -638,6 +772,7 @@ def expected_provenance(cast: str, root: Path = _SOURCES) -> dict:
         "view": {"style": entry["view"], "viewpoint": entry["viewpoint"], "theme": entry["theme"], "mirror": entry.get("mirror", False)},
         "scale": {"denominator": entry["scale"]},
         "state": {"kind": "clip", "id": entry["clip"]} if "clip" in entry else {"kind": "pose", "id": entry["pose"]},
+        "lod": {"id": lod.id, "revision": lod.revision},
     }
     if entry["view"] == "thermal":
         revisions = _preset_revisions(entry, root)
@@ -651,12 +786,12 @@ def expected_provenance(cast: str, root: Path = _SOURCES) -> dict:
     return {**found, "scenario": scenario}
 
 
-def _provenance(cast: str, index: dict, root: Path = _SOURCES) -> dict:
+def _provenance(cast: str, index: dict, lod: ResolvedLod, root: Path = _SOURCES) -> dict:
     """🔖 Check the provenance of a rendered cast against its manifest entry, the catalog asset, the environment presets and its own index, and return it; a missing or differing dimension raises."""
     found = index.get("provenance")
     if not isinstance(found, dict):
         raise ValueError(f"cast {cast!r}: its rendered index has no provenance record; export it again")
-    expected = expected_provenance(cast, root)
+    expected = expected_provenance(cast, lod, root)
     for section, named in expected.items():
         drawn = found.get(section)
         if section == "asset" and isinstance(drawn, dict):
@@ -669,10 +804,17 @@ def _provenance(cast: str, index: dict, root: Path = _SOURCES) -> dict:
     wanted = {"fps": index.get("fps"), "durationS": index.get("durationS"), "loop": index.get("loop"), "frames": len(index.get("frames", []))}
     if not isinstance(clock, dict) or any(clock.get(key) != value for key, value in wanted.items()) or "offsetS" not in clock:
         raise ValueError(f"cast {cast!r}: provenance clock is {clock!r} but its index says {wanted!r}; export it again")
+    sampled = index.get("lod")
+    canonical = {"fps": sampled.get("canonicalFps"), "durationS": index.get("durationS"), "loop": index.get("loop"), "count": sampled.get("canonicalFrames")} if isinstance(sampled, dict) else None
+    if canonical is None or {key: sampled.get(key) for key in ("id", "revision")} != {"id": lod.id, "revision": lod.revision}:
+        raise ValueError(f"cast {cast!r}: its index drew level {sampled!r} but {lod.id}-{lod.revision} was asked for; export it again")
+    schedule = lod_schedule(canonical, lod)
+    if schedule["count"] != len(index["frames"]) or abs(schedule["fps"] - index["fps"]) > 1e-9 * max(1.0, schedule["fps"]):
+        raise ValueError(f"cast {cast!r}: level {lod.id} samples {schedule['count']} frames at {schedule['fps']} fps of the canonical clock but the index holds {len(index['frames'])} at {index['fps']}; export it again")
     return found
 
 
-_DRAWN: list[dict] = []
+_DRAWN: dict[tuple[str, str, float | None], dict] = {}
 _RECORDING = [True]
 
 
@@ -695,8 +837,8 @@ def staffage_provenance(cast: str, rate: float | None = None) -> dict:
 
 
 def drawn_casts() -> list[dict]:
-    """📋 Return the provenance of every cast drawn in this process since `clear_drawn_casts`, in drawing order, each with its cast id and key."""
-    return json.loads(json.dumps(_DRAWN))
+    """📋 Return the provenance of every cast drawn in this process since `clear_drawn_casts`, once per distinct cast, key and rate in order of first drawing, each with its cast id and key; repeated draws of one cast add nothing, so the record is bounded by the manifest."""
+    return json.loads(json.dumps(list(_DRAWN.values())))
 
 
 def clear_drawn_casts() -> None:
@@ -708,7 +850,8 @@ def _drawn(cast: str, rate: float | None) -> dict:
     """📌 Record a drawn cast and return its provenance."""
     record = staffage_provenance(cast, rate)
     if _RECORDING[-1]:
-        _DRAWN.append({"cast": cast, "key": ensure_casts([cast])[cast].parent.name, **record})
+        key = ensure_casts([cast])[cast].parent.parent.name
+        _DRAWN.setdefault((cast, key, rate), {"cast": cast, "key": key, **record})
     return record
 
 
@@ -851,16 +994,18 @@ def _frame(folder: Path, frame: int) -> _Frame:
 
 
 def _slot_count(folder: Path) -> int:
-    """🔢 Count the most paths any frame of a cast draws, reading each distinct frame file once."""
-    if folder not in _SLOT_COUNTS:
-        names = dict.fromkeys(_index(folder)["frames"])
-        _SLOT_COUNTS[folder] = max(((folder / name).read_bytes().count(b"<path") for name in names), default=0)
-    return _SLOT_COUNTS[folder]
+    """🔢 The most paths any frame of a cast draws, written by the exporter into the index: no frame is read."""
+    return int(_index(folder)["logical"]["maxPaths"])
 
 
-def _style(shape: _Shape, factor: float, color: str | None, opacity: float) -> tuple[str | None, float, str | None, float, float]:
-    """🖌️ Resolve the Manim fill, stroke and width of a path; the stroke width follows the physical scale and never drops below one."""
-    width = max(shape.stroke_mm * factor / _STROKE_UNIT, _MIN_STROKE) if shape.stroke_mm > 0 else 0.0
+def _stroke_minimum(index: dict) -> float:
+    """🖊️ The thinnest stroke the level of detail of a cast draws, from the levels file."""
+    return float(_levels()[index["lod"]["id"]]["strokeMin"])
+
+
+def _style(shape: _Shape, factor: float, color: str | None, opacity: float, minimum: float) -> tuple[str | None, float, str | None, float, float]:
+    """🖌️ Resolve the Manim fill, stroke and width of a path; the stroke width follows the physical scale and never drops below the `minimum` of the level."""
+    width = max(shape.stroke_mm * factor / _STROKE_UNIT, minimum) if shape.stroke_mm > 0 else 0.0
     return shape.fill, shape.fill_opacity * opacity, color or shape.stroke, shape.stroke_opacity * opacity, width
 
 
@@ -893,9 +1038,9 @@ def _flipped(parsed: _Frame, mirror: bool) -> _Frame:
     return parsed._replace(points=parsed.points * np.array([-1.0, 1.0])) if mirror else parsed
 
 
-def _bounds(index: dict, key: str, mirror: bool) -> dict:
-    """🧱 Return the bounds of a cast in world metres, flipped about the world origin when `mirror` is set."""
-    box = index[key]
+def _bounds(index: dict, mirror: bool) -> dict:
+    """🧱 Return the figure bounds of a cast in world metres (the logical descriptor, identical for every level of detail and free of any air layer), flipped about the world origin when `mirror` is set."""
+    box = index["logical"]["figureBoundsM"]
     return {"minX": -box["maxX"], "minY": box["minY"], "maxX": -box["minX"], "maxY": box["maxY"]} if mirror else box
 
 
@@ -910,69 +1055,29 @@ def _place(folder: Path, frame: int, unit: float, anchor, color: str | None, opa
     for (low, high), shape in zip(parsed.spans, parsed.shapes):
         member = _Path()
         member.set_points(np.column_stack((anchor[0] + parsed.points[low:high, 0] * unit, anchor[1] + parsed.points[low:high, 1] * unit, np.full(high - low, anchor[2]))))
-        _apply(member, _style(shape, factor, recolour, opacity))
+        _apply(member, _style(shape, factor, recolour, opacity, _stroke_minimum(index)))
         members.append(member)
     return VGroup(*members)
 
 
 def staffage_height(cast: str) -> float:
     """📏 Return the height of a cast in metres: the figure, never the air layer of a transport cast."""
-    return float(_index(ensure_casts([cast])[cast])["heightM"])
+    return float(_index(ensure_casts([cast])[cast])["logical"]["heightM"])
 
 
 def staffage_width(cast: str) -> float:
     """📏 Return the horizontal paper extent of a cast in metres, the figure without the air layer of a transport cast: the width an elevation or plan figure spans and the depth a front figure spans, read from the exporter's bounds."""
-    index = _index(ensure_casts([cast])[cast])
-    box = index.get("figureBoundsM", index["boundsM"])
+    box = _index(ensure_casts([cast])[cast])["logical"]["figureBoundsM"]
     return float(box["maxX"] - box["minX"])
 
 
 def staffage_parts(cast: str, prefix: str = "") -> dict[str, np.ndarray]:
     """🔩 Return the filled polygons of the first frame whose shape id starts with `prefix`, as (n, 2) arrays in world metres (y up, origin on the feet), keyed by the shape id without its `shape-` prefix.
 
-    Clips derive attachment points (ray starts, labels) from these instead of hard-coding positions; only straight `M`/`L`/`H`/`V`/`Z` outlines are supported.
+    Clips derive attachment points (ray starts, labels) from these instead of hard-coding positions. They come from the logical descriptor the exporter writes for every level of detail, so an anchor never depends on which frames were loaded.
     """
-    return _parts(ensure_casts([cast])[cast], prefix)
-
-
-def _parts(folder: Path, prefix: str) -> dict[str, np.ndarray]:
-    """🧬 Read the filled polygons of the first frame in `folder` in world metres."""
-    index = _index(folder)
-    cast = index["cast"]
-    text = (folder / index["frames"][0]).read_text(encoding="utf-8")
-    matrix = np.array([1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-    found = _GROUP_MATRIX.search(text)
-    if found:
-        matrix = np.array([float(value) for value in found.group(1).replace(",", " ").split()])
-    elif (shift := _GROUP_TRANSLATE.search(text)):
-        matrix[4:] = [float(value) for value in shift.group(1).replace(",", " ").split()]
-    origin_x, origin_y = index["originMm"]
-    scale = index["mmPerMetre"]
-    parts: dict[str, np.ndarray] = {}
-    for name, path in _SHAPE.findall(text):
-        if not name.startswith(prefix):
-            continue
-        points: list[tuple[float, float]] = []
-        x = y = 0.0
-        for command, numbers in _COMMAND.findall(path):
-            values = [float(value) for value in _NUMBER.findall(numbers)]
-            if command in "MLl":
-                for step in zip(values[0::2], values[1::2]):
-                    x, y = (x + step[0], y + step[1]) if command == "l" else step
-                    points.append((x, y))
-                continue
-            if command == "H":
-                x = values[0]
-            elif command == "V":
-                y = values[0]
-            elif command not in "Zz":
-                raise ValueError(f"unsupported path command {command!r} in shape {name!r} of cast {cast!r}")
-            if command not in "Zz":
-                points.append((x, y))
-        placed = np.array([(matrix[0] * px + matrix[2] * py + matrix[4], matrix[1] * px + matrix[3] * py + matrix[5])
-                           for px, py in points])
-        parts[name] = np.column_stack(((placed[:, 0] - origin_x) / scale, (origin_y - placed[:, 1]) / scale))
-    return parts
+    parts = _index(ensure_casts([cast])[cast])["logical"]["partsM"]
+    return {name: np.array(points, dtype=float) for name, points in parts.items() if name.startswith(prefix)}
 
 
 def staffage(cast: str, *, unit: float, anchor=ORIGIN, color: str | None = None, opacity: float = 1.0,
@@ -984,15 +1089,15 @@ def staffage(cast: str, *, unit: float, anchor=ORIGIN, color: str | None = None,
     folder = ensure_casts([cast])[cast]
     group = _place(folder, 0, unit, anchor, color, opacity, mirror)
     group = group if window is None else _crop(group, unit, anchor, window)
-    group = _Figure(group, folder, unit, anchor, mirror) if window is None and "figureBoundsM" in _index(folder) else group
+    group = _Figure(group, folder, unit, anchor, mirror) if window is None else group
     group.provenance = _drawn(cast, None)
     return group
 
 
 class _FigureBounded(VGroup):
-    """🪜 A group whose width, height, top, bottom and centre follow its `probes` when `_figure_only` is set: the air layer of a transport cast reaches far beyond the person and must not size, place or align the group."""
+    """🪜 A group whose width, height, top, bottom and centre follow its `probes` when `_figure_only` is set: the logical figure bounds, identical for every level of detail, so neither the air layer of a transport cast nor the paths a level draws size, place or align the group."""
 
-    _figure_only = False
+    _figure_only = True
     probes: list
 
     def get_points_defining_boundary(self):
@@ -1010,13 +1115,13 @@ class _FigureBounded(VGroup):
 
 
 class _Figure(_FigureBounded):
-    """🪵 A static transport cast bounded by its figure alone."""
+    """🪵 A static cast bounded by its figure alone."""
 
     _figure_only = True
 
     def __init__(self, group: VGroup, folder: Path, unit: float, anchor, mirror: bool = False):
         super().__init__(*group)
-        bounds = _bounds(_index(folder), "figureBoundsM", mirror)
+        bounds = _bounds(_index(folder), mirror)
         anchor = np.asarray(anchor, dtype=float)
         self.probes = [VectorizedPoint(anchor + np.array([x, y, 0.0]) * unit) for x, y in ((bounds["minX"], bounds["minY"]), (bounds["maxX"], bounds["maxY"]))]
         self.add(*self.probes)
@@ -1034,16 +1139,8 @@ def _crop(group: VGroup, unit: float, anchor, window: tuple[float, float, float,
     return VGroup(*inside)
 
 
-class _SceneClock:
-    """⏱️ The scene time of the frame being drawn, in seconds of video: Manim's `renderer.time` while a scene updates its mobjects. A motion is a pure function of this value, so waits, plays, animated groups, skipped plays and partial renders show the same frame at the same instant."""
-
-    __slots__ = ("now",)
-
-    def __init__(self) -> None:
-        self.now = 0.0
-
-
-SCENE_CLOCK = _SceneClock()
+SCENE_CLOCK = importlib.import_module("🎓️teaching.🧰️interop.🕐️clock.🐍️").SCENE_CLOCK
+"""⏱️ The canonical scene clock of `🧰️interop/🕐️clock`: scene time is the integer frame being drawn over the frame rate. A motion is a pure function of it, so waits, plays, skipped plays, cache hits and trimmed renders show the same frame at the same instant."""
 
 
 def playback_frame(seconds: float, fps: float, count: int, duration: float, loop: bool) -> int:
@@ -1057,39 +1154,13 @@ def playback_frame(seconds: float, fps: float, count: int, duration: float, loop
     return step % period
 
 
-def _install_scene_clock() -> None:
-    """🔌 Publish `renderer.time` to `SCENE_CLOCK` before every update of a scene's mobjects."""
-    from manim import Scene
-
-    if getattr(Scene.update_mobjects, "_scene_clock", False):
-        return
-    update_mobjects, update_to_time = Scene.update_mobjects, Scene.update_to_time
-
-    def publish(self) -> None:
-        SCENE_CLOCK.now = float(self.renderer.time)
-
-    def clocked_update_mobjects(self, dt):
-        publish(self)
-        return update_mobjects(self, dt)
-
-    def clocked_update_to_time(self, t):
-        publish(self)
-        return update_to_time(self, t)
-
-    clocked_update_mobjects._scene_clock = True
-    Scene.update_mobjects = clocked_update_mobjects
-    Scene.update_to_time = clocked_update_to_time
-
-
-_install_scene_clock()
-
-
 class _Source:
     """🗄️ Where a motion reads its frames from; it has no `__dict__`, so Manim's play-hash sees only its type and the group's own content key keeps the hash small and deterministic."""
 
-    __slots__ = ("folder", "unit", "anchor", "factor", "color", "mirror")
+    __slots__ = ("folder", "unit", "anchor", "factor", "color", "mirror", "minimum")
 
-    def __init__(self, folder: Path, unit: float, anchor: np.ndarray, factor: float, color: str | None, mirror: bool = False):
+    def __init__(self, folder: Path, unit: float, anchor: np.ndarray, factor: float, color: str | None, mirror: bool = False, minimum: float = 1.0):
+        self.minimum = minimum
         self.mirror = mirror
         self.folder = folder
         self.unit = unit
@@ -1108,14 +1179,13 @@ class _Motion(_FigureBounded):
     def __init__(self, folder: Path, unit: float, anchor, rate: float, color: str | None, window=None, mirror: bool = False, loop: bool = False):
         super().__init__()
         index = _index(folder)
-        bounds = _bounds(index, "figureBoundsM" if "figureBoundsM" in index else "boundsM", mirror)
-        self._figure_only = "figureBoundsM" in index
+        bounds = _bounds(index, mirror)
         x0, y0, x1, y1 = window or (bounds["minX"], bounds["minY"], bounds["maxX"], bounds["maxY"])
         anchor = np.asarray(anchor, dtype=float)
         corners = [anchor + np.array([x, y, 0.0]) * unit for x, y in ((x0, y0), (x1, y0), (x0, y1))]
         self.window = window
-        self._source = _Source(folder, unit, anchor, unit / index["mmPerMetre"], color if color is not None and index["view"].endswith(_LINE_SUFFIX) else None, mirror)
-        self.content = f"{folder.parent.name}/{folder.name}" + ("~mirror" if mirror else "")
+        self._source = _Source(folder, unit, anchor, unit / index["mmPerMetre"], color if color is not None and index["view"].endswith(_LINE_SUFFIX) else None, mirror, _stroke_minimum(index))
+        self.content = f"{folder.parent.parent.name}/{folder.parent.name}/{folder.name}" + ("~mirror" if mirror else "")
         self.frames = tuple(index["frames"])
         self.slots = [_Path() for _ in range(_slot_count(folder))]
         self.fps = float(index["fps"])
@@ -1156,7 +1226,7 @@ class _Motion(_FigureBounded):
                 continue
             low, high = parsed.spans[position]
             slot.set_points(np.column_stack((carried[low:high], np.full(high - low, source.anchor[2]))))
-            _apply(slot, _style(parsed.shapes[position], source.factor, source.color, fade))
+            _apply(slot, _style(parsed.shapes[position], source.factor, source.color, fade, source.minimum))
         self.frame = frame
 
     def _inside(self, parsed: _Frame, position: int) -> bool:
@@ -1189,10 +1259,10 @@ class _Motion(_FigureBounded):
             self._show(frame)
 
     def sync(self) -> "_Motion":
-        """⏱️ Show the frame of the current scene time: cast time is `rate` times the scene time since the first sync (or the last seek), a pure function of `SCENE_CLOCK` that no play, wait or removal changes."""
+        """⏱️ Show the frame of the current scene time: cast time is `rate` times the scene time since the first sync (the start of the play that first syncs it, or the last seek), a pure function of `SCENE_CLOCK` that no play, wait, skip or removal changes."""
         now = SCENE_CLOCK.now
         if self._anchor is None:
-            self._anchor = now
+            self._anchor = now if SCENE_CLOCK.origin is None else SCENE_CLOCK.origin
         self._place(self._cast_start + self._rate * (now - self._anchor))
         return self
 
@@ -1215,3 +1285,93 @@ def staffage_motion(cast: str, *, unit: float, anchor=ORIGIN, rate: float = 1.0,
     motion = _Motion(ensure_casts([cast])[cast], unit, anchor, rate, color, window, mirror, loop)
     motion.provenance = _drawn(cast, rate)
     return motion
+
+
+class ResolveError(ValueError):
+    """🚫 A staffage reference names an unknown cast, a stale revision or an axis the manifest does not hold."""
+
+
+class ResolvedCast(NamedTuple):
+    """🧭 One cast resolved at one level of detail: the cache `folder` (nothing decoded but the small index), the level-independent `descriptor`, the number of sampled frames and the checked provenance."""
+
+    cast: str
+    key: str
+    lod: ResolvedLod
+    folder: Path
+    descriptor: dict
+    frame_count: int
+    provenance: dict
+
+
+def _axes(entry: dict) -> dict:
+    """🧮 The declared axes of a manifest entry in the vocabulary of a transition endpoint."""
+    return {"view": {entry["view"], entry["viewpoint"]}, "scale": {f"1:{entry['scale']}", entry["scale"]}, "pose": {entry.get("pose") or entry["clip"]},
+            "scenario": {"thermal" if entry["view"] == "thermal" else "structural" if entry["view"] in ("forces", "moments") else "geometry", *(() if "environment" not in entry else (entry["environment"],))}}
+
+
+def resolve(cast: str, *, lod: str | None = None, output_fps: float | None = None, revision: str | None = None, view: str | None = None, viewpoint: str | None = None,
+            scale: str | int | None = None, pose: str | None = None, scenario: str | None = None, progress: Callable[[str], None] | None = None) -> ResolvedCast:
+    """🧭 Resolve a canonical cast reference at a level of detail before anything is decoded or drawn. The cast id fixes asset, view, authored scale, pose or clip, clock and scenario; every keyword is a DECLARED axis (from a transition endpoint) checked against the manifest entry, so a combination the manifest does not hold is an error that names the casts of the asset which do match, never a silent substitute. `revision` is the asset revision the reference was authored against. Without `lod` the level of the render profile applies; a missing level is exported on demand, and only that level.
+
+    @see ../../../../🧍️staffage/🔨️modules/📤️export/🎭️cast/🧊️lod/🔣️.json — the levels
+    """
+    entry = _entry(cast)
+    declared = {"view": view, "scale": scale, "pose": pose, "scenario": scenario}
+    wrong = {axis: value for axis, value in declared.items() if value is not None and value not in _axes(entry)[axis]}
+    if viewpoint is not None and viewpoint != entry["viewpoint"]:
+        wrong["viewpoint"] = viewpoint
+    if wrong:
+        siblings = {name: other for name, other in _manifest()["casts"].items() if other["asset"] == entry["asset"]}
+        near = sorted(name for name, other in siblings.items() if all(value is None or value in _axes(other)[axis] for axis, value in declared.items()) and viewpoint in (None, other["viewpoint"]))
+        every = ", ".join(f"{name} ({other['view']}/{other['viewpoint']} 1:{other['scale']} {other.get('pose') or other['clip']})" for name, other in sorted(siblings.items()))
+        raise ResolveError(f"cast {cast!r} ({entry['asset']}) does not provide {wrong}; it draws view {entry['view']}/{entry['viewpoint']} at 1:{entry['scale']} for {entry.get('pose') or entry['clip']!r}. Casts of {entry['asset']!r} matching the declared axes: {', '.join(near) or 'none'}; every cast of the asset: {every}; add a cast to {_MANIFEST} for a new combination")
+    current = asset_revision(entry["asset"])
+    if revision is not None and revision != current:
+        raise ResolveError(f"cast {cast!r} was authored against asset revision {revision} but the catalog holds {current}; update the reference")
+    if lod is not None and output_fps is None:
+        raise ResolveError(f"level {lod!r} needs the output frame rate of the job (output_fps)")
+    chosen = active_lod() if lod is None else lod_level(lod, output_fps)
+    folder = ensure_casts([cast], progress, chosen)[cast]
+    index = _index(folder)
+    logical = index["logical"]
+    box = logical["figureBoundsM"]
+    descriptor = {"heightM": logical["heightM"], "widthM": box["maxX"] - box["minX"], "boundsM": index["boundsM"], "figureBoundsM": box, "originMm": index["originMm"], "mmPerMetre": index["mmPerMetre"],
+                  "partsM": logical["partsM"], "clock": index["provenance"]["clock"], "maxPaths": logical["maxPaths"]}
+    return ResolvedCast(cast, folder.parent.parent.name, chosen, folder, descriptor, len(index["frames"]), index["provenance"])
+
+
+def staffage_extent(cast: str) -> tuple[float, float]:
+    """📏 Return the width and height in metres of the figure bounds of a cast: the logical descriptor, identical for every level of detail, in the paper plane of its viewpoint."""
+    box = _index(ensure_casts([cast])[cast])["logical"]["figureBoundsM"]
+    return float(box["maxX"] - box["minX"]), float(box["maxY"] - box["minY"])
+
+
+def _job_fps() -> float:
+    """🎞️ The output frame rate of the running job."""
+    return float(importlib.import_module(_PROFILE).job().fps)
+
+
+def bind_staffage(stage, entity_id: str, cast_ref, *, unit: float = 1.0, anchor=ORIGIN, rate: float | None = None, color: str | None = None, mirror: bool = False,
+                  view: str | None = None, scale: str | int | None = None, pose: str | None = None, scenario: str | None = None, revision: int = 1) -> object:
+    """🔌 Bind a canonical staffage reference to a morph stage entity: `cast_ref` is a cast id or `{"cast": id, "revision": "sha256:..."}`. The logical bounds and anchors freeze now from the level-independent descriptor (the figure bounds times `unit` about `anchor`, the feet on `anchor`, one anchor per named part), never from the polygons of whatever level is drawn; the representation is a factory the stage calls with the level of the render profile, so a preview job never loads the full cast.
+
+    Registered as the stage binder `staffage`: `stage.bind_with("staffage", "tower.worker", "cooling-internal-gains-walker", unit=0.5)`.
+    """
+    ref = {"cast": cast_ref} if isinstance(cast_ref, str) else dict(cast_ref)
+    cast, wanted = ref["cast"], ref.get("revision")
+    profile = importlib.import_module(_PROFILE)
+    resolved = resolve(cast, lod=profile.active().lod, output_fps=_job_fps(), revision=wanted, view=view, scale=scale, pose=pose, scenario=scenario)
+    box, anchor_at = _bounds(_index(resolved.folder), mirror), np.asarray(anchor, dtype=float)
+    low, high = anchor_at + np.array([box["minX"], box["minY"], 0.0]) * unit, anchor_at + np.array([box["maxX"], box["maxY"], 0.0]) * unit
+    parts = {f"part:{name}": anchor_at + np.append(np.mean(np.array(points, dtype=float) * np.array([-1.0 if mirror else 1.0, 1.0]), axis=0), 0.0) * unit for name, points in resolved.descriptor["partsM"].items()}
+    entry = _entry(cast)
+
+    def build(lod: str):
+        with lod_scope(lod, _job_fps()):
+            return staffage(cast, unit=unit, anchor=anchor, color=color, mirror=mirror) if rate is None else staffage_motion(cast, unit=unit, anchor=anchor, rate=rate, color=color, mirror=mirror)
+
+    provides = {field: sorted(map(str, values)) for field, values in _axes(entry).items()}
+    return stage.bind(entity_id, build, bounds=np.array([low, high]), anchors={"origin": anchor_at, **parts}, revision=revision, provides=provides)
+
+
+importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🎭️stage.🐍️").Stage.register_binder("staffage", bind_staffage)

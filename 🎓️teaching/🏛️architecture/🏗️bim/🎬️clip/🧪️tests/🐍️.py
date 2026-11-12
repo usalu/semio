@@ -2744,7 +2744,7 @@ class BimLanguageContract(unittest.TestCase):
         import tempfile
         from unittest.mock import patch
 
-        settings = {"audience": "speaker", "quality": "-ql", "resolution": "320,180", "fps": 4}
+        settings = {"audience": "speaker", "profile": "preview", "resolution": "320,180", "fps": 4}
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])
         output.mkdir(parents=True, exist_ok=True)
         calls = []
@@ -2790,7 +2790,7 @@ class BimLanguageContract(unittest.TestCase):
                         patch.object(self.runtime, "render_segment") as render, \
                         patch.object(self.runtime, "execute_jobs", side_effect=execute), \
                         self.assertRaises(InterruptedError):
-                    self.runtime.compose_videos([CASES["chapters"][0]["video_id"]], language=language, audience="spectator",
+                    self.runtime.compose_videos([CASES["chapters"][0]["video_id"]], profile="preview", language=language, audience="spectator",
                                                 output_root=root / "output", media_dir=root / "media")
                 self.assertEqual(render.call_count, 1)
                 for call in render.call_args_list:
@@ -2838,7 +2838,7 @@ class BimSelectedSourceContract(unittest.TestCase):
 
                 for selection in CASES["source_validation"]["compose_all"]:
                     with self.subTest(compose_all=selection), self.assertRaisesRegex(ValueError, "Invalid lesson entry: missing"):
-                        self.runtime.compose_videos(selection, language="en", audience="speaker")
+                        self.runtime.compose_videos(selection, profile="preview", language="en", audience="speaker")
 
                 data = copy.deepcopy(CASES["source_validation"]["manifest"])
                 data["videos"][0]["chapters"][0]["segments"][0]["script"] = CASES["source_validation"]["missing_segment"]
@@ -2898,7 +2898,7 @@ class BimSelectedSourceContract(unittest.TestCase):
         videos = CASES["source_validation"]["manifest"]["videos"]
         with patch.object(renderer, "load_manifest", return_value=videos) as load, \
                 patch.object(renderer, "compose_videos", return_value={}) as compose:
-            self.assertEqual(renderer.main(["--language", "en", "--video", "ready", "--audience", "speaker", "--no-play"]), 0)
+            self.assertEqual(renderer.main(["--language", "en", "--profile", "preview", "--video", "ready", "--audience", "speaker", "--no-play"]), 0)
         load.assert_called_once_with(source_ids=[])
         self.assertEqual(compose.call_args.args[0], ["ready"])
 
@@ -2932,6 +2932,7 @@ COLOCATED_TEST_MODULES = (
     "🧩️models.🧪️tests.⭕️clearance.🐍️",
     "🧩️models.🧪️tests.🔢️counters.🐍️",
     "📊️information.🧪️tests.📏️clearance.🐍️",
+    "📊️information.🧪️tests.🎞️rig.🐍️",
     "👁️representations.🧪️tests.📐️paper.🐍️",
     "🧪️tests.🚘️height.🐍️",
     "🎨️visuals.📐️drafting.🧩️surfaces.🧪️coverage.🐍️",

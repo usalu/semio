@@ -1,0 +1,41 @@
+import sys
+sys.path.insert(0, ".")
+from migrate import T, run
+H = "C:/git/semio/🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/"
+S = "heating.calculation."
+tr = lambda i, *a, **k: T(S + i, *a, **k)
+run(H + "🧮️calculation",
+    [("ReplacementTransform(VGroup(ie[\"loss\"], ie[\"eq\"]), VGroup(ce[\"q\"], ce[\"eq\"])),", f'stage.transition("{S}balance.loss-equation", source=VGroup(ie["loss"], ie["eq"]), target=VGroup(ce["q"], ce["eq"])),'),
+     ("ReplacementTransform(VGroup(mg[\"ht\"], mg[\"plus\"], mg[\"hv\"]), VGroup(ce[\"ht\"], ce[\"plus\"], ce[\"hv\"])),", f'stage.transition("{S}balance.loss-terms", source=VGroup(mg["ht"], mg["plus"], mg["hv"]), target=VGroup(ce["ht"], ce["plus"], ce["hv"])),'),
+     ('ReplacementTransform(ie["t"], ce["lp"]),', f'stage.transition("{S}balance.open-bracket", source=ie["t"], target=ce["lp"]),'),
+     ('ReplacementTransform(ie["v"], ce["rp"]),', f'stage.transition("{S}balance.close-bracket", source=ie["v"], target=ce["rp"]),'),
+     ('ReplacementTransform(mg["arrow"], ce["times"]),', f'stage.transition("{S}balance.arrow-to-times", source=mg["arrow"], target=ce["times"]),'),
+     ('ReplacementTransform(area_static, ce["gt"]),', f'stage.transition("{S}balance.degree-day-area-to-symbol", source=area_static, target=ce["gt"]),'),
+     ('ReplacementTransform(gt_read, vi["gt"]), run_time=1.2)', f'stage.transition("{S}balance.degree-day-readout-to-value", source=gt_read, target=vi["gt"]), run_time=1.2)'),
+     ("Transform(mass_tag, heavy_tag), *sweep(3.5)", f'stage.transition("{S}mass.light-to-heavy-tag", source=mass_tag, target=heavy_tag), *sweep(3.5)'),
+     ("Transform(mass_tag, light_tag), run_time=2.5)", f'stage.transition("{S}mass.heavy-to-example-tag", source=heavy_tag, target=light_tag), run_time=2.5)'),
+     ("a_used_read, eta_read, mass_tag)),", "a_used_read, eta_read, light_tag)),"),
+     ('Transform(ie["q"], tg["q"]),', f'stage.transition("{S}use.heat-need-symbol", source=ie["q"], target=tg["q"]),'),
+     ('ReplacementTransform(green_static, tg["eta"]),', f'stage.transition("{S}use.eta-slot", source=green_static, target=tg["eta"]),'),
+     ('ReplacementTransform(q_loss_tag, me["loss"]),', f'stage.transition("{S}master.loss-tag-to-term", source=q_loss_tag, target=me["loss"]),'),
+     ('ReplacementTransform(q_gain_tag, VGroup(me["eta"], me["dot"], me["gain"])),', f'stage.transition("{S}master.gain-tag-to-term", source=q_gain_tag, target=VGroup(me["eta"], me["dot"], me["gain"])),'),
+     ("ReplacementTransform(_freeze(loss_read), nb[\"loss\"]),", f'stage.transition("{S}master.loss-readout-to-value", source=_freeze(loss_read), target=nb["loss"]),'),
+     ("ReplacementTransform(_freeze(gain_read), nb[\"gain\"]),", f'stage.transition("{S}master.gain-readout-to-value", source=_freeze(gain_read), target=nb["gain"]),'),
+     ("*[ReplacementTransform(copies[k], items[k]) for k in copies], *running(1.2), run_time=1.2)", f'stage.transition("{S}system.readouts-into-sum", source=copies, target={{k: items[k] for k in copies}}), *running(1.2), run_time=1.2)')],
+    [tr("balance.loss-equation", "abstraction", S + "balance.loss-equation-initial", S + "balance.loss-equation-compact", "replace", 2.5),
+     tr("balance.loss-terms", "abstraction", S + "balance.loss-terms-initial", S + "balance.loss-terms-compact", "replace", 2.5),
+     tr("balance.open-bracket", "transformation", S + "balance.transmission-label", S + "balance.open-bracket", "replace", 2.5),
+     tr("balance.close-bracket", "transformation", S + "balance.ventilation-label", S + "balance.close-bracket", "replace", 2.5),
+     tr("balance.arrow-to-times", "transformation", S + "balance.arrow", S + "balance.times", "replace", 2.5),
+     tr("balance.degree-day-area-to-symbol", "abstraction", S + "balance.degree-day-area", S + "balance.degree-day-symbol", "replace", 2.5),
+     tr("balance.degree-day-readout-to-value", "abstraction", S + "balance.degree-day-readout", S + "balance.degree-day-value", "replace", 1.2),
+     tr("mass.light-to-heavy-tag", "transformation", S + "mass.light-tag", S + "mass.heavy-tag", "replace", 3.5),
+     tr("mass.heavy-to-example-tag", "transformation", S + "mass.heavy-tag", S + "mass.example-tag", "replace", 2.5),
+     tr("use.heat-need-symbol", "transformation", S + "use.gain-symbol", S + "use.use-symbol", "replace", 1.2),
+     tr("use.eta-slot", "abstraction", S + "use.eta-readout", S + "use.eta-symbol", "replace", 1.6),
+     tr("master.loss-tag-to-term", "abstraction", S + "master.loss-tag", S + "master.loss-term", "replace", 1.5),
+     tr("master.gain-tag-to-term", "abstraction", S + "master.gain-tag", S + "master.gain-term", "replace", 1.5, ),
+     tr("master.loss-readout-to-value", "abstraction", S + "master.loss-readout", S + "master.loss-value", "replace", 1.5),
+     tr("master.gain-readout-to-value", "abstraction", S + "master.gain-readout", S + "master.gain-value", "replace", 1.5),
+     tr("system.readouts-into-sum", "abstraction", S + "system.readouts", S + "system.sum-slots", "replace", 1.2, relation="many-to-many", corr="key")],
+    ["Scene2", "Scene4", "UltimateEnergyBalance", "AnlagenVerluste"])

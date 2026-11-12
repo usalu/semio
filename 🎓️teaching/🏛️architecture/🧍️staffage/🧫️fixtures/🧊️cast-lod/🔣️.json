@@ -1,0 +1,31 @@
+{
+  "description": "Language-agnostic vectors of the cast levels of detail: the schedule each level samples from a canonical clock, the invalid requests, and the revision of resolved levels. Checked by the Vitest twin 🧪️tests/🧊️cast-lod and the Python bridge 🎨️visuals/🧍️staffage/🧪️tests.",
+  "schedules": [
+    { "name": "a looping walk cycle previews at half the 15 fps output in whole periods", "canonical": { "fps": 15, "durationS": 1.2, "loop": true, "count": 18 }, "lod": "preview", "outputFps": 15, "expected": { "count": 9, "fps": 7.5, "first": 0, "last": 1.0666666666666667 } },
+    { "name": "a non-looping clip keeps both endpoints", "canonical": { "fps": 15, "durationS": 2, "loop": false, "count": 31 }, "lod": "preview", "outputFps": 15, "expected": { "count": 16, "fps": 7.5, "first": 0, "last": 2 } },
+    { "name": "a 600 sample transient is capped at 90 samples and still ends on the exact terminal state", "canonical": { "fps": 14.975, "durationS": 40, "loop": false, "count": 600 }, "lod": "preview", "outputFps": 15, "expected": { "count": 90, "fps": 2.225, "first": 0, "last": 40 } },
+    { "name": "a long loop wraps in whole periods", "canonical": { "fps": 6, "durationS": 100, "loop": true, "count": 600 }, "lod": "preview", "outputFps": 15, "expected": { "count": 90, "fps": 0.9, "first": 0, "last": 98.88888888888889 } },
+    { "name": "a faster output rate never samples above the cast rate", "canonical": { "fps": 15, "durationS": 1.2, "loop": true, "count": 18 }, "lod": "preview", "outputFps": 60, "expected": { "count": 18, "fps": 15, "first": 0, "last": 1.1333333333333333 } },
+    { "name": "a very short non-looping clip keeps its first and last sample", "canonical": { "fps": 15, "durationS": 0.1, "loop": false, "count": 3 }, "lod": "preview", "outputFps": 15, "expected": { "count": 2, "fps": 10, "first": 0, "last": 0.1 } },
+    { "name": "a pose has one sample at every level", "canonical": { "fps": 1, "durationS": 0, "loop": false, "count": 1 }, "lod": "preview", "outputFps": 15, "expected": { "count": 1, "fps": 1, "first": 0, "last": 0 } },
+    { "name": "the poster is one sample at the phase of the duration", "canonical": { "fps": 15, "durationS": 1.2, "loop": true, "count": 18 }, "lod": "poster", "outputFps": 15, "expected": { "count": 1, "fps": 15, "first": 0, "last": 0 } },
+    { "name": "the full level is the canonical schedule", "canonical": { "fps": 15, "durationS": 1.2, "loop": true, "count": 18 }, "lod": "full", "outputFps": 15, "expected": { "count": 18, "fps": 15, "first": 0, "last": 1.1333333333333333 } },
+    { "name": "the full level of a 600 sample transient is unchanged", "canonical": { "fps": 14.975, "durationS": 40, "loop": false, "count": 600 }, "lod": "full", "outputFps": 30, "expected": { "count": 600, "fps": 14.975, "first": 0, "last": 40 } }
+  ],
+  "invalid": [
+    { "name": "an unknown level", "lod": "thumb", "outputFps": 15, "message": "unknown level of detail" },
+    { "name": "no output rate", "lod": "preview", "outputFps": 0, "message": "output frame rate" },
+    { "name": "an absurd output rate", "lod": "preview", "outputFps": 1000, "message": "output frame rate" }
+  ],
+  "resolved": [
+    { "lod": "preview", "outputFps": 15, "fpsCap": 7.5, "revision": "1b3820e5" },
+    { "lod": "preview", "outputFps": 30, "fpsCap": 15, "revision": "a64af1a0" },
+    { "lod": "full", "outputFps": 15, "fpsCap": null, "revision": "a771260f" },
+    { "lod": "poster", "outputFps": 15, "fpsCap": null, "revision": "54ed46e7" }
+  ],
+  "roles": {
+    "full": ["body", "detail", "texture", "glazing", "ground"],
+    "preview": ["body", "glazing", "ground"],
+    "poster": ["body", "glazing", "ground"]
+  }
+}

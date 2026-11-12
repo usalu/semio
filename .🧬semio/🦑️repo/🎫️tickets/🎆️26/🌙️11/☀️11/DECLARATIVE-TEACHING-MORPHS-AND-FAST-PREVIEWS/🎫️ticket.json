@@ -1,0 +1,20 @@
+{
+  "title": "Declarative Teaching Morphs with Fast Previews and Full Final Renders",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Implement a complete declarative morph and render-quality system for the architecture teaching clips (kit: teaching-morph-preview-launch-kit, acceptance.md/fleet.md). One canonical declarative morph model executed by shared render infrastructure; central preview/final render profiles with strict preview semantics (source translate/scale only, atomic swap to exact target at the terminal scheduled frame); zero full-morph work in preview jobs, real full morph in final jobs; canonical staffage LoD; profile-scoped bounded caches; cancellation and leak-free lifecycle; migrate every clip/consumer; before/after measurements; repair encountered fundamental defects.",
+  "goal": "🎯updatedtutorials",
+  "sessions": [],
+  "note": "Created manually: mcp__repo__ticket_open permission was not granted in this session.",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-11 00:00:00",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "windows",
+      "client": "claude-code",
+      "prompt": "Declarative teaching morphs with fast previews and full final renders (teaching-morph-preview-launch-kit).",
+      "llm": "opus-4-7"
+    }
+  ]
+}

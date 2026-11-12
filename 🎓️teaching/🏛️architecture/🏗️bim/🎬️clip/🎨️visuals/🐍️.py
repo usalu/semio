@@ -37,7 +37,7 @@ def source_files() -> tuple[Path, ...]:
     """🧾 Expose content, schema, widgets, palette and typography as render provenance inputs."""
     root = Path(__file__).resolve().parents[1]
     widgets = sorted(Path(__file__).parent.rglob("🐍️.py"))
-    return (Path(__file__), *widgets, root / "🧱️model/🐍️.py", root / "🧱️model/🔣️.json",
+    return (Path(__file__), *widgets, *sorted(root.rglob("🔀️transitions/🔣️.json")), root / "🧱️model/🐍️.py", root / "🧱️model/🔣️.json",
             root / "🧱️model/🧬️schema/🔣️.schema.json", *_theme.source_files())
 
 

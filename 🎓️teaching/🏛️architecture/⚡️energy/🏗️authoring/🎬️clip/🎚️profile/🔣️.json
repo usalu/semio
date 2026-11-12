@@ -1,0 +1,26 @@
+{
+  "$schema": "./🔣️.schema.json",
+  "version": 1,
+  "profiles": {
+    "preview": {
+      "morph": "swap",
+      "lod": "preview",
+      "output": { "width": 854, "height": 480, "fps": 15 },
+      "budgets": { "curveSamples": 64, "heatmapResolution": 32, "particles": 24, "trails": 12 },
+      "antialias": false,
+      "shadows": false,
+      "cache": { "maxEntries": 64, "maxBytes": 67108864 },
+      "performance": { "firstFrameMs": null, "warmFrameMedianMs": null, "warmFrameP95Ms": null, "seekMs": null, "retainedCacheEntries": null }
+    },
+    "final": {
+      "morph": "full",
+      "lod": "full",
+      "output": { "width": 1920, "height": 1080, "fps": 30 },
+      "budgets": { "curveSamples": null, "heatmapResolution": null, "particles": null, "trails": null },
+      "antialias": true,
+      "shadows": true,
+      "cache": { "maxEntries": 256, "maxBytes": 536870912 },
+      "performance": { "firstFrameMs": null, "warmFrameMedianMs": null, "warmFrameP95Ms": null, "seekMs": null, "retainedCacheEntries": null }
+    }
+  }
+}

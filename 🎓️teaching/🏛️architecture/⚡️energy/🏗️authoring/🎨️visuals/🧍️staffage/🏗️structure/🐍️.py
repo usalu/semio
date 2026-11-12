@@ -12,10 +12,10 @@ A moment here is a moment of force in N·m (displayed kN·m), never a momentum. 
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import os
 import shutil
-import subprocess
 import tempfile
 from decimal import ROUND_HALF_UP, Context, Decimal
 from functools import lru_cache
@@ -30,6 +30,9 @@ _INDEX = "🔣️.json"
 _PREFIXES = {"N": ((1e3, "kN"), (0.0, "N")), "N·m": ((1e3, "kN·m"), (0.0, "N·m"))}
 _STATUS_TOLERANCE = 1e-9
 _SOLVE_TIMEOUT_S = 120
+_SOLVE_ENTRIES = 256
+_SOLVE_DISK_BYTES = 256 << 20
+_SOLVE_DISK_AGE_S = 30 * 24 * 3600
 
 
 def _precision(value: float, significant: int) -> Decimal:
@@ -155,9 +158,15 @@ def _solver_digest() -> str:
     return digest.hexdigest()
 
 
-@lru_cache(maxsize=None)
+def _tools():
+    """🧰 The staffage process-tree runner and the shared disk-cache pruner."""
+    return (importlib.import_module(__package__.rpartition(".")[0] + ".🐍️"),
+            importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.💾️disk.🐍️"))
+
+
+@lru_cache(maxsize=_SOLVE_ENTRIES)
 def _solve(canonical: str) -> str:
-    """🧮 Solve one canonical case document through the library command, cached on disk by content."""
+    """🧮 Solve one canonical case document through the library command, cached on disk by content; the solver runs in a supervised process tree, so a cancelled or timed out render stops it and everything it started."""
     key = hashlib.sha256((canonical + _solver_digest()).encode("utf-8")).hexdigest()[:32]
     target = _cache_root() / f"{key}.json"
     if not target.is_file():
@@ -165,10 +174,14 @@ def _solve(canonical: str) -> str:
         with tempfile.TemporaryDirectory(dir=target.parent) as folder:
             source, out = Path(folder) / "case.json", Path(folder) / "out.json"
             source.write_text(canonical, encoding="utf-8")
-            done = subprocess.run([_repo(), "tools", "exec", "bun", "--", str(_SOLVER), "--case", str(source), "--out", str(out)], cwd=_WORKSPACE, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=_SOLVE_TIMEOUT_S)
-            if done.returncode != 0 or not out.is_file():
-                raise RuntimeError(f"the structural solver failed for case {json.loads(canonical).get('case')!r}: {done.stderr.strip()[-600:]}")
+            staffage, disk = _tools()
+            staffage.run_tree([_repo(), "tools", "exec", "bun", "--", str(_SOLVER), "--case", str(source), "--out", str(out)], timeout=_SOLVE_TIMEOUT_S, label=f"The structural solver for case {json.loads(canonical).get('case')!r}")
+            if not out.is_file():
+                raise RuntimeError(f"the structural solver wrote no result for case {json.loads(canonical).get('case')!r}")
             os.replace(out, target)
+        disk.prune(target.parent, max_bytes=_SOLVE_DISK_BYTES, max_age_s=_SOLVE_DISK_AGE_S, keep=frozenset((target.name,)))
+    else:
+        os.utime(target)
     return target.read_text(encoding="utf-8")
 
 
@@ -179,7 +192,7 @@ def solve_case(document: dict) -> dict:
 
 def cast_structure(cast: str) -> dict:
     """🧾 The `structure` block of a rendered `forces` or `moments` cast: `units`, `colors` and one summary per frame; the cast is rendered first when it is missing."""
-    staffage = __import__("importlib").import_module(__package__.rpartition(".")[0] + ".🐍️")
+    staffage = importlib.import_module(__package__.rpartition(".")[0] + ".🐍️")
     folder = staffage.ensure_casts([cast])[cast]
     index = json.loads((folder / _INDEX).read_text(encoding="utf-8"))
     if "structure" not in index:

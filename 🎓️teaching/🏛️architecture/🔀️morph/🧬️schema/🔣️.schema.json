@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/teaching/morph/transitions.schema.json",
+  "title": "Declarative morph transitions",
+  "description": "One document per clip folder: stable ids, semantic intent, endpoints, correspondence, recipe, timing and placement of every transition. Profile-independent: previews and final renders read the same document. Keys x-code and x-fix are annotations read by the spec validator (problem code and how to fix).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "transitions"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "version": {"const": 1, "x-code": "version", "x-fix": "set \"version\": 1 (the only supported schema version)"},
+    "transitions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/transition"}},
+    "groups": {"type": "array", "items": {"$ref": "#/$defs/group"}}
+  },
+  "$defs": {
+    "segment": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)*$",
+      "x-code": "id-format",
+      "x-fix": "use lower-case dotted segments such as \"trees.birth.capsules-to-leaves\" (letters, digits and single hyphens within a segment)"
+    },
+    "label": {"type": ["string", "null"]},
+    "endpoint": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["entity"],
+      "properties": {
+        "entity": {"$ref": "#/$defs/id"},
+        "revision": {"type": "integer", "minimum": 1, "default": 1, "x-code": "revision", "x-fix": "use an integer revision >= 1"},
+        "sampling": {"enum": ["live", "snapshot"], "default": "snapshot", "x-code": "sampling", "x-fix": "use \"snapshot\" (frozen at the transition start) or \"live\" (entity keeps animating)"},
+        "view": {"$ref": "#/$defs/label"},
+        "scale": {"$ref": "#/$defs/label"},
+        "pose": {"$ref": "#/$defs/label"},
+        "scenario": {"$ref": "#/$defs/label"}
+      }
+    },
+    "correspondence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"enum": ["identity", "key", "order", "pairs", "recipe"], "x-code": "correspondence-kind", "x-fix": "use one of identity, key, order, pairs, recipe"},
+        "pairs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "string", "minLength": 1}},
+          "x-code": "pairs-format",
+          "x-fix": "list [sourcePart, targetPart] part-name pairs such as [[\"0\", \"leaf-a\"], [\"1\", \"leaf-b\"]]"
+        },
+        "name": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "x-code": "recipe-name-format", "x-fix": "use a lower-case hyphenated correspondence name such as \"capsule-item\""}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"kind": {"const": "pairs"}}, "required": ["kind"]},
+          "then": {"required": ["pairs"], "x-code": "pairs-required", "x-fix": "add \"pairs\": [[sourcePart, targetPart], ...] to this correspondence"}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "recipe"}}, "required": ["kind"]},
+          "then": {"required": ["name"], "x-code": "recipe-name-required", "x-fix": "add \"name\": \"<registered correspondence>\" to this correspondence"}
+        },
+        {
+          "if": {"properties": {"kind": {"enum": ["identity", "key", "order"]}}, "required": ["kind"]},
+          "then": {"properties": {"pairs": false, "name": false}, "x-code": "correspondence-extra", "x-fix": "remove \"pairs\"/\"name\"; they are only allowed for kind \"pairs\" / \"recipe\""}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "pairs"}}, "required": ["kind"]},
+          "then": {"properties": {"name": false}, "x-code": "correspondence-extra", "x-fix": "remove \"name\"; it is only allowed for kind \"recipe\""}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "recipe"}}, "required": ["kind"]},
+          "then": {"properties": {"pairs": false}, "x-code": "correspondence-extra", "x-fix": "remove \"pairs\"; it is only allowed for kind \"pairs\""}
+        }
+      ]
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration"],
+      "properties": {
+        "duration": {"type": "number", "minimum": 0, "x-code": "duration", "x-fix": "use a finite number of seconds >= 0 (0 switches atomically)"},
+        "easing": {"enum": ["linear", "smooth", "ease-in", "ease-out", "ease-in-out", "overshoot"], "default": "smooth", "x-code": "easing", "x-fix": "use one of linear, smooth, ease-in, ease-out, ease-in-out, overshoot"},
+        "lag": {"type": "number", "minimum": 0, "default": 0, "x-code": "lag", "x-fix": "use a finite stagger in seconds >= 0"},
+        "limit": {"type": ["number", "null"], "exclusiveMinimum": 0, "default": null, "x-code": "limit", "x-fix": "use null (unbounded) or a finite number of seconds > 0 that bounds the staggered total"}
+      }
+    },
+    "placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "space": {"type": "string", "pattern": "^(scene|entity:[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)*)$", "default": "scene", "x-code": "placement-space", "x-fix": "use \"scene\" or \"entity:<entity id>\""},
+        "anchor": {"enum": ["center", "bottom", "top", "left", "right", "origin"], "default": "center", "x-code": "placement-anchor", "x-fix": "use one of center, bottom, top, left, right, origin"},
+        "fit": {"enum": ["none", "contain", "width", "height"], "default": "contain", "x-code": "placement-fit", "x-fix": "use one of none, contain, width, height"},
+        "uniform": {"type": "boolean", "default": true, "x-code": "placement-uniform", "x-fix": "use true or false"}
+      }
+    },
+    "final": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pathArc": {"type": "number", "default": 0, "x-code": "final-path-arc", "x-fix": "use a finite arc in radians"},
+        "dip": {"type": "number", "minimum": 0, "maximum": 1, "default": 0, "x-code": "final-dip", "x-fix": "use a number in [0, 1]"},
+        "ghost": {"type": "number", "minimum": 0, "maximum": 1, "default": 0, "x-code": "final-ghost", "x-fix": "use a number in [0, 1]"}
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "intent", "source", "target", "relation", "recipe", "timing"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "intent": {"enum": ["abstraction", "concretization", "continuation", "transformation"], "x-code": "intent", "x-fix": "use one of abstraction, concretization, continuation, transformation"},
+        "source": {"$ref": "#/$defs/endpoint"},
+        "target": {"$ref": "#/$defs/endpoint"},
+        "relation": {"enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"], "x-code": "relation", "x-fix": "use one of one-to-one, one-to-many, many-to-one, many-to-many"},
+        "correspondence": {"$ref": "#/$defs/correspondence"},
+        "recipe": {"enum": ["parts", "hull", "scatter", "gather", "split", "unfold", "retext", "flight", "move", "replace", "fade", "vanish", "appear"], "x-code": "recipe", "x-fix": "use one of parts, hull, scatter, gather, split, unfold, retext, flight, move, replace, fade, vanish, appear"},
+        "copy": {"type": "boolean", "default": false, "x-code": "copy", "x-fix": "use true (source stays, Manim TransformFromCopy) or false (source is replaced)"},
+        "timing": {"$ref": "#/$defs/timing"},
+        "placement": {"$ref": "#/$defs/placement"},
+        "final": {"$ref": "#/$defs/final"}
+      },
+      "allOf": [
+        {"if": {"properties": {"recipe": {"const": "parts"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one", "many-to-many"], "x-code": "recipe-relation", "x-fix": "recipe \"parts\" morphs matched parts, so use relation one-to-one or many-to-many (or pick another recipe)"}}}},
+        {"if": {"properties": {"recipe": {"const": "hull"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one"], "x-code": "recipe-relation", "x-fix": "recipe \"hull\" collapses one source to one silhouette, so use relation one-to-one (or pick another recipe)"}}}},
+        {"if": {"properties": {"recipe": {"const": "scatter"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["many-to-many"], "x-code": "recipe-relation", "x-fix": "recipe \"scatter\" sends many sources to many targets, so use relation many-to-many (or use split for one-to-many)"}}}},
+        {"if": {"properties": {"recipe": {"const": "gather"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["many-to-one"], "x-code": "recipe-relation", "x-fix": "recipe \"gather\" collects many sources into one target, so use relation many-to-one"}}}},
+        {"if": {"properties": {"recipe": {"const": "split"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-many"], "x-code": "recipe-relation", "x-fix": "recipe \"split\" breaks one source into many targets, so use relation one-to-many"}}}},
+        {"if": {"properties": {"recipe": {"const": "unfold"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-many"], "x-code": "recipe-relation", "x-fix": "recipe \"unfold\" lays one source out as many targets, so use relation one-to-many"}}}},
+        {"if": {"properties": {"recipe": {"const": "retext"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one"], "x-code": "recipe-relation", "x-fix": "recipe \"retext\" rewrites one text into one text, so use relation one-to-one"}}}},
+        {"if": {"properties": {"recipe": {"const": "flight"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one"], "x-code": "recipe-relation", "x-fix": "recipe \"flight\" moves one token along a path, so use relation one-to-one"}}}},
+        {"if": {"properties": {"recipe": {"const": "move"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one"], "x-code": "recipe-relation", "x-fix": "recipe \"move\" keeps one identity, so use relation one-to-one"}, "intent": {"const": "continuation", "x-code": "recipe-intent", "x-fix": "recipe \"move\" is the continuation recipe; set intent to \"continuation\""}}}},
+        {"if": {"properties": {"recipe": {"const": "replace"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one", "many-to-many"], "x-code": "recipe-relation", "x-fix": "recipe \"replace\" (Manim ReplacementTransform) swaps matched objects, so use relation one-to-one or many-to-many"}}}},
+        {"if": {"properties": {"recipe": {"const": "fade"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one", "many-to-many"], "x-code": "recipe-relation", "x-fix": "recipe \"fade\" (Manim FadeTransform) cross-fades matched objects, so use relation one-to-one or many-to-many"}}}},
+        {"if": {"properties": {"recipe": {"const": "vanish"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one"], "x-code": "recipe-relation", "x-fix": "recipe \"vanish\" removes one entity, so use relation one-to-one"}, "target": {"type": "null", "x-code": "absence-endpoint", "x-fix": "recipe \"vanish\" morphs into nothing: set \"target\": null"}, "source": {"type": "object", "x-code": "absence-endpoint", "x-fix": "recipe \"vanish\" needs a source entity"}, "correspondence": false}}},
+        {"if": {"properties": {"recipe": {"const": "appear"}}, "required": ["recipe"]}, "then": {"properties": {"relation": {"enum": ["one-to-one"], "x-code": "recipe-relation", "x-fix": "recipe \"appear\" introduces one entity, so use relation one-to-one"}, "source": {"type": "null", "x-code": "absence-endpoint", "x-fix": "recipe \"appear\" comes from nothing: set \"source\": null"}, "target": {"type": "object", "x-code": "absence-endpoint", "x-fix": "recipe \"appear\" needs a target entity"}, "correspondence": false}}},
+        {"if": {"properties": {"recipe": {"enum": ["parts", "hull", "scatter", "gather", "split", "unfold", "retext", "flight", "move", "replace", "fade"]}}, "required": ["recipe"]}, "then": {"required": ["correspondence"], "properties": {"source": {"type": "object", "x-code": "endpoint-required", "x-fix": "only recipes vanish/appear take a null endpoint; give this recipe a source entity"}, "target": {"type": "object", "x-code": "endpoint-required", "x-fix": "only recipes vanish/appear take a null endpoint; give this recipe a target entity"}}}},
+        {"if": {"properties": {"copy": {"const": true}}, "required": ["copy"]}, "then": {"properties": {"source": {"type": "object", "x-code": "copy-endpoints", "x-fix": "copy keeps the source and needs both a source and a target entity"}, "target": {"type": "object", "x-code": "copy-endpoints", "x-fix": "copy keeps the source and needs both a source and a target entity"}}}},
+        {"if": {"properties": {"relation": {"enum": ["one-to-many", "many-to-one"]}}, "required": ["relation"]}, "then": {"properties": {"correspondence": {"properties": {"kind": {"enum": ["pairs", "recipe"], "x-code": "pairs-or-recipe-required", "x-fix": "counts differ for this relation, so declare the matching explicitly: use correspondence kind \"pairs\" with explicit part pairs or kind \"recipe\" with a registered name"}}}}}},
+        {"if": {"properties": {"correspondence": {"properties": {"kind": {"const": "identity"}}, "required": ["kind"]}}, "required": ["correspondence"]}, "then": {"properties": {"relation": {"enum": ["one-to-one"], "x-code": "identity-relation", "x-fix": "identity keeps the same object, so use relation one-to-one"}}}}
+      ]
+    },
+    "group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "transitions"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "mode": {"enum": ["sequence", "parallel"], "default": "sequence", "x-code": "group-mode", "x-fix": "use \"sequence\" (later transitions own shared boundaries) or \"parallel\""},
+        "transitions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/id"}, "x-code": "group-members", "x-fix": "list at least one existing transition id"}
+      }
+    }
+  }
+}

@@ -311,7 +311,8 @@
             "maxX": 0.5,
             "maxY": 1.8
           },
-          "heightM": 1.8,
+          "lod": { "id": "full", "revision": "0a1b2c3d", "canonicalFrames": 18, "canonicalFps": 15 },
+          "logical": { "heightM": 1.8, "figureBoundsM": { "minX": -0.5, "minY": 0, "maxX": 0.5, "maxY": 1.8 }, "partsM": { "torso": [[-0.2, 0.9], [0.2, 0.9], [0, 1.5]] }, "maxPaths": 88 },
           "provenance": {
             "version": 1,
             "asset": {
@@ -339,6 +340,7 @@
               "offsetS": 0,
               "frames": 18
             },
+            "lod": { "id": "full", "revision": "0a1b2c3d" },
             "scenario": {
               "kind": "thermal",
               "environment": {
@@ -376,7 +378,8 @@
             "maxX": 0.5,
             "maxY": 1.8
           },
-          "heightM": 1.8,
+          "lod": { "id": "full", "revision": "0a1b2c3d", "canonicalFrames": 18, "canonicalFps": 15 },
+          "logical": { "heightM": 1.8, "figureBoundsM": { "minX": -0.5, "minY": 0, "maxX": 0.5, "maxY": 1.8 }, "partsM": { "torso": [[-0.2, 0.9], [0.2, 0.9], [0, 1.5]] }, "maxPaths": 88 },
           "provenance": {
             "version": 1,
             "asset": {
@@ -404,6 +407,7 @@
               "offsetS": 0,
               "frames": 18
             },
+            "lod": { "id": "full", "revision": "0a1b2c3d" },
             "scenario": {
               "kind": "thermal",
               "timeline": [
@@ -447,7 +451,8 @@
             "maxX": 0.5,
             "maxY": 1.8
           },
-          "heightM": 1.8,
+          "lod": { "id": "full", "revision": "0a1b2c3d", "canonicalFrames": 18, "canonicalFps": 15 },
+          "logical": { "heightM": 1.8, "figureBoundsM": { "minX": -0.5, "minY": 0, "maxX": 0.5, "maxY": 1.8 }, "partsM": { "torso": [[-0.2, 0.9], [0.2, 0.9], [0, 1.5]] }, "maxPaths": 88 },
           "provenance": {
             "version": 1,
             "asset": {
@@ -475,6 +480,7 @@
               "offsetS": 0,
               "frames": 18
             },
+            "lod": { "id": "full", "revision": "0a1b2c3d" },
             "scenario": {
               "kind": "structural",
               "dynamics": "quasi-static",
@@ -508,7 +514,8 @@
             "maxX": 0.5,
             "maxY": 1.8
           },
-          "heightM": 1.8,
+          "lod": { "id": "full", "revision": "0a1b2c3d", "canonicalFrames": 18, "canonicalFps": 15 },
+          "logical": { "heightM": 1.8, "figureBoundsM": { "minX": -0.5, "minY": 0, "maxX": 0.5, "maxY": 1.8 }, "partsM": { "torso": [[-0.2, 0.9], [0.2, 0.9], [0, 1.5]] }, "maxPaths": 88 },
           "provenance": {
             "version": 1,
             "asset": {
@@ -536,6 +543,7 @@
               "offsetS": 0,
               "frames": 18
             },
+            "lod": { "id": "full", "revision": "0a1b2c3d" },
             "scenario": {
               "kind": "geometry"
             }
@@ -544,6 +552,14 @@
       }
     ],
     "invalid": [
+      { "name": "no level of detail", "remove": "provenance/lod" },
+      { "name": "an unknown level of detail", "set": { "path": "provenance/lod/id", "value": "thumb" } },
+      { "name": "a level revision that is no hash", "set": { "path": "provenance/lod/revision", "value": "xyz" } },
+      { "name": "no index level of detail", "remove": "lod" },
+      { "name": "no logical descriptor", "remove": "logical" },
+      { "name": "no logical height", "remove": "logical/heightM" },
+      { "name": "no logical figure bounds", "remove": "logical/figureBoundsM" },
+      { "name": "a part with two points", "set": { "path": "logical/partsM/torso", "value": [[0, 0], [1, 1]] } },
       {
         "name": "no provenance",
         "remove": "provenance"

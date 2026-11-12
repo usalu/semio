@@ -769,7 +769,7 @@ class Beat5_ParetoFront(_visuals.ClipScene):
         walk = mn.Succession(*[mn.AnimationGroup(self.set_design(s.focus, {item["key"]: item["after"][item["key"]]}, 1.1), s.stage.animate(run_time=1.1).set_value(k + 1)) for k, item in enumerate(path.stages)])
         self.add(rows)
         self.step("approximate", mn.FadeOut(s.thumbs), mn.FadeOut(front_note), mn.FadeIn(ghost), mn.FadeIn(tag), mn.FadeIn(card), mn.FadeIn(changes),
-                  self._morph(s, {i: {"plain": 0, "grey": 1, "ring": 0} for i in gone}), mn.ReplacementTransform(s.guide, guide2), walk, seconds=4.2)
+                  self._morph(s, {i: {"plain": 0, "grey": 1, "ring": 0} for i in gone}), self.morphs.transition("optimization.pareto.approximate.guide-to-swapped", source=s.guide, target=guide2), walk, seconds=4.2)
         s.guide = home
         heads = mn.VGroup(self.label("OBJECTIVE SPACE: cost · electricity", "ZIELRAUM: Kosten · Strombedarf", s.axes.c2p(s.x_range[0], s.y_range[1]) + mn.RIGHT * 1.6 + mn.DOWN * .7, size=16, color=GOOD, width=3.0),
                           self.label("DESIGN SPACE", "ENTWURFSRAUM", (3.4, 2.66, 0), size=17, color=GLASS, width=2.4),
@@ -778,7 +778,7 @@ class Beat5_ParetoFront(_visuals.ClipScene):
                           self.label("simulation", "Simulation", (.5, -1.05, 0), size=16, color=INK, width=1.6))
         s.heads = heads
         self.step("sets", mn.FadeOut(s.total), mn.FadeOut(ghost), mn.FadeOut(tag), mn.FadeOut(card), mn.FadeOut(rows), mn.FadeOut(changes), self._morph(s, {i: {"plain": 1, "grey": 0, "ring": 1} for i in gone}),
-                  mn.ReplacementTransform(guide2, home), self.set_design(s.focus, member["design"], 1.2), mn.FadeIn(heads), seconds=1.4)
+                  self.morphs.transition("optimization.pareto.sets.swapped-to-guide", source=guide2, target=home), self.set_design(s.focus, member["design"], 1.2), mn.FadeIn(heads), seconds=1.4)
 
     def _step_card(self, s):
         """🧾 Live card of the front step being walked: both façades with the changed variable in colour, and the model numbers of the destination."""

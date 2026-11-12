@@ -1,0 +1,44 @@
+{
+  "transitions": [
+    {
+      "name": "15 fps, 18 frames from frame 15",
+      "fps": 15,
+      "f0": 15,
+      "count": 18,
+      "total": 60
+    },
+    {
+      "name": "30 fps, 15 frames from frame 12",
+      "fps": 30,
+      "f0": 12,
+      "count": 15,
+      "total": 60
+    },
+    {
+      "name": "25 fps, ten frames at 100",
+      "fps": 25,
+      "f0": 100,
+      "count": 10,
+      "total": 140
+    },
+    {
+      "name": "60 fps, one frame interval",
+      "fps": 60,
+      "f0": 30,
+      "count": 1,
+      "total": 60
+    }
+  ],
+  "keyframeInterval": 5,
+  "seed": 7,
+  "profiles": {
+    "preview": {
+      "en": "Preview",
+      "de": "Vorschau"
+    },
+    "final": {
+      "en": "Final",
+      "de": "Final"
+    }
+  }
+}

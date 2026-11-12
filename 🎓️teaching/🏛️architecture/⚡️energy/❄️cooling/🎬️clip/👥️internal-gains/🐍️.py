@@ -60,6 +60,8 @@ subtitle_text = _manim_module.subtitle_text
 SAFE_BOTTOM = _manim_module.SAFE_BOTTOM
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 unit_text = _manim_module.unit_text
 load_vo_timing = _manim_module.load_vo_timing
 
@@ -190,6 +192,7 @@ class Beat1_OfficeRoom(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("The enclosed environment", "Die umschlossene Umgebung"))
@@ -219,7 +222,7 @@ class Beat1_OfficeRoom(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "interior"))
         freeze_drawables(facade)
         freeze_drawables(room["shell"])
-        self.play(ReplacementTransform(facade, room["shell"]), FadeIn(room["glass"]), Create(insulation_box),
+        self.play(stage.transition("cooling.internal-gains.room.facade-to-shell", source=facade, target=room["shell"]), FadeIn(room["glass"]), Create(insulation_box),
                   run_time=1.8)
         self.add(room["air"])
         self.play(LaggedStart(*[FadeIn(m) for m in office["group"]], lag_ratio=0.15), FadeIn(interior_label),
@@ -271,6 +274,7 @@ class Beat2_HumanFactor(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Human metabolic heat", "Menschliche Stoffwechselwärme"))
@@ -412,7 +416,7 @@ class Beat2_HumanFactor(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "activity_scale"))
         self.play(
             Create(scale_line), Create(ticks), FadeIn(tick_labels), FadeIn(unit_label),
-            *[FadeTransform(fig, dot) for fig, dot in zip(figures, dots)],
+            stage.transition("cooling.internal-gains.activity.figures-to-dots", source=figures, target=dots),
             *[label.animate.move_to(t) for label, t in zip(names, name_targets)],
             *[read.animate.move_to(t) for read, t in zip(static_reads, read_targets)],
             run_time=2.2,
@@ -510,8 +514,8 @@ class Beat2_HumanFactor(Scene):
         self.play(FadeOut(single_label), Create(hall_outline), Create(tier_lines), run_time=0.8)
         self.add(n_hall_read)
         self.play(
-            FadeTransform(single, grid_icons[0]),
-            LaggedStart(*[TransformFromCopy(grid_icons[0], icon) for icon in grid_icons[1:]], lag_ratio=0.03),
+            stage.transition("cooling.internal-gains.hall.single-to-first-icon", source=single, target=grid_icons[0]),
+            stage.transition("cooling.internal-gains.hall.first-icon-to-grid", source=[grid_icons[0]], target=list(grid_icons[1:])),
             n_hall.animate.set_value(len(grid_icons)),
             run_time=2.0,
         )

@@ -1,0 +1,37 @@
+{
+  "poster": [
+    {"name": "frame", "policy": {"kind": "frame", "index": 7}, "frames": 30, "fps": 15, "expect": 7},
+    {"name": "time-half-frame-rounds-up", "policy": {"kind": "time", "seconds": 1.0}, "frames": 30, "fps": 15, "expect": 15},
+    {"name": "fraction-middle", "policy": {"kind": "fraction", "value": 0.5}, "frames": 30, "fps": 15, "expect": 15},
+    {"name": "fraction-end-is-last-frame", "policy": {"kind": "fraction", "value": 1}, "frames": 30, "fps": 15, "expect": 29},
+    {"name": "fraction-start", "policy": {"kind": "fraction", "value": 0}, "frames": 30, "fps": 15, "expect": 0},
+    {"name": "terminal-ten-frame-transition", "policy": {"kind": "transition", "id": "t"}, "windows": {"t": [10.0, 1.0]}, "frames": 200, "fps": 10, "expect": 109},
+    {"name": "terminal-zero-duration-is-atomic-frame", "policy": {"kind": "transition", "id": "t"}, "windows": {"t": [2.0, 0.0]}, "frames": 100, "fps": 10, "expect": 20},
+    {"name": "terminal-one-frame", "policy": {"kind": "transition", "id": "t"}, "windows": {"t": [2.0, 0.1]}, "frames": 100, "fps": 10, "expect": 20},
+    {"name": "terminal-30fps", "policy": {"kind": "transition", "id": "t"}, "windows": {"t": [1.0, 1.2]}, "frames": 300, "fps": 30, "expect": 65},
+    {"name": "frame-outside", "policy": {"kind": "frame", "index": 30}, "frames": 30, "fps": 15, "error": "outside"},
+    {"name": "fraction-out-of-range", "policy": {"kind": "fraction", "value": 1.5}, "frames": 30, "fps": 15, "error": "fraction"},
+    {"name": "transition-unknown", "policy": {"kind": "transition", "id": "missing"}, "windows": {"t": [0.0, 1.0]}, "frames": 30, "fps": 15, "error": "no window"},
+    {"name": "transition-after-end", "policy": {"kind": "transition", "id": "t"}, "windows": {"t": [5.0, 1.0]}, "frames": 30, "fps": 15, "error": "outside"},
+    {"name": "unknown-kind", "policy": {"kind": "last"}, "frames": 30, "fps": 15, "error": "Unknown poster policy"}
+  ],
+  "profileStates": [
+    {"name": "same-profile", "job": "preview", "state": {"settings": {"profile": "preview"}, "profile": "$preview"}, "accept": true},
+    {"name": "final-takes-final", "job": "final", "state": {"settings": {"profile": "final"}, "profile": "$final"}, "accept": true},
+    {"name": "final-refuses-preview", "job": "final", "state": {"settings": {"profile": "preview"}, "profile": "$preview"}, "accept": false, "message": "preview"},
+    {"name": "preview-refuses-final", "job": "preview", "state": {"settings": {"profile": "final"}, "profile": "$final"}, "accept": false, "message": "final"},
+    {"name": "stale-fingerprint", "job": "final", "state": {"settings": {"profile": "final"}, "profile": "0000000000000000000000000000000000000000000000000000000000000000"}, "accept": false, "message": "stale fingerprint"},
+    {"name": "nested-foreign-segment", "job": "final", "state": {"settings": {"profile": "final"}, "segments": [{"settings": {"profile": "final"}, "profile": "$final"}, {"settings": {"profile": "preview"}, "profile": "$preview"}]}, "accept": false, "message": "preview"},
+    {"name": "nested-all-same", "job": "final", "state": {"settings": {"profile": "final"}, "segments": [{"settings": {"profile": "final"}, "profile": "$final"}], "content": {"chapters": [{"settings": {"profile": "final"}}]}}, "accept": true},
+    {"name": "no-profile", "job": "final", "state": {"settings": {"language": "en"}}, "accept": false, "message": "no render profile"}
+  ],
+  "work": [
+    {"name": "preview-zero-full", "job": "preview", "counts": {"preview.swap": 4}, "transitions": 2, "ok": true},
+    {"name": "preview-with-full-evaluate", "job": "preview", "counts": {"preview.swap": 4, "full.evaluate": 3}, "transitions": 2, "ok": false, "message": "full-morph work"},
+    {"name": "preview-with-full-prepare", "job": "preview", "counts": {"full.prepare": 1}, "transitions": 0, "ok": false, "message": "full-morph work"},
+    {"name": "final-real-full-path", "job": "final", "counts": {"full.prepare": 2, "full.evaluate": 90}, "transitions": 2, "ok": true},
+    {"name": "final-silent-fallback", "job": "final", "counts": {"preview.swap": 2}, "transitions": 2, "ok": false, "message": "ran no full morph"},
+    {"name": "final-without-transitions", "job": "final", "counts": {}, "transitions": 0, "ok": true},
+    {"name": "final-prepare-only", "job": "final", "counts": {"full.prepare": 2}, "transitions": 1, "ok": false, "message": "ran no full morph"}
+  ]
+}

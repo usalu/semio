@@ -7,8 +7,7 @@
  *
  * @see ../../🧬️schema/🟦️.ts — the authored data
  */
-import type { Alternative, Anchor, Asset, AuthoredRepresentation, Environment, Language, PrintProfile, ScaleDenominator, Shape, Slug, SymbolRepresentation, Text, UnavailableCause, Viewpoint } from "../../🧬️schema/🟦️.ts";
-import type { ExportFormat, PlanarViewpoint } from "../../🧬️schema/🟦️.ts";
+import type { Alternative, Anchor, Asset, AuthoredRepresentation, Environment, Language, PlanarViewpoint, PrintProfile, ScaleDenominator, Shape, ShapeRole, Slug, SymbolRepresentation, Text, UnavailableCause, Viewpoint } from "../../🧬️schema/🟦️.ts";
 
 //#region 🧮️Evaluation
 /** 🎯️ What to evaluate: a static pose (at `timeS` on its own timeline, default 0, so respiration and transport still evolve), a clip
@@ -307,6 +306,10 @@ export type DepictionCommon = {
   readonly forceQuantity: ForceQuantity;
   readonly range: DisplayRange;
   readonly patterns: boolean;
+  /** 🧊️ The shape roles drawn (a level of detail): absent draws every role; the paper extent still reaches every shape of the representation. */
+  readonly roles?: readonly ShapeRole[];
+  /** 🧊️ The fraction (0, 1] of parcels and pathlines drawn, every ceil(1 / density)-th by emission index; absent draws all. */
+  readonly transportDensity?: number;
   readonly theme?: "light" | "dark";
   readonly environment?: Environment;
   readonly environmentTimeline?: EnvironmentTimeline;

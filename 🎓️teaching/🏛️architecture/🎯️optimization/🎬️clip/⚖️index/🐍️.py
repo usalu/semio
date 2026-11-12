@@ -1203,8 +1203,8 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         head2 = _room.place(text(self.tr("Still a sum of unlike units", "Immer noch eine Summe verschiedener Einheiten"), size=S1, color=MUTED), (LEFT, 3.1, 0), "left")
         unit_chip2 = _art.window_chip(text(self.tr("Units: kCHF · t", "Einheiten: kCHF · t"), size=S1, color=GOOD), color=GOOD)
         _room.place(unit_chip2, (RIGHT, 2.5, 0), "right")
-        self.step("units_3", *[mn.ReplacementTransform(rows[i], after[i]) for i in ids()], mn.ReplacementTransform(legend, legend2),
-                  mn.ReplacementTransform(unit_chip, unit_chip2), mn.ReplacementTransform(head, head2), self.set_focus(order2[0], .8), seconds=2.8)
+        self.step("units_3", self.morphs.transition("optimization.index.units.rows", source={i: rows[i] for i in ids()}, target={i: after[i] for i in ids()}), self.morphs.transition("optimization.index.units.legend", source=legend, target=legend2),
+                  self.morphs.transition("optimization.index.units.chip", source=unit_chip, target=unit_chip2), self.morphs.transition("optimization.index.units.head", source=head, target=head2), self.set_focus(order2[0], .8), seconds=2.8)
         self.naive_order = (order, order2)
 
     def ruler_away(self, ruler, header, away, run_time=.6):
@@ -1240,7 +1240,7 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         note2 = self.step_note(ruler, "÷", round(ruler.high, ruler.digits_tag) - round(ruler.low, ruler.digits_tag))
         zero_one = _room.place(text(self.tr(f"0 = best, 1 = worst of the {len(pool)} compared variants", f"0 = Bester, 1 = Schlechtester der {len(pool)} verglichenen Varianten"), size=S0, color=MUTED),
                                (LEFT + .4, -.36, 0), "left")
-        self.step("shift_2", ruler.stretch(2.0), mn.ReplacementTransform(note, note2), mn.FadeIn(zero_one), seconds=2.2)
+        self.step("shift_2", ruler.stretch(2.0), self.morphs.transition("optimization.index.shift.note", source=note, target=note2), mn.FadeIn(zero_one), seconds=2.2)
         self.step("mapped", mn.FadeOut(note2), self.detail.animate(run_time=.1).set_value(1), ruler.visit([0, last], hold=.6, travel=.8), seconds=2.8)
         for key in ("cost", "daylight"):
             new, new_header, new_block, run = self.next_ruler(key, ruler, header, block, [zero_one] if zero_one is not None else [])
@@ -1319,9 +1319,9 @@ class Beat4_NormalizedIndex(_visuals.ClipScene):
         keep = ("dot", "leader", "tag", "norm")
         index = ORDER.index(criterion)
         swap = mn.AnimationGroup(
-            *[mn.ReplacementTransform(old.members[i]["slot"], new.members[i]["slot"]) for i in pool],
+            self.morphs.transition("optimization.index.ruler.slots", source={i: old.members[i]["slot"] for i in pool}, target={i: new.members[i]["slot"] for i in pool}),
             mn.FadeOut(old.line), mn.FadeOut(old.ticks), mn.FadeOut(old.ring), *[mn.FadeOut(e) for e in extras], *[Retire(r) for r in retire],
-            *[mn.FadeOut(old.members[i][k]) for i in pool for k in keep], mn.ReplacementTransform(header, new_header),
+            *[mn.FadeOut(old.members[i][k]) for i in pool for k in keep], self.morphs.transition("optimization.index.ruler.header", source=header, target=new_header),
             Retire(block), mn.FadeIn(new_block), mn.FadeIn(new.line), *[mn.FadeIn(new.members[i][k]) for i in pool for k in keep],
             new.appear(1.0), self.active.animate(run_time=.3).set_value(index), self.row_hi.animate(run_time=.1).set_value(-1))
         self.add(new.ticks)

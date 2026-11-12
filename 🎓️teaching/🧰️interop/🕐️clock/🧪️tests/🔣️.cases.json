@@ -1,0 +1,153 @@
+{
+  "counts": [
+    {
+      "duration": 0.6,
+      "fps": 15,
+      "frames": 9
+    },
+    {
+      "duration": 0.5,
+      "fps": 15,
+      "frames": 8
+    },
+    {
+      "duration": 1,
+      "fps": 6,
+      "frames": 6
+    },
+    {
+      "duration": 0.7,
+      "fps": 30,
+      "frames": 21
+    },
+    {
+      "duration": 0.30000000000000004,
+      "fps": 10,
+      "frames": 3
+    },
+    {
+      "duration": 0.2,
+      "fps": 15,
+      "frames": 3
+    },
+    {
+      "duration": 0.001,
+      "fps": 15,
+      "frames": 1
+    },
+    {
+      "duration": 2,
+      "fps": 29.97,
+      "frames": 60
+    }
+  ],
+  "schedule": {
+    "fps": 15,
+    "plays": [
+      {
+        "kind": "play",
+        "duration": 0.5,
+        "frames": 8
+      },
+      {
+        "kind": "wait",
+        "duration": 0.5,
+        "frozen": false,
+        "frames": 7
+      },
+      {
+        "kind": "wait",
+        "duration": 0.5,
+        "frozen": true,
+        "frames": 8
+      },
+      {
+        "kind": "play",
+        "duration": 0.6,
+        "frames": 9
+      },
+      {
+        "kind": "wait",
+        "duration": 0.2,
+        "frozen": true,
+        "frames": 3
+      }
+    ],
+    "skipFrom": 3
+  },
+  "sequences": [
+    {
+      "name": "six tenths of a second at 15 fps never accumulate",
+      "fps": 15,
+      "durations": [
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        0.1
+      ],
+      "frames": [
+        2,
+        1,
+        2,
+        1,
+        2,
+        1
+      ]
+    },
+    {
+      "name": "a third of a second at 24 fps",
+      "fps": 24,
+      "durations": [
+        0.3333333333333333,
+        0.3333333333333333,
+        0.3333333333333333,
+        0.3333333333333333,
+        0.3333333333333333,
+        0.3333333333333333
+      ],
+      "frames": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8
+      ]
+    },
+    {
+      "name": "mixed",
+      "fps": 30,
+      "durations": [
+        0.5,
+        0.45,
+        0.2,
+        0.07,
+        0.3
+      ],
+      "frames": [
+        15,
+        14,
+        6,
+        2,
+        9
+      ]
+    },
+    {
+      "name": "sub-frame intervals borrow one frame and the next gives it back",
+      "fps": 15,
+      "durations": [
+        0.02,
+        0.02,
+        0.1
+      ],
+      "frames": [
+        1,
+        1,
+        1
+      ],
+      "direct": true
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:teaching/clip/profile",
+  "title": "Teaching render profiles",
+  "description": "Explicit render policies. A profile never changes timing, narration, ids or endpoints.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "profiles"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preview", "final"],
+      "properties": {
+        "preview": { "$ref": "#/$defs/profile" },
+        "final": { "$ref": "#/$defs/profile" }
+      }
+    }
+  },
+  "$defs": {
+    "count": { "type": "integer", "minimum": 1 },
+    "budget": { "description": "Upper bound for an effect count; null keeps the authored value (final).", "type": ["integer", "null"], "minimum": 1 },
+    "milliseconds": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["morph", "lod", "output", "budgets", "antialias", "shadows", "cache", "performance"],
+      "properties": {
+        "morph": { "enum": ["swap", "full"] },
+        "lod": { "enum": ["full", "preview", "poster"] },
+        "output": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height", "fps"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 2, "multipleOf": 2 },
+            "height": { "type": "integer", "minimum": 2, "multipleOf": 2 },
+            "fps": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "budgets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["curveSamples", "heatmapResolution", "particles", "trails"],
+          "properties": {
+            "curveSamples": { "$ref": "#/$defs/budget" },
+            "heatmapResolution": { "$ref": "#/$defs/budget" },
+            "particles": { "$ref": "#/$defs/budget" },
+            "trails": { "$ref": "#/$defs/budget" }
+          }
+        },
+        "antialias": { "type": "boolean" },
+        "shadows": { "type": "boolean" },
+        "cache": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["maxEntries", "maxBytes"],
+          "properties": {
+            "maxEntries": { "$ref": "#/$defs/count" },
+            "maxBytes": { "$ref": "#/$defs/count" }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["firstFrameMs", "warmFrameMedianMs", "warmFrameP95Ms", "seekMs", "retainedCacheEntries"],
+          "properties": {
+            "firstFrameMs": { "$ref": "#/$defs/milliseconds" },
+            "warmFrameMedianMs": { "$ref": "#/$defs/milliseconds" },
+            "warmFrameP95Ms": { "$ref": "#/$defs/milliseconds" },
+            "seekMs": { "$ref": "#/$defs/milliseconds" },
+            "retainedCacheEntries": { "type": ["integer", "null"], "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

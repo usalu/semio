@@ -56,8 +56,8 @@ export function loadEnvironments(root: string = DEFAULT_CATALOG_ROOT, signal?: A
   return readOptional<EnvironmentDocument>(resolve(root, ENVIRONMENTS_FOLDER, "🔣️.json"), signal);
 }
 
-/** 🗃️ Reads `🔣️.json` of the catalog root, every asset document of every category folder it lists (asset folders without a document are skipped, so a partly authored archive still loads) and the print profiles. Assets come in folder order within manifest category order. */
-export async function loadCatalogFromFiles(root: string = DEFAULT_CATALOG_ROOT, signal?: AbortSignal): Promise<LoadedCatalog> {
+/** 📥️ Reads `🔣️.json` of the catalog root, every asset document of every category folder it lists (asset folders without a document are skipped, so a partly authored archive still loads) and the print profiles. Assets come in folder order within manifest category order. `only` names the asset folders to read; every other asset is skipped without being parsed (a cast export reads the dozens of assets it draws, not the whole archive). */
+export async function loadCatalogFromFiles(root: string = DEFAULT_CATALOG_ROOT, signal?: AbortSignal, only?: ReadonlySet<string>): Promise<LoadedCatalog> {
   const manifest = await readJson<Manifest>(resolve(root, "🔣️.json"), signal);
   const loaded: LoadedAsset[] = [];
   for (const category of manifest.categories) {
@@ -69,6 +69,7 @@ export async function loadCatalogFromFiles(root: string = DEFAULT_CATALOG_ROOT, 
       throw error;
     }
     for (const folder of folders) {
+      if (only !== undefined && !only.has(folder)) continue;
       const path = resolve(root, category.folder, folder, "🔣️.json");
       const document = await readOptional<AssetDocument>(path, signal);
       if (document !== null) loaded.push({ asset: document.asset, document, folder: folder as Slug, categoryFolder: category.folder, path });

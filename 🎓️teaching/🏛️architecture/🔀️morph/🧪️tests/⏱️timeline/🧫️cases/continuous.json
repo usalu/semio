@@ -1,0 +1,55 @@
+{
+  "description": "Continuous-time evaluation (seek, scrub, dropped frames). With a schedule the boundary is tb = origin + f1 / fps and t >= tb is target; without one it is start + duration. `sequence` cases evaluate times in the given order (variable delivery cadence) and must be order independent.",
+  "cases": [
+    {
+      "name": "schedule 10 fps, window 10.0 + 1.0: tb = 10.9",
+      "fps": 10, "origin": 0.0, "window": { "start": 10.0, "duration": 1.0 },
+      "samples": [
+        { "t": 9.99, "owner": "before", "progress": 0.0 },
+        { "t": 10.0, "owner": "source", "progress": 0.0 },
+        { "t": 10.45, "owner": "source", "progress": 0.5 },
+        { "t": 10.8999, "owner": "source" },
+        { "t": 10.9, "owner": "target", "progress": 1.0 },
+        { "t": 10.899999999999999, "owner": "target", "progress": 1.0 },
+        { "t": 11.0, "owner": "target", "progress": 1.0 },
+        { "t": 30.0, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "dropped terminal frame: delivery jumps from t=10.8 over tb=10.9, next evaluation is target",
+      "fps": 10, "origin": 0.0, "window": { "start": 10.0, "duration": 1.0 },
+      "sequence": [
+        { "t": 10.7, "owner": "source" },
+        { "t": 10.8, "owner": "source" },
+        { "t": 11.05, "owner": "target", "progress": 1.0 },
+        { "t": 11.1, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "no schedule: plain end time is the boundary",
+      "fps": null, "window": { "start": 10.0, "duration": 1.0 },
+      "samples": [
+        { "t": 9.999, "owner": "before", "progress": 0.0 },
+        { "t": 10.5, "owner": "source", "progress": 0.5 },
+        { "t": 10.9999, "owner": "source" },
+        { "t": 11.0, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "one-frame window: target from its only frame time",
+      "fps": 30, "origin": 0.0, "window": { "start": 1.0, "duration": 0.01 },
+      "samples": [
+        { "t": 0.99, "owner": "before", "progress": 0.0 },
+        { "t": 1.0, "owner": "target", "progress": 1.0 }
+      ]
+    },
+    {
+      "name": "zero duration is atomic at start, with and without schedule",
+      "fps": 24, "origin": 0.0, "window": { "start": 2.0, "duration": 0.0 },
+      "samples": [
+        { "t": 1.999, "owner": "before", "progress": 0.0 },
+        { "t": 2.0, "owner": "target", "progress": 1.0 }
+      ]
+    }
+  ]
+}

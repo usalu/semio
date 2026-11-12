@@ -3,7 +3,7 @@
   "emoji": "🔀",
   "status": "closed",
   "description": "Resolve every unmerged path by keeping valuable changes from both sides. Unmerged files: .claude/launch.json, .vscode/launch.json, .vscode/🧰launch.seed.jsonc, Cargo.lock, bun.lock, framework rust script.ts, 2d test config, ui oracle json, and repo library mjs. Do not discard unique configurations, dependencies, or code from either side.",
-  "summary": "Resolved the stash-pop conflicts on the working tree. Unique stash functions were ported onto the current upstream APIs, and duplicate older helpers were left out. No unmerged paths and no conflict markers remain in the framework and hub sources. framework/Cargo.lock is marker-free and still omits semio-framework-job-replacement because the compiler ingress refuses a raw cargo metadata refresh. See resolution-1107.md.",
+  "summary": "Resolved the stash conflicts in staffage and the energy authoring script, keeping axonometric drawing and level-of-detail behavior. Staffage typecheck passes. See resolution-2026-11-12.md.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2766"
   },
@@ -11,7 +11,8 @@
   "sessions": [
     "⚪6be5f84b0acd4c409a8573a0468cd41c",
     "cdf472ee-eec5-4075-9b2d-faf8d041b1c8",
-    "5d1111dc-4f0a-464d-9b4f-55564dcd4776"
+    "5d1111dc-4f0a-464d-9b4f-55564dcd4776",
+    "44c50187-1896-46ad-b62f-a8f8dde1f6ef"
   ],
   "interactions": [
     {
@@ -841,6 +842,60 @@
         },
         {
           "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/resolution-1107.md"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-11-12 15:56:11",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "914d23addd29d96b0629a8d0756c66d5c56767a1",
+      "prompt": "Resolve the remaining stash conflict markers in staffage and the energy authoring script, keeping both sides.",
+      "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-11-12 16:00:16",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "914d23addd29d96b0629a8d0756c66d5c56767a1",
+      "summary": "Resolved the stash conflicts in staffage and the energy authoring script, keeping axonometric drawing and level-of-detail behavior. Staffage typecheck passes. See resolution-2026-11-12.md.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🔗️contracts/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🗂️catalog/📥️files/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🎭️cast-export/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧍️plan-projection/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/💨️transport-view/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🎨️depiction/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/🏷️revision/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/📤️export/🎭️cast/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/🧊️cast-lod/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️04/SOLVE-ALL-MERGE-CONFLICTS/resolution-2026-11-12.md"
         }
       ]
     }

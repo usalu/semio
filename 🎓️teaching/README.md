@@ -103,8 +103,8 @@ Run from the workspace root after the native/devcontainer bootstrap:
 
 ```sh
 repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts test
-repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --jobs 4 --quality l --output-root ./videos --no-play
-repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video heating --quality h --output-root ./videos --no-play
+repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --jobs 4 --profile preview --output-root ./videos --no-play
+repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video heating --profile final --output-root ./videos --no-play
 ```
 
 The entry provisions an isolated pinned Python 3.12 environment. FFmpeg resolves through `SEMIO_FFMPEG_BINARY`, PATH, or the packaged executable. Native setup supplies Cairo/Pango and math-capable system fonts; symbol-only fallback keeps supported text in the selected serif face. Windows uses Cambria Math for missing symbols; macOS/Linux provision DejaVu Math TeX Gyre.

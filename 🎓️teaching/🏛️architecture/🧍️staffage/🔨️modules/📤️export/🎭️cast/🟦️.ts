@@ -1,5 +1,5 @@
 /** 🎭️ Cast exporter: renders the named, figure-only casts of a cast manifest into one folder per cast (`<out>/<cast-id>/🔣️.json` and `NNNN.svg`).
- * `repo tools exec bun -- 🟦️.ts --manifest file --ids a,b --out dir [--catalog dir]`. Casts are language-independent: they print no text, so no language is asked for or part of any cache key.
+ * `repo tools exec bun -- 🟦️.ts --manifest file --ids a,b --out dir --lod full|preview|poster --output-fps 30 [--catalog dir]`. The level of detail (frames sampled at canonical times, shape roles, transport density; see 🧊️lod) is explicit and part of every index and provenance; the whole run sees one level. Casts are language-independent: they print no text, so no language is asked for or part of any cache key.
  *
  * A cast of the `axonometric` viewpoint draws the 3D volume through the default isometric camera. Each frame is `evaluate` → `depict` (every annotation, legend and title off, transparent paper) → `writeSvg`. All frames of a cast share one
  * viewBox and one world-origin alignment (the union of the frame extents, frames translated into it), so playing them back never jumps; `mirror`
@@ -21,7 +21,8 @@ import { sectionOf } from "../../🎨️depiction/✂️section/🟦️.ts";
 import { type Asset, type AuthoredRepresentation, type Environment, type EnvironmentPreset, SCALE_DENOMINATORS } from "../../../🧬️schema/🟦️.ts";
 import { DEFAULT_CATALOG_ROOT, type LoadedAsset, loadCatalogFromFiles, loadEnvironments } from "../../🗂️catalog/📥️files/🟦️.ts";
 import { evaluate, poseOf } from "../../🧮️evaluation/🟦️.ts";
-import { depict, loadAxonometric, textlessDepictionOptions } from "../../🎨️depiction/🟦️.ts";
+import { depict, dimensionExtent, figureOf, loadAxonometric, textlessDepictionOptions } from "../../🎨️depiction/🟦️.ts";
+import { prepare, sourceOf } from "../../🎨️depiction/🧩️shapes/🟦️.ts";
 import { solveThermalAt, thermalSession } from "../../🌡️thermal/🟦️.ts";
 import { solveTransport } from "../../💨️transport/🟦️.ts";
 import { solveStructure } from "../../🏗️structure/🟦️.ts";
@@ -30,7 +31,8 @@ import { type EnvironmentInput, isTimeline } from "../../🌡️thermal/🟦️.
 import { type FrameSchedule, frameSchedule } from "../🎞️frames/🟦️.ts";
 import { writeSvg } from "../🖼️svg/🟦️.ts";
 import { canonicalJson, castProvenance, presetRevision, revisionOfText } from "../../🏷️revision/🟦️.ts";
-import { type Cast, type CastIndex, type CastManifest, type Revision, parseCastManifest } from "./🧬️schema/🟦️.ts";
+import { type Cast, type CastIndex, type CastLogical, type CastManifest, type Revision, parseCastManifest } from "./🧬️schema/🟦️.ts";
+import { type ResolvedLod, lodSchedule, resolveLod } from "./🧊️lod/🟦️.ts";
 
 const MARGIN_MM = 1;
 const MAX_FRAMES = 600;
@@ -40,8 +42,10 @@ const round = (value: number, digits = 6): number => Math.round(value * 10 ** di
 
 export { canonicalJson, presetRevision, revisionOfText };
 
-/** ⚙️ What a cast export needs besides the manifest: the catalog folder, and progress and cancellation. */
-export type CastOptions = JobControl & { readonly catalog?: string; readonly started?: (id: string, index: number, count: number) => void };
+/** ⚙️ What a cast export needs besides the manifest: the catalog folder, the level of detail (absent: `full` at 30 fps; the command line names it explicitly), and progress and cancellation. */
+export type CastOptions = JobControl & { readonly catalog?: string; readonly lod?: ResolvedLod; readonly started?: (id: string, index: number, count: number) => void };
+
+const FULL = resolveLod("full", 30);
 
 const yieldToLoop = (): Promise<void> => new Promise((done) => setImmediate(done));
 
@@ -57,19 +61,31 @@ export function thinned(schedule: FrameSchedule): FrameSchedule {
   return { ...schedule, fps, count: MAX_FRAMES, times: Array.from({ length: MAX_FRAMES }, (_, frame) => frame / fps) };
 }
 
-function framesOf(cast: Cast, asset: Asset): Frames {
+function queriesOf(cast: Cast, asset: Asset, schedule: FrameSchedule): Frames["queries"] {
+  if (cast.clip !== undefined) {
+    const warm = cast.transportAgeS ?? 0;
+    return schedule.times.map((timeS) => ({ kind: "clip", clip: cast.clip!, timeS: warm + timeS }));
+  }
+  const pose = poseOf(asset, cast.pose!).id;
+  return schedule.times.map((timeS) => ({ kind: "pose", pose, timeS }));
+}
+
+/** 🕰️ The canonical clock of a cast, identical for every level of detail: the schedule of its clip (thinned to 600 samples) or of its environment timeline, and nothing for a plain pose. */
+export function canonicalSchedule(cast: Cast, asset: Asset): FrameSchedule {
   if (cast.clip !== undefined) {
     const clip = asset.clips.find((candidate) => candidate.id === cast.clip);
     if (!clip) throw new Error(`asset ${asset.id} has no clip ${cast.clip}; clips: ${asset.clips.map((candidate) => candidate.id).join(", ")}`);
-    const schedule = thinned(frameSchedule(clip, cast.fps!));
-    const warm = cast.transportAgeS ?? 0;
-    return { schedule, queries: schedule.times.map((timeS) => ({ kind: "clip", clip: clip.id, timeS: warm + timeS })) };
+    return thinned(frameSchedule(clip, cast.fps!));
   }
-  const pose = poseOf(asset, cast.pose!).id;
+  poseOf(asset, cast.pose!);
   const end = cast.timeline ? Math.max(...cast.timeline.map((key) => key.t)) : 0;
-  if (!(end > 0)) return { schedule: { fps: 1, durationS: 0, loop: false, count: 1, times: [0] }, queries: [{ kind: "pose", pose, timeS: 0 }] };
-  const schedule = thinned(frameSchedule({ durationS: end, loop: false }, cast.fps!));
-  return { schedule, queries: schedule.times.map((timeS) => ({ kind: "pose", pose, timeS })) };
+  return end > 0 ? thinned(frameSchedule({ durationS: end, loop: false }, cast.fps!)) : { fps: 1, durationS: 0, loop: false, count: 1, times: [0] };
+}
+
+function framesOf(cast: Cast, asset: Asset, lod: ResolvedLod): Frames & { readonly canonical: FrameSchedule } {
+  const canonical = canonicalSchedule(cast, asset);
+  const schedule = lodSchedule(canonical, lod);
+  return { canonical, schedule, queries: queriesOf(cast, asset, schedule) };
 }
 
 /** 🗺️ The authored representation a cast draws: exactly the authored preset scale, with geometry for the viewpoint (the axonometric viewpoint needs the asset's volume instead of authored shapes) and, for the thermal view, thermal regions. Unavailable, derived and empty combinations throw. */
@@ -140,26 +156,59 @@ async function patiently<T>(step: () => Promise<T>): Promise<T> {
   }
 }
 
+const ROUND_PART = 5;
+
+/** 📏️ Accumulates the level-independent physical truth of a cast over states of its canonical clock: the figure height, the paper extent of the figure and, for the first state, the polygons of its filled shapes by id. `evaluate` and `prepare` only: no thermal solve, no drawing. An axonometric cast measures that truth on the side elevation. */
+function logicalOf(asset: Asset, cast: Cast): { readonly add: (state: ReturnType<typeof evaluate>) => void; readonly done: (maxPaths: number) => CastLogical } {
+  const k = 1000 / cast.scale;
+  const mirror = cast.mirror === true;
+  const viewpoint = cast.viewpoint === "axonometric" ? "elevation" : cast.viewpoint;
+  let heightM = 0;
+  let box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+  let parts: Record<string, readonly (readonly [number, number])[]> | undefined;
+  return {
+    add(state) {
+      heightM = Math.max(heightM, state.bounds.maxY - state.bounds.minY);
+      const everything = viewpoint === "elevation" && parts !== undefined ? [] : prepare(state, viewpoint, sourceOf(state), k);
+      const extent = dimensionExtent(viewpoint, state.bounds, figureOf(everything), k);
+      if (extent !== null) box = { minX: Math.min(box.minX, extent.minX), minY: Math.min(box.minY, extent.minY), maxX: Math.max(box.maxX, extent.maxX), maxY: Math.max(box.maxY, extent.maxY) };
+      if (parts === undefined)
+        parts = Object.fromEntries(
+          everything.flatMap((p) => (p.closed && p.shape.filled && p.rings[0] !== undefined ? [[p.shape.id, p.rings[0].map((q): [number, number] => [round((mirror ? -q.x : q.x) / k, ROUND_PART), round(-q.y / k, ROUND_PART)])]] : [])),
+        );
+    },
+    done(maxPaths) {
+      const figure = mirror ? { minX: -box.maxX, minY: box.minY, maxX: -box.minX, maxY: box.maxY } : box;
+      return { heightM: round(heightM), figureBoundsM: { minX: round(figure.minX), minY: round(figure.minY), maxX: round(figure.maxX), maxY: round(figure.maxY) }, partsM: parts ?? {}, maxPaths };
+    },
+  };
+}
+
 /** 🎬 Draws the frames of one cast one at a time, each kept as a compact UTF-8 buffer (one byte per character instead of a two-byte string), then places them into the shared viewBox one at a time and writes each frame as soon as it is placed,
  * only when its placed text is new (compared by SHA-256); every buffer is released after its frame is placed. Returns the index. */
-async function render(id: string, cast: Cast, asset: Asset, revision: Revision, presets: ReadonlyMap<string, EnvironmentPreset>, control: JobControl, report: () => void, directory: string): Promise<CastIndex> {
-  const { schedule, queries } = framesOf(cast, asset);
+async function render(id: string, cast: Cast, asset: Asset, revision: Revision, presets: ReadonlyMap<string, EnvironmentPreset>, lod: ResolvedLod, control: JobControl, report: () => void, directory: string): Promise<CastIndex> {
+  const { canonical, schedule, queries } = framesOf(cast, asset, lod);
   const environment = environmentOf(cast, presets);
   const selector = { kind: "scale", scale: { denominator: cast.scale } } as const;
-  const base = { ...textlessDepictionOptions(cast.view, cast.scale, cast.viewpoint, cast.theme), ...(cast.thermalSpanK === undefined ? {} : { range: { mode: "span", spanK: cast.thermalSpanK } as const }), transparent: true, marginMm: MARGIN_MM, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false } as const };
+  const base = { ...textlessDepictionOptions(cast.view, cast.scale, cast.viewpoint, cast.theme), patterns: lod.level.patterns, roles: lod.level.roles, transportDensity: lod.level.transportDensity, ...(cast.thermalSpanK === undefined ? {} : { range: { mode: "span", spanK: cast.thermalSpanK } as const }), transparent: true, marginMm: MARGIN_MM, annotations: { dimensions: false, scaleBar: false, legend: false, labels: false, ground: false } as const };
   const options = { ...base, transport: cast.transport ?? [], ...(cast.transportStrokeMm === undefined ? {} : { transportStrokeMm: cast.transportStrokeMm }), ...(cast.transportTrailS === undefined ? {} : { transportTrailS: cast.transportTrailS }),...(environment === undefined ? {} : isTimeline(environment) ? { environmentTimeline: environment } : { environment }) };
   const drawn: Drawn[] = [];
   const session = thermalSession();
   const summaries: StructuralSummary[] = [];
   let mmPerMetre = 0;
-  let heightM = 0;
-  let figure = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+  const logical = logicalOf(asset, cast);
+  const shared = schedule === canonical;
+  if (!shared)
+    for (const query of queriesOf(cast, asset, canonical)) {
+      await yieldToLoop();
+      control.signal?.throwIfAborted();
+      logical.add(evaluate(asset, query, selector));
+    }
   for (const query of queries) {
     await yieldToLoop();
     control.signal?.throwIfAborted();
     const state = evaluate(asset, query, selector);
-    heightM = Math.max(heightM, state.bounds.maxY - state.bounds.minY);
-    figure = { minX: Math.min(figure.minX, state.bounds.minX), minY: Math.min(figure.minY, state.bounds.minY), maxX: Math.max(figure.maxX, state.bounds.maxX), maxY: Math.max(figure.maxY, state.bounds.maxY) };
+    if (shared) logical.add(state);
     const thermal = cast.view === "thermal" ? solveThermalAt(asset, query, environment, { ...(control.signal ? { signal: control.signal } : {}), session }) : undefined;
     const transport = options.transport.length > 0 && cast.transportAgeS !== undefined ? solveTransport(state.asset, state.query, options.environmentTimeline ?? options.environment!, { maxAgeS: cast.transportAgeS, ...(schedule.loop ? { periodS: schedule.durationS } : {}) }) : undefined;
     const structure = cast.view === "forces" || cast.view === "moments" ? solveStructure(state) : undefined;
@@ -181,11 +230,13 @@ async function render(id: string, cast: Cast, asset: Asset, revision: Revision, 
   const k = mmPerMetre;
   const named = new Map<string, string>();
   const frames: string[] = [];
+  let maxPaths = 0;
   const files = writer();
   for (const [position, frame] of drawn.entries()) {
     control.signal?.throwIfAborted();
     const svg = placed(frame.svg!.toString("utf8"), frame.originX, frame.originY, left, top, width, height, mirror);
     frame.svg = null;
+    maxPaths = Math.max(maxPaths, svg.split("<path").length - 1);
     const digest = createHash("sha256").update(svg).digest("hex");
     const known = named.get(digest);
     if (known !== undefined) {
@@ -212,19 +263,19 @@ async function render(id: string, cast: Cast, asset: Asset, revision: Revision, 
     mmPerMetre: k,
     originMm: [round(left, 4), round(top, 4)],
     boundsM: { minX: round(-left / k), minY: round(-bottom / k), maxX: round((width - left) / k), maxY: round(top / k) },
-    ...((cast.transport?.length ?? 0) > 0 ? { figureBoundsM: cast.mirror === true ? { minX: round(-figure.maxX), minY: round(figure.minY), maxX: round(-figure.minX), maxY: round(figure.maxY) } : { minX: round(figure.minX), minY: round(figure.minY), maxX: round(figure.maxX), maxY: round(figure.maxY) } } : {}),
-    heightM: round(heightM),
+    lod: { id: lod.id, revision: lod.revision, canonicalFrames: canonical.count, canonicalFps: canonical.fps },
+    logical: logical.done(maxPaths),
     ...(summaries.length > 0 ? { structure: structureIndex(summaries) } : {}),
-    provenance: castProvenance(cast, asset, revision, presets, { fps: schedule.fps, durationS: schedule.durationS, loop: schedule.loop, frames: frames.length }),
+    provenance: castProvenance(cast, asset, revision, presets, { fps: schedule.fps, durationS: schedule.durationS, loop: schedule.loop, frames: frames.length }, lod),
   };
 }
 
-async function exportOne(directory: string, out: string, plan: { readonly id: string; readonly cast: Cast; readonly asset: Asset; readonly revision: Revision }, presets: ReadonlyMap<string, EnvironmentPreset>, control: JobControl, report: () => void): Promise<CastIndex> {
+async function exportOne(directory: string, out: string, plan: { readonly id: string; readonly cast: Cast; readonly asset: Asset; readonly revision: Revision }, presets: ReadonlyMap<string, EnvironmentPreset>, lod: ResolvedLod, control: JobControl, report: () => void): Promise<CastIndex> {
   const temporary = join(out, `.${plan.id}.tmp-${process.pid}`);
   try {
     await patiently(() => rm(temporary, { recursive: true, force: true }));
     await mkdir(temporary, { recursive: true });
-    const index = await render(plan.id, plan.cast, plan.asset, plan.revision, presets, control, report, temporary);
+    const index = await render(plan.id, plan.cast, plan.asset, plan.revision, presets, lod, control, report, temporary);
     await writeFile(join(temporary, "🔣️.json"), `${JSON.stringify(index, null, 2)}\n`);
     control.signal?.throwIfAborted();
     await patiently(() => rm(directory, { recursive: true, force: true }));
@@ -242,7 +293,8 @@ export async function exportCast(manifest: unknown, ids: readonly string[], out:
   if (unknown.length > 0) throw new Error(`unknown cast ids: ${unknown.join(", ")}`);
   if (ids.some((id) => checked.casts[id]!.viewpoint === "axonometric")) await loadAxonometric();
   const root = resolve(options.catalog ?? DEFAULT_CATALOG_ROOT);
-  const catalog = await loadCatalogFromFiles(root, options.signal);
+  const lod = options.lod ?? FULL;
+  const catalog = await loadCatalogFromFiles(root, options.signal, new Set(ids.map((id) => checked.casts[id]!.asset)));
   const presets = new Map(((await loadEnvironments(root, options.signal))?.presets ?? []).map((preset) => [preset.id, preset]));
   const plans = ids.map((id) => {
     const cast = checked.casts[id]!;
@@ -253,7 +305,7 @@ export async function exportCast(manifest: unknown, ids: readonly string[], out:
     if (folder !== asset.id) throw new Error(`cast ${id}: asset ${asset.id} lives in the folder ${folder}, the folder must carry the asset id`);
     environmentOf(cast, presets);
     authoredRepresentation(id, asset, cast);
-    return { id, cast, asset, revision: revisionOfText(readFileSync(path, "utf8")), count: framesOf(cast, asset).schedule.count };
+    return { id, cast, asset, revision: revisionOfText(readFileSync(path, "utf8")), count: framesOf(cast, asset, lod).schedule.count };
   });
   const total = plans.reduce((sum, plan) => sum + plan.count, 0);
   let done = 0;
@@ -264,16 +316,16 @@ export async function exportCast(manifest: unknown, ids: readonly string[], out:
   for (const [position, plan] of plans.entries()) {
     options.signal?.throwIfAborted();
     options.started?.(plan.id, position + 1, plans.length);
-    indexes.push(await exportOne(join(resolve(out), plan.id), resolve(out), plan, presets, control, report));
+    indexes.push(await exportOne(join(resolve(out), plan.id), resolve(out), plan, presets, lod, control, report));
   }
   return indexes;
 }
 
-const FLAGS = ["manifest", "ids", "out", "catalog", "parent"];
-const USAGE ="usage: --manifest <file> [--ids a,b,c] --out <dir> [--catalog <dir>] [--parent <pid>]";
+const FLAGS = ["manifest", "ids", "out", "catalog", "parent", "lod", "output-fps"];
+const USAGE = "usage: --manifest <file> [--ids a,b,c] --out <dir> --lod full|preview|poster --output-fps <fps> [--catalog <dir>] [--parent <pid>]";
 
 /** 🔧️ Parses `--key value` arguments; every refusal names the offending flag. */
-export function parseArguments(argv: readonly string[]): { readonly manifest: string; readonly ids: readonly string[] | undefined; readonly out: string; readonly catalog: string; readonly parent: number | undefined } {
+export function parseArguments(argv: readonly string[]): { readonly manifest: string; readonly ids: readonly string[] | undefined; readonly out: string; readonly catalog: string; readonly parent: number | undefined; readonly lod: ResolvedLod } {
   const values = new Map<string, string>();
   for (let index = 0; index < argv.length; index += 2) {
     const key = argv[index];
@@ -284,7 +336,7 @@ export function parseArguments(argv: readonly string[]): { readonly manifest: st
   for (const key of values.keys()) if (!FLAGS.includes(key)) throw new Error(`unknown --${key}\n${USAGE}`);
   const need = (key: string): string => values.get(key) ?? (() => { throw new Error(`missing --${key}\n${USAGE}`); })();
   const ids = values.get("ids");
-  return { manifest: resolve(need("manifest")), ids: ids === undefined ? undefined : ids.split(",").filter((id) => id.length > 0), out: resolve(need("out")), catalog: resolve(values.get("catalog") ?? DEFAULT_CATALOG_ROOT), parent: parentOf(values.get("parent")) };
+  return { manifest: resolve(need("manifest")), ids: ids === undefined ? undefined : ids.split(",").filter((id) => id.length > 0), out: resolve(need("out")), catalog: resolve(values.get("catalog") ?? DEFAULT_CATALOG_ROOT), parent: parentOf(values.get("parent")), lod: resolveLod(need("lod"), Number(need("output-fps"))) };
 }
 
 function parentOf(value: string | undefined): number | undefined {
@@ -325,7 +377,7 @@ async function main(): Promise<void> {
     if (args.parent !== undefined) stopWatching = watchParent(args.parent, () => { controller.abort(); setTimeout(() => process.exit(130), 5000).unref(); });
     const manifest = JSON.parse(await readFile(args.manifest, "utf8")) as CastManifest;
     const ids = args.ids ?? Object.keys(manifest.casts ?? {});
-    const indexes = await exportCast(manifest, ids, args.out, { catalog: args.catalog, signal: controller.signal, started: (id, index, count) => process.stderr.write(`[cast ${index}/${count}] ${id}\n`), progress: (done, total, label) => { if (done % 50 === 0 || done === total) process.stderr.write(`[${done}/${total}] ${label.en} / ${label.de}\n`); } });
+    const indexes = await exportCast(manifest, ids, args.out, { catalog: args.catalog, lod: args.lod, signal: controller.signal, started: (id, index, count) => process.stderr.write(`[cast ${index}/${count}] ${id}\n`), progress: (done, total, label) => { if (done % 50 === 0 || done === total) process.stderr.write(`[${done}/${total}] ${label.en} / ${label.de}\n`); } });
     for (const index of indexes) process.stdout.write(`${join(args.out, index.cast)}\n`);
     process.stderr.write(`[peak] ${Math.round(process.resourceUsage().maxRSS / 1024)} MB resident\n`);
   } catch (error) {

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "transitions": [
+    {
+      "id": "trees.birth.capsules-to-leaves",
+      "intent": "abstraction",
+      "source": {"entity": "tower.capsules", "revision": 1, "sampling": "snapshot", "view": "front", "scale": "1:200", "pose": null, "scenario": null},
+      "target": {"entity": "diagram.leaves", "revision": 1, "sampling": "snapshot"},
+      "relation": "many-to-many",
+      "correspondence": {"kind": "key"},
+      "recipe": "parts",
+      "timing": {"duration": 1.2, "easing": "smooth", "lag": 0.012, "limit": 2.0},
+      "placement": {"space": "scene", "anchor": "center", "fit": "contain", "uniform": true},
+      "final": {"pathArc": 0.3, "dip": 0.0, "ghost": 0.0}
+    },
+    {
+      "id": "trees.leaf.relabel",
+      "intent": "continuation",
+      "source": {"entity": "tree.leaf", "revision": 1, "sampling": "live"},
+      "target": {"entity": "tree.leaf", "revision": 2, "sampling": "snapshot"},
+      "relation": "one-to-one",
+      "correspondence": {"kind": "identity"},
+      "recipe": "retext",
+      "timing": {"duration": 0.8}
+    }
+  ],
+  "groups": [
+    {"id": "trees.birth", "mode": "sequence", "transitions": ["trees.birth.capsules-to-leaves", "trees.leaf.relabel"]}
+  ]
+}

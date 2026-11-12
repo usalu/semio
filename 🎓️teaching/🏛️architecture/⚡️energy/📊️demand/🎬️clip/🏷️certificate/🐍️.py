@@ -58,6 +58,8 @@ tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -332,6 +334,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("Demand or consumption", "Bedarf oder Verbrauch"))
         din = _din_ref("GEG § 79 ff. · § 80")
@@ -360,7 +363,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
             np.array([sx, -1.58, 0.0]))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bedarf_berechnung"))
-        self.play(ReplacementTransform(sheet, bedarf_sheet), run_time=1.4)
+        self.play(stage.transition("demand.certificate.kinds.sheet-to-demand-sheet", source=sheet, target=bedarf_sheet), run_time=1.4)
         for row in input_rows:
             self.play(FadeIn(row, shift=RIGHT * 0.15), run_time=1.2)
         self.play(FadeIn(computed), run_time=1.0)
@@ -474,7 +477,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
         hold_for(self, self.NARRATION, "wann_neubau")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wann_bestand"))
-        self.play(ReplacementTransform(cyan_sheet, cyan_left), FadeOut(row_c), FadeOut(box_c), run_time=1.4)
+        self.play(stage.transition("demand.certificate.when.demand-sheet-to-left", source=cyan_sheet, target=cyan_left), FadeOut(row_c), FadeOut(box_c), run_time=1.4)
         self.play(Create(orange_right[0]), FadeIn(orange_right[1]), FadeIn(oder), Create(box_d), FadeIn(row_d),
                   run_time=1.6)
         hold_for(self, self.NARRATION, "wann_bestand")
@@ -748,6 +751,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("What the certificate triggers", "Was der Ausweis auslöst"))
         din = _din_ref("GEG § 84 · § 87")
@@ -795,7 +799,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         v_year.move_to(value_at[3]).align_to(value_at[3], LEFT)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "anzeige"))
-        self.play(ReplacementTransform(big_sheet, small_sheet), run_time=1.4)
+        self.play(stage.transition("demand.certificate.mandatory.sheet-to-listing-size", source=big_sheet, target=small_sheet), run_time=1.4)
         self.play(Create(listing), FadeIn(listing_head), GrowArrow(into_ad), run_time=1.4)
         hold_for(self, self.NARRATION, "anzeige")
 
@@ -838,7 +842,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
                   run_time=2.2, rate_func=smooth)
         self.play(FadeOut(fly), Indicate(cell, color=P_WHITE, scale_factor=1.15), run_time=0.8)
         self.add(flight)
-        self.play(ReplacementTransform(flight, badge), run_time=1.6)
+        self.play(stage.transition("demand.certificate.mandatory.band-to-class-badge", source=flight, target=badge), run_time=1.6)
         hold_for(self, self.NARRATION, "buchstabe")
 
         h_wp = house_section(np.array([-3.4, 0.3, 0.0]), scale=0.85)
@@ -906,7 +910,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "keine"))
         self.play(FadeOut(h_new["group"]), FadeOut(new_badge), FadeOut(better),
-                  ReplacementTransform(recommend, none_chip), *_heat(warm_old, 1.4), run_time=1.4)
+                  stage.transition("demand.certificate.mandatory.recommendation-to-none", source=recommend, target=none_chip), *_heat(warm_old, 1.4), run_time=1.4)
         self.play(FadeIn(no_measure), *_heat(warm_old, 1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "keine", during=lambda rt: _heat(warm_old, rt))
 

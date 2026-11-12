@@ -1,7 +1,7 @@
 {
   "settings": {
     "language": "en",
-    "quality": "-ql",
+    "profile": "preview",
     "resolution": "480,270",
     "fps": 4.0,
     "audience": "spectator"

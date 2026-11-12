@@ -27,7 +27,7 @@ class AudienceTest(unittest.TestCase):
     def test_cli_defaults_to_both_and_deduplicates_selection(self):
         render = importlib.import_module(PACKAGE + ".🎬️clip.🖌️render.🐍️")
         for selection, expected in (([], CASES["variants"]), (["spectator", "spectator"], ["spectator"])):
-            arguments = ["--language", "de", "--video", "physical_fundamentals", "--no-play"]
+            arguments = ["--language", "de", "--profile", "preview", "--video", "physical_fundamentals", "--no-play"]
             for audience in selection:
                 arguments.extend(["--audience", audience])
             with patch.object(render, "compose_videos") as compose:
@@ -48,9 +48,11 @@ class AudienceTest(unittest.TestCase):
                 movie.parent.mkdir(parents=True, exist_ok=True)
                 movie.write_bytes(b"0" * 1200)
                 runtime._write_state(movie.with_suffix(".render.json"), runtime.segment_state(segment, settings))
+                profile = importlib.import_module(PACKAGE + ".🎬️clip.🎚️profile.🐍️")
+                runtime._write_state(media / "work.json", {"job": "fixture", "profile": settings["profile"], "fingerprint": profile.fingerprint(settings["profile"]), "counts": {}})
                 return movie
 
-            def concat(clips, output, list_path):
+            def concat(clips, output, list_path, **kwargs):
                 output.parent.mkdir(parents=True, exist_ok=True)
                 output.write_bytes(b"0" * 1200)
 
@@ -60,9 +62,9 @@ class AudienceTest(unittest.TestCase):
 
             with patch.object(runtime, "load_manifest", return_value=[video]), patch.object(runtime, "segment_state", side_effect=lambda segment, settings: {"segment": segment, "settings": settings}), patch.object(runtime, "render_segment", side_effect=render), patch.object(runtime, "concat_videos", side_effect=concat), patch.object(runtime, "publish_presentation", side_effect=envelope):
                 for audience in CASES["variants"]:
-                    runtime.compose_videos(language="de", audience=audience, output_root=folder)
-                    runtime.compose_videos(language="de", audience=audience, output_root=folder, concat_only=True)
-                    runtime.compose_videos(language="de", audience=audience, output_root=folder, chapter_scenes=["Chapter"], concat_only=True)
+                    runtime.compose_videos(profile="preview", language="de", audience=audience, output_root=folder)
+                    runtime.compose_videos(profile="preview", language="de", audience=audience, output_root=folder, concat_only=True)
+                    runtime.compose_videos(profile="preview", language="de", audience=audience, output_root=folder, chapter_scenes=["Chapter"], concat_only=True)
             self.assertEqual(len(calls), 2)
             self.assertNotEqual(calls[0][0], calls[1][0])
             self.assertNotEqual(calls[0][2], calls[1][2])
@@ -79,7 +81,7 @@ class AudienceTest(unittest.TestCase):
                 clip = media / "v" / f"{segment['scene']}.mp4"
                 clip.parent.mkdir(parents=True)
                 clip.write_bytes(b"0" * 1200)
-                settings = {"language": "en", "quality": "-ql", "resolution": None, "fps": None, "audience": audience}
+                settings = {"language": "en", "profile": "preview", "resolution": None, "fps": None, "audience": audience}
                 with patch.object(runtime, "run_command") as command:
                     runtime.render_segment(segment, media, settings)
                 self.assertEqual(command.call_args.kwargs["env"]["SEMIO_TEACHING_AUDIENCE"], audience)
@@ -89,7 +91,7 @@ class AudienceTest(unittest.TestCase):
         segment = runtime.segment_plan()[0]["segment"]
         states, envelopes = [], []
         for audience in CASES["variants"]:
-            settings = {"language": "en", "quality": "-ql", "resolution": None, "fps": None, "audience": audience}
+            settings = {"language": "en", "profile": "preview", "resolution": None, "fps": None, "audience": audience}
             states.append(runtime.segment_state(segment, settings))
             envelopes.append(runtime.presentation_state("physical_fundamentals", settings, "de"))
         self.assertNotEqual(states[0], states[1])
@@ -119,7 +121,7 @@ class AudienceTest(unittest.TestCase):
                 "        self.wait(0.4)\n", encoding="utf-8")
             frames, clocks = {}, {}
             for audience in CASES["variants"]:
-                settings = {"language": "en", "quality": "-ql", "resolution": CASES["render"]["resolution"],
+                settings = {"language": "en", "profile": "preview", "resolution": CASES["render"]["resolution"],
                             "fps": CASES["render"]["fps"], "audience": audience}
                 movie = runtime.render_segment({"script": str(script), "scene": "Fixture"}, folder / audience, settings)
                 with av.open(movie) as container:

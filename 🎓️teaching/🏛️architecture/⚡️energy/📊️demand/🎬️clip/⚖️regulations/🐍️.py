@@ -12,6 +12,7 @@ semio_color = _theme_module.color
 
 import numpy as np
 from manim import *
+_clock = importlib.import_module("🎓️teaching.🧰️interop.🕐️clock.🐍️")
 
 from pathlib import Path as _Path
 
@@ -74,6 +75,8 @@ cloud_glyph = _manim_module.cloud_glyph
 card_grid = _manim_module.card_grid
 
 set_vo_language("de")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -343,14 +346,13 @@ def _level_flow(paths, color, level_fn, *, waves=7, speed=0.5, radius=0.06):
     """💧 Particle stream whose density follows ``level_fn() ∈ [0, 1]`` — more flow, more particles."""
     dots = VGroup(*[Dot(radius=radius, color=color, stroke_width=0).set_fill(color, opacity=0.0)
                     for _ in range(waves * len(paths))])
-    clock = {"t": 0.0}
+    watch = _clock.stopwatch(speed)
 
-    def update(group, dt):
-        clock["t"] += dt
+    def update(group):
         level = float(np.clip(level_fn(), 0.0, 1.0))
         for k, dot in enumerate(group):
             p, w = divmod(k, waves)
-            t = (clock["t"] * speed + w / waves + 0.31 * p) % 1.0
+            t = (watch() + w / waves + 0.31 * p) % 1.0
             dot.move_to(paths[p].point_from_proportion(t))
             on = float(np.clip(level * waves - w, 0.0, 1.0))
             dot.set_fill(color, opacity=max(0.0, min(1.0, t / 0.08, (1.0 - t) / 0.12) * on * 0.9))
@@ -712,6 +714,7 @@ class Beat2_Monatsbilanz(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         t0 = self.renderer.time
 
         subtitle = section_heading(tr("Why the balance is done month by month", "Warum Monat für Monat bilanziert wird"))
@@ -853,7 +856,7 @@ class Beat2_Monatsbilanz(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "klein"))
         wrong = cross_mark(P_RED, 0.28).move_to(chart["pt"](0.42, 0.78))
-        self.play(Transform(rest, shrunk), run_time=1.6)
+        self.play(stage.transition("demand.regulations.balance.rest-shrinks-by-credit", source=rest, target=shrunk), run_time=1.6)
         self.play(FadeIn(wrong, scale=0.6), run_time=0.6)
         hold_for(self, self.NARRATION, "klein")
 
@@ -864,8 +867,8 @@ class Beat2_Monatsbilanz(Scene):
         bar = stacked_bar([(None, REST_SHAPE[i], DEMAND_RED) for i in REST_MONTHS], base=np.array([bar_x, -1.28, 0.0]),
                           width=0.5, unit=0.5)
         total = math_label(r"Q_{h,a}", size=BODY_FONT_SIZE, color=DEMAND_RED).next_to(bar["top"], UP, buff=0.16)
-        self.play(FadeOut(wrong), FadeOut(warn), Transform(rest, full), run_time=0.8)
-        self.play(LaggedStart(*[ReplacementTransform(c, b) for c, b in zip(rest_cells, bar["bars"])], lag_ratio=0.1),
+        self.play(FadeOut(wrong), FadeOut(warn), stage.transition("demand.regulations.balance.rest-restores-full", source=shrunk, target=full), run_time=0.8)
+        self.play(stage.transition("demand.regulations.balance.months-into-annual-bar", source=full, target=bar["bars"]),
                   FadeIn(total), run_time=1.8)
         hold_for(self, self.NARRATION, "summe")
 
@@ -881,11 +884,11 @@ class Beat2_Monatsbilanz(Scene):
         ring = highlight_param(items, "qh", color=P_ORANGE)
         self.play(Create(ring), Indicate(bar["bars"], color=DEMAND_RED, scale_factor=1.04), run_time=1.0)
         ring2 = highlight_param(items, "sum", color=P_ORANGE)
-        self.play(ReplacementTransform(ring, ring2), Indicate(bar["bars"], color=P_ORANGE), run_time=1.0)
+        self.play(stage.transition("demand.regulations.balance.ring-to-sum", source=ring, target=ring2), Indicate(bar["bars"], color=P_ORANGE), run_time=1.0)
         ring3 = highlight_param(items, "sink", color=P_ORANGE)
-        self.play(ReplacementTransform(ring2, ring3), Indicate(sink, color=LOSS_BLUE), run_time=1.0)
+        self.play(stage.transition("demand.regulations.balance.ring-to-sink", source=ring2, target=ring3), Indicate(sink, color=LOSS_BLUE), run_time=1.0)
         ring4 = highlight_param(items, "eta", color=P_ORANGE)
-        self.play(ReplacementTransform(ring3, ring4), Indicate(use_snk, color=ETA_GREEN), run_time=1.0)
+        self.play(stage.transition("demand.regulations.balance.ring-to-eta", source=ring3, target=ring4), Indicate(use_snk, color=ETA_GREEN), run_time=1.0)
         hold_for(self, self.NARRATION, "formel")
 
         self.play(FadeOut(box), FadeOut(row), FadeOut(ring4), run_time=0.4)
@@ -945,6 +948,7 @@ class Beat3_Klimadaten(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         t0 = self.renderer.time
 
         subtitle = section_heading(tr("Climate data: the test reference year", "Klimadaten: das Testreferenzjahr"))
@@ -1050,8 +1054,8 @@ class Beat3_Klimadaten(Scene):
         mean = VGroup(*[_curve(chart, theta_fn, P_BLUE, width=3.0) for _ in range(4)])
         self.play(FadeOut(source), FadeOut(sun_cols), FadeOut(right), run_time=0.8)
         self.play(FadeIn(years), run_time=1.2)
-        self.play(Transform(years, mean), run_time=3.0)
-        self.remove(years)
+        self.play(stage.transition("demand.regulations.climate.years-to-mean", source=years, target=mean), run_time=3.0)
+        self.remove(mean)
         hold_for(self, self.NARRATION, "zwoelf")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "geg"))

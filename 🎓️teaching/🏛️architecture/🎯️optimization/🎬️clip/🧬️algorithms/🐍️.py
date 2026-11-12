@@ -516,7 +516,8 @@ class Beat6_EvolutionarySearch(_visuals.ClipScene):
         self.tape_colors[0] = GRADIENT
         self.note[0] = self.tr("current design", "aktueller Entwurf")
         label = self._method("Gradient descent", "Gradientenabstieg", GRADIENT)
-        self.step("gradient", mn.Transform(self.solver, label), mn.FadeIn(self._painted(self.start, rows[0]["electricity"])))
+        self.step("gradient", self.morphs.transition("optimization.algorithms.solver.to-gradient", source=self.solver, target=label), mn.FadeIn(self._painted(self.start, rows[0]["electricity"])))
+        self.solver = label
         reader = lambda: min(len(rows) - 1, int(self.stage.get_value() + 1e-6))
         cards, lens = self._probe_row(rows, reader, search=False), self._lens(rows[0])
         self.step("gradient_2", *self._fade(self.ledger), mn.FadeIn(lens), mn.FadeIn(cards, lag_ratio=.2), self._spend(1, 4, GRADIENT), seconds=1.8)
@@ -618,8 +619,9 @@ class Beat6_EvolutionarySearch(_visuals.ClipScene):
         self.runs.set_value(1)
         self.tape_colors[:] = [PATTERN] * self.budget
         self.note[0] = self.tr("current design", "aktueller Entwurf")
-        self.step("pattern", *self._fade([self.result_chips, self.tape_legend, *old_dots, self.star_pair, *self.ghosts]), mn.Transform(self.solver, label), self.set_design(self.focus, self.start, 1.4),
+        self.step("pattern", *self._fade([self.result_chips, self.tape_legend, *old_dots, self.star_pair, *self.ghosts]), self.morphs.transition("optimization.algorithms.solver.to-pattern", source=self.solver, target=label), self.set_design(self.focus, self.start, 1.4),
                   self.fog_t.animate.set_value(.68), mn.FadeIn(self._painted(self.start, rows[0]["electricity"])), seconds=1.6)
+        self.solver = label
         reader = lambda: min(len(rows) - 1, int(self.round.get_value() + 1e-6))
         cards, band = self._probe_row(rows, reader, search=True, y=-1.93), self._pattern_band(rows, reader)
         rule = self._chip([self.tr("try the four neighbours: ± step in windows and in overhang", "vier Nachbarn probieren: ± Schritt bei Fenster und Vordach")], (CARD_X, -.88, 0), size=18, width=6.7)
@@ -765,8 +767,9 @@ class Beat6_EvolutionarySearch(_visuals.ClipScene):
         first_dots = [self.cloud[item["id"]] for item in first["population"]]
         self.add(*[dot for dot in self.cloud.values() if dot not in first_dots])
         self.step("population", *self._fade([self.pointer, self.result_chips, *self.ghosts, *old_dots, self.star_pair, *self.rooms, self.seasons, *self.ledger, self.bar, self.note_chip, self.design_chip]),
-                  mn.Transform(self.solver, label), mn.FadeIn(self.best_chip), self.fog_t.animate.set_value(.68), mn.FadeIn(genes),
+                  self.morphs.transition("optimization.algorithms.solver.to-population", source=self.solver, target=label), mn.FadeIn(self.best_chip), self.fog_t.animate.set_value(.68), mn.FadeIn(genes),
                   mn.LaggedStart(*[mn.FadeIn(card) for card in entering], lag_ratio=.1), mn.LaggedStart(*[mn.FadeIn(dot) for dot in first_dots], lag_ratio=.1), seconds=2.4)
+        self.solver = label
         self.ghosts.clear()
         self._set_focus(first["population"][0]["design"])
         self.following = True

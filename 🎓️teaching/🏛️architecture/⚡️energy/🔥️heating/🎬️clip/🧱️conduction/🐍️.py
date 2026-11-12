@@ -25,6 +25,7 @@ semio_color = _theme_module.color
 
 import numpy as np
 from manim import *
+_clock = importlib.import_module("🎓️teaching.🧰️interop.🕐️clock.🐍️")
 
 
 
@@ -70,6 +71,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 label_number = _manim_module.label_number
 TOASTER_RATE = 8.0
 
@@ -165,14 +168,14 @@ def _formula_zone(mob):
     return mob
 
 
-def _fly_into(scene, panel, sources: dict, *, run_time: float = 1.2):
+def _fly_into(scene, stage, prefix, panel, sources: dict, *, run_time: float = 1.2):
     """🧲 Copies of drawn values fly into their empty panel slots, then the rest of the formula and its box appear."""
     row, box, items = panel
     targets = [items[key] for key in sources]
     rest = VGroup(*[m for m in row.submobjects if all(m is not t for t in targets)])
     copies = {key: _formula_zone(src.copy().clear_updaters()) for key, src in sources.items()}
     scene.play(*[copies[key].animate.move_to(items[key]) for key in sources], run_time=run_time * 0.6)
-    scene.play(*[FadeTransform(copies[key], items[key]) for key in sources], FadeIn(rest), Create(box),
+    scene.play(*[stage.transition(f"{prefix}.{key}", source=copies[key], target=items[key]) for key in sources], FadeIn(rest), Create(box),
                run_time=run_time * 0.4)
 
 
@@ -373,6 +376,7 @@ class Beat1_MakroUndMikro(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Macroscopic and microscopic", "Makroskopisch und mikroskopisch"))
@@ -432,7 +436,7 @@ class Beat1_MakroUndMikro(Scene):
             left_block[0].animate.set_stroke(width=0),
             right_block[0].animate.set_stroke(width=0),
             FadeIn(merged_outline),
-            ReplacementTransform(VGroup(left_read, right_read), eq_label),
+            stage.transition("heating.conduction.equilibrium.readouts-to-label", source=VGroup(left_read, right_read), target=eq_label),
             *balanced(1.5),
             run_time=1.5,
         )
@@ -442,7 +446,7 @@ class Beat1_MakroUndMikro(Scene):
         self.play(
             FadeOut(left_block), FadeOut(right_block), FadeOut(eq_label), FadeOut(merged_outline), FadeOut(wall_note),
             *[FadeOut(VGroup(th["group"], th["column"])) for th in therms],
-            ReplacementTransform(subtitle, micro_sub),
+            stage.transition("heating.conduction.micro.subtitle-to-micro", source=subtitle, target=micro_sub),
             run_time=1.0,
         )
         subtitle = micro_sub
@@ -465,8 +469,7 @@ class Beat1_MakroUndMikro(Scene):
                 dots_group.add(dot)
                 phases[dot] = (r * 1.3 + c * 2.7)
 
-        time_tracker = ValueTracker(0)
-        time_tracker.add_updater(lambda m, dt: m.increment_value(dt))
+        time_tracker = _clock.scene_timer()
         self.add(time_tracker)
 
         for dot in dots:
@@ -555,6 +558,7 @@ class Beat2_RWert(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -589,7 +593,7 @@ class Beat2_RWert(Scene):
             paths = _flow_lines([((x0, yc + dy, 0.0), (x1, yc + dy, 0.0)) for dy in (-0.72, -0.4, 0.4, 0.72)])
             return [_heat_flow([(paths, PASTEL_RED, PASTEL_BLUE)], rt, period=1.8 * rect.width / w0, waves=3, radius=0.075)]
 
-        self.play(ReplacementTransform(grid_dots, rect), FadeIn(rect_label), FadeIn(lam_label), run_time=1.6)
+        self.play(stage.transition("heating.conduction.slab.lattice-dots-to-slab", source=grid_dots, target=rect), FadeIn(rect_label), FadeIn(lam_label), run_time=1.6)
 
         panel = math_panel([
             ("r", "R", P_PRIMARY), (None, "=", PASTEL_WHITE),
@@ -672,6 +676,7 @@ class Beat3_UWertUndGradient(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -692,7 +697,7 @@ class Beat3_UWertUndGradient(Scene):
             (None, r"\;[\mathrm{W/(m^{2}\,K)}]", PASTEL_WHITE),
         ])
         caption = swap_caption(self, caption, subtitle_text(N, "u_formula"))
-        _fly_into(self, p_u, {"frac": r_lbl}, run_time=1.0)
+        _fly_into(self, stage, "heating.conduction.u.fly", p_u, {"frac": r_lbl}, run_time=1.0)
         ring = highlight_param(p_u[2], "u", color=PASTEL_ORANGE)
         self.play(FadeOut(r_lbl), Create(ring), run_time=0.6)
         hold_for(self, N, "u_formula")
@@ -715,7 +720,7 @@ class Beat3_UWertUndGradient(Scene):
 
         self.play(Create(tile), run_time=0.9)
         self.play(LaggedStart(*[GrowFromCenter(m) for m in dims], lag_ratio=0.12), run_time=0.9)
-        self.play(TransformFromCopy(p_u[2]["u"], u_tile), run_time=0.9)
+        self.play(stage.transition("heating.conduction.tile.u-label-to-tile", source=p_u[2]["u"], target=u_tile), run_time=0.9)
         starts = [o + RIGHT * side * fx + UP * side * fy for fx, fy in ((0.6, 0.1), (0.85, 0.3), (0.12, 0.66), (0.32, 0.86))]
         tile_paths = _flow_lines([(p - depth * 0.3, p + depth * 1.0) for p in starts])
 
@@ -754,8 +759,8 @@ class Beat3_UWertUndGradient(Scene):
         a_lbl = math_label("A", size=FORMULA_FONT_SIZE, color=PASTEL_CYAN).next_to(a_frame, RIGHT, buff=0.35)
 
         caption = swap_caption(self, caption, subtitle_text(N, "area"))
-        self.play(FadeOut(dims), FadeOut(u_tile), ReplacementTransform(tile, tiles[0]), run_time=1.0)
-        self.play(LaggedStart(*[TransformFromCopy(tiles[0], t) for t in tiles[1:]], lag_ratio=0.08),
+        self.play(FadeOut(dims), FadeOut(u_tile), stage.transition("heating.conduction.tile.tile-to-first", source=tile, target=tiles[0]), run_time=1.0)
+        self.play(stage.transition("heating.conduction.tile.first-to-grid", source=[tiles[0]], target=list(tiles[1:])),
                   run_time=2.4, rate_func=linear)
         self.play(GrowFromCenter(gw_dim), FadeIn(gw_lbl), GrowFromCenter(gh_dim), FadeIn(gh_lbl), run_time=0.7)
         self.play(Create(a_frame), FadeIn(a_lbl, shift=LEFT * 0.1), run_time=0.8)
@@ -764,7 +769,7 @@ class Beat3_UWertUndGradient(Scene):
             ("h", "H", PASTEL_YELLOW), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
             ("a", "A", PASTEL_CYAN), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
         ])
-        _fly_into(self, p_h, {"u": tiles[12][1], "a": a_lbl}, run_time=1.2)
+        _fly_into(self, stage, "heating.conduction.h.fly", p_h, {"u": tiles[12][1], "a": a_lbl}, run_time=1.2)
         hold_for(self, N, "area")
 
         self.play(FadeOut(VGroup(tiles, gw_dim, gw_lbl, gh_dim, gh_lbl, a_frame, a_lbl)), run_time=0.6)
@@ -818,7 +823,7 @@ class Beat3_UWertUndGradient(Scene):
             ("a", "A", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"\Delta\theta", PASTEL_YELLOW),
             (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
         ])
-        _fly_into(self, p_q, {"dt": dt_lbl.copy().clear_updaters()}, run_time=1.0)
+        _fly_into(self, stage, "heating.conduction.q.fly", p_q, {"dt": dt_lbl.copy().clear_updaters()}, run_time=1.0)
         hold_for(self, N, "profile", during=band_heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "steeper"))
@@ -851,6 +856,7 @@ class Beat4_WattVergleich(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -943,7 +949,7 @@ class Beat4_WattVergleich(Scene):
             ("q", r"\dot{Q}", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
             ("a", r"25\,\mathrm{m^{2}}", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"20\,\mathrm{K}", PASTEL_BLUE),
         ])
-        _fly_into(self, p_q, {"u": u_reads[0]}, run_time=1.0)
+        _fly_into(self, stage, "heating.conduction.compare.fly", p_q, {"u": u_reads[0]}, run_time=1.0)
         q_trk = [ValueTracker(0.0) for _ in data]
         q_reads = [
             math_readout(lambda t=t: rf"\dot{{Q}} = {label_number(t.get_value())}\,\mathrm{{W}}",
@@ -982,7 +988,7 @@ class Beat4_WattVergleich(Scene):
             return [_warmth(device_heat, rt, r_max=0.32)]
 
         devices.add(_ground_line(y0))
-        self.play(*[FadeTransform(sec, dev) for sec, dev in zip(sections, devices)],
+        self.play(stage.transition("heating.conduction.compare.sections-to-devices", source=sections, target=devices),
                   *[FadeOut(r) for r in r_reads], run_time=1.4)
         self.play(*[FadeIn(h, shift=UP * 0.1) for h in hints], *device_warmth(0.6), run_time=0.6)
         self.play(*[Indicate(h, color=PASTEL_YELLOW) for h in hints], *device_warmth(0.8), run_time=0.8)
@@ -1012,6 +1018,7 @@ class Beat5_Gebaeudehuelle(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -1159,7 +1166,7 @@ class Beat5_Gebaeudehuelle(Scene):
         stack_lbl = math_label(r"\Phi_{\mathrm{T}}", np.array([stack_x, cursor + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
         self.play(Create(sum_rule), FadeIn(sum_label), FadeIn(sum_a), *heat(0.5), run_time=0.5)
         self.add(sum_phi)
-        self.play(LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
+        self.play(stage.transition("heating.conduction.sum.bars-to-stack", source=bars, target=segs),
                   total.animate.set_value(PHI_T), *heat(2.6), run_time=2.6)
         sum_phi.clear_updaters()
         self.play(FadeIn(stack_lbl), Indicate(sum_phi, color=PASTEL_YELLOW), *heat(0.6), run_time=0.6)
@@ -1201,6 +1208,7 @@ class Beat6_Waermebruecken(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -1240,7 +1248,7 @@ class Beat6_Waermebruecken(Scene):
         def corner_heat(rt):
             return [_heat_flow([(corner_paths, PASTEL_ORANGE, PASTEL_BLUE)], rt, period=1.6, waves=2, radius=0.065)]
 
-        self.play(corner.animate.set_fill(opacity=0.22), ReplacementTransform(corner.copy(), lines["a"]), *corner_heat(1.4),
+        self.play(corner.animate.set_fill(opacity=0.22), stage.transition("heating.conduction.corner.corner-to-line", source=corner, target=lines["a"]), *corner_heat(1.4),
                   run_time=1.4)
         hold_for(self, N, "paper", used=1.2 + 0.6 + 1.4 + 0.3, during=corner_heat)
 
@@ -1249,7 +1257,7 @@ class Beat6_Waermebruecken(Scene):
             body_text(text, font_size=LABEL_FONT_SIZE, color=colors[k]).move_to(O + RIGHT * (L + 0.15) + UP * offsets[k], aligned_edge=LEFT)
             for k, text in (("e", tr("outside", "außen")), ("a", tr("centre", "Mitte")), ("i", tr("inside", "innen")))
         ])
-        self.play(TransformFromCopy(lines["a"], lines["e"]), TransformFromCopy(lines["a"], lines["i"]), FadeIn(tags),
+        self.play(stage.transition("heating.conduction.corner.line-to-outside", source=lines["a"], target=lines["e"]), stage.transition("heating.conduction.corner.line-to-inside", source=lines["a"], target=lines["i"]), FadeIn(tags),
                   *corner_heat(1.2), run_time=1.2)
         hold_for(self, N, "choice", during=corner_heat)
 
@@ -1347,7 +1355,7 @@ class Beat6_Waermebruecken(Scene):
             (None, rf"{label_number(U_INSULATED, 2)} \cdot {label_number(2 * CORNER_D, 2)}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
             (None, rf"{label_number(U_INSULATED * 2 * CORNER_D, 2)}\,\mathrm{{W/(m\,K)}}", PASTEL_YELLOW),
         ])
-        _fly_into(self, p_diff, {"d": ext_lbl}, run_time=1.2)
+        _fly_into(self, stage, "heating.conduction.bridge.fly", p_diff, {"d": ext_lbl}, run_time=1.2)
         hold_for(self, N, "diff", during=corner_heat)
 
         caption = swap_caption(self, caption, subtitle_text(N, "balcony"))
@@ -1404,12 +1412,12 @@ class Beat6_Waermebruecken(Scene):
                               rf" + {label_number(BALCONY_PSI * BALCONY_L, 1)} = {label_number(psi_sum, 1)}\,\mathrm{{W/K}}",
                               np.array([0.0, 1.9, 0.0]), color=PASTEL_YELLOW)
         self.play(FadeOut(VGroup(brick, ins, slab, sec_in, sec_out, slab_lbl, strip, strip_lbl, l_span, l_read)),
-                  ReplacementTransform(chi_read, sum_line), run_time=0.9)
+                  stage.transition("heating.conduction.psi.chi-to-sum", source=chi_read, target=sum_line), run_time=0.9)
         p_det = math_panel([
             ("h", r"H_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("ua", r"\Sigma\,U_{i}A_{i}", PASTEL_ORANGE),
             (None, "+", PASTEL_WHITE), ("psi", r"\Sigma\,\Psi_{k}\,l_{k}", PASTEL_YELLOW), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
         ])
-        _fly_into(self, p_det, {"psi": sum_line}, run_time=1.2)
+        _fly_into(self, stage, "heating.conduction.psi.fly", p_det, {"psi": sum_line}, run_time=1.2)
         base_y, k_h = -0.72, 0.018
         cols_x = (-5.1, -1.7, 1.7, 5.1)
         adds = (0.0, psi_sum, DU_WB[0] * ENVELOPE_AREA, DU_WB[1] * ENVELOPE_AREA)
@@ -1450,7 +1458,7 @@ class Beat6_Waermebruecken(Scene):
             ("h", r"H_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("ua", r"\Sigma\,U_{i}A_{i}", PASTEL_ORANGE),
             (None, "+", PASTEL_WHITE), ("du", r"\Delta U_{\mathrm{WB}} \cdot A", PASTEL_YELLOW), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
         ])
-        self.play(ReplacementTransform(p_det[0], p_flat[0]), ReplacementTransform(p_det[1], p_flat[1]),
+        self.play(stage.transition("heating.conduction.flat.formula-head", source=p_det[0], target=p_flat[0]), stage.transition("heating.conduction.flat.formula-box", source=p_det[1], target=p_flat[1]),
                   FadeIn(labels_b[2:]), FadeIn(notes_vg[1:]), run_time=0.9)
         self.add(base_bars[2], base_bars[3], add_bars[1], add_bars[2], tops[2], tops[3])
         self.play(grow_b[2].animate.set_value(1.0), grow_b[3].animate.set_value(1.0), run_time=1.2)

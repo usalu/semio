@@ -52,6 +52,8 @@ subtitle_text = _manim_module.subtitle_text
 radiation_ray = _manim_module.radiation_ray
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 staffage = _manim_module.staffage
 staffage_height = _manim_module.staffage_height
 staffage_parts = _manim_module.staffage_parts
@@ -184,7 +186,7 @@ def _freeze(*mobs):
         mob.clear_updaters()
 
 
-def _fly_into(scene, panel, sources, *, run_time: float = 1.2):
+def _fly_into(scene, stage, prefix, panel, sources, *, run_time: float = 1.2):
     """🧲 Fly copies of on-stage readouts into their formula slots, then reveal the rest of the panel.
 
     Same idea as ``_fill_panel`` in ``1_physical_fundamentals/scene_1.py``.
@@ -199,7 +201,7 @@ def _fly_into(scene, panel, sources, *, run_time: float = 1.2):
             part._layout_zone = "formula"
         copies[key] = copy
     scene.play(*[copy.animate.move_to(items[key]) for key, copy in copies.items()], run_time=run_time * 0.6)
-    scene.play(*[FadeTransform(copies[key], items[key]) for key in copies], run_time=run_time * 0.4)
+    scene.play(*[stage.transition(f"{prefix}.{key}", source=copies[key], target=items[key]) for key in copies], run_time=run_time * 0.4)
     rest = VGroup(*[m for m in row.submobjects if all(m is not items[key] for key in sources)])
     scene.play(FadeIn(rest), Create(box), run_time=0.6)
 #endregion
@@ -493,6 +495,7 @@ class Beat2_BestrahlungUndFlaeche(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -554,7 +557,7 @@ class Beat2_BestrahlungUndFlaeche(Scene):
                           color=COLOR_WIN, fill_color=COLOR_WIN, fill_opacity=0.15, stroke_width=2).move_to(oc)
         ff_lbl = math_label(r"F_{\mathrm{f}}", oc, size=FORMULA_FONT_SIZE, color=COLOR_FF)
         self.play(FadeOut(area), FadeIn(frame), run_time=0.7)
-        self.play(TransformFromCopy(opening, glass), ReplacementTransform(a_lbl, ff_lbl),
+        self.play(stage.transition("heating.solar-gains.ff.glass-from-opening", source=opening, target=glass), stage.transition("heating.solar-gains.ff.area-label-to-frame-factor", source=a_lbl, target=ff_lbl),
                   frame_rays.animate.set_stroke(color=GREY_C, opacity=[0.0, 0.35, 0.35]), run_time=1.0)
         self.add(frame_rays, frame, glass, glass_rays)
         self.bring_to_front(ff_lbl)
@@ -570,7 +573,7 @@ class Beat2_BestrahlungUndFlaeche(Scene):
             ("a", "A", COLOR_A), (None, r"\cdot", PASTEL_WHITE),
             ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
         ])
-        _fly_into(self, panel, {"g": g_lbl, "a": a_side, "ff": ff_lbl})
+        _fly_into(self, stage, "heating.solar-gains.ff.fly", panel, {"g": g_lbl, "a": a_side, "ff": ff_lbl})
         ring = highlight_param(panel[2], "ff", color=COLOR_FF)
         self.play(Create(ring), run_time=0.4)
         hold_for(self, N, "ff", during=through_glass)
@@ -616,6 +619,7 @@ class Beat3_GWert(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -708,7 +712,7 @@ class Beat3_GWert(Scene):
             ("ff", r"F_{\mathrm{f}}", COLOR_FF), (None, r"\cdot", PASTEL_WHITE),
             ("g", "g", COLOR_GVAL), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
         ])
-        _fly_into(self, panel, {"g": g_sym})
+        _fly_into(self, stage, "heating.solar-gains.g.fly", panel, {"g": g_sym})
         ring = highlight_param(panel[2], "g", color=COLOR_GVAL)
         self.play(Create(ring), run_time=0.4)
         hold_for(self, N, "phi", during=glass_heat)
@@ -736,6 +740,7 @@ class Beat4_SaisonaleWinkel(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -797,7 +802,7 @@ class Beat4_SaisonaleWinkel(Scene):
         self.add(patch, rays)
         self.play(
             elev.animate.set_value(ELEV_WINTER),
-            FadeTransform(tag_summer, tag_winter),
+            stage.transition("heating.solar-gains.season.tag-summer-to-winter", source=tag_summer, target=tag_winter),
             run_time=3.0, rate_func=smooth,
         )
         _freeze(rays, patch, sun, elev_read)
@@ -870,6 +875,7 @@ class Beat5_Verschattung(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -1009,7 +1015,7 @@ class Beat5_Verschattung(Scene):
         self.add(blind)
         self.play(blind.animate.shift(DOWN * 3.0).set_opacity(1.0), fsh.animate.set_value(0.0), run_time=1.6)
         self.play(FadeIn(lbl_blind, shift=UP * 0.15),
-                  *[Transform(r, c) for r, c in zip(direct, blocked)],
+                  stage.transition("heating.solar-gains.blind.rays-blocked", source=direct, target=blocked),
                   LaggedStart(*[Create(a, rate_func=linear) for a in reflected], lag_ratio=0.08), FadeOut(interior),
                   run_time=1.6)
         hold_for(self, N, "raffstore", during=sunlit(bounce_paths, []))
@@ -1039,7 +1045,7 @@ class Beat5_Verschattung(Scene):
         winter_paths.append([winter_cut.get_start(), winter_cut.get_end()])
         winter_spots = warm_spots([s.get_end() for s in winter_in[::2]])
         self.play(blind.animate.shift(UP * 3.0).set_opacity(0), FadeOut(lbl_blind), FadeOut(reflected),
-                  FadeOut(residual), FadeOut(direct), run_time=1.2)
+                  FadeOut(residual), FadeOut(blocked), run_time=1.2)
         self.play(FadeIn(overhang), FadeIn(lbl_over), Create(winter_cut, rate_func=linear),
                   LaggedStart(*[Create(r, rate_func=linear) for r in winter_direct], lag_ratio=0.08), run_time=1.4)
         self.play(LaggedStart(*[Create(r, rate_func=linear) for r in winter_in], lag_ratio=0.1),
@@ -1059,7 +1065,7 @@ class Beat5_Verschattung(Scene):
             ("g", "g", COLOR_GVAL), (None, r"\cdot", PASTEL_WHITE),
             ("fsh", r"F_{\mathrm{sh}}", COLOR_G), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
         ], edge_buff=1.35)
-        _fly_into(self, panel, {"fsh": sym})
+        _fly_into(self, stage, "heating.solar-gains.fsh.fly", panel, {"fsh": sym})
         ring = highlight_param(panel[2], "fsh", color=COLOR_G)
         self.play(Create(ring), run_time=0.4)
         hold_for(self, N, "fsh", during=winter_sun)
@@ -1096,6 +1102,7 @@ class Beat8_Hauptgleichung(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
         N = self.NARRATION
 
@@ -1138,7 +1145,7 @@ class Beat8_Hauptgleichung(Scene):
         rest = VGroup(*[m for m in row.submobjects if all(m is not slot for slot in slots)])
         self.play(
             FadeOut(labs),
-            *[ReplacementTransform(tok, slot) for tok, slot in zip(tokens, slots)],
+            stage.transition("heating.solar-gains.main.tokens-into-formula", source=tokens, target=slots),
             FadeIn(rest), Create(box),
             run_time=1.6,
         )

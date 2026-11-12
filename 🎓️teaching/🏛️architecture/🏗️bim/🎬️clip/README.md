@@ -44,7 +44,7 @@ Render the entire six-video playlist in German:
 repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video bim_information --video bim_objects --video bim_representations --video bim_models --video bim_exchange --video bim_consistency --language de --audience spectator
 ```
 
-Choose `--language en` or `--language de` (required) and `--audience speaker` or `--audience spectator` for any video or playlist; omitting `--audience` renders both. Use `--output-root` for a chosen output location, and `--quality h --fps 30` for Full HD. The shared renderer provides bounded work, progress, cancellation, cache provenance and the speaker/spectator presentation.
+Choose `--language en` or `--language de` (required) and `--audience speaker` or `--audience spectator` for any video or playlist; omitting `--audience` renders both. Use `--output-root` for a chosen output location, and `--profile final` for Full HD. The shared renderer provides bounded work, progress, cancellation, cache provenance and the speaker/spectator presentation.
 
 Every source scene contains complete English and German narration text. This source folder contains no pre-recorded speech or final videos. The shared renderer attaches existing configured clause recordings when available; narration text alone does not synthesize a recording.
 
@@ -91,7 +91,7 @@ Die sechs oben gezeigten Einzelaufrufe funktionieren auch mit `--language de`. B
 repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video bim_information --language de --audience speaker
 ```
 
-Der Playlist-Aufruf mit `--language de` rendert alle sechs Videos getrennt. `--language` (Pflicht) und `--audience` (`speaker` oder `spectator`; ohne Angabe entstehen beide) gelten für jedes Video und jede Playlist; `--output-root` wählt den Ausgabeordner, `--quality h --fps 30` liefert Full HD. Fortschritt, Abbruch, Zwischenergebnisse und die Darstellung für Sprechende und Zuschauende stellt der gemeinsame Renderer bereit.
+Der Playlist-Aufruf mit `--language de` rendert alle sechs Videos getrennt. `--language` (Pflicht) und `--audience` (`speaker` oder `spectator`; ohne Angabe entstehen beide) gelten für jedes Video und jede Playlist; `--output-root` wählt den Ausgabeordner, `--profile final` liefert Full HD. Fortschritt, Abbruch, Zwischenergebnisse und die Darstellung für Sprechende und Zuschauende stellt der gemeinsame Renderer bereit.
 
 Die Szenen enthalten vollständige deutsche und englische Sprechtexte. Tonaufnahmen und fertige Videos sind keine eingecheckten Quelldateien. Der gemeinsame Renderer bindet vorhandene konfigurierte Abschnittsaufnahmen ein; Sprechtext allein erzeugt keine Aufnahme.
 

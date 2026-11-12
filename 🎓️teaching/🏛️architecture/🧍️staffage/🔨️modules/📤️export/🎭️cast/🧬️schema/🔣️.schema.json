@@ -22,13 +22,15 @@
       "maxLength": 64,
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
     },
+    "LodId": { "description": "A level of detail of the cast levels file.", "enum": ["full", "preview", "poster"] },
+    "LodRevision": { "description": "Eight lower-case hex digits of the canonical-JSON hash of a resolved level.", "type": "string", "pattern": "^[0-9a-f]{8}$" },
     "Revision": { "description": "A content hash: sha256 and 64 lower-case hex digits.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
     "Box": { "type": "object", "additionalProperties": false, "required": ["minX", "minY", "maxX", "maxY"], "properties": { "minX": { "type": "number" }, "minY": { "type": "number" }, "maxX": { "type": "number" }, "maxY": { "type": "number" } } },
     "Provenance": {
       "description": "Where one rendered cast came from, in every dimension the contract names (T/r3-contract.md). The exporter writes it, the Python loader checks it against the manifest entry and the catalog, scenes read it.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "asset", "view", "scale", "state", "clock", "scenario"],
+      "required": ["version", "asset", "view", "scale", "state", "clock", "lod", "scenario"],
       "properties": {
         "version": { "const": 1 },
         "asset": { "type": "object", "additionalProperties": false, "required": ["id", "category", "revision"], "properties": { "id": { "$ref": "#/$defs/Slug" }, "category": { "$ref": "#/$defs/Slug" }, "revision": { "$ref": "#/$defs/Revision" } } },
@@ -42,6 +44,7 @@
           "required": ["fps", "durationS", "loop", "offsetS", "frames"],
           "properties": { "fps": { "type": "number", "exclusiveMinimum": 0 }, "durationS": { "type": "number", "minimum": 0 }, "loop": { "type": "boolean" }, "offsetS": { "type": "number", "minimum": 0 }, "frames": { "type": "integer", "minimum": 1 }, "rate": { "type": "number", "exclusiveMinimum": 0 } }
         },
+        "lod": { "description": "The level of detail the frames were drawn at (T/STAFFAGE-LOD-DESIGN.md): the level id and the revision of its resolved parameters.", "type": "object", "additionalProperties": false, "required": ["id", "revision"], "properties": { "id": { "$ref": "#/$defs/LodId" }, "revision": { "$ref": "#/$defs/LodRevision" } } },
         "scenario": {
           "type": "object",
           "required": ["kind"],
@@ -112,11 +115,23 @@
         "residual": { "$ref": "#/$defs/Action" }
       }
     },
+    "Logical": {
+      "description": "The physical truth of a cast, identical for every level of detail: the figure height in metres over the canonical clock, the paper extent of the figure in world metres (feet origin; the rig bounds in the side elevation, the drawn shapes of the front and plan), the polygons of frame 0 by shape id in world metres, and the most paths any frame draws.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heightM", "figureBoundsM", "partsM", "maxPaths"],
+      "properties": {
+        "heightM": { "type": "number", "minimum": 0 },
+        "figureBoundsM": { "$ref": "#/$defs/Box" },
+        "partsM": { "type": "object", "propertyNames": { "$ref": "#/$defs/Slug" }, "additionalProperties": { "type": "array", "minItems": 3, "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } } } },
+        "maxPaths": { "type": "integer", "minimum": 0 }
+      }
+    },
     "Index": {
       "description": "The index the exporter writes next to the frames of one cast.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "cast", "asset", "view", "viewpoint", "frames", "fps", "durationS", "loop", "mmPerMetre", "originMm", "boundsM", "heightM", "provenance"],
+      "required": ["version", "cast", "asset", "view", "viewpoint", "frames", "fps", "durationS", "loop", "mmPerMetre", "originMm", "boundsM", "lod", "logical", "provenance"],
       "properties": {
         "version": { "const": 1 },
         "cast": { "$ref": "#/$defs/Slug" },
@@ -131,8 +146,8 @@
         "mmPerMetre": { "type": "number", "exclusiveMinimum": 0 },
         "originMm": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
         "boundsM": { "$ref": "#/$defs/Box" },
-        "figureBoundsM": { "$ref": "#/$defs/Box" },
-        "heightM": { "type": "number", "minimum": 0 },
+        "lod": { "description": "How the level sampled the canonical clock: fps is the effective rate of the sampled frames, canonicalFrames and canonicalFps those of the full level.", "type": "object", "additionalProperties": false, "required": ["id", "revision", "canonicalFrames", "canonicalFps"], "properties": { "id": { "$ref": "#/$defs/LodId" }, "revision": { "$ref": "#/$defs/LodRevision" }, "canonicalFrames": { "type": "integer", "minimum": 1 }, "canonicalFps": { "type": "number", "exclusiveMinimum": 0 } } },
+        "logical": { "$ref": "#/$defs/Logical" },
         "structure": { "$ref": "#/$defs/Structure" },
         "provenance": { "$ref": "#/$defs/Provenance" }
       }

@@ -23,12 +23,14 @@ import signal
 import subprocess
 import threading
 import time
+import uuid
 import xml.etree.ElementTree as ElementTree
 
 sys.dont_write_bytecode = True
 
-QUALITY_FOLDERS = {"-ql": "480p15", "-qm": "720p30", "-qh": "1080p60"}
-_output = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️")
+_profile = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🐍️")
+_export = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📤️export.🐍️")
+_output =importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️")
 _audience = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.👥️audience.🐍️")
 _presentation_hierarchy = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🥞️hierarchy.🐍️")
 
@@ -115,6 +117,24 @@ def prepare_output(argv: list[str]) -> None:
 def manim_command() -> list[str]:
     """🐍 Invoke Manim through the active Python environment on every platform."""
     return [sys.executable, "-m", "manim"]
+
+
+def profile_arguments(profile: str) -> list[str]:
+    """🎚️ Manim resolution and frame rate of an explicit render profile."""
+    chosen = _profile.profile(profile)
+    return ["--resolution", f"{chosen.width},{chosen.height}", "--fps", f"{chosen.fps:g}"]
+
+
+def profile_environment(profile: str, scene: str) -> dict[str, str]:
+    """🌱 Scene-process environment of an explicit render profile for direct scene renders."""
+    return _profile.environment(profile, job_id=f"{profile}-{scene}-{time.time_ns():x}")
+
+
+def record_timing_profile(manifest: Path, profile: str = "preview") -> Path:
+    """📝 Record beside a measured subtitle trace which profile rendered it; timing is profile-independent."""
+    record = Path(manifest).with_suffix(".profile.json")
+    _write_state(record, {"purpose": "timing", "profile": profile, "fingerprint": _profile.fingerprint(profile)})
+    return record
 
 
 _FFMPEG = {}
@@ -242,6 +262,11 @@ def execute_jobs(tasks: list, worker, *, max_workers: int = 1) -> tuple[dict, di
     return results, failures
 
 
+def scratch(target: Path, kind: str) -> Path:
+    """🏷️ A hidden sibling of `target` no other process or job of the same output can pick, so concurrent preview and final jobs, a retry after a cancel, and a stale leftover never clobber each other."""
+    return target.with_name(f".{target.stem}.{os.getpid()}-{uuid.uuid4().hex[:8]}.{kind}{target.suffix}")
+
+
 def concat_entry(path: Path) -> str:
     """🪟 Write an FFmpeg concat entry with portable separators and quote escaping."""
     escaped = path.resolve().as_posix().replace("'", r"'\''")
@@ -328,18 +353,24 @@ def _cursor_hash(clip: Path) -> str | None:
     return hashlib.sha256(sidecar.read_bytes()).hexdigest() if sidecar.is_file() else None
 
 
-def concat_videos(clips: list[Path], output: Path, list_path: Path, *, keep_audio: bool = True) -> None:
-    """🔗 Join ordered clips with stream copy and atomically publish the result."""
+def concat_videos(clips: list[Path], output: Path, list_path: Path, *, keep_audio: bool = True, profile: str | None = None) -> None:
+    """🔗 Join ordered clips with stream copy and atomically publish the result; a render `profile` makes every clip's certificate prove that profile first."""
     if not clips or any(not clip.is_file() for clip in clips):
         raise FileNotFoundError("Every clip must exist before concatenation")
+    if profile is not None:
+        _export.require_profiles(clips, profile)
     output.parent.mkdir(parents=True, exist_ok=True)
     list_path.parent.mkdir(parents=True, exist_ok=True)
-    list_path.write_text("\n".join(concat_entry(clip) for clip in clips) + "\n", encoding="utf-8")
-    temporary = output.with_suffix(".partial.mp4")
-    command = [*ffmpeg_command(), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c:v", "copy"]
-    command.extend(["-c:a", "copy"] if keep_audio else ["-an"])
-    run_command([*command, str(temporary)])
-    temporary.replace(output)
+    entries, temporary = scratch(list_path, "list"), scratch(output, "partial")
+    try:
+        entries.write_text("\n".join(concat_entry(clip) for clip in clips) + "\n", encoding="utf-8")
+        command = [*ffmpeg_command(), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-f", "concat", "-safe", "0", "-i", str(entries), "-c:v", "copy"]
+        command.extend(["-c:a", "copy"] if keep_audio else ["-an"])
+        run_command([*command, str(temporary)])
+        temporary.replace(output)
+    finally:
+        entries.unlink(missing_ok=True)
+        temporary.unlink(missing_ok=True)
     propagate_cursor_intervals(clips, output)
 
 
@@ -361,18 +392,21 @@ def render_config(media_dir: Path) -> Path:
                 if not svg.is_symlink():
                     svg.unlink(missing_ok=True)
     config = media_dir / "render.cfg"
-    config.write_text(
-        "[CLI]\nmedia_dir = " + media_dir.as_posix() + "\n"
-        + "".join(f"{key} = {value}\n" for key, value in _output.MANIM_DIRECTORIES.items())
-        + "progress_bar = display\nverbosity = WARNING\n",
-        encoding="utf-8",
-    )
+    text = ("[CLI]\nmedia_dir = " + media_dir.as_posix() + "\n"
+            + "".join(f"{key} = {value}\n" for key, value in _output.MANIM_DIRECTORIES.items())
+            + "progress_bar = display\nverbosity = WARNING\n")
+    temporary = scratch(config, "tmp")
+    try:
+        temporary.write_text(text, encoding="utf-8")
+        temporary.replace(config)
+    finally:
+        temporary.unlink(missing_ok=True)
     return config
 
 
 def clip_state(settings: dict, sources: list[Path]) -> dict:
     """🔎 Fingerprint render settings and every authored dependency, including assets."""
-    return {"settings": settings, "sources": {path.resolve().as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+    return {"settings": settings, "profile": _profile.fingerprint(settings["profile"]), "sources": {path.resolve().as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
                                              for path in sorted(set(sources)) if path.is_file()}}
 
 
@@ -425,7 +459,7 @@ def segment_state(segment: dict, settings: dict) -> dict:
     shared = root / "🏛️architecture/⚡️energy/🏗️authoring"
     interaction = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🪟️presentation.🖱️interaction.🐍️")
     helper = shared / "🎬️clip/🪟️presentation/🖱️interaction/🎬️scene"
-    sources = [Path(__file__), *source_dependencies(script), shared / "🔤️fonts/🐍️.py", shared / "🎨️visuals/🐍️.py",
+    sources = [Path(__file__), Path(_profile.__file__), *source_dependencies(script), shared / "🔤️fonts/🐍️.py", shared / "🎨️visuals/🐍️.py",
                shared / "🔊️speech/🐍️.py", *interaction.source_files(), helper / "🐍️.py", helper / "🔣️.schema.json"]
     assets = [path for owner in {source.parent for source in sources if source.suffix == ".py"} for path in owner.rglob("*")
               if "🧪️tests" not in path.relative_to(owner).parts and path.suffix.lower() in
@@ -488,14 +522,17 @@ def attach_source_narration(clip: Path, clauses: list[tuple[str, Path]], marks: 
     audio = clip.with_suffix(".narration.mp3")
     duration = speech.probe_duration(clip)
     speech.assemble_aligned_track(placements, audio, total_duration=duration, min_gap=0.0, session=session)
-    temporary = clip.with_suffix(".narrated.mp4")
+    temporary = scratch(clip, "narrated")
     print(f"[narration] Aligning canonical clauses for {clip.stem}", flush=True)
-    run_command([*ffmpeg_command(), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-i", str(clip), "-i", str(audio),
-                 "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-af", f"apad=whole_dur={duration:.9f}", "-t", f"{duration:.9f}", str(temporary)],
-                session=session)
-    if not temporary.is_file() or temporary.stat().st_size <= 1000:
-        raise FileNotFoundError(f"Missing narrated source output {temporary}")
-    temporary.replace(clip)
+    try:
+        run_command([*ffmpeg_command(), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-i", str(clip), "-i", str(audio),
+                     "-map", "0:v:0", "-map", "1:a:0", "-c:v", "copy", "-c:a", "aac", "-af", f"apad=whole_dur={duration:.9f}", "-t", f"{duration:.9f}", str(temporary)],
+                    session=session)
+        if not temporary.is_file() or temporary.stat().st_size <= 1000:
+            raise FileNotFoundError(f"Missing narrated source output {temporary}")
+        temporary.replace(clip)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def render_segment(segment: dict, media_dir: Path, settings: dict, *, force: bool = False,
@@ -523,19 +560,23 @@ def render_segment(segment: dict, media_dir: Path, settings: dict, *, force: boo
     if require_trace:
         trace.unlink(missing_ok=True)
         clip.with_suffix(".trace.json").unlink(missing_ok=True)
-    command = [*manim_command(), "--config_file", str(config), settings["quality"], "--media_dir", str(media_dir)]
-    if settings["resolution"]:
-        command.extend(["--resolution", settings["resolution"]])
-    if settings["fps"]:
-        command.extend(["--fps", str(settings["fps"])])
+    chosen = _profile.profile(settings["profile"])
+    resolution = settings["resolution"] or f"{chosen.width},{chosen.height}"
+    fps = settings["fps"] or chosen.fps
+    command = [*manim_command(), "--config_file", str(config), "--media_dir", str(media_dir), "--resolution", resolution, "--fps", f"{fps:g}"]
     command.extend(["--disable_caching", str(root / segment["script"]), segment["scene"]])
     print(f"[segment] Rendering {segment['scene']}", flush=True)
     log = media_dir / f"attempt-{time.time_ns()}.log" if log_output else None
     environment = {"SEMIO_TEACHING_OUTPUT_ROOT": str(output_root or media_dir.parent), "VO_TRACE": "1",
                    "SEMIO_TEACHING_SPEECH_ROOT": str(source_speech_root(root / segment["script"], language=settings["language"]).parent),
                    "SEMIO_TEACHING_LANGUAGE": settings["language"],
-                   "SEMIO_TEACHING_AUDIENCE": settings["audience"]}
+                   "SEMIO_TEACHING_AUDIENCE": settings["audience"],
+                   **_profile.environment(settings["profile"], job_id=f"{settings['profile']}-{segment['scene']}-{time.time_ns():x}", fps=fps, resolution=resolution),
+                   "SEMIO_TEACHING_WORK": str(media_dir / "work.json")}
+    (media_dir / "work.json").unlink(missing_ok=True)
     run_command(command, cwd=root, env=environment, session=session, log=log)
+    if not (media_dir / "work.json").is_file():
+        _write_state(media_dir / "work.json", {"job": environment["SEMIO_TEACHING_JOB"], "profile": settings["profile"], "fingerprint": chosen.fingerprint, "counts": {}})
     if segment_state(segment, settings) != state:
         raise RuntimeError(f"Authored sources changed while rendering {segment['scene']}")
     if not clip.is_file() or clip.stat().st_size <= 1000:
@@ -597,14 +638,17 @@ def cut_clip(source: Path, output: Path, start: float, end: float, *, session: T
     if not all(math.isfinite(value) for value in (start, end)) or not 0 <= start < end:
         raise ValueError("Invalid clip interval")
     output.parent.mkdir(parents=True, exist_ok=True)
-    temporary = output.with_suffix(".partial.mp4")
-    run_command([*ffmpeg_command(), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-i", str(source), "-ss", f"{start:.9f}", "-t", f"{end - start:.9f}",
-                 "-map", "0:v:0", "-map", "0:a?", "-c:v", "libx264", "-preset", "fast", "-crf", "18",
-                 "-threads", "1", "-pix_fmt", "yuv420p", "-c:a", "aac", "-movflags", "+faststart", str(temporary)],
-                session=session)
-    if not temporary.is_file() or temporary.stat().st_size <= 1000:
-        raise FileNotFoundError(f"FFmpeg did not create a complete excerpt {temporary}")
-    temporary.replace(output)
+    temporary = scratch(output, "partial")
+    try:
+        run_command([*ffmpeg_command(), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-i", str(source), "-ss", f"{start:.9f}", "-t", f"{end - start:.9f}",
+                     "-map", "0:v:0", "-map", "0:a?", "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                     "-threads", "1", "-pix_fmt", "yuv420p", "-c:a", "aac", "-movflags", "+faststart", str(temporary)],
+                    session=session)
+        if not temporary.is_file() or temporary.stat().st_size <= 1000:
+            raise FileNotFoundError(f"FFmpeg did not create a complete excerpt {temporary}")
+        temporary.replace(output)
+    finally:
+        temporary.unlink(missing_ok=True)
     publish_cursor_intervals(output, clip_cursor_intervals(cursor_intervals(source), start, end))
 
 
@@ -631,7 +675,7 @@ def excerpt_segment(source: Path, segment: dict, settings: dict, *,
     sidecar.unlink(missing_ok=True)
     print(f"[excerpt] Selecting {segment['scene']} {segment['clauses']}", flush=True)
     cut_clip(source, output, *interval)
-    if hashlib.sha256(trace.read_bytes()).hexdigest() != state["trace"] or _cursor_hash(source) != state["cursor"] or segment_state(segment, settings) != {key: state[key] for key in ("settings", "sources", "segment", "casts")}:
+    if hashlib.sha256(trace.read_bytes()).hexdigest() != state["trace"] or _cursor_hash(source) != state["cursor"] or segment_state(segment, settings) != {key: state[key] for key in ("settings", "profile", "sources", "segment", "casts")}:
         raise RuntimeError(f"Authored inputs changed while selecting {segment['scene']}")
     _write_state(sidecar, state)
     return output
@@ -701,15 +745,22 @@ def publish_presentation(video_id: str, content: Path, output: Path, content_sta
     return output
 
 
+def publish_export(kind: str, output: Path, settings: dict, entries: list[dict], chapter_clips: list[Path], *, inputs: list[Path], stills: dict | None = None, segment_root: Path | None = None) -> dict:
+    """📦 Publish `<movie>.export.json`: effective profile, fingerprint, render settings and the summed work of every assembled chapter."""
+    root = teaching_root(Path(__file__))
+    clips = {job["segment"]["scene"]: segment_root / str(job["source_ordinal"]) / "v" / f"{job['segment']['scene']}.mp4" for job in entries} if segment_root else None
+    return _export.publish_export(kind, output, settings=settings, movies=chapter_clips, scripts=[root / job["segment"]["script"] for job in entries], inputs=inputs, stills=stills, scene_clips=clips)
+
+
 @_presentation_hierarchy.capture_catalog()
-def compose_videos(video_ids: list[str] | None = None, *, language: str, audience: str, quality_flag: str = "-ql", play: bool = False,
+def compose_videos(video_ids: list[str] | None = None, *, language: str, audience: str, profile: str, play: bool = False,
                    output_root: Path | None = None, media_dir: Path | None = None,
                    output_dir: Path | None = None, force: bool = False, concat_only: bool = False,
                    resolution: str | None = None, fps: float | None = None, jobs: int = 1,
                    log_output: bool = False, chapter_scenes: list[str] | None = None) -> dict[str, Path]:
     """🎥 Render a globally bounded segment plan, then assemble ordered chapters and lessons."""
     _audience.subtitles_visible(audience)
-    if language not in {"en", "de"} or jobs < 1 or quality_flag not in QUALITY_FOLDERS or (force and concat_only):
+    if language not in {"en", "de"} or jobs < 1 or profile not in _profile.NAMES or (force and concat_only):
         raise ValueError("Invalid render settings")
     if fps is not None and (not math.isfinite(fps) or fps <= 0):
         raise ValueError("Render frame rate must be finite and positive")
@@ -723,11 +774,11 @@ def compose_videos(video_ids: list[str] | None = None, *, language: str, audienc
     if selected - {video["id"] for video in videos} or (media_dir and len(selected) != 1):
         raise ValueError("Invalid selected videos or explicit media directory")
     output_root = Path(output_root or _output.output_root()).resolve()
-    output_root = output_root / language / audience
-    media_dir = Path(media_dir).resolve() / language / audience if media_dir else None
+    output_root = output_root / profile / language / audience
+    media_dir = Path(media_dir).resolve() / profile / language / audience if media_dir else None
     segment_root = media_dir / "s" if media_dir else output_root / "s"
     destination = Path(output_dir or (Path(media_dir) / "rendered" if media_dir else output_root / "rendered")).resolve()
-    settings = {"language": language, "quality": quality_flag, "resolution": resolution, "fps": fps, "audience": audience}
+    settings = {"language": language, "profile": profile, "resolution": resolution, "fps": fps, "audience": audience}
     selected_chapters = set(chapter_scenes or [])
     available_chapters = {chapter["scene"] for video in videos if video["id"] in selected for chapter in video["chapters"]}
     if selected_chapters - available_chapters:
@@ -792,15 +843,19 @@ def compose_videos(video_ids: list[str] | None = None, *, language: str, audienc
         sidecar.unlink(missing_ok=True)
         if len(clips) == 1:
             group["clip"].parent.mkdir(parents=True, exist_ok=True)
-            temporary = group["clip"].with_suffix(".partial.mp4")
-            shutil.copy2(clips[0], temporary)
-            temporary.replace(group["clip"])
+            temporary = scratch(group["clip"], "partial")
+            try:
+                shutil.copy2(clips[0], temporary)
+                temporary.replace(group["clip"])
+            finally:
+                temporary.unlink(missing_ok=True)
             publish_cursor_intervals(group["clip"], cursor_intervals(clips[0]))
         else:
-            concat_videos(clips, group["clip"], group["directory"] / f"{group['chapter']['scene']}.txt")
+            concat_videos(clips, group["clip"], group["directory"] / f"{group['chapter']['scene']}.txt", profile=profile)
         if _logical_state(group["chapter"]["scene"], group["chapter"]["segments"], settings, group["sources"]) != group["state"]:
             errors.append(f"Authored inputs changed while assembling {group['chapter']['scene']}")
             continue
+        _export.write_work(group["clip"], _export.collect_work([segment_root / str(job["source_ordinal"]) for job in group["entries"]], profile), profile)
         _write_state(sidecar, group["state"])
         print(f"[chapter] Complete {group['chapter']['scene']}", flush=True)
 
@@ -809,13 +864,17 @@ def compose_videos(video_ids: list[str] | None = None, *, language: str, audienc
             raise RuntimeError("Render failures; successful sources remain reusable:\n" + "\n".join(errors))
         if not all(reusable_clip(group["clip"], group["state"]) for group in groups):
             raise RuntimeError("Incomplete selected chapters")
-        return {group["chapter"]["scene"]: publish_presentation(
-            group["video"]["id"], group["clip"], destination / f"{group['chapter']['scene']}_{audience}_{language}.mp4",
-            group["state"], settings, language, force=force,
-        ) for group in groups}
+        published = {}
+        for group in groups:
+            published[group["chapter"]["scene"]] = publish_presentation(
+                group["video"]["id"], group["clip"], destination / f"{group['chapter']['scene']}_{audience}_{language}.mp4",
+                group["state"], settings, language, force=force)
+            publish_export("chapter", published[group["chapter"]["scene"]], settings, group["entries"], [group["clip"]], inputs=[group["clip"]])
+        return published
     completed = {}
-    rate = fps if fps is not None else {"-ql": 15, "-qm": 30, "-qh": 60}[quality_flag]
-    dimensions = resolution.replace(",", "x") if resolution else QUALITY_FOLDERS[quality_flag].split("p")[0]
+    chosen = _profile.profile(profile)
+    rate = fps if fps is not None else chosen.fps
+    dimensions = resolution.replace(",", "x") if resolution else str(chosen.height)
     for video in videos:
         if video["id"] not in selected:
             continue
@@ -829,12 +888,14 @@ def compose_videos(video_ids: list[str] | None = None, *, language: str, audienc
                  "cursor": [_cursor_hash(group["clip"]) for group in chapters]}
         if force or not reusable_clip(content, state) or not content.with_suffix(".cursor.json").is_file():
             content.with_suffix(".render.json").unlink(missing_ok=True)
-            concat_videos([group["clip"] for group in chapters], content, chapters[0]["directory"] / "concat.txt")
+            concat_videos([group["clip"] for group in chapters], content, chapters[0]["directory"] / "concat.txt", profile=profile)
             if any(_logical_state(group["chapter"]["scene"], group["chapter"]["segments"], settings, group["sources"]) != group["state"] for group in chapters) or [_cursor_hash(group["clip"]) for group in chapters] != state["cursor"]:
                 errors.append(f"Authored inputs changed while assembling {video['id']}")
                 continue
             _write_state(content.with_suffix(".render.json"), state)
         publish_presentation(video["id"], content, output, state, settings, language, force=force)
+        publish_export("master", output, settings, [job for group in chapters for job in group["entries"]], [group["clip"] for group in chapters],
+                       inputs=[group["clip"] for group in chapters], stills={"folder": output.parent / "posters", "name": output.stem, "policy": _export.poster_policy(video["id"])}, segment_root=segment_root)
         completed[video["id"]] = output
         print(f"[{video['id']}] Ready: {output}", flush=True)
         if play:

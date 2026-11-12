@@ -63,6 +63,8 @@ set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
 set_vo_language("de")
@@ -162,6 +164,7 @@ class Beat1_LueftungImWinter(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Ventilation loss in winter", "Lüftungsverlust im Winter"))
@@ -325,7 +328,7 @@ class Beat1_LueftungImWinter(Scene):
         self.play(FadeIn(VGroup(gauge["track"], gauge["fill"], gauge["label"])), FadeIn(eta_link), FadeOut(v_link),
                   *breeze(0.5), run_time=0.5)
         self.add(eta_read, ghost, saved)
-        self.play(row.animate.shift(RIGHT * dx), ReplacementTransform(box, box2), *breeze(0.6), run_time=0.6)
+        self.play(row.animate.shift(RIGHT * dx), stage.transition("heating.convection.wrg.formula-box-widens", source=box, target=box2), *breeze(0.6), run_time=0.6)
         self.play(FadeIn(tail), *breeze(0.3), run_time=0.3)
         ring = highlight_param(items2, "eta", color=PASTEL_GREEN)
         self.play(eta.animate.set_value(1.0), Create(ring), *breeze(2.0), run_time=2.0)

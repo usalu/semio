@@ -1,0 +1,20 @@
+[
+  {"name": "base document", "set": {}},
+  {"name": "minimal transition without placement, final, lag and limit", "remove": ["/transitions/0/placement", "/transitions/0/final", "/transitions/0/timing/lag", "/transitions/0/timing/limit", "/groups"]},
+  {"name": "zero duration is an explicit atomic switch", "set": {"/transitions/1/timing/duration": 0}},
+  {"name": "overshooting easing is allowed", "set": {"/transitions/0/timing/easing": "overshoot"}},
+  {"name": "explicit pairs", "set": {"/transitions/0/correspondence": {"kind": "pairs", "pairs": [["0", "leaf-a"], ["1", "leaf-b"]]}}},
+  {"name": "named recipe correspondence", "set": {"/transitions/0/correspondence": {"kind": "recipe", "name": "capsule-item"}}},
+  {"name": "one-to-many split with pairs", "set": {"/transitions/0/relation": "one-to-many", "/transitions/0/recipe": "split", "/transitions/0/correspondence": {"kind": "pairs", "pairs": [["0", "a"]]}}},
+  {"name": "many-to-one gather with recipe correspondence", "set": {"/transitions/0/relation": "many-to-one", "/transitions/0/recipe": "gather", "/transitions/0/correspondence": {"kind": "recipe", "name": "capsule-item"}}},
+  {"name": "move continuation", "set": {"/transitions/1/recipe": "move"}},
+  {"name": "nested placement space", "set": {"/transitions/0/placement/space": "entity:tree.leaf"}},
+  {"name": "origin anchor with width fit and non-uniform scale", "set": {"/transitions/0/placement": {"space": "scene", "anchor": "origin", "fit": "width", "uniform": false}}},
+  {"name": "limit equal to duration", "set": {"/transitions/0/timing/limit": 1.2}},
+  {"name": "schema reference property", "set": {"$schema": "../../../../🔀️morph/🧬️schema/🔣️.schema.json"}},
+  {"name": "vanish into nothing", "set": {"/transitions/1/target": null, "/transitions/1/recipe": "vanish", "/transitions/1/intent": "abstraction"}, "remove": ["/transitions/1/correspondence"]},
+  {"name": "appear from nothing", "set": {"/transitions/1/source": null, "/transitions/1/recipe": "appear", "/transitions/1/intent": "concretization"}, "remove": ["/transitions/1/correspondence"]},
+  {"name": "replace like ReplacementTransform", "set": {"/transitions/1/recipe": "replace"}},
+  {"name": "copy keeps the source", "set": {"/transitions/1/copy": true}},
+  {"name": "flight token", "set": {"/transitions/1/recipe": "flight", "/transitions/1/correspondence": {"kind": "identity"}}}
+]

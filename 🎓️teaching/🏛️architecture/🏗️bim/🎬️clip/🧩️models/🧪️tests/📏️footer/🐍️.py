@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT))
 CASES = json.loads(Path(__file__).with_name("🔣️.json").read_text(encoding="utf-8"))
 runtime = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
 SEGMENT = {"script": "🏛️architecture/🏗️bim/🎬️clip/🧩️models/🐍️.py", "scene": "Beat4_PartialModels"}
-STATE = runtime.segment_state(SEGMENT, dict(language="de", quality="-ql", resolution="480,270", fps=4.0, audience="spectator"))
+STATE = runtime.segment_state(SEGMENT, dict(language="de", profile="preview", resolution="480,270", fps=4.0, audience="spectator"))
 module = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧩️models.🐍️")
 mn = module._engine
 SOURCE = Path(module.__file__)

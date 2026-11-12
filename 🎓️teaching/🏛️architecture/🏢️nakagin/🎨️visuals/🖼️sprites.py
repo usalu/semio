@@ -27,7 +27,11 @@ def full_frame(sprite, camera):
 
 def capture(drawing, camera):
     """📸 Capture actual capsule vectors at their current camera pixel bounds."""
-    full = _snapshot.capture(drawing, camera).pixel_array
+    _snapshot.install(camera)
+    box = _snapshot.region(drawing, camera)
+    full = np.zeros((camera.pixel_height, camera.pixel_width, 4), np.uint8)
+    if box is not None:
+        full[box[1]:box[3], box[0]:box[2]] = _snapshot.render(drawing, camera, box)
     rows, cols = np.nonzero(full[:, :, 3])
     if len(rows):
         x0, x1, y0, y1 = int(cols.min()), int(cols.max()) + 1, int(rows.min()), int(rows.max()) + 1

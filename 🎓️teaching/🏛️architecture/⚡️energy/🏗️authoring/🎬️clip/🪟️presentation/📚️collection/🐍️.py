@@ -84,7 +84,7 @@ def body_frames(content: Path, settings: dict, work: Path, session) -> int:
     """🔢 Measure the authored body clock at the explicit presentation frame rate."""
     frames, source_fps = _decoded_clock(content, work, session)
     _, presentation, _ = _ports()
-    return max(1, math.ceil(frames * presentation._settings(settings)[2] / source_fps - 1e-6))
+    return presentation.frame_count(frames / source_fps, presentation._settings(settings)[2])
 
 
 def require_frames(content: Path, expected: int, settings: dict, work: Path, session) -> None:
@@ -100,8 +100,8 @@ def chapter_clock(scene: str, frames: int, settings: dict) -> dict:
     """⏲️ Project finite chapter body and both context-sensitive camera sequences."""
     _, presentation, hierarchy = _ports()
     fps = presentation._settings(settings)[2]
-    focus = max(3, round(presentation.transition_duration("focus", scene) * fps))
-    restore = max(3, round(presentation.transition_duration("restore", scene) * fps))
+    focus = presentation.frame_count(presentation.transition_duration("focus", scene), fps, minimum=3)
+    restore = presentation.frame_count(presentation.transition_duration("restore", scene), fps, minimum=3)
     neighbors = hierarchy.chapter_neighbors(scene)
     return {"chapter": scene, "path": hierarchy.path(scene), "focus_frames": focus,
         "body_frames": frames, "restore_frames": restore, "frames": focus + frames + restore,

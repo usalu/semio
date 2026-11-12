@@ -1,4 +1,4 @@
-"""🧪 Tests of the morph toolkit: every helper ends with exactly the target in the scene, carries colours and stays fast for 140 sources."""
+"""🧪 Tests of the full morph toolkit: every helper ends with exactly the target in the scene, carries colours and stays fast for 140 sources."""
 
 from __future__ import annotations
 
@@ -9,7 +9,8 @@ import unittest
 import numpy as np
 
 manim = importlib.import_module("manim")
-morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🎞️full.🐍️")
+tokens = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🪙️token.🐍️")
 
 
 def play(*start, animation):
@@ -73,13 +74,13 @@ class MorphTests(unittest.TestCase):
     """🔀 Single morphs."""
 
     def test_group_to_token_leaves_exactly_the_target(self):
-        src, dst = capsule(), morph.token("3", kind="item").shift(3 * manim.RIGHT)
+        src, dst = capsule(), tokens.token("3", kind="item").shift(3 * manim.RIGHT)
         scene = play(src, animation=morph.morph(src, dst))
         self.assertEqual(scene.mobjects, [dst])
         np.testing.assert_allclose(dst.get_center(), [3, 0, 0], atol=1e-6)
 
     def test_target_back_to_group_roundtrip(self):
-        src, dst = capsule(), morph.token("{0;1}", kind="path").shift(2 * manim.UP)
+        src, dst = capsule(), tokens.token("{0;1}", kind="path").shift(2 * manim.UP)
         scene = play(src, animation=morph.morph(src, dst))
         back = capsule(-2.0)
         scene = play(dst, animation=morph.morph(dst, back))
@@ -87,7 +88,7 @@ class MorphTests(unittest.TestCase):
 
     def test_start_carries_source_colour(self):
         src = capsule(color=manim.RED)
-        anim = morph.morph(src, morph.token("1", kind="number", color=manim.GREEN), mode="hull")
+        anim = morph.morph(src, tokens.token("1", kind="number", color=manim.GREEN), mode="hull")
         np.testing.assert_allclose(fill_of(anim.mobject), fill_of(morph.silhouette(src)), atol=1e-6)
 
     def test_colour_interpolates_halfway(self):
@@ -103,7 +104,7 @@ class MorphTests(unittest.TestCase):
         np.testing.assert_allclose(fill_of(anim.mobject), (red + blue) / 2, atol=0.12)
 
     def test_ghost_stays_at_requested_opacity(self):
-        src, dst = capsule(), morph.token("7", kind="cell").shift(3 * manim.RIGHT)
+        src, dst = capsule(), tokens.token("7", kind="cell").shift(3 * manim.RIGHT)
         anim = morph.morph(src, dst, ghost=0.25)
         scene = play(src, animation=anim)
         self.assertIn(anim.ghost_mobject, scene.mobjects)
@@ -112,13 +113,13 @@ class MorphTests(unittest.TestCase):
         np.testing.assert_allclose(anim.ghost_mobject[0].get_stroke_opacity(), 0.25, atol=1e-6)
 
     def test_keep_source_leaves_source_untouched(self):
-        src, dst = capsule(), morph.token("7", kind="cell").shift(3 * manim.RIGHT)
+        src, dst = capsule(), tokens.token("7", kind="cell").shift(3 * manim.RIGHT)
         scene = play(src, animation=morph.morph(src, dst, keep_source=True))
         self.assertEqual(set(scene.mobjects), {src, dst})
 
     def test_point_counts_are_robust(self):
         sources = [capsule(), manim.Circle(), manim.Triangle(), manim.Dot(), manim.VGroup(*[manim.Square(0.1).shift(i * manim.RIGHT * 0.2) for i in range(20)]), manim.Text("A1")]
-        targets = [morph.token(label, kind=kind) for label, kind in (("3", "item"), ("B2", "cell"), ("{0;1;3;1}", "path"), ("12", "number"), ("", "plane"), ("abc", "text"))]
+        targets = [tokens.token(label, kind=kind) for label, kind in (("3", "item"), ("B2", "cell"), ("{0;1;3;1}", "path"), ("12", "number"), ("", "plane"), ("abc", "text"))]
         for src in sources:
             for dst in targets:
                 dst = dst.copy().shift(2 * manim.RIGHT)
@@ -127,7 +128,7 @@ class MorphTests(unittest.TestCase):
                 src = src.copy()
 
     def test_pairs_leave_exactly_the_target_and_carry_features(self):
-        src, dst = capsule(), morph.token("3", kind="item", color=manim.RED, size=1.6).shift(3 * manim.RIGHT)
+        src, dst = capsule(), tokens.token("3", kind="item", color=manim.RED, size=1.6).shift(3 * manim.RIGHT)
         anim = morph.morph(src, dst, pairs=[(src[0], dst[0]), (src[1], dst[1])], dip=0.15)
         scene = manim.Scene(skip_animations=True)
         scene.add(src)
@@ -145,12 +146,12 @@ class MorphTests(unittest.TestCase):
         self.assertEqual(scene.mobjects, [dst])
 
     def test_pairs_ghost_stays_and_unpaired_source_fades(self):
-        src, dst = capsule(), morph.token("3", kind="item").shift(3 * manim.RIGHT)
+        src, dst = capsule(), tokens.token("3", kind="item").shift(3 * manim.RIGHT)
         anim = morph.morph(src, dst, pairs=[(src[1], dst[1])], ghost=0.3)
         scene = play(src, animation=anim)
         self.assertEqual(set(scene.mobjects), {dst, anim.ghost_mobject})
         np.testing.assert_allclose(anim.ghost_mobject[0].get_stroke_opacity(), 0.3, atol=1e-6)
-        anim = morph.morph(capsule(), morph.token("4", kind="cell"), pairs=[])
+        anim = morph.morph(capsule(), tokens.token("4", kind="cell"), pairs=[])
         self.assertIsInstance(anim, morph.PartMorph)
 
     def test_empty_and_degenerate_parts_never_crash(self):
@@ -163,24 +164,24 @@ class MorphTests(unittest.TestCase):
         self.assertLessEqual(len(morph.silhouette(manim.VMobject()).points), 4)
         self.assertLessEqual(len(morph.proxy(manim.VGroup(manim.VMobject())).points), 4)
         np.testing.assert_allclose([morph.silhouette(holey()).width, morph.proxy(holey()).width], [1.0, 1.0], atol=0.05)
-        dst = morph.token("3", kind="item").shift(3 * manim.RIGHT)
+        dst = tokens.token("3", kind="item").shift(3 * manim.RIGHT)
         src = holey()
         pairs = [(src[3], dst[0]), (src[0], src[4]), (src[1], dst[1]), (src[5], dst[1])]
         scene = play(src, animation=morph.morph(src, dst, pairs=pairs))
         self.assertEqual(scene.mobjects, [dst])
-        empty, dst = manim.VGroup(), morph.token("4", kind="cell")
+        empty, dst = manim.VGroup(), tokens.token("4", kind="cell")
         self.assertEqual(play(empty, animation=morph.morph(empty, dst)).mobjects, [dst])
         src, hollow = capsule(), manim.VGroup(manim.VMobject())
         self.assertEqual(play(src, animation=morph.morph(src, hollow)).mobjects, [hollow])
         srcs = [holey() for _ in range(3)]
-        dsts = [morph.token(str(i), kind="item").shift(3 * manim.RIGHT) for i in range(3)]
+        dsts = [tokens.token(str(i), kind="item").shift(3 * manim.RIGHT) for i in range(3)]
         scene = play(*srcs, animation=morph.scatter(srcs, dsts, pairs_fn=lambda s, d: [(s[3], d[0]), (s[0], d[1])]))
         self.assertEqual(scene.mobjects, dsts)
 
     def test_capsule_pairs_pick_shell_and_window(self):
         src = capsule()
         src.add(manim.VMobject())
-        tok = morph.token("3", kind="item")
+        tok = tokens.token("3", kind="item")
         pairs = morph.capsule_pairs(src, tok)
         self.assertEqual(pairs, [(src[0], tok[0]), (src[1], tok[1])])
         src[2].name = "window"
@@ -190,11 +191,6 @@ class MorphTests(unittest.TestCase):
         self.assertEqual(len(morph.capsule_pairs(nested, tok)), 2)
         scene = play(src, animation=morph.morph(src, tok.shift(2 * manim.RIGHT), pairs=morph.capsule_pairs(src, tok)))
         self.assertEqual(scene.mobjects, [tok])
-
-    def test_pairs_reject_keep_source(self):
-        src, dst = capsule(), morph.token("3", kind="item")
-        with self.assertRaises(ValueError):
-            morph.morph(src, dst, pairs=[(src[0], dst[0])], keep_source=True)
 
     def test_dip_shrinks_mid_flight_only(self):
         src, dst = manim.Square(1.0, fill_opacity=1), manim.Square(1.0, fill_opacity=1).shift(8 * manim.RIGHT)
@@ -217,7 +213,7 @@ class MorphTests(unittest.TestCase):
                 hulls.append(mob)
             return original(mob, **kwargs)
 
-        for dst in (morph.token("3", kind="item"), morph.token("B2", kind="cell"), morph.token("{0;1;3;1}", kind="path"), morph.token("7", kind="plane")):
+        for dst in (tokens.token("3", kind="item"), tokens.token("B2", kind="cell"), tokens.token("{0;1;3;1}", kind="path"), tokens.token("7", kind="plane")):
             src = capsule()
             morph.silhouette = spy
             try:
@@ -241,7 +237,7 @@ class MorphTests(unittest.TestCase):
             self.assertEqual(scene.mobjects, [dst])
 
     def test_hull_mode_is_still_available(self):
-        src, dst = capsule(), morph.token("3", kind="cell").shift(3 * manim.RIGHT)
+        src, dst = capsule(), tokens.token("3", kind="cell").shift(3 * manim.RIGHT)
         anim = morph.morph(src, dst, mode="hull")
         self.assertIsInstance(anim, morph.Morph)
         self.assertEqual(play(src, animation=anim).mobjects, [dst])
@@ -250,7 +246,7 @@ class MorphTests(unittest.TestCase):
 
     def test_unmatched_parts_shrink_and_grow_keeping_shape(self):
         src = manim.VGroup(*[manim.Square(0.3 + 0.1 * i, fill_color=manim.RED, fill_opacity=0.9).shift(i * 0.8 * manim.RIGHT) for i in range(5)])
-        dst = morph.token("a", kind="cell").shift(3 * manim.UP)
+        dst = tokens.token("a", kind="cell").shift(3 * manim.UP)
         anim = morph.morph(src, dst)
         self.assertEqual(len(anim.flights), 2)
         self.assertEqual(len(anim.vanishing), 3)
@@ -264,22 +260,22 @@ class MorphTests(unittest.TestCase):
         anim.finish()
         anim.clean_up_from_scene(scene)
         self.assertEqual(scene.mobjects, [dst])
-        small, big = manim.VGroup(manim.Square(0.4, fill_opacity=1)), morph.token("abc", kind="cell")
+        small, big = manim.VGroup(manim.Square(0.4, fill_opacity=1)), tokens.token("abc", kind="cell")
         grown = morph.morph(small, big.shift(2 * manim.RIGHT))
         self.assertGreaterEqual(len(grown.growing), 1)
         self.assertEqual(play(small, animation=grown).mobjects, [big])
 
-    def test_heavy_groups_travel_as_per_part_proxies(self):
+    def test_heavy_groups_travel_as_real_part_silhouettes(self):
         towers = manim.VGroup(*[manim.VGroup(*[manim.Square(0.05, fill_opacity=0.5).shift([i * 0.1, j * 0.06, 0]) for j in range(4)]) for i in range(80)])
-        dst = morph.token("3", kind="cell").shift(3 * manim.RIGHT)
+        dst = tokens.token("3", kind="cell").shift(3 * manim.RIGHT)
         anim = morph.morph(towers, dst)
         self.assertLessEqual(len(anim.flights) + len(anim.vanishing), 200)
-        self.assertTrue(all(len(f.mobject.points) <= 16 for f in (*anim.flights, *anim.vanishing)))
+        self.assertTrue(all(len(f.mobject.get_family()) == 1 for f in (*anim.flights, *anim.vanishing)))
         self.assertEqual(play(towers, animation=anim).mobjects, [dst])
 
     def test_gather_collapses_multi_part_sources_without_hulls(self):
         items = [capsule(i * 1.2) for i in range(4)]
-        badge = morph.token("4", kind="number").shift(3 * manim.UP)
+        badge = tokens.token("4", kind="number").shift(3 * manim.UP)
         anim = morph.gather(items, badge)
         self.assertEqual(play(*items, animation=anim).mobjects, [badge])
 
@@ -296,7 +292,7 @@ class GroupTests(unittest.TestCase):
 
     def test_scatter_140_builds_fast_and_leaves_only_targets(self):
         sources = [capsule(i * 0.05) for i in range(140)]
-        targets = [morph.token(str(i), kind="item").move_to([(i % 14) * 0.3 - 2, (i // 14) * 0.3 - 2, 0]) for i in range(140)]
+        targets = [tokens.token(str(i), kind="item").move_to([(i % 14) * 0.3 - 2, (i // 14) * 0.3 - 2, 0]) for i in range(140)]
         started = time.perf_counter()
         anim = morph.scatter(sources, targets, ghost=0.0)
         self.assertLess(time.perf_counter() - started, 2.0)
@@ -306,7 +302,7 @@ class GroupTests(unittest.TestCase):
 
     def test_scatter_with_pairs_fn_leaves_only_targets(self):
         sources = [capsule(i * 0.3) for i in range(12)]
-        targets = [morph.token(str(i), kind="item").move_to([i * 0.4 - 2, -2, 0]) for i in range(12)]
+        targets = [tokens.token(str(i), kind="item").move_to([i * 0.4 - 2, -2, 0]) for i in range(12)]
         anim = morph.scatter(sources, targets, pairs_fn=lambda s, d: [(s[0], d[0]), (s[1], d[1])], dip=0.1)
         scene = play(*sources, animation=anim)
         self.assertEqual(scene.mobjects, targets)
@@ -317,13 +313,13 @@ class GroupTests(unittest.TestCase):
 
     def test_gather_collapses_sources_into_target(self):
         squares = [manim.Square(0.2, fill_color=manim.ORANGE, fill_opacity=0.9).shift(i * 0.3 * manim.RIGHT + 2 * manim.DOWN) for i in range(20)]
-        badge = morph.token("20", kind="number", color=morph.DATA).shift(2 * manim.UP)
+        badge = tokens.token("20", kind="number", color=tokens.DATA).shift(2 * manim.UP)
         scene = play(*squares, animation=morph.gather(squares, badge))
         self.assertEqual(scene.mobjects, [badge])
 
     def test_split_sprouts_targets_and_removes_source(self):
         src = capsule()
-        cells = [morph.token(str(i), kind="cell").shift(i * 1.2 * manim.RIGHT + 2 * manim.DOWN) for i in range(5)]
+        cells = [tokens.token(str(i), kind="cell").shift(i * 1.2 * manim.RIGHT + 2 * manim.DOWN) for i in range(5)]
         scene = play(src, animation=morph.split(src, cells))
         self.assertEqual(scene.mobjects, cells)
 
@@ -342,40 +338,8 @@ class GroupTests(unittest.TestCase):
             morph.unfold([manim.Square()], [])
 
 
-class TokenTests(unittest.TestCase):
-    """🪙 Tokens, travel, tether and retext."""
-
-    def test_every_kind_builds_with_size_and_colour(self):
-        for kind in morph.KINDS:
-            tok = morph.token("{0;1;3;1}" if kind == "path" else "42", kind=kind, color=manim.GREEN)
-            self.assertEqual(tok.kind, kind)
-            self.assertGreater(tok.width, 0.1)
-            self.assertLess(tok.height, 1.0)
-            np.testing.assert_allclose(tok.get_center(), [0, 0, 0], atol=0.2)
-        with self.assertRaises(ValueError):
-            morph.token("x", kind="unknown")
-
-    def test_size_scales_tokens(self):
-        self.assertGreater(morph.token("1", kind="item", size=2.0).width, 1.8 * morph.token("1", kind="item").width)
-
-    def test_item_keeps_type_colour(self):
-        np.testing.assert_allclose(fill_of(morph.token("1", kind="item", color=manim.RED)[1]), np.array(manim.ManimColor(manim.RED).to_rgb()), atol=1e-6)
-
-    def test_travel_ends_at_path_end(self):
-        tok = morph.token("1", kind="number")
-        scene = play(tok, animation=morph.travel(tok, [[-3, 0, 0], [0, 1, 0], [3, 0, 0]]))
-        np.testing.assert_allclose(tok.get_center(), [3, 0, 0], atol=0.05)
-        self.assertEqual(scene.mobjects, [tok])
-
-    def test_tether_follows_both_ends(self):
-        a, b = manim.Square(0.5), manim.Square(0.5).shift(3 * manim.RIGHT)
-        line = morph.tether(a, b)
-        scene = play(a, b, line, animation=manim.Wait(0.1))
-        before = line.get_start(), line.get_end()
-        b.shift(2 * manim.UP)
-        line.update()
-        self.assertGreater(abs(line.get_end()[1] - before[1][1]), 0.5)
-        np.testing.assert_allclose(line.get_start()[0], 0.25, atol=0.05)
+class RetextTests(unittest.TestCase):
+    """✏ Formula morphs."""
 
     def test_retext_leaves_only_target(self):
         a, b = manim.Text("A1+B2"), manim.Text("B2+A1").shift(manim.DOWN)

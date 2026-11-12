@@ -70,6 +70,8 @@ room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
 fitted_staffage = _manim_module.fitted_staffage
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 sun_glyph = _manim_module.sun_glyph
 cloud_glyph = _manim_module.cloud_glyph
 thermometer_glyph = _manim_module.thermometer_glyph
@@ -184,7 +186,7 @@ def _snap(mob):
     return snap
 
 
-def _fill_panel(scene, panel, sources, *, run_time: float = 2.0):
+def _fill_panel(scene, stage, panel, sources, *, run_time: float = 2.0):
     """🧲 Every named formula slot is fed by the drawn quantity it stands for, then the rest of the formula appears.
 
     ``sources`` maps a slot key to the on-screen mobject it is read from; a copy of it morphs into its slot.
@@ -194,7 +196,7 @@ def _fill_panel(scene, panel, sources, *, run_time: float = 2.0):
     rest = VGroup(*[m for m in row.submobjects if all(m is not t for t in targets)])
     for part in row.get_family():
         part._layout_zone = "formula"
-    scene.play(*[TransformFromCopy(_snap(src), items[key]) for key, src in sources.items()], run_time=run_time * 0.75)
+    scene.play(*[stage.transition(f"ventilation.need.demand.formula-{key}", source=_snap(src), target=items[key]) for key, src in sources.items()], run_time=run_time * 0.75)
     scene.play(FadeIn(rest), Create(box), run_time=1.0)
 
 
@@ -243,6 +245,7 @@ class Beat1_Lueftungsbedarf(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("What ventilation has to achieve", "Was Lüftung leisten muss"))
@@ -376,7 +379,7 @@ class Beat1_Lueftungsbedarf(Scene):
             (None, r"\cdot", P_WHITE), ("blk", rf"{label_number(PER_PERSON_M3H)}\,\mathrm{{m^{{3}}/h}}", AIR_COLOR),
             (None, "=", P_WHITE), ("tot", rf"{label_number(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
         ], color=AIR_COLOR)
-        _fill_panel(self, panel, {"n": n_tag, "blk": texts[0], "tot": v_total})
+        _fill_panel(self, stage, panel, {"n": n_tag, "blk": texts[0], "tot": v_total})
         hold_for(self, N, "personen")
 
         caption = swap_caption(self, caption, subtitle_text(N, "jahreszeit"))
@@ -433,6 +436,7 @@ class Beat2_Lueftungsweg(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("The ventilation path through the house", "Der Lüftungsweg durchs Haus"))
@@ -555,7 +559,7 @@ class Beat2_Lueftungsweg(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "sommer"))
         mode["now"] = "summer"
         self.play(FadeOut(guides_winter), FadeOut(q_winter), FadeOut(label_in_w), FadeOut(label_out_w), run_time=0.6)
-        self.play(ReplacementTransform(badge_winter, badge_summer), FadeIn(guides_summer), FadeIn(label_in_s), FadeIn(label_out_s),
+        self.play(stage.transition("ventilation.need.path.badge-summer", source=badge_winter, target=badge_summer), FadeIn(guides_summer), FadeIn(label_in_s), FadeIn(label_out_s),
                   air.animate.set_fill(P_CYAN, opacity=0.1),
                   theta_e.animate.set_value(THETA_SUMMER[1]), theta_i.animate.set_value(THETA_SUMMER[0]),
                   *breeze(2.4), run_time=2.4)

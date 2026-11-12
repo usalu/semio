@@ -37,7 +37,7 @@ Render all six German videos:
 repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video optimization_extrema --video optimization_sampling --video optimization_experiments --video optimization_index --video optimization_pareto --video optimization_algorithms --language de --audience speaker --no-play
 ~~~
 
-For the delivered Full HD format, add `--quality h --fps 30`. Use `--audience spectator` for the same animation without captions; omitting `--audience` renders both. Progress, cancellation, job count and cache provenance use the shared renderer.
+For the delivered Full HD format, add `--profile final`. Use `--audience spectator` for the same animation without captions; omitting `--audience` renders both. Progress, cancellation, job count and cache provenance use the shared renderer.
 
 Run the contract and independent numerical checks:
 
@@ -86,7 +86,7 @@ Alle sechs deutschen Videos rendern:
 repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video optimization_extrema --video optimization_sampling --video optimization_experiments --video optimization_index --video optimization_pareto --video optimization_algorithms --language de --audience speaker --no-play
 ~~~
 
-Für das gelieferte Full-HD-Format `--quality h --fps 30` ergänzen. `--audience spectator` rendert dieselbe Animation ohne Untertitel; ohne `--audience` entstehen beide Varianten. Fortschritt, Abbruch, Job-Anzahl und Zwischenergebnisse stellt der gemeinsame Renderer bereit.
+Für das gelieferte Full-HD-Format `--profile final` ergänzen. `--audience spectator` rendert dieselbe Animation ohne Untertitel; ohne `--audience` entstehen beide Varianten. Fortschritt, Abbruch, Job-Anzahl und Zwischenergebnisse stellt der gemeinsame Renderer bereit.
 
 Vertrags- und unabhängige Zahlenprüfungen ausführen:
 

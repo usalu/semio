@@ -73,6 +73,8 @@ load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 _VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
@@ -96,6 +98,7 @@ HOUSE_SCALE = 0.8
 # One set of numbers for the whole chapter — the same example house the Heating
 # series calculates (areas, U-values, volume, air change from 2_ventilation/), so every bar and
 # readout below is a product of drawn quantities.
+SURFACE_SLUGS = ("wall", "roof", "windows", "floor")
 SURFACES = [
     ("Außenwand", 209.0, 0.24, 20.0, LOSS_BLUE),
     ("Dach", 89.0, 0.20, 20.0, semio_color("info")),
@@ -303,9 +306,9 @@ def _lead(tag, point, *, side: str, color):
     return Line(start, np.array(point, dtype=float), color=color, stroke_width=1.4, stroke_opacity=0.55)
 
 
-def _merge(sources, target):
+def _merge(stage, transition, sources, target):
     """🔀 Morph several flow symbols into one formula term — the first becomes it, the rest fold into it and are returned to remove."""
-    anims = [ReplacementTransform(sources[0], target)]
+    anims = [stage.transition(transition, source=sources[0], target=target)]
     anims += [src.animate.move_to(target).scale(0.4).set_opacity(0) for src in sources[1:]]
     return anims, list(sources[1:])
 
@@ -427,6 +430,7 @@ class Beat1_Bilanzgrenze(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("System boundary & energy conservation", "Bilanzgrenze & Energieerhaltung"))
         din = _din_ref("DIN V 18599-1")
@@ -527,11 +531,11 @@ class Beat1_Bilanzgrenze(Scene):
             ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, r"\;[\mathrm{kWh/a}]", P_PRIMARY),
         ])
         glue = [m for m in row if all(m is not v for v in items.values())]
-        sink_anims, sink_spare = _merge([tag_t[1], tag_v[1]], items["senke"])
-        src_anims, src_spare = _merge([tag_s[1], tag_i[1]], items["quelle"])
+        sink_anims, sink_spare = _merge(stage, "demand.recap.balance.sink-symbol-into-senke", [tag_t[1], tag_v[1]], items["senke"])
+        src_anims, src_spare = _merge(stage, "demand.recap.balance.source-symbol-into-quelle", [tag_s[1], tag_i[1]], items["quelle"])
         self.play(
             Create(box), *[FadeIn(g) for g in glue],
-            *sink_anims, *src_anims, ReplacementTransform(tag_h[1], items["qh"]),
+            *sink_anims, *src_anims, stage.transition("demand.recap.balance.heat-symbol-into-qh", source=tag_h[1], target=items["qh"]),
             FadeOut(VGroup(tag_h[0], lead_h, heat_g)), run_time=1.6,
         )
         self.remove(*sink_spare, *src_spare)
@@ -614,6 +618,7 @@ class Beat2_Verlustseite(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The loss side: transmission & ventilation", "Die Verlustseite: Transmission & Lüftung"))
         din = _din_ref("DIN V 18599-2")
@@ -686,7 +691,7 @@ class Beat2_Verlustseite(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "a"))
         self.add(ex["rows"][1])
-        self.play(ReplacementTransform(ring_u, ring_a), *_terms(row_t, 4, 7), a_t.animate.set_value(209.0),
+        self.play(stage.transition("demand.recap.loss.ring-u-to-a", source=ring_u, target=ring_a), *_terms(row_t, 4, 7), a_t.animate.set_value(209.0),
                   *on("Außenwand", 1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "a", during=lambda rt: on("Außenwand", rt))
 
@@ -697,7 +702,7 @@ class Beat2_Verlustseite(Scene):
                                 size=LABEL_FONT_SIZE, color=P_BLUE, edge="left")
         ring_dt = highlight_param(it_t, "dt", color=P_BLUE)
         self.play(FadeOut(VGroup(H["group"], H["air"], envelope, sym_t, hl["Außenwand"], ex["frame"], ex_head)),
-                  *[FadeOut(r) for r in ex["rows"]], ReplacementTransform(ring_a, ring_dt), run_time=0.8)
+                  *[FadeOut(r) for r in ex["rows"]], stage.transition("demand.recap.loss.ring-a-to-dt", source=ring_a, target=ring_dt), run_time=0.8)
         self.add(th["in"]["column"], th["out"]["column"], dth_read)
         self.play(FadeIn(th["static"]), *_terms(row_t, 7, 9),
                   th["in"]["level"].animate.set_value(0.75), th["out"]["level"].animate.set_value(0.25), run_time=1.6)
@@ -712,7 +717,7 @@ class Beat2_Verlustseite(Scene):
         ring_t = highlight_param(it_t, "t", color=P_PRIMARY)
         self.add(*t_card["rows"])
         self.play(FadeOut(th["static"]), *[FadeOut(m) for m in (th["in"]["column"], th["out"]["column"], dth_read, th["arrow"])],
-                  ReplacementTransform(ring_dt, ring_t), run_time=0.6)
+                  stage.transition("demand.recap.loss.ring-dt-to-t", source=ring_dt, target=ring_t), run_time=0.6)
         self.play(FadeIn(clk["group"]), FadeIn(VGroup(t_card["frame"], t_head)), *_terms(row_t, 9, 12), run_time=0.8)
         self.play(Rotate(clk["hand"], angle=-TAU * 3, about_point=clk["center"], rate_func=linear),
                   t_tr.animate.set_value(T_MONTH), run_time=1.6)
@@ -739,12 +744,12 @@ class Beat2_Verlustseite(Scene):
             u_s.set_value(0.0)
             a_s.set_value(0.0)
             d_s.set_value(0.0)
-            enter = [FadeIn(heads[0]), FadeIn(card["frame"])] if k == 0 else [ReplacementTransform(heads[k - 1], heads[k])]
+            enter = [FadeIn(heads[0]), FadeIn(card["frame"])] if k == 0 else [stage.transition(f"demand.recap.loss.surface-head-{SURFACE_SLUGS[k - 1]}-to-{SURFACE_SLUGS[k]}", source=heads[k - 1], target=heads[k])]
             leave = [FadeOut(hl[previous])] if previous else []
             self.play(Create(hl[name]), *leave, *enter, *on(name, 1.2), run_time=1.2)
             self.play(u_s.animate.set_value(u), a_s.animate.set_value(area), d_s.animate.set_value(d_k),
                       *on(name, 1.8), run_time=1.8)
-            self.play(TransformFromCopy(hl[name], stack["bars"][k]), FadeIn(labels[k]), Create(leaders[k]),
+            self.play(stage.transition(f"demand.recap.loss.surface-{SURFACE_SLUGS[k]}-into-stack", source=hl[name], target=stack["bars"][k]), FadeIn(labels[k]), Create(leaders[k]),
                       *on(name, 1.2), run_time=1.2)
             hold_for(self, self.NARRATION, ("wand", "dach", "fenster", "boden")[k], during=lambda rt, n=name: on(n, rt))
             previous = name
@@ -779,12 +784,12 @@ class Beat2_Verlustseite(Scene):
         ring_u2 = highlight_param(it_t2, "u", color=P_ORANGE)
         self.add(du_read)
         self.play(FadeIn(du_g["group"]), FadeIn(du_unit), Create(ring_u2),
-                  ReplacementTransform(box_t, box_t2), ReplacementTransform(row_t, row_t2), run_time=1.6)
+                  stage.transition("demand.recap.loss.formula-box-with-bridges", source=box_t, target=box_t2), stage.transition("demand.recap.loss.formula-with-bridges", source=row_t, target=row_t2), run_time=1.6)
         hold_for(self, self.NARRATION, "zuschlag", during=sparks)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wb_wert"))
         self.play(du_t.animate.set_value(1 / 3), run_time=1.4)
-        self.play(ReplacementTransform(dots, stack["bars"][4]), FadeIn(labels[4]), Create(leaders[4]), run_time=1.4)
+        self.play(stage.transition("demand.recap.loss.bridge-dots-into-stack-bar", source=dots, target=stack["bars"][4]), FadeIn(labels[4]), Create(leaders[4]), run_time=1.4)
         hold_for(self, self.NARRATION, "wb_wert")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lueftung"))
@@ -810,7 +815,7 @@ class Beat2_Verlustseite(Scene):
         ring_rc = highlight_param(it_v, "rc", color=P_GREEN)
         self.add(_veil(row_v))
         self.play(FadeOut(VGroup(du_g["group"], du_unit, ring_u2, row_t2)), FadeOut(du_read),
-                  ReplacementTransform(box_t2, box_v), FadeIn(sym_v), *_terms(row_v, 0, 2), *vent_flows(1.6), run_time=1.6)
+                  stage.transition("demand.recap.loss.formula-box-to-ventilation", source=box_t2, target=box_v), FadeIn(sym_v), *_terms(row_v, 0, 2), *vent_flows(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "lueftung", during=vent_flows)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "luftwechsel"))
@@ -821,20 +826,20 @@ class Beat2_Verlustseite(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "volumen"))
         self.add(v_card["rows"][1])
-        self.play(FadeIn(vol), ReplacementTransform(ring_n, ring_v), *_terms(row_v, 3, 5),
+        self.play(FadeIn(vol), stage.transition("demand.recap.loss.ring-n-to-v", source=ring_n, target=ring_v), *_terms(row_v, 3, 5),
                   v_t.animate.set_value(V_NET), *vent_flows(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "volumen", during=vent_flows)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "waermekap"))
         self.add(v_card["rows"][2])
-        self.play(ReplacementTransform(ring_v, ring_rc), *_terms(row_v, 5, 7), rc_t.animate.set_value(RHO_C),
+        self.play(stage.transition("demand.recap.loss.ring-v-to-rc", source=ring_v, target=ring_rc), *_terms(row_v, 5, 7), rc_t.animate.set_value(RHO_C),
                   *vent_flows(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "waermekap", during=vent_flows)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lueft_block"))
         self.add(v_card["rows"][3])
         self.play(FadeOut(ring_rc), *_terms(row_v, 7, 12), *vent_flows(1.4), run_time=1.4)
-        self.play(TransformFromCopy(vol, stack["bars"][5]), FadeIn(labels[5]), Create(leaders[5]),
+        self.play(stage.transition("demand.recap.loss.ventilation-volume-into-stack", source=vol, target=stack["bars"][5]), FadeIn(labels[5]), Create(leaders[5]),
                   *vent_flows(1.4), run_time=1.4)
         hold_for(self, self.NARRATION, "lueft_block", during=vent_flows)
 
@@ -863,8 +868,8 @@ class Beat2_Verlustseite(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "summe"))
         self.play(GrowFromCenter(brace_all), FadeIn(lab_all), run_time=1.2)
         self.play(Create(box_s), *[FadeIn(g) for g in glue],
-                  TransformFromCopy(lab_all, it_s["senke"]), TransformFromCopy(lab_t, it_s["qt"]),
-                  TransformFromCopy(lab_v, it_s["qv"]), run_time=1.4)
+                  stage.transition("demand.recap.loss.label-sink-into-sum", source=lab_all, target=it_s["senke"]), stage.transition("demand.recap.loss.label-transmission-into-sum", source=lab_t, target=it_s["qt"]),
+                  stage.transition("demand.recap.loss.label-ventilation-into-sum", source=lab_v, target=it_s["qv"]), run_time=1.4)
         hold_for(self, self.NARRATION, "summe")
 
         self.play(FadeOut(VGroup(caption, box_s, row_s, brace_t, brace_v, brace_all, lab_t, lab_v, lab_all, scale_group)),
@@ -933,6 +938,7 @@ class Beat3_Gewinnseite(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The gain side & the utilisation factor", "Die Gewinnseite & der Ausnutzungsgrad"))
         din = _din_ref("DIN V 18599-2")
@@ -1016,19 +1022,19 @@ class Beat3_Gewinnseite(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "einstrahlung"))
         self.add(s_card["rows"][1])
-        self.play(ReplacementTransform(ring_a, ring_i), *_terms(row_s, 3, 5), is_t.animate.set_value(I_S),
+        self.play(stage.transition("demand.recap.gain.ring-a-to-i", source=ring_a, target=ring_i), *_terms(row_s, 3, 5), is_t.animate.set_value(I_S),
                   *sunny(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "einstrahlung", during=sunny)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gwert"))
         self.add(s_card["rows"][2])
-        self.play(FadeIn(g_g["static"]), ReplacementTransform(ring_i, ring_g), *_terms(row_s, 5, 7),
+        self.play(FadeIn(g_g["static"]), stage.transition("demand.recap.gain.ring-i-to-g", source=ring_i, target=ring_g), *_terms(row_s, 5, 7),
                   g_t.animate.set_value(G_VALUE), *sunny(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "gwert", during=sunny)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "fs"))
         self.add(s_card["rows"][3])
-        self.play(FadeOut(g_g["static"]), FadeIn(fs_g["static"]), Create(slats), ReplacementTransform(ring_g, ring_f),
+        self.play(FadeOut(g_g["static"]), FadeIn(fs_g["static"]), Create(slats), stage.transition("demand.recap.gain.ring-g-to-f", source=ring_g, target=ring_f),
                   *_terms(row_s, 7, 9), fs_t.animate.set_value(F_S), *sunny(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "fs", during=sunny)
 
@@ -1036,7 +1042,7 @@ class Beat3_Gewinnseite(Scene):
         self.add(s_card["rows"][4])
         self.play(FadeOut(fs_g["static"]), FadeOut(ring_f), FadeIn(patches), *_terms(row_s, 9, 10),
                   *sunny(1.0), run_time=1.0)
-        self.play(TransformFromCopy(patches, solar_block), FadeIn(cap_gain), qs_t.animate.set_value(Q_SOLAR),
+        self.play(stage.transition("demand.recap.gain.patches-into-solar-block", source=patches, target=solar_block), FadeIn(cap_gain), qs_t.animate.set_value(Q_SOLAR),
                   *sunny(1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "solar_block", during=sunny)
 
@@ -1065,7 +1071,7 @@ class Beat3_Gewinnseite(Scene):
         self.add(_veil(row_i))
         self.play(FadeOut(VGroup(s_card["frame"], glass, slats, patches, S["sun"], S["group"], row_s)),
                   *[FadeOut(r) for r in s_card["rows"]],
-                  ReplacementTransform(box_s, box_i), *_terms(row_i, 0, 2),
+                  stage.transition("demand.recap.gain.formula-box-to-internal", source=box_s, target=box_i), *_terms(row_i, 0, 2),
                   LaggedStart(*[FadeIn(m) for m in G["sources"]], lag_ratio=0.2), run_time=1.6)
         hold_for(self, self.NARRATION, "intern", during=lambda rt: _gain_heat(G, rt))
 
@@ -1077,17 +1083,17 @@ class Beat3_Gewinnseite(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "a_n"))
         self.add(i_card["rows"][1])
-        self.play(ReplacementTransform(ring_q, ring_an), Create(floors), *_terms(row_i, 3, 5),
+        self.play(stage.transition("demand.recap.gain.ring-q-to-an", source=ring_q, target=ring_an), Create(floors), *_terms(row_i, 3, 5),
                   an_t.animate.set_value(A_NET), *_gain_heat(G, 1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "a_n", during=lambda rt: _gain_heat(G, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "t_i"))
         self.add(i_card["rows"][2])
-        self.play(ReplacementTransform(ring_an, ring_t), FadeOut(floors), *_terms(row_i, 5, 8),
+        self.play(stage.transition("demand.recap.gain.ring-an-to-t", source=ring_an, target=ring_t), FadeOut(floors), *_terms(row_i, 5, 8),
                   t_t.animate.set_value(T_MONTH), *_gain_heat(G, 1.6), run_time=1.6)
         self.add(i_card["rows"][3])
         self.play(FadeOut(ring_t), FadeIn(heat_pack), run_time=0.6)
-        self.play(TransformFromCopy(heat_pack, intern_block), qi_t.animate.set_value(Q_INTERN),
+        self.play(stage.transition("demand.recap.gain.heat-pack-into-internal-block", source=heat_pack, target=intern_block), qi_t.animate.set_value(Q_INTERN),
                   solar_block.animate.move_to(np.array([x_gain, base_y + (Q_INTERN + Q_SOLAR / 2) * unit, 0.0])),
                   *_gain_heat(G, 1.6), run_time=1.6)
         hold_for(self, self.NARRATION, "t_i", during=lambda rt: _gain_heat(G, rt))
@@ -1124,7 +1130,7 @@ class Beat3_Gewinnseite(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wert"))
         self.play(eta_t.animate.set_value(ETA_H), *_terms(row_e, 3, 4), run_time=1.6)
-        self.play(ReplacementTransform(VGroup(intern_block, solar_block), VGroup(usable, waste)), Create(spill),
+        self.play(stage.transition("demand.recap.gain.blocks-into-usable-and-waste", source=VGroup(intern_block, solar_block), target=VGroup(usable, waste)), Create(spill),
                   run_time=1.4)
         hold_for(self, self.NARRATION, "wert")
 
@@ -1158,13 +1164,13 @@ class Beat3_Gewinnseite(Scene):
                               ripples([rad.get_top() + UP * 0.02], r_max=0.5, color=DEMAND_RED, cycles=max(1.0, rt / 1.3))]
         self.play(FadeOut(VGroup(spill, spill_note, waste, G["sources"])),
                   H["air"].animate.set_fill(P_ORANGE, opacity=0.07), run_time=0.8)
-        self.play(FadeIn(rad), TransformFromCopy(rad, demand), Create(level), *warm_in(1.6), run_time=1.6)
+        self.play(FadeIn(rad), stage.transition("demand.recap.gain.radiator-into-demand", source=rad, target=demand), Create(level), *warm_in(1.6), run_time=1.6)
         self.play(FadeIn(lab_use), FadeIn(lab_dem), *warm_in(1.0), run_time=1.0)
         hold_for(self, self.NARRATION, "bilanz", during=warm_in)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bilanz_qh"))
-        self.play(ReplacementTransform(box_e, box_b), ReplacementTransform(row_e, row_b),
-                  TransformFromCopy(lab_dem, it_b["qh"]), *warm_in(1.4), run_time=1.4)
+        self.play(stage.transition("demand.recap.gain.formula-box-to-balance", source=box_e, target=box_b), stage.transition("demand.recap.gain.formula-to-balance", source=row_e, target=row_b),
+                  stage.transition("demand.recap.gain.demand-label-into-qh", source=lab_dem, target=it_b["qh"]), *warm_in(1.4), run_time=1.4)
         self.play(Create(ring_h), *warm_in(0.6), run_time=0.6)
         hold_for(self, self.NARRATION, "bilanz_qh", during=warm_in)
 
@@ -1213,6 +1219,7 @@ class Beat4_WinterUndSommer(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
 
         subtitle = section_heading(tr("The same balance, two seasons", "Dieselbe Bilanz, zwei Jahreszeiten"))
         din = _din_ref("DIN V 18599-2 · VDI 2078")
@@ -1334,13 +1341,13 @@ class Beat4_WinterUndSommer(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "juli"))
         self.play(FadeOut(VGroup(gap_lab_h, ring_h, box_w, row_w)), FadeOut(gap_w),
                   FadeOut(result_chip), run_time=0.8)
-        self.play(climate.animate.set_value(1.0), ReplacementTransform(season_chip, season_chip_j),
+        self.play(climate.animate.set_value(1.0), stage.transition("demand.recap.seasons.season-chip-to-summer", source=season_chip, target=season_chip_j),
                   run_time=2.0, rate_func=smooth)
         hold_for(self, self.NARRATION, "juli")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "juli_schalen"))
         self.play(season.animate.set_value(1.0), eta_t.animate.set_value(ETA_K),
-                  ReplacementTransform(cap_loss, cap_loss_k), ReplacementTransform(cap_gain, cap_gain_k),
+                  stage.transition("demand.recap.seasons.shell-loss-to-summer", source=cap_loss, target=cap_loss_k), stage.transition("demand.recap.seasons.shell-gain-to-summer", source=cap_gain, target=cap_gain_k),
                   run_time=2.6, rate_func=smooth)
         hold_for(self, self.NARRATION, "juli_schalen")
 

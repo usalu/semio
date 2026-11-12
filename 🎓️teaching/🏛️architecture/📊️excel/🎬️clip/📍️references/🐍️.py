@@ -34,6 +34,7 @@ SURFACES = (("roof", "top"), ("floor", "bottom"), ("wall_left", "left"), ("wall_
 LOSS_FORMAT = '#,##0 "W"'
 KELVIN = '0.0 "K"'
 WK = '0.00 "W/K"'
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 
 def _put(shape, point, edge="c"):
@@ -104,6 +105,22 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
     def _tok(self, label, kind, color, point, size=0.8):
         """🪙 A morph token centred on a stage point."""
         return _morph.token(label, kind=kind, color=color, size=size).move_to([point[0], point[1], 0])
+
+    def _to(self, name, source, target):
+        """🔀 The declared transition `excel.references.<name>`: preview swap or full morph by the active render profile."""
+        return self.morphs.transition(f"excel.references.{name}", source=source, target=target)
+
+    def _still(self, mob):
+        """🧊 A frame-frozen detached copy of a drawn part: the source of a morph while the live drawing stays."""
+        frozen = mob.copy()
+        for part in frozen.get_family():
+            part.clear_updaters()
+        return frozen
+
+    def _ghosts(self, animation):
+        """👻 The ghost a full morph leaves behind (none in a preview swap)."""
+        ghost = getattr(animation, "ghost_mobject", None)
+        return [] if ghost is None else [ghost]
 
     def _drop(self, *mobs, seconds=0.4):
         """🫧 Fade left-over morph targets and ghosts out."""
@@ -181,14 +198,14 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         finally:
             del self.play
 
-    def _bar_retext(self, win, old, new, run_time=1.4):
+    def _bar_retext(self, win, old, new, transition):
         """🧮 Hide the window's formula-bar text, put the old formula token there and return the retext into the new one plus the overlay to remove."""
         win.edit("")
         centre = win.formula_bar[0].base[0].get_center()[1]
         at = (win.field_left, centre - _visuals._workbook._cap(LABEL) / 2, 0)
         before, after = self.xl_formula_text(old, at=at, size=LABEL), self.xl_formula_text(new, at=at, size=LABEL)
         self.add(before)
-        return _morph.retext(before, after, run_time=run_time), after
+        return self._to(transition, before, after), after
 
     def _absorb(self, card, *rows):
         """🧲 Put morph targets back into the card they belong to."""
@@ -303,6 +320,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
     def present_references(self):
         """🎞️ The whole animation: pointer, relative, total, absolute and its mistake, mixed, sheet, 3D, deleted, names, recap."""
         lang = self.language()
+        self.morphs = _morph.stage(self, TRANSITIONS)
         base = _xl.workbook()
         relabel = [{"type": "set-cell", "sheet": "Program", "cell": "C3", "value": self.tr("Net area", "Nettofläche")}]
         if lang == "de":
@@ -350,11 +368,11 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         origin = tower.capsules[sorted(self._type_slots(None, "A"))[0]].get_center()
         dimension_token = self._tok(width_text, "number", blue, origin)
         cell_token = self._tok(width_text, "cell", blue, win.point("B2"))
-        lift = _morph.morph(dimension_token, cell_token, ghost=0.25, path_arc=0.5, run_time=1.6)
+        lift = self._to("hook-lift", dimension_token, cell_token)
         self.add(dimension_token)
         basis = self._basis_labels()
         self.step("hook", _m.FadeIn(basis), _m.FadeIn(win), win.select("D3"), _m.FadeIn(tower_display), *(_m.FadeIn(f) for f in dep_frames), lift, seconds=3.0)
-        self._drop(cell_token, lift.ghost_mobject)
+        self._drop(cell_token, *self._ghosts(lift))
         self.play(self.w.animate.set_value(width0 + 0.5), run_time=1.2)
         self.w.set_value(width0)
 
@@ -364,17 +382,17 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         drawing = faces.current[0]
         hatched = (("top", "D3"), ("bottom", "D4"), ("front", "D7"), ("back", "D9"))
         area_text = lambda a1: _xl.display(at_width(width0)[(SHEET, a1)], '0.0 "m²"', lang)
-        face_shapes = [_morph.silhouette(self._face(faces, face)) for face, _ in hatched]
+        face_shapes = [self._still(self._face(faces, face)) for face, _ in hatched]
         area_tokens = [self._tok(area_text(a1), "cell", DATA, win.point(a1)) for _, a1 in hatched]
         edge_tokens = [self._tok(self._cell(base, a1, values=vals0), "cell", color, win.point(a1)) for a1, color in (("B2", blue), ("B3", red))]
         dimension_tokens = [self._tok(self._cell(base, a1, values=vals0), "number", color, drawing.dims[name].get_center()) for (a1, color), name in zip((("B2", blue), ("B3", red)), ("width", "length"))]
         self.add(*face_shapes, *edge_tokens)
-        self.step("pointer", _m.FadeOut(tower_display), *(_m.FadeOut(f) for f in dep_frames), _m.FadeIn(faces_display), _morph.scatter(face_shapes, area_tokens, lag=0.15, path_arc=0.5, run_time=1.8, pairs_fn=lambda s, d: [(s, d[0])], dip=0.15),
-                  _morph.scatter(edge_tokens, dimension_tokens, lag=0.3, path_arc=0.5, run_time=1.8), seconds=3.0)
+        self.step("pointer", _m.FadeOut(tower_display), *(_m.FadeOut(f) for f in dep_frames), _m.FadeIn(faces_display), self._to("pointer-faces", face_shapes, area_tokens),
+                  self._to("pointer-edges", edge_tokens, dimension_tokens), seconds=3.0)
         formula = self.xl_formula_text("=B2*B3", at=(RIGHT_X - 0.9, -2.15, 0), size=LABEL, ink=INK)
         marks = [mark for _, _, mark in formula.refs]
         rest = [part for part in formula.submobjects if all(part is not mark for mark in marks)]
-        self.play(_morph.scatter(dimension_tokens, marks, lag=0.2, path_arc=0.4, run_time=1.0), *(_m.FadeIn(part) for part in rest), *(_m.FadeOut(token) for token in area_tokens), run_time=1.2)
+        self.play(self._to("pointer-marks", dimension_tokens, marks), *(_m.FadeIn(part) for part in rest), *(_m.FadeOut(token) for token in area_tokens), run_time=1.2)
         self.formula_pieces = [*marks, *rest]
         win.edit(None)
         input_frames = [self.xl_ref_frame(win, a1, color=color) for a1, color in (("B2", blue), ("B3", red))]
@@ -398,8 +416,8 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         mover, shifted = self._rewrite(shift_card, 3, 5)
         self.play(_m.FadeIn(shift_card), run_time=0.5)
         self.add(mover)
-        bar_shift, bar_after = self._bar_retext(win2, "=D3*E3", "=D4*E4")
-        self.step("shift", _morph.retext(mover, shifted, run_time=1.4), bar_shift, seconds=1.8)
+        bar_shift, bar_after = self._bar_retext(win2, "=D3*E3", "=D4*E4", "bar-shift")
+        self.step("shift", self._to("shift-retext", mover, shifted), bar_shift, seconds=1.8)
         self._absorb(shift_card, shifted)
         self.remove(bar_after)
         win2.edit("=D4*E4")
@@ -411,12 +429,12 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.row.set_value(3)
         self.st.update(mode="loss", loss=tuple(vals0[(SHEET, f"F{r}")] for r in range(3, 10)))
         faces.refresh()
-        surface_shapes = [_morph.silhouette(self._surface(faces, name, face)) for name, face in SURFACES]
+        surface_shapes = [self._still(self._surface(faces, name, face)) for name, face in SURFACES]
         value_chips = [self._tok(self._cell(base, f"F{r}", values=vals0), "cell", DATA, win2.point(f"F{r}"), size=0.6) for r in range(3, 10)]
         self.add(*surface_shapes)
         cursor_reveal = self._row_sequence((cursor,), 8, 4.5)
         self.step("lights", _m.FadeOut(shift_card), _m.FadeOut(handle), cursor_reveal,
-                  _morph.scatter(surface_shapes, value_chips, lag=0.5, path_arc=0.5, run_time=1.0, limit=4.4, pairs_fn=lambda s, d: [(s, d[0])], dip=0.15), seconds=4.5)
+                  self._to("lights-faces", surface_shapes, value_chips), seconds=4.5)
         self.row.set_value(8)
         self._drop(*value_chips)
 
@@ -430,7 +448,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         factor_cell = self._tok(factor_text, "cell", WARN, win2.point("F9"))
         factor_face = self._tok(factor_text, "number", WARN, self._face(faces, "back").get_center())
         self.add(factor_cell)
-        back_lift = _morph.morph(factor_cell, factor_face, ghost=0.25, path_arc=0.6, run_time=1.8)
+        back_lift = self._to("back-lift", factor_cell, factor_face)
         self.step("back", _m.FadeIn(back_card), back_lift, seconds=2.5)
         win2.edit(None)
 
@@ -443,8 +461,8 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         centres = [drawing.window.get_center() if name == "window" else self._face(faces, face).get_center() for name, face in SURFACES]
         parts = [self._tok(self._cell(b_total, f"F{r}", values=v_total), "number", DATA, centre, size=0.6) for r, centre in zip(range(3, 10), centres)]
         total_token = self._tok(self._cell(b_total, "F10", values=v_total), "cell", GOOD, win_t.point("F10"))
-        self.play(*(_m.FadeIn(part) for part in parts), _m.FadeOut(factor_face), _m.FadeOut(back_lift.ghost_mobject), run_time=0.5)
-        self.step("total", _m.FadeOut(win2), _m.FadeOut(cursor), _m.FadeOut(back_card), _m.FadeIn(win_t), _m.FadeIn(total_card), _morph.gather(parts, total_token, lag=0.12, run_time=1.6), seconds=2.5)
+        self.play(*(_m.FadeIn(part) for part in parts), _m.FadeOut(factor_face), *(_m.FadeOut(ghost) for ghost in self._ghosts(back_lift)), run_time=0.5)
+        self.step("total", _m.FadeOut(win2), _m.FadeOut(cursor), _m.FadeOut(back_card), _m.FadeIn(win_t), _m.FadeIn(total_card), self._to("total-gather", parts, total_token), seconds=2.5)
         self._drop(total_token)
         win_t.edit(None)
 
@@ -469,7 +487,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         movers = [form_rows[0].copy() for _ in range(3)]
         self.play(_m.FadeIn(card), run_time=0.5)
         self.add(*movers)
-        chain = [item for i in (1, 2, 3) for item in (_morph.retext(movers[i - 1], form_rows[i], run_time=1.0), _m.FadeIn(_m.VGroup(*locks[i]), shift=_m.DOWN * 0.25, run_time=0.8))]
+        chain = [item for i in (1, 2, 3) for item in (self._to(("f4-second", "f4-third", "f4-fourth")[i - 1], movers[i - 1], form_rows[i]), _m.FadeIn(_m.VGroup(*locks[i]), shift=_m.DOWN * 0.25, run_time=0.8))]
         self.step("f4", _m.LaggedStart(*chain, lag_ratio=0.5), seconds=2.5)
         self._absorb(card, *form_rows[1:], *(lock for group in locks.values() for lock in group))
 
@@ -492,7 +510,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         loss_faces0 = [self._tok(self._cell(_S["b_abs"], f"G{r}", values=v_abs), "number", DATA, self._centre(faces, name, face) + np.array([0.0, -0.18, 0]), size=0.55) for r, (name, face) in zip(range(3, 10), SURFACES)]
         win4.edit(None)
         reveal4 = self._row_sequence((win4, cursor4), 9, 5.0)
-        self.step("absolute", _morph.split(delta_chip, [inside_chip, outside_chip], lag=0.4, path_arc=0.5, run_time=1.6), _morph.scatter(loss_cells0, loss_faces0, lag=0.55, path_arc=0.5, run_time=0.9, limit=4.8), _m.FadeOut(card), _m.FadeOut(win3), _m.FadeOut(frame), _m.FadeIn(frame4), reveal4, seconds=5.0)
+        self.step("absolute", self._to("absolute-split", delta_chip, [inside_chip, outside_chip]), self._to("absolute-losses", loss_cells0, loss_faces0), _m.FadeOut(card), _m.FadeOut(win3), _m.FadeOut(frame), _m.FadeIn(frame4), reveal4, seconds=5.0)
         self.row.set_value(9)
         self._drop(inside_chip, outside_chip, *loss_faces0)
         win4.edit(None)
@@ -515,7 +533,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         wrong_chips = [self._tok(self._cell(_S["b_slide"], f"G{r}", values=v_slide), "cell", SERV, slide.point(f"G{r}"), size=0.6) for r in wrong_rows]
         self.add(*wrong_chips)
         falls = [self._shatter(chip, centres[r - 3], run_time=1.4) for chip, r in zip(wrong_chips, wrong_rows)]
-        slide_off = _m.LaggedStart(_morph.morph(slide_frames[0], slide_frames[1], keep_source=True, run_time=1.0), _morph.morph(slide_frames[0], slide_frames[2], keep_source=True, run_time=1.0), lag_ratio=0.8)
+        slide_off = _m.LaggedStart(self._to("slide-off-first", slide_frames[0], slide_frames[1]), self._to("slide-off-second", slide_frames[0], slide_frames[2]), lag_ratio=0.8)
         self.step("slide", slide_off, _m.AnimationGroup(*falls, lag_ratio=0.25), self._when(0.5, lambda: self.st.update(loss=losses(v_slide))), seconds=3.0)
         self._sweep()
         slide.edit(None)
@@ -533,8 +551,8 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         loss_cells = [self._tok(self._cell(_S["b_abs"], f"G{r}", values=v_abs), "cell", DATA, fixed.point(f"G{r}"), size=0.6) for r in range(3, 10)]
         loss_labels = [self._tok(self._cell(_S["b_abs"], f"G{r}", values=v_abs), "number", DATA, centre, size=0.6) for r, centre in zip(range(3, 10), centres)]
         self.add(*loss_cells)
-        bar_repair, bar_fixed = self._bar_retext(fixed, "=F4*D11", "=F4*$D$10")
-        self.step("repair", _morph.retext(mover, repaired, run_time=1.4), bar_repair, _morph.scatter(loss_cells, loss_labels, lag=0.1, path_arc=0.5, run_time=2.0), seconds=3.0)
+        bar_repair, bar_fixed = self._bar_retext(fixed, "=F4*D11", "=F4*$D$10", "bar-repair")
+        self.step("repair", self._to("repair-retext", mover, repaired), bar_repair, self._to("repair-losses", loss_cells, loss_labels), seconds=3.0)
         self._absorb(fix_card, repaired)
         self.remove(bar_fixed)
         fixed.edit("=F4*$D$10")
@@ -581,18 +599,18 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         bars = [part for part in chart.submobjects if part.get_fill_opacity() > 0 and _m.ManimColor(part.get_fill_color()) == blue]
         chart.remove(*bars)
         cell_chips = [self._tok(self._cell(_S["b_abs"], f"G{r}", values=_xl.evaluate(_S["b_abs"])), "cell", DATA, fixed.point(f"G{r}"), size=0.6) for r in range(3, 10)]
-        self.play(_morph.scatter(self.loss_labels, cell_chips, lag=0.08, path_arc=0.5, run_time=1.0), _m.FadeOut(fix_card), run_time=1.4)
+        self.play(self._to("mixed2-sync", self.loss_labels, cell_chips), _m.FadeOut(fix_card), run_time=1.4)
         faces.refresh()
-        label_sources = [_morph.silhouette(self._surface(faces, name, face)) for name, face in (("roof", "top"), ("wall_left", "left"), ("window", "front"))]
+        label_sources = [self._still(self._surface(faces, name, face)) for name, face in (("roof", "top"), ("wall_left", "left"), ("window", "front"))]
         label_targets = [self._tok(label, "cell", DATA, flux.point(f"A{row}"), size=0.6) for row, label, _ in rows]
         self.add(*label_sources)
         flux.edit(None)
         flux_refs = [self.xl_ref_frame(flux, a1, color=color) for a1, color in (("B19", DATA), ("C18", SERV))]
-        self.step("mixed2", *(_m.FadeIn(frame) for frame in flux_refs), _morph.scatter(label_sources, label_targets, lag=0.4, path_arc=0.5, run_time=1.8, pairs_fn=lambda s, d: [(s, d[0])]), _m.FadeOut(fixed), _m.FadeOut(faces_display),*(_m.FadeOut(chip) for chip in cell_chips), _m.FadeIn(flux), self.pos2.animate.set_value(8).set_rate_func(_m.linear), seconds=6.0)
+        self.step("mixed2", *(_m.FadeIn(frame) for frame in flux_refs), self._to("mixed2-labels", label_sources, label_targets), _m.FadeOut(fixed), _m.FadeOut(faces_display),*(_m.FadeOut(chip) for chip in cell_chips), _m.FadeIn(flux), self.pos2.animate.set_value(8).set_rate_func(_m.linear), seconds=6.0)
         self._drop(*label_targets, seconds=0.3)
         centre_cells = [self._tok(_xl.display(vg[("Program", f"D{row}")], "0.0", self.language()), "cell", DATA, flux.point(f"D{row}"), size=0.7) for row, _, _ in rows]
         self.add(*centre_cells)
-        self.play(_m.FadeIn(chart), _morph.scatter(centre_cells, bars, lag=0.25, path_arc=0.4, run_time=1.6), run_time=2.0)
+        self.play(_m.FadeIn(chart), self._to("mixed2-bars", centre_cells, bars), run_time=2.0)
         self._absorb(chart, *bars)
         self.remove(*flux_refs)
 
@@ -626,23 +644,23 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.play(_m.FadeOut(flux), _m.FadeOut(chart), _m.FadeIn(win5), _m.FadeIn(tower_live), run_time=0.6)
         win5.edit(None)
         counted = self._tower(lit=self._tower_cell(base, "B11"))
-        capsule_shapes = [_morph.silhouette(counted.capsules[key]) for key in sorted(self._tower_cell(base, "B11"))]
+        capsule_shapes = [self._still(counted.capsules[key]) for key in sorted(self._tower_cell(base, "B11"))]
         count_token = self._tok(self._cell(base, "B11", "Program", vals), "number", DATA, win5.point("B11"))
         self.add(*capsule_shapes)
-        self.step("mixed", _morph.gather(capsule_shapes, count_token, lag=0.06, path_arc=0.5, run_time=1.8), seconds=2.0)
+        self.step("mixed", self._to("mixed-count", capsule_shapes, count_token), seconds=2.0)
         self._drop(count_token)
         self.pos.set_value(0)
         plays = []
         for index in range(1, len(cells)):
             keys = self._tower_cell(base, cells[index])
             built = self._tower(lit=keys)
-            shapes = [_morph.silhouette(built.capsules[key]) for key in sorted(keys)]
+            shapes = [self._still(built.capsules[key]) for key in sorted(keys)]
             chip = self._tok(self._cell(base, cells[index], "Program", vals), "number", DATA, win5.point(cells[index]))
             set_pos = _m.UpdateFromAlphaFunc(_m.Mobject(), lambda mob, alpha, index=index: self.pos.set_value(index), run_time=0.05)
             if index % 2:
-                plays += [([set_pos, _m.FadeIn(chip)], 0.25), ([_morph.split(chip, shapes, lag=0.04, path_arc=0.5, run_time=0.8)], 0.9), ([_m.FadeOut(shape) for shape in shapes], 0.2)]
+                plays += [([set_pos, _m.FadeIn(chip)], 0.25), ([self._to("fill2d-split", chip, shapes)], 0.9), ([_m.FadeOut(shape) for shape in shapes], 0.2)]
             else:
-                plays += [([set_pos, *(_m.FadeIn(shape) for shape in shapes)], 0.25), ([_morph.gather(shapes, chip, lag=0.04, path_arc=0.5, run_time=0.8)], 0.9), ([_m.FadeOut(chip)], 0.2)]
+                plays += [([set_pos, *(_m.FadeIn(shape) for shape in shapes)], 0.25), ([self._to("fill2d-gather", shapes, chip)], 0.9), ([_m.FadeOut(chip)], 0.2)]
         self._clause("fill2d", plays)
         self.pos.set_value(7)
         self.win, self.tower_live = win5, tower_live
@@ -660,9 +678,9 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         plan_label = self._say(self.tr("net floor area", "Nettogrundfläche") + " " + self._cell(base, "B9", values=vals), (RIGHT_X, -2.4), size=SMALL, color=MUTED)
         area_token = self._tok(self._cell(base, "B9", values=vals), "cell", _visuals._workbook.REFERENCE_COLORS[0], win6.point("C4"))
         self.play(_m.FadeOut(win5), _m.FadeOut(tower_live), _m.FadeIn(win6), _m.FadeIn(thumb), _m.FadeIn(thumb_frame), _m.FadeIn(plan), _m.FadeIn(plan_label), run_time=0.7)
-        floor_shape = _morph.silhouette(plan.faces["top"])
+        floor_shape = self._still(plan.faces["top"])
         self.add(floor_shape)
-        floor_lift = _morph.morph(floor_shape, area_token, pairs=[(floor_shape, area_token[0])], path_arc=0.6, run_time=1.6, dip=0.15)
+        floor_lift = self._to("sheet-floor", floor_shape, area_token)
         self.step("sheet", floor_lift, seconds=2.0)
         self._drop(area_token)
         win6.edit(None)
@@ -691,7 +709,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         tab_chips = [self._tok(f"Type {k}", "path", _nd.type_color(k), win8.tabs[f"Type {k}"].get_center(), size=0.55) for k in "ABCD"]
         row_chips = [self._tok(f"Type {k}", "path", _nd.type_color(k), (note.get_left()[0] - 0.85, note.get_center()[1]), size=0.7) for k, (_, note) in zip("ABCD", rows_of)]
         self.add(*tab_chips)
-        self.step("pertype", _morph.scatter(tab_chips, row_chips, lag=0.25, path_arc=0.5, run_time=1.6), seconds=3.0)
+        self.step("pertype", self._to("pertype-tabs", tab_chips, row_chips), seconds=3.0)
         self.row_chips = row_chips
         win8.edit(None)
 
@@ -702,11 +720,11 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         bracket = self._bracket(energy, "Type A", "Type D")
         capsules, values, total_text = [chips[3 * i] for i in range(4)], [chips[3 * i + 2] for i in range(4)], chips[12]
         chips.remove(*capsules, *values, total_text)
-        self.play(_m.FadeOut(win8), _m.FadeOut(pertype_card), _m.FadeIn(energy), _m.FadeIn(chips), _m.FadeIn(bracket), _morph.scatter(self.row_chips, capsules, lag=0.15, path_arc=0.4, run_time=1.0), run_time=1.3)
-        sources = [_morph.silhouette(capsule) for capsule in capsules]
+        self.play(_m.FadeOut(win8), _m.FadeOut(pertype_card), _m.FadeIn(energy), _m.FadeIn(chips), _m.FadeIn(bracket), self._to("threed-chips", self.row_chips, capsules), run_time=1.3)
+        sources = [self._still(capsule) for capsule in capsules]
         self.add(*sources)
-        self.play(_morph.scatter(sources, values, lag=0.15, path_arc=0.3, run_time=0.9), run_time=1.2)
-        self.step("threed", _morph.gather(values, total_text, lag=0.2, path_arc=0.4, run_time=2.0), seconds=3.0)
+        self.play(self._to("threed-values", sources, values), run_time=1.2)
+        self.step("threed", self._to("threed-sum", values, total_text), seconds=3.0)
         energy.edit(None)
         moved = self._edit({"type": "move-sheet", "sheet": "Type B", "index": 4})
         vm = _xl.evaluate(moved)
@@ -715,18 +733,18 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         bracket2 = self._bracket(energy2, "Type A", "Type D")
         capsules2, values2, total2 = [chips2[3 * i] for i in range(4)], [chips2[3 * i + 2] for i in range(4)], chips2[12]
         chips2.remove(*capsules2, *values2, total2)
-        self.play(_m.FadeOut(energy), _m.FadeOut(chips), _m.FadeOut(bracket), _m.FadeOut(total_text), _m.FadeIn(energy2), _m.FadeIn(chips2), _m.FadeIn(bracket2), _morph.scatter(capsules, capsules2, lag=0.1, path_arc=0.0, run_time=0.8), run_time=0.9)
-        sources2 = [_morph.silhouette(capsule) for capsule in capsules2]
+        self.play(_m.FadeOut(energy), _m.FadeOut(chips), _m.FadeOut(bracket), _m.FadeOut(total_text), _m.FadeIn(energy2), _m.FadeIn(chips2), _m.FadeIn(bracket2), self._to("span-chips", capsules, capsules2), run_time=0.9)
+        sources2 = [self._still(capsule) for capsule in capsules2]
         self.add(*sources2)
-        self.play(_morph.scatter(sources2, values2, lag=0.15, path_arc=0.3, run_time=0.9), run_time=1.2)
+        self.play(self._to("span-values", sources2, values2), run_time=1.2)
         tab_label = _xl.tab_name(moved, "Type B", self.language())
         tab_src = self._tok(tab_label, "path", _nd.type_color("B"), energy.tabs["Type B"].get_center(), size=0.55)
         tab_dst = self._tok(tab_label, "path", _nd.type_color("B"), energy2.tabs["Type B"].get_center(), size=0.55)
         self.add(tab_src)
-        self.play(_morph.morph(tab_src, tab_dst, path_arc=-0.6, run_time=0.9), run_time=1.0)
+        self.play(self._to("span-tab", tab_src, tab_dst), run_time=1.0)
         self._drop(tab_dst, seconds=0.3)
         counted2 = [v for v, key in zip(values2, keys) if key != "B"]
-        self.step("span", _morph.gather(counted2, total2, lag=0.2, path_arc=0.4, run_time=2.0), seconds=2.5)
+        self.step("span", self._to("span-sum", counted2, total2), seconds=2.5)
         self.energy_window = energy2
         self.win, self.chips, self.leftover = _m.VGroup(energy2, bracket2), chips2, [total2, values2[keys.index("B")], *capsules2]
 
@@ -782,7 +800,7 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.add(error_chip, sum_source)
         crack = self._shatter(error_chip, small.point("B16"), run_time=1.4)
         crack_tab = self._shatter(tab_chip, broken.point("D6"), run_time=1.2)
-        self.step("deleted", _m.LaggedStart(crack_tab, crack, _morph.morph(sum_source, sum_target, path_arc=0.5, run_time=1.4), lag_ratio=0.6), seconds=3.0)
+        self.step("deleted", _m.LaggedStart(crack_tab, crack, self._to("deleted-sum", sum_source, sum_target), lag_ratio=0.6), seconds=3.0)
         self._sweep()
         self._drop(sum_target)
 
@@ -793,11 +811,11 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         ref_source = self._tok(self._cell(gone, "D6", "Program", vg), "cell", SERV, broken.point("D6"), size=0.7)
         ref_target = self._tok(self._cell(row_gone, "G3", SHEET), "cell", SERV, win9.point("G3"), size=0.6)
         self.add(ref_source)
-        self.play(_m.FadeOut(broken), _m.FadeOut(error), _m.FadeOut(small), _m.FadeOut(small_frame), _m.FadeOut(sum_card), _m.FadeIn(win9), _m.FadeIn(guard_card), _morph.morph(ref_source, ref_target, path_arc=0.5, run_time=0.9), run_time=1.0)
+        self.play(_m.FadeOut(broken), _m.FadeOut(error), _m.FadeOut(small), _m.FadeOut(small_frame), _m.FadeOut(sum_card), _m.FadeIn(win9), _m.FadeIn(guard_card), self._to("guard-ref", ref_source, ref_target), run_time=1.0)
         self._drop(ref_target)
         self.add(mover)
-        bar_guard, bar_broken = self._bar_retext(win9, "=F3*$D$10", "=F3*#REF!", run_time=1.6)
-        self.step("guard", _morph.retext(mover, broken_row, run_time=1.6), bar_guard, seconds=2.5)
+        bar_guard, bar_broken = self._bar_retext(win9, "=F3*$D$10", "=F3*#REF!", "bar-guard")
+        self.step("guard", self._to("guard-retext", mover, broken_row), bar_guard, seconds=2.5)
         self._absorb(guard_card, broken_row)
         self.remove(bar_broken)
         win9.edit(None)
@@ -824,8 +842,8 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         mover, readable = self._rewrite(names_card, 2, 3)
         self.play(_m.FadeOut(self.keep), _m.FadeIn(named), _m.FadeIn(names_card), _m.FadeIn(manager), run_time=0.6)
         self.add(mover)
-        bar_names, bar_named = self._bar_retext(named, "=F3*(Climate!$B$2-Climate!$B$3)", "=F3*(theta_i-theta_e)", run_time=1.6)
-        self.step("names", _morph.retext(mover, readable, run_time=1.6), bar_names, seconds=3.0)
+        bar_names, bar_named = self._bar_retext(named, "=F3*(Climate!$B$2-Climate!$B$3)", "=F3*(theta_i-theta_e)", "bar-names")
+        self.step("names", self._to("names-retext", mover, readable), bar_names, seconds=3.0)
         self._absorb(names_card, readable)
         self.remove(bar_named)
         named.edit("=F3*(theta_i-theta_e)")
@@ -854,4 +872,4 @@ class Beat2_References(_live_scene.RefreshMoving, _visuals.ClipScene):
         term_chips = [self.xl_formula_text(formula, at=(place[0] - 0.4, place[1] - 0.1, 0), size=SMALL, ink=INK) for place, (_, formula, _) in zip(places, rows)]
         self.add(*term_chips)
         self.play(_m.FadeOut(named), _m.FadeOut(names_card), _m.FadeOut(manager), _m.FadeIn(group), run_time=0.7)
-        self.step("recap", _morph.scatter(term_chips, examples, lag=0.3, path_arc=0.5, run_time=2.0), seconds=3.5)
+        self.step("recap", self._to("recap-terms", term_chips, examples), seconds=3.5)

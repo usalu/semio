@@ -26,7 +26,7 @@ import { type DimensionExtent, dimensionLine, legendBlock, scaleBar, titleBlock 
 import { Canvas, type Ctx, Labels, labelBudget } from "./🧱️canvas/🟦️.ts";
 import { type DiagramKind, diagramPolygons, forceList, forcesView, momentsView, peakOf } from "./🏗️structural-view/🟦️.ts";
 import { type Theme, THEMES, toneColour, tx } from "./🖍️palette/🟦️.ts";
-import { type AnalyticView, type Prepared, type Source, baseStyle, drawShapes, outlineRuns, prepare, sourceOf, themeOf } from "./🧩️shapes/🟦️.ts";
+import { type AnalyticView, type Prepared, type Source, baseStyle, drawShapes, outlineRuns, prepare, selectRoles, sourceOf, themeOf } from "./🧩️shapes/🟦️.ts";
 import { arrowOutline, commandsOf } from "./📐️geometry/🟦️.ts";
 import { ViewMissingError, axonometricCamera, projectionOf } from "./🔭️views/🟦️.ts";
 import type { AxonometricFigure } from "./🧊️axonometric/🟦️.ts";
@@ -69,7 +69,7 @@ const axonometricOf = (): AxonometricModule => {
 };
 
 /** 🧍️ The shapes that belong to the figure: everything except role `ground`. Ground shapes are drawn but never count toward the extent a dimension measures or a ground line spans, in any viewpoint. */
-const figureOf = (shapes: readonly Prepared[]): readonly Prepared[] => shapes.filter((p) => p.shape.role !== "ground");
+export const figureOf = (shapes: readonly Prepared[]): readonly Prepared[] => shapes.filter((p) => p.shape.role !== "ground");
 
 /** 📏️ The horizontal extent in metres a ground line spans: the rig bounds in the elevation, the drawn shapes in the front elevation, none in the plan. */
 function groundSpan(viewpoint: Viewpoint, bounds: EvaluatedState["bounds"], shapes: readonly Prepared[], k: number): { readonly minX: number; readonly maxX: number } | null {
@@ -196,6 +196,7 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
   const b = state.bounds;
   const metric = !source.paperUnits;
   let shapes: readonly Prepared[] = [];
+  let everything: readonly Prepared[] = [];
   let analytic: AnalyticView | null = null;
   let figure: AxonometricFigure | null = null;
   if (camera !== undefined) {
@@ -205,14 +206,15 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
   } else {
     const viewpoint = options.viewpoint as PlanarViewpoint;
     if (state.shapes[viewpoint].length === 0) throw new ViewMissingError(state.asset.id, viewpoint);
-    shapes = prepare(state, viewpoint, source, k);
+    everything = prepare(state, viewpoint, source, k);
+    shapes = options.roles === undefined ? everything : selectRoles(everything, options.roles);
     if (metric && options.viewpoint === "elevation") for (const corner of [{ x: b.minX, y: b.minY }, { x: b.maxX, y: b.maxY }]) canvas.reach(ctx.paper(corner));
-    for (const p of shapes) {
+    for (const p of everything) {
       canvas.reach({ x: p.box.minX, y: p.box.minY });
       canvas.reach({ x: p.box.maxX, y: p.box.maxY });
     }
 
-    const span = groundSpan(options.viewpoint, b, figureOf(shapes), k);
+    const span = groundSpan(options.viewpoint, b, figureOf(everything), k);
     if (options.annotations.ground && span !== null && metric) {
       canvas.path("ground", "ground:line", commandsOf([ctx.paper({ x: span.minX - GROUND_OVERHANG_M, y: 0 }), ctx.paper({ x: span.maxX + GROUND_OVERHANG_M, y: 0 })], false), { stroke: { color: colours.ink, widthMm: source.pens.ground, cap: "butt" } });
     }
@@ -239,8 +241,9 @@ function* depictSteps(state: EvaluatedState, options: DepictionOptions, analysis
     const base = -content.maxY / k;
     dimensionLine(canvas, ctx, { minX: content.minX / k, maxX: content.maxX / k, minY: base, maxY: base + figure.heightM }, content.maxX);
   }
-  const extent = figure === null && options.annotations.dimensions && metric ? dimensionExtent(options.viewpoint, b, figureOf(shapes), k) : null;
-  if (extent !== null) dimensionLine(canvas, ctx, extent, figureOf(shapes).length === 0 ? extent.maxX * k : Math.max(...figureOf(shapes).map((p) => p.box.maxX)));
+  const measured = figureOf(everything);
+  const extent = figure === null && options.annotations.dimensions && metric ? dimensionExtent(options.viewpoint, b, measured, k) : null;
+  if (extent !== null) dimensionLine(canvas, ctx, extent, measured.length === 0 ? extent.maxX * k : Math.max(...measured.map((p) => p.box.maxX)));
   const column = (canvas.box?.maxX ?? 0) + 4;
   const budget = labelBudget(options.scale.denominator);
   const omitted = ctx.labels.flush(canvas, "annotations", column, LABEL_TEXT_MM, colours.ink, 0.1, budget) + (analytic?.inset?.(canvas) ?? 0);

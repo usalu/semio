@@ -4,6 +4,7 @@
 import { VIEWPOINTS, SCALE_DENOMINATORS, type ScaleDenominator, type ViewSection, type Slug, type Viewpoint } from "../../../../🧬️schema/🟦️.ts";
 import { TRANSPORT_LAYERS, VIEWS, type TransportLayer, type View } from "../../../🔗️contracts/🟦️.ts";
 import type { StructureIndex } from "../../../🏗️structure/🧾️summary/🟦️.ts";
+import type { LodId } from "../🧊️lod/🟦️.ts";
 
 /** 🌗️ The themes of the analytic views. */
 export const CAST_THEMES = ["dark", "light"] as const;
@@ -40,7 +41,15 @@ export type Cast = {
 /** 🗃️ The cast manifest. */
 export type CastManifest = { readonly version: 1; readonly casts: Readonly<Record<Slug, Cast>> };
 
-/** 🧾️ The index written next to the frames of one cast. `heightM` is the physical height of the figure in metres (the evaluated y extent over all frames) in every viewpoint; the paper extents of the viewpoint are `boundsM` and `figureBoundsM`. */
+/** 📏️ The physical truth of a cast, identical for every level of detail: `heightM` the figure height in metres over the canonical clock, `figureBoundsM` the paper extent of the figure in world metres (rig bounds in the side elevation, drawn shapes of the front and plan), `partsM` the polygons of frame 0 by shape id in world metres and `maxPaths` the most paths any frame draws. */
+export type CastLogical = {
+  readonly heightM: number;
+  readonly figureBoundsM: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number };
+  readonly partsM: Readonly<Record<Slug, readonly (readonly [number, number])[]>>;
+  readonly maxPaths: number;
+};
+
+/** 🧾️ The index written next to the frames of one cast. `boundsM` is the extent of the drawn canvas of this level, `logical` the level-independent physical truth. */
 export type CastIndex = {
   readonly version: 1;
   readonly cast: Slug;
@@ -55,8 +64,8 @@ export type CastIndex = {
   readonly mmPerMetre: number;
   readonly originMm: readonly [number, number];
   readonly boundsM: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number };
-  readonly figureBoundsM?: { readonly minX: number; readonly minY: number; readonly maxX: number; readonly maxY: number };
-  readonly heightM: number;
+  readonly lod: { readonly id: LodId; readonly revision: string; readonly canonicalFrames: number; readonly canonicalFps: number };
+  readonly logical: CastLogical;
   readonly structure?: StructureIndex;
   readonly provenance: CastProvenance;
 };
@@ -80,6 +89,7 @@ export type CastProvenance = {
   readonly scale: { readonly denominator: ScaleDenominator };
   readonly state: { readonly kind: "pose" | "clip"; readonly id: Slug };
   readonly clock: { readonly fps: number; readonly durationS: number; readonly loop: boolean; readonly offsetS: number; readonly frames: number; readonly rate?: number };
+  readonly lod: { readonly id: LodId; readonly revision: string };
   readonly scenario: CastScenario;
 };
 

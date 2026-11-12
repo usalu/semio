@@ -51,6 +51,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 room_section = _manim_module.room_section
@@ -191,6 +193,7 @@ class Beat1_SolarIrradiance(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Direct solar radiation", "Direkte Sonnenstrahlung"))
@@ -342,7 +345,7 @@ class Beat1_SolarIrradiance(Scene):
         self.play(FadeOut(light_beam), FadeOut(irr_anchor), run_time=0.5)
         freeze_drawables(building)
         self.play(
-            ReplacementTransform(building, cube), Create(sun_path),
+            stage.transition("cooling.solar-radiation.geometry.building-to-cube", source=building, target=cube), Create(sun_path),
             sun.animate.scale(0.55).move_to(sun_screen(6.0)),
             run_time=1.5,
         )
@@ -381,7 +384,7 @@ class Beat1_SolarIrradiance(Scene):
 
         eq_rest = VGroup(*[m for m in eq_row.submobjects if m is not eq_items["i"]])
         self.play(Create(eq_box), FadeIn(eq_rest), run_time=1.0)
-        self.play(ReplacementTransform(sun.copy(), eq_items["i"]), run_time=1.4)
+        self.play(stage.transition("cooling.solar-radiation.equation.sun-to-irradiance", source=sun, target=eq_items["i"]), run_time=1.4)
 
         ring = highlight_param(eq_items, "i", color=P_YELLOW)
         self.play(Create(ring), run_time=0.5)

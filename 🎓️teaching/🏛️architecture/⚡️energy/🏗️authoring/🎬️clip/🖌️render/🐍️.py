@@ -19,6 +19,7 @@ sys.dont_write_bytecode = True
 _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
 compose_videos = _video_module.compose_videos
 load_manifest = _video_module.load_manifest
+_profile = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🐍️")
 _audience = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.👥️audience.🐍️")
 
 
@@ -36,7 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output-root", type=Path)
     parser.add_argument("--jobs", type=int, default=max(1, min(4, (os.cpu_count() or 2) - 1)), help="Global concurrent segment limit")
     parser.add_argument("--log-output", action="store_true", help="Save immutable per-segment attempt logs")
-    parser.add_argument("-q", "--quality", choices=("l", "m", "h"), default="l")
+    parser.add_argument("--profile", choices=_profile.NAMES, required=True, help="Explicit render profile: preview (480p15, swap morphs) or final (1080p30, full morphs)")
     parser.add_argument("--resolution", help="Optional width,height override for complete preview renders")
     parser.add_argument("--fps", type=float, help="Optional frame rate override")
     parser.add_argument("--force", action="store_true")
@@ -61,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         for audience in dict.fromkeys(args.audience or _audience.audiences()):
             print(f"[audience] Rendering {audience}", flush=True)
-            compose_videos(args.video, language=args.language, audience=audience, output_root=args.output_root, quality_flag="-q" + args.quality,
+            compose_videos(args.video, language=args.language, audience=audience, output_root=args.output_root, profile=args.profile,
                            play=args.play and not args.no_play, force=args.force, concat_only=args.concat_only,
                            resolution=args.resolution, fps=args.fps, jobs=args.jobs, log_output=args.log_output, chapter_scenes=args.chapter)
     except KeyboardInterrupt:

@@ -26,6 +26,8 @@ _sprites = importlib.import_module("🎓️teaching.🏛️architecture.🏢️n
 _keyed = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️keyed")
 _scene_interop = importlib.import_module("🎓️teaching.🧰️interop.🎬️scene.🐍️")
 
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
+RECAP = {5: "recap.orient-to-legend", 6: "recap.list-item-to-legend", 7: "recap.index-to-legend"}
 INK, MUTED, GOOD, WARN, DATA, SERV = (getattr(_visuals, name) for name in ("INK", "MUTED", "GOOD", "WARN", "DATA", "SERV"))
 DARK = "#1B2A33"
 SUBTLE = "#5E6A72"
@@ -732,6 +734,8 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
         self._d = _gh.canvas("capsule")
         self._cache, self._places, self._wraps, self._reg = {}, {}, {}, {}
         d = self._d
+        morphs = _morph.stage(self, TRANSITIONS)
+        hop = lambda name, source, target: morphs.transition(f"grasshopper.capsule.{name}", source=source, target=target)
         types = _nk.capsule_types()
         slots = _nk.slots()
         tower_b = _nk.towers()[1]
@@ -811,7 +815,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
                                        _engine.FadeOut(count_copy), lag_ratio=.01, run_time=1.8)
         self.step("hook", _Seq(((_engine.FadeIn(tower_display), _engine.FadeIn(callout), _engine.FadeIn(slider_w), _engine.FadeIn(outline)), 1.0), lambda: self.add(*crowd),
                                ((gather,), 2.0), lambda: self.add(chosen),
-                               ((_morph.morph(chosen, center, run_time=1.4), _engine.FadeIn(wire_a)), 1.4), lambda: self.add(count_copy),
+                               ((hop("hook.capsule-to-box", chosen, center), _engine.FadeIn(wire_a)), 1.4), lambda: self.add(count_copy),
                                ((split,), 1.8), lambda: self.remove(*lit_back)), seconds=6.2)
 
         rv_set = lambda **kw: _engine.AnimationGroup(*[self._to(rv[k], v, 1.2) for k, v in kw.items()])
@@ -845,8 +849,8 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         self.step("parametric", _Seq(((_engine.AnimationGroup(*self._gone(tower_display), _engine.FadeOut(callout), _engine.FadeOut(counts), _engine.FadeIn(head_p), _engine.FadeIn(head_d),
                                                               _engine.FadeIn(head_g), _engine.FadeIn(wire_b)),), 1.2), box_ready,
-                                     (lambda: (_morph.morph(hold["chip"], hold["solid"], run_time=1.6),), 1.6), box_born, width_ready,
-                                     ((_morph.travel(knob, [slider_w.grip_out().get_center(), center.grip_in("X").get_center()], run_time=1.0),), 1.0), (lambda: (_morph.morph(knob, hold["line"], run_time=1.0),), 1.0), width_done,
+                                     (lambda: (hop("parametric.box-to-solid", hold["chip"], hold["solid"]),), 1.6), box_born, width_ready,
+                                     ((_morph.travel(knob, [slider_w.grip_out().get_center(), center.grip_in("X").get_center()], run_time=1.0),), 1.0), (lambda: (hop("parametric.width-to-line", knob, hold["line"]),), 1.0), width_done,
                                      ((_engine.Succession(self._ramp(vals["w"], value("w"), 3.1, 1.6), self._ramp(vals["w"], 3.1, value("w"), 1.4)),), 3.0)), seconds=6.5)
         self.wait(0.2)
 
@@ -865,7 +869,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         self.step("sliders", _Seq(((_engine.AnimationGroup(*self._gone(head_p, head_d, head_g, center, wire_a, wire_b, slider_w, outline), _engine.LaggedStart(*[_engine.FadeIn(n.view) for n in sliders.values()], lag_ratio=0.2),
                                                            _engine.FadeIn(dots), rv_set(dl=1.0, dh=1.0, dd=1.0, dr=1.0, du=1.0, round=1.0, window=1.0)),), 3.2), dims_ready,
-                                  (lambda: (_morph.scatter(hold["src"], hold["dst"], lag=0.3, run_time=1.2, limit=2.0), _engine.FadeIn(params_card)), 2.0),
+                                  (lambda: (hop("sliders.dimensions-to-card", hold["src"], hold["dst"]), _engine.FadeIn(params_card)), 2.0),
                                   lambda: self.remove(*hold["dst"])), seconds=5.2)
         self._reg.update(sliders)
         fin = lambda items: [_engine.FadeIn(m) for m in items]
@@ -878,7 +882,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
         base_axes = self.plane_axes(_nk.Plane((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)), at=ORIGIN, scale=SCALE, view=(AZIMUTH, ELEVATION), length=1.7, labels=True)
         self.step("plane", _Seq(((_engine.AnimationGroup(_engine.FadeOut(params_card), *fin([xy_node.view]), self._to(rv["axes"], 1.0, 1.2),
                                                          rv_set(body=0.0, dw=0.0, dl=0.0, dh=0.0, dd=0.0, dr=0.0, du=0.0)),), 2.0), lambda: self.add(base_axes),
-                                ((_morph.morph(base_axes, origin_panel, run_time=1.6), _engine.FadeIn(wire_xy)), 1.6)), seconds=5.0)
+                                ((hop("plane.axes-to-origin", base_axes, origin_panel), _engine.FadeIn(wire_xy)), 1.6)), seconds=5.0)
         rv["lift"].set_value(0.0)
         rv["round"].set_value(0.0)
         rv["window"].set_value(0.0)
@@ -911,7 +915,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
             self.add(centre_panel)
 
         self.step("box", _Seq(((_engine.AnimationGroup(*fout([origin_panel, wire_xy]), *fin([box_node.view, base_wire, *box_wires]), self._to(rv["body"], 1.0, 1.5), rv_set(dw=1.0, dl=1.0, dh=1.0)),), 3.0),
-                              lambda: self.add(centre_dot), ((_morph.morph(centre_dot, centre_anchor, run_time=1.4), _engine.FadeIn(out_wire)), 1.4), centre_done), seconds=6.0)
+                              lambda: self.add(centre_dot), ((hop("box.centre-to-position", centre_dot, centre_anchor), _engine.FadeIn(out_wire)), 1.4), centre_done), seconds=6.0)
 
 
         def pulse(wires, steps):
@@ -937,7 +941,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
             self.remove(*half_tokens)
 
         self.step("lift", _Seq(((_engine.AnimationGroup(*fout([base_wire]), *fin([n.view for n in lifted.values()]), *fin(lift_wires)),), 1.2), lift_start,
-                               ((_morph.morph(half_lines[0], half_tokens[0], path_arc=0.4, run_time=1.4), _morph.morph(half_lines[1], half_tokens[1], path_arc=-0.4, run_time=1.4)), 1.4),
+                               ((hop("lift.length-to-half", half_lines[0], half_tokens[0]), hop("lift.height-to-half", half_lines[1], half_tokens[1])), 1.4),
                                ((_engine.AnimationGroup(self._to(rv["lift"], 1.0, 2.0), self._to(rv["plane2"], 1.0, 1.2),
                                                         _engine.Succession(_engine.Wait(1.0), pulse(lift_wires, [(("l", "hl"), PARAM_COLOR["l"]), (("h", "hh"), PARAM_COLOR["h"]), (("hl", "bc"), PARAM_COLOR["l"]), (("back", "bc"), flow), (("bc", "bp"), flow),
                                                                                                               (("hh", "bp"), PARAM_COLOR["h"]), (("bp", "bo"), flow), (("bo", "box"), flow)]))),), 4.4), lift_done),
@@ -979,13 +983,13 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
         helper_nodes = [n.view for n in lifted.values()] + [xy_node.view, centre_panel]
         helper_wires = lift_wires + [out_wire]
         fil_grow = [_engine.GrowFromPoint(n.view, fil["fil"].view.get_center()) for key, n in fil.items() if key != "fil"]
-        self.step("rounded", _Seq(((lambda: (_morph.gather(helper_nodes, fil["fil"].view, run_time=1.2, lag=0.1, limit=2.2),
+        self.step("rounded", _Seq(((lambda: (hop("rounded.helpers-to-fillet", helper_nodes, fil["fil"].view),
                                               _engine.Succession(_engine.AnimationGroup(*fout(helper_wires), box_node.view.animate.move_to((-2.2, 1.0, 0)), *fil_grow, *fin(fil_wires),
                                                                                       self._to(rv["plane2"], 0.0, 1.0), rv_set(dl=0.0, dh=0.0), run_time=1.2),
                                                                  self._ramp(vals["l"], drag, value("l"), 1.2))), 2.4)), shell_ready,
-                                  (lambda: (_morph.morph(hold["box"], hold["shell"], run_time=1.6),), 1.6), shell_done, radius_ready,
+                                  (lambda: (hop("rounded.box-to-shell", hold["box"], hold["shell"]),), 1.6), shell_done, radius_ready,
                                   ((_morph.travel(radius_token, [sliders["r"].anchor.grip_out().get_center(), self._grip(fil["fil"], "Radius", "in").get_center()], run_time=1.2),), 1.2),
-                                  (lambda: (_morph.morph(radius_token, hold["tag"], path_arc=0.3, run_time=1.4),), 1.4), radius_done), seconds=7.0)
+                                  (lambda: (hop("rounded.radius-to-tag", radius_token, hold["tag"]),), 1.4), radius_done), seconds=7.0)
 
         old = [box_node.view, *box_wires, *[n.view for n in fil.values()], *fil_wires]
         self._reg = dict(sliders)
@@ -1023,8 +1027,8 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         self.step("frontplane", _Seq(lambda: self.add(red_ring),
                                      ((_engine.AnimationGroup(*fout(before), *fin([n.view for n in front.values()]), *fin(front_wires), *fin(bridge), self._to(rv["wrong"], 0.0, 1.0), self._to(rv["dd"], 0.0, 0.8)),
-                                       _morph.morph(red_ring, plane_token, path_arc=0.6, run_time=1.6)), 1.6),
-                                     ((_morph.morph(plane_token, front_ring, run_time=1.4),), 1.4), ring_done,
+                                       hop("frontplane.ring-to-plane", red_ring, plane_token)), 1.6),
+                                     ((hop("frontplane.plane-to-ring", plane_token, front_ring),), 1.4), ring_done,
                                      ((_engine.AnimationGroup(self._to(rv["du"], 1.0, 1.0), _engine.Succession(_engine.Wait(0.6), self._ramp(vals["wu"], 0.0, offset, 1.8), self._ramp(vals["wu"], offset, 0.0, 1.6)),
                                                               pulse(front_wires, [(("l", "fr"), PARAM_COLOR["l"]), (("back", "fr"),flow), (("fr", "gl"),flow), (("recess", "gl"),flow), (("gl", "wpt"),flow), (("wu", "wpt"), PARAM_COLOR["wu"]), (("wv", "wpt"), PARAM_COLOR["h"]),
                                                                                   (("wpt", "wpl"), flow), (("xz", "wpl"), flow)])),), 4.0)), seconds=7.0)
@@ -1053,9 +1057,9 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
         cur_wires = front_wires + bridge
         cur_nodes = [view for view in cur if view not in cur_wires]
         cut_grow = [_engine.GrowFromPoint(n.view, cut["cut"].view.get_center()) for key, n in cut.items() if key != "cut"]
-        self.step("cut", _Seq(((lambda: (_morph.gather(cur_nodes, cut["cut"].view, run_time=1.2, lag=0.1, limit=2.0),
+        self.step("cut", _Seq(((lambda: (hop("cut.nodes-to-cutter", cur_nodes, cut["cut"].view),
                                          _engine.AnimationGroup(*fout(cur_wires), *cut_grow, *fin(cut_wires), self._to(rv["dd"], 1.0, 1.0), self._to(rv["du"], 0.0, 1.0))), 2.0)), cut_ready,
-                              (lambda: (_morph.morph(hold["ring"], hold["prism"], run_time=1.4),), 1.4), (lambda: (_morph.morph(hold["prism"], hold["hole"], run_time=1.4), self._to(rv["front"], 0.0, 1.4)), 1.4), cut_done), seconds=6.5)
+                              (lambda: (hop("cut.ring-to-prism", hold["ring"], hold["prism"]),), 1.4), (lambda: (hop("cut.prism-to-hole", hold["prism"], hold["hole"]), self._to(rv["front"], 0.0, 1.4)), 1.4), cut_done), seconds=6.5)
 
         cur = [n.view for n in cut.values()] + cut_wires
         bolt_sliders = {key: self._node(key, (-5.05, 1.9 - 0.8 * index, 0), d, source) for index, key in enumerate(BOLT_IDS)}
@@ -1070,7 +1074,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         self.step("bolts", _Seq(((_engine.AnimationGroup(*fout(cur), *fout(col), *fin([n.view for n in bolt_sliders.values()]), *fin([n.view for n in bolts.values()]), *fin(bolt_wires),
                                                          self._to(st.az, -AZIMUTH, 2.5), self._to(rv["bolts"], 1.0, 1.5), rv_set(dw=0.0, dl=0.0, dh=0.0, dd=0.0)),), 3.0), bolt_rings,
-                                 (lambda: (_morph.gather(hold["rings"], point_panel, run_time=1.0, lag=0.2, limit=2.4), _engine.FadeIn(point_wire)), 2.4)), seconds=7.0)
+                                 (lambda: (hop("bolts.rings-to-points", hold["rings"], point_panel), _engine.FadeIn(point_wire)), 2.4)), seconds=7.0)
 
         cur = [n.view for n in bolt_sliders.values()] + [n.view for n in bolts.values()] + bolt_wires + [point_panel, point_wire]
         self._reg = dict(sliders)
@@ -1089,7 +1093,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
             self.remove(hold["edge"])
 
         self.step("domains", _Seq(((_engine.AnimationGroup(*fout(cur), *fin(col), _engine.FadeIn(card), self._to(st.az, AZIMUTH, 2.0), self._to(rv["bolts"], 0.0, 1.0), rv_set(dw=1.0, dl=1.0, dh=1.0)),), 2.2),
-                                  range_ready, (lambda: (_morph.morph(hold["range"], hold["edge"], run_time=1.4),), 1.4), range_done), seconds=6.0)
+                                  range_ready, (lambda: (hop("domains.range-to-edge", hold["range"], hold["edge"]),), 1.4), range_done), seconds=6.0)
 
         width_hi = d.obj("w").settings["max"]
         limit_badge = self.badge(self.tr("limit reached", "Grenze erreicht") + " · " + self.quantity(width_hi, "m"), (-1.15, -1.6), color=WARN, size=SMALL, filled=False)
@@ -1123,7 +1127,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         self.step("types", _Seq(((_engine.AnimationGroup(*fout([card, limit_badge, red_box, request]), self._to(rv["over"], 0.0, 0.5), self._ramp(vals["w"], width_hi, value("w"), 1.5),
                                                          self._to(rv["env"], 0.0, 1.0), self._to(rv["hit"], 0.0, 0.5)),), 1.6), ((_engine.AnimationGroup(*fout(col)),), 0.3), minis_ready,
-                                (lambda: (_morph.scatter(hold["src"], hold["dst"], lag=0.3, run_time=1.2, path_arc=0.5, limit=2.4), _engine.FadeIn(minis), _engine.FadeIn(table), _engine.FadeIn(marker)), 2.4),
+                                (lambda: (hop("types.minis-to-table", hold["src"], hold["dst"]), _engine.FadeIn(minis), _engine.FadeIn(table), _engine.FadeIn(marker)), 2.4),
                                 lambda: self.remove(*hold["dst"])), seconds=5.0)
 
         steps = [_engine.AnimationGroup(self._ramp(ty, float(i) - 1.0 if i else 0.0, float(i), 0.2), *[self._to(vals[k], v, 2.0) for k, v in _reference_controls(t).items()]) for i, t in enumerate(order)]
@@ -1156,9 +1160,9 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         self.step("orient", _Seq(((_engine.AnimationGroup(*fin([n.view for n in capn.values()]), *fin(cap_wires), _engine.FadeIn(direct), _engine.FadeIn(move_panel), _engine.FadeIn(move_wire)),), 1.2),
                                  lambda: self.add(start_capsule),
-                                 ((_morph.morph(start_capsule, plane_a_token, pairs=_morph.capsule_pairs(start_capsule, plane_a_token), dip=0.15, run_time=1.2), self._to(cv["arrow"], 1.0, 1.2)), 1.2),
+                                 ((hop("orient.capsule-to-plane-a", start_capsule, plane_a_token), self._to(cv["arrow"], 1.0, 1.2)), 1.2),
                                  ((_morph.travel(plane_a_token, [spot_a, (spot_a + spot_b) / 2 + np.array([0.0, 0.4, 0.0]), spot_b], run_time=1.8),), 1.8),
-                                 ((_morph.morph(plane_a_token, end_capsule, pairs=[(t, s) for s, t in _morph.capsule_pairs(end_capsule, plane_a_token)], dip=0.15, run_time=1.4),), 1.4), orient_done), seconds=6.0)
+                                 (lambda: (hop("orient.plane-a-to-capsule", plane_a_token, end_capsule),), 1.4), orient_done), seconds=6.0)
 
         self._reg = {**apl, **capn}
         spin, spin_wires = self._rig(self._place, self._solve_place, {"an": (-5.3, -1.85), "rad": (-3.3, -1.85), "ax": (-3.3, -0.2), "rot": (-1.5, -0.4), "pr": (0.15, -1.75)},
@@ -1178,10 +1182,10 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
             self.remove(hold["arc"])
 
         spin_grow = [_engine.GrowFromPoint(n.view, spin["pr"].view.get_center()) for key, n in spin.items() if key != "pr"]
-        self.step("rotate", _Seq(((lambda: (_morph.gather([move_panel, apl["pa"].view, apl["pb"].view], spin["pr"].view, run_time=1.2, lag=0.2, limit=2.0),
+        self.step("rotate", _Seq(((lambda: (hop("rotate.panels-to-rotation", [move_panel, apl["pa"].view, apl["pb"].view], spin["pr"].view),
                                             _engine.AnimationGroup(*fout([direct, move_wire, *apl_wires]), *spin_grow, *fin(spin_wires), self._to(cv["arrow"], 0.0, 0.6), self._to(cv["arc"], 1.0, 1.0),
                                                                    self._to(cv["glide"], 1.0, 1.2))), 2.0)), angle_ready,
-                                 (lambda: (_morph.morph(angle_token, hold["arc"], path_arc=0.4, run_time=1.6),), 1.6), angle_done,
+                                 (lambda: (hop("rotate.angle-to-arc", angle_token, hold["arc"]),), 1.6), angle_done,
                                  ((_engine.Succession(*[self._to(cv["angle"], a, 1.8) for a in (-180.0, -270.0)]),), 3.6)), seconds=8.0)
 
         cur = [n.view for n in {**capn, **spin}.values()] + [apl["apl"].view, apl["tpl"].view] + cap_wires + spin_wires
@@ -1199,7 +1203,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         self.step("listitem", _Seq(((_engine.AnimationGroup(*fout(cur), _engine.FadeOut(glide), _engine.Succession(_engine.FadeIn(wrapstage, run_time=0.5), self._to(wv["planes"], 1.0, 1.2)),
                                                             *fin([n.view for n in chain.values()]), *fin(chain_wires)),), 2.0), lambda: self.add(*item_tokens),
-                                   ((_morph.scatter(item_tokens, placed, lag=0.5, run_time=1.2, path_arc=0.5, limit=3.0, pairs_fn=_morph.capsule_pairs),), 3.0), placed_done), seconds=7.0)
+                                   ((hop("listitem.items-to-capsules", item_tokens, placed),), 3.0), placed_done), seconds=7.0)
 
         wv["rev"].set_value(4.0)
         notice = self.live(lambda: self._notice(chain["li"]), key=lambda: (self._solve_wrap().state("li"), round(wv["count"].get_value())))
@@ -1207,7 +1211,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
         nothing = _morph.token("null", kind="text", color=RED).move_to(chain["out"].anchor.get_center() + np.array([0.0, -0.8, 0.0]))
         self.step("outside", _Seq(((_engine.FadeIn(notice),), 0.5), ((self._to(wv["count"], 8.0, 1.5),), 1.5), lambda: self.add(stray),
                                   ((_morph.travel(stray, [stray.get_center(), chain["li"].anchor.get_center() + np.array([-0.2, 0.0, 0.0])], run_time=1.2),), 1.2),
-                                  ((_morph.morph(stray, nothing, run_time=1.0),), 1.0), ((_engine.Wait(0.5),), 0.5)), seconds=6.0)
+                                  (lambda: (hop("outside.stray-to-null", stray, nothing),), 1.0), ((_engine.Wait(0.5),), 0.5)), seconds=6.0)
         wrap_types = _nk.capsule_types()
         index_token = _morph.token("4", kind="number", color="#E08A1E").move_to(chain["idx"].anchor.get_center() + np.array([1.3, 0.0, 0.0]))
         again = _morph.token(wrap_types[0].key, kind="item", color=_nkd.type_color(wrap_types[0].key)).move_to(chain["li"].anchor.get_center() + np.array([-0.2, 1.0, 0.0]))
@@ -1218,7 +1222,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
 
         loop = _engine.CurvedArrow(index_token.get_center(), again.get_center(), angle=-2.4, color="#E08A1E", stroke_width=3.5)
         self.step("wrap", _Seq(((self._to(wv["wrap"], 1.0, 0.6), _engine.FadeIn(loop)), 0.8), wrap_loop, ((_morph.travel(index_token, loop, run_time=1.4),), 1.4),
-                               ((_morph.morph(index_token, again, run_time=0.8),), 0.8), ((_engine.AnimationGroup(self._to(wv["rev"], 8.0, 3.2), _engine.FadeOut(again), _engine.FadeOut(loop)),), 3.2)), seconds=6.0)
+                               (lambda: (hop("wrap.index-to-item", index_token, again),), 0.8), ((_engine.AnimationGroup(self._to(wv["rev"], 8.0, 3.2), _engine.FadeOut(again), _engine.FadeOut(loop)),), 3.2)), seconds=6.0)
 
         cur = [n.view for n in chain.values()] + chain_wires + [notice]
         legend = [self._legend_row(i, *row) for i, row in enumerate(LEGEND)]
@@ -1234,7 +1238,7 @@ class Beat2_Capsule(_scene_interop.RefreshMoving, _visuals.ClipScene):
                 for i in range(len(legend))]
         self.step("recap", _Seq(lambda: self.add(*born.values()),
                                 ((_engine.AnimationGroup(*fout(cur)), *[born[i].animate.scale(0.35).move_to(legend[i][0].get_center()) for i in born]), 1.4),
-                                ((*[_morph.morph(born[i], legend[i], run_time=1.2) for i in born],), 1.2),
+                                (lambda: (*[hop(RECAP[i], born[i], legend[i]) for i in born],), 1.2),
                                 ((_engine.Succession(*glow),), 9.0)), seconds=11.0)
         self.wait(0.5)
 

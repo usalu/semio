@@ -47,6 +47,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 load_vo_timing = _manim_module.load_vo_timing
 room_section = _manim_module.room_section
 smooth_path = _manim_module.smooth_path
@@ -389,6 +391,7 @@ class Beat3_IsolateAirflow(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Balance: cooling power = cooling load", "Gleichgewicht: Kühlleistung = Kühllast"))
@@ -534,8 +537,8 @@ class Beat3_IsolateAirflow(Scene):
              P_WHITE),
             (None, "=", P_WHITE), (None, rf"{label_number(Q_V_R_SOLAR, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN),
         ], color=P_CYAN)
-        self.play(FadeOut(load_line), ReplacementTransform(solar_chip, hygiene_chip),
-                  ReplacementTransform(final_eq, num_eq), ReplacementTransform(final_box, num_box), run_time=0.9)
+        self.play(FadeOut(load_line), stage.transition("cooling.system-sizing.airflow.solar-to-hygiene-chip", source=solar_chip, target=hygiene_chip),
+                  stage.transition("cooling.system-sizing.airflow.final-to-numeric-equation", source=final_eq, target=num_eq), stage.transition("cooling.system-sizing.airflow.final-to-numeric-box", source=final_box, target=num_box), run_time=0.9)
         self.play(FadeIn(h_row["group"], shift=UP * 0.1), FadeIn(s_row["group"], shift=UP * 0.1), run_time=0.6)
         self.add(h_read, s_read)
         self.play(_ramp(k_s, 1.0), run_time=1.4)
@@ -566,8 +569,8 @@ class Beat3_IsolateAirflow(Scene):
             ("val", rf"\frac{{{label_number(Q_V_R_SOLAR, 3)}\,\mathrm{{m^{{3}}/s}}}}{{{label_number(V_M, 1)}\,\mathrm{{m/s}}}} \approx {label_number(A_SOLAR, 4)}\,\mathrm{{m^{{2}}}}",
              P_BLUE),
         ], color=P_BLUE)
-        self.play(ReplacementTransform(hygiene_chip, duct_chip), ReplacementTransform(num_eq, area_eq),
-                  ReplacementTransform(num_box, area_box), FadeOut(factor_group), run_time=0.9)
+        self.play(stage.transition("cooling.system-sizing.airflow.hygiene-to-duct-chip", source=hygiene_chip, target=duct_chip), stage.transition("cooling.system-sizing.airflow.numeric-to-area-equation", source=num_eq, target=area_eq),
+                  stage.transition("cooling.system-sizing.airflow.numeric-to-area-box", source=num_box, target=area_box), FadeOut(factor_group), run_time=0.9)
         self.add(disc_h, disc_s, tag_h, tag_s)
         self.play(_ramp(k_c, 1.0), run_time=2.4)
         hold_for(self, self.NARRATION, "duct", used=0.9 + 2.4 + 0.35)

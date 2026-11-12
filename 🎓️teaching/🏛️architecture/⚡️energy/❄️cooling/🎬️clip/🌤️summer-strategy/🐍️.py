@@ -50,6 +50,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 unit_text = _manim_module.unit_text
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
@@ -164,6 +166,7 @@ class Beat1_LastZuerstSenken(Scene):
     ]
 
     def construct(self):
+        stage = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Reduce the load first, then ventilate", "Erst die Last senken, dann lüften"))
@@ -257,7 +260,7 @@ class Beat1_LastZuerstSenken(Scene):
         self.play(
             load.animate.set_value(0.25),
             load_bar["fill"].animate.set_fill(P_ORANGE),
-            FadeIn(steps[2], shift=RIGHT * 0.2), ReplacementTransform(chip_nat, chip_mech), *heat(1.4, 0.18),
+            FadeIn(steps[2], shift=RIGHT * 0.2), stage.transition("cooling.summer-strategy.reserve.natural-to-mechanical-chip", source=chip_nat, target=chip_mech), *heat(1.4, 0.18),
             run_time=1.4,
         )
         self.play(Indicate(steps[2], color=P_ORANGE), *heat(1.0, 0.16), run_time=1.0)

@@ -73,6 +73,8 @@ window_glyph = _manim_module.window_glyph
 open_window = _manim_module.open_window
 window_opening = _manim_module.window_opening
 staffage = _manim_module.staffage
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 room_metre = _manim_module.room_metre
 staffage_motion = _manim_module.staffage_motion
 staffage_height = _manim_module.staffage_height
@@ -478,6 +480,7 @@ class Beat1_Innenvolumen(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
         H = HOUSE
 
@@ -644,15 +647,15 @@ class Beat1_Innenvolumen(Scene):
                            size=LABEL_FONT_SIZE, edge="left")
         val_v = math_label(rf"{label_number(H['V'])}\,\mathrm{{m^{{3}}}}", np.array([bx + blen * ratio + 0.14, -1.43, 0]),
                            size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
-        self.play(TransformFromCopy(outline, bar_e), FadeIn(lbl_e), FadeIn(val_e), *warm_air(1.0), run_time=1.0)
-        self.play(TransformFromCopy(room_edges, bar_v), FadeIn(lbl_v), FadeIn(val_v), *warm_air(1.0), run_time=1.0)
+        self.play(stage.transition("ventilation.volume.gross-net.bar-gross", source=outline, target=bar_e), FadeIn(lbl_e), FadeIn(val_e), *warm_air(1.0), run_time=1.0)
+        self.play(stage.transition("ventilation.volume.gross-net.bar-net", source=room_edges, target=bar_v), FadeIn(lbl_v), FadeIn(val_v), *warm_air(1.0), run_time=1.0)
         row, box, items = math_panel([
             ("v", "V", P_ORANGE), (None, r"\approx", None),
             ("f", label_number(ratio, 2), P_YELLOW), (None, r"\cdot", None),
             ("ve", r"V_{\mathrm{e}}", P_WHITE), (None, r"=", None),
             ("num", rf"{label_number(ratio, 2)} \cdot {label_number(H['V_e'])} \approx {label_number(V_NET)}\,\mathrm{{m^{{3}}}}", P_WHITE),
         ])
-        self.play(TransformFromCopy(v_sym, items["v"]), TransformFromCopy(lbl_e, items["ve"]), *warm_air(0.8), run_time=0.8)
+        self.play(stage.transition("ventilation.volume.gross-net.formula-v", source=v_sym, target=items["v"]), stage.transition("ventilation.volume.gross-net.formula-ve", source=lbl_e, target=items["ve"]), *warm_air(0.8), run_time=0.8)
         self.play(FadeIn(VGroup(*[m for m in row if m is not items["v"] and m is not items["ve"]])),
                   Create(box), *warm_air(0.7), run_time=0.7)
         ring = highlight_param(items, "f", color=P_YELLOW)
@@ -724,6 +727,7 @@ class Beat2_Luftwechselrate(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        morphs = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Air change rate n", "Luftwechselrate n"))
@@ -796,7 +800,7 @@ class Beat2_Luftwechselrate(Scene):
                                size=BODY_FONT_SIZE, color=P_TEAL, edge="left")
         snap = math_label(rf"V_{{\mathrm{{frisch}}}} = V \cdot n \cdot t = {label_number(V_NET * N_RATE)}\,\mathrm{{m^{{3}}}}",
                           np.array([x0, 1.05, 0]), size=BODY_FONT_SIZE, color=P_BLUE, edge="left")
-        self.play(TransformFromCopy(snap, flow_read), *exchange(0.9), run_time=0.9)
+        self.play(morphs.transition("ventilation.volume.air-change.flow-reading", source=snap, target=flow_read), *exchange(0.9), run_time=0.9)
         hold_for(self, N, "hour", during=exchange)
 
         caption = swap_caption(self, caption, subtitle_text(N, "one_change"))
@@ -812,8 +816,8 @@ class Beat2_Luftwechselrate(Scene):
             ("v", "V", P_ORANGE), (None, r"\cdot", None), ("n", "n", P_CYAN), (None, "=", None),
             ("vd", r"\dot{V}", P_TEAL), (None, r"\;[\mathrm{m^{3}/h}]", None),
         ])
-        self.play(TransformFromCopy(v_lbl, items["v"]), TransformFromCopy(n_lbl, items["n"]),
-                  TransformFromCopy(flow_read, items["vd"]), *exchange(1.0), run_time=1.0)
+        self.play(morphs.transition("ventilation.volume.air-change.formula-v", source=v_lbl, target=items["v"]), morphs.transition("ventilation.volume.air-change.formula-n", source=n_lbl, target=items["n"]),
+                  morphs.transition("ventilation.volume.air-change.formula-flow", source=flow_read, target=items["vd"]), *exchange(1.0), run_time=1.0)
         self.play(FadeIn(row), Create(box), *exchange(0.5), run_time=0.5)
         hold_for(self, N, "product", during=exchange)
 
@@ -867,7 +871,7 @@ class Beat2_Luftwechselrate(Scene):
                       rate_func=linear)
             glyph.clear_updaters()
             val.clear_updaters()
-            self.play(ReplacementTransform(glyph, dots[idx]), ReplacementTransform(VGroup(top, val), labels[idx]),
+            self.play(morphs.transition(f"ventilation.volume.air-change.use-{idx}-dot", source=glyph, target=dots[idx]), morphs.transition(f"ventilation.volume.air-change.use-{idx}-label", source=VGroup(top, val), target=labels[idx]),
                       Create(leaders[idx]), run_time=1.0)
 
         show_use(house, tr(r"\text{Dwelling}", r"\text{Wohnung}"), N_RATE, P_ORANGE, 0)
@@ -881,7 +885,7 @@ class Beat2_Luftwechselrate(Scene):
                 renew = math_label(rf"\frac{{60\,\mathrm{{min}}}}{{{label_number(20.0)}}} = {label_number(60 / 20.0)}\,\mathrm{{min}}",
                                    stage + DOWN * 0.1, size=BODY_FONT_SIZE, color=P_RED)
                 self.wait(1.0)
-                self.play(TransformFromCopy(labels[6], renew), run_time=1.5)
+                self.play(morphs.transition("ventilation.volume.air-change.renew-minutes", source=labels[6], target=renew), run_time=1.5)
                 self.play(Indicate(renew, color=P_RED, scale_factor=1.12), run_time=0.8)
             hold_for(self, N, key)
 
@@ -917,6 +921,7 @@ class Beat3_Volumenstrom(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Volume flow: one airflow, two notations", "Volumenstrom: ein Luftstrom, zwei Schreibweisen"))
@@ -964,8 +969,8 @@ class Beat3_Volumenstrom(Scene):
             ("vd", r"\dot{V}", P_TEAL), (None, "=", None),
             ("num", rf"{label_number(V_NET)} \cdot {label_number(N_RATE, 1)} = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_WHITE),
         ])
-        self.play(TransformFromCopy(v_read, items["v"]), TransformFromCopy(n_read, items["n"]),
-                  TransformFromCopy(a_read, items["vd"]), run_time=1.0)
+        self.play(stage.transition("ventilation.volume.flow.formula-v", source=v_read, target=items["v"]), stage.transition("ventilation.volume.flow.formula-n", source=n_read, target=items["n"]),
+                  stage.transition("ventilation.volume.flow.formula-flow", source=a_read, target=items["vd"]), run_time=1.0)
         self.play(FadeIn(VGroup(*[m for m in row if m not in (items["v"], items["n"], items["vd"])])), Create(box),
                   run_time=0.6)
         hold_for(self, N, "area")
@@ -999,7 +1004,7 @@ class Beat3_Volumenstrom(Scene):
             rf"\frac{{{label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}}}{{3600\,\mathrm{{s/h}}}} = {label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}"
             rf" \approx {label_number(V_DOT_S * 1000)}\,\mathrm{{l/s}}",
             np.array([x0 + width / 2, -1.0, 0]), size=BODY_FONT_SIZE, color=P_TEAL)
-        self.play(TransformFromCopy(a_read, per_s), run_time=1.0)
+        self.play(stage.transition("ventilation.volume.flow.per-second", source=a_read, target=per_s), run_time=1.0)
         hold_for(self, N, "second")
 
         caption = swap_caption(self, caption, subtitle_text(N, "spell"))
@@ -1023,9 +1028,9 @@ class Beat3_Volumenstrom(Scene):
         to_h = Arrow([1.05, 0.0, 0], [-1.05, 0.0, 0], buff=0, color=P_WHITE, stroke_width=2.4, tip_length=0.16)
         to_s_lbl = math_label(r"÷\,3600", np.array([0, 1.0, 0]), size=BODY_FONT_SIZE)
         to_h_lbl = math_label(r"\cdot\,3600", np.array([0, -0.35, 0]), size=BODY_FONT_SIZE)
-        self.play(FadeIn(card_h[0]), FadeIn(card_h[1][0]), FadeIn(card_h[1][1]), ReplacementTransform(a_read, card_h[1][2]),
+        self.play(FadeIn(card_h[0]), FadeIn(card_h[1][0]), FadeIn(card_h[1][1]), stage.transition("ventilation.volume.flow.card-heating", source=a_read, target=card_h[1][2]),
                   run_time=0.9)
-        self.play(FadeIn(card_k[0]), FadeIn(card_k[1][0]), FadeIn(card_k[1][1]), ReplacementTransform(per_s, card_k[1][2]),
+        self.play(FadeIn(card_k[0]), FadeIn(card_k[1][0]), FadeIn(card_k[1][1]), stage.transition("ventilation.volume.flow.card-cooling", source=per_s, target=card_k[1][2]),
                   GrowArrow(to_s), FadeIn(to_s_lbl), GrowArrow(to_h), FadeIn(to_h_lbl), run_time=1.2)
         row2, box2, items2 = math_panel([
             ("vd", r"\dot{V}", P_TEAL), (None, "=", None), ("vn", r"V \cdot n", P_ORANGE), (None, "=", None),
@@ -1033,8 +1038,8 @@ class Beat3_Volumenstrom(Scene):
             ("s", rf"{label_number(V_DOT_S, 3)}\,\mathrm{{m^{{3}}/s}}", P_CYAN), (None, "=", None),
             ("q", r"q_{v,\mathrm{R}}", P_CYAN),
         ])
-        self.play(TransformFromCopy(card_h[1][1], items2["vn"]), TransformFromCopy(card_h[1][2], items2["h"]),
-                  TransformFromCopy(card_k[1][1], items2["q"]), TransformFromCopy(card_k[1][2], items2["s"]),
+        self.play(stage.transition("ventilation.volume.flow.spell-vn", source=card_h[1][1], target=items2["vn"]), stage.transition("ventilation.volume.flow.spell-h", source=card_h[1][2], target=items2["h"]),
+                  stage.transition("ventilation.volume.flow.spell-q", source=card_k[1][1], target=items2["q"]), stage.transition("ventilation.volume.flow.spell-s", source=card_k[1][2], target=items2["s"]),
                   FadeIn(items2["vd"]), Create(box2), FadeIn(VGroup(*[m for m in row2 if m not in items2.values()])),
                   run_time=1.2)
         hold_for(self, N, "spell")
@@ -1057,7 +1062,7 @@ class Beat3_Volumenstrom(Scene):
         card_h[1].remove(value_h)
         card_k[1].remove(value_k)
         self.play(FadeOut(VGroup(card_h, card_k, to_s, to_h, to_s_lbl, to_h_lbl, value_k, VGroup(row2, box2))),
-                  ReplacementTransform(value_h, bar_n), run_time=0.9)
+                  stage.transition("ventilation.volume.flow.bar-people-total", source=value_h, target=bar_n), run_time=0.9)
         self.play(Create(room), FadeIn(room_lbl), FadeIn(lbl_n), *[FadeIn(p) for p in persons], run_time=1.0)
         self.add(lbl_p)
         for i, person in enumerate(persons):
@@ -1065,7 +1070,7 @@ class Beat3_Volumenstrom(Scene):
                             fill_color=P_BLUE, fill_opacity=0.6)
             seg.move_to([bx + (i + 0.5) * PER_PERSON * unit, 0.1, 0])
             seg_lbl = math_label(label_number(PER_PERSON), seg.get_center() + DOWN * 0.07, size=LABEL_FONT_SIZE, color=P_WHITE)
-            self.play(TransformFromCopy(_still(person), seg), FadeIn(seg_lbl, scale=0.8, rate_func=rush_from),
+            self.play(stage.transition(f"ventilation.volume.flow.person-{i}", source=_still(person), target=seg), FadeIn(seg_lbl, scale=0.8, rate_func=rush_from),
                       count.animate.set_value(PER_PERSON * (i + 1)), run_time=0.8)
         count.set_value(PER_PERSON * PERSONS)
         lbl_p.clear_updaters()
@@ -1081,7 +1086,7 @@ class Beat3_Volumenstrom(Scene):
             (None, "<", None),
             ("n", rf"V \cdot n = {label_number(V_DOT)}\,\mathrm{{m^{{3}}/h}}", P_TEAL),
         ])
-        self.play(TransformFromCopy(lbl_p, items3["p"]), TransformFromCopy(lbl_n, items3["n"]),
+        self.play(stage.transition("ventilation.volume.flow.cover-people", source=lbl_p, target=items3["p"]), stage.transition("ventilation.volume.flow.cover-total", source=lbl_n, target=items3["n"]),
                   FadeIn(VGroup(*[m for m in row3 if m not in items3.values()])), Create(box3), run_time=1.0)
         self.play(GrowFromCenter(reserve), FadeIn(reserve_lbl), FadeOut(lbl_n), FadeOut(lbl_p),
                   _dim(VGroup(room_lbl, *persons), 0.25), run_time=0.8)

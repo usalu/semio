@@ -14,7 +14,7 @@ PACKAGE = "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring"
 CASES = json.loads(Path(__file__).with_name("🔣️.json").read_text(encoding="utf-8"))
 runtime = importlib.import_module(PACKAGE + ".🎬️clip.⚙️runtime.🐍️")
 SEGMENT = {"script": "🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py", "scene": "Beat6_Consistency"}
-IMPORTED_STATE = runtime.segment_state(SEGMENT, dict(language="de", quality="-ql", resolution="480,270", fps=4.0, audience="spectator"))
+IMPORTED_STATE = runtime.segment_state(SEGMENT, dict(language="de", profile="preview", resolution="480,270", fps=4.0, audience="spectator"))
 module = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🔗️consistency.🐍️")
 mn = module._engine
 
@@ -103,7 +103,7 @@ class ConsistencyLifecycle(unittest.TestCase):
                     {"SEMIO_TEACHING_LANGUAGE": language, "SEMIO_TEACHING_AUDIENCE": "spectator"}), mn.tempconfig({
                     "media_dir": directory, "text_dir": str(Path(directory) / "t"), "pixel_width": 480,
                     "pixel_height": 270, "frame_rate": 4, "dry_run": True, "disable_caching": True}):
-                settings = dict(language=language, quality="-ql", resolution="480,270", fps=4.0, audience="spectator")
+                settings = dict(language=language, profile="preview", resolution="480,270", fps=4.0, audience="spectator")
                 before = runtime.segment_state(SEGMENT, settings)
                 seen = []
                 def present(scene):

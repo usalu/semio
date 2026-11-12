@@ -16,6 +16,7 @@ CLIP = Path(__file__).resolve().parents[2]
 CASES = json.loads(Path(__file__).with_name("🔣️.cases.json").read_text(encoding="utf-8"))
 PACKAGE = "🎓️teaching.🏛️architecture.🦗️grasshopper.🎬️clip"
 VISUALS = importlib.import_module(PACKAGE + ".🎨️visuals.🐍️")
+PROFILES = ("final", "preview")
 
 
 def discover() -> list:
@@ -150,10 +151,11 @@ class GrasshopperPresentationContract(unittest.TestCase):
         targets = [(Probe.__name__, Probe)] + [(scene.__name__, scene) for _, scene, _ in self.scenes]
         for name, base in targets:
             for language in CASES["languages"]:
-                with self.subTest(scene=name, language=language):
-                    self.lifecycle(name, base, language, output)
+                for profile in PROFILES if (CLIP / base.__module__.split(".")[-2] / "🔀️transitions").is_dir() else (None,):
+                    with self.subTest(scene=name, language=language, profile=profile):
+                        self.lifecycle(name, base, language, output, profile)
 
-    def lifecycle(self, name, base, language, output):
+    def lifecycle(self, name, base, language, output, profile=None):
         """🔬 One scene in one language with patched timing; asserts finite geometry, visible pixels and the exact stepped keys."""
         import numpy as np
         from manim import Scene, tempconfig
@@ -193,11 +195,11 @@ class GrasshopperPresentationContract(unittest.TestCase):
                 self.assertTrue(np.isfinite(member.points).all(), key)
             return result
 
-        env = {"SEMIO_TEACHING_LANGUAGE": language, "SEMIO_TEACHING_AUDIENCE": "spectator"}
+        env = {"SEMIO_TEACHING_LANGUAGE": language, "SEMIO_TEACHING_AUDIENCE": "spectator", **({} if profile is None else {"SEMIO_TEACHING_PROFILE": profile})}
         settings = {"media_dir": str(output / "media"), "text_dir": str(output / "text"), "pixel_width": 480, "pixel_height": 270, "frame_rate": 4,
                     "renderer": "cairo", "dry_run": True, "disable_caching": True}
         with patch.dict(os.environ, env), tempconfig(settings), patch.object(Scene, "play", play), patch.object(Scene, "wait", wait):
-            print(f"[DEBUG] GH lifecycle {name} {language}", flush=True)
+            print(f"[DEBUG] GH lifecycle {name} {language} {profile}", flush=True)
             probe = native_probe(base, step)
             scene = probe()
             scene.construct()
@@ -343,6 +345,41 @@ class CanvasWidgets(unittest.TestCase):
         np.testing.assert_allclose(curve[-1], (3, -1, 0))
         self.assertTrue(np.all(np.diff(curve[:, 0]) > 0))
         self.assertAlmostEqual(curve[1, 1] / curve[1, 0] if curve[1, 0] else 0.0, 0.0, delta=0.2)
+
+
+class DeclarativeTransitions(unittest.TestCase):
+    """🔀 Capsule and casting play only declared transitions: no toolkit morph internals, no direct Manim transforms, every document id used and valid."""
+
+    FOLDERS = ("💊️capsule", "🫗️casting")
+    ALLOWED = {"stage", "token", "travel", "tether"}
+    FORBIDDEN = {"Transform", "ReplacementTransform", "TransformFromCopy", "FadeTransform", "TransformMatchingShapes", "TransformMatchingTex"}
+
+    def parse(self, folder):
+        """📜 Syntax tree of a clip file."""
+        return ast.parse((CLIP / folder / "🐍️.py").read_text(encoding="utf-8"))
+
+    def test_clips_touch_only_the_shared_morph_primitives(self):
+        """🧱 `_morph.<name>` is limited to the stage and the shared tokens; recipes, silhouettes and capsule pairs live behind declared transitions."""
+        for folder in self.FOLDERS:
+            with self.subTest(folder=folder):
+                used = {node.attr for node in ast.walk(self.parse(folder)) if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "_morph"}
+                self.assertLessEqual(used, self.ALLOWED, sorted(used - self.ALLOWED))
+                engine = {node.attr for node in ast.walk(self.parse(folder)) if isinstance(node, ast.Attribute) and node.attr in self.FORBIDDEN}
+                self.assertEqual(engine, set(), "direct Manim transforms bypass the declarative stage")
+
+    def test_every_declared_transition_is_valid_and_played_by_the_clip(self):
+        """📋 The clip's transitions document validates against the schema, and its literal `hop(...)` ids are exactly the declared ones."""
+        spec = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.📋️spec.🐍️")
+        for folder, prefix in zip(self.FOLDERS, ("grasshopper.capsule.", "grasshopper.casting.")):
+            with self.subTest(folder=folder):
+                document = spec.load(CLIP / folder / "🔀️transitions" / "🔣️.json")
+                self.assertEqual(spec.validate(document), [])
+                declared = {t.id for t in document.transitions}
+                text = (CLIP / folder / "🐍️.py").read_text(encoding="utf-8")
+                called = {node.args[0].value for node in ast.walk(self.parse(folder)) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "hop" and node.args and isinstance(node.args[0], ast.Constant)}
+                self.assertTrue(all(i.startswith(prefix) for i in declared))
+                self.assertEqual({c for c in called if prefix + c not in declared}, set(), "clip plays undeclared transitions")
+                self.assertEqual([i for i in declared if f'"{i.removeprefix(prefix)}"' not in text], [], "declared transitions the clip never names")
 
 
 if __name__ == "__main__":

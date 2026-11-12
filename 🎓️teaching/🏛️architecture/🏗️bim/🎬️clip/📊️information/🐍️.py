@@ -22,6 +22,9 @@ _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _sheet = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📏️sheet.🐍️")
 _plan_widget = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📋️plan.🐍️")
 _engine = importlib.import_module("manim")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 INK, MUTED, ARCH, STRUCT, SERV, DATA, GOOD, WARN, GLASS, CONCRETE, GREEN_GROUND = (
     getattr(_visuals, name) for name in ("INK", "MUTED", "ARCH", "STRUCT", "SERV", "DATA", "GOOD", "WARN", "GLASS", "CONCRETE", "GREEN_GROUND"))
@@ -253,29 +256,52 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         p, q = poses[i], poses[i + 1]
         return p[0] + (q[0] - p[0]) * u, p[1] + (q[1] - p[1]) * u, p[2] + ((q[2] - p[2] + 180) % 360 - 180) * u
 
-    def _driver(self, t):
-        """🛣️ Car on the plan with the area it has swept so far."""
-        group = _engine.VGroup()
+    def _swept(self, t):
+        """🛣️ Swept-area polygon and dashed centre line of the car up to fraction ``t``; each pose is sampled once and serves both."""
         half = swept_half_metres()
         steps = max(int((t - DRIVE_FROM) * 160), 2)
-        left, right = [], []
+        left, right, centre_points = [], [], []
         for k in range(steps + 1):
             x, y, h = self._pose(DRIVE_FROM + (t - DRIVE_FROM) * k / steps)
             n = np.array([-math.sin(math.radians(h)), math.cos(math.radians(h))]) * half
             left.append(self._at(x + n[0], y + n[1]))
             right.append(self._at(x - n[0], y - n[1]))
-        group.add(_draft.polygon(left + right[::-1], DATA, 0.14, DATA, _draft.W_HAIR, 0.55))
-        centre_points = [self._at(*self._pose(DRIVE_FROM + (t - DRIVE_FROM) * k / steps)[:2]) for k in range(steps + 1)]
-        group.add(_draft.polyline(centre_points, INK, _draft.W_THIN, 0.9, dash=0.06))
+            centre_points.append(self._at(x, y))
+        return (_draft.polygon(left + right[::-1], DATA, 0.14, DATA, _draft.W_HAIR, 0.55),
+                _draft.polyline(centre_points, INK, _draft.W_THIN, 0.9, dash=0.06))
+
+    def _mile_marks(self):
+        """📍 Every 5 m tick across the car path as ``(fraction, shape)``; a tick depends on the path only, never on the drive."""
+        marks = []
         for metres in np.arange(5.0, self._path["length"], 5.0):
             fraction = metres / self._path["length"]
-            if DRIVE_FROM < fraction <= t:
-                x, y, h = self._pose(fraction)
-                n = np.array([-math.sin(math.radians(h)), math.cos(math.radians(h))]) * 0.09
-                centre = self._at(x, y)
-                group.add(_draft.segments([(centre + np.array([n[0], n[1], 0.0]), centre - np.array([n[0], n[1], 0.0]))], INK, _draft.W_EDGE))
-        x, y, h = self._pose(t)
-        group.add(self._car(SCALE, h).move_to(self._at(x, y)))
+            x, y, h = self._pose(fraction)
+            n = np.array([-math.sin(math.radians(h)), math.cos(math.radians(h))]) * 0.09
+            centre = self._at(x, y)
+            marks.append((fraction, _draft.segments([(centre + np.array([n[0], n[1], 0.0]), centre - np.array([n[0], n[1], 0.0]))], INK, _draft.W_EDGE)))
+        return marks
+
+    def _driver(self, tracker):
+        """🛣️ Car on the plan with the area it has swept so far, built once: the swept shapes are refilled, the ticks revealed and the car re-posed from a frozen heading-zero snapshot each frame."""
+        swept, centre = self._swept(tracker.get_value())
+        marks = [(fraction, shape, shape.points.copy()) for fraction, shape in self._mile_marks()]
+        car = self._car(SCALE)
+        home = [(member, member.points.copy()) for member in car.get_family()]
+        group = _engine.VGroup(swept, centre, *[shape for _, shape, _ in marks], car)
+
+        def follow(_):
+            t = tracker.get_value()
+            for shape, fresh in zip((swept, centre), self._swept(t)):
+                shape.set_points(fresh.points)
+            for fraction, shape, points in marks:
+                shape.points = points.copy() if DRIVE_FROM < fraction <= t else np.zeros((0, 3))
+            for member, points in home:
+                member.points = points.copy()
+            x, y, h = self._pose(t)
+            car.rotate(math.radians(h), about_point=np.zeros(3)).move_to(self._at(x, y))
+
+        group.add_updater(follow)
+        follow(group)
         return group
 
     def _rows(self, rows, point, width, title=None):
@@ -399,15 +425,22 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         bay.add(_fade(hint, rv["pil"] * (1.0 - rv["clear"])))
         return bay
 
-    def _ruler(self, t):
-        """📏 Distance ruler along the model path: a bar that grows with the drive, ticks every 5 m with numerals."""
+    def _ruler_fill(self, t):
+        """📏 Corner points of the ruler bar filled up to fraction ``t`` of the path."""
         length = self._path["length"]
         x0, y, k = 0.95, -1.35, 5.4 / length
-        ruler = _engine.VGroup(_draft.polygon([(x0, y - 0.07), (x0 + length * k, y - 0.07), (x0 + length * k, y + 0.07), (x0, y + 0.07)], None, 1.0, MUTED, _draft.W_THIN),
-                               _draft.polygon([(x0, y - 0.07), (x0 + t * length * k, y - 0.07), (x0 + t * length * k, y + 0.07), (x0, y + 0.07)], INK, 0.7))
+        return [(x0, y - 0.07), (x0 + t * length * k, y - 0.07), (x0 + t * length * k, y + 0.07), (x0, y + 0.07)]
+
+    def _ruler(self, tracker):
+        """📏 Distance ruler along the model path, built once: an outline, a bar refilled with the drive and ticks every 5 m with typeset numerals."""
+        length = self._path["length"]
+        x0, y, k = 0.95, -1.35, 5.4 / length
+        fill = _draft.polygon(self._ruler_fill(tracker.get_value()), INK, 0.7)
+        ruler = _engine.VGroup(_draft.polygon([(x0, y - 0.07), (x0 + length * k, y - 0.07), (x0 + length * k, y + 0.07), (x0, y + 0.07)], None, 1.0, MUTED, _draft.W_THIN), fill)
         for metres in range(0, int(length) + 1, 5):
             ruler.add(_draft.segments([((x0 + metres * k, y - 0.07, 0), (x0 + metres * k, y - 0.17, 0))], MUTED, _draft.W_EDGE),
                       self._say(self.number(metres, 0) + (_draft.NARROW + "m" if metres + 5 > length else ""), (x0 + metres * k, y - 0.38), size=_draft.S_SMALL, color=MUTED))
+        ruler.add_updater(lambda _: fill.set_points_as_corners([*map(_draft.P, (corners := self._ruler_fill(tracker.get_value()))), _draft.P(corners[0])]))
         return ruler
 
     def _gauge(self):
@@ -600,6 +633,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
     def present_information(self):
         """🎞️ The whole animation: a lone number, its context, its meaning, a question it answers, and the model around it."""
         lang = self.language()
+        stage = _morph.stage(self, TRANSITIONS)
         m = _model.load_model()
         self._m, self._g, self._c, self._path = m, _model.building_geometry(m), _model.clearance(m), _model.car_path(m)
         g, c, path = self._g, self._c, self._path
@@ -636,7 +670,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         north = self.north_arrow((-0.3, -1.95, 0), 0.34, color=MUTED)
         subtitle, norm = self._subtitle(), self._norm()
         self.step("context", _engine.AnimationGroup(
-            *self._gone(guesses), _engine.FadeIn(plan), _engine.FadeIn(dim_lines), _engine.ReplacementTransform(raw, dim.label),
+            *self._gone(guesses), _engine.FadeIn(plan), _engine.FadeIn(dim_lines), stage.transition("bim.information.context.raw-to-dimension", source=raw, target=dim.label),
             _engine.FadeIn(scale_bar), _engine.FadeIn(north), _engine.FadeIn(subtitle), _engine.FadeIn(norm), _engine.FadeIn(axon), _engine.FadeIn(axon_labels)), seconds=5.0)
 
         places = self._rows([
@@ -790,14 +824,14 @@ class Beat1_DataToInformation(_visuals.ClipScene):
                   seconds=6.0)
 
         drive_t = _engine.ValueTracker(DRIVE_FROM)
-        mover = _engine.always_redraw(lambda: self._driver(drive_t.get_value()))
+        mover = self._driver(drive_t)
         legend = self._rows([
             {"name": self.tr("Swept path", "Fahrspur"), "value": "", "sub": self.tr("area the car's outline covers", "Fläche, die der Autoumriss überstreicht"), "dot": DATA},
             {"name": self.tr("Turning circle", "Wendekreis"), "value": "", "sub": self.tr("outer edge of the swept path", "Außenrand der Fahrspur"), "dot": DATA},
             {"name": self.tr("Entrance surround", "Eingangsumfassung"), "value": "", "sub": self.tr("source-informed entrance geometry", "quellenbezogene Eingangsgeometrie"), "dot": GLASS},
             {"name": self.tr("Distance driven", "Gefahrene Strecke"), "value": "", "dot": INK,
              "live": lambda: self.quantity(drive_t.get_value() * path["length"], "m", 1)}], (PX, 1.2), PW - 0.3, title=self.tr("DRIVING THE CAR", "FAHRT DES AUTOS"))
-        ruler = _engine.always_redraw(lambda: self._ruler(drive_t.get_value()))
+        ruler = self._ruler(drive_t)
         self.add(mover, ruler)
         self.step("drive", _engine.AnimationGroup(
             *self._gone(bay, gauge, frame, bracket, link, moving), _engine.FadeOut(weak_chip), _engine.FadeIn(legend), *[_engine.FadeIn(r) for r in legend.rows],

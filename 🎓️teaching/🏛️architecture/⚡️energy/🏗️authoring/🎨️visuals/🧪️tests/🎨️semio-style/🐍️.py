@@ -142,7 +142,7 @@ class ClipStyleTest(unittest.TestCase):
 
         runtime = importlib.import_module(MODULE + ".🎬️clip.⚙️runtime.🐍️")
         segment = runtime.load_manifest()[0]["chapters"][0]["segments"][0]
-        state = runtime.segment_state(segment, {"language": "en", "quality": "-ql", "resolution": None, "fps": None})
+        state = runtime.segment_state(segment, {"language": "en", "profile": "preview", "resolution": None, "fps": None})
         visuals = Path(self.visuals.__file__).parent
         for path in (*self.theme.source_files(), visuals / "🧍️staffage/🐍️.py", visuals / "🧍️staffage/🔣️.json", visuals / "🔣️icons/🔣️.json"):
             with self.subTest(source=str(path.relative_to(ROOT))):
@@ -153,7 +153,7 @@ class ClipStyleTest(unittest.TestCase):
 
         runtime = importlib.import_module(MODULE + ".🎬️clip.⚙️runtime.🐍️")
         staffage = importlib.import_module(MODULE + ".🎨️visuals.🧍️staffage.🐍️")
-        settings = {"language": "en", "quality": "-ql", "resolution": None, "fps": None}
+        settings = {"language": "en", "profile": "preview", "resolution": None, "fps": None}
         segments = [segment for video in runtime.load_manifest() for chapter in video["chapters"] for segment in chapter["segments"]]
         drawing = {}
         for segment in segments:

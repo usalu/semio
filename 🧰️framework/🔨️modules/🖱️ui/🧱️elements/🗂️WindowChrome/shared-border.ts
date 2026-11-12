@@ -32,6 +32,9 @@ const states: readonly BorderState[] = ["normal", "focus", "active", "waiting", 
 const roots = new WeakMap<HTMLElement, { compositor: BorderCompositor; participants: number }>();
 let sequence = 0;
 
+/** 🧱️ Realm-independent element test: observer callbacks can outlive the window global that defined `Element`. */
+const isElement = (node: unknown): node is Element => typeof node === "object" && node !== null && (node as Node).nodeType === 1;
+
 /** 🕰️ Remove transition tokens whose corresponding live CSS transition has ended or disappeared. */
 export function pruneSharedBorderMotion(motion: Map<Element, Set<string>>): void {
   for (const [element, properties] of motion) {

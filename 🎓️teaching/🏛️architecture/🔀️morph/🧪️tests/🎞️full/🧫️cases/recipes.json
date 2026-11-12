@@ -1,0 +1,1218 @@
+{
+  "description": "Language-agnostic full-morph cases: one entity per side built from plain shapes, one transition per case. Every implementation must show the exact target at the terminal frame f1, genuine intermediates before it, and the source at frame 0.",
+  "fps": 10,
+  "cases": [
+    {
+      "name": "parts-identity-3-to-2",
+      "recipe": "parts",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "identity"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "body": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.4,
+              0.7
+            ],
+            "color": "#4488ff"
+          },
+          "window": {
+            "shape": "square",
+            "at": [
+              -3.3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#ffdd00"
+          },
+          "door": {
+            "shape": "rect",
+            "at": [
+              -2.6,
+              0
+            ],
+            "size": [
+              0.2,
+              0.4
+            ],
+            "color": "#999999"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "ring": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          },
+          "dot": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.2,
+            "color": "#00ff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "parts-key-extra-source-part",
+      "recipe": "parts",
+      "relation": "many-to-many",
+      "correspondence": {
+        "kind": "key"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "a": {
+            "shape": "square",
+            "at": [
+              -3,
+              1
+            ],
+            "size": 0.6,
+            "color": "#ff0000"
+          },
+          "b": {
+            "shape": "square",
+            "at": [
+              -3,
+              -1
+            ],
+            "size": 0.5,
+            "color": "#00ff00"
+          },
+          "c": {
+            "shape": "circle",
+            "at": [
+              -1,
+              0
+            ],
+            "size": 0.4,
+            "color": "#0000ff"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "a": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.6,
+            "color": "#ffaa00"
+          },
+          "b": {
+            "shape": "rect",
+            "at": [
+              3,
+              -1
+            ],
+            "size": [
+              1.0,
+              0.4
+            ],
+            "color": "#00aaff"
+          }
+        }
+      }
+    },
+    {
+      "name": "parts-pairs",
+      "recipe": "parts",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "pairs",
+        "pairs": [
+          [
+            "window",
+            "dot"
+          ],
+          [
+            "body",
+            "ring"
+          ]
+        ]
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "body": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.4,
+              0.7
+            ],
+            "color": "#4488ff"
+          },
+          "window": {
+            "shape": "square",
+            "at": [
+              -3.3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#ffdd00"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "ring": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          },
+          "dot": {
+            "shape": "circle",
+            "at": [
+              3.2,
+              1
+            ],
+            "size": 0.2,
+            "color": "#00ff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "hull-identity",
+      "recipe": "hull",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "identity"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "body": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.4,
+              0.7
+            ],
+            "color": "#4488ff"
+          },
+          "window": {
+            "shape": "square",
+            "at": [
+              -3.3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#ffdd00"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "badge": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          }
+        }
+      }
+    },
+    {
+      "name": "scatter-key",
+      "recipe": "scatter",
+      "relation": "many-to-many",
+      "correspondence": {
+        "kind": "key"
+      },
+      "duration": 0.6,
+      "lag": 0.05,
+      "source": {
+        "parts": {
+          "a": {
+            "shape": "square",
+            "at": [
+              -3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          },
+          "b": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#00ff00"
+          },
+          "c": {
+            "shape": "square",
+            "at": [
+              -3,
+              -1
+            ],
+            "size": 0.5,
+            "color": "#0000ff"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "a": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.3,
+            "color": "#ffaa00"
+          },
+          "b": {
+            "shape": "circle",
+            "at": [
+              3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#00aaff"
+          },
+          "c": {
+            "shape": "circle",
+            "at": [
+              3,
+              -1
+            ],
+            "size": 0.3,
+            "color": "#aa00ff"
+          }
+        }
+      }
+    },
+    {
+      "name": "scatter-order-one-more-target",
+      "recipe": "scatter",
+      "relation": "many-to-many",
+      "correspondence": {
+        "kind": "order"
+      },
+      "duration": 0.6,
+      "lag": 0.05,
+      "source": {
+        "parts": {
+          "s0": {
+            "shape": "square",
+            "at": [
+              -3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          },
+          "s1": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#00ff00"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "t0": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.3,
+            "color": "#ffaa00"
+          },
+          "t1": {
+            "shape": "circle",
+            "at": [
+              3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#00aaff"
+          },
+          "t2": {
+            "shape": "circle",
+            "at": [
+              3,
+              -1
+            ],
+            "size": 0.3,
+            "color": "#aa00ff"
+          }
+        }
+      }
+    },
+    {
+      "name": "gather-pairs",
+      "recipe": "gather",
+      "relation": "many-to-one",
+      "correspondence": {
+        "kind": "pairs",
+        "pairs": [
+          [
+            "a",
+            "sum"
+          ],
+          [
+            "b",
+            "sum"
+          ],
+          [
+            "c",
+            "sum"
+          ]
+        ]
+      },
+      "duration": 0.6,
+      "lag": 0.04,
+      "source": {
+        "parts": {
+          "a": {
+            "shape": "square",
+            "at": [
+              -3,
+              1
+            ],
+            "size": 0.4,
+            "color": "#ff0000"
+          },
+          "b": {
+            "shape": "square",
+            "at": [
+              -2,
+              1
+            ],
+            "size": 0.4,
+            "color": "#ff0000"
+          },
+          "c": {
+            "shape": "square",
+            "at": [
+              -1,
+              1
+            ],
+            "size": 0.4,
+            "color": "#ff0000"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "sum": {
+            "shape": "circle",
+            "at": [
+              2,
+              -2
+            ],
+            "size": 0.6,
+            "color": "#ffdd00"
+          }
+        }
+      }
+    },
+    {
+      "name": "split-pairs",
+      "recipe": "split",
+      "relation": "one-to-many",
+      "correspondence": {
+        "kind": "pairs",
+        "pairs": [
+          [
+            "whole",
+            "x"
+          ],
+          [
+            "whole",
+            "y"
+          ],
+          [
+            "whole",
+            "z"
+          ]
+        ]
+      },
+      "duration": 0.6,
+      "lag": 0.05,
+      "source": {
+        "parts": {
+          "whole": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.2,
+              0.8
+            ],
+            "color": "#4488ff"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "x": {
+            "shape": "square",
+            "at": [
+              2,
+              1
+            ],
+            "size": 0.4,
+            "color": "#ff0000"
+          },
+          "y": {
+            "shape": "square",
+            "at": [
+              3,
+              0
+            ],
+            "size": 0.4,
+            "color": "#00ff00"
+          },
+          "z": {
+            "shape": "square",
+            "at": [
+              2,
+              -1
+            ],
+            "size": 0.4,
+            "color": "#0000ff"
+          }
+        }
+      }
+    },
+    {
+      "name": "unfold-order",
+      "recipe": "unfold",
+      "relation": "one-to-many",
+      "correspondence": {
+        "kind": "order"
+      },
+      "duration": 0.6,
+      "lag": 0.05,
+      "source": {
+        "parts": {
+          "f0": {
+            "shape": "square",
+            "at": [
+              -1,
+              0.4
+            ],
+            "size": 0.6,
+            "color": "#4488ff"
+          },
+          "f1": {
+            "shape": "square",
+            "at": [
+              -1,
+              0.2
+            ],
+            "size": 0.6,
+            "color": "#44aaff"
+          },
+          "f2": {
+            "shape": "square",
+            "at": [
+              -1,
+              0.0
+            ],
+            "size": 0.6,
+            "color": "#4466ff"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "r0": {
+            "shape": "rect",
+            "at": [
+              2,
+              1
+            ],
+            "size": [
+              1.0,
+              0.3
+            ],
+            "color": "#4488ff"
+          },
+          "r1": {
+            "shape": "rect",
+            "at": [
+              2,
+              0
+            ],
+            "size": [
+              1.0,
+              0.3
+            ],
+            "color": "#44aaff"
+          },
+          "r2": {
+            "shape": "rect",
+            "at": [
+              2,
+              -1
+            ],
+            "size": [
+              1.0,
+              0.3
+            ],
+            "color": "#4466ff"
+          }
+        }
+      }
+    },
+    {
+      "name": "flight-pairs-colour-carry",
+      "recipe": "flight",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "pairs",
+        "pairs": [
+          [
+            "chip",
+            "slot"
+          ]
+        ]
+      },
+      "duration": 0.8,
+      "pathArc": 0.4,
+      "source": {
+        "parts": {
+          "chip": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "slot": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#0000ff"
+          }
+        }
+      }
+    },
+    {
+      "name": "move-continuation",
+      "recipe": "move",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "identity"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "box": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "box": {
+            "shape": "square",
+            "at": [
+              3,
+              1
+            ],
+            "size": 1.0,
+            "color": "#00ff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "replace-identity",
+      "recipe": "replace",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "identity"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "a": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "a": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.8,
+            "color": "#00ff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "copy-keeps-source",
+      "recipe": "replace",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "identity"
+      },
+      "duration": 0.8,
+      "copy": true,
+      "keepsSource": true,
+      "source": {
+        "parts": {
+          "a": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "a": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.8,
+            "color": "#00ff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "fade-identity",
+      "recipe": "fade",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "identity"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "a": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "a": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.8,
+            "color": "#00ff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "absence-into-nothing",
+      "recipe": "vanish",
+      "relation": "one-to-one",
+      "correspondence": null,
+      "duration": 0.8,
+      "target": null,
+      "source": {
+        "parts": {
+          "stray": {
+            "shape": "square",
+            "at": [
+              -3,
+              0
+            ],
+            "size": 0.5,
+            "color": "#ff0000"
+          },
+          "tag": {
+            "shape": "circle",
+            "at": [
+              -3,
+              0.5
+            ],
+            "size": 0.2,
+            "color": "#ffff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "parts-auto-recipe",
+      "recipe": "parts",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "body": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.4,
+              0.7
+            ],
+            "color": "#4488ff"
+          },
+          "window": {
+            "shape": "square",
+            "at": [
+              -3.3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#ffdd00"
+          },
+          "door": {
+            "shape": "rect",
+            "at": [
+              -2.6,
+              0
+            ],
+            "size": [
+              0.2,
+              0.4
+            ],
+            "color": "#999999"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "ring": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000",
+            "opacity": 0.1
+          },
+          "dot": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.2,
+            "color": "#00ff00"
+          }
+        }
+      }
+    },
+    {
+      "name": "parts-copy-auto-keeps-source",
+      "recipe": "parts",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "recipe",
+        "name": "auto"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "body": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.4,
+              0.7
+            ],
+            "color": "#4488ff"
+          },
+          "window": {
+            "shape": "square",
+            "at": [
+              -3.3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#ffdd00"
+          },
+          "door": {
+            "shape": "rect",
+            "at": [
+              -2.6,
+              0
+            ],
+            "size": [
+              0.2,
+              0.4
+            ],
+            "color": "#999999"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "ring": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000",
+            "opacity": 0.1
+          },
+          "dot": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.2,
+            "color": "#00ff00"
+          }
+        }
+      },
+      "copy": true,
+      "keepsSource": true
+    },
+    {
+      "name": "parts-capsule-item",
+      "recipe": "parts",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "recipe",
+        "name": "capsule-item"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "body": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.4,
+              0.7
+            ],
+            "color": "#4488ff"
+          },
+          "window": {
+            "shape": "square",
+            "at": [
+              -3.3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#ffdd00"
+          },
+          "door": {
+            "shape": "rect",
+            "at": [
+              -2.6,
+              0
+            ],
+            "size": [
+              0.2,
+              0.4
+            ],
+            "color": "#999999"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "ring": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000",
+            "opacity": 0.1
+          },
+          "dot": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.2,
+            "color": "#00ff00"
+          }
+        }
+      },
+      "dip": 0.15
+    },
+    {
+      "name": "parts-item-capsule",
+      "recipe": "parts",
+      "relation": "one-to-one",
+      "correspondence": {
+        "kind": "recipe",
+        "name": "item-capsule"
+      },
+      "duration": 0.8,
+      "source": {
+        "parts": {
+          "ring": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.5,
+            "color": "#ff0000",
+            "opacity": 0.1
+          },
+          "dot": {
+            "shape": "circle",
+            "at": [
+              3,
+              1
+            ],
+            "size": 0.2,
+            "color": "#00ff00"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "body": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.4,
+              0.7
+            ],
+            "color": "#4488ff"
+          },
+          "window": {
+            "shape": "square",
+            "at": [
+              -3.3,
+              0
+            ],
+            "size": 0.3,
+            "color": "#ffdd00"
+          },
+          "door": {
+            "shape": "rect",
+            "at": [
+              -2.6,
+              0
+            ],
+            "size": [
+              0.2,
+              0.4
+            ],
+            "color": "#999999"
+          }
+        }
+      },
+      "dip": 0.15
+    },
+    {
+      "name": "gather-fan-in",
+      "recipe": "gather",
+      "relation": "many-to-one",
+      "correspondence": {
+        "kind": "recipe",
+        "name": "fan-in"
+      },
+      "duration": 0.6,
+      "source": {
+        "parts": {
+          "a": {
+            "shape": "square",
+            "at": [
+              -3,
+              1
+            ],
+            "size": 0.4,
+            "color": "#ff0000"
+          },
+          "b": {
+            "shape": "square",
+            "at": [
+              -2,
+              1
+            ],
+            "size": 0.4,
+            "color": "#ff0000"
+          },
+          "c": {
+            "shape": "square",
+            "at": [
+              -1,
+              1
+            ],
+            "size": 0.4,
+            "color": "#ff0000"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "sum": {
+            "shape": "circle",
+            "at": [
+              2,
+              -2
+            ],
+            "size": 0.6,
+            "color": "#ffdd00"
+          }
+        }
+      },
+      "lag": 0.04
+    },
+    {
+      "name": "split-fan-out",
+      "recipe": "split",
+      "relation": "one-to-many",
+      "correspondence": {
+        "kind": "recipe",
+        "name": "fan-out"
+      },
+      "duration": 0.6,
+      "source": {
+        "parts": {
+          "whole": {
+            "shape": "rect",
+            "at": [
+              -3,
+              0
+            ],
+            "size": [
+              1.2,
+              0.8
+            ],
+            "color": "#4488ff"
+          }
+        }
+      },
+      "target": {
+        "parts": {
+          "x": {
+            "shape": "square",
+            "at": [
+              2,
+              1
+            ],
+            "size": 0.4,
+            "color": "#00ff00"
+          },
+          "y": {
+            "shape": "square",
+            "at": [
+              3,
+              0
+            ],
+            "size": 0.4,
+            "color": "#00ff00"
+          },
+          "z": {
+            "shape": "square",
+            "at": [
+              4,
+              -1
+            ],
+            "size": 0.4,
+            "color": "#00ff00"
+          }
+        }
+      },
+      "lag": 0.05
+    }
+  ]
+}

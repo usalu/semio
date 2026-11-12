@@ -12,6 +12,7 @@ semio_color = _theme_module.color
 
 import numpy as np
 from manim import *
+_clock = importlib.import_module("🎓️teaching.🧰️interop.🕐️clock.🐍️")
 
 
 
@@ -24,6 +25,7 @@ LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 room_metre = _manim_module.room_metre
+pose_animation = _manim_module.pose_animation
 P_PRIMARY = _manim_module.P_PRIMARY
 section_material = _manim_module.section_material
 section_assembly = _manim_module.section_assembly
@@ -63,6 +65,8 @@ hold_for = _manim_module.hold_for
 subtitle_text = _manim_module.subtitle_text
 set_vo_language = _manim_module.set_vo_language
 tr = _manim_module.tr
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
 set_vo_language("de")
@@ -332,7 +336,7 @@ def _dim(mobs, opacity: float):
         m.set_stroke(opacity=min(opacity, m.get_stroke_opacity()))
         if m.get_fill_opacity() > 0:
             m.set_fill(opacity=min(opacity, m.get_fill_opacity()))
-    return Transform(mobs, target)
+    return pose_animation(mobs, target)
 #endregion
 
 
@@ -372,7 +376,8 @@ def _q_token(sub: str, color: str):
 #endregion
 
 #region Live readouts
-_READOUT_CACHE: dict = {}
+_cache = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.🐍️")
+_READOUT_CACHE = _cache.BoundedCache("heating.readout", max_entries=256, max_bytes=16 << 20, sizeof=_cache.mobject_bytes)
 
 
 def _live(fn, at, *, size=None, color=PASTEL_WHITE, edge="left"):
@@ -381,10 +386,9 @@ def _live(fn, at, *, size=None, color=PASTEL_WHITE, edge="left"):
     https://docs.manim.community/en/stable/reference/manim.animation.updaters.mobject_update_utils.html
     """
     def build():
-        key = (fn(), size, color)
-        if key not in _READOUT_CACHE:
-            _READOUT_CACHE[key] = math_label(key[0], size=size, color=color)
-        return place_math(_READOUT_CACHE[key].copy(), np.array(at() if callable(at) else at, dtype=float), edge)
+        source = fn()
+        label = _READOUT_CACHE.get_or_build(_cache.scoped_key("heating.readout", source, size, color), lambda: math_label(source, size=size, color=color))
+        return place_math(label.copy(), np.array(at() if callable(at) else at, dtype=float), edge)
 
     return always_redraw(build)
 #endregion
@@ -466,6 +470,7 @@ class Beat1_DreiWegeDerWaerme(Scene):
     ]
 
     def construct(self):
+        morphs = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Section 1.1 — How heat moves", "Abschnitt 1.1 — Wie Wärme sich bewegt"))
@@ -513,7 +518,7 @@ class Beat1_DreiWegeDerWaerme(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "direction"))
         self.play(Create(heat_guides), *_warmth(stage, 0.6), run_time=0.6)
         self.play(*heat(3.2), _tint_wall(stage), run_time=3.2)
-        self.play(*heat(2.4), ReplacementTransform(stage["ti"], ti_cool), ReplacementTransform(stage["te"], te_warm),
+        self.play(*heat(2.4), morphs.transition("heating.fundamentals.direction.indoor-readout", source=stage["ti"], target=ti_cool), morphs.transition("heating.fundamentals.direction.outdoor-readout", source=stage["te"], target=te_warm),
                   dt.animate.set_value(18), run_time=2.4)
         hold_for(self, self.NARRATION, "direction", during=heat)
 
@@ -616,6 +621,7 @@ class Beat2_Waermeleitung(Scene):
     ]
 
     def construct(self):
+        morphs = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Conduction — energy without material transport", "Wärmeleitung — Energie ohne Materialtransport"))
@@ -640,8 +646,7 @@ class Beat2_Waermeleitung(Scene):
         def flow(rt, track=lane):
             return [flow_animation([([track], HOT, PASTEL_BLUE)], waves=3, radius=0.07, cycles=rt / 1.4)]
 
-        clock = ValueTracker(0.0)
-        clock.add_updater(lambda m, dt: m.increment_value(dt))
+        clock = _clock.scene_timer()
         front = ValueTracker(0.0)
         cold, hot = ManimColor(PASTEL_BLUE), ManimColor(HOT)
 
@@ -675,7 +680,7 @@ class Beat2_Waermeleitung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "lattice"))
         self.add(clock)
-        self.play(ReplacementTransform(marker, lens["rim"]), FadeIn(lens["disc"]), FadeIn(lens["bands"]),
+        self.play(morphs.transition("heating.fundamentals.lattice.marker-to-lens", source=marker, target=lens["rim"]), FadeIn(lens["disc"]), FadeIn(lens["bands"]),
                   FadeIn(lens["handle"]), run_time=1.0)
         lat["group"].add_updater(jiggle)
         self.play(FadeIn(lat["group"]), run_time=0.8)
@@ -694,8 +699,8 @@ class Beat2_Waermeleitung(Scene):
         lat["group"].clear_updaters()
         token = _q_token("k", PASTEL_RED).move_to(p(-1.5, 0.25))
         self.play(FadeOut(watch_ring), FadeOut(watch_tag), FadeOut(watch_lead), FadeOut(energy_tag),
-                  FadeOut(lens["group"]), ReplacementTransform(lat["group"], token),
-                  ReplacementTransform(energy, energy_k), run_time=1.4)
+                  FadeOut(lens["group"]), morphs.transition("heating.fundamentals.symbol.lattice-to-k", source=lat["group"], target=token),
+                  morphs.transition("heating.fundamentals.symbol.energy-to-k-label", source=energy, target=energy_k), run_time=1.4)
         self.play(*flow(0.8, lane_k), run_time=0.8)
         hold_for(self, self.NARRATION, "symbol", during=lambda rt: flow(rt, lane_k))
 
@@ -726,6 +731,7 @@ class Beat3_Konvektion(Scene):
     ]
 
     def construct(self):
+        morphs = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Convection — moving air carries the heat", "Konvektion — bewegte Luft trägt die Wärme"))
@@ -769,7 +775,7 @@ class Beat3_Konvektion(Scene):
         hold_for(self, self.NARRATION, "heater", during=rising)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "wall"))
-        self.play(ReplacementTransform(rise_guide, loop_guide), FadeIn(cold_tag),
+        self.play(morphs.transition("heating.fundamentals.wall.rise-to-loop", source=rise_guide, target=loop_guide), FadeIn(cold_tag),
                   wall_glow.animate.set_fill(opacity=0.45), *rising(0.8), run_time=0.8)
         self.play(*circling(4.5), run_time=4.5)
         hold_for(self, self.NARRATION, "wall", during=circling)
@@ -780,7 +786,7 @@ class Beat3_Konvektion(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = _q_token("c", PASTEL_CYAN).move_to(p(-3.0, 0.95))
-        self.play(ReplacementTransform(loop_guide, token), FadeOut(warm_tag), FadeOut(cold_tag), FadeOut(glow),
+        self.play(morphs.transition("heating.fundamentals.symbol.loop-to-c", source=loop_guide, target=token), FadeOut(warm_tag), FadeOut(cold_tag), FadeOut(glow),
                   FadeOut(wall_glow), *circling(1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "symbol", during=circling)
 
@@ -807,8 +813,7 @@ def _room_air(stage, n: int = 30, seed: int = 9):
     dots = VGroup(*[Dot(stage["p"](x, y), radius=0.035, color=semio_color("light-5-9"), fill_opacity=0.85) for x, y in pts])
     homes = [d.get_center() for d in dots]
     phases = rng.uniform(0, TAU, size=(n, 2))
-    clock = ValueTracker(0.0)
-    clock.add_updater(lambda m, dt: m.increment_value(dt))
+    clock = _clock.scene_timer()
 
     def drift(group):
         t = clock.get_value()
@@ -839,6 +844,7 @@ class Beat4_Strahlung(Scene):
     ]
 
     def construct(self):
+        morphs = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Radiation — needs no medium", "Strahlung — braucht kein Medium"))
@@ -884,7 +890,7 @@ class Beat4_Strahlung(Scene):
         self.play(Create(loop_guide), *glow(0.8, pulses=False), run_time=0.8)
         air.clear_updaters()
         self.play(LaggedStart(*[FadeOut(d, scale=0.3) for d in air], lag_ratio=0.03),
-                  ReplacementTransform(air_tag, no_air), *glow(1.6, pulses=False), run_time=1.6)
+                  morphs.transition("heating.fundamentals.vacuum.air-tag-to-none", source=air_tag, target=no_air), *glow(1.6, pulses=False), run_time=1.6)
         self.play(Create(no_mark), loop_guide.animate.set_stroke(opacity=0.15), *glow(0.6, pulses=False), run_time=0.6)
         hold_for(self, self.NARRATION, "vacuum", during=lambda rt: glow(rt, pulses=False))
 
@@ -894,7 +900,7 @@ class Beat4_Strahlung(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = _q_token("r", PASTEL_YELLOW).move_to(p(-3.0, 0.95))
-        self.play(ReplacementTransform(VGroup(inner, outer), token),
+        self.play(morphs.transition("heating.fundamentals.symbol.surfaces-to-r", source=VGroup(inner, outer), target=token),
                   FadeOut(loop_guide), FadeOut(no_mark), FadeOut(no_air), FadeOut(sky_tag),
                   *glow(1.2, pulses=False), run_time=1.2)
         hold_for(self, self.NARRATION, "symbol", during=lambda rt: glow(rt, pulses=False))
@@ -1171,6 +1177,7 @@ class Beat7_Waermedurchlasswiderstand(Scene):
     ]
 
     def construct(self):
+        morphs = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Thermal resistance R", "Wärmedurchlasswiderstand R"))
@@ -1312,7 +1319,7 @@ class Beat7_Waermedurchlasswiderstand(Scene):
         ring_l = highlight_param(parts, "lam", color=PASTEL_ORANGE)
         self.play(Create(ring_l), *heat(0.4), run_time=0.4)
         self.play(
-            ReplacementTransform(mat, ins_tag),
+            morphs.transition("heating.fundamentals.lam.material-to-insulation", source=mat, target=ins_tag),
             lam.animate.set_value(B7_LAM_INS), ins.animate.set_value(1.0), *heat(1.9),
             run_time=1.9,
         )
@@ -1395,6 +1402,7 @@ class Beat8_UWert(Scene):
     ]
 
     def construct(self):
+        morphs = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("U-value — how easily heat passes through", "U-Wert — wie leicht Wärme hindurchgeht"))
@@ -1483,7 +1491,7 @@ class Beat8_UWert(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "flip"))
         self.play(
-            ReplacementTransform(r_eq, u_eq), ReplacementTransform(r_box, u_box),
+            morphs.transition("heating.fundamentals.flip.r-equation-to-u", source=r_eq, target=u_eq), morphs.transition("heating.fundamentals.flip.r-box-to-u", source=r_box, target=u_box),
             FadeOut(films),
             run_time=1.3,
         )
@@ -1548,6 +1556,7 @@ class Beat9_WaermestromFormel(Scene):
     ]
 
     def construct(self):
+        morphs = _morph.stage(self, TRANSITIONS)
         apply_scene_style(self)
 
         subtitle = section_heading(tr("Heat flow through a component", "Wärmestrom durch ein Bauteil"))
@@ -1673,13 +1682,13 @@ class Beat9_WaermestromFormel(Scene):
         ring_dt = highlight_param(items, "dt", color=PASTEL_BLUE)
         self.play(Create(ring_dt), run_time=0.4)
         self.play(
-            ReplacementTransform(te, te_cold),
+            morphs.transition("heating.fundamentals.dt.outdoor-to-cold", source=te, target=te_cold),
             dt_t.animate.set_value(2 * (THETA_I - THETA_E)),
             run_time=1.4,
         )
         hold_for(self, self.NARRATION, "dt", used=0.4 + 1.4 + 0.35)
         self.play(
-            ReplacementTransform(te_cold, te_back),
+            morphs.transition("heating.fundamentals.dt.cold-back", source=te_cold, target=te_back),
             dt_t.animate.set_value(THETA_I - THETA_E),
             FadeOut(ring_dt),
             run_time=1.0,

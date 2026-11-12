@@ -69,12 +69,12 @@ VDI 3807, VDI 4645, VDI 4650-1:2024, VOB/C DIN 18380.
 From the workspace root, the repository entry provisions the pinned Python environment:
 
 ```sh
-repo tools exec bun -- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --language de --video energy_balance --quality l --jobs 4 --output-root ./videos --no-play
+repo tools exec bun -- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --language de --video energy_balance --profile preview --jobs 4 --output-root ./videos --no-play
 ```
 
-Use `--quality m` for 720p30 or `--quality h` for 1080p60. The renderer constructs each canonical source beat once, selects the declared narration sequences, assembles ordered chapters, and presents the complete lesson inside its virtual window. Video and optional source audio use identical cut boundaries; silent zoom transitions pad both ends. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled. Add `--chapter <chapter-identifier>` to render a selected chapter inside the same virtual window. Pass --language en for English chrome; the authored teaching content retains its recorded language. Chapter identifiers are declared in the curriculum JSON; lesson entry files expose `compose(language="de", chapters=[...], **settings)`.
+Use `--profile preview` (480p15, swap morphs) or `--profile final` (1080p30, full morphs); `--fps` and `--resolution` remain explicit overrides. The renderer constructs each canonical source beat once, selects the declared narration sequences, assembles ordered chapters, and presents the complete lesson inside its virtual window. Video and optional source audio use identical cut boundaries; silent zoom transitions pad both ends. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled. Add `--chapter <chapter-identifier>` to render a selected chapter inside the same virtual window. Pass --language en for English chrome; the authored teaching content retains its recorded language. Chapter identifiers are declared in the curriculum JSON; lesson entry files expose `compose(language="de", chapters=[...], **settings)`.
 
-The final low-quality movie is `<output-root>/rendered/Full_EnergyBalance_de_480p15.mp4`. Private raw segment media and logical chapter clips stay under the chosen output root.
+The movie of a preview job is `<output-root>/preview/<language>/<audience>/rendered/Full_EnergyBalance_<audience>_<language>_480p15.mp4` and that of a final job `<output-root>/final/<language>/<audience>/rendered/Full_EnergyBalance_<audience>_<language>_1080p30.mp4`, each with `.render.json` and `.export.json` provenance. Private raw segment media and logical chapter clips stay under the chosen output root.
 
 ## Chapter Identifiers and Beats
 

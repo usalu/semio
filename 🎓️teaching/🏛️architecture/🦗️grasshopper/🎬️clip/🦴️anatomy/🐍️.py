@@ -37,6 +37,7 @@ WINDOW_AT = VIEW + np.array([0.4, -0.05, 0.0])
 LABELS = {"Width": ("Width", "Breite"), "Length": ("Length", "Länge"), "Height": ("Height", "Höhe"), "Storey height": ("Storey height", "Geschosshöhe"), "Window": ("Window", "Fenster")}
 
 
+TRANSITIONS = Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 NB, NA = (next(t.capsule_storeys for t in _nk.towers() if t.index == index) for index in (1, 0))
 
 
@@ -173,35 +174,34 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         """🪙 An abstract token of the morph toolkit placed at a point."""
         return _morph.token(label, kind=kind, color=color, size=size).move_to(point).set_z_index(8)
 
-    def _hop(self, label, start, stop, color, kind="number", ghost=0.0, first=None, size=1.0):
-        """🔀 A token born at ``start`` that morphs into its twin at ``stop``; returns the animation and the arriving token."""
+    def _move(self, name, source, target):
+        """🔀 The declared transition ``anatomy.<name>`` between two objects; the active profile decides how it plays."""
+        return self.stage.transition(f"anatomy.{name}", source=source, target=target)
+
+    def _hop(self, name, label, start, stop, color, kind="number", first=None, size=1.0):
+        """🔀 A token born at ``start`` that moves into its twin at ``stop`` by the declared transition; returns the animation and the arriving token."""
         source, target = self._bit(label if first is None else first, start, color, kind, size), self._bit(label, stop, color, kind, size)
         self.add(source)
-        return _morph.morph(source, target, ghost=ghost, path_arc=0.5, run_time=1.2, dip=0.12), target
+        return self._move(name, source, target), target
 
     def _cap(self, key, towers):
         """🏗️ A copy of one capsule of the static tower drawing, in place, as a morph source or target."""
         self._spot(key, towers)
         return self._towers[towers].capsules[key].copy().set_z_index(8)
 
-    def _cap_to(self, key, towers, token):
-        """🔀 A capsule copy that flies part-wise into a token (shell to ring, window to dot); returns the animation."""
+    def _cap_to(self, name, key, towers, token):
+        """🔀 A capsule copy that becomes a token by the declared capsule-item transition; returns the animation."""
         source = self._cap(key, towers)
         self.add(source)
-        return _morph.morph(source, token, pairs=_morph.capsule_pairs(source, token), path_arc=0.5, run_time=1.2, dip=0.15)
-
-    def _to_cap(self, token, key, towers, run_time=1.2, arc=0.5):
-        """🔀 A token that flies part-wise into a capsule copy; returns the animation and the arriving capsule."""
-        target = self._cap(key, towers)
-        return _morph.morph(token, target, pairs=[(b, a) for a, b in _morph.capsule_pairs(target, token)], path_arc=arc, run_time=run_time, dip=0.15), target
+        return self._move(name, source, token)
 
     @staticmethod
     def _disc(marker):
         """⚫ The numbered disc of a legend marker."""
         return marker if isinstance(marker[0], _engine.Circle) else marker[-1]
 
-    def _fly_discs(self, markers, table, order):
-        """🔢 The numbered markers on the canvas fly into the number discs of their legend rows."""
+    def _fly_discs(self, name, markers, table, order):
+        """🔢 The numbered markers on the canvas move into the number discs of their legend rows."""
         sources = []
         for marker in markers:
             original = self._disc(marker)
@@ -210,7 +210,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
             self.add(disc)
             sources.append(disc)
         targets = [table[number - 1][0] for number in order]
-        return _morph.scatter(sources, targets, lag=0.15, path_arc=0.8, run_time=1.3, limit=3.2, pairs_fn=lambda a, b: [(a[0], b[0]), (a[1], b[1])])
+        return self._move(name, sources, targets)
 
     def _rest(self, table):
         """📖 The legend rows without their number discs."""
@@ -421,8 +421,8 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
     def _repair(self, old, new, index, extra=()):
         """🔧 The repair as an event: the text in the Panel morphs in place into 2.5, then the component, its bubble and its output turn into the repaired state."""
         row, fixed = old.text_panel.parts["rows"][index], new.text_panel.parts["rows"][index]
-        self.play(_morph.retext(row, fixed, run_time=1.2), run_time=1.2)
-        self.play(_engine.Transform(old.box, new.box), _engine.FadeOut(old.bubble), _engine.FadeOut(old.gloss), _engine.Transform(old.panel, new.panel), *[_engine.FadeOut(m) for m in extra], run_time=1.2)
+        self.play(self._move("repair-text", row, fixed), run_time=1.2)
+        self.play(self._move("repair-box", old.box, new.box), _engine.FadeOut(old.bubble), _engine.FadeOut(old.gloss), self._move("repair-panel", old.panel, new.panel), *[_engine.FadeOut(m) for m in extra], run_time=1.2)
         self._sweep(old)
         self.remove(fixed)
         self.add(new)
@@ -441,6 +441,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
 
     def present_anatomy(self):
         """🎞️ Run the clauses: script, slider, component, wires, states, panel, parameters, inputs, plugin, then item, list and tree."""
+        self.stage = _morph.stage(self, TRANSITIONS)
         defn = _gh.canvas("anatomy")
         full = _gh.evaluate(defn)
         settings = {k: defn.objects[k].settings for k in ("w", "bl", "bh", "st", "cnt")}
@@ -477,7 +478,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         del whole
         self.add(lit_capsule)
         self.step("script", _engine.FadeOut(whole_display), _engine.FadeOut(whole_note), _engine.FadeIn(preview), lit_capsule.animate.scale(4.0).move_to(WINDOW_AT).set_stroke(color="#F2C200", width=2.5), _engine.Create(frame), _engine.FadeIn(canvas_tag), _engine.FadeIn(strip), _engine.FadeOut(model_note), seconds=1.2)
-        self.play(_morph.morph(lit_capsule, chip, pairs=_morph.capsule_pairs(lit_capsule, chip), path_arc=0.4, run_time=1.4, dip=0.15), run_time=1.4)
+        self.play(self._move("script-capsule-to-chip", lit_capsule, chip), run_time=1.4)
         self.play(_engine.FadeOut(frame), run_time=0.3)
 
         w_slider = self._slider("w", _at(SL_X, 1.0), self.W, color=cw)
@@ -486,7 +487,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.view_state["dims"] = ("width",)
         self.W.set_value(settings["w"]["min"])
         w_slider.update(0)
-        hop_w, hop_w_end = self._hop(self.number(settings["w"]["value"], 1), _at(SL_X + 1.3, 1.0), VIEW + np.array([-0.2, -1.1, 0.0]), cw)
+        hop_w, hop_w_end = self._hop("slider-width-hop", self.number(settings["w"]["value"], 1), _at(SL_X + 1.3, 1.0), VIEW + np.array([-0.2, -1.1, 0.0]), cw)
         self.step("slider", _engine.FadeOut(chip), _engine.FadeOut(canvas_tag), _engine.FadeOut(strip), self._reveal_then(w_slider, self._ramp(self.W, settings["w"]["min"], settings["w"]["value"], 1.0), 1.4), _engine.FadeIn(notes), hop_w, seconds=1.4)
         self.play(_engine.FadeOut(hop_w_end), run_time=0.3)
 
@@ -496,14 +497,14 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
                       self.gh_wire(h_slider.grip_out(), cb_full.grip_in("Z"), color=ch)]
         self.view_state.update(mode="box", window=False, dims=("width", "length", "height"), scale=0.46)
         wire_paths = [_canvas.bezier(np.array(slider.grip_out().get_center()), np.array(cb_full.grip_in(port).get_center())) for slider, port in ((w_slider, "X"), (l_slider, "Y"), (h_slider, "Z"))]
-        hops = [self._hop(self.number(settings[k]["value"], 1), VIEW + np.array([-1.3 + 1.3 * i, -1.1, 0.0]), path[len(path) // 2], color, size=0.8)
-                for i, ((k, color), path) in enumerate(zip((("w", cw), ("bl", cl), ("bh", ch)), wire_paths))]
+        hops = [self._hop(f"box-{axis}-hop", self.number(settings[k]["value"], 1), VIEW + np.array([-1.3 + 1.3 * i, -1.1, 0.0]), path[len(path) // 2], color, size=0.8)
+                for i, ((k, color, axis), path) in enumerate(zip((("w", cw, "width"), ("bl", cl, "length"), ("bh", ch, "height")), wire_paths))]
         dimension_lines = [_engine.Line(VIEW + np.array([-1.75 + 1.3 * i, -1.35, 0.0]), VIEW + np.array([-0.85 + 1.3 * i, -1.35, 0.0]), color=color, stroke_width=4).set_z_index(7)
                            for i, color in enumerate((cw, cl, ch))]
         wire_curves = [_engine.VMobject(stroke_color=color, stroke_width=3).set_points_smoothly(path) for path, color in zip(wire_paths, (cw, cl, ch))]
         self.add(*dimension_lines)
         self.step("box", _engine.FadeOut(notes), _engine.FadeIn(l_slider), _engine.FadeIn(h_slider), _engine.FadeIn(cb_full), *[a for a, _ in hops],
-                  *[_morph.morph(line, curve, path_arc=0.4, run_time=1.4, dip=0.1) for line, curve in zip(dimension_lines, wire_curves)], seconds=1.4)
+                  *[self._move(f"box-dimension-{axis}-to-wire", line, curve) for axis, line, curve in zip(("width", "length", "height"), dimension_lines, wire_curves)], seconds=1.4)
         self.remove(*wire_curves)
         self.add(*full_wires)
         self.play(*[_engine.FadeOut(t) for _, t in hops], run_time=0.3)
@@ -530,13 +531,13 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         out_token = self._bit("Box", cb.grip_out().get_center() + np.array([0.5, 0.0, 0.0]), _canvas.PREVIEW_FILL, size=1.25)
         out_target = self._bit("Box", VIEW + np.array([-0.2, 1.3, 0.0]), _canvas.PREVIEW_FILL, size=1.25)
         self.add(out_token)
-        self.play(_morph.morph(out_token, out_target, path_arc=0.5, run_time=1.4, dip=0.1), run_time=1.4)
+        self.play(self._move("box-output-token", out_token, out_target), run_time=1.4)
         self.play(_engine.FadeOut(out_target), run_time=0.3)
 
         l0, h0 = settings["bl"]["value"], settings["bh"]["value"]
         self.view_state["dims"] = ("width", "length", "height")
-        l_hop, l_end = self._hop(self.number(l0 + 1.0, 1), l_slider.get_right() + np.array([0.3, 0.0, 0.0]), VIEW + np.array([-1.6, -0.9, 0.0]), cl)
-        h_hop, h_end = self._hop(self.number(h0 + 0.5, 1), h_slider.get_right() + np.array([0.3, 0.0, 0.0]), VIEW + np.array([1.5, 0.1, 0.0]), ch)
+        l_hop, l_end = self._hop("sliders-length-hop", self.number(l0 + 1.0, 1), l_slider.get_right() + np.array([0.3, 0.0, 0.0]), VIEW + np.array([-1.6, -0.9, 0.0]), cl)
+        h_hop, h_end = self._hop("sliders-height-hop", self.number(h0 + 0.5, 1), h_slider.get_right() + np.array([0.3, 0.0, 0.0]), VIEW + np.array([1.5, 0.1, 0.0]), ch)
         self.step("sliders", self._ramp(self.L, l0, l0 + 1.0, 2.0), self._ramp(self.H, h0, h0 + 0.5, 2.0), l_hop, h_hop, seconds=2.0)
         self.play(_engine.FadeOut(l_end), _engine.FadeOut(h_end), run_time=0.3)
         self.play(self._ramp(self.L, l0 + 1.0, l0, 1.0), self._ramp(self.H, h0 + 0.5, h0, 1.0), run_time=1.0)
@@ -552,12 +553,12 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         eye = self._eye(cb)
         vol_wire, vp_wire = self.gh_wire(cb.grip_out(), vol.grip_in()), self.gh_wire(vol.grip_out("V"), vp.grip_in())
         self.play(_engine.FadeOut(readout), _engine.FadeIn(vol), _engine.FadeIn(vp), _engine.FadeIn(vol_wire), _engine.FadeIn(vp_wire), _engine.FadeIn(eye), run_time=0.8)
-        volume_hop, volume_end = self._hop(vp_rows[-1][2], VIEW + np.array([-0.2, 0.1, 0.0]), vp.get_top() + np.array([0.0, 0.4, 0.0]), GREEN)
+        volume_hop, volume_end = self._hop("volume-hop", vp_rows[-1][2], VIEW + np.array([-0.2, 0.1, 0.0]), vp.get_top() + np.array([0.0, 0.4, 0.0]), GREEN)
         self.view_state["visible"] = False
-        self.step("preview", _engine.Transform(eye, self._eye(cb, on=False)), volume_hop, seconds=1.2)
+        self.step("preview", self._move("preview-eye-off", eye, self._eye(cb, on=False)), volume_hop, seconds=1.2)
         volume_ghost = _engine.VGroup(_engine.Rectangle(width=1.7, height=1.1, stroke_width=0, fill_color=GREEN, fill_opacity=0.22),
                                       _engine.DashedVMobject(_engine.Rectangle(width=1.7, height=1.1, stroke_color=GREEN, stroke_width=3), num_dashes=28)).move_to(WINDOW_AT + np.array([-0.4, 0.0, 0.0])).set_z_index(6)
-        self.play(_morph.morph(volume_end, volume_ghost, path_arc=0.7, run_time=1.4), run_time=1.4)
+        self.play(self._move("volume-ghost", volume_end, volume_ghost), run_time=1.4)
 
         main = _engine.VGroup(w_slider, l_slider, h_slider, cb, *wires, heads)
         extra = _engine.VGroup(vol, vp, vol_wire, vp_wire, eye)
@@ -584,7 +585,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         wp = self.gh_panel(None, rows=self._rows(full.tree("wp")), at=_at(1.2, 1.38))
         wp_wire = self.gh_wire(w_slider.grip_out(), wp.grip_in(), color=cw)
         mark = _engine.SurroundingRectangle(wp, buff=0.04, color=GREEN, stroke_width=3)
-        panel_hop, panel_end = self._hop(self.number(settings["w"]["value"], 1), VIEW + np.array([-0.2, -1.1, 0.0]), wp.get_left() + np.array([-0.5, 0.0, 0.0]), cw)
+        panel_hop, panel_end = self._hop("panel-hop", self.number(settings["w"]["value"], 1), VIEW + np.array([-0.2, -1.1, 0.0]), wp.get_left() + np.array([-0.5, 0.0, 0.0]), cw)
         self.step("panel", _engine.FadeOut(fixed_e), _engine.FadeIn(main), _engine.FadeIn(wp), _engine.FadeIn(wp_wire), _engine.Create(mark), panel_hop, seconds=1.2)
         self.play(_engine.FadeOut(panel_end), run_time=0.3)
         self._sweep(fixed_e)
@@ -595,7 +596,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         ring = _engine.SurroundingRectangle(cb.parts["inputs"]["X"], buff=0.07, color=RED, stroke_width=3)
         x_tag = self._tag(self.tr("input X · Number", "Eingang X · Number"), _at(-1.3, 1.5), color=RED)
         x_lead = self._reach(x_tag, cb.grip_in("X").get_center(), None, color=RED)
-        param_hop, param_end = self._hop(self.number(settings["w"]["value"], 1), wp.get_left() + np.array([-0.5, 0.0, 0.0]), fl.get_center(), cw)
+        param_hop, param_end = self._hop("params-hop", self.number(settings["w"]["value"], 1), wp.get_left() + np.array([-0.5, 0.0, 0.0]), fl.get_center(), cw)
         self.step("params", param_hop, _engine.FadeOut(wp), _engine.FadeOut(wp_wire), _engine.FadeOut(mark), _engine.FadeIn(fl), _engine.FadeIn(flp), _engine.FadeIn(fl_in), _engine.FadeIn(fl_out),
                   _engine.Create(ring), _engine.FadeIn(x_tag), _engine.FadeIn(x_lead), seconds=1.4)
         self.play(_engine.FadeOut(param_end), run_time=0.3)
@@ -609,7 +610,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         window_ring = _engine.Circle(radius=0.3, stroke_color=AMBER, stroke_width=4).move_to(WINDOW_AT).set_z_index(8)
         true_token = self._bit("True", _at(-1.9, 0.3) + np.array([0.5, 0.0, 0.0]), GREEN)
         self.add(true_token)
-        self.step("toggle", _engine.FadeOut(toggle_off), _engine.FadeIn(toggle_on), _engine.FadeIn(tg_panel), _engine.FadeIn(tg_wire), _morph.morph(true_token, window_ring, path_arc=0.5), seconds=1.4)
+        self.step("toggle", _engine.FadeOut(toggle_off), _engine.FadeIn(toggle_on), _engine.FadeIn(tg_panel), _engine.FadeIn(tg_wire), self._move("toggle-true-to-window", true_token, window_ring), seconds=1.4)
         self.play(_engine.FadeOut(window_ring), run_time=0.3)
 
         names = [f"{self.tr('Type', 'Typ')} {t.key}" for t in _nk.capsule_types()]
@@ -622,7 +623,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         type_note = self._type_note()
         self.vl_index.set_value(0)
         self.view_state.update(window=True, dims=("window",), scale=0.5)
-        pick_hop, pick_end = self._hop("C", _at(-1.9, 0.0) + np.array([0.4, 0.0, 0.0]), WINDOW_AT + np.array([-0.2, 0.0, 0.0]), _drawing.type_color("C"), kind="item")
+        pick_hop, pick_end = self._hop("valuelist-pick-hop", "C", _at(-1.9, 0.0) + np.array([0.4, 0.0, 0.0]), WINDOW_AT + np.array([-0.2, 0.0, 0.0]), _drawing.type_color("C"), kind="item")
         self.step("valuelist", pick_hop, _engine.FadeOut(toggle_on), _engine.FadeOut(tg_panel), _engine.FadeOut(tg_wire), _engine.FadeIn(vl_wire), self._value_sequence(vlist, vlp, vl_note, type_note), seconds=2.4)
         self.play(_engine.FadeOut(pick_end), run_time=0.3)
         self.view_state.update(window=True, dims=())
@@ -644,7 +645,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         sun_ring = _engine.Circle(radius=0.3, stroke_color=AMBER, stroke_width=4).move_to(WINDOW_AT).set_z_index(8)
         sun_token = self._bit("Window", sun_param.get_center(), AMBER, "cell")
         self.add(sun_ring)
-        self.step("plugin", _morph.morph(sun_ring, sun_token, pairs=[(sun_ring, sun_token[0])], path_arc=0.5, dip=0.12), _engine.FadeOut(vlist), _engine.FadeOut(vlp), _engine.FadeOut(vl_wire), _engine.FadeOut(vl_note), _engine.FadeOut(type_note),
+        self.step("plugin", self._move("plugin-ring-to-token", sun_ring, sun_token), _engine.FadeOut(vlist), _engine.FadeOut(vlp), _engine.FadeOut(vl_wire), _engine.FadeOut(vl_note), _engine.FadeOut(type_note),
                   _engine.FadeOut(ribbon), _engine.FadeIn(sun), _engine.FadeIn(steps), _engine.FadeIn(arrows), _engine.FadeIn(fine), seconds=1.6)
         self.play(_engine.FadeOut(sun_token), run_time=0.4)
 
@@ -687,7 +688,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
 
         first_points, first_texts = list_points(1)
         item_end = self._bit(first_texts[0], first_points[0], level_color(1, 0), "item")
-        item_hop = self._cap_to(level_key(1, 0), (1,), item_end)
+        item_hop = self._cap_to("item-capsule-to-token", level_key(1, 0), (1,), item_end)
         self.step("item", _engine.FadeOut(steps), _engine.FadeOut(arrows), _engine.FadeOut(fine), _engine.FadeOut(sun), _engine.FadeIn(series_ribbon), _engine.FadeIn(st_slider),
                   _engine.FadeIn(cnt_display), _engine.FadeIn(series), _engine.FadeIn(list_panel), *[_engine.FadeIn(w) for w in wires2], _engine.FadeOut(preview), _engine.FadeIn(tower), seconds=1.4)
         self.play(item_hop, run_time=1.2)
@@ -699,15 +700,17 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         series_src = [self._cap(level_key(1, i), (1,)) for i in range(NB)]
         series_dst = [self._bit(series_texts[i], series_points[i], level_color(1, i), "item") for i in range(NB)]
         self.add(*series_src)
-        self.play(_morph.scatter(series_src, series_dst, lag=0.1, path_arc=0.5, run_time=1.0, limit=2.2, dip=0.12, pairs_fn=_morph.capsule_pairs))
+        self.play(self._move("series-capsules-to-tokens", series_src, series_dst))
         self.play(*[_engine.FadeOut(t) for t in series_dst], run_time=0.3)
 
         self.tower_state.update(towers=(0,), marks=lambda: series_marks(0), lit=lambda: (lambda key: key in series_keys(0)))
         self.step("count", self._ramp(self.cnt, NB, NA, 1.6), seconds=1.6)
         count_points, count_texts = list_points(NA)
-        count_hops = [self._hop(count_texts[i], count_points[i], self._spot(level_key(0, i), (0,)) + np.array([0.95, 0.4 * (i - (NB + NA - 1) / 2), 0.0]), level_color(0, i)) for i in range(NB, NA)]
-        self.play(*[a for a, _ in count_hops], run_time=1.6)
-        self.play(*[_engine.FadeOut(t) for _, t in count_hops], run_time=0.4)
+        count_sources = [self._bit(count_texts[i], count_points[i], level_color(0, i), "number") for i in range(NB, NA)]
+        count_targets = [self._bit(count_texts[i], self._spot(level_key(0, i), (0,)) + np.array([0.95, 0.4 * (i - (NB + NA - 1) / 2), 0.0]), level_color(0, i), "number") for i in range(NB, NA)]
+        self.add(*count_sources)
+        self.play(self._move("count-capsule-hops", count_sources, count_targets), run_time=1.6)
+        self.play(*[_engine.FadeOut(t) for t in count_targets], run_time=0.4)
 
         t_param = self.gh_param("Brep", at=_at(-3.2, 0.0), label=self.tr("Capsules", "Kapseln"))
         aggregate = _gh.aggregate_tree()
@@ -730,20 +733,21 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         path_marks = lambda: [(path_text, chosen_key, -.6, .22), (self.tr("facade group", "Fassadengruppe"), chosen_key, -.6, -.22)]
         self.tower_state.update(towers=(0,), marks=path_marks, lit=lambda: (lambda key: key[:4] == chosen_path), key=lambda: "branch")
         chosen_items = aggregate.branch(chosen_path)
-        leaf_hops = []
+        leaf_sources, leaf_targets = [], []
         for i, item in enumerate(chosen_items):
             row = tree_panel.parts["rows"][row_indices[chosen_path][i]]
-            target = self._bit("", row.get_left() + np.array([-0.14, 0.0, 0.0]), _drawing.type_color(item.tag["type"]), "item")
-            leaf_hops.append((self._cap_to(tuple(item.tag["slot"]), (0,), target), target))
+            leaf_targets.append(self._bit("", row.get_left() + np.array([-0.14, 0.0, 0.0]), _drawing.type_color(item.tag["type"]), "item"))
+            leaf_sources.append(self._cap(tuple(item.tag["slot"]), (0,)))
+        self.add(*leaf_sources)
         self.step("tree", _engine.FadeIn(ribbon), *[_engine.FadeOut(m) for m in (st_slider, cnt_display, series, list_panel, series_ribbon, *wires2)], _engine.FadeIn(t_param), _engine.FadeIn(tree_panel),
                   _engine.FadeIn(t_wire), _engine.FadeIn(explain), _engine.FadeIn(band), seconds=1.6)
-        self.play(*[a for a, _ in leaf_hops], run_time=1.2)
-        self.play(*[_engine.FadeOut(t) for _, t in leaf_hops], run_time=0.3)
+        self.play(self._move("tree-capsules-to-leaves", leaf_sources, leaf_targets), run_time=1.2)
+        self.play(*[_engine.FadeOut(t) for t in leaf_targets], run_time=0.3)
         segment_at = self._spot(chosen_key, (0,)) + np.array([-1.0, 0.0, 0.0])
         segments = [self._bit(str(part), segment_at + np.array([0.0, 0.5 - 0.33 * i, 0.0]), _art.P_PRIMARY) for i, part in enumerate(chosen_path)]
         path_chip = self._bit(path_text, _at(2.6, 1.55), _art.P_PRIMARY, "path")
         self.add(*segments)
-        self.play(_morph.gather(segments, path_chip, lag=0.2, run_time=1.0))
+        self.play(self._move("path-segments-to-chip", segments, path_chip))
         levels = self.tr("BUILDING;TOWER;STORY;FACADE", "GEBÄUDE;TURM;GESCHOSS;FASSADE").split(";")
         path_levels = _engine.VGroup(*[self._note(name + (";" if k < 3 else ""), (0, 0, 0), color=_art.P_PRIMARY) for k, name in enumerate(levels)]).arrange_in_grid(rows=2, cols=2, buff=(0.15, 0.06), col_alignments="ll").next_to(path_chip, _engine.DOWN, buff=0.15)
         self.play(_engine.LaggedStart(*[_engine.FadeIn(level, shift=0.1 * _engine.DOWN) for level in path_levels], lag_ratio=0.5), run_time=1.6)
@@ -759,7 +763,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         index_token = self._bit("[1]", index_row, RED)
         self.add(index_token)
         flock = [_engine.Circle(radius=0.07, stroke_color=RED, stroke_width=2.5, fill_opacity=0).move_to(self._spot(key, (0,))).set_z_index(8) for key in sorted(ambiguous)]
-        self.play(_morph.split(index_token, flock, lag=0.04, path_arc=0.3, run_time=0.9, limit=2.4))
+        self.play(self._move("index-token-to-flock", index_token, flock))
         self.tower_state.update(marks=lambda: [], lit=lambda: (lambda key: key in ambiguous), key=lambda: "all")
         self.play(_engine.FadeIn(bad), _engine.FadeIn(expected), _engine.FadeIn(shown), run_time=0.6)
 
@@ -794,7 +798,7 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.step("legend_tool", *[_engine.FadeOut(m) for m in (t_param, tree_panel, t_wire, one, good, bad, strike, ribbon, final_tag)], _engine.FadeIn(final_ribbon), _engine.FadeIn(mini_chip), _engine.FadeIn(mini_slider),
                   _engine.FadeIn(mini_box), _engine.FadeIn(mini_param), _engine.FadeIn(mini_panel), *[_engine.FadeIn(w) for w in mini_wires], _engine.FadeIn(marks),
                   _engine.LaggedStart(*[_engine.FadeIn(r) for r in table_rest], lag_ratio=0.15), seconds=1.4)
-        self.play(self._fly_discs(marks, table, self.TOOL_ORDER))
+        self.play(self._fly_discs("legend-tool-discs", marks, table, self.TOOL_ORDER))
 
         data_panel = self.gh_panel(None, rows=self._tower_rows(branches), at=_at(-2.6, -.05), width=2.2, max_lines=32)
         rows = data_panel.parts["rows"]
@@ -814,4 +818,4 @@ class Beat1_Anatomy(_live_scene.RefreshMoving, _visuals.ClipScene):
         self.tower_state.update(marks=lambda: [], lit=lambda: (lambda k: k[:4] == chosen_path), key=lambda: "branch2")
         self.step("legend_data", *[_engine.FadeOut(m) for m in (mini_chip, mini_slider, mini_box, mini_param, mini_panel, *mini_wires, marks, table, table_rest)], _engine.FadeIn(data_panel), _engine.FadeIn(data_marks),
                   _engine.LaggedStart(*[_engine.FadeIn(r) for r in self._rest(data_table)], lag_ratio=0.15), seconds=1.2)
-        self.play(self._fly_discs(data_marks, data_table, self.DATA_ORDER))
+        self.play(self._fly_discs("legend-data-discs", data_marks, data_table, self.DATA_ORDER))

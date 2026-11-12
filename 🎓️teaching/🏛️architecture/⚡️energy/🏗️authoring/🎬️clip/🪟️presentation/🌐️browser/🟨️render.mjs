@@ -106,6 +106,7 @@ try{
     signal:cancellation.signal
   });
   cancellation.signal.throwIfAborted();
+  const open=async()=>{
   const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFactor:viewport.width/1600,reducedMotion:"no-preference",colorScheme:"dark"});
   const errors=[];page.on("pageerror",error=>errors.push(error.message));
   await page.route("http://presentation.local/**",async route=>{
@@ -125,17 +126,19 @@ try{
   await page.addScriptTag({content:bundle.outputFiles[0].text});
   await page.evaluate(value=>window.semioPresentation.configure(value),{contract,icons,cursors,cursorSizes,language:batch.language,viewport});
   await page.evaluate(()=>{window.semioPresentation.pointerEvents=[];for(const type of ["pointerdown","pointerup","click"])document.addEventListener(type,event=>{const button=event.target instanceof Element?event.target.closest("button"):null;window.semioPresentation.pointerEvents.push({type,target:button?.id||button?.getAttribute("data-presentation-card")||button?.getAttribute("data-slot")||null,point:[event.clientX,event.clientY]})},true)});
+  return {page,errors};
+  };
   const outputs=[],metadata=[];
-  let down=false,previousHierarchy=null;
+  let page,errors,down=false;
   for(let index=0;index<batch.frames.length;index++){
     if(process.exitCode===130)throw Error("Presentation browser rendering cancelled");
     const frame=batch.frames[index];
-    await page.evaluate(()=>window.semioPresentation.contentCamera(null));
-    if(down&&!frame.cursor?.pressed&&previousHierarchy&&JSON.stringify(previousHierarchy.opened_path)!==JSON.stringify(frame.hierarchy.opened_path)){await page.mouse.up();down=false}
-    await page.evaluate(value=>window.semioPresentation.render(value),frame);
+    await page?.context().close();
+    ({page,errors}=await open());
+    down=false;
+    await page.mouse.move(1610,910);
+    await page.evaluate(value=>window.semioPresentation.render(value,true),frame);
     await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(image=>image.decode().catch(()=>{})))});
-    const canonical=Boolean(frame.canonical_overview);
-    if(canonical)await page.evaluate(value=>window.semioPresentation.render(value,true),frame);
     await page.clock.runFor(0);
     if(frame.menu_open)await page.waitForSelector("[data-presentation-menu]",{state:"visible"});
     const point=frame.cursor?.point;
@@ -143,7 +146,7 @@ try{
     if(frame.cursor?.pressed&&!down){await page.mouse.down();down=true}else if(!frame.cursor?.pressed&&down){await page.mouse.up();down=false}
     await page.clock.runFor(frame.transition_elapsed??1000);
     await finishIncidentalTransitions(page);
-    await page.evaluate(elapsed=>{window.semioPresentation.animationTimes??=new WeakMap();for(const animation of document.getAnimations()){const time=(window.semioPresentation.animationTimes.get(animation)??0)+elapsed;animation.pause();animation.currentTime=time;window.semioPresentation.animationTimes.set(animation,time)}},frame.transition_elapsed??1000);
+    await page.evaluate(elapsed=>{for(const animation of document.getAnimations()){animation.pause();animation.currentTime=elapsed}},frame.transition_elapsed??1000);
     await finishIncidentalTransitions(page);
     await paintBarrier(page);
     for(let attempt=0;attempt<60&&!await page.evaluate(()=>window.semioPresentation.settled());attempt++){await finishIncidentalTransitions(page);await page.clock.runFor(34);await paintBarrier(page)}
@@ -203,7 +206,6 @@ try{
     await fs.mkdir(path.dirname(frame.output),{recursive:true});
     await page.screenshot({path:frame.output,animations:"allow"});
     outputs.push(frame.output);metadata.push({output:frame.output,...info,cursor:actualCursor});
-    previousHierarchy=frame.hierarchy;
     if(index===0||index===batch.frames.length-1||index%30===0)console.error("[DEBUG] Actual UI browser frame "+(index+1)+"/"+batch.frames.length);
   }
   const result={schema:batch.schema,outputs,metadata,source_files:[...sources].sort(),scan_sources:scanSources};

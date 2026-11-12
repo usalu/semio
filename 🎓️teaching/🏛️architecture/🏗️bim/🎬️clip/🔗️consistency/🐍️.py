@@ -21,6 +21,7 @@ _core = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
 _art = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 _engine = importlib.import_module("manim")
+_clock = importlib.import_module("🎓️teaching.🧰️interop.🕐️clock.🐍️")
 
 INK, MUTED, ARCH, STRUCT, SERV = _visuals.INK, _visuals.MUTED, _visuals.ARCH, _visuals.STRUCT, _visuals.SERV
 DATA, GOOD, WARN, GLASS = _visuals.DATA, _visuals.GOOD, _visuals.WARN, _visuals.GLASS
@@ -580,8 +581,7 @@ class Beat6_Consistency(_visuals.ClipScene):
         frame = self.detail_frame(detail)
         title = self.label("Reference: 17 cm structure · 9 cm reserve", "Referenz: 17 cm Tragwerk · 9 cm Reserve", (detail.x0 + detail.span + 0.36, detail.top + 0.45, 0), size=S_SMALL, color=MUTED, anchor="l", width=3.0)
         zoom = self.zoom_lines(section, frame)
-        clock = _engine.ValueTracker(0)
-        clock.add_updater(lambda tracker, dt: tracker.increment_value(dt * 0.8))
+        clock = _clock.scene_timer(0.8)
         self.add(clock)
         rain = self.live(lambda: self.drops(clock.get_value(), detail.x0, detail.x0 + detail.span, detail.top))
         self.show("leak", new=[section, marks, chip, pointer, history, detail, frame, title, zoom, rain], seconds=3.4)
@@ -590,8 +590,7 @@ class Beat6_Consistency(_visuals.ClipScene):
 
     def _leakpath(self):
         """🕳️ Beat 5: the water passes paving and structural reserve, finds a gap in the paving and stains the ceiling below."""
-        flow = _engine.ValueTracker(0)
-        flow.add_updater(lambda tracker, dt: tracker.increment_value(dt * 0.3))
+        flow = _clock.scene_timer(0.3)
         self.add(flow)
         marks = self.leak_marks(self.detail, flow)
         legend = self.panel(6.4, 1.45, (3.7, 2.35), GLASS)

@@ -608,11 +608,11 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         self.chart = _mn.VGroup(axes, lines, tags, legend)
         starts = [_mn.Dot(np.array(card["base"]) + UP * card["run"]["response"] * BAR_HEIGHT / YMAX, radius=.07, color=COOL) for card in self.cards]
         self.add(*starts)
-        flights = _mn.LaggedStart(*[_mn.ReplacementTransform(start, mark, path_arc=-.7) for start, mark in zip(starts, self.marks)], lag_ratio=.25)
+        flights = self.morphs.transition("optimization.experiments.plot.runs-to-marks", source=starts, target=list(self.marks))
         self.step("plot", _mn.FadeOut(self.table), _mn.FadeOut(self.cooling_cells), _mn.FadeOut(self.runs_chip), _mn.FadeOut(self.order_note), _mn.FadeOut(self.low_chip), _mn.FadeOut(self.note), _mn.FadeOut(self.frames),
                   _mn.Succession(_mn.FadeIn(axes, run_time=1), flights, _mn.AnimationGroup(_mn.Create(lines), _mn.FadeIn(tags), _mn.FadeIn(legend), run_time=1.2)), seconds=6)
         colored = [self._badge(card["badge"][0].get_center(), index + 1, color=SHADED if card["run"]["design"]["overhang"] > 0 else OPEN, shape="square" if card["run"]["design"]["overhang"] > 0 else "circle", fill=True) for index, card in enumerate(self.cards)]
-        pulses = [_mn.AnimationGroup(_mn.Indicate(self.marks[i], color=INK, scale_factor=1.9), _mn.ReplacementTransform(self.cards[i]["badge"], colored[i])) for i in (0, 2, 1, 3)]
+        pulses = [_mn.AnimationGroup(_mn.Indicate(self.marks[i], color=INK, scale_factor=1.9), self.morphs.transition("optimization.experiments.plot.badges-colored", source=self.cards[i]["badge"], target=colored[i])) for i in (0, 2, 1, 3)]
         self.step("plot_2", _mn.LaggedStart(*pulses, lag_ratio=.5), seconds=4)
         for index, card in enumerate(self.cards):
             card["badge"] = colored[index]
@@ -654,7 +654,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         blocked_small, blocked_large = self.cards[1]["refs"]["blocked"], self.cards[3]["refs"]["blocked"]
         self.convention = self._convention()
         self.step("saving_30", *self._head("The overhang saves more at a large window", "Das Vordach spart mehr bei großem Fenster"), _mn.FadeIn(veil_large), _mn.FadeIn(card_small), _mn.FadeIn(chain_small), _mn.FadeIn(self.convention), _mn.GrowFromEdge(arrow_small, UP), _mn.Indicate(blocked_small, color=ALERT, scale_factor=1.12), seconds=3.5)
-        self.step("saving_70", _mn.FadeOut(veil_large), _mn.FadeIn(veil_small), _mn.FadeIn(card_large), _mn.ReplacementTransform(chain_small, chain_large), _mn.GrowFromEdge(arrow_large, UP),
+        self.step("saving_70", _mn.FadeOut(veil_large), _mn.FadeIn(veil_small), _mn.FadeIn(card_large), self.morphs.transition("optimization.experiments.saving.chain-small-to-large", source=chain_small, target=chain_large), _mn.GrowFromEdge(arrow_large, UP),
                   _mn.Indicate(blocked_large, color=ALERT, scale_factor=1.08), seconds=3.5)
         stopped = (RUNS[2]["solar_summer"] - RUNS[3]["solar_summer"], RUNS[0]["solar_summer"] - RUNS[1]["solar_summer"])
         saved = (SHOWN[2] - SHOWN[3], SHOWN[0] - SHOWN[1])
@@ -678,8 +678,8 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         self.parallel = _mn.VGroup(parallel, gap, key)
         change = self._chip(f"{self.tr('Overhang effect', 'Vordach-Effekt')}: {self._kwh(SHOWN[1] - SHOWN[0], sign=True)} {self.tr('at 30 %', 'bei 30 %')} · {self._kwh(SHOWN[3] - SHOWN[2], sign=True)} {self.tr('at 70 %', 'bei 70 %')}", (PANEL_X, 2.5, 0), 16, MIXED, 6.3)
         rule = self._t(self.tr("depends on the window share = interaction", "hängt vom Fensteranteil ab = Wechselwirkung"), (PANEL_X, 2.05, 0), 16, MIXED, 6.3)
-        self.step("interaction", _mn.FadeOut(veil_small), _mn.FadeOut(self.legend), _mn.ReplacementTransform(chain_large, ratios), _mn.Create(parallel), _mn.FadeIn(gap), _mn.FadeIn(key), seconds=2.5)
-        self.step("interaction_2", _mn.ReplacementTransform(ratios, _mn.VGroup(change, rule)), _mn.Indicate(blocked_small, color=ALERT, scale_factor=1.12), _mn.Indicate(blocked_large, color=ALERT, scale_factor=1.08), seconds=2)
+        self.step("interaction", _mn.FadeOut(veil_small), _mn.FadeOut(self.legend), self.morphs.transition("optimization.experiments.interaction.chain-to-ratios", source=chain_large, target=ratios), _mn.Create(parallel), _mn.FadeIn(gap), _mn.FadeIn(key), seconds=2.5)
+        self.step("interaction_2", self.morphs.transition("optimization.experiments.interaction.ratios-to-rule", source=ratios, target=_mn.VGroup(change, rule)), _mn.Indicate(blocked_small, color=ALERT, scale_factor=1.12), _mn.Indicate(blocked_large, color=ALERT, scale_factor=1.08), seconds=2)
         self.rule = _mn.VGroup(change, rule)
         self.gain = _mn.VGroup()
 
@@ -734,7 +734,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         self.step("main", *self._head("Effects from the four runs", "Effekte aus den vier Läufen"), _mn.FadeIn(tags_a), _mn.FadeOut(self.savings), _mn.FadeOut(self.gain), _mn.FadeOut(self.parallel), _mn.FadeOut(self.rule), _mn.FadeIn(columns[0]), _mn.FadeIn(columns[1]), _mn.FadeIn(overlay_a), _mn.FadeIn(form_a), seconds=3.5)
         self.step("main_2", _mn.FadeOut(_mn.VGroup(*columns)), _mn.FadeOut(tags_a), _mn.FadeIn(tags_b), _mn.FadeOut(overlay_a), _mn.FadeOut(form_a), _mn.FadeIn(_mn.VGroup(*rows)), _mn.FadeIn(overlay_b), _mn.FadeIn(form_b), seconds=3.5)
         self.step("difference", _mn.FadeOut(tags_b), _mn.FadeIn(tags_ab), _mn.FadeOut(_mn.VGroup(*rows)), _mn.FadeOut(overlay_b), _mn.FadeOut(form_b), _mn.FadeIn(_mn.VGroup(*diagonals)), _mn.FadeIn(signs_ab), _mn.FadeIn(self.savings), _mn.FadeIn(form_ab), seconds=3.5)
-        self.step("difference_2", _mn.ReplacementTransform(form_ab, meaning), seconds=2)
+        self.step("difference_2", self.morphs.transition("optimization.experiments.difference.formula-to-meaning", source=form_ab, target=meaning), seconds=2)
         self.cleanup = _mn.VGroup(self.savings, _mn.VGroup(*diagonals), signs_ab, meaning, self.convention, tags_ab)
 
     def _column_tags(self, items):
@@ -816,7 +816,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         self.step("model", _mn.Succession(fades, tour), seconds=9)
         centre = FACTORIAL["centre"]["design"]
         mean_chip = self._chip(f"{self.tr('plan centre', 'Planmitte')}: WWR {self._wwr(centre['wwr'])} · {self._depth(centre['overhang'])}\n{self.tr('mean of 4 runs, unrounded', 'Mittel der 4 Läufe, ungerundet')} {self._kwh(coefficients[0])}", (MODEL_X, .45, 0), 15, COOL, 4.4)
-        self.step("model_2", self.set_design(self.trackers_model, {"wwr": centre["wwr"], "overhang": centre["overhang"]}, 3), _mn.ReplacementTransform(run4, mean_chip), seconds=4)
+        self.step("model_2", self.set_design(self.trackers_model, {"wwr": centre["wwr"], "overhang": centre["overhang"]}, 3), self.morphs.transition("optimization.experiments.model.run-to-mean", source=run4, target=mean_chip), seconds=4)
         halves = self._lines((f"{self.tr('window', 'Fenster')}: {self._sign(effects['a'], 1)} ÷ 2 = {self._sign(coefficients[1], 1)}", DESIGN, 18),
                              (f"{self.tr('overhang', 'Vordach')}: {self._sign(effects['b'], 1)} ÷ 2 = {self._sign(coefficients[2], 1)}", OPEN, 18),
                              (f"A·B: {self._sign(effects['ab'], 1)} ÷ 2 = {self._sign(coefficients[3], 1)}", MIXED, 18),
@@ -880,7 +880,7 @@ class Beat3_FactorialExperiments(_visuals.ClipScene):
         true = self._curve(axes, lambda x: self._cooling({**centre["design"], "overhang": x}), 0, 1, color=DATA)
         trace = self.live_marker(axes, self.centre, lambda d: d["overhang"], lambda d: self._cooling(d), color=DATA, drops=False, readout=False)
         sweep = _mn.Succession(self.centre["overhang"].animate.set_value(LOW_D), _mn.AnimationGroup(self.centre["overhang"].animate.set_value(HIGH_D), _mn.Create(true, rate_func=_mn.linear), self.ghost_depth.animate.set_value(HIGH_D), run_time=3), self.centre["overhang"].animate.set_value(.5))
-        self.step("confirm_3", _mn.FadeOut(gap_note), _mn.FadeOut(segment), _mn.FadeOut(gap_label), _mn.FadeIn(share_note), _mn.FadeIn(trace), _mn.ReplacementTransform(key_dots, key_true), sweep, seconds=6)
+        self.step("confirm_3", _mn.FadeOut(gap_note), _mn.FadeOut(segment), _mn.FadeOut(gap_label), _mn.FadeIn(share_note), _mn.FadeIn(trace), self.morphs.transition("optimization.experiments.confirm.key-dots-to-true-line", source=key_dots, target=key_true), sweep, seconds=6)
         self.stage_end = _mn.VGroup(share_note, true, trace, key_true)
 
     def _replicates(self):

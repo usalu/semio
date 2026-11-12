@@ -34,7 +34,10 @@ _model = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nak
 _fragments = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.✂️fragments.🐍️")
 _art = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+_cache = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.🐍️")
+_disk = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.💾️disk.🐍️")
 _engine = importlib.import_module("manim")
+_lod = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🎚️detail")
 
 INK, MUTED, DATA, GOOD, WARN, ARCH, BACKGROUND, CONCRETE = _d.INK, _d.MUTED, _d.DATA, _d.GOOD, _d.WARN, _d.ARCH, _d.BACKGROUND, _d.CONCRETE
 W_CUT, W_EDGE, W_THIN, W_HAIR, S_SMALL = _d.W_CUT, _d.W_EDGE, _d.W_THIN, _d.W_HAIR, _d.S_SMALL
@@ -47,9 +50,14 @@ VIEWS = {"axon": (55.0, 24.0), "axon_back": (-55.0, 24.0), "axon_left": (125.0, 
 ORTHO = {"plan": "plan", "north": "north", "south": "south", "east": "east", "west": "west"}
 LIGHT = np.array([-0.3, 0.45, 0.85]) / math.sqrt(0.09 + 0.2025 + 0.7225)
 
-_TEXTS: dict = {}
+_TEXTS = _cache.BoundedCache("nakagin.text", max_entries=512, max_bytes=32 << 20, sizeof=lambda drawing: sum(member.points.nbytes + 512 for member in drawing.get_family()))
+_ORDER_DISK_BYTES = 4 << 30
+_ORDER_DISK_AGE_S = 30 * 24 * 3600
+_ORDER_SUFFIX = ".jsonl"
+_ORDER_PRUNE_EVERY = 16
+_ORDER_STORES = [0]
 _TOWERS: dict = {}
-_TOWER_CACHE = 2
+_TOWER_FACETS: dict = {}
 _OCCLUSION_ORDERS: OrderedDict = OrderedDict()
 _ORDER_MEMORY_ROWS = 50_000
 _FROZEN_SHAPES = 200_000
@@ -255,52 +263,78 @@ def _order_directory():
     return (_WORKSPACE_ROOT / base if base else _WORKSPACE_ROOT / ".🧬semio/🎓️teaching/⚡️cache") / "nakagin-orders"
 
 
-@lru_cache(maxsize=1)
+_DIGEST: list = [None, None]
+
+
 def _source_digest():
-    """🧬 Digest of every source file that decides an ordering, so a code change invalidates all stored orders."""
-    digest = hashlib.blake2b(digest_size=20)
-    for path in source_files():
-        digest.update(Path(path).read_bytes())
-    return digest.hexdigest()
+    """🧬 Digest of every source file that decides an ordering, so a code change invalidates all stored orders; revalidated against the file stamps on every call so a long-lived editor process never serves a stale digest."""
+    paths = [Path(path) for path in source_files()]
+    stamp = tuple((str(path), path.stat().st_mtime_ns, path.stat().st_size) for path in paths)
+    if _DIGEST[0] != stamp:
+        digest = hashlib.blake2b(digest_size=20)
+        for path in paths:
+            digest.update(path.read_bytes())
+        _DIGEST[:] = [stamp, digest.hexdigest()]
+    return _DIGEST[1]
 
 
 def _order_path(key):
-    """🔑 The file of one ordering, named by a digest of the geometry key and the sources."""
-    return _order_directory() / f"{hashlib.blake2b(key + _source_digest().encode(), digest_size=20).hexdigest()}.json"
+    """🔑 The file of one ordering, named by the digest of the sources (its orphan marker) and a digest of the geometry key."""
+    sources = _source_digest()
+    return _order_directory() / f"{sources[:12]}-{hashlib.blake2b(key + sources.encode(), digest_size=20).hexdigest()}{_ORDER_SUFFIX}"
 
 
 def _order_rows(order):
-    """📤 JSON rows of a recipe tuple: source indices stay integers, fragments become objects."""
-    return [row if isinstance(row, int) else {"source": row.source, "polygon": row.polygon, "polygons": [[[float(c) for c in p] for p in polygon] for polygon in row.polygons], "normal": [float(c) for c in row.normal]} for row in order]
+    """📤 JSON rows of a recipe tuple, produced lazily one row at a time: source indices stay integers, fragments become objects."""
+    for row in order:
+        yield row if isinstance(row, int) else {"source": row.source, "polygon": row.polygon, "polygons": [[[float(c) for c in p] for p in polygon] for polygon in row.polygons], "normal": [float(c) for c in row.normal]}
+
+
+def _frozen_array(values):
+    array = np.array(values, float)
+    array.flags.writeable = False
+    return array
 
 
 def _order_recipes(rows):
-    """📥 Recipe tuple from JSON rows."""
-    return tuple(row if isinstance(row, int) else _FragmentRecipe(row["source"], row["polygon"], tuple(np.array(polygon, float) for polygon in row["polygons"]), np.array(row["normal"], float)) for row in rows)
+    """📥 Recipe tuple from JSON rows, consumed as a stream; the arrays are read-only so a cached order can never be mutated through a restored item."""
+    return tuple(row if isinstance(row, int) else _FragmentRecipe(row["source"], row["polygon"], tuple(_frozen_array(polygon) for polygon in row["polygons"]), _frozen_array(row["normal"])) for row in rows)
+
+
+def _orphan_order(path):
+    return not path.name.startswith(_source_digest()[:12])
+
+
+def _prune_orders(keep=frozenset()):
+    """🧹 Bound the order folder by bytes and age: orders of other source digests go first, then the least recently used."""
+    return _disk.prune(_order_directory(), max_bytes=_ORDER_DISK_BYTES, max_age_s=_ORDER_DISK_AGE_S, suffixes=(_ORDER_SUFFIX,), orphan=_orphan_order, keep=keep)
 
 
 def _store_order(key, order):
-    """💾 Persist one ordering atomically; any failure leaves the cache untouched."""
+    """💾 Persist one ordering atomically, streamed row by row into a unique temporary file; any failure leaves the cache untouched."""
     path = _order_path(key)
-    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary.write_text(json.dumps({"key": path.stem, "sources": _source_digest(), "order": _order_rows(order)}), encoding="utf-8")
-        os.replace(temporary, path)
+        _disk.publish_lines(path, {"key": path.stem, "sources": _source_digest()}, _order_rows(order))
     except OSError:
-        temporary.unlink(missing_ok=True)
+        return
+    _ORDER_STORES[0] += 1
+    if _ORDER_STORES[0] % _ORDER_PRUNE_EVERY == 1:
+        _prune_orders(frozenset((path.name,)))
 
 
 def _load_order(key):
-    """📖 Load a stored ordering only when its recorded key and sources match; anything else rebuilds."""
+    """📖 Load a stored ordering only when its recorded key and sources match; anything else rebuilds. Reading is line by line and marks the entry recently used."""
     path = _order_path(key)
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if data["key"] != path.stem or data["sources"] != _source_digest():
+        records = _disk.read_lines(path)
+        header = next(records)
+        if header["key"] != path.stem or header["sources"] != _source_digest():
             return None
-        return _order_recipes(data["order"])
-    except (OSError, ValueError, KeyError, TypeError):
+        order = _order_recipes(records)
+    except (OSError, ValueError, KeyError, TypeError, StopIteration):
         return None
+    _disk.touch(path)
+    return order
 
 
 def _remember_order(key, order):
@@ -1344,13 +1378,17 @@ def _section_order(items, view, progress=None, cancelled=None):
     digest = hashlib.blake2b(digest_size=20)
     digest.update(np.asarray(towards, float).tobytes())
     digest.update(np.asarray(basis, float).tobytes())
+    tiers, counts, polygon_lengths, normals, vertices = [], [], [], [], []
     for completed,item in enumerate(items):
         if checking and completed%128==0:
             _order_checkpoint(progress,cancelled,'occlusion-inputs',completed,len(items))
-        digest.update(np.asarray([item.tier], np.int64).tobytes())
-        digest.update(np.asarray([len(item.verts), *(len(polygon) for polygon in item.polygons)], np.int64).tobytes())
-        digest.update(np.asarray(item.verts, float).tobytes())
-        digest.update(np.asarray(item.normal if item.normal is not None else [0, 0, 0], float).tobytes())
+        tiers.append(item.tier)
+        counts.append((len(item.verts), len(item.polygons)))
+        polygon_lengths.extend(len(polygon) for polygon in item.polygons)
+        normals.append((0, 0, 0) if item.normal is None else item.normal)
+        vertices.append(np.asarray(item.verts, float))
+    for array in (np.asarray(tiers, np.int64), np.asarray(counts, np.int64).reshape(-1, 2), np.asarray(polygon_lengths, np.int64), np.asarray(normals, float).reshape(-1, 3), np.concatenate(vertices) if vertices else np.zeros((0, 3))):
+        digest.update(array.tobytes())
     if checking:
         _order_checkpoint(progress,cancelled,'occlusion-inputs',len(items),len(items))
     key = digest.digest()
@@ -1506,9 +1544,9 @@ def _parts(assembly):
 
 
 @lru_cache(maxsize=64)
-def _core_parts(index, storeys, side, pitch, height):
+def _core_parts(index, storeys, side, pitch, height, detail):
     t = replace(_model.towers()[index], storeys=storeys, core_side=side, storey_height=pitch, height=height)
-    return _parts(_model.core_assembly(t, detail="full"))
+    return _parts(_model.core_assembly(t, detail=detail))
 
 
 @lru_cache(maxsize=32)
@@ -1627,10 +1665,12 @@ class NakaginDrawing:
     """🎞️ Scene mixin: Nakagin capsule, views, axes, core, capital, podium and tower drawings. Combine with ``Drafting`` for text and dimensions."""
 
     def _text(self, string: str, point=(0, 0, 0), *, size: float = S_SMALL, color=DATA, anchor: str = "c"):
-        key = (string, size, color)
-        if key not in _TEXTS:
-            _TEXTS[key] = self.text(string, (0, 0, 0), size=size, color=color)
-        return _d.place(_TEXTS[key].copy(), point, anchor)
+        key = _cache.scoped_key("nakagin.text", string, size, color)
+        drawing = _TEXTS.get(key)
+        if drawing is None:
+            drawing = self.text(string, (0, 0, 0), size=size, color=color)
+            _TEXTS.put(key, drawing)
+        return _d.place(drawing.copy(), point, anchor)
 
     def _away(self, start, end, text, centre, offset: float, color=DATA):
         start, end = P(start), P(end)
@@ -1929,7 +1969,7 @@ class NakaginDrawing:
     def _core_items(self, tower, *, storeys, side, pitch, z0, tag, drawing=None, color=None, lod=False, roof=True, view=None, coverage_padding=0.0):
         height = tower.height * pitch / tower.storey_height if int(storeys) == tower.storeys else storeys * pitch
         t = replace(tower, storeys=int(storeys), core_side=side, storey_height=pitch, height=height)
-        parts = [(part, mesh) for part, mesh in _core_parts(t.index, t.storeys, t.core_side, t.storey_height, t.height) if mesh.V[:, 2].max() >= z0]
+        parts = [(part, mesh) for part, mesh in _core_parts(t.index, t.storeys, t.core_side, t.storey_height, t.height, _lod.core_assembly()) if mesh.V[:, 2].max() >= z0]
         if not roof:
             parts = [(part, mesh) for part, mesh in parts if part.role not in ("roof", "vent", "roof_vent_support")]
         groups = {}
@@ -2044,20 +2084,25 @@ class NakaginDrawing:
             raise ValueError("Drawing scale must be positive")
         included = tuple((slot.building, slot.tower, slot.storey, slot.facade, slot.item) for slot in _model.slots() if where is None or where(slot))
         viewpoint = (view.kind, view.azimuth, view.elevation, view.face) if isinstance(view, _d.View) else (tuple(view) if isinstance(view, (tuple, list)) else view)
-        key = (viewpoint, lit is None, included, capital, podium, core, ground, tuple(towers), storeys, segments)
+        segments = _lod.segments(segments)
+        key = (viewpoint, lit is None, included, capital, podium, core, ground, tuple(towers), storeys, segments, _lod.core_assembly())
         coverage_padding = _raster_footprint(scale, 1.2 if lit is not None else .45)
         template = _TOWERS.pop(key, None)
         if template is None or template.coverage_padding < coverage_padding:
-            while len(_TOWERS) >= _TOWER_CACHE:
-                _TOWERS.pop(next(iter(_TOWERS)))
             template = self._tower_drawing(at=(0, 0, 0), scale=1, view=view, lit=None if lit is None else (lambda path: True), tint=None, types=False, capital=capital, podium=podium,
                                            core=core, ground=ground, where=where, towers=towers, storeys=storeys, segments=segments, base=CAPSULE, coverage_padding=coverage_padding)
             template.outlined = lit is not None
-            if sum(isinstance(member, _Facet) for member in template.get_family()) >= _FROZEN_SHAPES:
-                template = _Frozen(template)
+            facets = sum(isinstance(member, _Facet) for member in template.get_family())
+            if facets >= _FROZEN_SHAPES:
+                template, facets = _Frozen(template), 0
             else:
                 _share_style(template)
+            _TOWER_FACETS[key] = facets
         _TOWERS[key] = template
+        entries, budget = _lod.template_cache()
+        while len(_TOWERS) > 1 and (len(_TOWERS) > entries or sum(_TOWER_FACETS[held] for held in _TOWERS) > budget):
+            _TOWER_FACETS.pop(next(iter(_TOWERS)), None)
+            _TOWERS.pop(next(iter(_TOWERS)))
         return template
 
     def _tint_capsules(self, capsules, template, *, lit, tint, types, base):

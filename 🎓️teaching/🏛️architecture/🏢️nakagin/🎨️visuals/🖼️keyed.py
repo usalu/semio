@@ -6,6 +6,9 @@ from PIL import Image
 _engine = importlib.import_module("manim")
 _snapshot = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️snapshot")
 _sprites = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🖼️sprites")
+_cache = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.🐍️")
+_KEYED_ENTRIES = 16
+_KEYED_BYTES = 128 << 20
 
 
 def _capture(drawing, camera):
@@ -64,15 +67,16 @@ class DrawingRef:
 
 def create(builder, key, camera, *, initial=None, retain=False, cache=False):
     """🖼️ Update one stable image from keyed native drawings without stale Cairo family members."""
-    images = {}
+    images = _cache.BoundedCache("nakagin.keyed", max_entries=_KEYED_ENTRIES, max_bytes=_KEYED_BYTES, sizeof=lambda result: result[0].pixel_array.nbytes)
 
     def obtain(value, supplied=None):
-        if cache and value in images:
-            return images[value]
+        found = images.get(value) if cache else None
+        if found is not None:
+            return found
         drawing = builder() if supplied is None else supplied
         result = (_capture(drawing, camera), drawing if retain else None)
         if cache:
-            images[value] = result
+            images.put(value, result)
         return result
 
     current = key()

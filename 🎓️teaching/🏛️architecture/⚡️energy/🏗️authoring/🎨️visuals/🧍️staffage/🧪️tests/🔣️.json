@@ -13,7 +13,68 @@
       50,
       90
     ],
-    "heightM": 4,
+    "logical": {
+      "heightM": 4,
+      "figureBoundsM": {
+        "minX": -2.5,
+        "minY": -0.5,
+        "maxX": 2.5,
+        "maxY": 4.5
+      },
+      "partsM": {
+        "slat-0": [
+          [
+            0.4,
+            0.2
+          ],
+          [
+            0.6,
+            0.2
+          ],
+          [
+            0.6,
+            0.4
+          ],
+          [
+            0.4,
+            0.4
+          ]
+        ],
+        "slat-1": [
+          [
+            1,
+            0.2
+          ],
+          [
+            1.2,
+            0.2
+          ],
+          [
+            1.2,
+            0.4
+          ]
+        ],
+        "box": [
+          [
+            2,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ]
+      },
+      "maxPaths": 2
+    },
     "boundsM": {
       "minX": -2.5,
       "minY": -0.5,
@@ -117,32 +178,6 @@
     }
   ],
   "fit": {
-    "worldMetres": {
-      "width": 1,
-      "height": 4
-    },
-    "cases": [
-      {
-        "width": 2,
-        "height": null,
-        "unit": 2
-      },
-      {
-        "width": null,
-        "height": 2,
-        "unit": 0.5
-      },
-      {
-        "width": 2,
-        "height": 2,
-        "unit": 0.5
-      },
-      {
-        "width": 0.25,
-        "height": 8,
-        "unit": 0.25
-      }
-    ],
     "animatedCases": [
       {
         "width": 2,
@@ -360,7 +395,10 @@
       "version": 1,
       "cast": "shared",
       "viewpoint": "elevation",
-      "frames": []
+      "frames": [],
+      "fps": 10,
+      "durationS": 0.3,
+      "loop": true
     }
   },
   "fade": {

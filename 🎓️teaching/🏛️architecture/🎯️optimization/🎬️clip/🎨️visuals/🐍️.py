@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import os
 import sys
 from pathlib import Path
@@ -19,6 +20,7 @@ _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🎯️optimization.🎬️clip.🧮️model.🐍️")
 _room = importlib.import_module("🎓️teaching.🏛️architecture.🎯️optimization.🎬️clip.🎨️visuals.🏠️room.🐍️")
 _engine = importlib.import_module("manim")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 
 INK = _art.P_WHITE
 MUTED = _art.PASTEL_GREY
@@ -34,7 +36,7 @@ def source_files() -> tuple[Path, ...]:
     root = Path(__file__).resolve().parents[1]
     model = root / "🧮️model"
     return (Path(__file__), Path(_room.__file__), *sorted(model.rglob("*.py")),
-            *sorted(model.rglob("*.json")), root / "🧪️cases/🔣️.json", Path(_fonts.__file__),
+            *sorted(model.rglob("*.json")), *sorted(root.rglob("🔀️transitions/🔣️.json")), root / "🧪️cases/🔣️.json", Path(_fonts.__file__),
             Path(_art.__file__), Path(_art.__file__).with_name("🔣️.json"),
             Path(_art.__file__).parent / "🔣️icons/🔣️.json",
             Path(_art.__file__).parent / "🧍️staffage/🔣️.json", *_theme.source_files())
@@ -126,6 +128,8 @@ class ClipScene(_room.RoomVisuals, _engine.Scene):
         _art.set_vo_language(self.language())
         _fonts.apply_scene_style(self)
         self._caption = None
+        document = Path(inspect.getfile(type(self))).parent / "🔀️transitions" / "🔣️.json"
+        self.morphs = _morph.stage(self, document) if document.is_file() else None
         getattr(self, "present_" + topic)()
         self.play(_engine.FadeOut(self._caption), run_time=.3)
         self.wait(.3)

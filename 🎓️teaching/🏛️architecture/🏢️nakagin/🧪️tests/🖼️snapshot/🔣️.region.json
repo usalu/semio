@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"name": "centred", "seed": 1, "shapes": 6, "spread": 3.0, "maxStroke": 6, "width": 160, "height": 90, "frameWidth": 14.222222222222221, "frameHeight": 8, "center": [0, 0, 0]},
+    {"name": "partly off frame", "seed": 2, "shapes": 8, "spread": 9.0, "maxStroke": 10, "width": 160, "height": 90, "frameWidth": 14.222222222222221, "frameHeight": 8, "center": [0, 0, 0]},
+    {"name": "shifted camera", "seed": 3, "shapes": 5, "spread": 4.0, "maxStroke": 12, "width": 128, "height": 72, "frameWidth": 10.0, "frameHeight": 5.625, "center": [1.37, -0.81, 0]},
+    {"name": "odd pixel grid", "seed": 4, "shapes": 7, "spread": 5.0, "maxStroke": 8, "width": 97, "height": 53, "frameWidth": 14.222222222222221, "frameHeight": 8, "center": [-2.2, 0.4, 0]},
+    {"name": "thick strokes", "seed": 5, "shapes": 4, "spread": 2.0, "maxStroke": 30, "width": 160, "height": 90, "frameWidth": 14.222222222222221, "frameHeight": 8, "center": [0, 0, 0]}
+  ]
+}

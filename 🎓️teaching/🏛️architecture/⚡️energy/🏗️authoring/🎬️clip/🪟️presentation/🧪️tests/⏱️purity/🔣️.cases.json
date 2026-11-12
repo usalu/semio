@@ -1,0 +1,18 @@
+{
+  "frameCounts": [
+    {"duration": 1.0, "fps": 15, "minimum": 1, "count": 15},
+    {"duration": 0.5, "fps": 15, "minimum": 1, "count": 8},
+    {"duration": 0.8333333333333334, "fps": 15, "minimum": 1, "count": 13},
+    {"duration": 0.1, "fps": 15, "minimum": 3, "count": 3},
+    {"duration": 2.0, "fps": 30, "minimum": 3, "count": 60},
+    {"duration": 1.2, "fps": 60, "minimum": 3, "count": 72},
+    {"duration": 0.0333333333333, "fps": 30, "minimum": 1, "count": 1}
+  ],
+  "bodyClocks": [
+    {"frames": 150, "sourceFps": 15, "fps": 15, "count": 150},
+    {"frames": 150, "sourceFps": 15, "fps": 30, "count": 300},
+    {"frames": 151, "sourceFps": 30, "fps": 15, "count": 76},
+    {"frames": 1, "sourceFps": 60, "fps": 15, "count": 1}
+  ],
+  "samples": [0.0, 0.07, 0.25, 0.5, 0.999, 1.0]
+}

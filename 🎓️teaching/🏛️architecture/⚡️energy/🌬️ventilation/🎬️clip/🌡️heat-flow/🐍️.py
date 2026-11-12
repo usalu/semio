@@ -69,6 +69,8 @@ tr = _manim_module.tr
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
+TRANSITIONS = _Path(__file__).resolve().parent / "🔀️transitions" / "🔣️.json"
 staffage = _manim_module.staffage
 staffage_height = _manim_module.staffage_height
 sun_glyph = _manim_module.sun_glyph
@@ -287,6 +289,7 @@ class Beat1_Luftwaerme(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Heat capacity of air", "Wärmekapazität der Luft"))
@@ -345,7 +348,7 @@ class Beat1_Luftwaerme(Scene):
         self.play(FadeIn(thermo["group"]), FadeIn(thermo["column"]), *warming(0.4, convect=False), run_time=0.4)
         self.add(th_read, q_read, wh_read)
         warm = _cube_faces(c_center, 1.0, P_ORANGE, warm=True)
-        self.play(*[Transform(a, b) for a, b in zip(cube, warm)], theta.animate.set_value(21.0), *warming(3.0),
+        self.play(stage.transition("ventilation.heat-flow.air-heat.cube-warms", source=cube, target=warm), theta.animate.set_value(21.0), *warming(3.0),
                   run_time=3.0, rate_func=linear)
         hold_for(self, N, "heat", during=warming)
 
@@ -364,12 +367,12 @@ class Beat1_Luftwaerme(Scene):
         wh_snap = math_label(rf"{label_number(RHO_AIR * CP_AIR / 3600.0, 3)}\,\mathrm{{Wh}}", size=BODY_FONT_SIZE, color=P_YELLOW)
         wh_snap.move_to(wh_read.get_right() + LEFT * wh_snap.width / 2)
         self.play(FadeIn(c_name), FadeIn(c_def), *warming(0.7), run_time=0.7)
-        self.play(TransformFromCopy(q_snap, c_j), *warming(0.9), run_time=0.9)
-        self.play(TransformFromCopy(wh_snap, c_wh), *warming(0.9), run_time=0.9)
+        self.play(stage.transition("ventilation.heat-flow.air-heat.joules-per-m3-k", source=q_snap, target=c_j), *warming(0.9), run_time=0.9)
+        self.play(stage.transition("ventilation.heat-flow.air-heat.wh-per-m3-k", source=wh_snap, target=c_wh), *warming(0.9), run_time=0.9)
         hold_for(self, N, "c_luft", during=warming)
 
         caption = swap_caption(self, caption, subtitle_text(N, "spell"))
-        _hide(self, cube, cube_label, rho_lbl, m_read, coil, coil_label, cp_lbl, thermo["group"], thermo["column"],
+        _hide(self, warm, cube_label, rho_lbl, m_read, coil, coil_label, cp_lbl, thermo["group"], thermo["column"],
               th_read, q_read, wh_read, c_name, c_def, c_j, c_wh)
         heiz_row, heiz = math_row([
             ("v", r"\dot{V}\,[\mathrm{m^{3}/h}]", AIR), (None, r"\cdot", P_WHITE),
@@ -442,6 +445,7 @@ class Beat2_SensibleWaerme(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Sensible heat", "Sensible Wärme"))
@@ -504,7 +508,7 @@ class Beat2_SensibleWaerme(Scene):
             ("dt", r"\Delta\theta", P_YELLOW), (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
         rest = VGroup(*[m for m in row if m is not items["dt"]])
-        self.play(TransformFromCopy(dt_name[0], items["dt"]), *air(1.0), run_time=1.0)
+        self.play(stage.transition("ventilation.heat-flow.sensible.formula-dtheta", source=dt_name[0], target=items["dt"]), *air(1.0), run_time=1.0)
         self.play(FadeIn(rest), Create(box), *air(0.6), run_time=0.6)
         hold_for(self, N, "formula", during=air)
 
@@ -546,7 +550,7 @@ class Beat2_SensibleWaerme(Scene):
         gain = body_text(tr("Gain", "Gewinn"), font_size=LABEL_FONT_SIZE, color=SENS).move_to(q_name[1])
         gain.align_to(q_name[1], LEFT)
         season["now"] = "summer"
-        self.play(ReplacementTransform(chip_w, chip_s), Transform(q_name[1], gain), ReplacementTransform(guides, _guides([(house, "summer")])), _ramp(th_i, THETA_I_S),
+        self.play(stage.transition("ventilation.heat-flow.sensible.season-chip-summer", source=chip_w, target=chip_s), stage.transition("ventilation.heat-flow.sensible.label-gain", source=q_name[1], target=gain), stage.transition("ventilation.heat-flow.sensible.guides-summer", source=guides, target=_guides([(house, "summer")])), _ramp(th_i, THETA_I_S),
                   _ramp(th_e, THETA_E_S), *air(3.2), run_time=3.2)
         hold_for(self, N, "summer", during=air)
 
@@ -585,6 +589,7 @@ class Beat3_LatenteLast(Scene):
 
     def construct(self):
         apply_scene_style(self)
+        stage = _morph.stage(self, TRANSITIONS)
         N = self.NARRATION
 
         subtitle = section_heading(tr("Latent load from moisture", "Latente Last durch Feuchte"))
@@ -661,7 +666,7 @@ class Beat3_LatenteLast(Scene):
             (None, r"\;[\mathrm{W}]", P_WHITE),
         ])
         rest = VGroup(*[m for m in row if m is not items["dx"]])
-        self.play(TransformFromCopy(dx_lbl, items["dx"]), *air(1.0), run_time=1.0)
+        self.play(stage.transition("ventilation.heat-flow.latent.formula-dx", source=dx_lbl, target=items["dx"]), *air(1.0), run_time=1.0)
         self.play(FadeIn(rest), Create(box), *air(0.6), run_time=0.6)
         hold_for(self, N, "formula", during=air)
 

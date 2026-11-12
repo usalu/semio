@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.teaching.export/v1",
+  "title": "Teaching Export Provenance and Stills",
+  "description": "Provenance published beside every exported teaching movie (`<movie>.export.json`) and the poster/thumbnail policy. Preview and final exports are separate artifacts; a record names exactly one profile.",
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "profileRef": {
+      "type": "object",
+      "required": ["name", "fingerprint", "morph", "lod"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"enum": ["preview", "final"]},
+        "fingerprint": {"$ref": "#/$defs/sha256"},
+        "morph": {"enum": ["swap", "full"]},
+        "lod": {"enum": ["full", "preview", "poster"]}
+      }
+    },
+    "render": {
+      "type": "object",
+      "required": ["width", "height", "fps", "antialias", "shadows", "budgets", "resolutionOverride", "fpsOverride", "seed"],
+      "additionalProperties": false,
+      "properties": {
+        "width": {"type": "integer", "minimum": 2},
+        "height": {"type": "integer", "minimum": 2},
+        "fps": {"type": "number", "exclusiveMinimum": 0},
+        "antialias": {"type": "boolean"},
+        "shadows": {"type": "boolean"},
+        "budgets": {"type": "object", "description": "null keeps the authored count", "additionalProperties": {"type": ["integer", "null"], "minimum": 1}},
+        "resolutionOverride": {"type": ["string", "null"]},
+        "fpsOverride": {"type": ["number", "null"]},
+        "seed": {"type": "integer"}
+      }
+    },
+    "work": {
+      "type": "object",
+      "required": ["jobs", "counts", "sources"],
+      "additionalProperties": false,
+      "properties": {
+        "jobs": {"type": "integer", "minimum": 0},
+        "counts": {"$ref": "#/$defs/counts"},
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "job", "counts"],
+            "additionalProperties": false,
+            "properties": {"file": {"type": "string"}, "job": {"type": "string"}, "counts": {"$ref": "#/$defs/counts"}}
+          }
+        }
+      }
+    },
+    "posterPolicy": {
+      "description": "Canonical poster frame, derived from the output frame schedule and never from a decoder's last delivered frame.",
+      "oneOf": [
+        {"type": "object", "required": ["kind", "index"], "additionalProperties": false, "properties": {"kind": {"const": "frame"}, "index": {"type": "integer", "minimum": 0}}},
+        {"type": "object", "required": ["kind", "seconds"], "additionalProperties": false, "properties": {"kind": {"const": "time"}, "seconds": {"type": "number", "minimum": 0}}},
+        {"type": "object", "required": ["kind", "value"], "additionalProperties": false, "properties": {"kind": {"const": "fraction"}, "value": {"type": "number", "minimum": 0, "maximum": 1}}},
+        {"type": "object", "required": ["kind", "id"], "additionalProperties": false, "properties": {"kind": {"const": "transition"}, "id": {"type": "string", "minLength": 1}, "scene": {"type": "string", "minLength": 1}}}
+      ]
+    },
+    "stills": {
+      "type": "object",
+      "required": ["profile", "policy", "frame", "frames", "fps", "seconds", "poster", "thumbnail"],
+      "additionalProperties": false,
+      "properties": {
+        "profile": {"$ref": "#/$defs/profileRef"},
+        "policy": {"$ref": "#/$defs/posterPolicy"},
+        "frame": {"type": "integer", "minimum": 0},
+        "frames": {"type": "integer", "minimum": 1},
+        "fps": {"type": "number", "exclusiveMinimum": 0},
+        "seconds": {"type": "number", "minimum": 0},
+        "poster": {"$ref": "#/$defs/still"},
+        "thumbnail": {"$ref": "#/$defs/still"}
+      }
+    },
+    "still": {
+      "type": "object",
+      "required": ["file", "width", "height", "sha256"],
+      "additionalProperties": false,
+      "properties": {"file": {"type": "string"}, "width": {"type": "integer", "minimum": 1}, "height": {"type": "integer", "minimum": 1}, "sha256": {"$ref": "#/$defs/sha256"}}
+    }
+  },
+  "type": "object",
+  "required": ["version", "kind", "artifact", "language", "audience", "profile", "render", "work", "inputs"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"type": "string"},
+    "version": {"const": 1},
+    "kind": {"enum": ["chapter", "master", "course", "delivery"]},
+    "artifact": {
+      "type": "object",
+      "required": ["file", "sha256", "bytes"],
+      "additionalProperties": false,
+      "properties": {"file": {"type": "string"}, "sha256": {"$ref": "#/$defs/sha256"}, "bytes": {"type": "integer", "minimum": 1}}
+    },
+    "language": {"enum": ["en", "de"]},
+    "audience": {"enum": ["speaker", "spectator"]},
+    "profile": {"$ref": "#/$defs/profileRef"},
+    "render": {"$ref": "#/$defs/render"},
+    "work": {"$ref": "#/$defs/work"},
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "profile", "fingerprint"],
+        "additionalProperties": false,
+        "properties": {"file": {"type": "string"}, "profile": {"enum": ["preview", "final"]}, "fingerprint": {"$ref": "#/$defs/sha256"}}
+      }
+    },
+    "stills": {"$ref": "#/$defs/stills"}
+  }
+}

@@ -2,6 +2,7 @@
 import contextlib
 import errno
 import hashlib
+import importlib
 import inspect
 import sys
 import json
@@ -18,6 +19,10 @@ else:
     import fcntl
 
 REVISION = "semio-exact-slab-cache/v1"
+MAX_BYTES = 512 << 20
+MAX_AGE_S = 30 * 24 * 3600
+LOCK_SUFFIX = ".lock"
+_disk = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎚️profile.🗃️cache.💾️disk.🐍️")
 
 
 def encode(value):
@@ -157,6 +162,14 @@ def producers_current(registry, bindings):
 
 
 @contextlib.contextmanager
+def prune(folder: Path, keep=frozenset()):
+    """🧹 Bound the slab folder by bytes and age with least-recently-used eviction, and drop lock files whose slab is gone."""
+    folder = Path(folder)
+    return _disk.prune(folder, max_bytes=MAX_BYTES, max_age_s=MAX_AGE_S, suffixes=(".json", LOCK_SUFFIX),
+                       orphan=lambda path: path.suffix == LOCK_SUFFIX and not path.with_suffix(".json").exists() and time.time() - path.stat().st_mtime > 86400, keep=keep)
+
+
+@contextlib.contextmanager
 def lock(path: Path, cancelled, progress):
     """🔒 Use a process-death-safe operating-system lock with cancellable waiting."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -164,6 +177,7 @@ def lock(path: Path, cancelled, progress):
         if path.stat().st_size == 0:
             handle.write(b"0")
             handle.flush()
+        _disk.touch(path)
         reported = False
         while True:
             if cancelled():
@@ -222,6 +236,7 @@ def get_or_compute(model, slab, root, producers, folder, build, *, eligibility, 
                     raise InterruptedError("Slab cache cancelled")
                 if not eligibility() or identity(model, slab, root, producers, producer_slots) != key:
                     raise RuntimeError("Slab cache inputs changed while decoding")
+                _disk.touch(path)
                 progress("hit")
                 return result
         progress("compute")
@@ -242,6 +257,7 @@ def get_or_compute(model, slab, root, producers, folder, build, *, eligibility, 
             os.replace(temporary, path)
         finally:
             temporary.unlink(missing_ok=True)
+        prune(folder, frozenset((path.name, path.with_suffix(LOCK_SUFFIX).name)))
         progress("published")
         return result
 
